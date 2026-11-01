@@ -5,6 +5,7 @@ use std::{
     io::{self, Write},
     process::{Command, Stdio},
 };
+const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
 pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     if files.is_empty() {
         return Ok(Vec::new());
@@ -18,7 +19,7 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
         return Err(invalid("formatter tool package manifest missing"));
     }
     let bytes = serde_json::to_vec(files)?;
-    if bytes.len() > 64 * 1024 * 1024 {
+    if bytes.len() > MAX_TOOL_BYTES {
         return Err(invalid("formatter tool input limit"));
     }
     let mut child = Command::new(cli.node)
@@ -31,9 +32,7 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
         .spawn()?;
     write_formatter_input(&mut child, &bytes)?;
     let output = child.wait_with_output()?;
-    if !output.status.success()
-        || !output.stderr.is_empty()
-        || output.stdout.len() > 64 * 1024 * 1024
+    if !output.status.success() || !output.stderr.is_empty() || output.stdout.len() > MAX_TOOL_BYTES
     {
         return Err(invalid("formatter tool rejected source"));
     }

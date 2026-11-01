@@ -169,13 +169,12 @@ fn render_installation(
 
 fn render_progress(planned: &Planned, options: &options::Options, output: &Output) {
     if let Some(progress) = &planned.progress {
+        let on_lane = planned.prepared["currentLane"].is_string();
         if planned.graph_progress {
-            progress.render_inbound_continuation(
-                output,
-                planned.prepared["currentLane"].is_string(),
-            );
+            progress.render_inbound_continuation(output, on_lane);
             return;
         }
+        let prefetch = options.write.dependencies.depth.map(|_| planned.prefetch_count);
         // The wildcard listing already printed the first `importing components`.
         if options.wildcards().is_empty() {
             progress.render_inbound(
@@ -187,18 +186,11 @@ fn render_progress(planned: &Planned, options: &options::Options, output: &Outpu
                         || options.ids
                             .iter()
                             .any(|id| !id.contains('@'))),
-                options.write.dependencies.depth.map(|_| planned.prefetch_count),
-                planned.prepared["currentLane"].is_string(),
+                prefetch,
+                on_lane,
             );
         } else {
-            progress.render_inbound(
-                output,
-                false,
-                false,
-                true,
-                options.write.dependencies.depth.map(|_| planned.prefetch_count),
-                planned.prepared["currentLane"].is_string(),
-            );
+            progress.render_inbound(output, false, false, true, prefetch, on_lane);
         }
     }
 }

@@ -33,7 +33,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("outside native format grammar".into()));
     };
     let ci_active = is_ci_active();
-    if let Some(root) = workspace::root(&env::current_dir()?) {
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
         if !ci_active
             && let Some(err) =
                 validate_lint_pattern(&root, options.pattern.as_deref(), Chalk::detect(args))
@@ -45,7 +46,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if ci_active {
         return Ok(Outcome::Declined("CI format delegated".into()));
     }
-    let cwd = env::current_dir()?;
     if is_missing_host(&cwd) {
         return workspace_command::execute_failure_scope(
             &cwd,

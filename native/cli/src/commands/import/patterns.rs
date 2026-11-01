@@ -34,8 +34,9 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
     }
     let lists = list(root, &wildcards, options.selection.lane_only)?;
     let mut lists = lists.iter();
-    let mut selection = Selection { ids: Vec::new(), warnings: Vec::new() };
-    let mut seen = HashSet::new();
+    let mut selection =
+        Selection { ids: Vec::with_capacity(options.ids.len()), warnings: Vec::new() };
+    let mut seen = HashSet::with_capacity(options.ids.len());
     for pattern in &options.ids {
         let ids = if has_wildcard(pattern) {
             let list = lists.next().ok_or_else(|| decline("remote lists"))?;
@@ -95,8 +96,9 @@ fn list(root: &Path, patterns: &[&String], lane_only: bool) -> io::Result<Vec<Va
 
 /// The listed ids, with their versions.
 fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
-    let mut ids = Vec::new();
-    for component in array(list.get("components"), "remote list components")? {
+    let components = array(list.get("components"), "remote list components")?;
+    let mut ids = Vec::with_capacity(components.len());
+    for component in components {
         let id = component_id(component)?;
         if !collate::supported(&id) || !id.contains('@') {
             return Err(decline("remote list id"));

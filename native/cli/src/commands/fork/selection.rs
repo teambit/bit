@@ -36,12 +36,15 @@ pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Resul
     Ok(selected)
 }
 fn single(options: &Options, state: &Value, scope: String) -> Selected {
-    let local =
-        inventory::selected(state, &options.source).and_then(row_bare_id).map(str::to_owned);
-    Selected {
-        local: local.iter().cloned().collect(),
-        remote: if local.is_none() { vec![options.source.trim().to_owned()] } else { vec![] },
-        target_scope: scope,
+    match inventory::selected(state, &options.source).and_then(row_bare_id) {
+        Some(local) => {
+            Selected { local: vec![local.to_owned()], remote: Vec::new(), target_scope: scope }
+        }
+        None => Selected {
+            local: Vec::new(),
+            remote: vec![options.source.trim().to_owned()],
+            target_scope: scope,
+        },
     }
 }
 fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
@@ -80,10 +83,14 @@ fn without_existing_targets(ids: Vec<String>, scope: &str, pool: &[Value]) -> Ve
     ids.into_iter()
         .filter(|id| {
             let name = bare(id).split_once('/').map_or_else(|| bare(id), |(_, name)| name);
-            let target = format!("{scope}/{name}");
             !pool
                 .iter()
-                .any(|row| row_bare_id(row) == Some(target.as_str()))
+                .any(|row| {
+                    row_bare_id(row)
+                        .and_then(|existing| existing.strip_prefix(scope))
+                        .and_then(|rest| rest.strip_prefix('/'))
+                        == Some(name)
+                })
         })
         .collect()
 }

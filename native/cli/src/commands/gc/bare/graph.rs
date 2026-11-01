@@ -53,16 +53,17 @@ impl<'a> Collector<'a> {
             "[*] completed processing lanes. total {} refs in the white list",
             self.retained.len(),
         ));
+        let dependencies = std::mem::take(&mut self.dependencies);
         self.logs.push(format!(
             "[*] start processing {} flattened dependencies",
-            self.dependencies.len(),
+            dependencies.len(),
         ));
-        for dependency in self.dependencies.clone() {
-            self.dependency(&dependency)?;
+        for dependency in &dependencies {
+            self.dependency(dependency)?;
         }
         self.logs.push(format!(
             "[*] completed processing {} flattened dependencies. total {} refs in the white list",
-            self.dependencies.len(),
+            dependencies.len(),
             self.retained.len(),
         ));
         Ok(self.objects
@@ -183,12 +184,15 @@ impl<'a> Collector<'a> {
     }
     fn retain_lanes(&mut self) -> io::Result<IndexSet<(String, String)>> {
         let mut foreign = IndexSet::new();
-        let prefix = format!("{}/", self.name.trim());
+        let scope_name = self.name.trim();
         for (hash, lane) in &self.lanes {
             self.retained.insert(hash.clone());
             self.retained.insert(digest(&format!("{hash}:LaneHistory")));
             for (id, head) in lane_entries(lane)? {
-                if !id.starts_with(&prefix) {
+                if !id
+                    .strip_prefix(scope_name)
+                    .is_some_and(|rest| rest.starts_with('/'))
+                {
                     foreign.insert((id, head));
                 }
             }

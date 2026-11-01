@@ -181,13 +181,12 @@ fn parse_stash_file(file_path: &Path) -> Result<Vec<String>, String> {
 pub(in crate::commands::gc) fn load_unmerged_roots(
     scope_dir: &Path,
 ) -> Result<Vec<String>, String> {
-    let unmerged_path = scope_dir.join("unmerged.json");
-    if !unmerged_path.exists() {
-        return Ok(Vec::new());
-    }
-    let val =
-        bit_object_import::parse_jsonc(&fs::read(&unmerged_path).map_err(|err| err.to_string())?)
-            .map_err(|err| err.to_string())?;
+    let bytes = match fs::read(scope_dir.join("unmerged.json")) {
+        Ok(bytes) => bytes,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(err) => return Err(err.to_string()),
+    };
+    let val = bit_object_import::parse_jsonc(&bytes).map_err(|err| err.to_string())?;
     let Some(arr) = val.as_array() else { return Ok(Vec::new()) };
     let mut roots = Vec::new();
     for item in arr {

@@ -3,9 +3,9 @@ use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
     valid_import_flags(flags)
         && (!flags.contains(&"--lane-only") || ids.iter().any(|id| has_wildcard(id)))
-        && !ids
+        && ids
             .iter()
-            .any(|id| has_wildcard(id) && !valid_pattern(id))
+            .all(|id| !has_wildcard(id) || valid_pattern(id))
 }
 
 fn valid_import_flags(flags: &[&str]) -> bool {

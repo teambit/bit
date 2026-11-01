@@ -86,10 +86,13 @@ fn remove_empty_bucket(parent: &Path) -> io::Result<()> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(failure(error, "scandir", parent)),
     };
-    match entries.next() {
-        Some(Ok(_)) => return Ok(()),
-        Some(Err(error)) => return Err(failure(error, "scandir", parent)),
-        None => {}
+    if entries
+        .next()
+        .transpose()
+        .map_err(|error| failure(error, "scandir", parent))?
+        .is_some()
+    {
+        return Ok(());
     }
     match fs::remove_dir(parent) {
         Err(error)

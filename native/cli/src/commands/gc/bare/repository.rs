@@ -18,10 +18,11 @@ pub(super) fn read(directory: &Path) -> io::Result<BTreeMap<String, Object>> {
         else {
             continue;
         };
-        if !bucket.path().is_dir() {
+        let bucket_path = bucket.path();
+        if !bucket_path.is_dir() {
             continue;
         }
-        for entry in entries(&bucket.path())? {
+        for entry in entries(&bucket_path)? {
             let Some(identity) = object_name(name, &entry)? else { continue };
             if objects.len() >= 100_000 {
                 return Err(unsupported("object inventory budget"));
@@ -39,6 +40,9 @@ fn object_name(bucket: &str, entry: &fs::DirEntry) -> io::Result<Option<String>>
     else {
         return Ok(None);
     };
+    if bucket.len() + leaf.len() != 40 {
+        return Ok(None);
+    }
     let identity = format!("{bucket}{leaf}");
     if !hash(&identity) {
         return Ok(None);

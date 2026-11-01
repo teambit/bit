@@ -86,7 +86,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
 
 fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, String)>> {
     let state = inventory::read(root)?;
-    let mut pairs = Vec::new();
+    let mut pairs = Vec::with_capacity(results.ids.len() * 2);
     for (id, facts) in results.ids.iter().zip(&results.facts) {
         let target =
             inventory::selected(&state, id).ok_or_else(|| io::Error::other("fork batch target"))?;
@@ -166,7 +166,7 @@ fn ast(
     variables: bool,
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let spool = tempfile::Builder::new().prefix("bit-fork-ast-").tempdir()?;
-    let mut files = Vec::new();
+    let mut files = Vec::with_capacity(inputs.len());
     for (index, (path, bytes)) in inputs.iter().enumerate() {
         let stored = spool.path().join(index.to_string());
         fs::write(&stored, bytes)?;
@@ -179,9 +179,8 @@ fn ast(
         .enumerate()
         .map(|(index, (path, _))| {
             let stored = spool.path().join(index.to_string());
-            if !fs::symlink_metadata(&stored)?.is_file()
-                || fs::metadata(&stored)?.len() > 32 * 1024 * 1024
-            {
+            let metadata = fs::symlink_metadata(&stored)?;
+            if !metadata.is_file() || metadata.len() > 32 * 1024 * 1024 {
                 return Err(io::Error::other("fork AST source limit"));
             }
             Ok((path.clone(), fs::read(stored)?))

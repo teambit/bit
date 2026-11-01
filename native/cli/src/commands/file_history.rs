@@ -49,7 +49,11 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
         super::status::autosync::run_if_enabled(root)?;
     }
     let input = input.trim();
-    let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
+    let normalized = if cfg!(windows) && input.contains('\\') {
+        std::borrow::Cow::Owned(input.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(input)
+    };
     let requested = normalized.trim_start_matches("./");
     if !is_valid_relative_file_path(requested) {
         return Err(decline("file history path"));

@@ -268,11 +268,15 @@ fn run_empty_workspace_gc(
     args: &[OsString],
     options: &Options,
 ) -> io::Result<Outcome> {
-    let empty_res = GcResult {
-        flags: GcRunFlags { dry_run: options.dry_run, backup: options.backup, backup_dir: None },
-        ..GcResult::default()
-    };
     if options.json {
+        let empty_res = GcResult {
+            flags: GcRunFlags {
+                dry_run: options.dry_run,
+                backup: options.backup,
+                backup_dir: None,
+            },
+            ..GcResult::default()
+        };
         let payload = serde_json::to_value(&empty_res).map_err(io::Error::other)?;
         return emit_json(root, args, &payload);
     }

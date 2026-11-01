@@ -321,7 +321,11 @@ fn match_ws_dep(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<Strin
         let pkg_dot = format!("@{scope}/{}", other.id.name.replace('/', "."));
         if [&other.package_name, &pkg_slash, &pkg_dot]
             .into_iter()
-            .any(|pkg| raw_spec == pkg || raw_spec.starts_with(&format!("{pkg}/")))
+            .any(|pkg| {
+                raw_spec
+                    .strip_prefix(pkg.as_str())
+                    .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+            })
         {
             return Some(selection::entry_full_id(entry));
         }

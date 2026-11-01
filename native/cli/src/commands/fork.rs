@@ -83,8 +83,9 @@ fn execute(
         ProjectedLinker::prepare(root)?
     };
     print!("{}", linker.take_stdout());
+    let chalk = Chalk::detect(args);
     let work = |output: &bit_install::output::Output| {
-        execution::run(root, options, &mut linker, Chalk::detect(args), output)
+        execution::run(root, options, &mut linker, chalk, output)
     };
     if options.scope_fork {
         workspace_command::execute_without_loader(root, args, "fork", work)
@@ -126,9 +127,14 @@ fn preflight(
     };
     let source_id = source["identity"]
         .as_str()
-        .or_else(|| source["id"].as_str())
         .map(str::trim)
         .filter(|id| !id.is_empty())
+        .or_else(|| {
+            source["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
         .ok_or_else(|| io::Error::other("fork source identity"))?;
     let clean = |opt: Option<&str>| {
         opt.map(str::trim)

@@ -79,7 +79,7 @@ fn dependencies(
     old_packages: &[String],
     multiple: bool,
 ) -> io::Result<Vec<Value>> {
-    let mut seen = Vec::new();
+    let mut seen = std::collections::HashSet::new();
     let mut entries = Vec::new();
     for source in facts {
         for entry in bit_object_import::component_fork::dependency_policy(source)? {
@@ -88,15 +88,15 @@ fn dependencies(
                 .map(str::trim)
                 .filter(|id| !id.is_empty())
                 .ok_or_else(|| io::Error::other("fork dependency identity"))?;
+            let is_seen = !seen.insert(id.to_owned());
             if multiple
-                && (old_packages
-                    .iter()
-                    .any(|old| old.trim() == id)
-                    || seen.iter().any(|old| old == id))
+                && (is_seen
+                    || old_packages
+                        .iter()
+                        .any(|old| old.trim() == id))
             {
                 continue;
             }
-            seen.push(id.to_owned());
             entries.push(entry);
         }
     }
@@ -121,8 +121,9 @@ fn write(root: &Path, config: &Value, reason: &str) -> io::Result<()> {
     let reason = reason.trim();
     let id = workspace_command::file_id();
     let history = bit_object_import::scope_path(root).join("workspace-config-history");
-    fs::create_dir_all(history.join("files"))?;
-    fs::write(history.join("files").join(&id), &before)?;
+    let files_dir = history.join("files");
+    fs::create_dir_all(&files_dir)?;
+    fs::write(files_dir.join(&id), &before)?;
     writeln!(
         fs::OpenOptions::new()
             .create(true)

@@ -223,13 +223,13 @@ fn report(rows: &[Value], file: &str, chalk: Chalk) -> io::Result<String> {
 fn one(row: &Value, file: &str, chalk: Chalk, previous: &Previous<'_>) -> io::Result<String> {
     let mut output = heading(&row["normalized"], chalk)?;
     let body = patch(row, file, chalk, previous)?;
-    output.push_str(
-        &body
-            .split('\n')
-            .map(|line| format!("      {line}"))
-            .collect::<Vec<_>>()
-            .join("\n"),
-    );
+    for (index, line) in body.split('\n').enumerate() {
+        if index > 0 {
+            output.push('\n');
+        }
+        output.push_str("      ");
+        output.push_str(line);
+    }
     Ok(output)
 }
 
@@ -278,7 +278,7 @@ fn patch(row: &Value, file: &str, chalk: Chalk, previous: &Previous<'_>) -> io::
 }
 
 fn selected(rows: &[Value]) -> io::Result<Vec<&Value>> {
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(rows.len());
     let mut last_hash: Option<&str> = None;
     for row in rows {
         if row["log"]["hidden"] == true {

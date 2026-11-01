@@ -196,17 +196,14 @@ fn merge_bitmap_contents(current: &str, other: &str, strategy: &str) -> io::Resu
     let other_obj =
         parsed_other.as_object().ok_or_else(|| io::Error::other("other bitmap object"))?;
     let merged = combine_bitmap_objects(cur_obj, other_obj, strategy)?;
-    let mut keys = merged
-        .keys()
-        .filter(|key| *key != "$schema-version")
-        .cloned()
+    let mut entries = merged
+        .into_iter()
+        .filter(|(key, _)| key != "$schema-version")
         .collect::<Vec<_>>();
-    keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
-    let mut sorted = Map::with_capacity(merged.len());
-    for key in keys {
-        if let Some(val) = merged.get(&key) {
-            sorted.insert(key, val.clone());
-        }
+    entries.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
+    let mut sorted = Map::with_capacity(entries.len() + 1);
+    for (key, val) in entries {
+        sorted.insert(key, val);
     }
     if let Some(schema) = cur_obj
         .get("$schema-version")
@@ -253,7 +250,7 @@ fn format_bitmap_object(sorted: &Map<String, Value>) -> io::Result<String> {
     let mut buf = Vec::new();
     let mut serializer =
         serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
-    Value::Object(sorted.clone()).serialize(&mut serializer).map_err(io::Error::other)?;
+    sorted.serialize(&mut serializer).map_err(io::Error::other)?;
     let body = String::from_utf8(buf).map_err(io::Error::other)?;
     Ok(format!("{BITMAP_HEADER}{body}"))
 }

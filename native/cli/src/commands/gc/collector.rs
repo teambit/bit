@@ -198,14 +198,13 @@ fn seed_workspace_roots(
         {
             graph.add_root(ver);
         }
-        let Some(comp) = graph.find_comp(spec.scope.as_deref(), &spec.name).cloned() else {
+        let Some(comp) = graph.find_comp(spec.scope.as_deref(), &spec.name) else {
             continue;
         };
-        let key = comp_value_key(&comp);
-        ws_keys.insert(key.clone());
+        let key = comp_value_key(comp);
         let checked_out = spec.version
             .as_deref()
-            .and_then(|ver| resolve_comp_version_ref(&comp, ver))
+            .and_then(|ver| resolve_comp_version_ref(comp, ver))
             .or_else(|| {
                 comp["head"]
                     .as_str()
@@ -213,6 +212,7 @@ fn seed_workspace_roots(
                     .filter(|val| !val.is_empty())
                     .map(str::to_owned)
             });
+        ws_keys.insert(key.clone());
         if let Some(head) = checked_out {
             graph.add_root(&head);
             checked_out_heads.push((key, head));
@@ -382,16 +382,18 @@ fn parse_lane_comp_head(item: &Value) -> Option<(String, String)> {
 }
 
 fn collect_lane_update_deps(deps_val: &Value) -> CompHeadList {
-    let Some(deps) = deps_val.as_array() else { return Vec::new() };
-    let mut out = Vec::new();
-    for item in deps {
-        let Some(spec) = parse_dep_value(item) else { continue };
-        let Some(ver) = spec.version else { continue };
-        let key = spec.scope
-            .as_deref()
-            .filter(|val| !val.is_empty())
-            .map_or_else(|| spec.name.clone(), |sc| format!("{sc}/{}", spec.name));
-        out.push((key, ver));
-    }
-    out
+    deps_val
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(parse_dep_value)
+        .filter_map(|spec| {
+            let ver = spec.version?;
+            let key = match spec.scope.as_deref() {
+                Some(sc) if !sc.is_empty() => format!("{sc}/{}", spec.name),
+                _ => spec.name,
+            };
+            Some((key, ver))
+        })
+        .collect()
 }

@@ -30,11 +30,12 @@ impl Planned {
         let lane = has_active_lane(&prepared["currentLane"]);
         let rows = json!({"bitmapCount":0,"imports":prepared["progress"],"loads":[]});
         if let Some(progress) = Progress::parse(Some(&rows))? {
+            let has_wildcards = !options.wildcards().is_empty();
             progress.render_inbound(
                 output,
                 false,
-                options.wildcards().is_empty() && !options.ids.is_empty(),
-                !options.wildcards().is_empty(),
+                !has_wildcards && !options.ids.is_empty(),
+                has_wildcards,
                 None,
                 lane,
             );

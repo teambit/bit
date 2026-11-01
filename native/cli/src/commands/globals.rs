@@ -110,21 +110,23 @@ pub(in crate::commands) fn resolve_capsules_dir(cwd: &Path) -> io::Result<String
 }
 
 fn read_scope_layer(cwd: &Path, ws_root: Option<&Path>) -> io::Result<Value> {
-    let scope_dir = ws_root
-        .map(scope_path)
+    let scope_json = ws_root
+        .map(|root| scope_path(root).join("scope.json"))
+        .filter(|path| path.is_file())
         .or_else(|| {
             cwd.ancestors()
                 .find_map(|path| {
-                    [path.to_path_buf(), path.join(".bit"), path.join(".git/bit")]
+                    ["scope.json", ".bit/scope.json", ".git/bit/scope.json"]
                         .into_iter()
-                        .find(|candidate| candidate.join("scope.json").is_file())
+                        .map(|rel| path.join(rel))
+                        .find(|candidate| candidate.is_file())
                 })
         });
-    let Some(dir) = scope_dir.filter(|path| path.join("scope.json").is_file()) else {
+    let Some(scope_json) = scope_json else {
         return Ok(Value::Null);
     };
-    let parsed: Value = bit_object_import::parse_jsonc(&fs::read(dir.join("scope.json"))?)
-        .map_err(io::Error::other)?;
+    let parsed: Value =
+        bit_object_import::parse_jsonc(&fs::read(scope_json)?).map_err(io::Error::other)?;
     Ok(parsed
         .get("config")
         .filter(|val| val.is_object())

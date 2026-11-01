@@ -178,15 +178,14 @@ pub(super) fn restore(scope: &Path, args: &[OsString], options: &Options) -> io:
         Ok(index) => index,
         Err(error) => return Ok(Outcome::Declined(error.to_string())),
     };
+    let chalk = Chalk::detect(args);
     let work = |_: &Output| {
         index::write(scope, index.as_deref())?;
-        super::restore::run(scope, options.restore_overwrite)
-            .map_err(|error| error.report(Chalk::detect(args)))?;
+        super::restore::run(scope, options.restore_overwrite).map_err(|error| error.report(chalk))?;
         let data = if options.json {
             serde_json::to_string_pretty(&json!({"restored":true}))?
         } else {
-            Formatter::new(Chalk::detect(args))
-                .success_summary("restored the objects from the backup directory")
+            Formatter::new(chalk).success_summary("restored the objects from the backup directory")
         };
         Ok(Report { data, code: 0, details: None })
     };

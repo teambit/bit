@@ -50,12 +50,13 @@ pub(super) fn selection(
     selection: &super::patterns::Selection,
     output: &Output,
 ) {
-    if options.wildcards().is_empty() {
+    let wildcards = options.wildcards();
+    if wildcards.is_empty() {
         return;
     }
     output.status("importing components");
     if !options.selection.lane_only {
-        for _ in options.wildcards() {
+        for _ in wildcards {
             output.status("listing remote components");
         }
     }
@@ -81,17 +82,16 @@ pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::R
         .as_array()
         .ok_or_else(|| io::Error::other("native inbound progress"))?;
     let counts = groups.as_array().ok_or_else(|| io::Error::other("native inbound lane groups"))?;
+    let main_fetch = prepared["mainFetch"] == true;
     if !options.lanes
-        || !valid_group_count(counts.len(), prepared["mainFetch"] == true, options.ids.len())
+        || !valid_group_count(counts.len(), main_fetch, options.ids.len())
         || counts
             .iter()
             .enumerate()
             .any(|(index, count)| {
                 count
                     .as_u64()
-                    .is_none_or(|count| {
-                        count == 0 && !(prepared["mainFetch"] == true && index == 0)
-                    })
+                    .is_none_or(|count| count == 0 && !(main_fetch && index == 0))
             })
         || counts
             .iter()

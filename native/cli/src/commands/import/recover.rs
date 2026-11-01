@@ -50,15 +50,15 @@ pub(in crate::commands) fn recover_scope_import(
     ids: &[String],
     output: &Output,
 ) -> io::Result<()> {
+    let mut options = import_options(&[], false, false);
+    options.objects_only = true;
+    options.write.override_existing = false;
     for id in ids {
         let trimmed = id.trim();
         if trimmed.is_empty() {
             return Err(io::Error::other("recover scope import id is empty"));
         }
         let single = [trimmed.to_owned()];
-        let mut options = import_options(&single, false, false);
-        options.objects_only = true;
-        options.write.override_existing = false;
         let (mut engine, prepared) = super::prepare(root, &options, &single)?;
         let reason = format!("1 components {trimmed} because it's missing from the local scope");
         output.status(&format!("importing {reason}"));

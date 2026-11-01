@@ -263,10 +263,9 @@ fn dir_size(dir: &Path) -> u64 {
     let Ok(entries) = fs::read_dir(dir) else { return 0 };
     let mut total = 0u64;
     for entry in entries.filter_map(Result::ok) {
-        let path = entry.path();
-        if let Ok(meta) = fs::symlink_metadata(&path) {
+        if let Ok(meta) = entry.metadata() {
             let entry_size = if meta.is_dir() {
-                dir_size(&path)
+                dir_size(&entry.path())
             } else if meta.is_file() {
                 meta.len()
             } else {

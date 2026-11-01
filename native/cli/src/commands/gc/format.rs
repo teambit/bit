@@ -62,12 +62,10 @@ pub(super) fn format_bytes(bytes: u64) -> String {
         (1024_u64.pow(3), "GB"),
         (1024_u64.pow(4), "TB"),
     ];
-    let mut chosen_index = 0;
-    for (index, entry) in units.iter().enumerate() {
-        if bytes >= entry.0 {
-            chosen_index = index;
-        }
-    }
+    let chosen_index = units
+        .iter()
+        .rposition(|(size, _)| bytes >= *size)
+        .unwrap_or(0);
     let (mut divisor, mut unit) = units[chosen_index];
     let calc_tenths = |div: u64| {
         bytes

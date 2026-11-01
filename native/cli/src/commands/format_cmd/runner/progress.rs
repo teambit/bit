@@ -14,10 +14,7 @@ impl Progress {
                 output.status(&format!("loading {count} component(s)"));
             }
         }
-        let total = self.identities
-            .iter()
-            .filter(|id| !id.trim().is_empty())
-            .count();
+        let total = self.non_empty_count();
         if total == 0 {
             return;
         }
@@ -31,11 +28,13 @@ impl Progress {
         else {
             return;
         };
-        let total = self.identities
+        let total = self.non_empty_count().max(index + 1);
+        output.status(&format!("formatting components ({}/{total}) {identity}", index + 1));
+    }
+    fn non_empty_count(&self) -> usize {
+        self.identities
             .iter()
             .filter(|id| !id.trim().is_empty())
             .count()
-            .max(index + 1);
-        output.status(&format!("formatting components ({}/{total}) {identity}", index + 1));
     }
 }

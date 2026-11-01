@@ -11,8 +11,8 @@ pub(super) fn classify(
     pool: &[Value],
 ) -> (Vec<String>, Vec<String>) {
     let all = local.iter().chain(remote);
-    let mut locals = Vec::new();
-    let mut remotes = Vec::new();
+    let mut locals = Vec::with_capacity(local.len());
+    let mut remotes = Vec::with_capacity(remote.len());
     for id in all {
         if local.iter().any(|candidate| equal(id, candidate, pool)) {
             locals.push(bare(id).into());
@@ -38,28 +38,31 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
     explicit.or_else(|| {
         let row = pool
             .iter()
-            .find(|row| {
-                row["identity"]
-                    .as_str()
-                    .filter(|val| !val.trim().is_empty())
-                    .or_else(|| row["id"].as_str())
-                    .map(bare)
-                    == Some(bare_id)
-            })?;
+            .find(|row| row_raw_id(row).map(bare) == Some(bare_id))?;
         row["version"]
             .as_str()
             .map(str::trim)
             .filter(|candidate| is_concrete_version(candidate))
             .or_else(|| {
-                row["identity"]
-                    .as_str()
-                    .filter(|val| !val.trim().is_empty())
-                    .or_else(|| row["id"].as_str())
-                    .and_then(|raw| raw.trim().rsplit_once('@'))
+                row_raw_id(row)
+                    .and_then(|raw| raw.rsplit_once('@'))
                     .map(|(_, ver)| ver.trim())
                     .filter(|candidate| is_concrete_version(candidate))
             })
     })
+}
+
+fn row_raw_id(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+        })
 }
 
 fn is_concrete_version(version: &str) -> bool {

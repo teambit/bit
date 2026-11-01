@@ -27,9 +27,13 @@ pub(crate) struct CompGraph {
     pub(crate) edges: Vec<GraphEdge>,
 }
 
+fn trim_owned(val: String) -> String {
+    if val.len() == val.trim().len() { val } else { val.trim().to_owned() }
+}
+
 impl CompGraph {
     pub(crate) fn add_node(&mut self, id: String) {
-        let id = if id.len() == id.trim().len() { id } else { id.trim().to_owned() };
+        let id = trim_owned(id);
         if !id.is_empty()
             && !self.nodes
                 .iter()
@@ -41,16 +45,8 @@ impl CompGraph {
 
     pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
         let attr = attr.trim();
-        let source_id = if source_id.len() == source_id.trim().len() {
-            source_id
-        } else {
-            source_id.trim().to_owned()
-        };
-        let target_id = if target_id.len() == target_id.trim().len() {
-            target_id
-        } else {
-            target_id.trim().to_owned()
-        };
+        let source_id = trim_owned(source_id);
+        let target_id = trim_owned(target_id);
         if source_id.is_empty() || target_id.is_empty() {
             return;
         }

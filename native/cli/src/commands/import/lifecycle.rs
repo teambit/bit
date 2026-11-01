@@ -22,10 +22,11 @@ impl Lifecycle {
         if preflight_ok && options.needs_installer() {
             Installer::validate_workspace(root)?;
         }
-        let core: Vec<String> = serde_json::from_str(include_str!(
-            "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-        ))?;
-        Ok((preflight_ok && options.requires_facts()) || root_providers(&config, &core))
+        if preflight_ok && options.requires_facts() {
+            return Ok(true);
+        }
+        let core: Vec<String> = serde_json::from_str(crate::commands::aspect::CORE_ASPECT_IDS)?;
+        Ok(root_providers(&config, &core))
     }
     pub(super) fn bootstrap(
         root: &Path,
@@ -268,13 +269,13 @@ fn ordered_ids(ids: &[String], order: &[String]) -> io::Result<Vec<String>> {
     if order.is_empty() {
         return Ok(ids.to_vec());
     }
+    let targets: std::collections::HashSet<&str> = ids
+        .iter()
+        .map(|candidate| bare_id(candidate))
+        .collect();
     let ordered = order
         .iter()
-        .filter(|id| {
-            let target = bare_id(id);
-            ids.iter()
-                .any(|candidate| bare_id(candidate) == target)
-        })
+        .filter(|id| targets.contains(bare_id(id)))
         .cloned()
         .collect::<Vec<_>>();
     if ordered.len() != ids.len() {

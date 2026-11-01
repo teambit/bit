@@ -160,7 +160,7 @@ fn selected(rows: &[Value]) -> Vec<&Value> {
     let mut selected = rows
         .iter()
         .filter(|row| row["log"]["hidden"] != true && row["fileHash"].is_string())
-        .filter(|row| row["fileHash"] != effective_parent(row, &hidden))
+        .filter(|row| row["fileHash"] != *effective_parent(row, &hidden))
         .collect::<Vec<_>>();
     selected.sort_by_key(|row| row["headOrder"].as_u64().unwrap_or(u64::MAX));
     selected
@@ -181,12 +181,11 @@ fn owners(rows: &[Value], selected: &[&Value], lines: usize) -> io::Result<Vec<u
         if owners.iter().all(Option::is_some) {
             break;
         }
-        let Some(parent_hash) = effective_parent(row, &hidden).as_str().map(str::to_string) else {
+        let Some(parent_hash) = effective_parent(row, &hidden).as_str() else {
             continue;
         };
-        let parent = sources
-            .get(parent_hash.as_str())
-            .ok_or_else(|| decline("blame parent source absent"))?;
+        let parent =
+            sources.get(parent_hash).ok_or_else(|| decline("blame parent source absent"))?;
         assign_changed(&mut owners, index, parent, text(row.get("contents"))?);
     }
     Ok(owners
@@ -237,7 +236,7 @@ fn cells(
         .collect()
 }
 
-fn effective_parent(row: &Value, hidden: &HashMap<&str, &Value>) -> Value {
+fn effective_parent<'a>(row: &'a Value, hidden: &HashMap<&str, &'a Value>) -> &'a Value {
     let mut current = row;
     for _ in 0..=hidden.len() {
         let parents = current["log"]["parents"].as_array();
@@ -252,7 +251,7 @@ fn effective_parent(row: &Value, hidden: &HashMap<&str, &Value>) -> Value {
         };
         current = ancestor;
     }
-    current["parentFileHash"].clone()
+    &current["parentFileHash"]
 }
 
 fn assign_changed(owners: &mut [Option<usize>], index: usize, parent: &str, current: &str) {

@@ -222,6 +222,7 @@ fn take_required_layout(args: &[&str], idx: &mut usize) -> Option<String> {
 }
 
 fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
+    let arg = arg.trim();
     if let Some(val) = arg
         .strip_prefix("--remote=")
         .or_else(|| arg.strip_prefix("-r="))
@@ -230,11 +231,8 @@ fn apply_inline_or_id(arg: &str, options: &mut Options) -> Option<()> {
     } else if let Some(val) = arg.strip_prefix("--layout=").map(str::trim) {
         (!val.is_empty() && !val.starts_with('-')).then_some(())?;
         options.layout = Some(val.to_owned());
-    } else if !arg.trim().starts_with('-')
-        && !arg.trim().is_empty()
-        && options.id.is_none()
-    {
-        options.id = Some(arg.trim().to_owned());
+    } else if !arg.starts_with('-') && !arg.is_empty() && options.id.is_none() {
+        options.id = Some(arg.to_owned());
     } else {
         return None;
     }

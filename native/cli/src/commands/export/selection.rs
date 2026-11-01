@@ -5,8 +5,10 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
-    let mut expr = String::from("^");
-    for ch in pattern.trim().chars() {
+    let trimmed = pattern.trim();
+    let mut expr = String::with_capacity(trimmed.len() + 2);
+    expr.push('^');
+    for ch in trimmed.chars() {
         if ch == '*' {
             expr.push_str(".*");
         } else if r".+?()[]{}^$|\".contains(ch) {
@@ -48,7 +50,9 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
                 .trim();
             patterns
                 .iter()
-                .any(|pattern| pattern.find(id).is_some() || pattern.find(bare).is_some())
+                .any(|pattern| {
+                    pattern.find(id).is_some() || (bare != id && pattern.find(bare).is_some())
+                })
         })
         .collect())
 }

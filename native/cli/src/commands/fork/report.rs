@@ -23,14 +23,14 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
 }
 fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
     let source = options.source.trim();
-    let count = ids
-        .iter()
-        .filter(|id| !id.trim().is_empty())
-        .count();
     if options.scope_fork {
         let scope = target_scope(options, ids);
         format!("forked {} into {}", chalk.bold(source), chalk.bold(scope))
     } else if options.multiple() {
+        let count = ids
+            .iter()
+            .filter(|id| !id.trim().is_empty())
+            .count();
         format!("forked {count} component(s) matching pattern {}", chalk.bold(source))
     } else {
         let first_id = ids

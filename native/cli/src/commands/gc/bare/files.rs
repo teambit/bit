@@ -4,15 +4,7 @@ use std::{fs, io, path::Path};
 
 pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) -> io::Result<()> {
     for hash in hashes {
-        let (bucket, leaf) = split_hash(hash)?;
-        let source = scope
-            .join("objects")
-            .join(bucket)
-            .join(leaf);
-        let target = scope
-            .join("deleted-objects")
-            .join(bucket)
-            .join(leaf);
+        let (source, target) = object_move_paths(scope, hash)?;
         let metadata = fs::symlink_metadata(&source)?;
         if metadata.is_dir() {
             return Err(super::repository::unsupported("directory object source"));
@@ -27,15 +19,7 @@ pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) 
 }
 
 pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
-    let (bucket, leaf) = split_hash(hash)?;
-    let source = scope
-        .join("objects")
-        .join(bucket)
-        .join(leaf);
-    let target = scope
-        .join("deleted-objects")
-        .join(bucket)
-        .join(leaf);
+    let (source, target) = object_move_paths(scope, hash)?;
     let metadata = fs::symlink_metadata(&source).map_err(|error| failure(error, "lstat", &source))?;
     if metadata.is_dir() {
         return Err(super::repository::unsupported("directory object source"));
@@ -105,6 +89,22 @@ fn identical(first: &fs::Metadata, second: &fs::Metadata) -> bool {
 #[cfg(not(unix))]
 fn identical(_: &fs::Metadata, _: &fs::Metadata) -> bool {
     false
+}
+
+fn object_move_paths(
+    scope: &Path,
+    hash: &str,
+) -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
+    let (bucket, leaf) = split_hash(hash)?;
+    let source = scope
+        .join("objects")
+        .join(bucket)
+        .join(leaf);
+    let target = scope
+        .join("deleted-objects")
+        .join(bucket)
+        .join(leaf);
+    Ok((source, target))
 }
 
 fn split_hash(hash: &str) -> io::Result<(&str, &str)> {

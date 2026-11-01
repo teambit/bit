@@ -183,14 +183,15 @@ impl GcGraph {
         accum: (&mut HashSet<String>, &mut Vec<CompIdSpec>, &mut Vec<String>),
     ) {
         let (kept, dep_specs, added) = accum;
-        let Some(ver_val) = self.version_map.get(hash).cloned() else { return };
+        let Some(ver_val) = self.version_map.get(hash) else { return };
         kept.insert(hash.to_owned());
-        kept.extend(version_refs_without_parents(&ver_val));
-        dep_specs.extend(version_dependencies(scope_dir, &ver_val));
-        if let Some(unrel_head) = ver_val["unrelated"]["head"].as_str()
-            && self.add_new_root(unrel_head)
+        kept.extend(version_refs_without_parents(ver_val));
+        dep_specs.extend(version_dependencies(scope_dir, ver_val));
+        let unrel_head = ver_val["unrelated"]["head"].as_str().map(str::to_owned);
+        if let Some(unrel_head) = unrel_head
+            && self.add_new_root(&unrel_head)
         {
-            added.push(unrel_head.to_owned());
+            added.push(unrel_head);
         }
     }
 

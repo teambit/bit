@@ -56,7 +56,11 @@ pub(super) fn validate(inputs: &[Value]) -> io::Result<()> {
     for input in inputs {
         let path = path(input)?;
         let expected = input["source"].as_str().ok_or_else(|| invalid("formatter source text"))?;
-        if !fs::symlink_metadata(path)?.is_file() || fs::read_to_string(path)? != expected {
+        let metadata = fs::symlink_metadata(path)?;
+        if !metadata.is_file()
+            || metadata.len() != expected.len() as u64
+            || fs::read_to_string(path)? != expected
+        {
             return Err(invalid("formatter source changed"));
         }
     }

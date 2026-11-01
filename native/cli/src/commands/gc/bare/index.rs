@@ -24,7 +24,9 @@ pub(super) fn prepare(
         return Ok(None);
     }
     let value: Value = json!({"components":components,"lanes":lanes});
-    Ok(Some(format!("{}\n", serde_json::to_string_pretty(&value)?).into_bytes()))
+    let mut bytes = serde_json::to_vec_pretty(&value)?;
+    bytes.push(b'\n');
+    Ok(Some(bytes))
 }
 
 fn component(value: &Value, hash: &str) -> io::Result<Value> {

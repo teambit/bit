@@ -56,7 +56,7 @@ fn entry(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     } else if metadata.file_type().is_symlink() {
         copy_restore_link(src, dst)
     } else {
-        copy_file(src, dst, overwrite)
+        copy_file(src, dst, overwrite, destination.is_some())
     }
 }
 fn directory(src: &Path, dst: &Path, overwrite: bool, existed: bool) -> io::Result<()> {
@@ -74,8 +74,8 @@ fn directory(src: &Path, dst: &Path, overwrite: bool, existed: bool) -> io::Resu
     }
     Ok(())
 }
-fn copy_file(source: &Path, target: &Path, overwrite: bool) -> io::Result<()> {
-    if existing(target)?.is_some() {
+fn copy_file(source: &Path, target: &Path, overwrite: bool, existed: bool) -> io::Result<()> {
+    if existed {
         if !overwrite {
             return Ok(());
         }

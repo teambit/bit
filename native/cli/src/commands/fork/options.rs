@@ -45,18 +45,19 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     assign_positions(positions, &mut options)?;
     Some(options)
 }
-fn assign_positions(mut positions: Vec<String>, options: &mut Options) -> Option<()> {
+fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()> {
     let min = if options.scope_fork { 2 } else { 1 };
     let max = if options.scope_fork { 3 } else { 2 };
     if !(min..=max).contains(&positions.len()) {
         return None;
     }
-    options.source = positions.remove(0);
+    let mut iter = positions.into_iter();
+    options.source = iter.next()?;
     if options.scope_fork {
-        options.scope = positions.first().cloned();
-        options.pattern = positions.get(1).cloned();
+        options.scope = iter.next();
+        options.pattern = iter.next();
     } else {
-        options.target = positions.first().cloned();
+        options.target = iter.next();
     }
     Some(())
 }

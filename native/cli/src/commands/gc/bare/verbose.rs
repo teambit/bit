@@ -6,8 +6,8 @@ pub(super) fn preflight(objects: &BTreeMap<String, Object>, deleted: &[String]) 
     if objects
         .values()
         .filter(|object| object.kind == "Component")
-        .count()
-        > 1
+        .nth(1)
+        .is_some()
         || deleted.len() > 1
     {
         return Err(unsupported("verbose multiple-object report ordering"));

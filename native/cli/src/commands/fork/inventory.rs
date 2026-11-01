@@ -8,9 +8,7 @@ pub(super) fn read(root: &Path) -> io::Result<Value> {
     let context: Value = engine.request(&json!({"kind":"trackingContext","root":root,"home":workspace_command::home(),"bitmap":bitmap}))?;
     let config =
         WorkspaceConfig::from_value(root.join("workspace.jsonc"), context["workspace"].clone())?;
-    let core: Vec<String> = serde_json::from_str(include_str!(
-        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-    ))?;
+    let core: Vec<String> = serde_json::from_str(crate::commands::aspect::CORE_ASPECT_IDS)?;
     let workspace = Workspace::load_projected(root, &config, &core, &bitmap)?;
     let components = workspace.components.iter().map(|component| json!({
         "identity":component.id.to_string_without_version(),"version":component.id.version,
@@ -47,12 +45,14 @@ fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bo
         .or_else(|| row["id"].as_str())
         .map(str::trim)
         .unwrap_or_default();
-    let row_id = raw_id.rsplit_once('@').map_or(raw_id, |(prefix, _)| prefix.trim());
+    let (row_id, inline_ver) = raw_id
+        .rsplit_once('@')
+        .map_or((raw_id, None), |(prefix, ver)| (prefix.trim(), Some(ver.trim())));
     let row_ver = row["version"]
         .as_str()
         .map(str::trim)
         .filter(|ver| !ver.is_empty())
-        .or_else(|| raw_id.rsplit_once('@').map(|(_, ver)| ver.trim()));
+        .or(inline_ver);
     let id_matches =
         row_id == bare || row_id.split_once('/').map(|(_, name)| name.trim()) == Some(bare);
     let ver_matches = explicit_ver.is_none_or(|ver| {

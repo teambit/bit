@@ -11,10 +11,11 @@ fn render(
     let formatter = Formatter::new(chalk);
     let name = progress.name.trim();
     let rows = value["results"].as_array().ok_or_else(|| invalid("formatter result rows"))?;
-    let mut sections = vec![formatter.title(&format!(
+    let mut sections = Vec::with_capacity(rows.len() + 2);
+    sections.push(formatter.title(&format!(
         "formatting total of {} component(s) in workspace '{name}'",
         progress.identities.len(),
-    ))];
+    )));
     for row in rows {
         sections.push(component(row, &formatter, check)?);
     }
@@ -31,12 +32,13 @@ fn render(
 }
 fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<String> {
     let (scope, name) = component_scope_and_name(&row["componentId"])?;
-    let mut lines = vec![formatter.title(&format!("{scope}/{name}"))];
     let files = row["results"].as_array().ok_or_else(|| invalid("formatter file results"))?;
     let issues: Vec<_> = files
         .iter()
         .filter(|file| file_has_issues(file))
         .collect();
+    let mut lines = Vec::with_capacity(issues.len().max(1) + 2);
+    lines.push(formatter.title(&format!("{scope}/{name}")));
     if issues.is_empty() {
         lines.push(formatter.success_summary("no issues found"));
     } else {

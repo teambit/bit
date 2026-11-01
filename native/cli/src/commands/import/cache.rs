@@ -22,7 +22,7 @@ pub(super) fn prepare(
     ids: &[String],
     retained: bool,
 ) -> io::Result<Option<Prepared>> {
-    if !eligible(options, retained) {
+    if !eligible(options, retained) || ids.is_empty() {
         return Ok(None);
     }
     let mut engine = Engine::new()?;

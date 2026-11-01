@@ -78,8 +78,8 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
 
 /// Versioned ids, distinct without their versions.
 fn imported_ids(rows: &[Value], multi_lane: bool) -> io::Result<(Vec<String>, HashSet<String>)> {
-    let mut imported = HashSet::new();
-    let mut ids = Vec::new();
+    let mut imported = HashSet::with_capacity(rows.len());
+    let mut ids = Vec::with_capacity(rows.len());
     for row in rows {
         let text = text(Some(row))?;
         let id = Id::parse(text)?;
@@ -221,7 +221,7 @@ impl Receipt {
     }
 
     fn import_items(&self, format: &Formatter) -> io::Result<(Vec<String>, usize)> {
-        let mut items = Vec::new();
+        let mut items = Vec::with_capacity(self.ids.len());
         let mut up_to_date = 0;
         for id in &self.ids {
             let id = Id::parse(id)?;

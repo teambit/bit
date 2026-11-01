@@ -12,6 +12,16 @@ struct Results {
     old_packages: Vec<String>,
     captures: Vec<RemoteCapture>,
 }
+impl Results {
+    fn with_capacity(local: usize, remote: usize) -> Self {
+        Self {
+            ids: Vec::with_capacity(local + remote),
+            facts: Vec::with_capacity(remote),
+            old_packages: Vec::with_capacity(remote),
+            captures: Vec::with_capacity(remote),
+        }
+    }
+}
 pub(super) fn run(
     root: &Path,
     options: &Options,
@@ -21,8 +31,7 @@ pub(super) fn run(
 ) -> io::Result<Report> {
     let state = inventory::read(root)?;
     let selected = selection::select(root, options, &state)?;
-    let mut results =
-        Results { ids: vec![], facts: vec![], old_packages: vec![], captures: vec![] };
+    let mut results = Results::with_capacity(selected.local.len(), selected.remote.len());
     for id in &selected.local {
         local(root, options, (&selected.target_scope, id), linker, chalk, output, &mut results)?;
     }

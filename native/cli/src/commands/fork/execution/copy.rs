@@ -48,18 +48,9 @@ fn prepare(
     source["incrementPathIfConflicted"] = json!(options.scope_fork);
     let scope = scope.trim();
     let kernel = component_fork::Options {
-        source: source["identity"]
-            .as_str()
-            .map(str::trim)
-            .filter(|id| !id.is_empty())
-            .or_else(|| {
-                source["id"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|id| !id.is_empty())
-            })
-            .unwrap_or_default()
-            .to_owned(),
+        source: clean_opt(source["identity"].as_str())
+            .or_else(|| clean_opt(source["id"].as_str()))
+            .unwrap_or_default(),
         target: clean_opt(options.target.as_deref()),
         scope: (!scope.is_empty()).then(|| scope.to_owned()),
         path: if remote_multiple { None } else { clean_opt(options.path.as_deref()) },

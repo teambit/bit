@@ -91,17 +91,23 @@ fn bare_id(id: &str) -> &str {
     }
 }
 
-fn row_bare_id(row: &serde_json::Value) -> Option<&str> {
+fn raw_row_id(row: &Value) -> Option<&str> {
     row["identity"]
         .as_str()
-        .map(bare_id)
-        .filter(|id| !id.is_empty())
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
         .or_else(|| {
             row["id"]
                 .as_str()
-                .map(bare_id)
-                .filter(|id| !id.is_empty())
+                .map(str::trim)
+                .filter(|raw| !raw.is_empty())
         })
+}
+
+fn row_bare_id(row: &serde_json::Value) -> Option<&str> {
+    raw_row_id(row)
+        .map(bare_id)
+        .filter(|id| !id.is_empty())
 }
 
 fn loaded_source_ids(captured: &RemoteCapture) -> Vec<String> {
@@ -124,17 +130,8 @@ fn format_source_row_id(row: &Value) -> Option<String> {
 }
 
 fn inline_row_version(row: &Value) -> Option<&str> {
-    let raw = row["identity"]
-        .as_str()
-        .map(str::trim)
-        .filter(|raw| !raw.is_empty())
-        .or_else(|| {
-            row["id"]
-                .as_str()
-                .map(str::trim)
-                .filter(|raw| !raw.is_empty())
-        })?;
-    raw.rsplit_once('@')
+    raw_row_id(row)?
+        .rsplit_once('@')
         .map(|(_, ver)| ver.trim())
         .filter(|ver| !ver.is_empty())
 }

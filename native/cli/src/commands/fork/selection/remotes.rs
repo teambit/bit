@@ -8,12 +8,11 @@ use std::{io, path::Path};
 
 pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
     let mut result = Vec::new();
-    let mut seen = Vec::new();
+    let mut seen = std::collections::HashSet::new();
     for scope in scopes(options) {
-        if seen.contains(&scope) {
+        if !seen.insert(scope.clone()) {
             continue;
         }
-        seen.push(scope.clone());
         let ids = match list(root, &scope) {
             Ok(ids) => ids,
             Err(error) if options.scope_fork => return Err(error),
@@ -65,12 +64,14 @@ fn qualify_scope_part(part: &str, scope: &str) -> Option<String> {
     if body.is_empty() {
         return None;
     }
-    let qualified = if body.starts_with(&format!("{scope}/")) {
-        body.to_owned()
+    let already_qualified = body
+        .strip_prefix(scope)
+        .is_some_and(|rest| rest.starts_with('/'));
+    if already_qualified {
+        Some(format!("{prefix}{body}"))
     } else {
-        format!("{scope}/{body}")
-    };
-    Some(format!("{prefix}{qualified}"))
+        Some(format!("{prefix}{scope}/{body}"))
+    }
 }
 fn list(root: &Path, scope: &str) -> io::Result<Vec<String>> {
     let cli = NodeCli::find()?;

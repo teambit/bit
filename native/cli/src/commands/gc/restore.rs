@@ -56,8 +56,9 @@ pub(super) fn preflight(scope: &Path) -> io::Result<()> {
     if candidates.is_empty() {
         return Err(io::Error::other("missing recovery backup requires released CI diagnostics"));
     }
+    let objects_dir = scope.join("objects");
     for candidate in candidates {
-        copy::preflight(&scope.join(candidate), &scope.join("objects"))?;
+        copy::preflight(&scope.join(candidate), &objects_dir)?;
     }
     Ok(())
 }
@@ -65,7 +66,7 @@ pub(super) fn run(scope_dir: &Path, overwrite: bool) -> Result<(), Error> {
     let deleted_dir = scope_dir.join("deleted-objects");
     let mut candidates = find_restoring_leftovers(scope_dir);
     candidates.push("deleted-objects".into());
-    let mut staged = Vec::new();
+    let mut staged = Vec::with_capacity(candidates.len());
     let now_ms = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

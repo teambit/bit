@@ -169,15 +169,16 @@ fn imported_package_name(id: &str) -> Option<String> {
     if scope.is_empty() || name.is_empty() {
         return None;
     }
-    let name_dots = name.replace('/', ".");
     if let Some((owner, scope_name)) = scope.split_once('.') {
         let owner = owner.trim();
         let scope_name = scope_name.trim();
         if owner.is_empty() || scope_name.is_empty() {
             return None;
         }
+        let name_dots = name.replace('/', ".");
         Some(format!("@{owner}/{scope_name}.{name_dots}"))
     } else {
+        let name_dots = name.replace('/', ".");
         Some(format!("@{scope}/{name_dots}"))
     }
 }

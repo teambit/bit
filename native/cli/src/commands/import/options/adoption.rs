@@ -20,7 +20,8 @@ pub(super) struct Values<'a> {
     pub dependents_via: Option<String>,
 }
 pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
-    let mut values = Values { args: Vec::new(), write_deps: None, dependents_via: None };
+    let mut values =
+        Values { args: Vec::with_capacity(args.len()), write_deps: None, dependents_via: None };
     let mut arguments = args.iter().copied();
     while let Some(argument) = arguments.next() {
         let trimmed_arg = argument.trim();

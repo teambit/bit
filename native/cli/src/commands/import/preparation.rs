@@ -321,13 +321,14 @@ fn new_target_directory(
     if rows.iter().any(|(key, row)| bitmap_row_matches_scope_name(key, row, scope, name)) {
         return None;
     }
-    let rel_dir =
-        options.write.path.clone().unwrap_or_else(|| expand_directory(template, scope, name));
+    if let Some(path) = &options.write.path {
+        return Some(root.join(path));
+    }
+    let rel_dir = expand_directory(template, scope, name);
     // The retained writer chooses and validates owner-prefixed destinations.
-    if options.write.path.is_none()
-        && rows
-            .values()
-            .any(|row| row["rootDir"] == rel_dir)
+    if rows
+        .values()
+        .any(|row| row["rootDir"] == rel_dir)
     {
         return None;
     }

@@ -88,8 +88,8 @@ fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
     if changed.len() <= 1 {
         return true;
     }
-    let mut seen = std::collections::HashSet::new();
-    let mut seen_canonical = std::collections::HashSet::new();
+    let mut seen = std::collections::HashSet::with_capacity(changed.len());
+    let mut seen_canonical = std::collections::HashSet::with_capacity(changed.len());
     changed
         .into_iter()
         .all(|(input, _)| {

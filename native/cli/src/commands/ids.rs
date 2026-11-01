@@ -90,7 +90,7 @@ impl Id {
             .map(str::trim)
             .filter(|_| self.has_version())
         {
-            Some(version) => format!("{}@{version}", self.without_version()),
+            Some(version) => format!("{}/{}@{version}", self.scope, self.name),
             None => self.without_version(),
         }
     }

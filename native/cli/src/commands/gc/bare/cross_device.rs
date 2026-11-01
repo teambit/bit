@@ -39,11 +39,7 @@ fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
 
 fn create_symlink(link: &Path, target: &Path) -> io::Result<()> {
     #[cfg(unix)]
-    {
-        std::os::unix::fs::symlink(link, target)
-    }
+    return std::os::unix::fs::symlink(link, target);
     #[cfg(windows)]
-    {
-        std::os::windows::fs::symlink_file(link, target)
-    }
+    return std::os::windows::fs::symlink_file(link, target);
 }

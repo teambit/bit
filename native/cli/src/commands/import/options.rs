@@ -140,8 +140,8 @@ fn set_bounded_option(slot: &mut Option<String>, value: &str) -> Option<()> {
 
 /// The ids and the distinct flags.
 fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
-    let mut ids = Vec::new();
-    let mut flags: Vec<&str> = Vec::new();
+    let mut ids = Vec::with_capacity(args.len());
+    let mut flags: Vec<&str> = Vec::with_capacity(args.len());
     let mut iter = args.iter().copied();
     while let Some(raw_arg) = iter.next() {
         let arg = raw_arg.trim();

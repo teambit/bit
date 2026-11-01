@@ -23,9 +23,10 @@ pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> 
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {
         return Err(io::Error::other("Source and destination must not be the same."));
     }
+    let source_parent = source.parent();
     for parent in target.ancestors().skip(1) {
         if parent.as_os_str().is_empty()
-            || Some(parent) == source.parent()
+            || Some(parent) == source_parent
             || parent.parent().is_none()
         {
             break;

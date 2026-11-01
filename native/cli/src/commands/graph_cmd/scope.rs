@@ -131,7 +131,7 @@ fn load_local_scope_components(
     if rows.len() > 128 {
         return Err(Failure::Declined("bare scope component count exceeds native cap".into()));
     }
-    let mut list = Vec::new();
+    let mut list = Vec::with_capacity(rows.len());
     for row in rows
         .iter()
         .filter(|row| row["isSymlink"] != true)
