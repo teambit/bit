@@ -1,4 +1,4 @@
-//! Unit tests for component rename batch planning and atomic publication in
+//! Unit tests for component rename [`Batch`] planning ([`Plan`], [`Options`]) and atomic publication in
 //! `bit-object-import`.
 
 use super::Batch;

@@ -1,5 +1,5 @@
-//! Unit tests for own `undefined` property preservation in component config
-//! merges in `bit-object-import`.
+//! Unit tests for [`equal`] comparison and own `undefined` property
+//! preservation in component config merges in `bit-object-import`.
 
 use super::equal;
 use serde_json::json;

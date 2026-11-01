@@ -1,4 +1,4 @@
-//! Unit tests for parallel raw source object reads without filesystem writes in
+//! Unit tests for parallel raw source object reads ([`read_sources`]) without filesystem writes in
 //! `bit-object-import`.
 
 use super::{Directory, frame, pool, store};

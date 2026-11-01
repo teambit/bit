@@ -1,4 +1,4 @@
-//! Unit tests for appending and updating `scope.json` remote lane tracking
+//! Unit tests for appending and updating ([`append`], [`Id`]) `scope.json` remote lane tracking
 //! aliases in `bit-object-import`.
 
 use super::{Id, append};

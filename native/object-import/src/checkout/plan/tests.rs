@@ -1,4 +1,4 @@
-//! Unit tests for checkout plan computation and version resolution in
+//! Unit tests for checkout plan computation ([`serve`]) and version resolution ([`plain_tag`]) in
 //! `bit-object-import`.
 
 use super::{plain_tag, serve};

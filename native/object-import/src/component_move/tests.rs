@@ -1,4 +1,4 @@
-//! Unit tests for component directory move `.bitmap` projection and untracked
+//! Unit tests for component directory move `.bitmap` projection ([`project`], [`Observed`]) and untracked
 //! path errors in `bit-object-import`.
 
 use super::{Observed, project};

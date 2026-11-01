@@ -1,4 +1,4 @@
-//! Unit tests for canonical model stream normalization during lane main refresh
+//! Unit tests for canonical model stream normalization ([`prepare_cached`], [`publish`]) during lane main refresh
 //! in `bit-object-import`.
 
 use super::{Fixture, object_hash, prepare_cached, publish};

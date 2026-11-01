@@ -1,4 +1,4 @@
-//! Actual Node 22.22.0 / Bit 2.2.94 default `zlib.deflate` byte captures.
+//! Unit tests against Node 22.22.0 / Bit 2.2.94 default `zlib.deflate` byte captures ([`exact`]).
 //! Inputs retain the exact original logical header and JSON payload. The four
 //! corpus pairs are windows-037, windows-033, windows-050, and history-1; no Node
 //! process or host system zlib is required when these cross-platform tests run.

@@ -1,5 +1,5 @@
-//! Unit tests for component main file selection and extension precedence in
-//! `bit-object-import`.
+//! Unit tests for component main file [`choose`] and [`resolve`] extension
+//! precedence in `bit-object-import`.
 
 use super::{
     super::main_file::{choose, resolve},

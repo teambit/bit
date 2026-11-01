@@ -1,4 +1,4 @@
-//! `VersionHistory.merge` keeps incoming rows first and retains existing-only
+//! Unit tests verifying `VersionHistory` [`merge`] keeps incoming rows first and retains existing-only
 //! rows in order in `bit-object-import`.
 
 use super::merge;

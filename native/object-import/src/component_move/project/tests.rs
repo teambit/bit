@@ -1,4 +1,4 @@
-//! Unit tests for platform-specific component move path prefix matching in
+//! Unit tests for platform-specific component move path prefix matching ([`super::matches_from`]) in
 //! `bit-object-import`.
 
 #[test]

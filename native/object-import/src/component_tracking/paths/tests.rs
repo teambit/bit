@@ -1,5 +1,5 @@
-//! Unit tests for component tracking platform path formatting and workspace
-//! boundary checks in `bit-object-import`.
+//! Unit tests for component tracking [`display`], [`relative`], and
+//! [`diagnostic`] path formatting in `bit-object-import`.
 
 use super::{diagnostic, display, relative};
 use std::path::Path;

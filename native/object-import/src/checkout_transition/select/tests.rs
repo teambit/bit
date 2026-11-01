@@ -1,4 +1,4 @@
-//! Unit tests for checkout selection state machine checkpoints and receipts in
+//! Unit tests for checkout selection state machine ([`State`]) checkpoints and receipts in
 //! `bit-object-import`.
 
 use super::State;

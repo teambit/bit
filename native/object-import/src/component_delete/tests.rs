@@ -1,4 +1,4 @@
-//! Unit tests for component deletion batch preparation and outbound remote
+//! Unit tests for component deletion [`Batch`] preparation, [`Scope`] checks, and [`outbound`] remote
 //! requests in `bit-object-import`.
 
 use super::{Batch, Scope, outbound};

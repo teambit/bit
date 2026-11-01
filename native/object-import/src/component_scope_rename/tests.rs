@@ -1,5 +1,5 @@
-//! Unit tests for component scope and owner rename selection and validation in
-//! `bit-object-import`.
+//! Unit tests for component scope and owner rename [`selection`] and
+//! [`Options`] validation in `bit-object-import`.
 
 use super::{Options, selection};
 #[test]

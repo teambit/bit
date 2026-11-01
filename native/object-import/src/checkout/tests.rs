@@ -1,4 +1,4 @@
-//! Unit tests for parallel checkout source verification and materialization in
+//! Unit tests for parallel checkout source verification and materialization ([`serve`], [`repository`]) in
 //! `bit-object-import`.
 
 mod cached;

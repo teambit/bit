@@ -1,4 +1,4 @@
-//! Unit tests for retargeting checkout plans across duplicate and new file
+//! Unit tests for retargeting checkout plans ([`additions`], [`statuses`], [`plan`]) across duplicate and new file
 //! bodies in `bit-object-import`.
 
 use super::{additions, plan, statuses, wire};

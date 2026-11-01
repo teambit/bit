@@ -1,4 +1,4 @@
-//! Preserves the exact validated Node stream; compressors may emit different
+//! Unit tests verifying object publishing preserves the validated Node stream ([`GOLDEN`]); compressors may emit different
 //! valid encodings.
 
 mod compression;

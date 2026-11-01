@@ -1,4 +1,4 @@
-//! Unit tests for semver comparison and range intersection in config merge
+//! Unit tests for [`semver`] comparison and range intersection in config merge
 //! planning in `bit-object-import`.
 
 use super::semver;

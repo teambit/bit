@@ -1,5 +1,5 @@
-//! Unit tests for active `main` tag selection and dependency graph coverage
-//! validation in `bit-object-import`.
+//! Unit tests for active `main` tag selection ([`latest`]) and dependency graph coverage
+//! validation ([`validate_graph`], [`DependencyComponent`]) in `bit-object-import`.
 
 use super::{DependencyComponent, latest, validate_graph};
 use serde_json::json;

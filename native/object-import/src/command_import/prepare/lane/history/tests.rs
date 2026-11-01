@@ -1,4 +1,4 @@
-//! Unit tests for `LaneHistory` entry merging during lane refresh in
+//! Unit tests for `LaneHistory` entry merging ([`merge_history`]) during lane refresh in
 //! `bit-object-import`.
 
 use super::merge_history;

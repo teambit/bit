@@ -1,4 +1,4 @@
-//! Unit tests for accepting verified recovery objects during pending imports in
+//! Unit tests for accepting verified recovery objects ([`publish`], [`object_hash`]) during pending imports in
 //! `bit-object-import`.
 
 use super::{Fixture, object_hash, publish};

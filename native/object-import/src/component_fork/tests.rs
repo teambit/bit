@@ -1,4 +1,4 @@
-//! Unit tests for local component fork planning, source refactoring, and
+//! Unit tests for local component fork planning ([`Plan`], [`Options`]), source refactoring, and
 //! `.bitmap` updates in `bit-object-import`.
 
 use super::{Options, Plan};

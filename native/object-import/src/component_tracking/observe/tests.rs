@@ -1,5 +1,5 @@
-//! Unit tests for preimage and directory inventory observation during component
-//! tracking in `bit-object-import`.
+//! Unit tests for [`Observed`] preimage and directory inventory observation
+//! during component tracking in `bit-object-import`.
 
 use super::Observed;
 use crate::component_tracking::tests::fixture;

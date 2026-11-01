@@ -1,4 +1,4 @@
-//! Unit tests for binary file classification and end-of-line normalization in
+//! Unit tests for [`binary`] file classification and end-of-line normalization ([`normalize`]) in
 //! `bit-object-import`.
 
 use super::{binary, normalize};

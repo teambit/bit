@@ -1,4 +1,4 @@
-//! Unit tests for retained current workspace snapshot verification during
+//! Unit tests for retained current workspace snapshot verification ([`Observation`], [`State`], [`digest`]) during
 //! checkout transition in `bit-object-import`.
 
 use super::{digest, wire};

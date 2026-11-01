@@ -1,4 +1,4 @@
-//! Unit tests for bounded source object caching across checkout repositories in
+//! Unit tests for bounded source object caching ([`State`]) across checkout repositories in
 //! `bit-object-import`.
 
 use super::State;

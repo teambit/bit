@@ -1,4 +1,4 @@
-//! Unit tests for component tracking plan preparation, namespaces, and
+//! Unit tests for component tracking [`Plan`] preparation, namespaces, and
 //! validation in `bit-object-import`.
 
 use super::{Plan, facts, fixture, options, source};

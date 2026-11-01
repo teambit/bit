@@ -1,4 +1,4 @@
-//! Unit tests for parallel current workspace file reading and byte budget
+//! Unit tests for parallel current workspace file reading ([`wire`]) and byte budget ([`MAX_BYTES`])
 //! limits in `bit-object-import`.
 
 use super::{MAX_BYTES, wire};

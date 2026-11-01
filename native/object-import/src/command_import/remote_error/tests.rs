@@ -1,5 +1,5 @@
-//! Unit tests for remote zlib inflation error classification and guidance
-//! messages in `bit-object-import`.
+//! Unit tests for remote zlib inflation error classification ([`mark`]) and guidance
+//! messages ([`message`]) in `bit-object-import`.
 
 use super::{mark, message};
 #[test]
