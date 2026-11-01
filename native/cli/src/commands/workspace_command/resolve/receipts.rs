@@ -355,42 +355,34 @@ impl Resolved<'_> {
 /// `getLogForSquash` for every merged component the resolve snaps.
 pub(super) fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()> {
     let mut seen = HashSet::new();
+    let base_log = receipt["log"].clone();
+    let versions =
+        receipt["versions"].as_array_mut().ok_or_else(|| decline("resolve receipt versions"))?;
     for row in rows {
         let identity = text(row.get("identity"))?.trim();
         let (scope, name) = squash_lane_id(&row["laneId"])?;
-        let versions = array(receipt.get("versions"), "resolve receipt versions")?;
-        if !seen.insert(identity)
-            || identity.is_empty()
-            || scope.is_empty()
-            || name.is_empty()
-            || !versions
-                .iter()
-                .any(|version| version["identity"].as_str().map(str::trim) == Some(identity))
-        {
+        let Some(version) = versions
+            .iter_mut()
+            .find(|ver| ver["identity"].as_str().map(str::trim) == Some(identity))
+        else {
+            return Err(decline("resolve snapshot squash receipt"));
+        };
+        if !seen.insert(identity) || identity.is_empty() || scope.is_empty() || name.is_empty() {
             return Err(decline("resolve snapshot squash receipt"));
         }
-        let mut log = receipt["log"].clone();
+        let mut log = base_log.clone();
         log["message"] = json!(format!("squashed during merge from {scope}/{name}"));
-        for version in
-            receipt["versions"].as_array_mut().ok_or_else(|| decline("resolve receipt versions"))?
-        {
-            if version["identity"].as_str().map(str::trim) == Some(identity) {
-                version["squashLog"] = log.clone();
-            }
-        }
+        version["squashLog"] = log;
     }
     Ok(())
 }
 
 fn squash_lane_id(lane: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = lane.as_str() {
-        return raw
-            .split('@')
-            .next()
-            .unwrap_or(raw)
-            .split_once('/')
-            .map(|(scope, name)| (scope.trim(), name.trim()))
-            .ok_or_else(|| decline("resolve snapshot squash receipt"));
+        let bare = bit_install::config::aspect_id_without_version(raw.trim()).trim();
+        let (scope, name) =
+            bare.split_once('/').ok_or_else(|| decline("resolve snapshot squash receipt"))?;
+        return Ok((scope.trim(), name.trim()));
     }
     Ok((text(lane.get("scope"))?.trim(), text(lane.get("name"))?.trim()))
 }

@@ -27,15 +27,15 @@ pub(in crate::commands) fn complete(planned: &mut Planned, receipt: &Value) -> i
 }
 
 fn valid_switch_receipt(receipt: &Value, flag_key: &str, expected_token: &str) -> bool {
+    let flag_val = &receipt[flag_key];
     let flag_ok = receipt.is_object()
         && receipt.get("error").is_none_or(Value::is_null)
-        && (receipt[flag_key] == true
-            || receipt[flag_key]
+        && (flag_val == true
+            || flag_val
                 .as_str()
                 .is_some_and(|val| val.trim().eq_ignore_ascii_case("true")));
-    let token_ok = receipt["token"]
-        .as_str()
-        .map(str::trim)
-        .is_some_and(|token| token == expected_token.trim() && !token.is_empty());
+    let expected = expected_token.trim();
+    let token_ok =
+        !expected.is_empty() && receipt["token"].as_str().map(str::trim) == Some(expected);
     flag_ok && token_ok
 }

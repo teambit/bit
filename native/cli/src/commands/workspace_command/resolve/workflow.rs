@@ -137,11 +137,10 @@ impl Workflow {
                 return Some(usize::from(value.is_some()));
             }
             "--skip-tasks" => {
-                self.pipeline.skip_tasks = Some(
-                    next.map(str::trim)
-                        .filter(|value| !value.is_empty() && !value.starts_with('-'))?
-                        .to_string(),
-                );
+                let tasks = next
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty() && !value.starts_with('-'))?;
+                self.pipeline.skip_tasks = Some(tasks.to_owned());
                 return Some(1);
             }
             "--skip-tests" => self.pipeline.skip_tests = true,

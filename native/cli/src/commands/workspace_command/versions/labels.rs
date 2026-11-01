@@ -55,20 +55,9 @@ pub const TAG: Labels = Labels {
 };
 
 pub const SOFT_TAG: Labels = Labels {
-    versioned: "taggedComponents",
-    automatic: "autoTaggedResults",
-    others: &[
-        "newComponents",
-        "dependentsWithPinnedDeps",
-        "warnings",
-        "laneName",
-        "totalComponentsCount",
-    ],
-    nothing: "nothing to tag",
-    dependents: "auto-tagged dependents",
     verb: "soft-tagged",
     explanation: "(use \"bit tag --persist\" to persist the soft-tagged changes as a fully tagged version)\n(use \"bit reset --soft\" to remove the soft-tags)",
-    tag: true,
+    ..TAG
 };
 
 pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };

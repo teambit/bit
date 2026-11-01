@@ -7,7 +7,7 @@ use crate::commands::color::Chalk;
 use std::fmt::Write;
 
 pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
-    let mut fields = Vec::new();
+    let mut fields = Vec::with_capacity(5);
     if let Some(errno) = error.errno {
         fields.push(format!("errno: {}", chalk.yellow(&errno.to_string())));
     }
@@ -37,7 +37,8 @@ fn quote(value: &str) -> String {
     } else {
         '\''
     };
-    let mut result = String::from(delimiter);
+    let mut result = String::with_capacity(value.len() + 2);
+    result.push(delimiter);
     for character in value.chars() {
         match character {
             '\\' => result.push_str(r"\\"),

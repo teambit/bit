@@ -56,15 +56,13 @@ impl Replacer {
             ids.insert(package_name.to_string(), (name.to_string(), scope.to_string()));
             escaped.push(escape(package_name));
         }
-        let pattern = if escaped.is_empty() {
-            None
-        } else {
-            let source = format!(r#"({})@file:[^'"(]+"#, escaped.join("|"));
-            Some(
+        let pattern = (!escaped.is_empty())
+            .then(|| {
+                let source = format!(r#"({})@file:[^'"(]+"#, escaped.join("|"));
                 Regex::new(&source)
-                    .map_err(|error| decline(format!("dependency graph pattern: {error}")))?,
-            )
-        };
+                    .map_err(|error| decline(format!("dependency graph pattern: {error}")))
+            })
+            .transpose()?;
         Ok(Self { pattern, replacements, components: ids })
     }
 

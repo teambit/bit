@@ -172,21 +172,22 @@ fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
 }
 
 fn display_ids(rows: &mut [Value], context: &Value) {
+    let targets = context["targets"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
     for row in rows {
         let Some(id) = non_empty_field(row, "id") else {
             continue;
         };
-        let target = context["targets"]
-            .as_array()
-            .into_iter()
-            .flatten()
+        let version = targets
+            .iter()
             .find(|target| {
                 non_empty_field(target, "identity") == Some(id)
                     || non_empty_field(target, "id") == Some(id)
+            })
+            .and_then(|target| {
+                non_empty_field(target, "version").or_else(|| non_empty_field(target, "head"))
             });
-        let version = target.and_then(|target| {
-            non_empty_field(target, "version").or_else(|| non_empty_field(target, "head"))
-        });
         if let Some(version) = version {
             row["displayId"] = serde_json::json!(format!("{id}@{version}"));
         }

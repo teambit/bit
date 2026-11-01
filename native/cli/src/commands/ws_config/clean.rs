@@ -180,15 +180,15 @@ pub(in crate::commands) fn collect_standard_env_ids(ws: &Workspace) -> Option<Ve
 
 pub(in crate::commands::ws_config) fn collect_active_component_dirs(ws: &Workspace) -> Vec<String> {
     ws.active()
-        .map(|(_, comp)| {
-            comp.root_dir
+        .filter_map(|(_, comp)| {
+            let dir = comp.root_dir
                 .replace('\\', "/")
                 .trim()
                 .trim_start_matches("./")
                 .trim_matches('/')
                 .trim()
-                .to_owned()
+                .to_owned();
+            (!dir.is_empty()).then_some(dir)
         })
-        .filter(|dir| !dir.is_empty())
         .collect()
 }

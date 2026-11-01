@@ -41,14 +41,12 @@ pub(super) fn snapshot(root: &Path, request: &ResolveRequest<'_>, workflow: &Wor
     if request.options["policy"]["rebuildDepsGraph"] == true {
         params["rebuildDepsGraph"] = json!(true);
     }
-    for field in ["ignoreIssues"] {
-        if let Some(val) = request.options["policy"][field]
-            .as_str()
-            .map(str::trim)
-            .filter(|val| !val.is_empty())
-        {
-            params[field] = json!(val);
-        }
+    if let Some(val) = request.options["policy"]["ignoreIssues"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
+        params["ignoreIssues"] = json!(val);
     }
     match &request.selection {
         Selection::Snap { .. } => {

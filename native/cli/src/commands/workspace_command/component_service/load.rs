@@ -5,7 +5,7 @@ use crate::commands::{
     status::{capture, environments::Environments},
 };
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
-use std::{env, fs, io, path::Path};
+use std::{fs, io, path::Path};
 
 pub(in crate::commands) struct Loaded {
     engine: Engine,
@@ -56,17 +56,16 @@ impl Loaded {
         options: &super::Selection,
     ) -> io::Result<Self> {
         let (workspace, name, environment) = workspace(root)?;
-        let home =
-            env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
+        let home = super::super::home();
         let mut engine = Engine::new()?;
         let context: Value = engine.request(
-            &json!({"kind":"statusContext","root":root,"home":Path::new(&home),"history":options.changed && options.pattern.is_none()}),
+            &json!({"kind":"statusContext","root":root,"home":&home,"history":options.changed && options.pattern.is_none()}),
         )?;
         let targets = selected(root, &context, options)?;
         let mut capture = capture::capture_with(
             &mut engine,
             root,
-            Path::new(&home),
+            &home,
             &context,
             &targets,
             capture::CaptureOptions {

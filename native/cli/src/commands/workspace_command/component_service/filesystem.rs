@@ -22,16 +22,18 @@ pub(in crate::commands) fn error(
     Ok(json!({"errno":errno,"code":code,"syscall":syscall.trim(),"path":path}))
 }
 
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
 pub(in crate::commands) fn message(
     service: &str,
     environment: &str,
     error: &Value,
 ) -> io::Result<String> {
-    let code = error["code"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| invalid("service error code"))?;
+    let code = non_empty(&error["code"]).ok_or_else(|| invalid("service error code"))?;
     let description = match code {
         "EPERM" => "operation not permitted",
         "EACCES" => "permission denied",
@@ -43,17 +45,10 @@ pub(in crate::commands) fn message(
         "ENOTEMPTY" => "directory not empty",
         _ => return Err(invalid("service filesystem error")),
     };
-    let path = [error["path"].as_str(), error["filePath"].as_str()]
-        .into_iter()
-        .flatten()
-        .map(str::trim)
-        .find(|value| !value.is_empty())
+    let path = non_empty(&error["path"])
+        .or_else(|| non_empty(&error["filePath"]))
         .ok_or_else(|| invalid("service error path"))?;
-    let syscall = error["syscall"]
-        .as_str()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .ok_or_else(|| invalid("service error syscall"))?;
+    let syscall = non_empty(&error["syscall"]).ok_or_else(|| invalid("service error syscall"))?;
     let service = service.trim();
     let environment = environment.trim();
     Ok(format!(

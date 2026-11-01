@@ -46,9 +46,6 @@ impl<'ast> Visit<'ast> for Classifier {
 }
 fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
     match callee.without_parentheses() {
-        Expression::Identifier(identifier) if identifier.name == "define" => {
-            Classification::Fallback
-        }
         Expression::Identifier(identifier) if identifier.name == "require" => {
             let is_amd_array = arguments
                 .first()
@@ -57,6 +54,9 @@ fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classif
                     matches!(expr.without_parentheses(), Expression::ArrayExpression(_))
                 });
             if is_amd_array { Classification::Fallback } else { Classification::Supported }
+        }
+        Expression::Identifier(identifier) if identifier.name == "define" => {
+            Classification::Fallback
         }
         Expression::StaticMemberExpression(member) if member.property.name == "require" => {
             Classification::Fallback

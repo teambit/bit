@@ -264,7 +264,7 @@ impl Reader {
         mut engine: Engine,
     ) -> io::Result<Self> {
         let home = home();
-        let environments = match inherited {
+        let mut environments = match inherited {
             Some(environment) => Some(environment.for_checkout()),
             None => checkout_lifecycle::bootstrap(
                 &mut engine,
@@ -274,14 +274,10 @@ impl Reader {
                 request,
                 preview,
             )?,
+        };
+        if request.operation == "switch" {
+            environments = environments.map(|env| env.with_issue_facts(false));
         }
-        .map(|environment| {
-            if request.operation == "switch" {
-                environment.with_issue_facts(false)
-            } else {
-                environment
-            }
-        });
         let (token, context, targets) = prepare_owned(
             &mut engine,
             root,

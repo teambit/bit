@@ -31,14 +31,8 @@ impl Cache {
             .get_or_init(|| {
                 factory()
                     .map(|mut user| {
-                        user.username = user.username
-                            .take()
-                            .map(|val| val.trim().to_owned())
-                            .filter(|val| !val.is_empty());
-                        user.email = user.email
-                            .take()
-                            .map(|val| val.trim().to_owned())
-                            .filter(|val| !val.is_empty());
+                        user.username = clean_field(user.username.take());
+                        user.email = clean_field(user.email.take());
                         user
                     })
                     .map_err(|error| Failure {
@@ -56,4 +50,10 @@ impl Cache {
                 }
             })
     }
+}
+
+fn clean_field(field: Option<String>) -> Option<String> {
+    let val = field?;
+    let trimmed = val.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }

@@ -294,15 +294,13 @@ impl Results {
 
 /// `getFileStatusNote`.
 fn note(chalk: Chalk, status: Status, file: &str) -> String {
-    if status == Status::BinaryConflict {
-        return chalk.white(binary::note(file));
-    }
-    if status == Status::Manual {
-        return chalk.white(
+    match status {
+        Status::BinaryConflict => chalk.white(binary::note(file)),
+        Status::Manual => chalk.white(
             r#"automatic merge failed. please fix conflicts manually and then run "bit install""#,
-        );
+        ),
+        _ => String::new(),
     }
-    String::new()
 }
 
 /// `getRemovedOutput` and `getAddedOutput`.

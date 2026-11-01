@@ -38,13 +38,15 @@ fn invalid(message: &str) -> io::Error {
 
 impl Progress {
     fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
-        let name = if name.trim().len() == name.len() { name } else { name.trim().to_owned() };
-        let environment = if environment.trim().len() == environment.len() {
-            environment
-        } else {
-            environment.trim().to_owned()
+        let trim_owned = |val: String| {
+            if val.trim().len() == val.len() { val } else { val.trim().to_owned() }
         };
-        Self { name, environment, identities: Vec::new(), loads: initial_loads(counts, options) }
+        Self {
+            name: trim_owned(name),
+            environment: trim_owned(environment),
+            identities: Vec::new(),
+            loads: initial_loads(counts, options),
+        }
     }
 }
 

@@ -80,33 +80,21 @@ pub(super) fn format_write_output(
 ) -> String {
     let is_dry = opts.dry_run.is_dry();
     let ws_dir = Path::new(&result.ws_dir);
-    if opts.verbose {
-        return format_verbose(result, ws_dir, is_dry, chalk);
-    }
-    let clean_out = (!result.clean_results.is_empty()).then(|| {
-        format_clean_output(&result.clean_results, is_dry, chalk)
-    });
-    let write_out = format_non_verbose_results(&result.write_results, ws_dir, is_dry, chalk);
-    let combined = match clean_out {
-        Some(clean) => format!("{clean}\n{write_out}"),
-        None => write_out,
+    let body = if opts.verbose {
+        let clean = format_clean_output(&result.clean_results, is_dry, chalk);
+        let write = format_verbose_results(&result.write_results, ws_dir, is_dry, chalk);
+        format!("{clean}\n{write}")
+    } else {
+        let write = format_non_verbose_results(&result.write_results, ws_dir, is_dry, chalk);
+        if result.clean_results.is_empty() {
+            write
+        } else {
+            format!("{}\n{write}", format_clean_output(&result.clean_results, is_dry, chalk))
+        }
     };
     let skipped = format_skipped(&result.write_results.skipped_paths, ws_dir, chalk);
     let summary = write_summary(&result.write_results.skipped_paths);
-    Formatter::join(&[combined, skipped, summary])
-}
-
-fn format_verbose(
-    result: &WriteConfigFilesResult,
-    ws_dir: &Path,
-    is_dry: bool,
-    chalk: Chalk,
-) -> String {
-    let clean_out = format_clean_output(&result.clean_results, is_dry, chalk);
-    let write_out = format_verbose_results(&result.write_results, ws_dir, is_dry, chalk);
-    let skipped = format_skipped(&result.write_results.skipped_paths, ws_dir, chalk);
-    let summary = write_summary(&result.write_results.skipped_paths);
-    Formatter::join(&[format!("{clean_out}\n{write_out}"), skipped, summary])
+    Formatter::join(&[body, skipped, summary])
 }
 
 fn format_non_verbose_results(

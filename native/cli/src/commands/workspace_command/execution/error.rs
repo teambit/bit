@@ -34,14 +34,12 @@ pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
 }
 
 fn downcast_details(error: &io::Error) -> Option<&str> {
-    let mut current: Option<&(dyn std::error::Error + 'static)> = error
-        .get_ref()
-        .map(|inner| inner as &(dyn std::error::Error + 'static));
-    while let Some(err) = current {
-        if let Some(with_details) = err.downcast_ref::<WithDetails>() {
-            return Some(with_details.details.as_str());
-        }
-        current = err.source();
-    }
-    None
+    std::iter::successors(
+        error
+            .get_ref()
+            .map(|inner| inner as &(dyn std::error::Error + 'static)),
+        |err| err.source(),
+    )
+    .find_map(|err| err.downcast_ref::<WithDetails>())
+    .map(|with_details| with_details.details.as_str())
 }

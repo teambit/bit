@@ -53,10 +53,11 @@ fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
 }
 
 pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
-    if dir.to_string_lossy().trim().is_empty() {
+    let is_blank = |os: &OsStr| os.to_string_lossy().trim().is_empty();
+    if is_blank(dir.as_os_str()) {
         return path.unwrap_or_default();
     }
-    let Some(path) = path.filter(|path| !path.to_string_lossy().trim().is_empty()) else {
+    let Some(path) = path.filter(|val| !is_blank(val.as_os_str())) else {
         return dir.as_os_str().to_os_string();
     };
     if env::split_paths(&path)

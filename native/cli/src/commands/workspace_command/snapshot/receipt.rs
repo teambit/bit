@@ -86,27 +86,23 @@ impl User {
         let scope = ScopeJson::load(&scope_path(root))?;
         let workspace = WorkspaceConfig::load(root)?;
         let config = EffectiveConfig::new(&global, &scope.config, &workspace.config_store);
-        let cloud = config
-            .get("user.token")
-            .and_then(|token| cloud_username(&config.cloud_domain(), &token));
         let mut git = None;
         let mut get = |key: &str| {
-            config
+            let raw = config
                 .get(key)
                 .or_else(|| {
                     git.get_or_insert_with(git_config)
                         .get(key)
                         .cloned()
-                })
+                })?;
+            let trimmed = raw.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
         };
-        let username = cloud
-            .or_else(|| get("user.name"))
-            .map(|name| name.trim().to_owned())
-            .filter(|name| !name.is_empty());
-        let email = get("user.email")
-            .map(|email| email.trim().to_owned())
-            .filter(|email| !email.is_empty());
-        Ok(Self { username, email })
+        let username = config
+            .get("user.token")
+            .and_then(|token| cloud_username(&config.cloud_domain(), &token))
+            .or_else(|| get("user.name"));
+        Ok(Self { username, email: get("user.email") })
     }
 
     /// `getBasicLog()`: `undefined` fields are left out, as `JSON.stringify` does.

@@ -41,23 +41,22 @@ pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
         && match callee {
             Expression::Identifier(id) => id.name == "require",
             Expression::StaticMemberExpression(member) => {
-                member.property.name == "resolve"
-                    && match member.object.without_parentheses() {
-                        Expression::Identifier(id) => id.name == "require",
-                        Expression::ImportMeta(_) => true,
-                        _ => false,
-                    }
+                member.property.name == "resolve" && is_resolve_receiver(&member.object)
             }
             Expression::ComputedMemberExpression(member) => {
                 matches!(
                     member.expression.without_parentheses(),
                     Expression::Identifier(id) if id.name == "resolve",
-                ) && match member.object.without_parentheses() {
-                    Expression::Identifier(id) => id.name == "require",
-                    Expression::ImportMeta(_) => true,
-                    _ => false,
-                }
+                ) && is_resolve_receiver(&member.object)
             }
             _ => false,
         }
+}
+
+fn is_resolve_receiver(object: &Expression<'_>) -> bool {
+    match object.without_parentheses() {
+        Expression::Identifier(id) => id.name == "require",
+        Expression::ImportMeta(_) => true,
+        _ => false,
+    }
 }

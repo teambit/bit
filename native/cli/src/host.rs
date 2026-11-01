@@ -292,10 +292,11 @@ fn forward_stderr(child: &mut Child) -> io::Result<std::sync::mpsc::Receiver<()>
 }
 
 fn progress_mode() -> &'static str {
-    let progress = env::args()
-        .nth(1)
+    let mut args = env::args().skip(1);
+    let progress = args
+        .next()
         .is_some_and(|arg| matches!(arg.trim(), "status" | "s" | "diff" | "d"))
-        && !env::args().any(|arg| matches!(arg.trim(), "--json" | "--json=true" | "-j"))
+        && !args.any(|arg| matches!(arg.trim(), "--json" | "--json=true" | "-j"))
         && env::var_os("CI").is_none_or(|val| val.to_string_lossy().trim().is_empty());
     if progress { "1" } else { "0" }
 }

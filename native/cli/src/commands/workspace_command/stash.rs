@@ -159,26 +159,16 @@ impl Captured {
         let removal = self.capture.captured
             .iter()
             .map(|row| {
-                let row_id =
-                    row["identity"].as_str().or_else(|| row["id"].as_str()).map(str::trim);
-                let component = components.iter().find(|component| {
-                    component["identity"]
-                        .as_str()
-                        .or_else(|| component["id"].as_str())
-                        .map(str::trim)
-                        == row_id
-                });
+                let row_id = row_identity(row);
+                let component =
+                    components.iter().find(|component| row_identity(component) == row_id);
                 json!({"identity":row_id,"extensions":row["current"]["extensions"],"packageName":component.map(|component|&component["packageName"])})
             })
             .collect();
         let metadata = self.capture.captured
             .iter()
             .filter_map(|row| {
-                let id = row["identity"]
-                    .as_str()
-                    .or_else(|| row["id"].as_str())
-                    .map(str::trim)
-                    .filter(|id| !id.is_empty())?;
+                let id = row_identity(row).filter(|id| !id.is_empty())?;
                 let data = capture::snapshot_data(&self.capture, id)?;
                 Some((id.to_owned(), data["consumerMetadata"].clone()))
             })
@@ -233,4 +223,11 @@ fn allocations(root: &Path, selected: &[String], plan: &Value) -> io::Result<Vec
             row
         })
         .collect())
+}
+
+fn row_identity(row: &Value) -> Option<&str> {
+    row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(str::trim)
 }

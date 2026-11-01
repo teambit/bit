@@ -82,8 +82,8 @@ impl Formatter {
     pub fn join(sections: &[String]) -> String {
         sections
             .iter()
+            .map(String::as_str)
             .filter(|section| !section.trim().is_empty())
-            .cloned()
             .collect::<Vec<_>>()
             .join("\n\n")
     }

@@ -139,8 +139,11 @@ fn data_target(target: &AssignmentTarget<'_>) -> bool {
         | AssignmentTarget::StaticMemberExpression(_) => true,
         AssignmentTarget::ComputedMemberExpression(member) => {
             matches!(&member.object, Expression::Identifier(id) if id.name == "exports")
-                && (matches!(&member.expression, Expression::StringLiteral(_))
-                    || matches!(&member.expression, Expression::TemplateLiteral(value) if value.expressions.is_empty()))
+                && match &member.expression {
+                    Expression::StringLiteral(_) => true,
+                    Expression::TemplateLiteral(value) => value.expressions.is_empty(),
+                    _ => false,
+                }
         }
         _ => false,
     }

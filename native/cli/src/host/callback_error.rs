@@ -20,16 +20,13 @@ impl CallbackError {
             }
             Err(cause) => cause,
         };
-        startup.truncate(
-            startup
-                .trim_end_matches(['\0', '\r'])
-                .len(),
-        );
-        output.truncate(
-            output
-                .trim_end_matches(['\0', '\r'])
-                .len(),
-        );
+        for field in [&mut startup, &mut output] {
+            field.truncate(
+                field
+                    .trim_end_matches(['\0', '\r'])
+                    .len(),
+            );
+        }
         io::Error::other(Self { startup, output, cause })
     }
 }

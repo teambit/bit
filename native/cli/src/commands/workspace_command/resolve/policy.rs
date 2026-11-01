@@ -81,17 +81,7 @@ impl Policy {
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
         match flag {
             "--ignore-issues" => {
-                self.ignore_issues = Some(
-                    next.map(str::trim)
-                        .filter(|val| {
-                            !val.is_empty()
-                                && !val.starts_with('-')
-                                && val
-                                    .split(',')
-                                    .any(|part| !part.trim().is_empty())
-                        })?
-                        .to_string(),
-                );
+                self.ignore_issues = Some(valid_ignore_issues(next?)?);
                 return Some(1);
             }
             "--ignore-newest-version" => self.ignore_newest_version = true,
@@ -105,16 +95,7 @@ impl Policy {
 
     fn inline_flag(&mut self, flag: &str, val: &str) -> Option<()> {
         if flag == "--ignore-issues" {
-            let val = val.trim();
-            if val.is_empty()
-                || val.starts_with('-')
-                || !val
-                    .split(',')
-                    .any(|part| !part.trim().is_empty())
-            {
-                return None;
-            }
-            self.ignore_issues = Some(val.to_string());
+            self.ignore_issues = Some(valid_ignore_issues(val)?);
             return Some(());
         }
         let enabled = match val.trim() {
@@ -144,4 +125,14 @@ impl Policy {
             });
         }
     }
+}
+
+fn valid_ignore_issues(val: &str) -> Option<String> {
+    let val = val.trim();
+    (!val.is_empty()
+        && !val.starts_with('-')
+        && val
+            .split(',')
+            .any(|part| !part.trim().is_empty()))
+    .then(|| val.to_string())
 }

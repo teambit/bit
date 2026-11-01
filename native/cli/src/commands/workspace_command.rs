@@ -77,34 +77,29 @@ impl Planned {
     /// `MergingMain` clears the cached current and incoming versions after writing.
     pub(in crate::commands) fn merge_cache_ids(&self) -> io::Result<Vec<String>> {
         let rows = array(self.plan["result"].get("components"), "merged components")?;
-        let targets = self.context["lane"]["targets"].as_array();
+        let targets = self.context["lane"]["targets"]
+            .as_array()
+            .map_or(&[][..], Vec::as_slice);
         let mut ids = Vec::new();
+        let mut push_unique = |candidate: String| {
+            if !ids.contains(&candidate) {
+                ids.push(candidate);
+            }
+        };
         for row in rows {
             let current = text(row.get("id"))?.trim();
             if current.is_empty() {
                 continue;
             }
-            if !ids
-                .iter()
-                .any(|existing| existing == current)
-            {
-                ids.push(current.to_owned());
-            }
+            push_unique(current.to_owned());
             let identity = bit_install::config::aspect_id_without_version(current).trim();
             let incoming = targets
-                .into_iter()
-                .flatten()
+                .iter()
                 .find(|target| target["identity"].as_str().map(str::trim) == Some(identity))
                 .and_then(|target| target["head"].as_str().map(str::trim))
                 .filter(|head| !head.is_empty());
             if let Some(head) = incoming {
-                let incoming = format!("{identity}@{head}");
-                if !ids
-                    .iter()
-                    .any(|existing| existing == &incoming)
-                {
-                    ids.push(incoming);
-                }
+                push_unique(format!("{identity}@{head}"));
             }
         }
         Ok(ids)

@@ -49,14 +49,7 @@ pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error 
     let details = error
         .get_ref()
         .and_then(|error| error.downcast_ref::<Failure>())
-        .filter(|_| {
-            std::env::var_os("CI")
-                .is_some_and(|value| {
-                    let trimmed = value.to_string_lossy();
-                    let trimmed = trimmed.trim();
-                    !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-                })
-        })
+        .filter(|_| crate::commands::scope_rename::ci_active())
         .map(|error| inspect::render(error, chalk));
     let message = io::Error::new(error.kind(), chalk.red(&error.to_string()));
     if let Some(details) = details {

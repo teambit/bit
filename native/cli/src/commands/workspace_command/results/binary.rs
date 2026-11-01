@@ -2,13 +2,12 @@
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
 pub(super) fn note(file: &str) -> &'static str {
-    let cleaned = file
+    let file_name = file
         .trim()
-        .trim_end_matches(['/', '\\']);
-    let file_name = cleaned
+        .trim_end_matches(['/', '\\'])
         .rsplit(['/', '\\'])
         .next()
-        .unwrap_or(cleaned);
+        .unwrap_or_default();
     let extension = std::path::Path::new(file_name)
         .extension()
         .and_then(std::ffi::OsStr::to_str)

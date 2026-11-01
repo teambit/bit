@@ -19,11 +19,10 @@ impl Progress {
         if fetch {
             output.status("fetching objects...");
         }
-        if !on_lane {
-            output.status("importing components");
-        }
-        if with_ids {
-            output.status("importing components");
+        for enabled in [!on_lane, with_ids] {
+            if enabled {
+                output.status("importing components");
+            }
         }
         if let Some(count) = prefetch {
             output.restart(&format!("importing {count} components"));

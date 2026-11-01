@@ -337,17 +337,12 @@ fn validate(completed: &Value, projected: &[Value], rows: &[Value]) -> io::Resul
 
 /// `` `${target.identity}@${target.version}` ``.
 fn versioned(target: &Value) -> String {
-    let identity = target
-        .get("identity")
-        .and_then(Value::as_str)
+    format!("{}@{}", versioned_field(&target["identity"]), versioned_field(&target["version"]))
+}
+
+fn versioned_field(val: &Value) -> &str {
+    val.as_str()
         .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .unwrap_or("undefined");
-    let version = target
-        .get("version")
-        .and_then(Value::as_str)
-        .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .unwrap_or("undefined");
-    format!("{identity}@{version}")
+        .filter(|text| !text.is_empty())
+        .unwrap_or("undefined")
 }

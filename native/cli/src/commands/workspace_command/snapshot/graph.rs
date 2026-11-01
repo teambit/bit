@@ -67,9 +67,9 @@ fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
     let root_directory = config.aspects
         .iter()
         .find_map(|(key, val)| {
-            (key == "teambit.workspace/workspace"
-                || key.starts_with("teambit.workspace/workspace@"))
-            .then_some(val)
+            (bit_install::config::aspect_id_without_version(key.trim())
+                == "teambit.workspace/workspace")
+                .then_some(val)
         })
         .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
         .map(str::trim)

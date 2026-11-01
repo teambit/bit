@@ -73,21 +73,20 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
                 "" | "0" | "false" | "off" | "no",
             )
         });
-    let help = args
-        .iter()
-        .skip(1)
-        .any(|arg| matches!(arg.to_str().map(str::trim), Some("--help" | "-h")));
-    if quiet || help || trace::enabled() {
+    let has_flag = |flags: &[&str]| {
+        args.iter()
+            .skip(1)
+            .any(|arg| {
+                arg.to_str()
+                    .is_some_and(|raw| flags.contains(&raw.trim()))
+            })
+    };
+    if quiet || has_flag(&["--help", "-h"]) || trace::enabled() {
         return;
     }
     let message = fallback_message(name, reason);
     let no_color = env::var_os("NO_COLOR").is_some_and(|val| !val.is_empty())
-        || args
-            .iter()
-            .skip(1)
-            .any(|arg| {
-                matches!(arg.to_str().map(str::trim), Some("--no-color" | "--no-color=true"))
-            });
+        || has_flag(&["--no-color", "--no-color=true"]);
     if io::stderr().is_terminal() && !no_color {
         eprintln!("\u{1b}[33m{message}\u{1b}[39m");
     } else {

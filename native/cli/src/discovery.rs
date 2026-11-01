@@ -92,14 +92,9 @@ pub fn find_in(environment: &Environment) -> io::Result<Target> {
 
 impl Environment {
     pub fn from_process() -> Self {
-        let non_empty_path = |key: &str| {
-            env::var_os(key)
-                .filter(|val| !val.to_string_lossy().trim().is_empty())
-                .map(PathBuf::from)
-        };
         Self {
-            node_cli: non_empty_path("BIT_NODE_CLI"),
-            node_binary: non_empty_path("BIT_NODE_BINARY"),
+            node_cli: env_path("BIT_NODE_CLI"),
+            node_binary: env_path("BIT_NODE_BINARY"),
             executable: env::current_exe().and_then(fs::canonicalize).ok(),
             bvm_dir: bvm_dir(),
             path: env::var_os("PATH"),
@@ -107,19 +102,22 @@ impl Environment {
     }
 }
 
+fn env_path(key: &str) -> Option<PathBuf> {
+    env::var_os(key)
+        .filter(|val| !val.to_string_lossy().trim().is_empty())
+        .map(PathBuf::from)
+}
+
 fn bvm_dir() -> Option<PathBuf> {
-    if let Some(dir) =
-        env::var_os("BVM_GLOBALS_DIR").filter(|dir| !dir.to_string_lossy().trim().is_empty())
-    {
-        return Some(PathBuf::from(dir));
+    if let Some(dir) = env_path("BVM_GLOBALS_DIR") {
+        return Some(dir);
     }
     let home = if cfg!(windows) {
-        env::var_os("LOCALAPPDATA").or_else(|| env::var_os("USERPROFILE"))
+        env_path("LOCALAPPDATA").or_else(|| env_path("USERPROFILE"))
     } else {
-        env::var_os("HOME")
+        env_path("HOME")
     };
-    home.filter(|home| !home.to_string_lossy().trim().is_empty())
-        .map(|home| PathBuf::from(home).join(".bvm"))
+    home.map(|dir| dir.join(".bvm"))
 }
 
 fn from_env(environment: &Environment) -> Option<NodeCli> {

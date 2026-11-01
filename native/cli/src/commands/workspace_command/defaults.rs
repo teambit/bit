@@ -168,11 +168,11 @@ pub(super) fn prepare(
     if token.is_empty() {
         return Err(decline("command token"));
     }
-    let context = prepared
+    let mut context = prepared
         .get("context")
         .filter(|context| truthy(Some(context)))
-        .cloned();
-    let mut context = context.ok_or_else(|| decline("command context"))?;
+        .cloned()
+        .ok_or_else(|| decline("command context"))?;
     context["commandProgress"] = prepared["progress"].clone();
     let targets = array(prepared.get("targets"), "command targets")?.to_vec();
     Ok((token, context, targets))

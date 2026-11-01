@@ -215,16 +215,14 @@ fn other_lane(context: &Value) -> io::Result<String> {
     {
         return Ok(format!("{scope}/{name}"));
     }
-    let name = other["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty());
-    let scope = other["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty());
-    match (scope, name) {
+    match (non_empty_str(&other["scope"]), non_empty_str(&other["name"])) {
         (Some(scope), Some(name)) => Ok(format!("{scope}/{name}")),
         _ => Err(decline("command lane identity receipt")),
     }
+}
+
+fn non_empty_str(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
 }

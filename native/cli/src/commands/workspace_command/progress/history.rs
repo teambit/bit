@@ -13,26 +13,27 @@ impl Progress {
         if !value.is_object() {
             return Err(decline("lane history pending import receipt"));
         }
-        let performed = value["performed"].as_bool();
-        let completed = value["completed"].as_bool();
+        let (Some(performed), Some(completed)) =
+            (value["performed"].as_bool(), value["completed"].as_bool())
+        else {
+            return Err(decline("lane history pending import receipt"));
+        };
         let requested = value["requested"].as_u64();
         let row = import(
             &json!({"ids":value["ids"],"reason":null,"components":0,"objects":0,"requested":requested}),
         )?;
         let unexpected_fields = !value["reason"].is_null()
             || (!value["objectRequest"].is_null() && value["objectRequest"] != Value::Bool(false));
-        if performed.is_none()
-            || completed.is_none()
-            || unexpected_fields
+        if unexpected_fields
             || requested != Some(row.ids.len() as u64)
-            || performed != Some(!row.ids.is_empty())
+            || performed == row.ids.is_empty()
             || row.ids
                 .iter()
                 .any(|id| id.trim().is_empty())
         {
             return Err(decline("lane history pending import receipt"));
         }
-        if performed == Some(true) && completed == Some(false) && !row.ids.is_empty() {
+        if performed && !completed {
             output.restart(&import_message(&row));
         }
         Ok(())

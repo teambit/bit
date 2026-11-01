@@ -30,18 +30,18 @@ impl History {
     /// load the consumer after `CLIParser.parse()`, writing only the completion
     /// entry on `end`.
     pub fn unstarted(root: &Path, args: &[OsString]) -> Self {
-        Self {
-            file: workspace::scope_path(root).join("command-history"),
-            command: Self::format_command(args),
-        }
+        Self::new(&workspace::scope_path(root), args)
     }
 
     /// Record a command using the actual consumer scope directory.
     pub fn start_scope(scope: &Path, args: &[OsString]) -> Self {
-        let history =
-            Self { file: scope.join("command-history"), command: Self::format_command(args) };
+        let history = Self::new(scope, args);
         history.write("started");
         history
+    }
+
+    fn new(scope: &Path, args: &[OsString]) -> Self {
+        Self { file: scope.join("command-history"), command: Self::format_command(args) }
     }
 
     fn format_command(args: &[OsString]) -> String {

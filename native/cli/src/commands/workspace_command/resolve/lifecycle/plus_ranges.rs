@@ -149,22 +149,19 @@ fn environment(root: &Path, component: &Value) -> io::Result<Option<Value>> {
 fn enabled() -> io::Result<bool> {
     let global =
         bit_install::config::load_global_config(&bit_workspace_config::global_config_dir())?;
-    let features = env::var("BIT_FEATURES")
-        .ok()
-        .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())
-        .or_else(|| {
-            env::var("BIT_CONFIG_FEATURES")
-                .ok()
-                .map(|value| value.trim().to_owned())
-                .filter(|value| !value.is_empty())
-        })
-        .or_else(|| {
-            global
-                .get("features")
-                .and_then(non_empty_str)
-                .map(str::to_owned)
+    let env_features = ["BIT_FEATURES", "BIT_CONFIG_FEATURES"]
+        .into_iter()
+        .find_map(|key| {
+            let val = env::var(key).ok()?;
+            let trimmed = val.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
         });
+    let features = env_features.or_else(|| {
+        global
+            .get("features")
+            .and_then(non_empty_str)
+            .map(str::to_owned)
+    });
     Ok(features.is_some_and(|features| {
         features
             .split(',')

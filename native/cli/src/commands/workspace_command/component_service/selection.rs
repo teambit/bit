@@ -28,7 +28,7 @@ fn matches(row: &Value, selector: &str) -> bool {
     let Some(raw_identity) = row_text(row, ["identity", "id"]) else {
         return false;
     };
-    let identity = raw_identity.rsplit_once('@').map_or(raw_identity, |(base, _)| base.trim());
+    let identity = bit_install::config::aspect_id_without_version(raw_identity).trim();
     let component_name = identity.split_once('/').map_or(identity, |(_, name)| name.trim());
     let directory = normalized_dir(name);
     let row_dir = row_text(row, ["directory", "rootDir"]).map(normalized_dir);

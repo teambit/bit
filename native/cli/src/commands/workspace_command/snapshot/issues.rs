@@ -61,14 +61,8 @@ fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
     if let Some(raw) = entry_id.as_str() {
         return without_version(raw.trim()) == target;
     }
-    let scope = entry_id["scope"]
-        .as_str()
-        .map(str::trim)
-        .unwrap_or_default();
-    let name = entry_id["name"]
-        .as_str()
-        .map(str::trim)
-        .unwrap_or_default();
+    let scope = entry_id["scope"].as_str().map_or("", str::trim);
+    let name = entry_id["name"].as_str().map_or("", str::trim);
     if scope.is_empty() { name == target } else { format!("{scope}/{name}") == target }
 }
 

@@ -33,11 +33,12 @@ fn component_directory(component: &Value) -> Value {
         .find(|dir| !dir.is_empty())
         .map_or_else(
             || {
-                if component["directory"].is_null() {
-                    component["rootDir"].clone()
-                } else {
-                    component["directory"].clone()
-                }
+                component
+                    .get("directory")
+                    .filter(|val| !val.is_null())
+                    .or_else(|| component.get("rootDir"))
+                    .cloned()
+                    .unwrap_or(Value::Null)
             },
             Value::from,
         )

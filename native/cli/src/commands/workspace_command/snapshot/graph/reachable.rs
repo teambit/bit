@@ -39,11 +39,7 @@ pub(super) fn graph(
 fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -> Option<&'a str> {
     let environment = environment.trim();
     let environment = if lockfile["importers"].get(environment).is_none() {
-        environment
-            .split('@')
-            .next()
-            .unwrap_or(environment)
-            .trim()
+        bit_install::config::aspect_id_without_version(environment).trim()
     } else {
         environment
     };

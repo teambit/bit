@@ -319,28 +319,18 @@ fn render_import(output: &Output, row: &Import) {
         return;
     }
     let message = import_message(row);
-    let reason = row.reason
-        .as_ref()
-        .map_or_else(String::new, |reason| format!(" {reason}"));
-    // `ObjectsFetcher` starts the loader itself, so its lines show on CI too.
     output.restart(&message);
-    let is_ci = std::env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-        });
-    if !is_ci {
+    if !crate::commands::scope_rename::ci_active() {
         for downloaded in (100..=row.objects).step_by(100) {
             output.status(&format!("{message}. downloaded {downloaded} objects."));
         }
     }
-    let imported = if row.components > 0 {
-        format!("{} components", row.components)
-    } else {
-        format!("{} objects", row.objects)
-    };
-    output.restart(&format!("successfully imported {imported}{reason}"));
+    let (count, unit) =
+        if row.components > 0 { (row.components, "components") } else { (row.objects, "objects") };
+    let reason = row.reason
+        .as_ref()
+        .map_or_else(String::new, |val| format!(" {val}"));
+    output.restart(&format!("successfully imported {count} {unit}{reason}"));
 }
 
 fn import_message(row: &Import) -> String {
@@ -348,16 +338,14 @@ fn import_message(row: &Import) -> String {
         .iter()
         .map(|id| without_version(id))
         .collect();
-    let ids = if row.objects_only {
-        format!("{} objects", row.ids.len())
-    } else if names.len() == row.ids.len() {
-        format!("{} components", names.len())
-    } else {
-        format!("{} components, {} versions", names.len(), row.ids.len())
+    let ids = match (row.objects_only, names.len() == row.ids.len()) {
+        (true, _) => format!("{} objects", row.ids.len()),
+        (false, true) => format!("{} components", names.len()),
+        (false, false) => format!("{} components, {} versions", names.len(), row.ids.len()),
     };
     let reason = row.reason
         .as_ref()
-        .map_or_else(String::new, |reason| format!(" {reason}"));
+        .map_or_else(String::new, |val| format!(" {val}"));
     format!("importing {ids}{reason}")
 }
 

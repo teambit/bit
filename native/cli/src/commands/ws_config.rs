@@ -134,16 +134,9 @@ fn run_list(args: &[OsString], json_flag: bool, chalk: Chalk) -> io::Result<Outc
     let Some(env_ids) = collect_standard_env_ids(&ws) else {
         return Ok(Outcome::Declined("ws-config list non-standard env delegated".into()));
     };
-    if json_flag {
-        let data = format_list_json(&env_ids)?;
-        return workspace_command::execute_json(&root, args, "list", |_| {
-            Ok(Report { data, code: 0, details: None })
-        });
-    }
-    let data = format_list_output(&env_ids, chalk);
-    workspace_command::execute_then(&root, args, "list", |_| {
-        Ok(Report { data, code: 0, details: None })
-    })
+    let data =
+        if json_flag { format_list_json(&env_ids)? } else { format_list_output(&env_ids, chalk) };
+    execute_ws_report(&root, args, "list", json_flag, data)
 }
 
 fn run_clean(
@@ -153,7 +146,7 @@ fn run_clean(
     writers: Option<&[String]>,
     json_flag: bool,
 ) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("ws-config clean CI delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -174,21 +167,16 @@ fn run_clean(
     } else {
         clean_workspace_configs(&root, writers, dry_run)?
     };
-    if json_flag {
-        let data = serde_json::to_string_pretty(&paths).map_err(io::Error::other)?;
-        return workspace_command::execute_json(&root, args, "clean", |_| {
-            Ok(Report { data, code: 0, details: None })
-        });
-    }
-    let chalk = Chalk::detect(args);
-    let data = format_clean_output(&paths, dry_run, chalk);
-    workspace_command::execute_then(&root, args, "clean", |_| {
-        Ok(Report { data, code: 0, details: None })
-    })
+    let data = if json_flag {
+        serde_json::to_string_pretty(&paths).map_err(io::Error::other)?
+    } else {
+        format_clean_output(&paths, dry_run, Chalk::detect(args))
+    };
+    execute_ws_report(&root, args, "clean", json_flag, data)
 }
 
 fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result<Outcome> {
-    if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
+    if super::scope_rename::ci_active() {
         return Ok(Outcome::Declined("CI ws-config write delegated".into()));
     }
     let cwd = env::current_dir()?;
@@ -208,27 +196,34 @@ fn run_write(args: &[OsString], opts: &WriteOptions, chalk: Chalk) -> io::Result
     }
     let comp_dirs = collect_active_component_dirs(&ws);
     let result = write_workspace_configs(&root, &env_ids, &comp_dirs, opts)?;
-    if opts.json {
-        let data = serde_json::to_string_pretty(&result).map_err(io::Error::other)?;
-        return workspace_command::execute_json(&root, args, "write", |_| {
-            Ok(Report { data, code: 0, details: None })
-        });
+    let data = if opts.json {
+        serde_json::to_string_pretty(&result).map_err(io::Error::other)?
+    } else {
+        format_write_output(&result, opts, chalk)
+    };
+    execute_ws_report(&root, args, "write", opts.json, data)
+}
+
+fn execute_ws_report(
+    root: &Path,
+    args: &[OsString],
+    sub: &str,
+    json_flag: bool,
+    data: String,
+) -> io::Result<Outcome> {
+    let report = Report { data, code: 0, details: None };
+    if json_flag {
+        workspace_command::execute_json(root, args, sub, |_| Ok(report))
+    } else {
+        workspace_command::execute_then(root, args, sub, |_| Ok(report))
     }
-    let data = format_write_output(&result, opts, chalk);
-    workspace_command::execute_then(&root, args, "write", |_| {
-        Ok(Report { data, code: 0, details: None })
-    })
 }
 
 pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     if let Some(sub) = parse_unrecognized(args) {
         return Some(Subcommand::Unrecognized(sub.to_owned()));
     }
-    let filtered: Vec<_> = args
-        .iter()
-        .copied()
-        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"))
-        .collect();
+    let filtered = strip_no_color(args);
     let rest = filtered.get(1..)?;
     let rest = rest
         .strip_suffix(&["--"])
@@ -245,15 +240,18 @@ pub(super) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
 }
 
 pub(super) fn parse_unrecognized<'a>(args: &[&'a str]) -> Option<&'a str> {
-    let filtered: Vec<_> = args
-        .iter()
-        .copied()
-        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"))
-        .collect();
+    let filtered = strip_no_color(args);
     let [sub] = filtered.as_slice() else { return None };
     let sub = sub.trim();
     (!sub.is_empty() && !sub.starts_with('-') && !matches!(sub, "write" | "clean" | "list"))
         .then_some(sub)
+}
+
+fn strip_no_color<'a>(args: &[&'a str]) -> Vec<&'a str> {
+    args.iter()
+        .copied()
+        .filter(|&arg| !matches!(arg, "--no-color" | "--no-color=true" | "--no-color=false"))
+        .collect()
 }
 
 fn parse_list(rest: &[&str]) -> Option<Subcommand> {

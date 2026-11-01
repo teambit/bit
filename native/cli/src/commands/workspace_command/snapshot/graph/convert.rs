@@ -349,10 +349,7 @@ fn is_file_package(pkg_id: &str) -> bool {
 
 /// `dp.parse(depPath).name`.
 fn package_name(dep_path: &str) -> Option<&str> {
-    let mut chars = dep_path.char_indices();
-    let (_, first_len) = chars
-        .next()
-        .map(|(_, ch)| (ch, ch.len_utf8()))?;
+    let first_len = dep_path.chars().next()?.len_utf8();
     let separator = dep_path.get(first_len..)?.find('@')? + first_len;
     dep_path.get(..separator)
 }

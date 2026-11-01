@@ -9,12 +9,12 @@ pub fn enabled() -> bool {
 
 fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
     let text = value.to_string_lossy();
-    let trimmed = text.trim();
-    !trimmed.is_empty()
-        && trimmed != "0"
-        && !trimmed.eq_ignore_ascii_case("false")
-        && !trimmed.eq_ignore_ascii_case("off")
-        && !trimmed.eq_ignore_ascii_case("no")
+    !matches!(
+        text.trim()
+            .to_ascii_lowercase()
+            .as_str(),
+        "" | "0" | "false" | "off" | "no",
+    )
 }
 
 pub fn log(message: impl Display) {

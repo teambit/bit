@@ -122,7 +122,7 @@ fn literal_match<'i>(identities: &[&'i str], pattern: &str) -> io::Result<&'i st
         && pattern
             .chars()
             .all(|character| character.is_ascii_alphanumeric() || "_./-".contains(character));
-    if pattern.contains('*') || pattern.contains(',') || !literal {
+    if !literal {
         return Err(decline("tag pattern outside the native grammar"));
     }
     let suffix = format!("/{pattern}");

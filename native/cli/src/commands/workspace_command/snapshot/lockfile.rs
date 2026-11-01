@@ -93,13 +93,11 @@ fn visible_graphs(
                 .find(|target| target_identity(target) == Some(identity))
                 .ok_or_else(|| decline("command snapshot target"))?;
             let directory = text(target.get("directory"))?.trim();
-            Ok(graph::Snapped {
-                directory,
-                package_name: package_name(capture, identity)?,
-                env_id: env_id_str(&capture.environment_facts[identity]["envId"])
-                    .or_else(|| env_id_str(&context["environmentFacts"][identity]["envId"]))
-                    .unwrap_or("teambit.harmony/node"),
-            })
+            let env_id = [&capture.environment_facts, &context["environmentFacts"]]
+                .into_iter()
+                .find_map(|facts| env_id_str(&facts[identity]["envId"]))
+                .unwrap_or("teambit.harmony/node");
+            Ok(graph::Snapped { directory, package_name: package_name(capture, identity)?, env_id })
         })
         .collect::<io::Result<Vec<_>>>()?;
     let components = workspace_components(targets, needs_snap, hashes, capture)?;

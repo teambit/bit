@@ -112,12 +112,7 @@ impl Steps<'_> {
     fn snapshot_context(&self, caches: &[Pending]) -> io::Result<Value> {
         let activated: Vec<&str> = caches
             .iter()
-            .map(|entry| {
-                entry
-                    .identity()
-                    .rsplit_once('@')
-                    .map_or_else(|| entry.identity(), |(identity, _)| identity)
-            })
+            .map(|entry| without_version(entry.identity()))
             .collect();
         let mut targets = array(self.context.get("targets"), "targets")?.to_vec();
         if let Some(inactive) = self.context["lane"]

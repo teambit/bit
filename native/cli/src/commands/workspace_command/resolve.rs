@@ -220,16 +220,12 @@ impl<'r> Session<'r> {
             "components": component_receipts(&self.context, &self.capture)?,
         });
         match &request.selection {
-            Selection::Resolve { pattern } => {
+            Selection::Resolve { pattern } | Selection::Snap { pattern, unmerged: false } => {
                 if let Some(ids) = self.pattern_ids(*pattern)? {
                     plan_request["selectedIds"] = json!(ids);
                 }
             }
-            Selection::Snap { pattern, unmerged } => {
-                if !unmerged && let Some(ids) = self.pattern_ids(*pattern)? {
-                    plan_request["selectedIds"] = json!(ids);
-                }
-            }
+            Selection::Snap { unmerged: true, .. } => {}
             Selection::Tag { patterns, exact_version, .. } => {
                 let selections = self.tag_selections(&plan_request, patterns)?;
                 versions.extend(exact_version.iter().map(ToString::to_string));

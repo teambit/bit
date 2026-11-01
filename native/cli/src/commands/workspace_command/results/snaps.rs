@@ -79,10 +79,7 @@ pub fn snaps(value: Option<&Value>) -> io::Result<Option<Snaps>> {
 
 pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(None) };
-    let kind = value["kind"]
-        .as_str()
-        .unwrap_or("")
-        .trim();
+    let kind = value["kind"].as_str().map_or("", str::trim);
     if kind == "message" {
         let map = record(value, &["kind", "message"])?;
         let message = text(map.get("message"))?.trim();

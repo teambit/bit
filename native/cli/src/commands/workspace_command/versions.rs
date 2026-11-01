@@ -201,18 +201,18 @@ fn ids(value: Option<&Value>) -> io::Result<Vec<Id>> {
         .collect()
 }
 
+fn bare_names(ids: &[Id]) -> HashSet<String> {
+    ids.iter()
+        .map(Id::without_version)
+        .collect()
+}
+
 impl Versioned<'_> {
     /// An automatic id that is also selected must be a new component with
     /// the same version, and the total counts each component once.
     fn validate_overlaps(&self) -> io::Result<()> {
-        let added: HashSet<String> = self.added
-            .iter()
-            .map(Id::without_version)
-            .collect();
-        let mut persisted: HashSet<String> = self.selected
-            .iter()
-            .map(Id::without_version)
-            .collect();
+        let added = bare_names(&self.added);
+        let mut persisted = bare_names(&self.selected);
         for (id, _) in &self.automatic {
             let name = id.without_version();
             let overlap = self.selected
@@ -234,31 +234,22 @@ impl Versioned<'_> {
     fn report(&self, format: &Formatter, root: Option<&Id>) -> Report {
         let verb = if self.labels.tag { "tagged" } else { "snapped" };
         let root = root.map_or_else(String::new, |root|format.hint(&format!("({} is the workspace-root component. it was new or modified, so it was {verb} along: the other components record the root version they were {verb} with)",in_bold(format.chalk,root))));
-        let footer = self.footer(format);
-        let warnings = self.warnings(format);
+        let render = |detailed: bool| {
+            let mut parts = self.sections(format, detailed, &root);
+            parts.extend([self.warnings(format), self.footer(format)]);
+            Formatter::join(&parts)
+        };
         if self.automatic.is_empty() {
-            let data = Formatter::join(
-                &[self.sections(format, true, &root), vec![warnings, footer]].concat(),
-            );
-            return Report { data, code: 0, details: None };
+            Report { data: render(true), code: 0, details: None }
+        } else {
+            Report { data: render(false), code: 0, details: Some(render(true)) }
         }
-        let summary = vec![warnings.clone(), footer.clone()];
-        let data = Formatter::join(&[self.sections(format, false, &root), summary].concat());
-        let details =
-            Formatter::join(&[self.sections(format, true, &root), vec![warnings, footer]].concat());
-        Report { data, code: 0, details: Some(details) }
     }
 
     /// The new and changed components, each with its dependents when `detailed`.
     fn sections(&self, format: &Formatter, detailed: bool, root: &str) -> Vec<String> {
-        let added: HashSet<String> = self.added
-            .iter()
-            .map(Id::without_version)
-            .collect();
-        let removed: HashSet<String> = self.removed
-            .iter()
-            .map(Id::without_version)
-            .collect();
+        let added = bare_names(&self.added);
+        let removed = bare_names(&self.removed);
         let item = |id: &Id| {
             if detailed {
                 self.detailed(format, id)
@@ -278,15 +269,16 @@ impl Versioned<'_> {
             .collect();
         let (new_title, new_desc) = self.labels.section(true);
         let (changed_title, changed_desc) = self.labels.section(false);
+        let auto = if !detailed && !self.automatic.is_empty() {
+            self.automatic_section(format)
+        } else {
+            String::new()
+        };
         vec![
             format.section(new_title, new_desc, &new),
             format.section(changed_title, changed_desc, &changed),
             root.to_string(),
-            if !detailed && !self.automatic.is_empty() {
-                self.automatic_section(format)
-            } else {
-                String::new()
-            },
+            auto,
             self.pinned_section(format),
             format.section("removed components", "", &removed),
         ]
@@ -297,15 +289,12 @@ impl Versioned<'_> {
             return String::new();
         }
         let action = if self.labels.tag { "tagged" } else { "snapped" };
+        let warn = format.warn_symbol();
         let items: Vec<String> = self.pinned
             .iter()
             .map(|(id, deps)| {
-                let text = format!(
-                    "{} {}",
-                    in_bold(format.chalk, id),
-                    format.chalk.dim(&format!("({})", deps.join(", "))),
-                );
-                Formatter::item_with(&text, &format.warn_symbol())
+                let dim = format.chalk.dim(&format!("({})", deps.join(", ")));
+                Formatter::item_with(&format!("{} {dim}", in_bold(format.chalk, id)), &warn)
             })
             .collect();
         let section = format.section(

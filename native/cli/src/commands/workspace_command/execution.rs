@@ -71,12 +71,7 @@ pub fn execute_failure_scope(
 }
 
 fn ci_active() -> bool {
-    env::var_os("CI")
-        .is_some_and(|val| {
-            let trimmed = val.to_string_lossy();
-            let trimmed = trimmed.trim();
-            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
-        })
+    crate::commands::scope_rename::ci_active()
 }
 
 /// Locate the workspace root or emit `ConsumerNotFound` outside a workspace when `CI` is unset.

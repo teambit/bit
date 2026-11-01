@@ -170,6 +170,8 @@ fn registry(config: &Value) -> Option<String> {
         return registry
             .split_whitespace()
             .next()
+            .map(str::trim)
+            .filter(|url| !url.is_empty())
             .map(str::to_string);
     }
     config["packageJson"]["publishConfig"]["registry"]
