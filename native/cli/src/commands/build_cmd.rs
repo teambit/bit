@@ -263,7 +263,10 @@ fn apply_inline_or_positional(arg: &str, options: &mut Options) -> Option<()> {
     if let Some(val) = arg.strip_prefix("--tasks=") {
         options.pipeline.tasks = Some(take_val(val)?);
     } else if let Some(val) = arg.strip_prefix("--list-tasks=") {
-        options.list_tasks = Some(val.to_owned());
+        if val.trim_start().starts_with('-') {
+            return None;
+        }
+        options.list_tasks = Some(val.trim().to_owned());
     } else if let Some(val) = arg.strip_prefix("--skip-tasks=") {
         options.pipeline.skip_tasks = Some(take_val(val)?);
     } else if let Some(val) = arg

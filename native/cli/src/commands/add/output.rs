@@ -14,6 +14,9 @@ pub(super) fn failure(
     error: io::Error,
 ) -> io::Result<Outcome> {
     let error = colors::error(error, Chalk::detect(args));
+    if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+        return Err(error);
+    }
     if !json {
         return workspace_command::checkout_lifecycle::failure(root, args, "add", startup, error);
     }

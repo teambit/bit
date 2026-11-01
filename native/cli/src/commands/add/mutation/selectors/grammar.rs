@@ -71,10 +71,12 @@ pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Va
 }
 pub(super) fn union(selected: &mut Vec<Value>, targets: Vec<Value>) {
     for row in targets {
-        let row_id = row_identity(&row);
+        let Some(row_id) = row_identity(&row) else {
+            continue;
+        };
         if !selected
             .iter()
-            .any(|known| row_identity(known) == row_id)
+            .any(|known| row_identity(known) == Some(row_id))
         {
             selected.push(row);
         }

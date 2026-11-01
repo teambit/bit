@@ -159,8 +159,17 @@ fn overlay_bytes(capture: &Capture) -> io::Result<u64> {
                 trimmed_str(path).ok_or_else(|| io::Error::other("identity callback source path"))?;
             let root = trimmed_str(&row["sourceOverlayRoot"])
                 .ok_or_else(|| io::Error::other("identity callback source root"))?;
-            let metadata = fs::symlink_metadata(path)?;
-            if !Path::new(path).starts_with(root) || !metadata.is_file() {
+            let source_path = Path::new(path);
+            let root_path = Path::new(root);
+            let metadata = fs::symlink_metadata(source_path)?;
+            if !source_path.is_absolute()
+                || !root_path.is_absolute()
+                || source_path
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+                || !source_path.starts_with(root_path)
+                || !metadata.is_file()
+            {
                 return Err(io::Error::other("identity callback source outside private spool"));
             }
             total = total

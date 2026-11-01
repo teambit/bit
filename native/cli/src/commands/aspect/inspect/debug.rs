@@ -151,7 +151,7 @@ fn prepare_origin_entries(
         if mark_specific && let Value::Object(cfg) = &mut item.config {
             cfg.insert("__specific".into(), Value::Bool(true));
         }
-        if item.config.as_str() == Some("-") {
+        if item.config.as_str().map(str::trim) == Some("-") {
             removed.push(aspect_id_without_version(&item.id).to_owned());
             continue;
         }

@@ -112,7 +112,10 @@ fn finish_scope_artifacts(
 }
 
 pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
-    if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+    if !root.is_absolute()
+        || root.as_os_str().is_empty()
+        || root.to_string_lossy().trim().is_empty()
+    {
         return Ok(false);
     }
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;

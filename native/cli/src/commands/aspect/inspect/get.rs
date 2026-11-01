@@ -102,6 +102,10 @@ pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
 }
 
 pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -> Option<String> {
+    let bare = bare.trim();
+    if bare.is_empty() {
+        return None;
+    }
     let scope_dir = crate::workspace::scope_path(root);
     let index = bit_object_import::parse_jsonc(&fs::read(scope_dir.join("index.json")).ok()?).ok()?;
     let rows = index["components"].as_array().or_else(|| index.as_array())?;
@@ -115,7 +119,12 @@ pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -
     let [row] = matches.as_slice() else {
         return None;
     };
-    let scope = row["id"]["scope"]
+    let scope = row_scope(row, &scope_dir)?;
+    Some(format!("{scope}/{bare}"))
+}
+
+fn row_scope(row: &Value, scope_dir: &Path) -> Option<String> {
+    row["id"]["scope"]
         .as_str()
         .map(str::trim)
         .filter(|val| !val.is_empty())
@@ -138,8 +147,7 @@ pub(in crate::commands::aspect) fn scope_index_lookup(root: &Path, bare: &str) -
                 .map(str::trim)
                 .filter(|val| !val.is_empty())
                 .map(str::to_owned)
-        })?;
-    Some(format!("{scope}/{bare}"))
+        })
 }
 
 fn merge_origins(

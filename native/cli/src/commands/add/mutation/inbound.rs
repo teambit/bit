@@ -148,10 +148,7 @@ impl ProjectedLinker {
 fn strip_version(id: &str) -> String {
     let trimmed = id.trim();
     match trimmed.rsplit_once('@') {
-        Some((base, _)) => {
-            let trimmed_base = base.trim();
-            if trimmed_base.is_empty() { trimmed.to_owned() } else { trimmed_base.to_owned() }
-        }
+        Some((base, _)) => base.trim().to_owned(),
         None => trimmed.to_owned(),
     }
 }

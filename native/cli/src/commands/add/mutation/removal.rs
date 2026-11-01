@@ -19,6 +19,12 @@ impl ProjectedLinker {
         bitmap: &Value,
         ids: &[String],
     ) -> io::Result<Vec<Value>> {
+        if !root.is_absolute()
+            || root.as_os_str().is_empty()
+            || root.to_string_lossy().trim().is_empty()
+        {
+            return Err(io::Error::other("consumer status workspace root is empty"));
+        }
         let normalized = normalize_ids(ids);
         let ids = normalized.as_slice();
         let missing = self.retained.missing(ids);

@@ -155,6 +155,7 @@ pub(super) fn link_rows(
     Ok(())
 }
 fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
     components
         .iter()
         .filter(|component| {
@@ -172,6 +173,7 @@ fn aspect_environments(components: &[WorkspaceComponent], aspects: &[String]) ->
                     })
         })
         .map(|component| component.env_id.trim().to_owned())
+        .filter(|env_id| seen.insert(env_id.clone()))
         .collect()
 }
 fn report(plan: &Plan, json: bool, chalk: Chalk) -> io::Result<Report> {

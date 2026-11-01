@@ -136,6 +136,7 @@ pub(in crate::commands) fn update_in_bitmap_row(
     target_aspect_id: &str,
     cfg_val: &Value,
 ) -> Result<(), Failure> {
+    validate_aspect_target(target_aspect_id)?;
     let row = find_bitmap_row_mut(bitmap_val, entry)?;
     let row_obj =
         row.as_object_mut().ok_or_else(|| Failure::Declined("bitmap row object".into()))?;

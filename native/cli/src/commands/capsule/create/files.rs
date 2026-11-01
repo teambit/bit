@@ -280,8 +280,9 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
                     )
                 })
         })
-        .and_then(|env| env.get("env"))
-        .and_then(Value::as_str);
+        .and_then(|env| env["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty());
     if entry.id.version.is_none() {
         return Ok(bitmap_env.map(str::to_owned));
     }
@@ -295,9 +296,9 @@ fn effective_env(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Strin
     let model_env = model.extensions
         .iter()
         .find(|ext| crate::commands::update_cmd::matches_aspect(ext, "teambit.envs/envs"))
-        .and_then(|ext| ext.get("config"))
-        .and_then(|config| config.get("env"))
-        .and_then(Value::as_str);
+        .and_then(|ext| ext["config"]["env"].as_str())
+        .map(str::trim)
+        .filter(|env| !env.is_empty());
     Ok(model_env.or(bitmap_env).map(str::to_owned))
 }
 
@@ -314,15 +315,11 @@ pub(super) fn component_dependency(entry: &BitmapEntry) -> (String, String) {
 }
 
 fn package_version(entry: &BitmapEntry) -> String {
-    let version = entry.id.version
-        .as_deref()
-        .map(str::trim)
-        .filter(|ver| !ver.is_empty())
-        .unwrap_or("latest");
+    let (_, version) = component_dependency(entry);
     if version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         format!("0.0.0-{version}")
     } else {
-        version.to_owned()
+        version
     }
 }
 

@@ -17,6 +17,9 @@ impl Retained {
         let (bare, inline) = trimmed
             .rsplit_once('@')
             .map_or((trimmed, None), |(base, ver)| (base.trim(), Some(ver.trim())));
+        if bare.is_empty() {
+            return;
+        }
         let current = self.rows
             .get(bare)
             .or_else(|| self.rows.get(trimmed))

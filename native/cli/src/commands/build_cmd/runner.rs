@@ -300,14 +300,15 @@ fn copy_tree(src: &Path, dst: &Path) -> io::Result<()> {
     fs::create_dir_all(dst)?;
     for entry in fs::read_dir(src)?.filter_map(Result::ok) {
         let name = entry.file_name();
-        if name == "node_modules" || name == ".git" || name == "dist" {
+        let file_type = entry.file_type()?;
+        if name == "node_modules" || name == ".git" || name == "dist" || file_type.is_symlink() {
             continue;
         }
         let src_path = entry.path();
         let dst_path = dst.join(&name);
-        if src_path.is_dir() {
+        if file_type.is_dir() {
             copy_tree(&src_path, &dst_path)?;
-        } else if src_path.is_file() {
+        } else if file_type.is_file() {
             let _ = fs::remove_file(&dst_path);
             fs::copy(&src_path, &dst_path)?;
         }

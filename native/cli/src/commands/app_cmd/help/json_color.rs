@@ -26,7 +26,7 @@ fn unknown_names(flag: &str, list: bool) -> Option<&'static [&'static str]> {
     let (name, inline) = trimmed
         .split_once('=')
         .map_or((trimmed, None), |(prefix, val)| (prefix.trim(), Some(val.trim())));
-    if inline.is_some_and(|val| val.is_empty() || val.starts_with('-')) {
+    if name.is_empty() || inline.is_some_and(|val| val.is_empty() || val.starts_with('-')) {
         return None;
     }
     match name {

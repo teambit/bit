@@ -69,7 +69,15 @@ fn relative_path<'a>(directory: &str, file: &'a Value) -> io::Result<&'a str> {
         .map(str::trim)
         .filter(|rel| !rel.is_empty())
         .ok_or_else(|| io::Error::other("tracking docs relative path"))?;
-    if Path::new(directory).is_absolute() || Path::new(relative).is_absolute() {
+    if Path::new(directory).is_absolute()
+        || Path::new(relative).is_absolute()
+        || Path::new(directory)
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+        || Path::new(relative)
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
         return Err(io::Error::other("tracking docs relative path"));
     }
     Ok(relative)

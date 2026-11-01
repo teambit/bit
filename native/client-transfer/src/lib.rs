@@ -14,7 +14,9 @@ pub use cancellation::Cancellation;
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 
 pub(crate) fn invalid(message: &str) -> std::io::Error {
-    std::io::Error::new(std::io::ErrorKind::InvalidData, message.trim())
+    let trimmed = message.trim();
+    let text = if trimmed.is_empty() { "invalid transport data" } else { trimmed };
+    std::io::Error::new(std::io::ErrorKind::InvalidData, text)
 }
 
 #[must_use]

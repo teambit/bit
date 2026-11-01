@@ -194,8 +194,11 @@ fn candidate_scope_dirs(root: &Path, aspect_scope: &str) -> Vec<PathBuf> {
 fn remote_file_scope_dir(local_scope: &Path, aspect_scope: &str) -> Option<PathBuf> {
     let bytes = fs::read(local_scope.join("scope.json")).ok()?;
     let scope_json = bit_object_import::parse_jsonc(&bytes).ok()?;
-    let remote_url = scope_json["remotes"][aspect_scope].as_str()?;
-    remote_url.strip_prefix("file://").map(PathBuf::from)
+    let remote_url = scope_json["remotes"][aspect_scope.trim()].as_str()?.trim();
+    remote_url
+        .strip_prefix("file://")
+        .filter(|path| !path.trim().is_empty())
+        .map(PathBuf::from)
 }
 
 fn read_latest_model_version(scope_dir: &Path, hash: &str) -> Option<String> {

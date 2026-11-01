@@ -120,7 +120,14 @@ fn source_proofs(root: &Path, targets: &[Value]) -> io::Result<Vec<Value>> {
                 .flatten()
                 .filter_map(Value::as_str)
                 .map(str::trim)
-                .filter(|file| !file.is_empty())
+                .filter(|file| {
+                    let path = Path::new(file);
+                    !file.is_empty()
+                        && !path.is_absolute()
+                        && !path
+                            .components()
+                            .any(|part| matches!(part, std::path::Component::ParentDir))
+                })
                 .map(move |file| directory.join(file))
         })
         .map(|path| controls::refresh(&path))

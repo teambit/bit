@@ -61,7 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     if !root.join(".bitmap").is_file()
         || !root.join("workspace.jsonc").is_file()
-        || !bit_workspace_config::scope_path(&root).is_dir()
+        || !bit_workspace_config::scope_path(&root).join("objects").is_dir()
     {
         if diagnostics::ci() {
             return Ok(Outcome::Declined(

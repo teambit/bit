@@ -100,6 +100,9 @@ fn validate(
     writes: &[Value],
     observed: &BTreeMap<PathBuf, Source>,
 ) -> io::Result<Vec<(String, String)>> {
+    if writes.len() > 16384 {
+        return Err(io::Error::other("tracking docs file count budget"));
+    }
     let mut total = 0_usize;
     let mut seen = std::collections::HashSet::new();
     let mut entries = Vec::new();

@@ -271,7 +271,15 @@ fn collect_component_apps(
     }
     for rel_file in &comp.files {
         if is_app_plugin_file(rel_file) {
-            let content = fs::read_to_string(comp.dir.join(rel_file)).ok()?;
+            let rel_path = Path::new(rel_file);
+            if rel_path.is_absolute()
+                || rel_path
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+            {
+                return None;
+            }
+            let content = fs::read_to_string(comp.dir.join(rel_path)).ok()?;
             let app_name = extract_app_name(&content)?;
             apps.push((selection::entry_full_id(entry), app_name));
         }

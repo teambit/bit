@@ -13,8 +13,13 @@ const MAX_LOG_BYTES: usize = 8 * 1024 * 1024;
 impl Network {
     /// `Http.log()`: read-only history in the order supplied by the scope.
     pub async fn log(&self, url: &str, id: &str) -> io::Result<Vec<Value>> {
-        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
-        let body = json!({"query": LOG_QUERY, "variables": {"id": id.trim()}});
+        let base = url.trim().trim_end_matches('/');
+        let id = id.trim();
+        if base.is_empty() || id.is_empty() {
+            return Err(invalid("remote log request"));
+        }
+        let endpoint = format!("{base}/graphql");
+        let body = json!({"query": LOG_QUERY, "variables": {"id": id}});
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
                 .json(&body),

@@ -290,8 +290,10 @@ fn lookup_remote_url(scope_dir: &Path, comp_scope: &str) -> Option<String> {
     let bytes = fs::read(scope_dir.join("scope.json")).ok()?;
     let val: Value = bit_object_import::parse_jsonc(&bytes).ok()?;
     val["remotes"]
-        .get(comp_scope)
+        .get(comp_scope.trim())
         .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|url| !url.is_empty())
         .map(str::to_owned)
 }
 

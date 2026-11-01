@@ -112,6 +112,9 @@ impl Remotes {
     /// `Remotes.resolve`.
     pub async fn resolve(&self, scope: &str, network: &Network) -> io::Result<Remote> {
         let scope = scope.trim();
+        if scope.is_empty() || scope.contains('/') {
+            return Err(invalid("invalid remote scope"));
+        }
         if let Some(host) = self.hosts.get(scope) {
             return Remote::from_host(host);
         }
@@ -127,10 +130,10 @@ impl Remotes {
             Some(resolver) => Remote::from_host(&resolver.resolve(scope).await?)?,
             None => self.resolve_from_hub(scope, network).await?,
         };
-        RESOLVED
-            .lock()
-            .map_err(|_| invalid("remotes poisoned"))?
-            .insert(key, remote.clone());
+        let mut cache = RESOLVED.lock().map_err(|_| invalid("remotes poisoned"))?;
+        if cache.len() < 4096 {
+            cache.insert(key, remote.clone());
+        }
         Ok(remote)
     }
 

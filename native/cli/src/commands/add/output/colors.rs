@@ -19,13 +19,7 @@ pub(super) fn error(error: io::Error, chalk: Chalk) -> io::Error {
     io::Error::new(error.kind(), Colored { message, source: error })
 }
 pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
-    if !chalk.enabled()
-        || error
-            .get_ref()
-            .is_some_and(|inner| {
-                inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>()
-            })
-    {
+    if !chalk.enabled() || has_colored_or_callback(&error) {
         return error;
     }
     let message = error.to_string();
@@ -33,6 +27,21 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
         return error;
     }
     io::Error::new(error.kind(), Colored { message: chalk.red(&message), source: error })
+}
+fn has_colored_or_callback(error: &io::Error) -> bool {
+    let mut current: Option<&(dyn Error + 'static)> = error
+        .get_ref()
+        .map(|inner| inner as &(dyn Error + 'static));
+    for _ in 0..32 {
+        let Some(inner) = current else {
+            return false;
+        };
+        if inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>() {
+            return true;
+        }
+        current = inner.source();
+    }
+    false
 }
 fn filesystem_message(message: &str) -> bool {
     let trimmed = message.trim_start();

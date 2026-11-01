@@ -15,34 +15,47 @@ pub(in crate::commands) fn overlay(
         let Some(row) = captured.iter().find(|row| matches_captured(row, &expected)) else {
             continue;
         };
-        component.files = serde_json::from_value(row["files"].clone())?;
-        if let Some(version) = row.get("trackingVersion") {
-            component.id.version = version
-                .as_str()
-                .map(str::trim)
-                .filter(|ver| !ver.is_empty())
-                .map(str::to_owned);
-        }
-        if let Some(main) = row["current"]["mainFile"]
+        apply_captured(component, row)?;
+    }
+    Ok(())
+}
+
+fn apply_captured(component: &mut WorkspaceComponent, row: &Value) -> io::Result<()> {
+    let files: Vec<String> = serde_json::from_value(row["files"].clone())?;
+    if files.len() > 4096
+        || files
+            .iter()
+            .any(|file| file.trim().is_empty())
+    {
+        return Err(io::Error::other("tracking loaded files"));
+    }
+    component.files = files;
+    if let Some(version) = row.get("trackingVersion") {
+        component.id.version = version
             .as_str()
             .map(str::trim)
-            .filter(|main| !main.is_empty())
-        {
-            main.clone_into(&mut component.main_file);
-        }
-        let extensions = row["current"]["extensions"]
-            .as_array()
-            .ok_or_else(|| io::Error::other("tracking loaded extensions"))?;
-        component.config = bit_install::workspace::aspects::from_model(extensions)
-            .into_iter()
-            .map(|aspect| (aspect.id, aspect.config))
-            .collect();
-        component.package_name = bit_install::workspace::component_package_name(
-            &component.id,
-            row["current"]["bindingPrefix"].as_str(),
-            &component.config,
-        );
+            .filter(|ver| !ver.is_empty())
+            .map(str::to_owned);
     }
+    if let Some(main) = row["current"]["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
+    {
+        main.clone_into(&mut component.main_file);
+    }
+    let extensions = row["current"]["extensions"]
+        .as_array()
+        .ok_or_else(|| io::Error::other("tracking loaded extensions"))?;
+    component.config = bit_install::workspace::aspects::from_model(extensions)
+        .into_iter()
+        .map(|aspect| (aspect.id, aspect.config))
+        .collect();
+    component.package_name = bit_install::workspace::component_package_name(
+        &component.id,
+        row["current"]["bindingPrefix"].as_str(),
+        &component.config,
+    );
     Ok(())
 }
 

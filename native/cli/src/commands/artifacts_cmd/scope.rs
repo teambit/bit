@@ -150,7 +150,9 @@ fn parse_index_row_id(row: &Value) -> Option<(&str, &str)> {
     } else {
         (row["id"]["scope"].as_str()?, row["id"]["name"].as_str()?)
     };
-    (!scope.trim().is_empty() && !name.trim().is_empty()).then_some((scope, name))
+    let scope = scope.trim();
+    let name = name.trim();
+    (!scope.is_empty() && !name.is_empty()).then_some((scope, name))
 }
 
 pub(super) fn filter_artifacts(

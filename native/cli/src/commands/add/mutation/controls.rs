@@ -56,7 +56,14 @@ fn proof_path(proof: &Value) -> Option<&str> {
                 .map(str::trim)
                 .filter(|path| !path.is_empty())
         })
-        .filter(|path| Path::new(path).is_absolute() && !path.chars().any(char::is_control))
+        .filter(|path| {
+            let candidate = Path::new(path);
+            candidate.is_absolute()
+                && !path.chars().any(char::is_control)
+                && !candidate
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+        })
 }
 
 pub(super) fn reads(facts: &Value) -> &[Value] {

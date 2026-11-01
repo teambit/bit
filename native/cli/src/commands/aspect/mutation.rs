@@ -258,13 +258,14 @@ pub(in crate::commands) fn find_matching_aspect_key(
     map: &Map<String, Value>,
     bare_aspect: &str,
 ) -> Option<String> {
-    if map.contains_key(bare_aspect) {
-        return Some(bare_aspect.to_owned());
-    }
-    let prefix = format!("{bare_aspect}@");
-    map.keys()
-        .find(|key| key.starts_with(&prefix))
-        .cloned()
+    let bare = bare_aspect.trim();
+    map.contains_key(bare)
+        .then(|| bare.to_owned())
+        .or_else(|| {
+            map.keys()
+                .find(|key| bit_install::config::aspect_id_without_version(key.trim()) == bare)
+                .cloned()
+        })
 }
 
 pub(in crate::commands) fn find_bitmap_row_mut<'a>(

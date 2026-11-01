@@ -50,6 +50,9 @@ fn add_lifecycle_packages(
     lifecycle: Lifecycle,
     result: &mut ComponentDependencies,
 ) -> io::Result<()> {
+    if packages.len() > 4096 {
+        return Err(io::Error::other("tracking package dependency count"));
+    }
     for (name, spec) in packages {
         let name = name.trim();
         let version = spec

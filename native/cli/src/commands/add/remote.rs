@@ -56,6 +56,7 @@ fn remote_id_str(value: &Value) -> Option<String> {
     Some(
         non_empty_str(&value["scope"])
             .or_else(|| non_empty_str(&value["id"]["scope"]))
+            .filter(|scope| !scope.contains('/'))
             .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")),
     )
 }

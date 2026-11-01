@@ -184,7 +184,7 @@ fn append_origin_sources(
 ) {
     for mut aspect in origin.entries {
         let bare = aspect_id_without_version(&aspect.id).to_owned();
-        if aspect.config.as_str() == Some("-") {
+        if aspect.config.as_str().map(str::trim) == Some("-") {
             removed.push(bare);
             continue;
         }

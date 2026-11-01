@@ -141,7 +141,15 @@ pub(super) fn source_path(root: &Path, component: &Value, file: &Value) -> io::R
         .or_else(|| non_empty_str(&component["rootDir"]))
         .ok_or_else(|| invalid("docs directory"))?;
     let relative = file_relative_path(file).ok_or_else(|| invalid("docs relative path"))?;
-    if Path::new(directory).is_absolute() || Path::new(relative).is_absolute() {
+    if Path::new(directory).is_absolute()
+        || Path::new(relative).is_absolute()
+        || Path::new(directory)
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+        || Path::new(relative)
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
         return Err(invalid("docs relative path"));
     }
     // Node path.join normalizes both separator spellings on Windows and drops

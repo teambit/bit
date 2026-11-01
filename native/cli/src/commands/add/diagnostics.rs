@@ -52,7 +52,7 @@ fn blocked_package(package: &Path) -> io::Result<bool> {
     if metadata(package)?.is_some_and(|metadata| metadata.is_file()) {
         return Ok(true);
     }
-    for ancestor in package.ancestors().skip(1) {
+    for ancestor in package.ancestors().skip(1).take(32) {
         match fs::metadata(ancestor) {
             Ok(metadata) if metadata.is_file() => return Ok(true),
             Ok(_) => {}

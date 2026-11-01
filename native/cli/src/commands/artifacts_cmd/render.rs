@@ -50,10 +50,14 @@ fn save_single_artifact_file(
     comp_path: &Path,
     file: &ArtifactFile,
 ) -> Result<(), Failure> {
-    if file.hash.trim().is_empty() || !is_safe_artifact_path(&file.relative_path) {
+    let hash = file.hash.trim();
+    if hash.len() != 40
+        || !hash.bytes().all(|byte| byte.is_ascii_hexdigit())
+        || !is_safe_artifact_path(&file.relative_path)
+    {
         return Err(Failure::Declined("missing hash or unsafe artifact path".into()));
     }
-    let (_, bytes) = bit_object_import::read_raw_scope_object(scope_dir, file.hash.trim())
+    let (_, bytes) = bit_object_import::read_raw_scope_object(scope_dir, hash)
         .ok()
         .flatten()
         .ok_or_else(|| Failure::Declined("missing Source object for artifact".into()))?;

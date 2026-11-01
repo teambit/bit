@@ -245,10 +245,11 @@ pub(super) fn enrich(loaded: &mut Loaded) -> io::Result<()> {
         &loaded.projection.context,
     )?;
     for row in rows {
-        let row_id = row_identity(&row);
+        let row_id =
+            row_identity(&row).ok_or_else(|| io::Error::other("cached hydration identity"))?;
         let current = loaded.capture.captured
             .iter_mut()
-            .find(|current| row_identity(current) == row_id)
+            .find(|current| row_identity(current) == Some(row_id))
             .ok_or_else(|| io::Error::other("cached hydration identity"))?;
         current
             .as_object_mut()

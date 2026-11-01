@@ -70,7 +70,10 @@ impl Read for Chunks {
             match self.receiver.blocking_recv() {
                 Some(chunk) if chunk.is_empty() => continue,
                 Some(chunk) => self.current = io::Cursor::new(chunk),
-                None => return Ok(0),
+                None => {
+                    self.current = io::Cursor::new(Vec::new());
+                    return Ok(0);
+                }
             }
         }
     }

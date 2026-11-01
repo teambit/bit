@@ -68,6 +68,9 @@ impl Manifests {
     }
 }
 fn serialized(path: &Path) -> Option<String> {
+    if fs::metadata(path).ok()?.len() > 4 * 1024 * 1024 {
+        return None;
+    }
     let value: serde_json::Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;
     bit_object_import::stringify_json(&value, false).ok()
 }

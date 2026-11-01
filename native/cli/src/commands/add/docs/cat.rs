@@ -20,7 +20,11 @@ pub(in crate::commands) struct CatDocs {
 /// Cache corruption and ambiguous feature precedence must reach the published
 /// consumer, whose `FsCache` owns its cleanup and option semantics.
 pub(in crate::commands) fn cat_prepare(root: &Path, component: Value) -> Option<CatDocs> {
-    if root.as_os_str().is_empty() || !component.is_object() || cache::no_fs_cache(root) {
+    if !root.is_absolute()
+        || root.as_os_str().is_empty()
+        || !component.is_object()
+        || cache::no_fs_cache(root)
+    {
         return None;
     }
     let components = vec![component];

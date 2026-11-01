@@ -108,8 +108,12 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
 
 pub(super) fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
     let mut entry_points = entry_point_metadata(manifest.env, stem);
-    if let Some(types) = &manifest.overrides.entry_points.types {
-        entry_points.types = Some(types.clone());
+    if let Some(types) = manifest.overrides.entry_points.types
+        .as_deref()
+        .map(str::trim)
+        .filter(|types| !types.is_empty())
+    {
+        entry_points.types = Some(types.to_owned());
     }
     if let Some(exports) = &manifest.overrides.entry_points.exports {
         entry_points.exports = Some(exports.clone());

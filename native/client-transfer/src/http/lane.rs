@@ -10,11 +10,15 @@ const MAX_LANE_BYTES: usize = 4 * 1024 * 1024;
 
 impl Network {
     pub async fn list_lanes(&self, url: &str, id: Option<&str>) -> io::Result<Vec<Value>> {
+        let base = url.trim().trim_end_matches('/');
+        if base.is_empty() {
+            return Err(invalid("remote lane url"));
+        }
         let ids = id
             .map(str::trim)
             .filter(|id| !id.is_empty())
             .map(|id| vec![id]);
-        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
+        let endpoint = format!("{base}/graphql");
         let response = self.send(
             self.headers(self.client.post(&endpoint), "read")?
                 .json(&json!({"query": LANES_QUERY, "variables": {"ids": ids}})),
@@ -30,25 +34,29 @@ impl Network {
             }
             bytes.extend_from_slice(&chunk);
         }
-        let parsed: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
-        if let Some(message) = parsed["errors"][0]["message"]
-            .as_str()
-            .map(str::trim)
-            .filter(|msg| !msg.is_empty())
-        {
-            return Err(io::Error::other(message.to_owned()));
-        }
-        let lanes = parsed["data"]["lanes"]["list"]
-            .as_array()
-            .ok_or_else(|| invalid("remote lane list response"))?;
-        if lanes.len() > 4096 {
-            return Err(invalid("remote lane list count"));
-        }
-        lanes
-            .iter()
-            .map(lane_projection)
-            .collect()
+        parse_lanes_response(&bytes)
     }
+}
+
+fn parse_lanes_response(bytes: &[u8]) -> io::Result<Vec<Value>> {
+    let parsed: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;
+    if let Some(message) = parsed["errors"][0]["message"]
+        .as_str()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+    {
+        return Err(io::Error::other(message.to_owned()));
+    }
+    let lanes = parsed["data"]["lanes"]["list"]
+        .as_array()
+        .ok_or_else(|| invalid("remote lane list response"))?;
+    if lanes.len() > 4096 {
+        return Err(invalid("remote lane list count"));
+    }
+    lanes
+        .iter()
+        .map(lane_projection)
+        .collect()
 }
 
 fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
@@ -59,18 +67,18 @@ fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
             .unwrap_or(raw)
             .split_once('/')
             .map(|(scope, name)| (scope.trim(), name.trim()))
-            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty() && !name.contains('/'))
             .ok_or_else(|| invalid("remote lane scope"))
     } else {
         let name = id["name"]
             .as_str()
             .map(str::trim)
-            .filter(|name| !name.is_empty())
+            .filter(|name| !name.is_empty() && !name.contains('/'))
             .ok_or_else(|| invalid("remote lane name"))?;
         let scope = id["scope"]
             .as_str()
             .map(str::trim)
-            .filter(|scope| !scope.is_empty())
+            .filter(|scope| !scope.is_empty() && !scope.contains('/'))
             .ok_or_else(|| invalid("remote lane scope"))?;
         Ok((scope, name))
     }

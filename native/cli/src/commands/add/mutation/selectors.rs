@@ -85,6 +85,10 @@ impl ProjectedLinker {
         entered: &str,
     ) -> io::Result<Vec<Value>> {
         grammar::validate(entered)?;
+        let applied = grammar::applied(entered);
+        if applied == "$env:" {
+            return Err(io::Error::other("selector environment name is empty"));
+        }
         let ids = grammar::identities(&targets);
         if ids.is_empty() {
             return Ok(Vec::new());
@@ -97,7 +101,7 @@ impl ProjectedLinker {
         selection::criterion(
             request.context,
             targets,
-            &grammar::applied(entered),
+            &applied,
             &rows,
             &self.retained.facts.environments,
             &compared,

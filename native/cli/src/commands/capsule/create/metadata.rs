@@ -64,6 +64,9 @@ fn has_valid_origin_marker(marker: &Path) -> bool {
             val["originPath"]
                 .as_str()
                 .is_some_and(|origin| !origin.trim().is_empty())
+                && val["createdAt"]
+                    .as_str()
+                    .is_some_and(|created| !created.trim().is_empty())
                 && val["kind"]
                     .as_str()
                     .is_some_and(|kind| !kind.trim().is_empty())

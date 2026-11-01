@@ -52,7 +52,10 @@ pub(super) fn components(
 ) -> Vec<WorkspaceComponent> {
     identities
         .iter()
-        .map(|identity| identity.trim())
+        .map(|identity| {
+            let trimmed = identity.trim();
+            trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
+        })
         .filter(|identity| !identity.is_empty())
         .filter_map(|identity| {
             projection.workspace.components

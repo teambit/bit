@@ -83,8 +83,12 @@ impl Resolver {
 
     /// `resolverFunction(scopeName, thisScope.name, token)`.
     pub async fn resolve(&self, scope: &str) -> io::Result<String> {
+        let scope = scope.trim();
+        if scope.is_empty() || scope.chars().any(char::is_control) {
+            return Err(invalid("the remote resolver received an invalid scope"));
+        }
         let resolver = self.clone();
-        let scope = scope.trim().to_string();
+        let scope = scope.to_string();
         tokio::task::spawn_blocking(move || resolver.run(&scope)).await.map_err(io::Error::other)?
     }
 

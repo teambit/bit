@@ -119,11 +119,20 @@ fn already_used(value: &Value, format: &Formatter) -> io::Result<String> {
         return Ok(String::new());
     };
     for (id, files) in already {
+        let id = id.trim();
+        if id.is_empty() {
+            return Err(io::Error::other("tracking used component"));
+        }
         let files = files
             .as_array()
             .ok_or_else(|| io::Error::other("tracking used files"))?
             .iter()
-            .map(|file| file.as_str().ok_or_else(|| io::Error::other("tracking used file")))
+            .map(|file| {
+                file.as_str()
+                    .map(str::trim)
+                    .filter(|file| !file.is_empty())
+                    .ok_or_else(|| io::Error::other("tracking used file"))
+            })
             .collect::<io::Result<Vec<_>>>()?;
         result.push(Formatter::item_with(
             &format!(

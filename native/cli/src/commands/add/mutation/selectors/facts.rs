@@ -50,8 +50,12 @@ impl Facts {
     ) -> io::Result<Value> {
         let targets = ids
             .iter()
-            .filter_map(|id| self.comparisons.get(id.trim()))
-            .collect::<Vec<_>>();
+            .map(|id| {
+                self.comparisons
+                    .get(id.trim())
+                    .ok_or_else(|| io::Error::other("selector comparison target missing"))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
         engine.request(&json!({"kind":"statusCompare","root":root,"targets":targets}))
     }
 }

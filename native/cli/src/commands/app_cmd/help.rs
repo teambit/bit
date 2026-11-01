@@ -77,8 +77,12 @@ fn rejected_app_option(args: &[&str], list: bool) -> Option<&'static str> {
         }
         _ => return None,
     };
-    let flag = flag.split_once('=').map_or(flag, |(name, _)| name.trim());
-    if list && matches!(flag, "--json" | "-j") {
+    let (flag, inline) = flag
+        .split_once('=')
+        .map_or((flag, None), |(name, val)| (name.trim(), Some(val.trim())));
+    if inline.is_some_and(|val| val.is_empty() || val.starts_with('-'))
+        || (list && matches!(flag, "--json" | "-j"))
+    {
         return None;
     }
     match flag {

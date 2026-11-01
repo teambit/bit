@@ -311,9 +311,13 @@ impl Network {
         if let Some(message) = parsed["errors"][0]["message"].as_str() {
             return Err(io::Error::other(message.to_string()));
         }
-        parsed["data"]["scope"]["components"]
+        let components = parsed["data"]["scope"]["components"]
             .as_array()
-            .ok_or_else(|| invalid("remote list response"))?
+            .ok_or_else(|| invalid("remote list response"))?;
+        if components.len() > 16_384 {
+            return Err(invalid("remote list response limit"));
+        }
+        components
             .iter()
             .map(Listed::parse)
             .collect()

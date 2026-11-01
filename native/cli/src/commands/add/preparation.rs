@@ -83,8 +83,11 @@ fn environment_options(
 
 fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
     let configured = extract_env_id(facts, "configuredId")
+        .filter(|id| !id.chars().any(char::is_control))
         .ok_or_else(|| io::Error::other("tracking environment identity"))?;
-    let resolved = extract_env_id(facts, "resolvedId").unwrap_or(configured);
+    let resolved = extract_env_id(facts, "resolvedId")
+        .filter(|id| !id.chars().any(char::is_control))
+        .unwrap_or(configured);
     Ok(json!({(configured):{},"teambit.envs/envs":{"env":resolved}}))
 }
 

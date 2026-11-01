@@ -366,11 +366,12 @@ fn parse_set(rest: &[&str]) -> Option<Subcommand> {
         }
         _ => return None,
     };
+    let aspect_id = aspect_id.trim();
     if !is_supported_pattern(pattern) || aspect_id.is_empty() {
         return None;
     }
     Some(Subcommand::Set {
-        pattern: pattern.to_owned(),
+        pattern: pattern.trim().to_owned(),
         aspect_id: aspect_id.to_owned(),
         config,
         merge,

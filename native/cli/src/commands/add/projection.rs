@@ -155,10 +155,12 @@ fn components(workspace: &Workspace, added: &[Value]) -> Vec<Value> {
     }).collect()
 }
 fn tracking_version(row: &mut Value, added: &[Value]) {
-    let row_id = row_identity(row).map(str::to_owned);
+    let Some(row_id) = row_identity(row).map(str::to_owned) else {
+        return;
+    };
     if let Some(added) = added
         .iter()
-        .find(|added| row_identity(added) == row_id.as_deref())
+        .find(|added| row_identity(added) == Some(row_id.as_str()))
     {
         row["trackingVersion"] = added["loadVersion"].clone();
     }

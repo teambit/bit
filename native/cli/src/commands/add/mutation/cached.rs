@@ -120,9 +120,9 @@ fn refreshed(
             .iter()
             .find(|component| Some(component.id.to_string_without_version().trim()) == identity)
             .ok_or_else(|| io::Error::other("retained identity projection missing"))?;
-        row["directory"] = json!(component.root_dir);
+        row["directory"] = json!(component.root_dir.trim());
         row["files"] = json!(component.files);
-        row["current"]["mainFile"] = json!(component.main_file);
+        row["current"]["mainFile"] = json!(component.main_file.trim());
     }
     Ok(rows)
 }
