@@ -277,6 +277,7 @@ fn append_lane_dependency_progress(
     Ok(())
 }
 
+#[inline]
 fn decorate_receipt(input: &Prepare, lanes: usize, groups: &[usize], receipt: &mut Value) {
     receipt["laneFetch"] = json!(true);
     if input.operation == "laneImport" {

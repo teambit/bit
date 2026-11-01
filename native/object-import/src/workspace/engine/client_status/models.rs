@@ -101,6 +101,7 @@ fn index_row_parts(row: &Value) -> (&str, &str) {
     }
 }
 
+#[inline]
 fn reference<'a>(model: &'a Value, target: &'a Target) -> io::Result<&'a str> {
     let version = target.version.trim();
     let reference = if matches!(version, "" | "latest" | "head") {

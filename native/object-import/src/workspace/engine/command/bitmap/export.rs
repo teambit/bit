@@ -90,6 +90,7 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
     Ok(false)
 }
 
+#[inline]
 fn can_promote_default_scope(row: &Value, scope: &str) -> bool {
     row["scope"]
         .as_str()

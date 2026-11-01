@@ -59,6 +59,7 @@ fn capture_remotes(
     Ok((remotes.into_values().collect(), hash))
 }
 
+#[inline]
 fn unmatched_roots(roots: &[Target], entries: &[lane::Entry]) -> Vec<Target> {
     let entry_set: HashSet<_> = entries.iter().map(entry_key).collect();
     roots

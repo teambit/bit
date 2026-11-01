@@ -4,7 +4,7 @@ use std::{collections::HashMap, io, path::PathBuf};
 
 use super::{State, invalid};
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     token: String,
@@ -13,7 +13,7 @@ struct Request {
     chown: Option<Owner>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Owner {
     uid: u32,

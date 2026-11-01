@@ -1,4 +1,4 @@
-//! Validated bitmap targets and status-facing bitmap state.
+//! Validated bitmap targets, aspect configurations, and status-facing bitmap state.
 
 #[cfg(test)]
 mod rename_tests;

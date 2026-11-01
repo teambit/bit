@@ -12,6 +12,7 @@ use sha1::Digest;
 use std::{borrow::Cow, collections::HashMap, path::Path};
 
 /// The objects one request returned, then the workspace's own.
+#[derive(Debug, Clone)]
 struct Objects<'a> {
     fetched: HashMap<&'a str, &'a [u8]>,
     local: &'a Path,

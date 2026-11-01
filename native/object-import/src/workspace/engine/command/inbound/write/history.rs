@@ -44,7 +44,7 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
     })
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone)]
 pub(super) struct Attributes {
     pub(super) source: Option<fs::Metadata>,
     pub(super) backup: Option<fs::Metadata>,

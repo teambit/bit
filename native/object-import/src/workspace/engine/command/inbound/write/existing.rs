@@ -23,7 +23,7 @@ pub(super) struct Input<'a> {
     pub(super) resolution: Resolution<'a>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Resolution<'a> {
     pub(super) override_existing: bool,
     pub(super) merge_strategy: Option<&'a str>,

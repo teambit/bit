@@ -48,6 +48,7 @@ const ISSUE_CLASSES: [&str; 24] = [
     "LoadFailures",
 ];
 
+#[inline]
 pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
     configuration_for_command(root, false)
 }

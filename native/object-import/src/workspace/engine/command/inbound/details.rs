@@ -170,6 +170,7 @@ fn removed(
     Ok(false)
 }
 
+#[inline]
 fn head_version<'a>(
     root: &Path,
     head: &str,

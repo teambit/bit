@@ -23,12 +23,14 @@ use std::{
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_OBJECTS: usize = 4096;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Body {
     Repository,
     Snapshot(Vec<u8>),
     Metadata(Vec<u8>),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Descriptor {
     pub(crate) hash: [u8; 20],
     pub(crate) scope: Option<String>,
@@ -36,6 +38,7 @@ pub(crate) struct Descriptor {
     pub(crate) body: Body,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Prepared {
     pub(crate) path: PathBuf,
     pub(crate) count: usize,

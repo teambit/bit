@@ -145,6 +145,7 @@ pub(super) fn publish_bitmap(
 }
 // Canonical Repository.persist invokes its hook without awaiting completion. Native
 // publication records each invocation and performs the same best-effort notification.
+#[inline]
 pub(super) fn notify(root: &std::path::Path) -> usize {
     let directory = crate::scope_path(root).join("events");
     let target = directory.join("onPostObjectsPersist");

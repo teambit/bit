@@ -97,6 +97,7 @@ fn retain_files(
     Ok((files, paths))
 }
 
+#[inline]
 fn validate_relative<'a>(relative: &'a str, seen: &mut HashSet<&'a str>) -> io::Result<()> {
     if relative.len() > 4096
         || relative

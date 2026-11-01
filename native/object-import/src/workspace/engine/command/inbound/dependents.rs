@@ -134,6 +134,7 @@ fn enqueue(
     }
     Ok(())
 }
+#[inline]
 fn bare(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@')

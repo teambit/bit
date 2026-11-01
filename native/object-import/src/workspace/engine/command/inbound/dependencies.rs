@@ -265,6 +265,7 @@ pub(super) fn target(value: &Value) -> io::Result<Target> {
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
 
+#[inline]
 pub(super) fn identity(target: &Target) -> io::Result<String> {
     let scope = target.scope
         .as_deref()

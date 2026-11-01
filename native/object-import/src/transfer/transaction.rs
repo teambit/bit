@@ -23,6 +23,7 @@ pub(super) struct Receipt {
     success: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Transaction {
     scope_count: usize,
     token: String,
@@ -31,6 +32,7 @@ pub(super) struct Transaction {
     phase: Phase,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Phase {
     Push(usize),
     Validate,

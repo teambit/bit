@@ -1,3 +1,4 @@
+//! Finalize merge-snap planning and bitmap preparation for a planned workspace command.
 use super::{Finalize, State, bitmap, invalid, proof, scratch};
 use serde_json::{Value, json};
 use std::io;

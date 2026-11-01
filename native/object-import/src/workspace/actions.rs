@@ -10,6 +10,7 @@ use std::{
 use super::{MAX_BYTES, MAX_FILES, MAX_PATH, Response, invalid};
 use crate::protocol;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Action {
     kind: u32,
     source: PathBuf,

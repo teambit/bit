@@ -1,5 +1,5 @@
 //! Retained public inbound transfer. Prepare performs remote I/O and validates
-//! the complete import without touching the user's repository; Apply publishes.
+//! the complete import without touching the local repository; Apply publishes.
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;
 pub(crate) mod details;

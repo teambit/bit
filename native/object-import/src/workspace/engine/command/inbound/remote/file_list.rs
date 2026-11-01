@@ -178,6 +178,7 @@ pub(crate) fn row_id_parts(row: &Value) -> Option<(Option<&str>, &str)> {
     (!name.is_empty()).then_some((scope, name))
 }
 
+#[inline]
 pub(crate) fn row_scoped_id_parts(row: &Value) -> Option<(&str, &str)> {
     let (scope, name) = row_id_parts(row)?;
     let scope = scope.filter(|val| !val.is_empty())?;

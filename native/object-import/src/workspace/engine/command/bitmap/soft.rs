@@ -46,6 +46,7 @@ fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
     Ok(cloned)
 }
 
+#[inline]
 pub(super) fn identity(entry: &Value) -> io::Result<String> {
     let name = entry["name"]
         .as_str()

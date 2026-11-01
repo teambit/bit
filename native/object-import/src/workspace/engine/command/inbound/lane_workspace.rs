@@ -70,6 +70,7 @@ fn prepare_http(
     finish(import, choice, id, input)
 }
 
+#[derive(Debug, Clone)]
 struct Choice {
     selected: Vec<Target>,
     main: Vec<String>,

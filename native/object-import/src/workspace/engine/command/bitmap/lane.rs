@@ -2,6 +2,7 @@ use super::{super::repository, Update, identity, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+#[inline]
 pub(super) fn on_lane(context: &Value) -> bool {
     context["lane"]["currentId"]["name"]
         .as_str()

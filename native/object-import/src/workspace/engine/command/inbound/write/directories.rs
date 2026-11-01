@@ -45,6 +45,7 @@ pub(super) fn assign(
 }
 
 /// `incrementPathRecursively`: `<path>_1`, or the first free `<path>_<n>`.
+#[inline]
 fn increment_path(path: &str, all: &[String]) -> String {
     let mut number = 1;
     loop {

@@ -38,6 +38,7 @@ const MAX_INBOUND_BYTES: usize = bit_client_transfer::tar::MAX_ARCHIVE_BYTES;
 /// The objects retained from one remote scope.
 const MAX_INBOUND_OBJECTS: usize = 16384;
 
+#[inline]
 pub(super) fn recovery_connection(
     root: &Path,
     home: &Path,

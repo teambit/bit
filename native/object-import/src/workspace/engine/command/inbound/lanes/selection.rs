@@ -1,4 +1,4 @@
-//! `ImporterMain.fetch` resolves tracked aliases and implicit remote lane refs.
+//! `ImporterMain.fetch` resolves tracked aliases and implicit remote lane references.
 #[cfg(test)]
 mod tests;
 use super::super::{Prepare, config, invalid};

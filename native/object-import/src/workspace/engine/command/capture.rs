@@ -87,6 +87,7 @@ fn all_with(
         Ok(Captured { added: false, hidden: false, model_backed: false, target, metadata: Value::Array(metadata), files: Value::Array(files) })
     }).collect()
 }
+#[inline]
 pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io::Result<()> {
     let Some(rows) = context["lane"]["targets"].as_array() else { return Ok(()) };
     for component in captured {

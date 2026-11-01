@@ -9,6 +9,7 @@ use std::{fs, io, path::PathBuf};
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     path: PathBuf,
     before: Vec<u8>,

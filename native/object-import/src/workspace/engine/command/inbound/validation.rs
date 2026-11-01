@@ -41,6 +41,7 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
     if input.options.lanes && input.ids.len() > 33 {
         return Err(invalid("inbound lanes require explicit IDs"));

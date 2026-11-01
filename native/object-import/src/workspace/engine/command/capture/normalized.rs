@@ -34,6 +34,7 @@ pub(super) fn read(
     .collect()
 }
 
+#[inline]
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata, Vec<u8>)> {
     let (mut metadata, contents) = read::canonical(path, bytes);
     if !bitmap {

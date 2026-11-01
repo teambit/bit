@@ -53,6 +53,7 @@ fn connected(
     )
 }
 
+#[inline]
 fn group(
     input: &Prepare,
     targets: &[Target],

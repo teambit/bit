@@ -27,6 +27,7 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
     Ok(result)
 }
 
+#[inline]
 fn normalize_receipt(receipt: &Value) -> io::Result<(String, Value, Value)> {
     let path = receipt["path"]
         .as_str()

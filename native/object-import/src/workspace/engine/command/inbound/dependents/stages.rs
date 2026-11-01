@@ -11,19 +11,20 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
+#[derive(Clone)]
 pub(in super::super) struct Pending {
     input: Prepare,
     roots: Vec<Target>,
     targets: Vec<Target>,
     progress_count: usize,
 }
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {
     token: String,
     graph: Graph,
 }
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Graph {
     rows: Vec<Value>,

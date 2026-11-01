@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub(super) struct State {
     values: HashMap<String, Value>,
     changed: HashSet<String>,

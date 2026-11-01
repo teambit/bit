@@ -147,6 +147,7 @@ fn overwrite(old: &Value, incoming: &Value) -> io::Result<bool> {
         .zip(right)
         .is_some_and(|(left, right)| left.compare(&right) == Ordering::Greater))
 }
+#[inline]
 fn array(value: &Value) -> io::Result<&[Value]> {
     value
         .as_array()

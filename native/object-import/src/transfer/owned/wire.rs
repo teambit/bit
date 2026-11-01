@@ -185,6 +185,7 @@ pub(super) fn hexadecimal(text: &str) -> std::io::Result<Vec<u8>> {
         .collect()
 }
 
+#[inline]
 fn hex_digit(byte: u8) -> std::io::Result<u8> {
     match byte {
         b'0'..=b'9' => Ok(byte - b'0'),

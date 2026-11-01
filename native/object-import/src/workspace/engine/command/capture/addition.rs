@@ -39,6 +39,7 @@ pub(in crate::workspace::engine::command) fn capture(
     })
 }
 
+#[inline]
 fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result<()> {
     let scope = destination["scope"]
         .as_str()

@@ -7,7 +7,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
     token: String,

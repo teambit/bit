@@ -67,6 +67,7 @@ impl State {
         Ok(())
     }
 
+    #[inline]
     pub(super) fn token(&mut self, bytes: &[u8]) -> io::Result<String> {
         if bytes.len() > super::MAX_BYTES {
             return Err(invalid("transfer identity input limit"));

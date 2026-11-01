@@ -36,6 +36,7 @@ pub(in crate::workspace::engine::command) fn context(
     Ok(())
 }
 
+#[inline]
 fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("stash bitmap"))?;
     Ok(rows

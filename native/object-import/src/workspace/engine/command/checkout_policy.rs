@@ -11,13 +11,14 @@ use std::{io, path::Path};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
+#[derive(Debug, Clone)]
 pub(super) struct Prepared {
     input: Value,
     publication: publication::Prepared,
     ready: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {
     token: String,

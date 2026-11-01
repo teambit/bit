@@ -45,6 +45,7 @@ pub(super) fn rows(
     progress
 }
 
+#[inline]
 fn latest_root_count(roots: &[Target], depth: bool) -> usize {
     if !depth {
         return 0;

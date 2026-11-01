@@ -1,4 +1,4 @@
-//! Resolve explicit import identifiers and tracked scoped bitmap targets.
+//! Resolve explicit import identifiers and tracked scoped `.bitmap` targets.
 use super::{Target, invalid};
 use crate::workspace::engine::client_status::config;
 use std::{io, path::Path};
