@@ -101,10 +101,8 @@ pub(in crate::workspace::engine) fn prepare(
     input: Prepare,
     state: &mut super::State,
 ) -> io::Result<(usize, Value)> {
+    validate_policy_state(state, &input.token)?;
     let mut record = state.record.take().ok_or_else(|| invalid("command policy owner absent"))?;
-    if input.token.trim().is_empty() || record.token.trim() != input.token.trim() {
-        return Err(invalid("command policy token"));
-    }
     let mut planned = record.planned.take().ok_or_else(|| invalid("command policy plan absent"))?;
     let merge = planned.plan.merge.as_mut().ok_or_else(|| invalid("command policy nonmerge"))?;
     let policy =
@@ -132,6 +130,23 @@ pub(in crate::workspace::engine) fn prepare(
     record.planned = Some(planned);
     state.record = Some(record);
     Ok((targets.len(), output))
+}
+
+fn validate_policy_state(state: &super::State, token: &str) -> io::Result<()> {
+    let token = token.trim();
+    let current = state.record.as_ref().ok_or_else(|| invalid("command policy owner absent"))?;
+    if token.is_empty() || current.token.trim() != token {
+        return Err(invalid("command policy token"));
+    }
+    if current.planned
+        .as_ref()
+        .and_then(|planned| planned.plan.merge.as_ref())
+        .and_then(|merge| merge.policy.as_ref())
+        .is_none()
+    {
+        return Err(invalid("command policy plan absent"));
+    }
+    Ok(())
 }
 
 fn validate_preparation(record: &Record, prepared: &mut super::PreparedPlan) -> io::Result<()> {

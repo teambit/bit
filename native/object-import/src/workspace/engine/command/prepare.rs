@@ -216,24 +216,24 @@ fn validate(request: &Prepare) -> io::Result<()> {
 
 fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
     let options = &request.options;
-    let to = options.to.as_deref().map(str::trim);
+    let checkout_head = request.operation == Operation::Checkout
+        && options.to
+            .as_deref()
+            .is_some_and(|to| to.trim().eq_ignore_ascii_case("head"));
     let invalid_strategy = options.strategy
         .as_deref()
         .map(str::trim)
         .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"));
-    let invalid_workspace_only =
-        options.workspace_only && (request.operation != Operation::Checkout || to != Some("head"));
-    let conflicting_forces = options.force_ours && options.force_theirs;
-    let interrupted = request.root.join("merge-conflict").try_exists()?;
-    Ok(!options.skip_dependency_installation
-        || options.scope.include_new_from_scope
-            && (request.operation != Operation::Checkout || to != Some("head"))
+    let invalid_scope = options.scope.include_new_from_scope && !checkout_head
         || !options.scope.include_new_from_scope
-            && !options.scope.scope_candidates.is_empty()
-        || invalid_workspace_only
-        || conflicting_forces && request.operation != Operation::Switch
-        || invalid_strategy && request.operation != Operation::Switch
-        || interrupted)
+            && !options.scope.scope_candidates.is_empty();
+    let invalid_switch_flags = request.operation != Operation::Switch
+        && (options.force_ours && options.force_theirs || invalid_strategy);
+    Ok(!options.skip_dependency_installation
+        || invalid_scope
+        || options.workspace_only && !checkout_head
+        || invalid_switch_flags
+        || request.root.join("merge-conflict").try_exists()?)
 }
 
 fn validate_revert(request: &Prepare) -> io::Result<()> {
@@ -273,27 +273,22 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
             if name.is_empty() {
                 return Err(invalid("command component name"));
             }
-            let (_, key_ver) = key
-                .rsplit_once('@')
-                .map_or((key.as_str(), ""), |(base, ver)| (base, ver.trim()));
-            let version = value
+            let key_ver = key.rsplit_once('@').map_or("", |(_, ver)| ver.trim());
+            let version = match value
                 .get("version")
                 .filter(|val| !val.is_null())
-                .map(|val| {
-                    val.as_str()
-                        .map(str::trim)
-                        .ok_or_else(|| invalid("command component version"))
-                })
-                .transpose()?
-                .unwrap_or(key_ver);
-            Ok(command_import::Target {
-                scope: scope
+            {
+                Some(val) => val
+                    .as_str()
                     .map(str::trim)
-                    .filter(|scope| !scope.is_empty())
-                    .map(str::to_owned),
-                name: name.to_owned(),
-                version: version.to_owned(),
-            })
+                    .ok_or_else(|| invalid("command component version"))?,
+                None => key_ver,
+            };
+            let scope = scope
+                .map(str::trim)
+                .filter(|sc| !sc.is_empty())
+                .map(str::to_owned);
+            Ok(command_import::Target { scope, name: name.to_owned(), version: version.to_owned() })
         })
         .collect()
 }

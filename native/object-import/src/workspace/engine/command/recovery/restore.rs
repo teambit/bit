@@ -119,6 +119,7 @@ fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> i
         .map(|lane| lane.id.trim().trim_matches('/'))
         .filter(|id| !id.is_empty())
         .unwrap_or("main");
+    crate::checkout::plan::relative_path(lane_id)?;
     let staged_config = format!("staged-config/{lane_id}.json");
     for (source, destination) in
         [("staged-snaps", "staged-snaps"), ("staged-config.json", staged_config.as_str())]

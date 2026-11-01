@@ -9,13 +9,15 @@ pub(super) fn run(
     snapshots: &mut crate::workspace::snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    let mut record =
-        snapshots.command.record.take().ok_or_else(|| invalid("command owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || record.token.trim() != token || record.planned.is_some() {
+    let current =
+        snapshots.command.record.as_ref().ok_or_else(|| invalid("command owner absent"))?;
+    if token.is_empty() || current.token.trim() != token || current.planned.is_some() {
         return Err(invalid("command plan token"));
     }
     proof::verify(&input.dependency_read_set)?;
+    let mut record =
+        snapshots.command.record.take().ok_or_else(|| invalid("command owner absent"))?;
     record.proofs.extend(input.dependency_read_set.iter().cloned());
     validate_versions(&mut record)?;
     let mut planned = plan_operation(&mut record, input, snapshots, pool)

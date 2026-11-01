@@ -83,7 +83,9 @@ pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Val
                 .map(str::trim)
                 .filter(|identity| !identity.is_empty())
                 .ok_or_else(|| invalid("command issue dependency identity"))?;
-            dependencies.push(identity);
+            if !dependencies.contains(&identity) {
+                dependencies.push(identity);
+            }
         }
     }
     Ok(json!({

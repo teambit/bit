@@ -58,9 +58,14 @@ fn unexported_lane_row<'a>(
             let default_scope = row["defaultScope"].as_str().map_or("", str::trim);
             let row_name = row["name"].as_str().map(str::trim);
             (key_id == name || key_id == full || row_name == Some(name))
-                && row["scope"]
-                    .as_str()
-                    .is_none_or(|val| val.trim().is_empty())
+                && row
+                    .get("scope")
+                    .is_none_or(|val| {
+                        val.is_null()
+                            || val
+                                .as_str()
+                                .is_some_and(|sc| sc.trim().is_empty())
+                    })
                 && (default_scope.is_empty() || default_scope == scope)
         })
         .map(|(_, row)| row)
@@ -73,6 +78,16 @@ pub(super) fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {
         scope["lanes"]["new"].as_array_mut().ok_or_else(|| invalid("outbound lane scope state"))?;
     if new.len() > 4096 {
         return Err(invalid("outbound lane scope bounds"));
+    }
+    if new
+        .iter()
+        .any(|entry| {
+            entry
+                .as_str()
+                .is_none_or(|val| val.trim().is_empty())
+        })
+    {
+        return Err(invalid("outbound lane scope state"));
     }
     new.retain(|entry| entry.as_str().map(str::trim) != Some(name));
     bit_workspace_config::render_scope_json(&scope)

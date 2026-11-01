@@ -57,6 +57,7 @@ fn saved_edges(version: &Value, repository: &mut Repository) -> io::Result<Value
     }
     Ok(version
         .get("flattenedEdges")
+        .filter(|value| !value.is_null())
         .cloned()
         .unwrap_or_else(|| serde_json::json!([])))
 }

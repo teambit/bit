@@ -35,7 +35,10 @@ pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Valu
             .into_iter()
             .flatten()
         {
-            if aspect.get("conflict").is_some() {
+            if aspect
+                .get("conflict")
+                .is_some_and(|conflict| !conflict.is_null())
+            {
                 conflicts.push(aspect_text(&receipt["input"], aspect)?);
             }
         }

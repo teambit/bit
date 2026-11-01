@@ -194,10 +194,18 @@ fn prepare_scope(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
 }
 
 fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
-    let components: Vec<Value> = lane_model::lane_entries(&selected.lane)?
+    let components = lane_model::lane_entries(&selected.lane)?
         .iter()
-        .map(|entry| json!({"id":entry["id"],"head":entry["head"]}))
-        .collect();
+        .map(|entry| {
+            let head = entry["head"]
+                .as_str()
+                .or_else(|| entry["version"].as_str())
+                .map(str::trim)
+                .filter(|head| !head.is_empty())
+                .ok_or_else(|| invalid("outbound lane ref head"))?;
+            Ok(json!({"id":entry["id"],"head":head}))
+        })
+        .collect::<io::Result<Vec<Value>>>()?;
     if components.len() > 4096 {
         return Err(invalid("outbound lane publication bounds"));
     }

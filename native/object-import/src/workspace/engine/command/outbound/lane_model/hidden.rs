@@ -272,7 +272,10 @@ fn file(path: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
     else {
         return Ok(None);
     };
-    let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound remote lane hash"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("outbound remote lane hash"))?;
     let lane = model::read_object(&path.join("objects"), hash, "Lane")?;
     validate_lane(lane, scope, name).map(Some)
 }
@@ -280,7 +283,11 @@ fn http(input: &Prepare, url: &str, scope: &str, name: &str) -> io::Result<Optio
     let config = super::super::hub::configuration(input)?;
     let local: Value =
         crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
-    let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
+    let local_name = local["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|local_name| !local_name.is_empty())
+        .ok_or_else(|| invalid("outbound local scope"))?;
     let network = Network::new(
         &config,
         &input.transport.bit_version,
@@ -331,7 +338,9 @@ fn fetch_http(network: &Network, url: &str, scope: &str, name: &str) -> io::Resu
     Ok(result)
 }
 fn validate_lane(lane: Value, scope: &str, name: &str) -> io::Result<Value> {
-    if lane["scope"] != scope || lane["name"] != name {
+    if lane["scope"].as_str().map(str::trim) != Some(scope.trim())
+        || lane["name"].as_str().map(str::trim) != Some(name.trim())
+    {
         return Err(invalid("outbound remote lane identity"));
     }
     entries(&lane)?

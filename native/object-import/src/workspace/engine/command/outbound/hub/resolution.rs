@@ -38,6 +38,12 @@ impl Resolution {
         &self.global_remotes_file
     }
     fn configured(&self, local: &Value, scope: &str) -> io::Result<Option<String>> {
+        if local
+            .get("remotes")
+            .is_some_and(|remotes| !remotes.is_null() && !remotes.is_object())
+        {
+            return Err(invalid("outbound local remotes"));
+        }
         if let Some(host) = local["remotes"][scope]
             .as_str()
             .map(str::trim)
@@ -50,6 +56,9 @@ impl Resolution {
             Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
             Err(error) => return Err(error),
         };
+        if !globals.is_null() && !globals.is_object() {
+            return Err(invalid("outbound global remotes"));
+        }
         Ok(globals[scope]
             .as_str()
             .map(str::trim)

@@ -10,21 +10,18 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     else {
         return Ok(());
     };
-    let readme_id = id_pair(&readme["id"]);
-    let readme_head = readme["head"]
-        .as_str()
-        .map(str::trim)
-        .filter(|head| !head.is_empty());
+    let readme_id = id_pair(readme);
+    let readme_head = entry_head(readme);
     let present = lane["components"]
         .as_array()
         .is_some_and(|components| {
             components
                 .iter()
                 .any(|component| {
-                    (component["id"] == readme["id"]
-                        || readme_id.is_some() && id_pair(&component["id"]) == readme_id)
+                    (!readme["id"].is_null() && component["id"] == readme["id"]
+                        || readme_id.is_some() && id_pair(component) == readme_id)
                         && readme_head.is_some()
-                        && component["head"].as_str().map(str::trim) == readme_head
+                        && entry_head(component) == readme_head
                 })
         });
     if present {
@@ -33,7 +30,19 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     Err(invalid(&format!("outbound lane {name} unsnapped readme requires canonical stack")))
 }
 
-fn id_pair(value: &Value) -> Option<(&str, &str)> {
+fn entry_head(entry: &Value) -> Option<&str> {
+    entry["head"]
+        .as_str()
+        .or_else(|| entry["version"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+}
+
+fn id_pair(entry: &Value) -> Option<(&str, &str)> {
+    let value = entry
+        .get("id")
+        .filter(|id| !id.is_null())
+        .unwrap_or(entry);
     let (scope, name) = if let Some(raw) = value.as_str().map(str::trim) {
         raw.rsplit_once('@')
             .map_or(raw, |(base, _)| base.trim())

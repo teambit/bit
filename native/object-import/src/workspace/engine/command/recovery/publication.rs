@@ -4,13 +4,16 @@ use std::io;
 
 pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, Value)> {
     super::super::bitmap::validate_history_file_id(input.file_id.trim())?;
-    let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
-    if retained.operation != Operation::LaneAbort
-        || retained.restored
-        || retained.record.token != input.token.trim()
+    let token = input.token.trim();
+    let current = state.recovery.as_ref().ok_or_else(|| invalid("recovery owner absent"))?;
+    if current.operation != Operation::LaneAbort
+        || current.restored
+        || token.is_empty()
+        || current.record.token.trim() != token
     {
         return Err(invalid("recovery restoration state"));
     }
+    let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     if let Some(prepared) = retained.record.planned.as_ref() {
         reset::validate(&retained.record, prepared)?;
     } else if retained.record.context["callbackLifecycle"] == true {

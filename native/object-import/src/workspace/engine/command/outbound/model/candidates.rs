@@ -50,12 +50,23 @@ fn candidate_scope_and_name(row: &Value) -> io::Result<(&str, &str)> {
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
             .ok_or_else(|| invalid("outbound candidate name"))?;
     let name = name.trim();
-    if name.is_empty() {
+    if name.is_empty()
+        || name.contains('\\')
+        || name.chars().any(char::is_control)
+        || name
+            .split('/')
+            .any(|seg| seg.trim().is_empty() || matches!(seg.trim(), "." | ".."))
+    {
         return Err(invalid("outbound candidate name"));
     }
     let scope = scope_opt
         .map(str::trim)
-        .filter(|val| !val.is_empty())
+        .filter(|val| {
+            !val.is_empty()
+                && !matches!(*val, "." | "..")
+                && !val.contains(['/', '\\'])
+                && !val.chars().any(char::is_control)
+        })
         .ok_or_else(|| invalid("outbound candidate scope"))?;
     Ok((scope, name))
 }

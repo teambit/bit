@@ -46,12 +46,17 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
     }
     let ids = identities.collect::<Vec<_>>();
     let mut result = Vec::new();
+    let mut seen_scopes = std::collections::HashSet::new();
     for pending in &retained.pending {
+        let target_scope = pending.scope.trim();
+        if !seen_scopes.insert(target_scope) {
+            continue;
+        }
         let mut group = ids
             .iter()
             .filter(|id| {
                 id.split_once('/')
-                    .is_some_and(|(scope, _)| scope == pending.scope.trim())
+                    .is_some_and(|(scope, _)| scope == target_scope)
             })
             .cloned()
             .collect::<Vec<_>>();

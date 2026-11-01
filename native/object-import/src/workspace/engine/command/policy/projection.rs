@@ -214,12 +214,12 @@ fn component_dependency(entry: &Value, lifecycle: &str) -> io::Result<Value> {
 
 fn dependencies(state: &Value, policies: &[Value]) -> io::Result<Vec<Value>> {
     let mut rows = Vec::new();
+    let entries = array(&state["entries"])?;
     for (field, lifecycle) in ["runtime", "dev", "peer"].iter().enumerate() {
         for index in array(&state["components"][field])? {
-            let entry = &state["entries"]
-                [index.as_u64().ok_or_else(|| invalid("command dependency index"))? as usize];
-            let row = component_dependency(entry, lifecycle)?;
-            rows.push(row);
+            let idx = index.as_u64().ok_or_else(|| invalid("command dependency index"))? as usize;
+            let entry = entries.get(idx).ok_or_else(|| invalid("command dependency index"))?;
+            rows.push(component_dependency(entry, lifecycle)?);
         }
     }
     for (field, lifecycle) in ["runtime", "dev", "peer"].iter().enumerate() {
@@ -227,9 +227,13 @@ fn dependencies(state: &Value, policies: &[Value]) -> io::Result<Vec<Value>> {
             .as_object()
             .ok_or_else(|| invalid("command package dependencies"))?
         {
-            rows.push(
-                json!({"id":name,"version":version,"__type":"package","lifecycle":lifecycle}),
-            );
+            let name = name.trim();
+            let ver = version
+                .as_str()
+                .map(str::trim)
+                .filter(|ver| !ver.is_empty() && !name.is_empty())
+                .ok_or_else(|| invalid("command package dependencies"))?;
+            rows.push(json!({"id":name,"version":ver,"__type":"package","lifecycle":lifecycle}));
         }
     }
     let mut seen = HashSet::new();

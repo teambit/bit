@@ -116,7 +116,7 @@ fn push_file(
     if !fs::symlink_metadata(&parent)?.file_type().is_dir() {
         return Err(invalid("outbound pending directory"));
     }
-    let pending = parent.join(client);
+    let pending = parent.join(client.trim());
     fs::create_dir(&pending)?;
     let result = write_pending(&pending, objects, group::owner(path, &pending)?);
     if result.is_err() {
@@ -149,7 +149,7 @@ fn push_http(retained: &Retained, pending: &Pending, url: &str) -> io::Result<()
     let archive = tar::pack(&pending.objects, MAX_BYTES)?;
     let network = network(retained)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let result = runtime.block_on(network.push(url, &retained.client_id, archive))?;
+    let result = runtime.block_on(network.push(url, retained.client_id.trim(), archive))?;
     if !result.is_empty() {
         return Err(invalid("outbound unexpected push result"));
     }
@@ -164,7 +164,7 @@ impl Actions {
             pending,
             "ExportValidate",
             &json!({
-                "clientId":retained.client_id,"isResumingExport":true
+                "clientId":retained.client_id.trim(),"isResumingExport":true
             }),
         )?;
         if !result.is_object() {
@@ -185,7 +185,7 @@ impl Actions {
                 retained,
                 pending,
                 "ExportPersist",
-                &json!({"clientId":retained.client_id}),
+                &json!({"clientId":retained.client_id.trim()}),
             );
             match persisted.and_then(persisted_ids) {
                 Ok(ids) => return Ok(ids),
@@ -206,7 +206,7 @@ impl Actions {
             retained,
             pending,
             "RemovePendingDir",
-            &json!({"clientId":retained.client_id}),
+            &json!({"clientId":retained.client_id.trim()}),
         )?;
         if !result.is_object() {
             return Err(invalid("outbound cleanup result"));

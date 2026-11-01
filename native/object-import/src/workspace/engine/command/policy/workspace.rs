@@ -23,8 +23,16 @@ pub(super) fn prepare(
                             entry["id"].as_str().map(str::trim) == Some(projection::RESOLVER)
                         })
                 });
+            let merged_policy = policy
+                .and_then(|entry| entry["merged"]["value"].get("policy"))
+                .filter(|val| !val.is_null())
+                .or_else(|| {
+                    row.merged
+                        .get(projection::RESOLVER)
+                        .and_then(|res| res.get("policy"))
+                });
             json!({"compId":row.identity.trim(),
-                "mergedPolicy":policy.map(|policy| &policy["merged"]["value"]["policy"]),
+                "mergedPolicy":merged_policy,
                 "conflict":policy.map(|policy| &policy["conflict"]["value"])})
         })
         .collect::<Vec<_>>();

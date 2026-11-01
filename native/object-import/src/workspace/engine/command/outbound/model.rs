@@ -165,15 +165,16 @@ fn requested(
             continue;
         }
         let component = find_requested(&staged, id)?;
-        if chosen
-            .iter()
-            .any(|(row, _)| row["hash"] == component.0["hash"])
-        {
+        if chosen.iter().any(|(row, _)| same_hash(row, &component.0)) {
             return Err(invalid("outbound duplicate component"));
         }
         chosen.push(component.clone());
     }
     Ok(chosen)
+}
+
+fn same_hash(left: &Value, right: &Value) -> bool {
+    left["hash"].as_str().map(str::trim) == right["hash"].as_str().map(str::trim)
 }
 
 fn add_scope(
@@ -189,10 +190,7 @@ fn add_scope(
                 && (all_versions || has_staged(model))
         })
     {
-        if !chosen
-            .iter()
-            .any(|(row, _)| row["hash"] == component.0["hash"])
-        {
+        if !chosen.iter().any(|(row, _)| same_hash(row, &component.0)) {
             chosen.push(component.clone());
         }
     }
@@ -217,6 +215,12 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     let (identity, version) = id
         .rsplit_once('@')
         .map_or((id, None), |(identity, version)| (identity.trim(), Some(version.trim())));
+    let identity = identity
+        .split_once('/')
+        .map_or_else(
+            || identity.to_owned(),
+            |(scope, name)| format!("{}/{}", scope.trim(), name.trim()),
+        );
     if let Some(scoped) = staged
         .iter()
         .find(|(row, model)| {

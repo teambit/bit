@@ -98,15 +98,19 @@ pub(super) fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
 }
 
 fn populate(rows: &mut Vec<Value>, dir: &Path, head: &str) -> io::Result<()> {
+    if rows.len() > 4096 {
+        return Err(invalid("outbound VersionHistory bounds"));
+    }
     let mut known = rows
         .iter()
         .map(|row| {
-            row["hash"]
+            let hash = row["hash"]
                 .as_str()
                 .map(str::trim)
                 .filter(|hash| !hash.is_empty())
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("outbound VersionHistory hash"))
+                .ok_or_else(|| invalid("outbound VersionHistory hash"))?;
+            crate::merge_history::hash(hash)?;
+            Ok(hash.to_owned())
         })
         .collect::<io::Result<HashSet<_>>>()?;
     let mut pending = vec![head.to_owned()];

@@ -43,6 +43,12 @@ fn stage_heads<'a>(
     head: Option<&'a str>,
     remote: Option<&'a str>,
 ) -> Option<[Option<&'a str>; 2]> {
+    let head = head
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    let remote = remote
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
     let lower = to.to_ascii_lowercase();
     match stage {
         Some("resolveTarget") if lower.starts_with("head~") => Some([head, None]),
@@ -56,12 +62,6 @@ fn stage_heads<'a>(
 }
 
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {
-    let head = head
-        .map(str::trim)
-        .filter(|val| !val.is_empty());
-    let remote = remote
-        .map(str::trim)
-        .filter(|val| !val.is_empty());
     let latest_without_tags = to.eq_ignore_ascii_case("latest")
         && model["versions"].as_object().is_none_or(serde_json::Map::is_empty)
         && model["orphanedVersions"].as_object().is_none_or(serde_json::Map::is_empty);

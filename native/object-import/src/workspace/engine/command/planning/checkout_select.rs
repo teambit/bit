@@ -73,7 +73,11 @@ fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
                             .is_none_or(|val| val == scope)
                 })
         })
-        .and_then(|row| row["head"].as_str())
+        .and_then(|row| {
+            row["head"]
+                .as_str()
+                .or_else(|| row["version"].as_str())
+        })
         .map(str::trim)
         .filter(|head| !head.is_empty())
 }

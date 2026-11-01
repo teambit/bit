@@ -7,12 +7,17 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     let mut roots = targets
         .iter()
         .map(|target| {
-            target["directory"]
+            let raw = target["directory"]
                 .as_str()
                 .or_else(|| target["rootDir"].as_str())
                 .map(str::trim)
                 .filter(|root| !root.is_empty())
-                .ok_or_else(|| invalid("command component root"))
+                .ok_or_else(|| invalid("command component root"))?;
+            let stripped = raw
+                .strip_prefix("./")
+                .unwrap_or(raw)
+                .trim_end_matches('/');
+            Ok(if stripped.is_empty() { "." } else { stripped })
         })
         .collect::<io::Result<Vec<_>>>()?;
     roots.sort_unstable_by(|left, right| {

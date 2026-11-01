@@ -46,12 +46,26 @@ fn parse_resume_id(id: &str) -> io::Result<(String, String, String)> {
         .trim()
         .rsplit_once('@')
         .map(|(identity, version)| (identity.trim(), version.trim()))
-        .filter(|(_, version)| !version.is_empty())
+        .filter(|(_, version)| {
+            !version.is_empty()
+                && !matches!(*version, "." | "..")
+                && !version.contains(['/', '\\'])
+                && !version.chars().any(char::is_control)
+        })
         .ok_or_else(|| invalid("outbound lane resume version"))?;
     let (scope, name) = identity
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
-        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .filter(|(scope, name)| {
+            !scope.is_empty()
+                && !name.is_empty()
+                && !matches!(*scope, "." | "..")
+                && !name
+                    .split('/')
+                    .any(|seg| seg.is_empty() || matches!(seg, "." | ".."))
+                && !identity.contains('\\')
+                && !identity.chars().any(char::is_control)
+        })
         .ok_or_else(|| invalid("outbound lane resume identity"))?;
     Ok((scope.to_owned(), name.to_owned(), version.to_owned()))
 }

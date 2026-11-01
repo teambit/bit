@@ -132,23 +132,31 @@ fn missing(
         .collect())
 }
 
+fn normalized_root_dir(value: &Value, error: &'static str) -> io::Result<String> {
+    let raw = value
+        .as_str()
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .ok_or_else(|| invalid(error))?;
+    let slashed = raw.replace('\\', "/");
+    let stripped = slashed
+        .strip_prefix("./")
+        .unwrap_or(&slashed)
+        .trim_end_matches('/');
+    Ok(if stripped.is_empty() { ".".to_owned() } else { stripped.to_owned() })
+}
+
 fn validate_lane_overlap(context: &Value, additions: &[Value]) -> io::Result<()> {
     let lane = context["lane"]["additions"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
     for addition in additions {
-        let root = addition["rootDir"]
-            .as_str()
-            .map(str::trim)
-            .filter(|root| !root.is_empty())
-            .ok_or_else(|| invalid("checkout scope root"))?;
+        let root = normalized_root_dir(&addition["rootDir"], "checkout scope root")?;
         for existing in lane {
-            let other = existing["rootDir"]
-                .as_str()
-                .map(str::trim)
-                .filter(|other| !other.is_empty())
-                .ok_or_else(|| invalid("checkout lane root"))?;
+            let other = normalized_root_dir(&existing["rootDir"], "checkout lane root")?;
             if root == other
+                || root == "."
+                || other == "."
                 || root.starts_with(&format!("{other}/"))
                 || other.starts_with(&format!("{root}/"))
             {

@@ -20,12 +20,14 @@ pub(super) fn project(row: &mut super::Row, repository: &mut Repository) -> io::
         if edges.len() >= 16384 || seen.len() > 4096 {
             return Err(invalid("command dependency graph budget"));
         }
+        let source_key = key(&edge["source"])?;
         let target = edge["target"].clone();
         let identity = key(&target)?;
         if !edges
             .iter()
             .any(|existing: &Value| {
-                existing["source"] == edge["source"] && existing["target"] == target
+                key(&existing["source"]).ok().as_deref() == Some(source_key.as_str())
+                    && key(&existing["target"]).ok().as_deref() == Some(identity.as_str())
             })
         {
             edges.push(edge);

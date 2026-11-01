@@ -24,13 +24,26 @@ fn validate_snapshot(config: &Value) -> io::Result<()> {
         .any(|(name, value)| {
             name.trim()
                 .split_once('/')
-                .is_none_or(|(scope, part)| scope.trim().is_empty() || part.trim().is_empty())
+                .is_none_or(|(scope, part)| {
+                    let (base, ver) = part
+                        .rsplit_once('@')
+                        .map_or((part, "0"), |(base, ver)| (base, ver.trim()));
+                    scope.trim().is_empty() || base.trim().is_empty() || ver.is_empty()
+                })
                 || (!value.is_object() && value != "-")
         })
     {
         return Err(invalid("snapshot bitmap aspect configuration"));
     }
     Ok(())
+}
+
+fn normalize_root_dir(dir: &str) -> &str {
+    let stripped = dir
+        .strip_prefix("./")
+        .unwrap_or(dir)
+        .trim_end_matches('/');
+    if stripped.is_empty() { "." } else { stripped }
 }
 
 fn project_with(
@@ -53,12 +66,8 @@ fn project_with(
             .get("rootDir")
             .and_then(Value::as_str)
             .map(str::trim)
-            .map(|dir| {
-                dir.strip_prefix("./")
-                    .unwrap_or(dir)
-                    .trim_end_matches('/')
-            })
-            .filter(|directory| !directory.is_empty())
+            .filter(|dir| !dir.is_empty())
+            .map(normalize_root_dir)
             .ok_or_else(|| invalid("recovery bitmap directory"))?;
         if configs.insert(directory.to_owned(), config).is_some() {
             return Err(invalid("recovery duplicate config root"));

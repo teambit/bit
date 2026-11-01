@@ -19,10 +19,16 @@ pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
 }
 
 fn name(config: &Value) -> io::Result<Option<&str>> {
+    if !config.is_object() {
+        return Err(io::Error::other("unsupported file remote group configuration"));
+    }
     match &config["groupName"] {
         Value::Null | Value::Bool(false) => Ok(None),
         Value::String(name) => {
             let trimmed = name.trim();
+            if trimmed.contains(':') || trimmed.chars().any(char::is_control) {
+                return Err(io::Error::other("unsupported file remote group configuration"));
+            }
             Ok((!trimmed.is_empty()).then_some(trimmed))
         }
         Value::Number(number) if number.as_f64() == Some(0.0) => Ok(None),

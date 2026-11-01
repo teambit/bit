@@ -11,8 +11,9 @@ pub(super) fn report_if_applicable(
     plan: &mut Planned,
     recovery_reset: bool,
 ) -> io::Result<()> {
+    let to = record.request.options.to.as_deref().map(str::trim);
     if record.request.operation != input::Operation::Checkout
-        || record.request.options.to.as_deref().map(str::trim) != Some("reset")
+        || !to.is_some_and(|to| to.eq_ignore_ascii_case("reset"))
         || recovery_reset
     {
         return Ok(());
@@ -25,16 +26,7 @@ pub(super) fn report_if_applicable(
             .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
             .filter(|id| !id.is_empty())
             .ok_or_else(|| invalid("reset missing identity"))?;
-        let directory = target["directory"]
-            .as_str()
-            .map(str::trim)
-            .filter(|directory| !directory.is_empty())
-            .ok_or_else(|| invalid("reset missing directory"))?;
-        let main = target["mainFile"]
-            .as_str()
-            .map(str::trim)
-            .filter(|main| !main.is_empty())
-            .ok_or_else(|| invalid("reset missing main file"))?;
+        let (directory, main) = target_paths(target)?;
         let root = record.request.root.join(directory);
         if !missing(&root)? && !missing(&root.join(main))? {
             continue;
@@ -42,6 +34,24 @@ pub(super) fn report_if_applicable(
         report_one(plan, identity, target)?;
     }
     Ok(())
+}
+
+fn target_paths(target: &Value) -> io::Result<(&str, &str)> {
+    let directory = target["directory"]
+        .as_str()
+        .map(str::trim)
+        .filter(|directory| !directory.is_empty())
+        .ok_or_else(|| invalid("reset missing directory"))?;
+    if directory != "." {
+        crate::checkout::plan::relative_path(directory)?;
+    }
+    let main = target["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
+        .ok_or_else(|| invalid("reset missing main file"))?;
+    crate::checkout::plan::relative_path(main)?;
+    Ok((directory, main))
 }
 
 fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<()> {

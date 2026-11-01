@@ -69,31 +69,41 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     Ok((format!("{scope}/{name}"), head))
 }
 
+fn row_identity(row: &Value) -> Option<String> {
+    if let Some(raw) = row["identity"]
+        .as_str()
+        .or_else(|| row["id"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        let base = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+        return Some(
+            base.split_once('/')
+                .map_or_else(|| base.to_owned(), |(sc, nm)| format!("{}/{}", sc.trim(), nm.trim())),
+        );
+    }
+    let scope = row["scope"]
+        .as_str()
+        .or_else(|| row["id"]["scope"].as_str())?
+        .trim();
+    let name = row["name"]
+        .as_str()
+        .or_else(|| row["id"]["name"].as_str())?
+        .trim();
+    (!scope.is_empty() && !name.is_empty()).then(|| format!("{scope}/{name}"))
+}
+
 fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()> {
     let tracked = context["lane"]["trackedTargets"]
         .as_array()
         .ok_or_else(|| invalid("checkout lane tracked targets"))?;
     let identities = tracked
         .iter()
-        .filter_map(|row| {
-            row["identity"]
-                .as_str()
-                .or_else(|| row["id"].as_str())
-                .map(str::trim)
-        })
-        .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
-        .filter(|id| !id.is_empty())
+        .filter_map(row_identity)
         .collect::<std::collections::HashSet<_>>();
     result["components"]
         .as_array_mut()
         .ok_or_else(|| invalid("checkout lane component result"))?
-        .retain(|row| {
-            row["id"]
-                .as_str()
-                .or_else(|| row["identity"].as_str())
-                .map(str::trim)
-                .map(|id| id.rsplit_once('@').map_or(id, |(base, _)| base.trim()))
-                .is_none_or(|identity| !identities.contains(identity))
-        });
+        .retain(|row| row_identity(row).is_none_or(|identity| !identities.contains(&identity)));
     Ok(())
 }

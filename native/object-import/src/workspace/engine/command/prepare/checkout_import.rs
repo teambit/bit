@@ -29,6 +29,8 @@ fn has_lane_assignment(bitmap: &Value) -> bool {
                 .is_some_and(|text| !text.trim().is_empty())
                 || lane
                     .as_object()
-                    .is_some_and(|map| !map.is_empty())
+                    .is_some_and(|map| {
+                        !map.is_empty() && !map.get("id").is_some_and(Value::is_null)
+                    })
         })
 }

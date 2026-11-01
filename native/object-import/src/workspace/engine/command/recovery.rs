@@ -102,12 +102,14 @@ pub(in crate::workspace::engine) fn plan(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    let mut retained =
-        snapshots.command.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || retained.record.token.trim() != token {
+    let current =
+        snapshots.command.recovery.as_ref().ok_or_else(|| invalid("recovery owner absent"))?;
+    if token.is_empty() || current.record.token.trim() != token {
         return Err(invalid("recovery token changed"));
     }
+    let mut retained =
+        snapshots.command.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     proof::verify(&input.dependency_read_set)?;
     retained.restore.validate_dependencies(&input.dependency_read_set)?;
     retained.record.proofs.extend(input.dependency_read_set);
@@ -139,11 +141,12 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     let file_id = input.file_id.trim();
     super::bitmap::validate_history_file_id(file_id)?;
-    let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     let token = input.token.trim();
-    if token.is_empty() || retained.record.token.trim() != token {
+    let current = state.recovery.as_ref().ok_or_else(|| invalid("recovery owner absent"))?;
+    if token.is_empty() || current.record.token.trim() != token {
         return Err(invalid("recovery token changed"));
     }
+    let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
     if let Some(result) = publication::failed_checkout(input, &retained)? {
         return Ok((retained.record.targets.len(), json!({"applied":true,"result":result})));
     }

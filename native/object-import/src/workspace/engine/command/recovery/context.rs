@@ -297,6 +297,11 @@ fn validate_pending_configuration(
     }
     Ok(())
 }
+fn norm_dir(dir: &str) -> &str {
+    dir.strip_prefix("./")
+        .unwrap_or(dir)
+        .trim_end_matches('/')
+}
 fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: bool) -> bool {
     let identity = identity.trim();
     request.options.pattern
@@ -304,11 +309,16 @@ fn matches_target(request: &Prepare, target: &Value, identity: &str, marked: boo
         .map(str::trim)
         .filter(|pattern| !pattern.is_empty())
         .map_or(marked, |pattern| {
-            identity == pattern
+            let bare = pattern.rsplit_once('@').map_or(pattern, |(base, _)| base.trim());
+            identity == bare
                 || identity
                     .split_once('/')
-                    .is_some_and(|(_, name)| name.trim() == pattern)
-                || target["directory"].as_str().map(str::trim) == Some(pattern)
+                    .is_some_and(|(_, name)| name.trim() == bare)
+                || target["directory"]
+                    .as_str()
+                    .map(str::trim)
+                    .map(norm_dir)
+                    == Some(norm_dir(pattern))
         })
 }
 fn pending_id(row: &Value) -> Option<String> {

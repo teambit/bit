@@ -56,38 +56,44 @@ pub(super) fn workspace_entries(
         .ok_or_else(|| invalid("outbound component index"))?;
     let mut extra = Vec::new();
     for (key, entry) in entries {
-        let Some(id) = workspace_entry_id(key, entry) else {
+        let Some(identity) = workspace_entry_id(key, entry) else {
             continue;
         };
-        if lane_rows
-            .iter()
-            .any(|row| row["id"] == id)
-        {
-            continue;
+        if let Some(item) = resolve_workspace_entry(&loaded.dir, indexed, lane_rows, identity)? {
+            extra.push(item);
         }
-        let row = indexed
-            .iter()
-            .find(|row| row["isSymlink"] != true && row["id"] == id)
-            .ok_or_else(|| invalid("outbound non-staged component model missing"))?;
-        let hash = row["hash"]
-            .as_str()
-            .map(str::trim)
-            .filter(|hash| !hash.is_empty())
-            .ok_or_else(|| invalid("outbound model hash"))?;
-        let component = model::read_object(&loaded.dir, hash, "Component")?;
-        let Some(head) = component["head"]
-            .as_str()
-            .map(str::trim)
-            .filter(|head| !head.is_empty())
-        else {
-            continue;
-        };
-        extra.push(json!({"id":id,"head":head}));
     }
     Ok(extra)
 }
 
-fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
+fn resolve_workspace_entry(
+    dir: &Path,
+    indexed: &[Value],
+    lane_rows: &[Value],
+    (scope, name): (&str, &str),
+) -> io::Result<Option<Value>> {
+    use crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches;
+    if lane_rows.iter().any(|row| row_lane_matches(row, scope, name)) {
+        return Ok(None);
+    }
+    let row = indexed
+        .iter()
+        .find(|row| row["isSymlink"] != true && row_lane_matches(row, scope, name))
+        .ok_or_else(|| invalid("outbound non-staged component model missing"))?;
+    let hash = row["hash"]
+        .as_str()
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
+        .ok_or_else(|| invalid("outbound model hash"))?;
+    let component = model::read_object(dir, hash, "Component")?;
+    Ok(component["head"]
+        .as_str()
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+        .map(|head| json!({"id":{"scope":scope,"name":name},"head":head})))
+}
+
+fn workspace_entry_id<'a>(key: &'a str, entry: &'a Value) -> Option<(&'a str, &'a str)> {
     let trimmed_key = key.trim();
     if trimmed_key.starts_with('$')
         || matches!(trimmed_key, "_bit_lane" | "version")
@@ -121,7 +127,7 @@ fn workspace_entry_id(key: &str, entry: &Value) -> Option<Value> {
                 .filter(|val| !val.is_empty())
         })?;
     let _ = version;
-    (!name.is_empty()).then(|| json!({"scope":scope,"name":name}))
+    (!name.is_empty()).then_some((scope, name))
 }
 
 fn non_empty_field<'a>(entry: &'a Value, field: &str) -> Option<&'a str> {

@@ -303,9 +303,9 @@ impl Prepared {
             }
         }
         self.bitmap.validate()?;
-        if read_optional(&crate::scope_path(&self.root).join("staged-snaps"))?
-            != self.preimage.staged
-            || read_optional(&crate::scope_path(&self.root).join("staged-config/main.json"))?
+        let scope_dir = crate::scope_path(&self.root);
+        if read_optional(&scope_dir.join("staged-snaps"))? != self.preimage.staged
+            || read_optional(&scope_dir.join("staged-config/main.json"))?
                 != self.preimage.staged_config
         {
             return Err(invalid("outbound staged or remote state changed"));
@@ -319,24 +319,25 @@ impl Prepared {
     }
 
     fn publish_controls(self) -> io::Result<()> {
+        let scope_dir = crate::scope_path(&self.root);
         if let Some(staged_config) = self.output.staged_config {
-            let config_path = crate::scope_path(&self.root).join("staged-config/main.json");
+            let config_path = scope_dir.join("staged-config/main.json");
             if let Some(parent) = config_path.parent() {
                 fs::create_dir_all(parent)?;
             }
             fs::write(config_path, staged_config)?;
         }
         if self.preimage.staged.is_some() {
-            fs::remove_file(crate::scope_path(&self.root).join("staged-snaps"))?;
+            fs::remove_file(scope_dir.join("staged-snaps"))?;
         }
-        let last_merged = crate::scope_path(&self.root).join("last-merged");
-        crate::workspace::actions::remove(&last_merged)?;
+        crate::workspace::actions::remove(&scope_dir.join("last-merged"))?;
         let _ = self.bitmap.commit(&self.file_id, "export")?;
         Ok(())
     }
 }
 
 fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io::Result<Vec<u8>> {
+    let scope = scope.trim();
     let mut rows: Vec<Value> = match before {
         Some(bytes) => crate::parse_jsonc(bytes)
             .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?,
@@ -347,7 +348,7 @@ fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io
     }
     for item in selected
         .iter()
-        .filter(|item| item.scope == scope)
+        .filter(|item| item.scope.trim() == scope)
     {
         set_ref(&mut rows, scope, item)?;
     }
@@ -356,17 +357,18 @@ fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io
 
 /// The remote ref of `item`, replaced or added.
 fn set_ref(rows: &mut Vec<Value>, scope: &str, item: &Selected) -> io::Result<()> {
+    let (scope, name, head) = (scope.trim(), item.name.trim(), item.head.trim());
     let matches: Vec<usize> = rows
         .iter()
         .enumerate()
         .filter(|(_, row)| {
             crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
-                row, scope, &item.name,
+                row, scope, name,
             )
         })
         .map(|(index, _)| index)
         .collect();
-    let value = json!({"id":{"scope":scope,"name":item.name},"head":item.head});
+    let value = json!({"id":{"scope":scope,"name":name},"head":head});
     match matches.as_slice() {
         [] => rows.push(value),
         [index] => rows[*index] = value,

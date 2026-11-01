@@ -67,6 +67,7 @@ fn selected_parents(
 }
 
 fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
+    let (scope, name) = (scope.trim(), name.trim());
     if let Some((orig_scope, orig_name)) = origin
         .as_str()
         .and_then(|raw| raw.trim().split_once('/'))

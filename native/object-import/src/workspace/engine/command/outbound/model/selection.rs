@@ -48,7 +48,12 @@ fn head_only(model: &Value) -> io::Result<Staged> {
 }
 
 fn validate_label(label: &str) -> io::Result<()> {
-    if label.trim().is_empty() {
+    let trimmed = label.trim();
+    if trimmed.is_empty()
+        || matches!(trimmed, "." | "..")
+        || trimmed.contains(['@', '/', '\\'])
+        || trimmed.chars().any(char::is_control)
+    {
         return Err(invalid("outbound empty Version label"));
     }
     Ok(())

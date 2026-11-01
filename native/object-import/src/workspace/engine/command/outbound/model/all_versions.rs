@@ -11,6 +11,11 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
     crate::merge_history::hash(head)?;
     let tags =
         model["versions"].as_object().ok_or_else(|| invalid("outbound all-versions tags"))?;
+    let orphaned = match model.get("orphanedVersions") {
+        None | Some(Value::Null) => None,
+        Some(Value::Object(map)) => Some(map),
+        Some(_) => return Err(invalid("outbound all-versions orphaned tags")),
+    };
     let mut pending = vec![head.to_owned()];
     let mut seen = HashSet::new();
     let mut hashes = Vec::new();
@@ -35,7 +40,7 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
         );
         hashes.push(hash);
     }
-    let labels = resolve_version_labels(&hashes, tags, model["orphanedVersions"].as_object());
+    let labels = resolve_version_labels(&hashes, tags, orphaned);
     labels.first().ok_or_else(|| invalid("outbound all-versions head"))?;
     Ok(Staged { head: head.to_owned(), hashes, labels })
 }

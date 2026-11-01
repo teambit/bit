@@ -156,7 +156,8 @@ pub(super) fn automatic(merged: &Value) -> io::Result<Value> {
 
 fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
     let mut output = serde_json::Map::new();
-    for row in value.as_array().into_iter().flatten() {
+    let rows = if value.is_null() { &[][..] } else { projection::array(value)?.as_slice() };
+    for row in rows {
         if (row["force"] == true) != forced {
             continue;
         }

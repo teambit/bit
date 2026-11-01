@@ -20,7 +20,7 @@ pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> 
     Ok(())
 }
 
-fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, &str>> {
+fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, String>> {
     let mut files = BTreeMap::new();
     for row in value.as_array().ok_or_else(|| invalid("reset Source comparison files"))? {
         let path = row["relativePath"]
@@ -38,8 +38,8 @@ fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, &str>> {
             .map(str::trim)
             .filter(|hash| !hash.is_empty())
             .ok_or_else(|| invalid("reset Source comparison hash"))?;
-        crate::merge_history::hash(hash)?;
-        if files.insert(path, hash).is_some() {
+        let normalized = crate::validate::hexadecimal(&crate::merge_history::hash(hash)?);
+        if files.insert(path, normalized).is_some() {
             return Err(invalid("reset duplicate Source comparison path"));
         }
     }

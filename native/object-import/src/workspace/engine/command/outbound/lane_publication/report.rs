@@ -38,10 +38,13 @@ fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
         .iter()
         .map(|id| id.trim())
         .collect();
-    selected.lane["updateDependents"]
-        .as_array()
-        .into_iter()
-        .flatten()
+    let updates = match selected.lane.get("updateDependents") {
+        None | Some(Value::Null) => &[][..],
+        Some(Value::Array(updates)) => updates.as_slice(),
+        Some(_) => return Err(invalid("outbound lane update-dependents")),
+    };
+    updates
+        .iter()
         .map(|value| {
             let id = value
                 .as_str()
@@ -49,11 +52,14 @@ fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
                 .ok_or_else(|| invalid("outbound lane update-dependent"))?;
             let (identity, _) =
                 id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
-            let identity = identity.trim();
-            if identity.is_empty() {
-                return Err(invalid("outbound lane update-dependent id"));
-            }
-            Ok(selected_ids.contains(identity).then(|| identity.to_owned()))
+            let (scope, name) = identity
+                .trim()
+                .split_once('/')
+                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+                .ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+            let normalized = format!("{scope}/{name}");
+            Ok(selected_ids.contains(normalized.as_str()).then_some(normalized))
         })
         .collect::<io::Result<Vec<_>>>()
         .map(|rows| rows.into_iter().flatten().collect())

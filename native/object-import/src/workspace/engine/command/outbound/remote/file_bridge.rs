@@ -73,7 +73,15 @@ impl FileBridge {
 
     pub(super) fn call(&mut self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
         let name = name.trim();
-        if name.is_empty() || name.chars().any(char::is_control) || path.as_os_str().is_empty() {
+        if name.is_empty()
+            || name.chars().any(char::is_control)
+            || !path.is_absolute()
+            || path
+                .to_string_lossy()
+                .chars()
+                .any(char::is_control)
+            || !options.is_object()
+        {
             return Err(io::Error::other("file action name is empty"));
         }
         let request = json!({ "path": path, "name": name, "options": options });

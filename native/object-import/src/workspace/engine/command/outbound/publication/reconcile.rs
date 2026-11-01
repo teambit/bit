@@ -13,7 +13,7 @@ pub(super) fn prepare_staged_config(
     let identities = selected
         .iter()
         .filter(|item| !item.labels.is_empty())
-        .map(|item| (item.scope.clone(), item.name.clone()))
+        .map(|item| (item.scope.trim().to_owned(), item.name.trim().to_owned()))
         .collect::<Vec<_>>();
     prepare_staged_config_ids(bytes, &identities, strict)
 }
@@ -35,7 +35,7 @@ fn prepare_staged_config_ids(
     rows.retain(|row| {
         let matched = selected.iter().find(|(scope, name)| staged_row_matches(row, scope, name));
         if let Some((scope, name)) = matched {
-            found.insert(format!("{scope}/{name}"));
+            found.insert(format!("{}/{}", scope.trim(), name.trim()));
             false
         } else {
             true
@@ -48,12 +48,20 @@ fn prepare_staged_config_ids(
 }
 
 fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
+    let (scope, name) = (scope.trim(), name.trim());
     if let Some(raw) = row["id"].as_str().map(str::trim) {
         let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());
         return bare == name || bare == format!("{scope}/{name}");
     }
-    let row_scope = row["id"]["scope"].as_str().map_or("", str::trim);
-    row["id"]["name"].as_str().map(str::trim) == Some(name)
+    let row_scope = row["id"]["scope"]
+        .as_str()
+        .or_else(|| row["scope"].as_str())
+        .map_or("", str::trim);
+    row["id"]["name"]
+        .as_str()
+        .or_else(|| row["name"].as_str())
+        .map(str::trim)
+        == Some(name)
         && (row_scope.is_empty() || row_scope == scope)
 }
 

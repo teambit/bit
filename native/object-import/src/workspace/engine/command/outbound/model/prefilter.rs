@@ -28,11 +28,14 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
             .and_then(Option::as_deref)
             .ok_or_else(|| invalid("outbound prefilter index absent"))?,
     )?;
-    for row in index["components"]
+    let rows = index["components"]
         .as_array()
         .or_else(|| index.as_array())
-        .ok_or_else(|| invalid("outbound prefilter index"))?
-    {
+        .ok_or_else(|| invalid("outbound prefilter index"))?;
+    if rows.len() > 4096 {
+        return Err(invalid("outbound prefilter index bounds"));
+    }
+    for row in rows {
         prepared.capture_component(&scope.join("objects"), row)?;
     }
     prepared.histories = candidates::histories(root)?;

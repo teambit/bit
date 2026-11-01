@@ -9,8 +9,8 @@ pub(super) fn select(model: &Value) -> io::Result<Staged> {
         .or_else(|| non_empty(&model["head"]["ref"]))
         .or_else(|| non_empty(&model["head"]["hash"]))
         .ok_or_else(|| invalid("outbound head"))?;
-    crate::merge_history::hash(head)?;
-    Ok(Staged { head: head.to_owned(), hashes: Vec::new(), labels: Vec::new() })
+    let head = crate::validate::hexadecimal(&crate::merge_history::hash(head)?);
+    Ok(Staged { head, hashes: Vec::new(), labels: Vec::new() })
 }
 
 fn non_empty(val: &Value) -> Option<&str> {

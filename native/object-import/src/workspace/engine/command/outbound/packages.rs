@@ -162,17 +162,22 @@ fn resolve_version_hash<'a>(target: &'a Value, model: &'a Value) -> io::Result<&
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("export package version"))?;
-    let resolved = if matches!(version_id, "" | "latest" | "head") {
-        model["head"].as_str().map_or(version_id, str::trim)
+    let resolved = if version_id.is_empty()
+        || version_id.eq_ignore_ascii_case("latest")
+        || version_id.eq_ignore_ascii_case("head")
+    {
+        model["head"]
+            .as_str()
+            .map(str::trim)
+            .filter(|head| !head.is_empty())
+            .ok_or_else(|| invalid("export package version"))?
     } else {
         model["versions"][version_id]
             .as_str()
             .or_else(|| model["orphanedVersions"][version_id].as_str())
             .map_or(version_id, str::trim)
     };
-    if resolved.is_empty() {
-        return Err(invalid("export package version"));
-    }
+    crate::merge_history::hash(resolved)?;
     Ok(resolved)
 }
 

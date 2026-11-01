@@ -134,7 +134,8 @@ pub(in crate::workspace::engine) fn stage(
     let updated = match retained.publication.as_mut() {
         Some(Publication::Main(plan)) => plan.stage(ids)?,
         Some(Publication::Lane { prepared, .. }) => prepared.stage(ids)?,
-        None => Vec::new(),
+        None if ids.is_empty() => Vec::new(),
+        None => return Err(invalid("outbound unexpected remote ids")),
     };
     let mut receipt = publication_receipt(retained, ids, false);
     receipt["staged"] = json!(true);
@@ -169,10 +170,17 @@ pub(in crate::workspace::engine) fn finalize(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let token = input.token.trim();
-    let mut retained = state.outbound.take().ok_or_else(|| invalid("outbound owner missing"))?;
-    if token.is_empty() || retained.token.trim() != token {
+    if token.is_empty() {
         return Err(invalid("outbound owner token"));
     }
+    let retained_ref = state.outbound.as_ref().ok_or_else(|| invalid("outbound owner missing"))?;
+    if retained_ref.token.trim() != token {
+        return Err(invalid("outbound owner token"));
+    }
+    if retained_ref.transfer.ids.is_none() {
+        return Err(invalid("outbound owner not persisted"));
+    }
+    let mut retained = state.outbound.take().ok_or_else(|| invalid("outbound owner missing"))?;
     let exported_ids =
         retained.transfer.ids.take().ok_or_else(|| invalid("outbound owner not persisted"))?;
     let receipt = publication_receipt(&retained, &exported_ids, true);

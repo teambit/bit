@@ -11,6 +11,7 @@ impl Prepared {
         let before = crate::recovery::jsonc::parse(&self.published.bitmap.before)?;
         self.published.non_existing_ids =
             super::report::missing(&self.report, &before, exported_ids);
+        self.published.updated_ids.clear();
         let mut after = crate::recovery::jsonc::parse(&self.published.bitmap.after)?;
         for (key, row) in after.as_object_mut().ok_or_else(|| invalid("outbound lane bitmap"))? {
             let Some(old) = before
@@ -36,6 +37,7 @@ impl Prepared {
             }
         }
         sort_ids(&mut self.published.updated_ids);
+        self.published.updated_ids.dedup();
         self.published.bitmap.after = crate::inspection::render_bitmap(&after)?;
         if let Some(config) = self.staged.config.as_mut() {
             config.after = export_staged_config(&config.before, &ids)?;

@@ -187,7 +187,7 @@ fn complete_rows(
     let visible = policy.rows
         .iter()
         .filter(|row| !row.fast_forward)
-        .map(|row| format!("{}@{}", row.identity, row.baseline.version))
+        .map(|row| format!("{}@{}", row.identity.trim(), row.baseline.version.trim()))
         .collect::<HashSet<_>>();
     policy.dependencies_ready = true;
     Ok(Completion { caches, issue_targets, issues, visible })
@@ -207,7 +207,7 @@ fn validate_application_files(rows: &[super::Row]) -> io::Result<()> {
 fn snapshot_identities(rows: &[super::Row]) -> HashSet<String> {
     rows.iter()
         .filter(|row| !row.fast_forward)
-        .map(|row| row.identity.clone())
+        .map(|row| row.identity.trim().to_owned())
         .collect()
 }
 

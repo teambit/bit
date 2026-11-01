@@ -167,6 +167,8 @@ fn expanded_imports(
             expanded.push(command_import::Target {
                 version: original["version"]
                     .as_str()
+                    .map(str::trim)
+                    .filter(|version| !version.is_empty())
                     .ok_or_else(|| invalid("command merge base version"))?
                     .to_owned(),
                 ..target

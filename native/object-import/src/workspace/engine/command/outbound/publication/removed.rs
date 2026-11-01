@@ -36,11 +36,13 @@ fn parse_removed_id(row: &Value) -> io::Result<String> {
     }
     let scope = row["id"]["scope"]
         .as_str()
+        .or_else(|| row["scope"].as_str())
         .map(str::trim)
         .filter(|scope| !scope.is_empty() && !scope.contains('/'))
         .ok_or_else(|| invalid("outbound removal scope"))?;
     let name = row["id"]["name"]
         .as_str()
+        .or_else(|| row["name"].as_str())
         .map(str::trim)
         .filter(|name| !name.is_empty())
         .ok_or_else(|| invalid("outbound removal name"))?;

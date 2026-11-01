@@ -222,6 +222,9 @@ fn collect_candidate(
             .map(str::trim)
             .filter(|dir| !dir.is_empty())
             .ok_or_else(|| invalid("checkout tracked lane directory"))?;
+        if directory != "." {
+            crate::checkout::plan::relative_path(directory)?;
+        }
         if missing_root(&candidates.root.join(directory))? {
             result.prospective.push(json!({"identity":identity,"head":entry.head.trim(),
                 "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":true}));

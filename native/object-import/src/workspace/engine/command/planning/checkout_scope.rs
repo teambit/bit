@@ -20,6 +20,12 @@ pub(super) fn prepare(
         .clone();
     for destination in additions {
         let (identity, version) = addition_target(&destination)?;
+        if plan.captured
+            .iter()
+            .any(|item| item.target.identity.trim() == identity)
+        {
+            return Err(invalid("checkout scope duplicate addition"));
+        }
         plan.captured.push(capture::addition(&identity, &destination)?);
         let selected = json!({"kind":"target","version":version,"merge":false});
         let index = plan.captured.len() - 1;

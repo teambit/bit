@@ -15,20 +15,17 @@ pub(super) fn prepare(
     current: &Value,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Option<Lane>> {
-    let id = &current["_bit_lane"]["id"];
-    if id.is_null() {
+    let Some(header) = current
+        .get("_bit_lane")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(None);
+    };
+    if header.get("id").is_some_and(Value::is_null) {
         return Ok(None);
     }
-    let scope = id["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|scope| !scope.is_empty())
+    let (scope, name) = super::super::inbound::remote::file_list::row_scoped_id_parts(header)
         .ok_or_else(|| invalid("recovery lane scope"))?;
-    let name = id["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
-        .ok_or_else(|| invalid("recovery lane name"))?;
     let (hash, value) = read_backup(root, proofs)?;
     if value["scope"].as_str().map(str::trim) != Some(scope)
         || value["name"].as_str().map(str::trim) != Some(name)

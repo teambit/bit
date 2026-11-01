@@ -29,8 +29,12 @@ fn entry(value: &Value) -> io::Result<Value> {
         "configJson":serde_json::to_string(&config).map_err(io::Error::other)?,
         "configPretty":serde_json::to_string_pretty(&config).map_err(io::Error::other)?,
         "data":value.get("data").cloned().unwrap_or_else(|| json!({})),"dataUndefinedKeys":[]});
-    if let Some(name) = value.get("name") {
-        result["name"] = name.clone();
+    if let Some(name) = value["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
+        result["name"] = json!(name);
     } else {
         result["componentId"] = json!({"base":base,"legacy":id});
         if let Some((_, version)) = id.rsplit_once('@') {

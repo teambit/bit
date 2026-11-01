@@ -24,8 +24,17 @@ pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Re
 }
 
 fn identity(row: &Value) -> io::Result<String> {
+    if row
+        .get("name")
+        .is_some_and(|val| !val.is_null() && !val.is_string())
+    {
+        return Err(invalid("snapshot callback core identity"));
+    }
     if let Some(name) = row["name"].as_str().map(str::trim) {
-        if row.get("extensionId").is_some() {
+        if row
+            .get("extensionId")
+            .is_some_and(|val| !val.is_null())
+        {
             return Err(invalid("snapshot callback core identity"));
         }
         let (scope, part) = name

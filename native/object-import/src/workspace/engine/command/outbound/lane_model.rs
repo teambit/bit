@@ -238,38 +238,28 @@ impl RemoteLaneHeads {
     fn load(input: &Prepare, loaded: &Loaded, scope: &str, name: &str) -> io::Result<Self> {
         let lane = remote_heads(&input.root, scope, name)?;
         let fork = match &loaded.forked_from {
-            Some((parent_scope, parent_name)) => {
-                remote_heads(&input.root, parent_scope, parent_name)?
-            }
+            Some((sc, nm)) => remote_heads(&input.root, sc, nm)?,
             None => Vec::new(),
         };
         Ok(Self { lane, fork })
     }
-
     fn should_select<'a>(
         &'a self,
         context: &ComponentContext<'_>,
         component: &ComponentId<'_>,
         exhaustive: bool,
     ) -> io::Result<Option<Option<&'a str>>> {
-        let lane_remote_head = self.lane
-            .iter()
-            .find(|row| component.matches(row))
-            .and_then(|row| {
-                row["head"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|head| !head.is_empty())
-            });
-        let fork_remote_head = self.fork
-            .iter()
-            .find(|row| component.matches(row))
-            .and_then(|row| {
-                row["head"]
-                    .as_str()
-                    .map(str::trim)
-                    .filter(|head| !head.is_empty())
-            });
+        let head_in = |rows: &'a [Value]| {
+            rows.iter()
+                .find(|row| component.matches(row))
+                .and_then(|row| {
+                    row["head"]
+                        .as_str()
+                        .map(str::trim)
+                        .filter(|hd| !hd.is_empty())
+                })
+        };
+        let (lane_remote_head, fork_remote_head) = (head_in(&self.lane), head_in(&self.fork));
         if (!exhaustive || context.input.options.head_only)
             && lane_remote_head == Some(component.head)
             && !(context.input.options.fork_lane_new_scope
@@ -288,10 +278,9 @@ fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, b
     if exhaustive || input.options.fork_lane_new_scope {
         rows.extend(exhaustive::workspace_entries(input, loaded, &rows)?);
     }
-    if rows.len() > MAX_OBJECTS {
-        return Err(invalid("outbound lane component budget"));
-    }
-    Ok((rows, exhaustive))
+    (rows.len() <= MAX_OBJECTS)
+        .then_some((rows, exhaustive))
+        .ok_or_else(|| invalid("outbound lane component budget"))
 }
 
 struct ComponentId<'a> {
@@ -303,23 +292,21 @@ struct ComponentId<'a> {
 
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
+        let field = |key: &str| {
+            entry["id"][key]
+                .as_str()
+                .or_else(|| entry[key].as_str())
+                .map(str::trim)
+        };
         let (scope, name) = if let Some(raw) = entry["id"].as_str().map(str::trim) {
             raw.rsplit_once('@')
                 .map_or(raw, |(bare, _)| bare.trim())
                 .split_once('/')
-                .map(|(scope, name)| (scope.trim(), name.trim()))
+                .map(|(sc, nm)| (sc.trim(), nm.trim()))
                 .ok_or_else(|| invalid("outbound lane component scope"))?
         } else {
-            let scope = entry["id"]["scope"]
-                .as_str()
-                .or_else(|| entry["scope"].as_str())
-                .map(str::trim)
-                .ok_or_else(|| invalid("outbound lane component scope"))?;
-            let name = entry["id"]["name"]
-                .as_str()
-                .or_else(|| entry["name"].as_str())
-                .map(str::trim)
-                .ok_or_else(|| invalid("outbound lane component name"))?;
+            let scope = field("scope").ok_or_else(|| invalid("outbound lane component scope"))?;
+            let name = field("name").ok_or_else(|| invalid("outbound lane component name"))?;
             (scope, name)
         };
         let head = entry["head"]
@@ -360,13 +347,14 @@ fn select_component(
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("outbound component model hash"))?;
-    let dir = &context.loaded.dir;
-    let mut component = model::read_object(dir, hash, "Component")?;
-    if component["scope"] != id.scope || component["name"] != id.name {
+    let mut component = model::read_object(&context.loaded.dir, hash, "Component")?;
+    if component["scope"].as_str().map(str::trim) != Some(id.scope)
+        || component["name"].as_str().map(str::trim) != Some(id.name)
+    {
         return Err(invalid("outbound component identity"));
     }
     staged::check_new_cross_scope_conflict(context, id, &component)?;
-    let before = read_compressed(dir, hash)?;
+    let before = read_compressed(&context.loaded.dir, hash)?;
     model::clear_and_mark_exported(
         &mut component,
         context.scope,
@@ -375,7 +363,19 @@ fn select_component(
     )?;
     let after = model::encode(hash, "Component", &component)?;
     let versions = staged::selected_versions(context, id, &component, previous_head, exhaustive)?;
-    let history = model::prepare_history(dir, id.scope, id.name, id.head)?;
+    record_selected_component(context, id, hash, &versions, before, after, selected)
+}
+
+fn record_selected_component(
+    context: &ComponentContext<'_>,
+    id: &ComponentId<'_>,
+    hash: &str,
+    versions: &[String],
+    before: Vec<u8>,
+    after: Vec<u8>,
+    selected: &mut Selection,
+) -> io::Result<()> {
+    let history = model::prepare_history(&context.loaded.dir, id.scope, id.name, id.head)?;
     let mut expected = HashSet::new();
     for version in versions.iter().chain(&history.hashes) {
         if expected.insert(version.clone()) {
@@ -383,8 +383,8 @@ fn select_component(
         }
     }
     selected.histories.push(history);
-    let ignore_missing = context.input.options.ignore_missing_artifacts;
-    for object in model::collect(dir, hash, &after, &versions, ignore_missing)? {
+    let ignore = context.input.options.ignore_missing_artifacts;
+    for object in model::collect(&context.loaded.dir, hash, &after, versions, ignore)? {
         selected.append(object)?;
     }
     selected.models.push(model::ModelBytes { hash: hash.to_owned(), before, after });
@@ -394,12 +394,9 @@ fn select_component(
 
 fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> {
     let (scope, name) = (scope.trim(), name.trim());
-    if scope.is_empty()
-        || name.is_empty()
-        || [scope, name]
-            .into_iter()
-            .any(|segment| matches!(segment, "." | "..") || segment.contains(['/', '\\', '\0']))
-    {
+    let bad =
+        |seg: &str| seg.is_empty() || matches!(seg, "." | "..") || seg.contains(['/', '\\', '\0']);
+    if bad(scope) || bad(name) {
         return Err(invalid("outbound lane ref path"));
     }
     match fs::read(
@@ -408,8 +405,7 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
             .join(scope)
             .join(name),
     ) {
-        Ok(bytes) => crate::parse_jsonc(&bytes)
-            .and_then(|val| serde_json::from_value(val).map_err(io::Error::other)),
+        Ok(bytes) => serde_json::from_value(crate::parse_jsonc(&bytes)?).map_err(io::Error::other),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(error) => Err(error),
     }

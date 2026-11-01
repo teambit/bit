@@ -8,32 +8,48 @@ pub(super) fn prepare(record: &Record, planned: &planning::Planned) -> io::Resul
     let policy = merge.policy.as_ref().ok_or_else(|| invalid("command dependency rows"))?;
     let mut overlay = SourceOverlay::new(&record.request.root)?;
     for row in policy.rows.iter().filter(|row| !row.baseline.scope_only) {
-        let files = overlay_files(row, planned)?;
-        let root = record.request.root.join(row.baseline.directory.trim());
-        for file in files {
-            let relative = file["relativePath"]
-                .as_str()
-                .map(str::trim)
-                .filter(|path| !path.is_empty())
-                .ok_or_else(|| invalid("command overlay path"))?;
-            overlay.insert_source(&root.join(relative), &file["source"])?;
-        }
-        let current = planned.captured
-            .iter()
-            .find(|current| current.target.identity.trim() == row.identity.trim())
-            .ok_or_else(|| invalid("command overlay capture"))?;
-        for file in &current.target.files {
-            let trimmed = file.trim();
-            if !trimmed.is_empty()
-                && !row.files
-                    .iter()
-                    .any(|item| item.trim() == trimmed)
-            {
-                overlay.remove(&root.join(trimmed))?;
-            }
-        }
+        apply_row(&mut overlay, &record.request.root, row, planned)?;
     }
     overlay.seal()
+}
+
+fn apply_row(
+    overlay: &mut SourceOverlay,
+    workspace_root: &std::path::Path,
+    row: &super::super::Row,
+    planned: &planning::Planned,
+) -> io::Result<()> {
+    let files = overlay_files(row, planned)?;
+    let directory = row.baseline.directory.trim();
+    if directory != "." {
+        crate::checkout::plan::relative_path(directory)?;
+    }
+    let root = workspace_root.join(directory);
+    for file in files {
+        let relative = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .filter(|path| !path.is_empty())
+            .ok_or_else(|| invalid("command overlay path"))?;
+        crate::checkout::plan::relative_path(relative)?;
+        overlay.insert_source(&root.join(relative), &file["source"])?;
+    }
+    let current = planned.captured
+        .iter()
+        .find(|current| current.target.identity.trim() == row.identity.trim())
+        .ok_or_else(|| invalid("command overlay capture"))?;
+    for file in &current.target.files {
+        let trimmed = file.trim();
+        if !trimmed.is_empty()
+            && !row.files
+                .iter()
+                .any(|item| item.trim() == trimmed)
+        {
+            crate::checkout::plan::relative_path(trimmed)?;
+            overlay.remove(&root.join(trimmed))?;
+        }
+    }
+    Ok(())
 }
 
 fn overlay_files<'a>(
