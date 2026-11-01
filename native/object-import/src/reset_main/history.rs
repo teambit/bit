@@ -1,4 +1,4 @@
-//! Persist selected pending main-lane versions in `VersionHistory` before resetting them.
+//! Persist selected pending `main`-lane versions in `VersionHistory` before resetting them.
 
 use super::{ObjectChange, invalid, outbound, selection::Selection};
 use serde_json::{Value, json};

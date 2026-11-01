@@ -1,3 +1,5 @@
+//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection.
+
 pub use semantic::{Semantic, semantic};
 
 #[path = "snapshot_projection/artifacts.rs"]

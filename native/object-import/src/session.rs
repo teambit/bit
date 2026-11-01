@@ -1,3 +1,5 @@
+//! Persistent workspace protocol session state and shared `Rayon` worker-pool management.
+
 #[cfg(test)]
 mod tests;
 

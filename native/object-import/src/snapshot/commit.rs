@@ -1,3 +1,5 @@
+//! Zlib-compressed repository object serialization and atomic store writes for snapshot commits.
+
 use super::{MAX_RAW, Response, count, hash, invalid, path};
 use crate::store::Store;
 use flate2::{Compression, write::ZlibEncoder};

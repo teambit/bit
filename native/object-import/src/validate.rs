@@ -1,3 +1,5 @@
+//! Streaming zlib decompression, header inspection, and `SHA-1` digest verification for repository objects.
+
 use flate2::{Decompress, FlushDecompress, Status};
 use serde::Serialize;
 use sha1::{Digest, Sha1};

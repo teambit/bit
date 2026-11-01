@@ -1,3 +1,5 @@
+//! Phase-ordered execution journal for full-snap, soft-tag, and repository-persist transactions.
+
 #[cfg(test)]
 #[path = "journal_tests.rs"]
 mod tests;

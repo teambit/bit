@@ -1,3 +1,5 @@
+//! Canonical `Version` object field ordering, dependency normalization, and extension projection.
+
 use std::io;
 
 use super::{choose, get, invalid, object};

@@ -1,3 +1,5 @@
+//! Scoped tar-entry naming, compressed object reading, and metadata decoding for transfers.
+
 use std::{
     fs::File,
     io::{self, Read},

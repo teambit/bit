@@ -1,4 +1,4 @@
-//! `removeComponentVersions` mutates model heads/tags without deleting Versions or Sources.
+//! `removeComponentVersions` model head/tag mutation without deleting `Version` or `Source` objects.
 #[cfg(test)]
 mod tests;
 use super::{ObjectChange, Repository, Selection, changed, diagnostics, invalid};

@@ -1,4 +1,4 @@
-//! `DependencyGraph.getImmediateDependentsPerId` guard for a local reset.
+//! `DependencyGraph.getImmediateDependentsPerId` guard for a local `main`-lane reset.
 
 use super::{invalid, outbound, selection::Selection};
 use serde_json::Value;

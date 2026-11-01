@@ -1,4 +1,4 @@
-//! Select local main history and preserve Bit's tag names in the report.
+//! Select local `main` history and preserve Bit's tag names in the reset report.
 
 use super::{invalid, outbound};
 use serde_json::{Map, Value};

@@ -1,4 +1,4 @@
-//! Scope index and `Component` deletion for a lane-only component reset.
+//! Scope `index.json` and `Component` deletion for a lane-only component reset.
 
 use super::{BytesChange, ObjectChange, invalid, object_path, unique_position};
 use serde_json::Value;

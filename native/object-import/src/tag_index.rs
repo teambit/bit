@@ -1,4 +1,4 @@
-//! Index snapshot hashes by their newest normal or orphaned tag.
+//! Index snapshot hashes by their newest normal or orphaned tag label.
 #[cfg(test)]
 mod tests;
 

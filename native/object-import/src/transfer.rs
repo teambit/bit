@@ -1,4 +1,4 @@
-//! Owned compressed transfer collection, tar framing and remote acknowledgement policy.
+//! Owned compressed transfer collection, tar framing, and remote acknowledgement policy.
 pub(crate) mod collection;
 pub(crate) mod object;
 

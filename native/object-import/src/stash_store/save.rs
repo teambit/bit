@@ -1,4 +1,4 @@
-//! `StashFiles`' lexical next-name selection and four-space JSON publication.
+//! `StashFiles` lexical next-name selection and four-space JSON publication.
 use super::{invalid, observation::Observation};
 use serde::Serialize;
 use serde_json::Value;

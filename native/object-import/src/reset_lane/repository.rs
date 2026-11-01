@@ -1,3 +1,5 @@
+//! Local scope `Component` and `Lane` object loading and projection for lane resets.
+
 use super::{
     BitmapState, Heads, ObjectChange, Repository, Selection, changed, indexed_hash, invalid,
     membership, proofs, remote, unique_position,

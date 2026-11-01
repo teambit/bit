@@ -1,3 +1,5 @@
+//! Extension configuration sorting and internal-field filtering for semantic `Version` hashing.
+
 use std::io;
 
 use super::{component_id, get, invalid, object, text};

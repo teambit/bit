@@ -1,3 +1,5 @@
+//! `ArtifactFiles` class projection for `teambit.pipelines/builder` extension data.
+
 use super::{get, invalid, object};
 use crate::js_json::Value;
 use std::io;

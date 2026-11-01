@@ -1,3 +1,5 @@
+//! Bounded compressed object freezing and optional missing-object skipping for transfers.
+
 use std::{collections::HashSet, io, path::Path};
 
 use super::{Descriptor, Entry, MAX_BYTES, invalid, object};

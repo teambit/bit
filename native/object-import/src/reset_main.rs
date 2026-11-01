@@ -1,5 +1,5 @@
-//! Main-lane `bit reset`: select local Version history, project the scope
-//! object and bitmap changes, then publish only after a fresh validation.
+//! Main-lane `bit reset`: select local `Version` history, project the scope
+//! object and `.bitmap` changes, then publish only after a fresh validation.
 
 pub use batch::Batch;
 pub use publication::backup_bitmap;

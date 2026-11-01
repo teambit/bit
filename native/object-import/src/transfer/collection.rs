@@ -1,5 +1,5 @@
-//! Repository-backed collection before archive materialization. Version snapshots
-//! remain local, while caller metadata can guard the live cache's reference view.
+//! Repository-backed object collection before archive materialization; [`Version`] snapshots
+//! remain local, while caller metadata guards the live cache's reference view.
 pub(crate) mod shape;
 
 #[cfg(test)]

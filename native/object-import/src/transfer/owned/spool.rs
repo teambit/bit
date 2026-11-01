@@ -1,4 +1,4 @@
-//! Failed collections remove only files created by that collection attempt.
+//! Private staging-file spooling with rollback cleanup on failed collection attempts.
 use super::{Entry, invalid};
 use std::{
     fs,

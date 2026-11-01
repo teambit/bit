@@ -1,3 +1,5 @@
+//! Multi-scope export push, validation, persist, and cleanup phase state machine.
+
 #[cfg(test)]
 mod tests;
 

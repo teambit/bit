@@ -1,3 +1,5 @@
+//! Wire request structs for snapshot object serialization and end-of-line normalization.
+
 use serde::Deserialize;
 use std::path::PathBuf;
 

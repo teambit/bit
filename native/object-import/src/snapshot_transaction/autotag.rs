@@ -1,3 +1,5 @@
+//! Transitive dependent auto-tag candidate discovery (`snapshotAutoTag`).
+
 use super::invalid;
 use serde_json::{Value, json};
 use std::{

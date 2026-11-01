@@ -1,3 +1,5 @@
+//! Parallel zlib compression and staging-file preparation for snapshot transaction objects.
+
 #[cfg(test)]
 #[path = "header_tests.rs"]
 mod tests;

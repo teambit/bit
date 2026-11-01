@@ -1,3 +1,5 @@
+//! Snapshot head, parent, and detached-head policy evaluation (`snapshotPlan`).
+
 use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};

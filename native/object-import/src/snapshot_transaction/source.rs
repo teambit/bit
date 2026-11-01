@@ -1,3 +1,5 @@
+//! Workspace file, repository object, and hex-body `Source` payload loading and `SHA-1` verification.
+
 #[cfg(test)]
 #[path = "source_tests.rs"]
 mod tests;

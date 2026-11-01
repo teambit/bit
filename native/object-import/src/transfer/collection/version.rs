@@ -1,3 +1,5 @@
+//! Repository [`Version`] manifest loading and `Source`/artifact reference extraction.
+
 use std::{io, path::Path};
 
 use serde_json::Value;

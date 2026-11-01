@@ -1,3 +1,5 @@
+//! `.bitmap` lane header parsing, soft-deleted row restoration, and version projection for lane resets.
+
 use super::{BitmapState, bitmap, bitmap_key, invalid};
 use serde_json::Value;
 use std::{fs, io, path::Path};

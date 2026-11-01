@@ -1,3 +1,5 @@
+//! Wire request validation and parsing for `transferCollect`, `transferPlan`, and `transferArchive`.
+
 use serde::Deserialize;
 use std::path::PathBuf;
 

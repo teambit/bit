@@ -1,3 +1,5 @@
+//! Canonical field ordering and projection for `Component`, `Lane`, and `VersionHistory` objects.
+
 use std::io;
 
 use super::{choose, get, insert, invalid, object};

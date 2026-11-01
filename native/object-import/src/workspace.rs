@@ -1,3 +1,5 @@
+//! Workspace file-write frame handler, filesystem action runner, and command engine modules.
+
 pub(crate) mod actions;
 pub(crate) mod engine;
 pub(crate) mod snapshots;

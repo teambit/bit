@@ -1,4 +1,4 @@
-//! `bit reset --soft` clears pending bitmap tags without touching objects.
+//! `bit reset --soft` clearing of pending `.bitmap` tags without touching scope objects.
 
 #[cfg(test)]
 mod tests;

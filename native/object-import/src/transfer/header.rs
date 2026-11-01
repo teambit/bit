@@ -1,3 +1,5 @@
+//! 512-byte `USTAR` tar header encoding for object transfer archives.
+
 use std::io;
 
 /// Encode a 512-byte USTAR tar header for a transfer archive entry.

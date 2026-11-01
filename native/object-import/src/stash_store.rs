@@ -1,4 +1,4 @@
-//! Published stash metadata files, naming and retained filesystem observations.
+//! Published stash metadata files, lexical naming, and retained filesystem observations.
 pub use save::PreparedSave;
 mod observation;
 mod save;

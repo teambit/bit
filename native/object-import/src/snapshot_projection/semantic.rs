@@ -1,3 +1,5 @@
+//! Canonical semantic JSON payload and `SHA-1` digest computation for `Version` objects.
+
 #[path = "semantic_extensions.rs"]
 mod extensions;
 

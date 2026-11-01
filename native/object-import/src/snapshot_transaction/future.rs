@@ -1,3 +1,5 @@
+//! Next published version computation (`snapshotFutureVersions`) for explicit, soft, and auto-tagged components.
+
 use super::{increment, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};

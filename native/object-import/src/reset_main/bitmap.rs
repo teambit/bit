@@ -1,4 +1,4 @@
-//! Bitmap projection and the staged-config boundary of `updateVersions`.
+//! `.bitmap` projection and the staged-config boundary of `updateVersions`.
 
 use super::{BytesChange, invalid};
 use serde_json::Value;

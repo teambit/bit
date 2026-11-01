@@ -1,3 +1,5 @@
+//! Pending object-directory materialization (`transferWritePending`) from frozen transfer plans.
+
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};

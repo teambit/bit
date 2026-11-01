@@ -1,4 +1,4 @@
-//! `getLocalHashes` uses graph divergence before filtering lean-lane origin refs.
+//! `getLocalHashes` graph divergence and lean-lane origin ref filtering for lane resets.
 use super::{Repository, Selection, diagnostics, invalid, outbound};
 use serde_json::Value;
 use std::io;

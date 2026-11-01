@@ -1,3 +1,5 @@
+//! Snapshot dependency version alignment across batch-tagged components (`snapshotDependencies`).
+
 use super::{autotag, invalid};
 use serde_json::{Value, json};
 use std::io;

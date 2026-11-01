@@ -1,3 +1,5 @@
+//! Atomic temporary-file write, ownership preservation, and index-write validation for object stores.
+
 #[cfg(test)]
 mod tests;
 

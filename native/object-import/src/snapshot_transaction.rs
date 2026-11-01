@@ -1,3 +1,5 @@
+//! Snap/tag transaction serialization, version incrementing, auto-tagging, and journal state.
+
 mod autotag;
 mod dependencies;
 mod future;
