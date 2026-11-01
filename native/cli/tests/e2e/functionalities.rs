@@ -1,4 +1,6 @@
 //! End-to-end core functionality suites (`e2e/functionalities/`).
+//!
+//! Groups auto-tagging, binary files, component index, dependency resolution, merge, and workspace config tests.
 
 mod auto_tagging;
 mod binary_files;

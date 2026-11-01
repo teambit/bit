@@ -1,4 +1,6 @@
 //! Published callbacks observe the same newly tracked classes before generated packages are linked.
+//!
+//! Verifies `onLoad` and package extension callbacks and rollback behavior on callback or filesystem link failure.
 
 use crate::{
     commands::add::support::{compare, node, workspace},

@@ -1,4 +1,6 @@
 //! `bit checkout` and `bit revert` use the published workspace component-pattern grammar.
+//!
+//! Covers globs, negation, `$modified` intersections, short snapshot hashes, ambiguity errors, and numeric yargs coercion.
 
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};

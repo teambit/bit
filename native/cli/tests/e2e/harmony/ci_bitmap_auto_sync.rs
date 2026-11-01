@@ -1,4 +1,4 @@
-//! Ported cases from `e2e/harmony/ci-bitmap-auto-sync.e2e.ts` for `.bitmap` auto-sync parity.
+//! Ported cases from `e2e/harmony/ci-bitmap-auto-sync.e2e.ts` for `.bitmap` auto-sync and `--no-bitmap-commit` parity.
 
 use crate::{
     helper::{Helper, parse},

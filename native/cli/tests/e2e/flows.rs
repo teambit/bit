@@ -1,4 +1,4 @@
-//! End-to-end multi-command workflow suites (`e2e/flows/`).
+//! End-to-end multi-command workflow suites (`e2e/flows/`) for native CLI parity.
 
 mod big_file;
 mod bitmap_deleted;

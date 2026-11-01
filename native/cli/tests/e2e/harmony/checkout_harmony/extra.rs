@@ -1,4 +1,6 @@
 //! Additional tests for `e2e/harmony/checkout-harmony.e2e.ts` parity.
+//!
+//! Exercises `checkout head`, `checkout latest`, `checkout reset`, short snap hashes, lanes, and `--include-new-from-scope`.
 
 use crate::helper::Helper;
 

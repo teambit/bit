@@ -1,4 +1,6 @@
 //! Port of `e2e/functionalities/components-index.e2e.ts` for `.bit/index.json` maintenance.
+//!
+//! Verifies index updates across tag, export, remove, import, and `init --reset` recovery.
 
 use crate::helper::{Helper, config, parse, remote};
 use serde_json::json;

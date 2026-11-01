@@ -1,4 +1,6 @@
 //! Status sections derived from durable `.bitmap` state.
+//!
+//! Verifies `localOnly`, `softTaggedComponents`, `locallySoftRemoved`, `remotelySoftRemoved`, and `importPendingComponents`.
 
 mod pending_import;
 

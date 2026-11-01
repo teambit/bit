@@ -1,4 +1,6 @@
 //! Environment and variant policy tests for Harmony `bit add`.
+//!
+//! Ensures `bit add --root` assigns `teambit.harmony/empty-env` and suppresses toolchain/dependency issues.
 
 use crate::{
     commands::add::support::{compare, workspace},

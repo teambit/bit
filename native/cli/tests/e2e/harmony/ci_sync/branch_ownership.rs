@@ -2,6 +2,8 @@
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-branch-ownership.e2e.ts`
+//!
+//! Verifies branch deletion guards on `close-pr`, pre-push race protection, and first-contact branch adoption/halt rules.
 
 use super::support::{
     arm_pre_push_hook, branch_side_commit, branch_tip_sha, comp1_src, comp2_src,

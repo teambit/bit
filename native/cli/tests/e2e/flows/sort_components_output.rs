@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/sort-components-output.e2e.ts` for alphabetical component output ordering.
+//!
+//! Ensures `status` and `list` preserve deterministic alphabetical ordering for new, staged, and deleted components.
 
 use crate::helper::Helper;
 use std::fs;

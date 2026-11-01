@@ -1,4 +1,6 @@
 //! Port of `e2e/functionalities/env-peer-deps-install.e2e.ts` for environment peer dependency installation.
+//!
+//! Verifies that creating a React component installs `@types/react` and passes `check-types`.
 
 use crate::helper::Helper;
 

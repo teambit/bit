@@ -2,6 +2,8 @@
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-convergence.e2e.ts`
+//!
+//! Covers benign push races, bundled `.bitmap` commits, untracked file probes, squash commits, and `onConflict` policies.
 
 use super::support::{
     arm_pre_push_hook, branch_side_commit, branch_tip_message, branch_tip_sha, comp1_src,

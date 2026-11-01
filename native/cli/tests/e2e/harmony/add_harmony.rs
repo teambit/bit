@@ -1,4 +1,6 @@
 //! Harmony workspace-root component and tracking tests for `bit add`.
+//!
+//! Covers `.bitmap` convergence on snap, root component removal, root import guards, and member-only imports.
 
 #[path = "add_harmony/extra.rs"]
 mod extra;

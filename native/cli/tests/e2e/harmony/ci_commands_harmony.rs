@@ -1,4 +1,4 @@
-//! Ported cases from `e2e/harmony/ci-commands.e2e.ts` for `bit ci` command parity.
+//! Ported cases from `e2e/harmony/ci-commands.e2e.ts` for `bit ci pr` and `bit ci merge` command parity.
 
 use crate::helper::Helper;
 use std::path::PathBuf;

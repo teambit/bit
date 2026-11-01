@@ -1,4 +1,6 @@
 //! Port of `e2e/functionalities/binary-files.e2e.ts` for binary file tracking and export.
+//!
+//! Exercises PNG asset tracking alongside `JavaScript` files and as standalone component files.
 
 use crate::helper::{Helper, remote};
 use std::{fs, path::Path};

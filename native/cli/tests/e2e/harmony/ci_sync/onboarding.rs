@@ -1,4 +1,6 @@
 //! Onboarding commands from `e2e/harmony/ci-sync-main.e2e.ts`.
+//!
+//! Verifies `bit ci sync --init` staging instructions, `.gitignore` force-add guidance, and GitHub/Enterprise output.
 
 mod native;
 use super::support::{run_bit, setup_sync_workspace};

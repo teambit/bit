@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/checkout-harmony.e2e.ts` for native `bit checkout` parity.
+//!
+//! Covers version switching, dependency graphs, file additions/deletions, and merge conflict strategies (`--manual`, `theirs`, `ours`).
 
 #[path = "checkout_harmony/extra.rs"]
 mod extra;

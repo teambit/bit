@@ -1,4 +1,6 @@
 //! Native onboarding compares complete command bytes and workspace/history state.
+//!
+//! Verifies that `bit ci sync --init` executes without the `JavaScript` host and preserves comments, staged files, and error prefixes.
 
 use crate::{commands::add::support, helper::Helper};
 use std::{collections::BTreeMap, fs};

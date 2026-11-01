@@ -1,4 +1,6 @@
 //! Port of `e2e/harmony/aspect.e2e.ts` for native `bit aspect` parity.
+//!
+//! Covers `aspect set` (including `--merge`), `aspect unset`, `aspect get`, `aspect list`, `aspect list-core`, and `aspect update`.
 
 use crate::helper::{Helper, config, parse};
 use serde_json::json;

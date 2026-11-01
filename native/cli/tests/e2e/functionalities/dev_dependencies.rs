@@ -1,4 +1,6 @@
 //! Port of `e2e/functionalities/dev-dependencies.e2e.ts` for dev-dependency resolution and tagging.
+//!
+//! Verifies dev-only package/component dependency recording, flattened dependency chains, and `deps remove --dev`.
 
 use crate::helper::{Helper, parse};
 

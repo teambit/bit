@@ -1,4 +1,4 @@
-//! Ordinary tester output preserves Jest's separate stdout and stderr.
+//! Ordinary `bit test` text output preserves Jest's separate stdout and stderr streams.
 
 use super::{move_paths::support, tester_text_summary::without_duration};
 

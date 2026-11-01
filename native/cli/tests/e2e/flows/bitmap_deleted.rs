@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/bitmap-deleted.e2e.ts` for deleted `.bitmap` reinitialization parity.
+//! Port of `e2e/flows/bitmap-deleted.e2e.ts` for deleted `.bitmap` `bit init --force` parity.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 

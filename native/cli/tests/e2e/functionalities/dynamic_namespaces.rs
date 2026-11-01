@@ -1,4 +1,6 @@
 //! Port of `e2e/functionalities/dynamic-namespaces.e2e.ts` for multi-level component namespaces.
+//!
+//! Covers deeply nested component IDs across `cat-component`, `status`, `list`, `show`, `import`, and ID conflict detection.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 

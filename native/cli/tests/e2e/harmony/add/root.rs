@@ -1,4 +1,6 @@
 //! Workspace-root component tracking and nested ownership tests for `bit add --root`.
+//!
+//! Verifies `.bitmap` boundaries, nested component file handoff, collision errors, and skipped dependency detectors.
 
 use crate::{
     commands::add::support::{compare, workspace},

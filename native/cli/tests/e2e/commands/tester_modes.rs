@@ -1,4 +1,4 @@
-//! Built-in tester modes retain complete reports and command filesystem effects.
+//! Built-in `bit test` summary and coverage modes retain complete reports and command filesystem effects.
 
 use super::{move_paths::support, tester::timings};
 

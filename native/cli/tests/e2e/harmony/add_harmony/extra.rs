@@ -1,4 +1,6 @@
 //! Extended workspace-root component and lane cloning tests for `bit add`.
+//!
+//! Exercises `trackAllFiles`, `bit clone` from a workspace-root component, and lane-scoped workspace cloning.
 
 use crate::helper::{Helper, config};
 use serde_json::Value;

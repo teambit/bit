@@ -1,4 +1,6 @@
 //! Compiled extension hydration stays an adapter around Rust checkout selection and files.
+//!
+//! Verifies `onLoad` callbacks, error rollback, unsupported transport fallback, and `.bitTmp` cleanup across `checkout`, `revert`, and `switch`.
 
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};

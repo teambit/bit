@@ -1,4 +1,6 @@
 //! Inspect the actual published consumers of native-produced tracking records.
+//!
+//! Provides `show` and `status` helpers for asserting environment, policy, and issue parity after `bit add`.
 
 use crate::{commands::add::support::node, helper::Helper};
 use serde_json::Value;

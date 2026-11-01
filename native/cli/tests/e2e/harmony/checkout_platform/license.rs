@@ -1,4 +1,6 @@
 //! `ScopeMeta` license text is generated metadata, independently of `Version` source files.
+//!
+//! Verifies that `checkout` writes `ScopeMeta` license bytes verbatim for the component's scope and ignores unrelated local scopes.
 
 use super::{compare, versions};
 use crate::helper::{Helper, config};

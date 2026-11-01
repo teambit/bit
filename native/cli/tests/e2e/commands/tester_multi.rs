@@ -1,4 +1,4 @@
-//! Multi-component summary comparisons preserve all fields and workspace effects.
+//! Multi-component `bit test --summary` comparisons preserve all fields and workspace effects.
 
 use super::move_paths::support;
 use serde_json::Value;
