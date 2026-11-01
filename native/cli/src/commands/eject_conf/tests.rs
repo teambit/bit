@@ -1,4 +1,4 @@
-//! Unit tests for `bit eject-conf` [`Options`] parsing ([`parse_options`]) and `component.json` [`prepare`] generation.
+//! Unit tests for `bit eject-conf` [`Options`] CLI parsing ([`parse_options`]) and `component.json` [`prepare`] generation.
 
 use super::{Chalk, Options, parse_options, prepare};
 use bit_install::workspace::sha1_hex;

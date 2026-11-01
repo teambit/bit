@@ -1,4 +1,4 @@
-//! Unit tests for ANSI styling and nested color wrapping in [`Chalk`].
+//! Unit tests for ANSI terminal styling and nested color wrapping in [`Chalk`].
 
 use super::Chalk;
 

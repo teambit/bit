@@ -1,4 +1,4 @@
-//! Unit tests for `bit snap-distance` [`Options`] argument parsing ([`parse_options`]) and common-ancestor computation ([`compute_snap_distance`]).
+//! Unit tests for `bit snap-distance` [`Options`] CLI argument parsing ([`parse_options`]) and common-ancestor computation ([`compute_snap_distance`]).
 
 use super::{Options, compute_snap_distance, parse_options};
 use serde_json::json;

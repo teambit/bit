@@ -1,4 +1,4 @@
-//! Unit tests for `bit lane list` and `bit lane show` [`LaneData`] model parsing ([`lane`]) and output formatting ([`report`], [`show_report`]).
+//! Unit tests for `bit lane list` and `bit lane show` [`LaneData`] model parsing ([`lane`]) and terminal formatting ([`report`], [`show_report`]).
 
 use super::{LaneData, Tracking, lane, report};
 use crate::commands::{color::Chalk, lane::show::show_report};

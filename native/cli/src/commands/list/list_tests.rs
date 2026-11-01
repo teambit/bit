@@ -1,4 +1,4 @@
-//! Unit tests for `bit list` [`Options`] parsing ([`parse`]), namespace [`Wildcard`] patterns ([`namespace_pattern`]), and CLI [`table`] / [`report`] rendering.
+//! Unit tests for `bit list` [`Options`] CLI parsing ([`parse`]), namespace [`Wildcard`] patterns ([`namespace_pattern`]), and CLI [`table`] / [`report`] rendering.
 
 use super::{Options, Row, Wildcard, WorkspaceRow, namespace_pattern, parse, report, table};
 use crate::commands::color::Chalk;

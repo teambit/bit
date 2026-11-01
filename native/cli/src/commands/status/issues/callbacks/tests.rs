@@ -1,4 +1,4 @@
-//! Unit tests for merging ([`merge`]) plugin callback issue objects into native component issues.
+//! Unit tests for merging ([`merge`]) plugin callback issue objects into native component status issues.
 
 use super::merge;
 use serde_json::json;

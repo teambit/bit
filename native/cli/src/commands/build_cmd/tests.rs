@@ -1,4 +1,4 @@
-//! Unit tests for `build` command option parsing and capsule flag validation.
+//! Unit tests for `build` command [`parse_options`] and capsule [`flag_error`] validation.
 
 use super::{Options, flag_error, is_empty_build_workspace, parse_options};
 use std::fs;

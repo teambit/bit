@@ -1,4 +1,4 @@
-//! Unit tests for extracting materialized writer component IDs ([`writer_ids`]) after `bit switch`.
+//! Unit tests for extracting materialized writer component IDs ([`writer_ids`]) after `bit switch` execution.
 
 use super::writer_ids;
 use serde_json::json;

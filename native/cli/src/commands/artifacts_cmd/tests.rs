@@ -1,4 +1,4 @@
-//! Unit tests for `artifacts` command options, extraction, filtering, and rendering.
+//! Unit tests for `artifacts` command [`parse_options`], [`filter_artifacts`], and [`render_artifacts_report`].
 
 use super::{
     Options,

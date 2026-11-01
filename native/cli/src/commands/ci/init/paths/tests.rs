@@ -1,4 +1,4 @@
-//! Compare ordinary names, relative links, and lexical parent resolution with Node's filesystem API
+//! Compare ordinary names, relative links, and lexical parent resolution with `Node.js` filesystem APIs
 //! and symlink targets.
 use std::{
     fs,

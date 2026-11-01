@@ -1,4 +1,4 @@
-//! Unit tests for hard-delete wildcard selector matching across nested namespaces.
+//! Unit tests for hard-delete [`wildcard`] selector matching across nested namespaces.
 
 use super::wildcard;
 

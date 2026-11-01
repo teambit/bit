@@ -1,4 +1,4 @@
-//! Unit tests for `bit compile` option parsing and component selector validation.
+//! Unit tests for `bit compile` [`parse_options`] and [`validate_compile_selectors`] validation.
 
 use super::{Options, parse_options, validate_compile_selectors};
 use std::fs;

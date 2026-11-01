@@ -1,4 +1,4 @@
-//! Unit tests for `bit eject` [`Options`] parsing ([`parse_options`]) and active-lane rejection ([`validate_workspace`]).
+//! Unit tests for `bit eject` [`Options`] CLI parsing ([`parse_options`]) and active-lane rejection ([`validate_workspace`]).
 
 use super::{Options, parse_options, validate_workspace};
 use std::fs;

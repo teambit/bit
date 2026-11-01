@@ -1,4 +1,4 @@
-//! Unit tests for `cat-component` documentation cache preparation and reuse.
+//! Unit tests for `cat-component` documentation cache [`cat_prepare`] preparation and reuse.
 
 use super::cat_prepare;
 use serde_json::json;

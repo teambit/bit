@@ -1,4 +1,4 @@
-//! Unit tests for yargs-compatible numeric target string normalization.
+//! Unit tests for yargs-compatible numeric target string [`normalize`] behavior.
 
 use super::normalize;
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for `bit blame` path key normalization ([`published_source_key`]), option parsing ([`parse_args`]), and [`Target`] classification ([`classify_target`]).
+//! Unit tests for `bit blame` path key normalization ([`published_source_key`]), CLI parsing ([`parse_args`]), and [`Target`] classification ([`classify_target`]).
 
 use super::{Target, classify_target, parse_args, published_source_key};
 use std::fs;

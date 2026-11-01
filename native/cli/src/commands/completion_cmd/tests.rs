@@ -1,4 +1,4 @@
-//! Unit tests for `bit completion` flag validation and shell script rendering.
+//! Unit tests for `bit completion` [`valid_options`] validation and [`render_completion_script`] rendering.
 
 use super::{render_completion_script, valid_options};
 

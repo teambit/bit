@@ -1,4 +1,4 @@
-//! Unit tests for `bit doctor` scope [`object`] decompression and missing-head ([`heads`]) integrity checks.
+//! Unit tests for `bit doctor` local scope [`object`] decompression and missing-head ([`heads`]) integrity checks.
 
 use super::{heads, object};
 use crate::commands::doctor::catalog::DIAGNOSES;

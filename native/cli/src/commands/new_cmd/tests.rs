@@ -1,4 +1,4 @@
-//! Unit tests for `bit new` [`Options`] parsing ([`parse_options`]) and workspace creation validation ([`validate_options`]).
+//! Unit tests for `bit new` [`Options`] CLI parsing ([`parse_options`]) and workspace creation validation ([`validate_options`]).
 
 use super::{Options, parse_options, validate_options};
 use std::fs;

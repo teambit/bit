@@ -1,4 +1,4 @@
-//! Unit tests for unified file diff header formatting and dollar-pattern expansion.
+//! Unit tests for unified file diff header [`format`] and dollar-pattern expansion.
 
 use super::format;
 

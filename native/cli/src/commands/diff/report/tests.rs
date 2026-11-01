@@ -1,4 +1,4 @@
-//! Unit tests for `bit diff` file filtering ([`filtered`]) and `--stat` summary formatting ([`format`]).
+//! Unit tests for `bit diff` file filtering ([`filtered`]) and `--stat` summary rendering ([`format`]).
 
 use super::{filtered, format};
 use crate::commands::{color::Chalk, diff::options::parse};

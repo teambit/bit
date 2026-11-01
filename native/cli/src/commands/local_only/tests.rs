@@ -1,4 +1,4 @@
-//! Unit tests for `bit local-only` [`Subcommand`] parsing ([`parse_subcommand`]).
+//! Unit tests for `bit local-only` [`Subcommand`] CLI parsing ([`parse_subcommand`]).
 
 use super::{Subcommand, parse_subcommand};
 use std::ffi::OsString;

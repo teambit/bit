@@ -1,4 +1,4 @@
-//! Unit tests for `bit npmrc` subcommand parsing ([`parse_subcommand`]).
+//! Unit tests for `bit npmrc` CLI subcommand parsing ([`parse_subcommand`]).
 
 use super::parse_subcommand;
 use std::ffi::OsString;

@@ -1,4 +1,4 @@
-//! Unit tests for `bit switch` and `bit lane import` option parsing ([`parse`]) and pattern validation.
+//! Unit tests for `bit switch` and `bit lane import` CLI option parsing ([`parse`]) and pattern validation.
 
 use super::parse;
 

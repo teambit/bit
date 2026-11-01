@@ -1,4 +1,4 @@
-//! Unit tests for advancing `.bitmap` readset receipts in [`Retained`].
+//! Unit tests for advancing `.bitmap` readset and control receipts in [`Retained`].
 
 use super::Retained;
 use serde_json::json;

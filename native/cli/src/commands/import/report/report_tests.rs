@@ -1,4 +1,4 @@
-//! Unit tests for `bit import` and `bit fetch` receipt validation ([`validate`]) and summary formatting.
+//! Unit tests for `bit import` and `bit fetch` receipt validation ([`validate`]) and terminal summary formatting.
 
 use super::validate;
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

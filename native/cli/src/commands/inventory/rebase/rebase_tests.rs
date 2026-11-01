@@ -1,4 +1,4 @@
-//! Unit tests for POSIX path joining ([`join_linux`]) and ignore-pattern rebasing ([`pattern`]).
+//! Unit tests for POSIX path joining ([`join_linux`]) and ignore-pattern rebasing ([`pattern`]) in inventory scans.
 
 use super::{join_linux, pattern};
 

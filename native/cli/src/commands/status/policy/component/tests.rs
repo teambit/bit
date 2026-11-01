@@ -1,4 +1,4 @@
-//! Unit tests for component dependency [`Policy`] resolution and environment policy precedence.
+//! Unit tests for component dependency [`Policy`] resolution and environment policy override precedence.
 
 use super::Policy;
 use serde_json::{Value, json};

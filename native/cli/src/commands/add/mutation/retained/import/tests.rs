@@ -1,4 +1,4 @@
-//! Unit tests for acknowledging imported object and file publications in [`Retained`].
+//! Unit tests for acknowledging imported object and file publications in [`Retained`] readsets.
 
 use super::{Retained, json};
 use std::fs;

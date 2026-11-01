@@ -1,4 +1,4 @@
-//! Unit tests for `bit script` [`Options`] parsing ([`parse_options`]), `.bit-env.ts` [`ParsedScript`] extraction ([`parse_scripts_from_source`]), and [`execute`] execution.
+//! Unit tests for `bit script` [`Options`] CLI parsing ([`parse_options`]), `.bit-env.ts` [`ParsedScript`] extraction ([`parse_scripts_from_source`]), and [`execute`] execution.
 
 use super::{
     Options, fast_workspace_message, parse_options,

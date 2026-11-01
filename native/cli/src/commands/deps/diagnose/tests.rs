@@ -1,4 +1,4 @@
-//! Unit tests for `bit deps diagnose` peer-suffix parsing and copy grouping.
+//! Unit tests for `bit deps diagnose` peer-suffix [`parse_copy`] and copy grouping [`render`].
 
 use super::{PackageCopy, PackageReport, parse_copy, render};
 use crate::commands::color::Chalk;

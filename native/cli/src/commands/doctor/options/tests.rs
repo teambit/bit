@@ -1,4 +1,4 @@
-//! Unit tests for `bit doctor` [`Options`] parsing and flag compatibility validation.
+//! Unit tests for `bit doctor` [`Options`] CLI parsing and flag compatibility validation.
 
 use super::Options;
 #[test]

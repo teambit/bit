@@ -1,4 +1,4 @@
-//! Unit tests for `bit component-issues` option parsing and issue catalog output.
+//! Unit tests for `bit component-issues` [`parse`], [`issues_json`], and [`report`] output.
 
 use super::{Chalk, issues_json, parse, report};
 

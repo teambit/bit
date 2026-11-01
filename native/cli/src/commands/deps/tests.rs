@@ -1,4 +1,4 @@
-//! Unit tests for `bit deps` subcommand parsing and dependency policy mutations.
+//! Unit tests for `bit deps` [`parse_subcommand`], [`parse_why`], and [`prepare`] dependency policy mutations.
 
 use super::{Subcommand, parse_subcommand, parse_why, prepare, write::WriteTarget};
 use crate::commands::{color::Chalk, set_peer::DEP_RESOLVER_ID};

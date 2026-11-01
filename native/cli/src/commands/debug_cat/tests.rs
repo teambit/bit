@@ -1,4 +1,4 @@
-//! Unit tests for `bit cat-object`, `bit cat-component`, and `bit cat-lane` parsing and lookup diagnostics.
+//! Unit tests for `bit cat-object` ([`parse_object_options`]), `bit cat-component` ([`parse_id_json_options`]), and `bit cat-lane` lookup diagnostics.
 
 use super::{
     IdJsonOptions, ObjectOptions,

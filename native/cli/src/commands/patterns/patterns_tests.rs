@@ -1,4 +1,4 @@
-//! Unit tests for component glob [`matching`], comma-separated pattern lists ([`split`]), and negations.
+//! Unit tests for component glob [`matching`], comma-separated pattern lists ([`split`]), and negated patterns.
 
 use super::{matching, split};
 

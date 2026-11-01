@@ -1,4 +1,4 @@
-//! Unit tests for `bit insights` [`Options`] parsing ([`parse_options`]), duplicate-dependency [`render`]ing, and [`find_cycles`] cycle finding.
+//! Unit tests for `bit insights` [`Options`] CLI parsing ([`parse_options`]), duplicate-dependency [`render`]ing, and [`find_cycles`] cycle finding.
 
 use super::{Options, find_cycles, parse_options, render};
 use crate::commands::graph_cmd::model::CompGraph;

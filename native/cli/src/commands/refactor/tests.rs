@@ -1,4 +1,4 @@
-//! Unit tests for `bit refactor` [`Action`] subcommand parsing ([`parse_options`]) and package-name import rewriting ([`replace_package_name`]).
+//! Unit tests for `bit refactor` [`Action`] CLI subcommand parsing ([`parse_options`]) and package-name import rewriting ([`replace_package_name`]).
 
 use super::{
     Action, Failure, extract_version_package_name, parse_options,

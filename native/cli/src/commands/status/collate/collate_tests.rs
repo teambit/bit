@@ -1,4 +1,4 @@
-//! Unit tests for root-locale component ID collation ([`compare`]) matching `String.prototype.localeCompare`.
+//! Unit tests for root-locale component ID collation ([`compare`]) matching `JavaScript` `String.prototype.localeCompare`.
 
 use super::compare;
 

@@ -1,4 +1,4 @@
-//! Unit tests for `checkout` and `revert` CLI option parsing and validation.
+//! Unit tests for `checkout` ([`parse`]) and `revert` ([`parse_revert`]) CLI option parsing and validation.
 
 use super::{parse, parse_revert};
 

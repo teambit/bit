@@ -1,4 +1,4 @@
-//! Unit tests for `bit search` flag parsing ([`parse_args`]) and case-insensitive local query matching ([`match_queries`]).
+//! Unit tests for `bit search` CLI flag parsing ([`parse_args`]) and case-insensitive local query matching ([`match_queries`]).
 
 use super::{match_queries, parse_args};
 use serde_json::json;

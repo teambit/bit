@@ -1,4 +1,4 @@
-//! Unit tests for workspace `ignoreIssues` filtering during [`Component`] issue [`collect`]ion.
+//! Unit tests for workspace `ignoreIssues` filtering during [`Component`] status issue [`collect`]ion.
 
 use super::{Component, collect};
 use serde_json::{Value, json};

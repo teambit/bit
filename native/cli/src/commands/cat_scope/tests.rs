@@ -1,4 +1,4 @@
-//! Unit tests for `cat-scope` flag parsing and JSON entry formatting.
+//! Unit tests for `cat-scope` [`parse_options`] and [`build_component_entry`] / [`build_lane_entry`] formatting.
 
 use super::{Options, build_component_entry, build_lane_entry, parse_options};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for `bit scope set` [`Options`] argument parsing ([`parse_options`]) and unsupported-selector rejection.
+//! Unit tests for `bit scope set` [`Options`] CLI argument parsing ([`parse_options`]) and unsupported-selector rejection.
 
 use super::{Options, parse_options};
 use std::ffi::OsString;

@@ -1,4 +1,4 @@
-//! Unit tests for dependency-cache reset gating ([`checkout_reset`]) during checkout [`Capture`] commit.
+//! Unit tests for dependency-cache reset gating ([`checkout_reset`]) and [`fresh`] checks during checkout [`Capture`] commit.
 
 use super::{Engine, checkout_reset, fresh};
 use crate::commands::status::capture::{CacheWrites, Capture};

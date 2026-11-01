@@ -1,4 +1,4 @@
-//! Unit tests for selector state grammar validation and union ordering.
+//! Unit tests for selector state grammar [`validate`], [`ordinary`], and [`union`] ordering.
 
 use super::{applied, identities, ordinary, union, validate};
 use serde_json::json;

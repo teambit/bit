@@ -1,4 +1,4 @@
-//! Unit tests for `bit log` [`Options`] parsing ([`parse`]), [`LocalTarget`] resolution ([`resolve_local_target`]), [`ordered_parents`], and [`render`] formatting.
+//! Unit tests for `bit log` [`Options`] CLI parsing ([`parse`]), [`LocalTarget`] resolution ([`resolve_local_target`]), [`ordered_parents`], and [`render`] formatting.
 
 use super::{
     Chalk, LocalTarget, Options, bitmap, normalize, ordered_parents, paint, parse, render,

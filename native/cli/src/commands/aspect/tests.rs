@@ -1,4 +1,4 @@
-//! Unit tests for `aspect` subcommands, inspection tables, and config deep merging.
+//! Unit tests for `aspect` [`parse_subcommand`], inspection tables, and [`deep_merge`] config updates.
 
 use super::{
     GetOpts, ListOpts, Subcommand,

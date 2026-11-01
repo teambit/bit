@@ -1,4 +1,4 @@
-//! Unit tests for scope garbage collection [`Options`] parsing ([`parse_options`]), reachability analysis ([`prepare_with_workspace_ids`]), and backup [`restore`].
+//! Unit tests for scope garbage collection [`Options`] CLI parsing ([`parse_options`]), reachability analysis ([`prepare_with_workspace_ids`]), and backup [`restore`].
 
 use super::{
     Options,

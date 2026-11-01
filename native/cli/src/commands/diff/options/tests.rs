@@ -1,4 +1,4 @@
-//! Unit tests for `bit diff` option parsing ([`parse`]) and mutually exclusive flag validation ([`output_error`]).
+//! Unit tests for `bit diff` option parsing ([`parse`]) and mutually exclusive output flag validation ([`output_error`]).
 
 use super::{output_error, parse};
 

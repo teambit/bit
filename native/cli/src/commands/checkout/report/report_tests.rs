@@ -1,4 +1,4 @@
-//! Unit tests for formatting `checkout` and `revert` terminal output reports.
+//! Unit tests for formatting `checkout` and `revert` terminal output reports via [`format`].
 
 use super::format;
 use crate::commands::{

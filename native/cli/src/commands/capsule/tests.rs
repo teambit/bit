@@ -1,4 +1,4 @@
-//! Unit tests for `capsule` subcommand parsing and short SHA-1 object hashing.
+//! Unit tests for `capsule` [`parse_subcommand`] parsing and [`object_hash_short`] SHA-1 hashing.
 
 use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand};
 

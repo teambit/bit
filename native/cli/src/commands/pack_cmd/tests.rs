@@ -1,4 +1,4 @@
-//! Unit tests for `bit pack` [`Options`] parsing ([`parse_options`]), missing scope checks ([`is_missing_scope`]), and `.tgz` tarball generation ([`build_tgz_bytes`]).
+//! Unit tests for `bit pack` [`Options`] CLI parsing ([`parse_options`]), missing scope checks ([`is_missing_scope`]), and `.tgz` tarball generation ([`build_tgz_bytes`]).
 
 use super::{Options, is_missing_scope, packer::build_tgz_bytes, parse_options};
 use flate2::read::GzDecoder;

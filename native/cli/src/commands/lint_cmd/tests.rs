@@ -1,4 +1,4 @@
-//! Unit tests for `bit lint` [`Options`] parsing ([`parse_options`]), missing host detection ([`is_missing_host`]), and workspace pattern validation ([`validate_lint_pattern`]).
+//! Unit tests for `bit lint` [`Options`] CLI parsing ([`parse_options`]), missing host detection ([`is_missing_host`]), and workspace pattern validation ([`validate_lint_pattern`]).
 
 use super::{Options, is_missing_host, parse_options, validate_lint_pattern};
 use crate::commands::color::Chalk;

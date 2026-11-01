@@ -1,4 +1,4 @@
-//! Unit tests for `bit export` option parsing ([`parse`]) and outbound failure diagnostics ([`persist_failure`], [`validation_failure`]).
+//! Unit tests for `bit export` CLI option parsing ([`parse`]) and outbound failure diagnostics ([`persist_failure`], [`validation_failure`]).
 
 use super::{parse, persist_failure, validation_failure};
 

@@ -1,4 +1,4 @@
-//! Oracle tests ([`ORACLE`]) comparing component pattern [`matching`] and [`split`] against released `multimatch` / `minimatch`.
+//! Oracle tests ([`ORACLE`]) comparing component pattern [`matching`] and [`split`] against released `multimatch` / `minimatch` behavior.
 
 use super::{matching, split};
 

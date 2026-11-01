@@ -1,4 +1,4 @@
-//! Unit tests for `bit login` [`Options`] parsing ([`parse_options`]).
+//! Unit tests for `bit login` [`Options`] CLI parsing ([`parse_options`]).
 
 use super::{Options, parse_options};
 

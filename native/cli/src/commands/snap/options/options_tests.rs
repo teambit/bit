@@ -1,4 +1,4 @@
-//! Unit tests for `bit snap` [`Options`] parsing ([`parse`]) and selector grammar retention.
+//! Unit tests for `bit snap` [`Options`] CLI parsing ([`parse`]) and selector grammar retention.
 
 use super::{Options, parse};
 use serde_json::json;

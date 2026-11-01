@@ -1,4 +1,4 @@
-//! Unit tests for `bit cli generate --docs` option parsing and frontmatter rendering.
+//! Unit tests for `bit cli generate --docs` [`is_generate_docs`], [`parse_unknown_skill`], and [`render_docs_frontmatter`].
 
 use super::{is_generate_docs, parse_unknown_skill, render_docs_frontmatter};
 

@@ -1,4 +1,4 @@
-//! Unit tests for `bit details` argument validation and persisted command detail rendering.
+//! Unit tests for `bit details` [`valid_args`] validation and persisted command [`render_details`].
 
 use super::{Chalk, render_details, valid_args};
 use std::{ffi::OsString, fs};
