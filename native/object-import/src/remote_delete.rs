@@ -131,10 +131,11 @@ impl Plan {
 
     #[must_use]
     pub fn receipt(&self) -> Value {
-        json!({"removedComponentIds":if self.lanes { Vec::new() } else { self.selected.removed.clone() },
+        let empty: &[String] = &[];
+        json!({"removedComponentIds":if self.lanes { empty } else { self.selected.removed.as_slice() },
             "missingComponents":self.selected.missing,
             "dependentBits":self.selected.dependent,"removedFromLane":[],"removedLanes":
-            if self.lanes { self.selected.removed.clone() } else { Vec::new() }})
+            if self.lanes { self.selected.removed.as_slice() } else { empty }})
     }
 
     /// Commit once. A caller must never delegate or retry after entering this method.

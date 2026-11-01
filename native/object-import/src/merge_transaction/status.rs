@@ -111,15 +111,12 @@ impl Cursor {
     }
     fn incoming(&mut self, value: &Value) -> io::Result<()> {
         let lane = boolean(value, "onLane")?;
+        let removed = boolean(value, "removed")?;
         self.selector = current_selector(value, lane)?;
-        if boolean(value, "removed")? {
-            if lane {
-                self.removed.marked = true;
-                self.next("currentId");
-            } else {
-                self.next("removeOnMain");
-            }
+        if removed && !lane {
+            self.next("removeOnMain");
         } else {
+            self.removed.marked |= removed;
             self.next("currentId");
         }
         Ok(())

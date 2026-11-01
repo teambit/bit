@@ -103,28 +103,28 @@ fn enqueue_parents(queue: &mut VecDeque<String>, version: &Value) -> io::Result<
 fn collect(reverse: &Reverse, identity: &str) -> Vec<String> {
     let mut pending = reverse
         .keys()
+        .map(String::as_str)
         .filter(|node| {
             node.split_once('@')
                 .is_some_and(|(name, _)| name == identity)
         })
-        .cloned()
         .collect::<VecDeque<_>>();
     let mut visited = IndexSet::new();
     let mut dependents = IndexSet::new();
     while let Some(node) = pending.pop_front() {
-        if !visited.insert(node.clone()) {
+        if !visited.insert(node) {
             continue;
         }
-        let Some(next) = reverse.get(&node) else { continue };
-        extend_dependents(next, &node, &mut pending, &mut dependents);
+        let Some(next) = reverse.get(node) else { continue };
+        extend_dependents(next, node, &mut pending, &mut dependents);
     }
     dependents.into_iter().collect()
 }
 
-fn extend_dependents(
-    next: &IndexSet<String>,
+fn extend_dependents<'a>(
+    next: &'a IndexSet<String>,
     node: &str,
-    pending: &mut VecDeque<String>,
+    pending: &mut VecDeque<&'a str>,
     dependents: &mut IndexSet<String>,
 ) {
     for parent in next {
@@ -132,7 +132,7 @@ fn extend_dependents(
             let name = parent.split_once('@').map_or(parent.as_str(), |(name, _)| name);
             dependents.insert(name.to_owned());
         }
-        pending.push_back(parent.to_owned());
+        pending.push_back(parent.as_str());
     }
 }
 

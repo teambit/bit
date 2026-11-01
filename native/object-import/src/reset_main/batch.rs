@@ -89,22 +89,12 @@ impl Batch {
         if self.bitmap != fresh.bitmap
             || self.index != fresh.index
             || self.controls != fresh.controls
-            || self.items
+            || !self.items
                 .iter()
-                .map(|item| &item.object)
-                .collect::<Vec<_>>()
-                != fresh.items
+                .map(|item| (&item.object, &item.history))
+                .eq(fresh.items
                     .iter()
-                    .map(|item| &item.object)
-                    .collect::<Vec<_>>()
-            || self.items
-                .iter()
-                .map(|item| &item.history)
-                .collect::<Vec<_>>()
-                != fresh.items
-                    .iter()
-                    .map(|item| &item.history)
-                    .collect::<Vec<_>>()
+                    .map(|item| (&item.object, &item.history)))
         {
             return Err(invalid("reset batch changed during preparation"));
         }
@@ -133,6 +123,7 @@ fn candidates(root: &Path) -> io::Result<Vec<String>> {
         .as_array()
         .or_else(|| index.as_array())
         .ok_or_else(|| invalid("reset batch index"))?;
+    let objects = crate::scope_path(root).join("objects");
     let mut selected = Vec::new();
     for row in rows {
         if row["isSymlink"] == true {
@@ -142,8 +133,7 @@ fn candidates(root: &Path) -> io::Result<Vec<String>> {
             .as_str()
             .map(str::trim)
             .ok_or_else(|| invalid("reset batch model hash"))?;
-        let model =
-            outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Component")?;
+        let model = outbound::read_object(&objects, hash, "Component")?;
         if model["state"]["versions"]
             .as_object()
             .is_some_and(|state| {

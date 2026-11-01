@@ -172,7 +172,7 @@ pub(super) fn distance(repository: &Repository, source: &str) -> io::Result<Valu
         Some(source),
         repository.heads.baseline.as_deref(),
     )?;
-    if source == repository.heads.baseline.as_deref().unwrap_or_default() {
+    if repository.heads.baseline.as_deref() == Some(source) {
         distance["common"] = Value::String(source.to_owned());
     }
     Ok(distance)

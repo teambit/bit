@@ -44,8 +44,7 @@ fn roots(value: &Value) -> io::Result<HashSet<&str>> {
         return Err(invalid("bitmap component budget"));
     }
     let schema = entries.get("$schema-version").is_some_and(truthy);
-    let mut roots = HashSet::new();
-    let mut explicit = HashSet::new();
+    let mut roots = HashSet::with_capacity(entries.len());
     for (key, component) in entries {
         let key = key.trim();
         if key == "_bit_lane" || key == if schema { "$schema-version" } else { "version" } {
@@ -53,10 +52,9 @@ fn roots(value: &Value) -> io::Result<HashSet<&str>> {
         }
         identity(key, component)?;
         let root = root(component)?;
-        if !explicit.insert(root) {
+        if !roots.insert(root) {
             return Err(invalid("bitmap duplicate root"));
         }
-        roots.insert(root);
     }
     lane(value)?;
     Ok(roots)

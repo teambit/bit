@@ -75,22 +75,25 @@ fn record_source_trace(
 ) -> io::Result<()> {
     trace.source_reads = trace.source_reads.saturating_add(1);
     trace.source_bytes = trace.source_bytes.saturating_add(body.len());
-    let hash = crate::validate::hexadecimal(&hash);
-    if let Some(existing) = trace.records.get(&hash) {
-        if existing.body != body {
-            return Err(invalid("merge Source receipt mismatch"));
+    let count = trace.records.len();
+    let entry = match trace.records.entry(crate::validate::hexadecimal(&hash)) {
+        std::collections::hash_map::Entry::Occupied(existing) => {
+            if existing.get().body != body {
+                return Err(invalid("merge Source receipt mismatch"));
+            }
+            return Ok(());
         }
-        return Ok(());
-    }
+        std::collections::hash_map::Entry::Vacant(vacant) => vacant,
+    };
     trace.compressed = trace.compressed.saturating_add(compressed_size);
     trace.retained_bytes = trace.retained_bytes.saturating_add(body.len());
     if inflated_size < body.len()
         || trace.compressed > 32 * 1024 * 1024
         || trace.retained_bytes > 32 * 1024 * 1024
-        || trace.records.len() >= 4096
+        || count >= 4096
     {
         return Err(invalid("merge Source receipt budget"));
     }
-    trace.records.insert(hash, Receipt { body: body.to_vec(), compressed_size, inflated_size });
+    entry.insert(Receipt { body: body.to_vec(), compressed_size, inflated_size });
     Ok(())
 }

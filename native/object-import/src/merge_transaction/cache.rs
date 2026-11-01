@@ -29,8 +29,8 @@ impl Capsules {
         let record =
             self.trace.records.get(hash).ok_or_else(|| invalid("merge Source receipt missing"))?;
         let index = self.sources.len();
-        let (path, offset) = if let Some(retained) = self.retained.get(hash) {
-            retained.clone()
+        let (path, offset) = if let Some(retained) = self.retained.remove(hash) {
+            retained
         } else {
             let path = self.directory.join(format!("{}-{index}.source.body", self.token));
             let mut file = OpenOptions::new()

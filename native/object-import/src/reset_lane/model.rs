@@ -9,19 +9,19 @@ pub(super) fn project(
     repository: &mut Repository,
     selection: &Selection,
 ) -> io::Result<Option<ObjectChange>> {
-    let original = repository.model.clone();
-    let scope = original["scope"].as_str().map_or("", str::trim);
-    let name = original["name"].as_str().map_or("", str::trim);
+    let scope = repository.model["scope"].as_str().map_or("", str::trim);
+    let name = repository.model["name"].as_str().map_or("", str::trim);
     if scope.is_empty() || name.is_empty() {
         return Err(invalid("lane reset Component identity"));
     }
     let identity = format!("{scope}/{name}");
-    if is_removed(&original["head"], &selection.removed) {
+    let had_head = repository.model["head"].is_string();
+    if is_removed(&repository.model["head"], &selection.removed) {
         set_head(&mut repository.model, selection.next.as_deref())?;
     }
     remove_versions(&mut repository.model, selection)?;
     remove_detached(&mut repository.model, &selection.removed)?;
-    if original["head"].is_string()
+    if had_head
         && !repository.model["head"].is_string()
         && repository.model["versions"]
             .as_object()

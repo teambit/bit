@@ -59,7 +59,7 @@ impl Plan {
         }
         for (path, before) in &self.objects {
             if before.is_some() {
-                if fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+                if path.is_symlink() {
                     return Err(invalid("never-exported object symlink"));
                 }
                 fs::remove_file(path)?;
@@ -118,7 +118,7 @@ fn read_object_file(root: &Path, name: &str) -> io::Result<(PathBuf, Option<Vec<
         .join("objects")
         .join(&hash[..2])
         .join(&hash[2..]);
-    if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+    if path.is_symlink() {
         return Err(invalid("never-exported object symlink"));
     }
     let data = match fs::read(&path) {

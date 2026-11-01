@@ -24,15 +24,18 @@ pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 pub(crate) fn path(path: &Path) -> io::Result<()> {
+    let Some(name) = path.to_str() else {
+        return Err(invalid("invalid recovery path"));
+    };
     if !path.is_absolute()
+        || name.trim().is_empty()
+        || name.len() > 32768
+        || name.contains('\0')
         || path
             .components()
             .any(|comp| {
                 matches!(comp, std::path::Component::ParentDir | std::path::Component::CurDir)
             })
-        || path
-            .to_str()
-            .is_none_or(|name| name.trim().is_empty() || name.len() > 32768 || name.contains('\0'))
     {
         return Err(invalid("invalid recovery path"));
     }

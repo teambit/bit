@@ -103,10 +103,8 @@ fn non_empty<'a>(value: Option<&'a Value>, message: &str) -> io::Result<&'a str>
 }
 
 pub(crate) fn restore(row: &mut Map<String, Value>, config: Option<Value>) {
-    if !row.contains_key("config")
-        && let Some(config) = config
-    {
-        row.insert("config".into(), config);
+    if let Some(config) = config {
+        row.entry("config").or_insert(config);
     }
 }
 

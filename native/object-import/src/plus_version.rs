@@ -12,17 +12,19 @@ pub fn is_plus(version: &str) -> bool {
 /// `resolvePlusVersion`: prefix only release tags, retaining snaps and existing ranges.
 #[must_use]
 pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String {
-    let trimmed_version = version.trim();
-    if !is_plus(trimmed_version) {
+    let Some(prefix) = version
+        .trim()
+        .strip_prefix('+')
+        .filter(|prefix| matches!(*prefix, "" | "^" | "~"))
+    else {
         return version.to_owned();
-    }
+    };
     let Some(resolved) = resolved
         .map(str::trim)
         .filter(|value| !value.is_empty())
     else {
         return fallback.to_owned();
     };
-    let prefix = trimmed_version.strip_prefix('+').unwrap_or_default();
     if !prefix.is_empty()
         && !resolved
             .trim_start_matches(['v', 'V'])

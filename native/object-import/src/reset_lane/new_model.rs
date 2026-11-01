@@ -21,9 +21,9 @@ pub(super) fn remove_new_model(
     let hash = rows[position]["hash"]
         .as_str()
         .map(str::trim)
-        .ok_or_else(|| invalid("lane reset model hash"))?
-        .to_owned();
-    crate::merge_history::hash(&hash)?;
+        .ok_or_else(|| invalid("lane reset model hash"))?;
+    crate::merge_history::hash(hash)?;
+    let hash = hash.to_owned();
     let model_bytes = fs::read(object_path(&crate::scope_path(root).join("objects"), &hash))?;
     if model_bytes.len() > 32 * 1024 * 1024 {
         return Err(invalid("lane reset model budget"));

@@ -234,12 +234,12 @@ pub(super) fn populations_for(
     };
     let mut changes = Vec::new();
     for head in heads {
-        let previous = history.clone();
         let versions = history["versions"]
             .as_array_mut()
             .ok_or_else(|| invalid("lane reset population versions"))?;
+        let previous_len = versions.len();
         append_missing_ancestors(&repository.objects, versions, head)?;
-        if previous != history {
+        if versions.len() != previous_len {
             let after = outbound::encode_object(&hash, "VersionHistory", &history)?;
             changes.push(ObjectChange { hash: hash.clone(), before, after: Some(after.clone()) });
             before = after;

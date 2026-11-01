@@ -14,12 +14,12 @@ pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
 }
 
 pub(crate) fn respond(writer: &mut impl Write, response: &impl Serialize) -> io::Result<()> {
-    let bytes = serde_json::to_vec(response).map_err(io::Error::other)?;
+    let mut bytes = serde_json::to_vec(response).map_err(io::Error::other)?;
     if bytes.len() > MAX_BATCH_BYTES {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "response exceeds frame limit"));
     }
+    bytes.push(b'\n');
     writer.write_all(&bytes)?;
-    writer.write_all(b"\n")?;
     writer.flush()
 }
 

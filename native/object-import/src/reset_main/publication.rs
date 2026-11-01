@@ -36,7 +36,7 @@ pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()>
         fs::create_dir_all(path.parent().ok_or_else(|| invalid("reset object path"))?)?;
         fs::write(path, bytes)
     } else {
-        if fs::symlink_metadata(&path).is_ok_and(|meta| meta.file_type().is_symlink()) {
+        if path.is_symlink() {
             return Err(invalid("reset object symlink"));
         }
         match fs::remove_file(path) {

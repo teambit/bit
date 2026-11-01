@@ -22,20 +22,18 @@ pub(super) fn remote_head(
         return Err(invalid("lane reset remote ref path"));
     }
     let scope_dir = crate::scope_path(root);
-    let path = scope_dir
-        .join("refs/remotes")
-        .join(lane_scope)
-        .join(lane_name);
-    let bytes = if let Some(bytes) = proofs::read(&path, reads)? {
-        bytes
-    } else {
-        let legacy = scope_dir
-            .join("refs/remote")
+    let mut found = None;
+    for dir in ["refs/remotes", "refs/remote"] {
+        let path = scope_dir
+            .join(dir)
             .join(lane_scope)
             .join(lane_name);
-        let Some(bytes) = proofs::read(&legacy, reads)? else { return Ok(None) };
-        bytes
-    };
+        if let Some(bytes) = proofs::read(&path, reads)? {
+            found = Some(bytes);
+            break;
+        }
+    }
+    let Some(bytes) = found else { return Ok(None) };
     if bytes.len() > 4 * 1024 * 1024 {
         return Err(invalid("lane reset remote refs oversized"));
     }

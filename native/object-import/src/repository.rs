@@ -61,19 +61,20 @@ pub fn read_raw_scope_object(
         .iter()
         .position(|byte| *byte == 0)
         .filter(|end| *end < 256)
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "missing object header"))?;
-    let header_str = std::str::from_utf8(&raw[..end])
-        .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "object header is not UTF-8"))?;
+        .ok_or_else(|| invalid("missing object header"))?;
+    let header_str =
+        std::str::from_utf8(&raw[..end]).map_err(|_| invalid("object header is not UTF-8"))?;
     let headers = header_str
         .split(' ')
         .map(str::to_owned)
         .collect::<Vec<_>>();
     if headers.len() != 3 {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid object header"));
+        return Err(invalid("invalid object header"));
     }
-    let kind = headers
-        .first()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "invalid object header"))?;
-    let (_, body) = repository::split(&raw, hash, kind)?;
+    let (_, body) = repository::split(&raw, hash, &headers[0])?;
     Ok(Some((headers, body.to_vec())))
+}
+
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, message)
 }

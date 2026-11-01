@@ -214,23 +214,26 @@ impl<'a> IndexState<'a> {
         if obj_hash.is_empty() || !matches!(obj_category, "component" | "lane") {
             return None;
         }
-        let Some((category, index, id)) = self.found.get(obj_hash).copied() else {
-            let side = usize::from(obj_category == "lane");
-            let index = self.counts[side];
-            self.counts[side] += 1;
-            self.found.insert(obj_hash, (obj_category, index, &object.id));
-            self.actions.push(json!(["add", offset, index]));
-            return Some(());
-        };
-        if obj_category != "lane" {
-            return Some(());
-        }
-        if category != "lane" {
-            return None;
-        }
-        if *id != object.id {
-            self.actions.push(json!(["rename", offset, index]));
-            self.found.insert(obj_hash, ("lane", index, &object.id));
+        match self.found.entry(obj_hash) {
+            std::collections::hash_map::Entry::Vacant(vacant) => {
+                let index = self.counts[usize::from(obj_category == "lane")];
+                self.counts[usize::from(obj_category == "lane")] += 1;
+                vacant.insert((obj_category, index, &object.id));
+                self.actions.push(json!(["add", offset, index]));
+            }
+            std::collections::hash_map::Entry::Occupied(mut occupied) => {
+                if obj_category != "lane" {
+                    return Some(());
+                }
+                let (category, index, id) = *occupied.get();
+                if category != "lane" {
+                    return None;
+                }
+                if *id != object.id {
+                    self.actions.push(json!(["rename", offset, index]));
+                    occupied.insert(("lane", index, &object.id));
+                }
+            }
         }
         Some(())
     }

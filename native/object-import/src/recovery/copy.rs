@@ -15,9 +15,9 @@ pub(crate) fn file(source: &Path, destination: &Path) -> io::Result<()> {
 pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
     super::path(source)?;
     super::path(destination)?;
-    let source_metadata = regular(source)?;
+    let source_metadata = regular(source, fs::symlink_metadata(source)?)?;
     let existing = match fs::symlink_metadata(destination) {
-        Ok(_) => Some(regular(destination)?),
+        Ok(metadata) => Some(regular(destination, metadata)?),
         Err(error) if error.kind() == io::ErrorKind::NotFound => None,
         Err(error) => return Err(error),
     };
@@ -32,8 +32,7 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
     ancestors(destination)?;
     Ok(())
 }
-fn regular(path: &Path) -> io::Result<fs::Metadata> {
-    let metadata = fs::symlink_metadata(path)?;
+fn regular(path: &Path, metadata: fs::Metadata) -> io::Result<fs::Metadata> {
     if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > 32 * 1024 * 1024
     {
         return Err(invalid("unsupported recovery copy metadata"));

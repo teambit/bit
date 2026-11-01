@@ -69,12 +69,9 @@ impl Repository {
         mut self,
         selected: &Selection,
     ) -> io::Result<(ObjectChange, Option<BytesChange>)> {
-        let updated = selected.updated_model(&self.component)?;
-        let after_model = updated
-            .as_ref()
-            .map(|value| outbound::encode_object(&self.model_hash, "Component", value))
-            .transpose()?;
-        let index = if updated.is_none() {
+        let (after_model, index) = if let Some(value) = selected.updated_model(&self.component)? {
+            (Some(outbound::encode_object(&self.model_hash, "Component", &value)?), None)
+        } else {
             let rows = if self.index.is_array() {
                 self.index.as_array_mut()
             } else {
@@ -84,9 +81,7 @@ impl Repository {
             rows.remove(self.position);
             let mut after = serde_json::to_vec_pretty(&self.index)?;
             after.push(b'\n');
-            Some(BytesChange { before: self.index_before, after })
-        } else {
-            None
+            (None, Some(BytesChange { before: self.index_before, after }))
         };
         let object =
             ObjectChange { hash: self.model_hash, before: self.model_before, after: after_model };

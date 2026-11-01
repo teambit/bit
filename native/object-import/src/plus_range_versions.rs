@@ -30,6 +30,14 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
     if !is_range(&dependency["versionRange"]) {
         return None;
     }
+    let range = text(&dependency["versionRange"]);
+    if let Some(name) = dependency["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
+        return Some(format!(r#"{name}: "{range}""#));
+    }
     let identity = dependency["id"]
         .as_str()
         .or_else(|| dependency.as_str())
@@ -50,12 +58,7 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
                     .to_owned()
             },
         );
-    let name = dependency["packageName"]
-        .as_str()
-        .map(str::trim)
-        .filter(|name| !name.is_empty())
-        .unwrap_or(&identity);
-    Some(format!(r#"{name}: "{}""#, text(&dependency["versionRange"])))
+    Some(format!(r#"{identity}: "{range}""#))
 }
 fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
     let Some(resolver) = extensions

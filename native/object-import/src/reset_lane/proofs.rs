@@ -65,7 +65,7 @@ pub(super) fn object(
     let path = object_path(objects, &hash);
     let before = read(&path, proofs)?;
     let value = super::outbound::read_object(objects, &hash, kind)?;
-    if read(&path, &mut Vec::new())? != before {
+    if regular(&path)? != before {
         return Err(invalid("lane reset object changed during capture"));
     }
     Ok(value)
@@ -73,7 +73,7 @@ pub(super) fn object(
 
 pub(super) fn verify(proofs: &ReadSet) -> io::Result<()> {
     for (path, expected) in proofs {
-        if read(path, &mut Vec::new())? != *expected {
+        if regular(path)? != *expected {
             return Err(invalid("lane reset retained input changed"));
         }
     }

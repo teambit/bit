@@ -90,13 +90,16 @@ fn collect_model_references(
     identity: &str,
     refs: &mut Vec<(String, String)>,
 ) -> io::Result<()> {
-    let mut versions = model["versions"]
+    let versions = model["versions"]
         .as_object()
-        .cloned()
-        .unwrap_or_default();
-    if let Some(orphaned) = model["orphanedVersions"].as_object() {
-        versions.extend(orphaned.clone());
-    }
+        .into_iter()
+        .flatten()
+        .chain(
+            model["orphanedVersions"]
+                .as_object()
+                .into_iter()
+                .flatten(),
+        );
     for (label, hash) in versions {
         if refs.len() >= 32768 {
             return Err(invalid("lane dependent reference limit"));

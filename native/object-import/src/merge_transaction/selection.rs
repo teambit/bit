@@ -65,12 +65,13 @@ fn parse_string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
 }
 
 fn visible(input: &Value) -> io::Result<Vec<usize>> {
+    let results = array(input, "results")?;
     let hidden = array(input, "hidden")?
         .iter()
         .map(identity)
         .collect::<io::Result<std::collections::HashSet<_>>>()?;
-    let mut selected = Vec::new();
-    for (index, row) in array(input, "results")?.iter().enumerate() {
+    let mut selected = Vec::with_capacity(results.len());
+    for (index, row) in results.iter().enumerate() {
         if !hidden.contains(&identity(row)?) {
             selected.push(index);
         }

@@ -40,13 +40,14 @@ fn matches_identity(row: &Value, identities: &[String]) -> bool {
     if row_name.is_empty() {
         return false;
     }
-    let candidate = format!("{row_scope}/{row_name}");
     identities
         .iter()
         .any(|id| {
             let trimmed = id.trim();
             let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
-            bare == candidate
+            bare.strip_prefix(row_scope)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(row_name)
                 || (row_scope.is_empty()
                     && bare
                         .split_once('/')

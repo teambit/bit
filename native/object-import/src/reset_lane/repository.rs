@@ -80,15 +80,13 @@ impl Repository {
             .as_str()
             .map(str::trim)
             .filter(|scope| !scope.is_empty())
-            .ok_or_else(|| invalid("lane reset model scope"))?
-            .to_owned();
+            .ok_or_else(|| invalid("lane reset model scope"))?;
         let name = self.model["name"]
             .as_str()
             .map(str::trim)
             .filter(|name| !name.is_empty())
-            .ok_or_else(|| invalid("lane reset model name"))?
-            .to_owned();
-        membership::project(&mut self.lane, &scope, &name, selection)
+            .ok_or_else(|| invalid("lane reset model name"))?;
+        membership::project(&mut self.lane, scope, name, selection)
     }
 
     pub(super) fn lane_object(&self) -> io::Result<ObjectChange> {

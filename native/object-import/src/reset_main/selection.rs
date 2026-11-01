@@ -94,16 +94,12 @@ fn walk(
         if !seen.insert(current.clone()) || seen.len() > 4096 {
             return Err(invalid("reset cyclic or oversized local history"));
         }
-        removed.push(current.clone());
         let next = parent(objects, &current)?;
-        if head_only
-            || next
-                .as_ref()
-                .is_none_or(|next| !local.contains_key(next))
-        {
-            return Ok((removed, next));
+        removed.push(current);
+        match next {
+            Some(next) if !head_only && local.contains_key(&next) => current = next,
+            next => return Ok((removed, next)),
         }
-        current = next.ok_or_else(|| invalid("reset parent absent"))?;
     }
 }
 

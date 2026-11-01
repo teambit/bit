@@ -44,11 +44,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
             decision::bucket(&input)
         }
         "mergeTransactionFinish" => {
-            let token = input["token"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
-                .ok_or_else(|| invalid("merge finish token"))?;
+            let token = parse_token(&input, "merge finish token")?;
             let tokens = state.journal.finish(token)?;
             state.status.finish(&tokens);
             state.bodies.finish(&tokens)?;
@@ -64,12 +60,15 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     state.bodies.prepare(input, &state.journal, Some(snapshots))
 }
-fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
-    let token = input["token"]
+fn parse_token<'a>(input: &'a Value, message: &'static str) -> io::Result<&'a str> {
+    input["token"]
         .as_str()
         .map(str::trim)
         .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
-        .ok_or_else(|| invalid("merge owner token"))?;
+        .ok_or_else(|| invalid(message))
+}
+fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
+    let token = parse_token(input, "merge owner token")?;
     let index = input["index"]
         .as_u64()
         .filter(|index| *index < 4096)
@@ -78,11 +77,7 @@ fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     state.verify(token, index)
 }
 fn verify_owner(input: &Value, state: &journal::State) -> io::Result<()> {
-    let token = input["token"]
-        .as_str()
-        .map(str::trim)
-        .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
-        .ok_or_else(|| invalid("merge owner token"))?;
+    let token = parse_token(input, "merge owner token")?;
     let index = input["index"]
         .as_u64()
         .filter(|index| *index == 0)

@@ -59,12 +59,12 @@ pub(super) fn find_key(
         let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);
         if (row_scope == Some(scope) || row_scope.is_none())
             && row_name == name
-            && found.replace(key.clone()).is_some()
+            && found.replace(key.as_str()).is_some()
         {
             return Err(invalid("reset ambiguous bitmap identity"));
         }
     }
-    found.ok_or_else(|| invalid("reset bitmap identity absent"))
+    found.map(str::to_owned).ok_or_else(|| invalid("reset bitmap identity absent"))
 }
 
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {

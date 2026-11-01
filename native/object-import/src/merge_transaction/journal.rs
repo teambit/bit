@@ -178,8 +178,9 @@ impl State {
     }
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
-        let token = request.token.trim().to_owned();
-        let mut record = self.live(&token)?.clone();
+        let token = request.token.trim();
+        self.live(token)?;
+        let record = self.records.get_mut(token).ok_or_else(|| invalid("stale merge owner"))?;
         if record.revision != request.revision
             || record.phase() != request.phase.trim()
             || record.index != request.index
@@ -187,12 +188,11 @@ impl State {
         {
             return Err(invalid("stale merge receipt"));
         }
-        record.advance(request.next_count)?;
-        record.revision =
+        let revision =
             record.revision.checked_add(1).ok_or_else(|| invalid("merge revision overflow"))?;
-        let output = record.output(&token);
-        self.records.insert(token, record);
-        Ok(output)
+        record.advance(request.next_count)?;
+        record.revision = revision;
+        Ok(record.output(token))
     }
     fn live(&self, token: &str) -> io::Result<&Record> {
         let original =

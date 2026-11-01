@@ -35,16 +35,20 @@ fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
         .map_err(|_| invalid("invalid mutable body text"))?;
     let mut parts = header.split(' ');
     let kind = parts.next();
-    if !(matches!(kind, Some("Version" | "VersionHistory" | "LaneHistory"))
-        || models && matches!(kind, Some("Component" | "Lane" | "Symlink" | "ScopeMeta")))
+    let valid_kind = matches!(kind, Some("Version" | "VersionHistory" | "LaneHistory"))
+        || (models && matches!(kind, Some("Component" | "Lane" | "Symlink" | "ScopeMeta")));
+    if !valid_kind
         || parts
             .next()
-            .is_none_or(|actual| !actual.eq_ignore_ascii_case(hash.trim()))
+            .is_none_or(|actual| !actual.eq_ignore_ascii_case(hash))
         || parts
             .next()
             .and_then(|size| size.parse::<usize>().ok())
-            .is_none_or(|size| size > 32 * 1024 * 1024 || size != body.encode_utf16().count())
-        || parts.next().is_some()
+            .is_none_or(|size| {
+                size > 32 * 1024 * 1024
+                    || parts.next().is_some()
+                    || size != body.encode_utf16().count()
+            })
     {
         return Err(invalid("unsupported mutable identity or type"));
     }

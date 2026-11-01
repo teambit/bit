@@ -48,7 +48,7 @@ fn string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
     }
     Ok((scope, name))
 }
-fn hashes(input: &Value, field: &str) -> io::Result<HashSet<String>> {
+fn hashes<'a>(input: &'a Value, field: &str) -> io::Result<HashSet<&'a str>> {
     rows(input, field)?
         .iter()
         .map(|value| {
@@ -57,7 +57,7 @@ fn hashes(input: &Value, field: &str) -> io::Result<HashSet<String>> {
                 .map(str::trim)
                 .ok_or_else(|| invalid("merge dependency hash"))?;
             crate::merge_history::hash(hash)?;
-            Ok(hash.to_owned())
+            Ok(hash)
         })
         .collect()
 }
@@ -79,15 +79,15 @@ pub(super) fn candidates(input: &Value) -> io::Result<Value> {
     let mut added = Vec::new();
     let mut selected = Vec::new();
     for (index, dependency) in rows(input, "dependencies")?.iter().enumerate() {
-        let dep_scope = identity(dependency)?.0;
-        let version = dependency_version(dependency);
-        if dep_scope != scope {
+        if identity(dependency)?.0 != scope {
             continue;
         }
-        let Some(hash) = version.filter(|hash| crate::merge_history::hash(hash).is_ok()) else {
+        let Some(hash) =
+            dependency_version(dependency).filter(|hash| crate::merge_history::hash(hash).is_ok())
+        else {
             continue;
         };
-        if checked.insert(hash.to_owned()) {
+        if checked.insert(hash) {
             selected.push(index);
             added.push(hash);
         }

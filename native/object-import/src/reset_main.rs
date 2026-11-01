@@ -61,24 +61,31 @@ impl Plan {
         let identity = format!("{scope}/{name}");
         let bitmap = bitmap::Bitmap::load(root, scope, name)?;
         let repository = repository::Repository::load(root, scope, name)?;
-        let selection = selection::select(&repository.component, &repository.objects(), head_only)?;
+        let objects = repository.objects();
+        let selection = selection::select(&repository.component, &objects, head_only)?;
         validate_detached(&repository.component, &selection)?;
         if !force {
             dependents::validate(
-                &repository.objects(),
+                &objects,
                 repository.components()?,
                 &identity,
                 &selection,
                 &repository.component,
             )?;
         }
-        let version = selection.bitmap_version(&repository.component);
         let history = history::pending(root, &identity, &repository.component, &selection)?;
-        let bitmap = bitmap.project(version)?;
+        let bitmap = bitmap.project(selection.bitmap_version(&repository.component))?;
         let (object, index) = repository.project(&selection)?;
         let controls = crate::reset_lane::controls::prepare(root, std::slice::from_ref(&identity))?;
-        let input = Input { root: root.to_owned(), identity, head_only, force };
-        Ok(Self { input, object, bitmap, index, history, controls, selection })
+        Ok(Self {
+            input: Input { root: root.to_owned(), identity, head_only, force },
+            object,
+            bitmap,
+            index,
+            history,
+            controls,
+            selection,
+        })
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {

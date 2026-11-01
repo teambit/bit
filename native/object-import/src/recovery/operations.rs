@@ -64,9 +64,8 @@ impl State {
             }
             self.index += 1;
         }
-        Ok(
-            json!({"completed":self.index-start,"nextIndex":self.index,"failed":self.index-start<count}),
-        )
+        let completed = self.index - start;
+        Ok(json!({"completed":completed,"nextIndex":self.index,"failed":completed<count}))
     }
 }
 impl Operation {

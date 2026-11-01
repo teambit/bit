@@ -76,12 +76,12 @@ impl Plan {
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        crate::reset_main::validate_file_id(file_id)?;
         let current =
             Self::prepare_with(&self.root, self.pattern.as_deref(), self.selected.clone())?;
         if current.before != self.before || current.after != self.after {
             return Err(invalid("soft reset bitmap changed"));
         }
-        crate::reset_main::validate_file_id(file_id)?;
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.after)
     }

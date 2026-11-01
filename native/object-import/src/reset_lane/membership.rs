@@ -32,7 +32,6 @@ pub(super) fn project(
     name: &str,
     selection: &Selection,
 ) -> io::Result<()> {
-    let identity = format!("{scope}/{name}");
     let rows = lane["components"].as_array_mut().ok_or_else(|| invalid("lane reset components"))?;
     let mut positions = rows
         .iter()
@@ -50,7 +49,7 @@ pub(super) fn project(
         }
         return Ok(());
     }
-    project_hidden(lane, &identity, selection)
+    project_hidden(lane, &format!("{scope}/{name}"), selection)
 }
 
 fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {

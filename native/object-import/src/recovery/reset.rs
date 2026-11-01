@@ -168,13 +168,20 @@ fn resolve<'a>(input: &'a Value, label: &'a str, remaining: &[&str]) -> io::Resu
     if !tag(label) {
         return Err(invalid("unsupported reset tag"));
     }
-    let orphaned = array(input, "orphaned")?
+    if let Some(entry) = array(input, "orphaned")?
         .iter()
-        .find(|entry| entry["label"] == label);
-    let normal = array(input, "tags")?
-        .iter()
-        .find(|entry| entry["label"] == label && remaining.contains(&label));
-    text(&orphaned.or(normal).ok_or_else(|| invalid("reset missing tag"))?["hash"])
+        .find(|entry| entry["label"] == label)
+    {
+        return text(&entry["hash"]);
+    }
+    let normal = remaining
+        .contains(&label)
+        .then_some(array(input, "tags")?)
+        .and_then(|tags| {
+            tags.iter()
+                .find(|entry| entry["label"] == label)
+        });
+    text(&normal.ok_or_else(|| invalid("reset missing tag"))?["hash"])
 }
 fn tag(label: &str) -> bool {
     label.split('.').count() == 3

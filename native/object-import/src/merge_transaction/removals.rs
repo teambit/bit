@@ -10,11 +10,12 @@ fn relative_path(file: &Value) -> io::Result<&str> {
         .ok_or_else(|| invalid("merge current relative path"))
 }
 fn removed_entry(file: &Value, path: &str) -> Value {
-    file["path"]
+    let entry = file["path"]
         .as_str()
         .map(str::trim)
         .filter(|value| !value.is_empty())
-        .map_or_else(|| Value::String(path.to_owned()), |value| Value::String(value.to_owned()))
+        .unwrap_or(path);
+    Value::String(entry.to_owned())
 }
 pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     let mut statuses = input["filesStatus"]

@@ -71,10 +71,8 @@ impl Readset {
         }
         self.bytes = self.bytes
             .checked_add(bytes.as_ref().map_or(0, Vec::len))
+            .filter(|total| *total <= MAX_READSET_BYTES)
             .ok_or_else(|| invalid("remote object readset budget"))?;
-        if self.bytes > MAX_READSET_BYTES {
-            return Err(invalid("remote object readset budget"));
-        }
         self.entries.push((path, bytes));
         Ok(())
     }

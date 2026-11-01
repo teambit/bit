@@ -22,10 +22,11 @@ impl WorkspaceSession {
         if !(1..=8).contains(&threads) {
             return Err(io::Error::other("thread count must be between 1 and 8"));
         }
+        let pool = shared_pool(threads)?;
         let mut merge = Box::<crate::merge_state::State>::default();
         merge.inspection.enable_memory_snapshots();
         Ok(Self {
-            pool: shared_pool(threads)?,
+            pool,
             checkout: crate::checkout::cache::State::default(),
             merge,
             cancellation: bit_client_transfer::Cancellation::current(),

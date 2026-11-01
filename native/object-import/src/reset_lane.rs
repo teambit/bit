@@ -195,7 +195,8 @@ fn project_objects(
     selection: &Selection,
 ) -> io::Result<Vec<ObjectChange>> {
     let mut history = version_history(repository, identity)?;
-    if let Some(last) = history::populations(repository)?.last() {
+    let population = history::populations(repository)?;
+    if let Some(last) = population.last() {
         history.after.clone_from(&last.after);
     }
     let lane_history = lane_history(repository, &selection.removed)?;
@@ -207,7 +208,6 @@ fn project_objects(
     repository.project_lane(selection)?;
     let mut objects = vec![history, lane_history, repository.lane_object()?];
     objects.extend(pending);
-    let population = history::populations(repository)?;
     let retained = selection.proofs.clone();
     if let Some(change) = model::project(repository, selection)
         .map_err(|error| {

@@ -31,7 +31,7 @@ impl Discovery {
 }
 
 pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
-    let bitmap = context(root)?;
+    let mut bitmap = context(root)?;
     let mut retained = vec![(root.join(".bitmap"), Some(bitmap.before.clone()))];
     let index_bytes = proofs::read(&crate::scope_path(root).join("index.json"), &mut retained)?
         .ok_or_else(|| invalid("lane candidate index absent"))?;
@@ -44,7 +44,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
     let mut result =
         Discovery { identities: Vec::new(), population: Vec::new(), proofs: retained, objects };
     for identity in identities {
-        let repository = staged_repository(root, &identity)?;
+        let repository = staged_repository(root, &mut bitmap, &identity)?;
         if staged(&repository, &mut result)? {
             result.identities.push(identity);
         }
@@ -53,21 +53,24 @@ pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
     Ok(result)
 }
 
-fn staged_repository(root: &Path, identity: &str) -> io::Result<Repository> {
+fn staged_repository(
+    root: &Path,
+    bitmap: &mut BitmapState,
+    identity: &str,
+) -> io::Result<Repository> {
     let (scope, name) = identity
         .trim()
         .split_once('/')
         .map(|(scope, name)| (scope.trim(), name.trim()))
         .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
         .ok_or_else(|| invalid("lane candidate identity"))?;
-    let mut bitmap = context(root)?;
     bitmap.key = bitmap_key(
         bitmap.document.as_object().ok_or_else(|| invalid("lane candidate bitmap"))?,
         scope,
         name,
     )
     .unwrap_or_default();
-    Repository::staged(root, &bitmap, scope, name)
+    Repository::staged(root, bitmap, scope, name)
 }
 
 fn staged(repository: &Repository, result: &mut Discovery) -> io::Result<bool> {

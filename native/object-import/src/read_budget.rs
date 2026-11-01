@@ -21,7 +21,7 @@ impl Budget {
             .try_update(Ordering::Relaxed, Ordering::Relaxed, |remaining| {
                 remaining.checked_sub(bytes)
             })
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "parallel read byte budget"))?;
+            .map_err(|_| invalid("parallel read byte budget"))?;
         Ok(())
     }
 
@@ -29,25 +29,23 @@ impl Budget {
     pub(crate) fn read(&self, mut input: File) -> io::Result<Vec<u8>> {
         let metadata = input.metadata()?;
         if !metadata.is_file() || metadata.file_type().is_symlink() {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "parallel read requires a regular file",
-            ));
+            return Err(invalid("parallel read requires a regular file"));
         }
-        let length = usize::try_from(metadata.len())
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "parallel read file length"))?;
+        let length =
+            usize::try_from(metadata.len()).map_err(|_| invalid("parallel read file length"))?;
         if length > 32 * 1024 * 1024 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "parallel read single file budget",
-            ));
+            return Err(invalid("parallel read single file budget"));
         }
         self.reserve(length)?;
         let mut bytes = vec![0; length];
         input.read_exact(&mut bytes)?;
         if input.read(&mut [0])? != 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "parallel read file grew"));
+            return Err(invalid("parallel read file grew"));
         }
         Ok(bytes)
     }
+}
+
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, message)
 }

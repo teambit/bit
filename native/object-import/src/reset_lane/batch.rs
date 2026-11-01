@@ -126,14 +126,10 @@ impl Batch {
             || self.bitmap_before != fresh.bitmap_before
             || self.bitmap_after != fresh.bitmap_after
             || self.index != fresh.index
-            || self.items
+            || !self.items
                 .iter()
                 .map(|item| &item.selection)
-                .collect::<Vec<_>>()
-                != fresh.items
-                    .iter()
-                    .map(|item| &item.selection)
-                    .collect::<Vec<_>>()
+                .eq(fresh.items.iter().map(|item| &item.selection))
         {
             return Err(invalid("lane reset batch changed during preparation"));
         }

@@ -39,12 +39,12 @@ fn validate_row(
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
             .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default(), nm));
     let same = (row_scope == scope || row_scope.is_empty()) && row_name == name;
-    let component = component_model(objects, row, same, selected_model)?;
-    for reference in references(&component)? {
-        if same && removed.contains(reference.as_str()) {
+    let loaded = component_model(objects, row, same)?;
+    for reference in references(loaded.as_ref().unwrap_or(selected_model))? {
+        if same && removed.contains(reference) {
             continue;
         }
-        let version = outbound::read_object(objects, &reference, "Version")?;
+        let version = outbound::read_object(objects, reference, "Version")?;
         if uses_removed(&version, scope, name, removed) {
             return Err(invalid("reset version has a dependent"));
         }
@@ -52,18 +52,18 @@ fn validate_row(
     Ok(())
 }
 
-fn component_model(objects: &Path, row: &Value, same: bool, selected: &Value) -> io::Result<Value> {
+fn component_model(objects: &Path, row: &Value, same: bool) -> io::Result<Option<Value>> {
     if same {
-        return Ok(selected.clone());
+        return Ok(None);
     }
     let hash = row["hash"]
         .as_str()
         .map(str::trim)
         .ok_or_else(|| invalid("reset dependent index hash"))?;
-    outbound::read_object(objects, hash, "Component")
+    outbound::read_object(objects, hash, "Component").map(Some)
 }
 
-fn references(component: &Value) -> io::Result<HashSet<String>> {
+fn references(component: &Value) -> io::Result<HashSet<&str>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset dependent versions"))?;
     let mut refs = HashSet::new();
@@ -82,7 +82,7 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
             .filter(|hash| !hash.is_empty())
             .ok_or_else(|| invalid("reset dependent version hash"))?;
         crate::merge_history::hash(hash)?;
-        refs.insert(hash.to_owned());
+        refs.insert(hash);
     }
     if let Some(head) = component["head"]
         .as_str()
@@ -90,7 +90,7 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
         .filter(|head| !head.is_empty())
     {
         crate::merge_history::hash(head)?;
-        refs.insert(head.to_owned());
+        refs.insert(head);
     }
     if let Some(local) = component["state"]["versions"].as_object() {
         for label in local
@@ -99,7 +99,7 @@ fn references(component: &Value) -> io::Result<HashSet<String>> {
             .map(str::trim)
             .filter(|label| crate::merge_history::hash(label).is_ok())
         {
-            refs.insert(label.to_owned());
+            refs.insert(label);
         }
     }
     Ok(refs)

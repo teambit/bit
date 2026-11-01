@@ -17,7 +17,6 @@ pub(super) fn single(path: &Path) -> io::Result<bool> {
 }
 
 fn is_single_regular_handle(info: &winapi_util::file::Information) -> bool {
-    !info.is_dir()
-        && info.number_of_links() == 1
+    info.number_of_links() == 1
         && info.file_attributes() & (DIRECTORY | DEVICE | REPARSE_POINT | OFFLINE) == 0
 }

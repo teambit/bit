@@ -13,12 +13,12 @@ pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> 
         let (row_scope, row_name) = row_identity(key, row);
         if (row_scope == Some(scope) || row_scope.is_none())
             && row_name == name
-            && found.replace(key.clone()).is_some()
+            && found.replace(key.as_str()).is_some()
         {
             return Err(invalid("lane reset ambiguous bitmap identity"));
         }
     }
-    found.ok_or_else(|| invalid("lane reset bitmap identity absent"))
+    found.map(str::to_owned).ok_or_else(|| invalid("lane reset bitmap identity absent"))
 }
 
 pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>, &'a str) {

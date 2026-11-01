@@ -127,11 +127,11 @@ fn validate(writes: &[Write]) -> io::Result<()> {
         {
             return Err(invalid("lane reset population symlink"));
         }
-        let actual = match previous.get(write.path.as_path()) {
-            Some(bytes) => bytes.to_vec(),
-            None => current_bytes(&write.path)?,
+        let matches = match previous.get(write.path.as_path()) {
+            Some(bytes) => *bytes == write.before,
+            None => current_bytes(&write.path)? == write.before,
         };
-        if actual != write.before {
+        if !matches {
             return Err(invalid("lane reset population changed before error"));
         }
         previous.insert(&write.path, &write.after);

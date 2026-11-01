@@ -33,8 +33,9 @@ fn select_lanes(
     index: &Value,
     readset: &mut Readset,
 ) -> io::Result<(Vec<String>, Vec<String>)> {
-    let mut refs = Vec::new();
-    let mut removed = Vec::new();
+    let mut refs = Vec::with_capacity(ids.len());
+    let mut removed = Vec::with_capacity(ids.len());
+    let trash = scope.join("trash");
     for id in ids {
         let (lane_scope, name) = parse_lane_id(id)?;
         let row = index["lanes"]
@@ -57,7 +58,7 @@ fn select_lanes(
             )));
         }
         refs.push(lane_hash.to_owned());
-        readset.watch(&object_path(&scope.join("trash"), lane_hash))?;
+        readset.watch(&object_path(&trash, lane_hash))?;
         removed.push(id.to_owned());
     }
     Ok((refs, removed))

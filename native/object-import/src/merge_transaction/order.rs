@@ -29,6 +29,9 @@ fn apply_stage(
     }
     let rows = indices(&expected["loads"], true)?;
     let selected = indices(&actual["order"], false)?;
+    if rows.len() != selected.len() || (expected_stage == Some("modified") && rows != selected) {
+        return Err(invalid("merge invalid completion permutation"));
+    }
     let source = rows
         .iter()
         .copied()
@@ -37,12 +40,7 @@ fn apply_stage(
         .iter()
         .copied()
         .collect::<HashSet<_>>();
-    if rows.len() != selected.len()
-        || source.len() != rows.len()
-        || source != selected_set
-        || selected_set.len() != selected.len()
-        || (expected_stage == Some("modified") && rows != selected)
-    {
+    if source.len() != rows.len() || source != selected_set {
         return Err(invalid("merge invalid completion permutation"));
     }
     for (destination, source) in rows.into_iter().zip(selected) {

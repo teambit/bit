@@ -31,11 +31,8 @@ pub(super) fn pending(
     if !append_removed(&objects, &mut history, selection)? {
         return Ok(None);
     }
-    Ok(Some(ObjectChange {
-        hash: hash.clone(),
-        before,
-        after: Some(outbound::encode_object(&hash, "VersionHistory", &history)?),
-    }))
+    let after = outbound::encode_object(&hash, "VersionHistory", &history)?;
+    Ok(Some(ObjectChange { hash, before, after: Some(after) }))
 }
 
 fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) -> io::Result<bool> {

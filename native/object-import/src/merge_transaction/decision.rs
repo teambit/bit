@@ -39,12 +39,17 @@ fn parse_strategy(value: Option<&Value>) -> io::Result<Option<&'static str>> {
     match value {
         None | Some(Value::Null) => Ok(None),
         Some(Value::String(raw)) if raw.len() <= 64 => {
-            match raw.trim().to_ascii_lowercase().as_str() {
-                "" => Ok(None),
-                "ours" => Ok(Some("ours")),
-                "theirs" => Ok(Some("theirs")),
-                "manual" => Ok(Some("manual")),
-                _ => Err(invalid("unsupported merge strategy")),
+            let raw = raw.trim();
+            if raw.is_empty() {
+                Ok(None)
+            } else if raw.eq_ignore_ascii_case("ours") {
+                Ok(Some("ours"))
+            } else if raw.eq_ignore_ascii_case("theirs") {
+                Ok(Some("theirs"))
+            } else if raw.eq_ignore_ascii_case("manual") {
+                Ok(Some("manual"))
+            } else {
+                Err(invalid("unsupported merge strategy"))
             }
         }
         _ => Err(invalid("unsupported merge strategy")),

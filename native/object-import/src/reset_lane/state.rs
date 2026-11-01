@@ -61,16 +61,14 @@ impl BitmapState {
     }
 
     pub(super) fn validate_head(&self, model: &Value, head: &str) -> io::Result<()> {
+        let version = self.document[&self.key]["version"].as_str().map(str::trim);
         if !self.key.is_empty()
             && !self.restored
-            && self.document[&self.key]["version"].as_str().map(str::trim) != Some(head)
-            && self.document[&self.key]["version"]
-                .as_str()
-                .map(str::trim)
-                .is_none_or(|version| {
-                    model["versions"][version].as_str().map(str::trim) != Some(head)
-                        && model["orphanedVersions"][version].as_str().map(str::trim) != Some(head)
-                })
+            && version != Some(head)
+            && version.is_none_or(|version| {
+                model["versions"][version].as_str().map(str::trim) != Some(head)
+                    && model["orphanedVersions"][version].as_str().map(str::trim) != Some(head)
+            })
         {
             return Err(invalid("lane reset bitmap head mismatch"));
         }
