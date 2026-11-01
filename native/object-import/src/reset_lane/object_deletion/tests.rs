@@ -1,4 +1,4 @@
-//! Unit tests for object deletion and empty prefix directory pruning.
+//! Unit tests for [`ObjectChange`] deletion and empty prefix directory pruning via [`write_objects`].
 
 use crate::reset_lane::{ObjectChange, object_path, write_objects};
 use std::fs;

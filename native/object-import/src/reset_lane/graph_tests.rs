@@ -1,4 +1,4 @@
-//! Unit tests for lane reset version graph selection and diagnostics.
+//! Unit tests for lane reset version graph [`selection`], population prefixes, and [`diagnostics`].
 
 use super::{Heads, Repository, diagnostics, object_path, outbound, selection};
 use serde_json::{Value, json};

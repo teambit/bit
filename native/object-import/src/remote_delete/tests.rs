@@ -1,4 +1,4 @@
-//! Unit tests for remote scope deletion guard and index row matching.
+//! Unit tests for remote [`ScopeGuard`] deletion validation and index row matching.
 
 use super::ScopeGuard;
 use std::fs;

@@ -1,4 +1,5 @@
-//! Unit tests for lane history published diagnostic checks.
+//! Unit tests for lane history published diagnostic checks in
+//! `bit-object-import`.
 
 use super::ci_requires_published_diagnostic;
 use flate2::{Compression, write::ZlibEncoder};

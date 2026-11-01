@@ -1,4 +1,5 @@
-//! Seeded equivalence tests for `isComponentModified` and `isComponentSourceCodeModified`.
+//! Seeded equivalence tests for `isComponentModified` and
+//! `isComponentSourceCodeModified` in `bit-object-import`.
 
 use super::plan;
 use serde_json::Value;

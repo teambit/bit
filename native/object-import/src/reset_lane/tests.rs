@@ -1,4 +1,4 @@
-//! Unit tests for single-component linear lane snap resets and publication guards.
+//! Unit tests for single-component linear lane snap reset [`Plan`] execution and publication guards.
 
 use super::{Plan, object_hash, object_path};
 use crate::workspace::engine::command::outbound;

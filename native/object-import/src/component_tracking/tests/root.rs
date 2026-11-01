@@ -1,4 +1,5 @@
-//! Unit tests for workspace root component tracking intent and main file selection.
+//! Unit tests for workspace root component tracking intent and main file
+//! selection in `bit-object-import`.
 
 use super::{Plan, facts, fixture, options, source};
 use crate::component_tracking::{Options, identity, main_file};

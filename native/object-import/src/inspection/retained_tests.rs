@@ -1,4 +1,5 @@
-//! Unit tests for retained workspace read observations during inspection.
+//! Unit tests for retained workspace read observations during inspection in
+//! `bit-object-import`.
 
 use super::{State, begin, hash, tests::Fixture};
 use crate::workspace::snapshots::{Observation, State as Reads};

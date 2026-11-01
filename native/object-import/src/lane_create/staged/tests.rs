@@ -1,4 +1,5 @@
-//! Unit tests for outbound staged lane creation planning.
+//! Unit tests for outbound staged lane creation planning in
+//! `bit-object-import`.
 
 use crate::lane_create::{Options, Plan, outbound};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for lane reset hash prefix resolution and ambiguity diagnostics.
+//! Unit tests for lane reset hash prefix resolution, population prefixes, and [`diagnostics`].
 
 use super::{
     Batch, BitmapState, Plan, Repository, diagnostics, object_hash, object_path, outbound,

@@ -1,4 +1,4 @@
-//! Unit tests for snapshot transaction journal directive ordering and receipts.
+//! Unit tests for snapshot transaction journal [`State`] directive ordering and receipts.
 
 use super::State;
 use serde_json::{Value, json};

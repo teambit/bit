@@ -1,4 +1,5 @@
-//! Unit tests for lane squash parent policy resolution in merge state.
+//! Unit tests for lane squash parent policy resolution in merge state in
+//! `bit-object-import`.
 
 use super::{State, serve};
 use flate2::{Compression, write::ZlibEncoder};

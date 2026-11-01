@@ -1,4 +1,4 @@
-//! Unit tests for clearing unexported `.bitmap` component versions.
+//! Unit tests for clearing unexported `.bitmap` component versions via [`Plan`].
 
 use super::Plan;
 use serde_json::json;

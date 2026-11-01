@@ -1,4 +1,5 @@
-//! Unit tests for topological graph sorting and `jsdiff`-compatible line diffs.
+//! Unit tests for topological graph sorting and `jsdiff`-compatible line diffs
+//! in `bit-object-import`.
 
 use super::{lines, show};
 use serde_json::json;

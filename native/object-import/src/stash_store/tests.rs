@@ -1,4 +1,4 @@
-//! Unit tests for stash store lexical ordering, metadata formatting, and consumption.
+//! Unit tests for stash store lexical ordering, metadata formatting, and [`PreparedLoad`]/[`PreparedSave`] consumption.
 
 use super::{PreparedLoad, PreparedSave, list};
 use serde_json::json;

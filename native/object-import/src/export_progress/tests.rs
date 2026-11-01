@@ -1,4 +1,5 @@
-//! Unit tests for thread-local export progress event observers and unwind isolation.
+//! Unit tests for thread-local export progress event observers and unwind
+//! isolation in `bit-object-import`.
 
 use super::{Event, emit, scope};
 use std::sync::{Arc, Barrier, mpsc::sync_channel};

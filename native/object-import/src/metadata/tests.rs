@@ -1,4 +1,4 @@
-//! Unit tests for bounded zlib object metadata inflation.
+//! Unit tests for bounded zlib object metadata inflation and corrupt stream rejection.
 
 use super::{MAX_BYTES, inflate};
 use flate2::{Compression, write::ZlibEncoder};

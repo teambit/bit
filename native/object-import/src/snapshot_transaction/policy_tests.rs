@@ -1,4 +1,4 @@
-//! Seeded differential tests for future version increment policy.
+//! Seeded differential tests for [`future`] version increment and auto-tag graph policy.
 
 use super::future;
 use serde_json::Value;

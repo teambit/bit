@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction source body preparation from overlays.
+//! Unit tests for merge transaction source body preparation and receipt retention from overlays.
 
 use super::{json, prepare_response};
 use flate2::{Compression, write::ZlibEncoder};

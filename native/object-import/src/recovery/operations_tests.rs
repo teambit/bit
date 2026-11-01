@@ -1,4 +1,4 @@
-//! Unit tests for recovery operation token revision exhaustion.
+//! Unit tests for recovery operation token revision exhaustion and plan invalidation.
 
 use super::{Operation, State};
 #[test]

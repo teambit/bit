@@ -1,4 +1,4 @@
-//! Unit tests for snapshot object batch writing and verification.
+//! Unit tests for snapshot object batch writing, header verification, and index updates via [`serve`].
 
 use super::serve;
 use flate2::read::ZlibDecoder;

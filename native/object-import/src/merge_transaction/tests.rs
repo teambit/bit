@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction phase directives and journal receipts.
+//! Unit tests for merge transaction phase directives, dependency snap selection, and journal receipts.
 
 use super::{State, apply};
 use serde_json::{Value, json};

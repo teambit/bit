@@ -1,4 +1,4 @@
-//! Unit tests for workspace recovery plans, JSONC parsing, and `.bitmap` updates.
+//! Unit tests for workspace recovery plans, `JSONC` parsing, and `.bitmap` updates.
 
 use super::{Operation, State, bitmap, jsonc};
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for parallel object header encoding and zlib compression.
+//! Unit tests for parallel object header [`encode`] and zlib [`compress`] routines.
 
 use super::{compress, encode};
 use flate2::read::ZlibDecoder;
