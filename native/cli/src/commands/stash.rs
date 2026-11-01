@@ -207,11 +207,11 @@ fn run_without_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io
     if env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
     {
         return Ok(Outcome::Declined("not inside a workspace".to_owned()));

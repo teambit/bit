@@ -46,9 +46,13 @@ impl Reader {
         if !eligible(root, row) || pending(&self.context, identity) {
             return Ok(None);
         }
-        let directory = row["rootDir"].as_str().map_or("", str::trim);
+        let directory = row["rootDir"]
+            .as_str()
+            .map_or("", |dir| dir.trim().trim_start_matches("./"));
         let files = self.files(root, directory)?;
-        let main = row["mainFile"].as_str().map_or("", str::trim);
+        let main = row["mainFile"]
+            .as_str()
+            .map_or("", |file| file.trim().trim_start_matches("./"));
         if !files.iter().any(|file| file == main) {
             return Ok(None);
         }

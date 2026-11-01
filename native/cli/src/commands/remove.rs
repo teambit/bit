@@ -27,7 +27,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined(format!("remove: {error}")));
     }
     let mut linker = add::ProjectedLinker::prepare(&root)?;
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
     workspace_command::execute_then(&root, args, "remove", |output| {
         work(&root, args, &options, &mut linker, output)
     })

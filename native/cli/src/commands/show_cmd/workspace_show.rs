@@ -103,29 +103,20 @@ fn render_workspace_outcome(
     options: &Options,
     loaded: &LoadedComponent,
 ) -> io::Result<Option<Outcome>> {
-    match (options.json, options.legacy) {
-        (true, true) => {
-            let data = serde_json::to_string_pretty(&render::legacy_json(loaded))?;
-            let outcome = workspace_command::execute_json(root, args, "show", |_| {
-                Ok(Report { data, code: 0, details: None })
-            })?;
-            Ok(Some(outcome))
-        }
-        (true, false) => {
-            let data = serde_json::to_string_pretty(&render::harmony_json(loaded))?;
-            let outcome = workspace_command::execute_json(root, args, "show", |_| {
-                Ok(Report { data, code: 0, details: None })
-            })?;
-            Ok(Some(outcome))
-        }
-        (false, _) => {
-            let data = render::text_report(loaded);
-            let outcome = workspace_command::execute_then(root, args, "show", |_| {
-                Ok(Report { data, code: 0, details: None })
-            })?;
-            Ok(Some(outcome))
-        }
+    if options.json {
+        let payload =
+            if options.legacy { render::legacy_json(loaded) } else { render::harmony_json(loaded) };
+        let data = serde_json::to_string_pretty(&payload)?;
+        return workspace_command::execute_json(root, args, "show", |_| {
+            Ok(Report { data, code: 0, details: None })
+        })
+        .map(Some);
     }
+    let data = render::text_report(loaded);
+    workspace_command::execute_then(root, args, "show", |_| {
+        Ok(Report { data, code: 0, details: None })
+    })
+    .map(Some)
 }
 
 fn invalid_default_scope_error(root: &Path) -> Option<String> {

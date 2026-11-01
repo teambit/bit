@@ -128,15 +128,15 @@ pub(super) fn is_help_form(args: &[&str]) -> bool {
 fn run_unsupported_help(args: &[&str]) -> Option<&'static str> {
     match args {
         ["--no-color"] => Some("Unknown arguments: no-color, noColor"),
-        [name, "--no-color"] if !name.is_empty() && !name.starts_with('-') => {
+        [name, "--no-color"] if !name.trim().is_empty() && !name.trim().starts_with('-') => {
             Some("Unknown arguments: no-color, noColor")
         }
         ["--json"] => Some("Unknown argument: json"),
-        [name, "--json"] if !name.is_empty() && !name.starts_with('-') => {
+        [name, "--json"] if !name.trim().is_empty() && !name.trim().starts_with('-') => {
             Some("Unknown argument: json")
         }
         ["--ssr"] => Some("Unknown argument: ssr"),
-        [name, "--ssr"] if !name.is_empty() && !name.starts_with('-') => {
+        [name, "--ssr"] if !name.trim().is_empty() && !name.trim().starts_with('-') => {
             Some("Unknown argument: ssr")
         }
         _ => None,

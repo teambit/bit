@@ -222,6 +222,13 @@ fn refactor_identities(prepared: &Prepared) -> io::Result<Vec<String>> {
     Ok(identities)
 }
 
+fn flush_stdout(linker: &mut ProjectedLinker) {
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
+}
+
 fn exported_refactor(
     root: &Path,
     prepared: &mut Prepared,
@@ -234,11 +241,11 @@ fn exported_refactor(
     linker.forget_loaded();
     // Workspace.get(target) is singular; only getMany/list starts a loading summary.
     linker.capture(root, &prepared.plan.published_bitmap()?, &target)?;
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     refactor_load(root, prepared, linker, output)?;
     prepared.plan.apply_files()?;
     linker.call(root, "identityMaterialized", &prepared.plan.materialized())?;
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     Ok(())
 }
 
@@ -255,9 +262,9 @@ fn finish_link(
     } else {
         linker.link_retained(root, prepared.plan.bitmap(), &targets, false, chalk)?;
     }
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     linker.call(root, "renameTooling", &json!({"action":"compile","ids":targets}))?;
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     Ok(())
 }
 

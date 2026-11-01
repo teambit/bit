@@ -45,7 +45,11 @@ fn consume_trailing_names<'a>(
 ) -> Option<()> {
     for rest in iter {
         let trimmed = rest.trim();
-        (!trimmed.is_empty() && !trimmed.starts_with('-')).then_some(())?;
+        (!trimmed.is_empty()
+            && !trimmed.starts_with('-')
+            && !trimmed.contains(char::is_whitespace)
+            && !trimmed.contains('\0'))
+        .then_some(())?;
         names.push(trimmed);
     }
     Some(())
@@ -59,6 +63,9 @@ fn apply_arg<'a>(
 ) -> Option<()> {
     let trimmed = arg.trim();
     if !trimmed.starts_with('-') && !trimmed.is_empty() {
+        if trimmed.contains(char::is_whitespace) || trimmed.contains('\0') {
+            return None;
+        }
         names.push(trimmed);
         return Some(());
     }

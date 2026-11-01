@@ -74,10 +74,10 @@ pub(super) fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => {
             workspace_command::execute_then(&root, args, "set", |_output| prepared.commit(chalk))
         }
+        Err(Failure::User(_)) if super::scope_rename::ci_active() => {
+            Ok(Outcome::Declined("CI scope set error stack".to_owned()))
+        }
         Err(Failure::User(message)) => {
-            if env::var_os("CI").is_some_and(|value| !value.is_empty()) {
-                return Ok(Outcome::Declined("CI scope set error stack".to_owned()));
-            }
             workspace_command::execute_then(&root, args, "set", |_output| {
                 Err(io::Error::other(message))
             })
@@ -88,8 +88,8 @@ pub(super) fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn parse_options(args: &[OsString]) -> Option<Options> {
     let tokens = args
+        .get(1..)?
         .iter()
-        .skip(1)
         .map(|arg| arg.to_str())
         .collect::<Option<Vec<_>>>()?
         .into_iter()

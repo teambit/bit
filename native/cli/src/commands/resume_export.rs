@@ -48,7 +48,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             "--delete=false" => delete = false,
             "--force" | "--force=true" => force = true,
             "--force=false" => force = false,
-            val if !val.starts_with('-') && !val.is_empty() => {
+            val if !val.starts_with('-')
+                && !val.is_empty()
+                && !val.contains(char::is_whitespace)
+                && !val.contains('\0') =>
+            {
                 push_resume_arg(val, &mut export_id, &mut remotes);
             }
             _ => return None,
@@ -65,7 +69,11 @@ fn consume_trailing_resume_args<'a>(
 ) -> Option<()> {
     for rest in iter {
         let trimmed = rest.trim();
-        if trimmed.is_empty() || trimmed.starts_with('-') {
+        if trimmed.is_empty()
+            || trimmed.starts_with('-')
+            || trimmed.contains(char::is_whitespace)
+            || trimmed.contains('\0')
+        {
             return None;
         }
         push_resume_arg(trimmed, export_id, remotes);

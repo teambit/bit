@@ -134,7 +134,10 @@ fn lookup_global_remote(scope_name: &str) -> Option<String> {
 }
 
 fn local_scope_from_url(url: &str) -> Option<PathBuf> {
-    let url = url.trim();
+    let url = url
+        .trim()
+        .trim_matches(['"', '\''])
+        .trim();
     if url.is_empty()
         || url.starts_with("http://")
         || url.starts_with("https://")

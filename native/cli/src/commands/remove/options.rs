@@ -31,7 +31,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--track=false" => options.track = false,
             value
                 if !value.starts_with('-')
-                    && !value.is_empty()
+                    && value.len() <= 4096
                     && !value.contains('\0')
                     && !value
                         .trim_start_matches('!')

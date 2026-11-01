@@ -139,12 +139,17 @@ pub(in crate::commands) fn row_has_name(row: &Value, name: &str) -> bool {
         || row["id"]
             .as_str()
             .map(str::trim)
-            .map(|raw| raw.split('@').next().unwrap_or(raw))
+            .map(|raw| {
+                raw.split('@')
+                    .next()
+                    .unwrap_or(raw)
+                    .trim()
+            })
             .is_some_and(|bare| {
                 bare == name
                     || bare
                         .split_once('/')
-                        .is_some_and(|(_, nm)| nm == name)
+                        .is_some_and(|(_, nm)| nm.trim() == name)
             })
 }
 

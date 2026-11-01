@@ -41,10 +41,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             if env::var_os("CI")
                 .is_some_and(|value| {
                     let text = value.to_string_lossy();
-                    let trimmed = text.trim();
-                    !trimmed.is_empty()
-                        && !trimmed.eq_ignore_ascii_case("0")
-                        && !trimmed.eq_ignore_ascii_case("false")
+                    let trimmed = text
+                        .trim()
+                        .trim_matches(['"', '\''])
+                        .trim();
+                    !matches!(
+                        trimmed.to_ascii_lowercase().as_str(),
+                        "" | "0" | "false" | "no" | "off",
+                    )
                 })
             {
                 return Ok(Outcome::Declined("CI remote error stack".to_owned()));

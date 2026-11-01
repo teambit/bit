@@ -343,7 +343,11 @@ fn file_matches_version(comp_dir: &Path, scope_dir: &Path, item: &Value) -> bool
     let Some(rel_path) = item["relativePath"]
         .as_str()
         .or_else(|| item["path"].as_str())
-        .map(|path| path.trim().trim_start_matches("./"))
+        .map(|path| {
+            path.trim()
+                .trim_start_matches("./")
+                .trim_start_matches(r".\")
+        })
         .filter(|path| !path.is_empty())
     else {
         return false;
@@ -351,6 +355,8 @@ fn file_matches_version(comp_dir: &Path, scope_dir: &Path, item: &Value) -> bool
     let Some(hash) = item["file"]
         .as_str()
         .or_else(|| item["file"]["hash"].as_str())
+        .map(str::trim)
+        .filter(|hash| !hash.is_empty())
     else {
         return false;
     };

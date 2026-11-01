@@ -19,13 +19,11 @@ pub(super) fn missing_component(root: &Path, pattern: &str) -> bool {
     if pattern.is_empty() || pattern.contains('@') {
         return false;
     }
-    let Ok(bitmap) = bitmap::read(root) else {
-        return false;
-    };
+    let Ok(bitmap) = bitmap::read(root) else { return false };
     if bitmap.lane.is_some() {
         return false;
     }
-    let dir = pattern.trim_start_matches("./");
+    let dir = pattern.trim_start_matches("./").trim_start_matches(r".\");
     !bitmap.entries
         .iter()
         .any(|entry| {
@@ -96,39 +94,28 @@ fn append_model_version_refs(
 }
 
 fn model_scope_and_name(model: &Value, row: &Value) -> (String, String) {
-    let (id_scope, id_name) = row["id"]
+    let base = row["id"]
         .as_str()
-        .map_or(("", ""), |id_str| {
-            let base = id_str
-                .split('@')
-                .next()
-                .unwrap_or(id_str);
-            base.split_once('/')
-                .unwrap_or(("", base))
-        });
-    let scope = model["scope"]
-        .as_str()
-        .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["scope"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-        })
-        .unwrap_or_else(|| id_scope.trim());
-    let name = model["name"]
-        .as_str()
-        .map(str::trim)
-        .filter(|val| !val.is_empty())
-        .or_else(|| {
-            row["id"]["name"]
-                .as_str()
-                .map(str::trim)
-                .filter(|val| !val.is_empty())
-        })
-        .unwrap_or_else(|| id_name.trim());
-    (scope.to_owned(), name.to_owned())
+        .map_or("", |id| id.split('@').next().unwrap_or(id));
+    let (id_scope, id_name) = base
+        .split_once('/')
+        .unwrap_or(("", base));
+    (
+        non_empty_field(&model["scope"], &row["id"]["scope"], id_scope),
+        non_empty_field(&model["name"], &row["id"]["name"], id_name),
+    )
+}
+
+fn non_empty_field(primary: &Value, secondary: &Value, fallback: &str) -> String {
+    for candidate in [primary.as_str(), secondary.as_str(), Some(fallback)] {
+        if let Some(trimmed) = candidate
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
+            return trimmed.to_owned();
+        }
+    }
+    String::new()
 }
 
 /// Append version entries from a single version map (`versions` or `orphanedVersions`).

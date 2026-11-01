@@ -157,8 +157,11 @@ fn extract_vh_versions(val: &Value) -> Option<Vec<Value>> {
         val["versions"]
             .as_object()?
             .iter()
-            .map(|(hash, item)| {
-                json!({ "hash": hash, "parents": item.get("parents").unwrap_or(item) })
+            .filter_map(|(hash, item)| {
+                let hash = hash.trim();
+                (!hash.is_empty()).then(
+                    || json!({ "hash": hash, "parents": item.get("parents").unwrap_or(item) }),
+                )
             })
             .collect(),
     )

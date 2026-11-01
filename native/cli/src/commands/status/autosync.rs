@@ -45,7 +45,7 @@ pub(in crate::commands) fn run(
     let bitmap = Bitmap::load(root, workspace["defaultScope"].as_str())?;
     if bitmap.lane
         .as_ref()
-        .is_some_and(|lane| lane.name != "main")
+        .is_some_and(|lane| lane.name.trim() != "main")
     {
         return Ok(());
     }

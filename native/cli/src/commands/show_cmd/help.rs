@@ -46,7 +46,7 @@ fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
         .iter()
         .all(|flag| {
             matches!(
-                *flag,
+                flag.trim(),
                 "-j" | "--json"
                     | "-l"
                     | "--legacy"

@@ -364,27 +364,23 @@ fn run_lane_batch(
 }
 
 fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
-    let selected = match options.selected
-        .clone()
-        .map(Ok)
-        .or_else(|| {
-            options.pattern
-                .filter(|pattern| selection::complex(pattern))
-                .map(|pattern| {
-                    selection::identities(root, pattern).map(selection::Selected::ordinary)
-                })
-        })
-        .transpose()
-    {
-        Ok(selected) => selected,
-        Err(error) => return Ok(Outcome::Declined(format!("soft reset selection: {error}"))),
+    let selected = match (&options.selected, options.pattern) {
+        (Some(selected), _) => Some(selected.clone()),
+        (None, Some(pattern)) if selection::complex(pattern) => {
+            match selection::identities(root, pattern) {
+                Ok(ids) => Some(selection::Selected::ordinary(ids)),
+                Err(error) => {
+                    return Ok(Outcome::Declined(format!("soft reset selection: {error}")));
+                }
+            }
+        }
+        (None, _) => None,
     };
-    let plan = match selected
-        .as_ref()
-        .map_or_else(
-            || SoftPlan::prepare(root, options.pattern),
-            |ids| SoftPlan::prepare_selected(root, &ids.identities),
-        ) {
+    let prepared = match &selected {
+        Some(ids) => SoftPlan::prepare_selected(root, &ids.identities),
+        None => SoftPlan::prepare(root, options.pattern),
+    };
+    let plan = match prepared {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("soft reset: {error}"))),
     };

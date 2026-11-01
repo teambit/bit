@@ -58,8 +58,9 @@ fn is_main_lane(name: &str) -> bool {
         .split('@')
         .next()
         .unwrap_or_default()
-        .trim();
-    bare.is_empty() || bare.rsplit('/').next() == Some("main")
+        .trim()
+        .trim_matches('/');
+    bare.is_empty() || bare.rsplit('/').next().map(str::trim) == Some("main")
 }
 
 fn scope_supported(scope: &Path) -> io::Result<bool> {

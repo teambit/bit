@@ -104,10 +104,11 @@ async fn persist_one(plan: &Plan, name: &str, client_id: &str) -> io::Result<Val
                 .clone_into(&mut error),
         }
     }
+    let reason = if error.is_empty() { "remote export persist failed" } else { &error };
     Err(io::Error::other(format!(
         "failed persisting to the following scopes: {name}\n\
         errors:\n\
-        {name} - {error}\n\n\
+        {name} - {reason}\n\n\
         the remote bit.dev will try to re-persist the data for the failed scopes.\n   ",
     )))
 }

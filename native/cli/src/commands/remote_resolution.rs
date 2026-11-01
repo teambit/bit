@@ -93,8 +93,11 @@ impl Session {
         let ci_enabled = env::var_os("CI")
             .is_some_and(|val| {
                 let text = val.to_string_lossy();
-                let trimmed = text.trim();
-                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                let trimmed = text
+                    .trim()
+                    .trim_matches(['"', '\''])
+                    .trim();
+                !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
             });
         if !pending.is_empty() && ci_enabled {
             return Err(io::Error::other(CiResolverDecline));

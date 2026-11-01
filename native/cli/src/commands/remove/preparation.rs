@@ -132,12 +132,20 @@ fn row_identity(key: &str, row: &Value) -> Option<String> {
 fn main_exists(root: &Path, row: &Value) -> bool {
     row["rootDir"]
         .as_str()
-        .map(|dir| dir.trim().trim_start_matches("./"))
+        .map(|dir| {
+            dir.trim()
+                .trim_start_matches("./")
+                .trim_start_matches(r".\")
+        })
         .filter(|dir| !dir.is_empty())
         .zip(
             row["mainFile"]
                 .as_str()
-                .map(|main| main.trim().trim_start_matches("./"))
+                .map(|main| {
+                    main.trim()
+                        .trim_start_matches("./")
+                        .trim_start_matches(r".\")
+                })
                 .filter(|main| !main.is_empty()),
         )
         .is_some_and(|(directory, main)| {

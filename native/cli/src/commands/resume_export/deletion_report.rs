@@ -95,7 +95,7 @@ pub(super) fn result(
     let changed: Vec<_> = probe.present
         .iter()
         .filter(|name| result.absent.contains(name))
-        .map(|name| Formatter::item_with(name, &formatter.warn_symbol()))
+        .map(|name| Formatter::item_with(name.trim(), &formatter.warn_symbol()))
         .collect();
     Ok(Formatter::join(&[
         formatter.section(&format!("{} scopes that changed while this command ran", formatter.warn_symbol()),

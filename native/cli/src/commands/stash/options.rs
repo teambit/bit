@@ -124,7 +124,10 @@ impl<'a> LoadFlags<'a> {
             .strip_prefix("--auto-merge-resolve=")
             .or_else(|| arg.strip_prefix("-r="))
         {
-            let trimmed = val.trim();
+            let trimmed = val
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
             if trimmed.is_empty() || trimmed.starts_with('-') {
                 return None;
             }
@@ -135,7 +138,11 @@ impl<'a> LoadFlags<'a> {
             "-r" | "--auto-merge-resolve" => {
                 self.strategy = Some(
                     iter.next()
-                        .map(str::trim)
+                        .map(|val| {
+                            val.trim()
+                                .trim_matches(['"', '\''])
+                                .trim()
+                        })
                         .filter(|value| !value.is_empty() && !value.starts_with('-'))?,
                 );
             }

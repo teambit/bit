@@ -56,16 +56,7 @@ fn first_subcommand(args: &[OsString]) -> Option<String> {
 }
 
 fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
-    if env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
-        })
-    {
+    if ci_active() {
         return Ok(Outcome::Declined("CI scope unrecognized subcommand".into()));
     }
     let cwd = env::current_dir()?;
@@ -135,12 +126,7 @@ fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     {
         return Ok(Outcome::Declined(format!("scope rename: {error}")));
     }
-    let mut linker = if options.owner || options.skip_install {
-        ProjectedLinker::prepare(&root)?
-    } else {
-        ProjectedLinker::prepare_with_installation(&root, args)?
-    };
-    print!("{}", linker.take_stdout());
+    let mut linker = prepare_rename_linker(&root, args, options.owner || options.skip_install)?;
     if options.owner {
         workspace_command::execute_without_loader(&root, args, "rename-owner", |output| {
             execution::run(&root, &options, &mut linker, Chalk::detect(args), output)
@@ -152,15 +138,32 @@ fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-fn ci_active() -> bool {
+fn prepare_rename_linker(
+    root: &std::path::Path,
+    args: &[OsString],
+    skip_install: bool,
+) -> io::Result<ProjectedLinker> {
+    let mut linker = if skip_install {
+        ProjectedLinker::prepare(root)?
+    } else {
+        ProjectedLinker::prepare_with_installation(root, args)?
+    };
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
+    Ok(linker)
+}
+
+pub(super) fn ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
 }
 

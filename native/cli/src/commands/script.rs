@@ -123,11 +123,11 @@ fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
             let text = val.to_string_lossy();
-            let trimmed = text.trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !matches!(trimmed.to_ascii_lowercase().as_str(), "" | "0" | "false" | "no" | "off")
         })
 }
 
@@ -148,7 +148,11 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
             val if let Some(name) = val
                 .strip_prefix("--script-name=")
                 .or_else(|| val.strip_prefix("--scriptName="))
-                .map(str::trim)
+                .map(|raw| {
+                    raw.trim()
+                        .trim_matches(['"', '\''])
+                        .trim()
+                })
                 .filter(|name| !name.is_empty()) =>
             {
                 script_name = Some(name.to_owned());

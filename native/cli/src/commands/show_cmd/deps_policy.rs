@@ -204,32 +204,41 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<De
     }
 }
 
-fn model_dep_entry(item: &Value, identity: &Identity<'_>) -> Option<DepEntry> {
-    let is_comp = item["__type"].as_str() == Some("component");
+fn resolve_model_dep_id(item: &Value, is_comp: bool) -> Option<String> {
     let obj_id = crate::commands::graph_cmd::builder::format_dep_id(&item["componentId"])
         .or_else(|| crate::commands::graph_cmd::builder::format_dep_id(&item["id"]));
-    let dep_id = if is_comp {
+    let raw = if is_comp {
         obj_id
             .as_deref()
             .or_else(|| item["packageName"].as_str())?
     } else {
         item["packageName"].as_str().or(obj_id.as_deref())?
     };
-    if identity.is_self(dep_id) {
+    let trimmed = raw.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_owned())
+}
+
+fn model_dep_entry(item: &Value, identity: &Identity<'_>) -> Option<DepEntry> {
+    let is_comp = item["__type"].as_str() == Some("component");
+    let dep_id = resolve_model_dep_id(item, is_comp)?;
+    if identity.is_self(&dep_id) {
         return None;
     }
     let ver = item["version"]
         .as_str()
         .or_else(|| item["componentId"]["version"].as_str())
-        .or_else(|| item["id"]["version"].as_str())?;
+        .or_else(|| item["id"]["version"].as_str())
+        .map(str::trim)?;
     let pkg_name = item["packageName"]
         .as_str()
-        .unwrap_or(dep_id)
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .unwrap_or(&dep_id)
         .to_owned();
     let full_id = if is_comp && !dep_id.contains('@') && !ver.is_empty() {
         format!("{dep_id}@{ver}")
     } else {
-        dep_id.to_owned()
+        dep_id
     };
     let lifecycle = match item["lifecycle"].as_str() {
         Some("dev") => "dev",

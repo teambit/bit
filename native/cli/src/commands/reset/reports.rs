@@ -61,7 +61,7 @@ pub(super) fn batch_report<'a>(
         .map(|(identity, labels)| {
             formatter.item(&format!(
                 "{} - version(s): {}",
-                formatter.chalk.cyan(identity),
+                formatter.chalk.cyan(identity.trim()),
                 labels.join(", "),
             ))
         })

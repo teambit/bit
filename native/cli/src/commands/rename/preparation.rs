@@ -85,12 +85,13 @@ fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::
     let component = workspace.components
         .iter()
         .find(|component| {
-            component.id.name == bare || component.id.to_string_without_version() == bare
+            !bare.is_empty()
+                && (component.id.name == bare || component.id.to_string_without_version() == bare)
         })
         .ok_or_else(|| {
             io::Error::new(io::ErrorKind::InvalidInput, format!("component {source} was not found"))
         })?;
-    facts["sourcePackage"] = json!(component.package_name);
+    facts["sourcePackage"] = json!(component.package_name.trim());
     let mut id = component.id.clone();
     options.target
         .trim()

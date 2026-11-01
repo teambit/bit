@@ -268,8 +268,12 @@ fn build_dev_files_map(loaded: &LoadedComponent) -> Value {
     let compositions = matching_files(&loaded.component.files, |file| {
         file.contains(".composition.") || file.contains(".compositions.")
     });
-    if is_readme && !loaded.main_file.is_empty() {
-        docs.push(Value::String(loaded.main_file.clone()));
+    let main_file = loaded.main_file.trim();
+    if is_readme && !main_file.is_empty() {
+        let entry = Value::String(main_file.to_owned());
+        if !docs.contains(&entry) {
+            docs.push(entry);
+        }
     }
     json!({
         "teambit.defender/tester": tester,

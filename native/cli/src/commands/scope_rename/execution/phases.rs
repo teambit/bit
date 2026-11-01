@@ -134,7 +134,10 @@ pub(super) fn materialize(
         }
         entries.batch.materialize(index, &workspace_command::file_id())?;
         linker.call(root, "identityMaterialized", &entries.batch.plan(index)?.materialized())?;
-        print!("{}", linker.take_stdout());
+        let stdout = linker.take_stdout();
+        if !stdout.is_empty() {
+            print!("{stdout}");
+        }
     }
     Ok(())
 }

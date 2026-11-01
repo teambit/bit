@@ -51,7 +51,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 }
 
 fn canonical_flag(raw: &str) -> &str {
-    match raw {
+    match raw.trim() {
         "-m" => "--message",
         "-u" | "--no-unmodified" => "--unmodified",
         "--no-unmerged" => "--unmerged",

@@ -111,12 +111,21 @@ pub(super) fn read_allowed_envs(ws_jsonc: &Value) -> Vec<String> {
     let Some(arr) = scripts_val.and_then(|val| val["envs"].as_array()) else {
         return Vec::new();
     };
-    arr.iter()
+    let mut allowed = Vec::new();
+    for env_id in arr
+        .iter()
         .filter_map(Value::as_str)
         .map(str::trim)
         .filter(|text| !text.is_empty())
-        .map(str::to_owned)
-        .collect()
+    {
+        if !allowed
+            .iter()
+            .any(|existing| existing == env_id)
+        {
+            allowed.push(env_id.to_owned());
+        }
+    }
+    allowed
 }
 
 pub(super) fn is_env_allowed(env_id: &str, allowed_envs: &[String]) -> bool {

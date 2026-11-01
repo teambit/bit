@@ -53,7 +53,10 @@ pub(super) fn transform(
             "targetName": target_name,
         }),
     );
-    print!("{}", linker.take_stdout());
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
     result?;
     read_transformed_inputs(&spool.0, &inputs, plan)
 }

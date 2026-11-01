@@ -48,7 +48,8 @@ pub(super) fn render(
     ]))
 }
 fn section(name: &str, rows: &[String], format: &Formatter) -> String {
-    if rows.is_empty() {
+    let name = name.trim();
+    if rows.is_empty() || name.is_empty() {
         return String::new();
     }
     let mut output = vec![format.title(&format!("{name} ({})", rows.len()))];

@@ -65,6 +65,7 @@ impl Plan {
         command: &str,
         work: impl FnOnce(&bit_install::output::Output) -> io::Result<Report>,
     ) -> io::Result<Outcome> {
+        let command = command.trim();
         if self.workspace {
             workspace_command::execute_then(&self.root, args, command, work)
         } else {

@@ -63,7 +63,7 @@ fn execute_local_search(
     let chalk = Chalk::detect(args);
     let ids = load_workspace_ids(root);
     let (all_matches, per_query) = match_queries(&ids, &parsed.queries);
-
+    let mut stdout = io::stdout().lock();
     if parsed.json {
         let output = json!({
             "remote": [],
@@ -71,7 +71,7 @@ fn execute_local_search(
             "perQuery": per_query,
             "hasWorkspace": true,
         });
-        writeln!(io::stdout(), "{output}")?;
+        writeln!(stdout, "{output}")?;
     } else {
         let formatter = Formatter::new(chalk);
         let header = formatter.title(&format!("Local ({})", all_matches.len()));
@@ -80,8 +80,9 @@ fn execute_local_search(
         } else {
             all_matches.join("\n")
         };
-        writeln!(io::stdout(), "{header}\n{body}")?;
+        writeln!(stdout, "{header}\n{body}")?;
     }
+    stdout.flush()?;
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 

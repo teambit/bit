@@ -103,5 +103,9 @@ fn is_no_color_flag(token: &str) -> bool {
 }
 
 fn valid_target(value: &str) -> bool {
-    !value.is_empty() && value != "__proto__" && !value.contains(' ') && !value.contains('!')
+    !value.is_empty()
+        && value.len() <= 4096
+        && value != "__proto__"
+        && !value.contains(char::is_whitespace)
+        && !value.contains(['!', '\0'])
 }

@@ -162,7 +162,7 @@ fn load_global_remotes(
         return Ok(Map::new());
     }
     let bytes = fs::read(&path)?;
-    if bytes.is_empty() {
+    if bytes.iter().all(u8::is_ascii_whitespace) {
         return Ok(Map::new());
     }
     let value: Value = bit_workspace_config::parse_jsonc(&bytes)

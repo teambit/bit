@@ -184,6 +184,19 @@ fn compute_local_remote_distance(
     distance_from_heads(scope_dir, vh_hash, local_head.as_deref(), remote_head.as_deref())
 }
 
+fn resolve_scope_local_head(
+    scope_dir: &Path,
+    scope: &str,
+    name: &str,
+    ws_version: &str,
+) -> Option<String> {
+    let (_, _, comp_hash) = resolve_component_entry(scope_dir, &format!("{scope}/{name}"))?;
+    let (kind, model) = bit_object_import::read_scope_object(scope_dir, &comp_hash).ok()??;
+    let local_head = (kind == "Component").then(|| resolve_ver_hash(&model, ws_version))??;
+    let (v_kind, _) = bit_object_import::read_scope_object(scope_dir, &local_head).ok()??;
+    (v_kind == "Version").then_some(local_head)
+}
+
 pub(super) fn is_component_staged_on_main(
     root: &Path,
     scope: &str,
@@ -191,16 +204,7 @@ pub(super) fn is_component_staged_on_main(
     ws_version: &str,
 ) -> Option<bool> {
     let scope_dir = bit_object_import::scope_path(root);
-    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, &format!("{scope}/{name}"))?;
-    let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
-    if kind != "Component" {
-        return None;
-    }
-    let local_head = resolve_ver_hash(&model, ws_version)?;
-    let (v_kind, _) = bit_object_import::read_scope_object(&scope_dir, &local_head).ok()??;
-    if v_kind != "Version" {
-        return None;
-    }
+    let local_head = resolve_scope_local_head(&scope_dir, scope, name, ws_version)?;
     let remote_head = read_remote_main_head(&scope_dir, scope, name)?;
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let dist =
@@ -216,16 +220,7 @@ pub(super) fn is_component_staged_on_lane(
     ws_version: &str,
 ) -> Option<bool> {
     let scope_dir = bit_object_import::scope_path(root);
-    let (_, _, comp_hash) = resolve_component_entry(&scope_dir, &format!("{scope}/{name}"))?;
-    let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &comp_hash).ok()??;
-    if kind != "Component" {
-        return None;
-    }
-    let local_head = resolve_ver_hash(&model, ws_version)?;
-    let (v_kind, _) = bit_object_import::read_scope_object(&scope_dir, &local_head).ok()??;
-    if v_kind != "Version" {
-        return None;
-    }
+    let local_head = resolve_scope_local_head(&scope_dir, scope, name, ws_version)?;
     let (lane_scope, lane_name) =
         bitmap_lane_scope_and_name(bitmap_val).filter(|(sc, _)| !sc.is_empty())?;
     if let Some(remote_lane_head) =

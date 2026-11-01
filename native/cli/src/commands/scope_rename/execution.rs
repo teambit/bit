@@ -68,6 +68,13 @@ fn prepare(
     Ok(Entries { batch: Batch::prepare(root, plans)?, facts })
 }
 
+fn flush_stdout(linker: &mut ProjectedLinker) {
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
+}
+
 fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
     if let Err(error) = linker.install_scope_rename(root) {
         let text = error.to_string();
@@ -82,10 +89,10 @@ fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
             "renameTooling",
             &json!({"action":"installFailure","message":message}),
         );
-        print!("{}", linker.take_stdout());
+        flush_stdout(linker);
         res?;
     } else {
-        print!("{}", linker.take_stdout());
+        flush_stdout(linker);
     }
     Ok(())
 }
@@ -99,7 +106,7 @@ fn finish_linked_tooling(
     chalk: Chalk,
 ) -> io::Result<()> {
     let linked = linker.link_retained(root, batch.bitmap(), ids, false, chalk);
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     linked?;
     if !options.owner && !options.skip_install {
         install(root, linker)?;
@@ -109,7 +116,7 @@ fn finish_linked_tooling(
         "renameTooling",
         &json!({"action":"compile","ids":ids,"progress":!options.owner}),
     );
-    print!("{}", linker.take_stdout());
+    flush_stdout(linker);
     compiled?;
     Ok(())
 }
