@@ -39,7 +39,10 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
         .filter(|row| {
             let (row_scope, row_name) = row_id_parts(&row["id"]);
             row["isSymlink"] != true
-                && (format!("{row_scope}/{row_name}") == bare
+                && (bare
+                    .strip_prefix(row_scope)
+                    .and_then(|rest| rest.strip_prefix('/'))
+                    == Some(row_name)
                     || (local_name.is_some()
                         && local_name == Some(row_name)
                         && row_scope.is_empty()))
@@ -239,18 +242,13 @@ struct Source {
     bytes: Vec<u8>,
 }
 fn source(batch: &mut Batch, hash: &str, budget: usize) -> io::Result<Source> {
-    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
-    let scope = crate::scope_path(&batch.root);
-    let source = scope
-        .join("objects")
+    let raw_hash = crate::merge_history::hash(hash.trim())?;
+    let canonical = crate::validate::hexadecimal(&raw_hash);
+    let objects_dir = crate::scope_path(&batch.root).join("objects");
+    let source = objects_dir
         .join(&canonical[..2])
         .join(&canonical[2..]);
     let proof = required(&mut batch.proofs, &source)?;
-    let bytes = crate::checkout::repository::source(
-        &scope.join("objects"),
-        crate::merge_history::hash(&canonical)?,
-        budget,
-        &mut 0,
-    )?;
+    let bytes = crate::checkout::repository::source(&objects_dir, raw_hash, budget, &mut 0)?;
     Ok(Source { path: source, proof, bytes })
 }

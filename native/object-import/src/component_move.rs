@@ -87,10 +87,13 @@ impl Plan {
     }
 }
 fn change_identity(row: &Value) -> Option<String> {
-    if let Some(identity) = [&row["identity"], &row["id"]]
-        .into_iter()
-        .find_map(|val| {
-            val.as_str()
+    if let Some(identity) = row["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+        .or_else(|| {
+            row["id"]
+                .as_str()
                 .map(str::trim)
                 .filter(|text| !text.is_empty())
         })

@@ -216,6 +216,20 @@ fn prepare_files(root: &Path, selected: &Selection) -> io::Result<(Repository, V
     Ok((repository, files))
 }
 
+fn matches_tracked_row(key: &str, row: &Value, target: &str) -> bool {
+    if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {
+        return false;
+    }
+    let (scope, bare_name) = crate::reset_lane::bitmap::row_identity(key, row);
+    bare_name == target
+        || scope.is_some_and(|sc| {
+            target
+                .strip_prefix(sc)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(bare_name)
+        })
+}
+
 fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
     let target = name
         .trim()
@@ -224,28 +238,19 @@ fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
         .unwrap_or(name)
         .trim();
     let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
-    let matches: Vec<_> = rows
-        .iter()
-        .filter(|(key, row)| {
-            !key.starts_with('$')
-                && !matches!(key.as_str(), "_bit_lane" | "version")
-                && row.is_object()
-                && {
-                    let (scope, bare_name) = crate::reset_lane::bitmap::row_identity(key, row);
-                    bare_name == target
-                        || scope.is_some_and(|scope| format!("{scope}/{bare_name}") == target)
-                }
-        })
-        .collect();
-    if matches.len() != 1 {
+    let mut matches = rows.iter().filter(|(key, row)| matches_tracked_row(key, row, target));
+    let Some((key, _)) = matches
+        .next()
+        .filter(|_| matches.next().is_none())
+    else {
         return Err(invalid("component is not uniquely tracked"));
-    }
-    Ok(matches[0].0.clone())
+    };
+    Ok(key.clone())
 }
 fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository, Value)> {
     let (scope, name) =
         selected.identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
-    let (index, model, model_value) = read_model(root, scope, name)?;
+    let (index, model, model_value) = read_model(root, scope.trim(), name.trim())?;
     let version_hash = resolve_version_hash(selected, &model_value)?;
     let version_object = frozen(root, version_hash)?;
     let objects_dir = crate::scope_path(root).join("objects");
@@ -287,32 +292,30 @@ fn resolve_version_hash<'a>(
         .ok_or_else(|| invalid("component version is not in model"))
 }
 fn matches_index_row(row: &Value, scope: &str, name: &str) -> bool {
-    let (scope, name) = (scope.trim(), name.trim());
     let (row_scope, row_name) =
         crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
             .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default().trim(), nm.trim()));
     row["isSymlink"] != true && row_name == name && (row_scope == scope || row_scope.is_empty())
 }
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
-    let (scope, name) = (scope.trim(), name.trim());
     let index = fs::read(crate::scope_path(root).join("index.json"))?;
     let value: Value = crate::parse_jsonc(&index)?;
-    let rows = value["components"]
+    let mut matches = value["components"]
         .as_array()
         .or_else(|| value.as_array())
-        .ok_or_else(|| invalid("scope index"))?;
-    let matches: Vec<_> = rows
+        .ok_or_else(|| invalid("scope index"))?
         .iter()
-        .filter(|row| matches_index_row(row, scope, name))
-        .collect();
-    if matches.len() != 1 {
+        .filter(|row| matches_index_row(row, scope, name));
+    let Some(matched) = matches
+        .next()
+        .filter(|_| matches.next().is_none())
+    else {
         return Err(invalid("component is not uniquely indexed"));
+    };
+    let model_hash = matched["hash"].as_str().map_or("", str::trim);
+    if model_hash.is_empty() {
+        return Err(invalid("Component hash"));
     }
-    let model_hash = matches[0]["hash"]
-        .as_str()
-        .map(str::trim)
-        .filter(|hash| !hash.is_empty())
-        .ok_or_else(|| invalid("Component hash"))?;
     let model = frozen(root, model_hash)?;
     let model_value =
         outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;

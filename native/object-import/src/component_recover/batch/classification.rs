@@ -6,8 +6,7 @@ pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
     let bare = selection::bare(id);
     let model = repository::model(batch, bare)?;
     if let Some(key_ref) = &key {
-        let row = batch.bitmap[key_ref].clone();
-        let (action, files) = tracked(batch, id, &row, model.as_ref())?;
+        let (action, files) = tracked(batch, id, key_ref, model.as_ref())?;
         return Ok(Item { id: id.into(), key, action, files, configuration: None });
     }
     let action = if let Some(model) = model {
@@ -25,10 +24,10 @@ pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
 fn tracked(
     batch: &mut Batch,
     id: &str,
-    row: &Value,
+    key_ref: &str,
     model: Option<&Value>,
 ) -> io::Result<(Action, Vec<super::File>)> {
-    if row["config"]
+    let has_remove = batch.bitmap[key_ref]["config"]
         .as_object()
         .and_then(|cfg| {
             cfg.get(REMOVE)
@@ -41,15 +40,16 @@ fn tracked(
                         })
                 })
         })
-        .is_some_and(has_remove_info)
-    {
+        .is_some_and(has_remove_info);
+    if has_remove {
+        let row = batch.bitmap[key_ref].clone();
         let version = model
             .map(|model| repository::version(batch, id, model))
             .transpose()?
             .flatten();
         return match version {
             Some(version) => {
-                Ok((Action::WriteFromScope, repository::sources(batch, row, &version)?))
+                Ok((Action::WriteFromScope, repository::sources(batch, &row, &version)?))
             }
             None => Ok((Action::DeleteConfigAndImport, vec![])),
         };

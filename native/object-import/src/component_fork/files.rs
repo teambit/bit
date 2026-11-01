@@ -67,10 +67,12 @@ fn transform(
         return Ok((relative.into(), bytes));
     }
     let (scope, name) = source_id(options, source)?;
-    let original = format!("{scope}/{name}");
     // replaceMultipleStrings uses ordered global regex replacement, before variable/class changes.
-    let mut bytes =
-        if options.ast { bytes } else { copy_refactor::replace(&bytes, &original, &id.target)? };
+    let mut bytes = if options.ast {
+        bytes
+    } else {
+        copy_refactor::replace(&bytes, &format!("{scope}/{name}"), &id.target)?
+    };
     if options.preserve {
         return Ok((relative.into(), bytes));
     }

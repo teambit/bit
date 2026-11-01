@@ -39,7 +39,7 @@ impl Selection {
         let bitmap = fs::read(root.join(".bitmap"))?;
         let workspace = crate::parse_jsonc(&before)?;
         let key = workspace_aspect_key(&workspace);
-        let default = workspace[&key]["defaultScope"].as_str().map_or("", str::trim);
+        let default = workspace[key]["defaultScope"].as_str().map_or("", str::trim);
         let entries =
             selection::entries_with_default(&crate::parse_jsonc(&bitmap)?, default, options)?;
         let default_scope = selection::scope(default, options);
@@ -66,7 +66,7 @@ impl Selection {
                 ),
             ));
         }
-        Ok(Self { root: root.into(), before, bitmap, entries, default_scope, key })
+        Ok(Self { root: root.into(), before, bitmap, entries, default_scope, key: key.to_owned() })
     }
     pub fn validate(&self) -> io::Result<()> {
         for (path, expected) in [
@@ -93,7 +93,7 @@ impl Selection {
     }
 }
 
-fn workspace_aspect_key(workspace: &Value) -> String {
+fn workspace_aspect_key(workspace: &Value) -> &str {
     workspace
         .as_object()
         .and_then(|rows| {
@@ -104,7 +104,7 @@ fn workspace_aspect_key(workspace: &Value) -> String {
                         trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
                     bare == "teambit.workspace/workspace"
                 })
+                .map(String::as_str)
         })
-        .cloned()
-        .unwrap_or_else(|| "teambit.workspace/workspace".into())
+        .unwrap_or("teambit.workspace/workspace")
 }

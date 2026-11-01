@@ -52,6 +52,9 @@ impl LocalBatch {
             .collect()
     }
     pub fn check_aspect_usage(&self, components: &[Value]) -> io::Result<()> {
+        if components.is_empty() {
+            return Ok(());
+        }
         let new = self.selected
             .iter()
             .filter(|row| {

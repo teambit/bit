@@ -18,7 +18,8 @@ pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
     let name = non_empty_field(row, "name")
         .unwrap_or_else(|| {
             key_id
-                .strip_prefix(&format!("{scope}/"))
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(key_id)
                 .trim()
         });
@@ -68,8 +69,9 @@ pub(super) fn select(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>
     let mut result = bitmap_pool(batch)?;
     staged(batch, &mut result)?;
     result.retain(|id| {
-        bit_workspace_config::glob::matches(pattern, bare(id))
-            || bare(id)
+        let bare_id = bare(id);
+        bit_workspace_config::glob::matches(pattern, bare_id)
+            || bare_id
                 .split_once('/')
                 .is_some_and(|(_, name)| bit_workspace_config::glob::matches(pattern, name))
     });

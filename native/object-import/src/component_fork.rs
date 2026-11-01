@@ -100,10 +100,14 @@ impl Plan {
     }
     /// Environment/config facts can be resolved after `Workspace.write` and before tracking.
     pub fn set_config(&mut self, config: Value) -> io::Result<()> {
-        if !config.is_object() || !self.bitmap[&self.identity.key].is_object() {
+        let Some(row) = self.bitmap.get_mut(&self.identity.key).and_then(Value::as_object_mut)
+        else {
+            return Err(unsupported("fork config must be an object"));
+        };
+        if !config.is_object() {
             return Err(unsupported("fork config must be an object"));
         }
-        self.bitmap[&self.identity.key]["config"] = config;
+        row.insert("config".into(), config);
         Ok(())
     }
     pub fn commit_bitmap(&self, file_id: &str) -> io::Result<()> {

@@ -24,8 +24,13 @@ impl Options {
             path: self.path
                 .as_deref()
                 .map(|val| {
-                    let normalized = val.trim().replace('\\', "/");
-                    let mut stripped = normalized.as_str();
+                    let trimmed = val.trim();
+                    let normalized = if trimmed.contains('\\') {
+                        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+                    } else {
+                        std::borrow::Cow::Borrowed(trimmed)
+                    };
+                    let mut stripped = normalized.as_ref();
                     while let Some(rest) = stripped.strip_prefix("./") {
                         stripped = rest;
                     }

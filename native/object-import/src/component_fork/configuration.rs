@@ -69,6 +69,9 @@ fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     }
     let Some(entries) = source["current"]["extensions"].as_array() else { return Ok(()) };
     for entry in entries {
+        if !bit_workspace_config::truthy(&entry["config"]) {
+            continue;
+        }
         let Some(key) = extension_key(entry) else {
             continue;
         };

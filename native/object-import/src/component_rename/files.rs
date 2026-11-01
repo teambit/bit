@@ -380,8 +380,14 @@ pub(super) fn write_changes(changes: &[Change]) -> io::Result<()> {
         if let Some(parent) = change.destination.parent() {
             fs::create_dir_all(parent)?;
         }
-        let bytes = change.writer.contents(change.bytes.clone(), cfg!(windows));
-        fs::write(&change.destination, bytes)?;
+        if change.writer == eol::Writer::Workspace {
+            fs::write(&change.destination, &change.bytes)?;
+        } else {
+            fs::write(
+                &change.destination,
+                change.writer.contents(change.bytes.clone(), cfg!(windows)),
+            )?;
+        }
         fs::set_permissions(&change.destination, change.permissions.clone())?;
     }
     Ok(())

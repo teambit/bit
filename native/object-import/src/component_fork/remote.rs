@@ -113,6 +113,9 @@ impl RemoteCapture {
         }
     }
     fn write_objects(&mut self, objects: Vec<(String, Vec<u8>)>) -> io::Result<()> {
+        if objects.is_empty() {
+            return Ok(());
+        }
         let object_directory =
             tempfile::Builder::new().prefix("bit-native-fork-objects-").tempdir()?;
         for (hash, bytes) in objects {

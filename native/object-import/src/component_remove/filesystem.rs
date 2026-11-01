@@ -78,12 +78,14 @@ pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
 
 pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
     let value = value.trim();
-    if value.len() > 32
-        || value.split('-').count() != 6
-        || value
-            .split('-')
-            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
-    {
+    let mut count = 0usize;
+    let valid_parts = value
+        .split('-')
+        .all(|part| {
+            count += 1;
+            !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit())
+        });
+    if value.len() > 32 || !valid_parts || count != 6 {
         return Err(invalid("component bitmap history receipt"));
     }
     Ok(())

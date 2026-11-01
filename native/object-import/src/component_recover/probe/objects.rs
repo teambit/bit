@@ -77,6 +77,7 @@ fn read_indexed_remote_model(
     Ok(Some(model))
 }
 fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
+    let objects_dir = scope.join("objects");
     let mut total = 0;
     for file in version["files"]
         .as_array()
@@ -88,7 +89,7 @@ fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
             .map(str::trim)
             .ok_or_else(|| invalid("recovery remote Source hash"))?;
         let bytes = repository::source(
-            &scope.join("objects"),
+            &objects_dir,
             crate::merge_history::hash(hash)?,
             32 * 1024 * 1024 - total,
             &mut 0,
@@ -130,7 +131,7 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
     let mut model = None;
     let mut total = 0;
     for item in items {
-        let raw = repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
+        let mut raw = repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
         total += raw.len();
         if total > 128 * 1024 * 1024 {
             return Err(unsupported("recovery remote inflated object budget"));
@@ -147,8 +148,10 @@ pub(crate) fn decode(items: &[ObjectItem], id: &str) -> io::Result<(Objects, Opt
         {
             model = Some(value);
         }
+        let header_len = raw.len() - body.len();
+        raw.drain(..header_len);
         if objects
-            .insert(item.hash.clone(), (kind, body.to_vec()))
+            .insert(item.hash.clone(), (kind, raw))
             .is_some()
         {
             return Err(invalid("duplicate recovery remote object"));

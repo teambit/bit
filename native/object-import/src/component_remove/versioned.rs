@@ -251,7 +251,7 @@ fn object_changes(root: &Path, selection: &ModelSelection<'_>) -> io::Result<Vec
     let dir = crate::scope_path(root).join("objects");
     let model = outbound::read_object(&dir, selection.model_hash, "Component")?;
     let hashes = model_hashes(&model, selection)?;
-    let mut changes = Vec::new();
+    let mut changes = Vec::with_capacity(hashes.len());
     for hash in hashes {
         let path = dir.join(&hash[..2]).join(&hash[2..]);
         regular_file(root, &path)?;

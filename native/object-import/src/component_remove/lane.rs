@@ -67,8 +67,8 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     let scope_path = crate::scope_path(root);
     let index_before = fs::read(scope_path.join("index.json"))?;
     let hash = find_lane_hash(&index_before, scope, name)?;
-    let path = scope_path
-        .join("objects")
+    let objects_dir = scope_path.join("objects");
+    let path = objects_dir
         .join(&hash[..2])
         .join(&hash[2..]);
     let metadata = fs::symlink_metadata(&path)?;
@@ -77,7 +77,7 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
         return Err(invalid("current lane object path"));
     }
     let before = fs::read(&path)?;
-    let value = outbound::read_object(&scope_path.join("objects"), &hash, "Lane")?;
+    let value = outbound::read_object(&objects_dir, &hash, "Lane")?;
     if value["scope"].as_str().map(str::trim) != Some(scope)
         || value["name"].as_str().map(str::trim) != Some(name)
     {
@@ -89,14 +89,16 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
 fn find_lane_hash(index_before: &[u8], scope: &str, name: &str) -> io::Result<String> {
     let index: Value = crate::parse_jsonc(index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
-    let matches: Vec<_> = rows
+    let mut matches = rows
         .iter()
-        .filter(|entry| lane_id_parts(&entry["id"]) == (scope, name))
-        .collect();
-    if matches.len() != 1 {
+        .filter(|entry| lane_id_parts(&entry["id"]) == (scope, name));
+    let Some(matched) = matches
+        .next()
+        .filter(|_| matches.next().is_none())
+    else {
         return Err(invalid("current lane is not uniquely indexed"));
-    }
-    let raw_hash = matches[0]["hash"]
+    };
+    let raw_hash = matched["hash"]
         .as_str()
         .map(str::trim)
         .filter(|hash| !hash.is_empty())

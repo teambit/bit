@@ -119,16 +119,17 @@ fn group(
         .ok_or_else(|| unsupported("fork refactor files"))?;
     let mut group =
         Group { files: Vec::with_capacity(files.len()), initial: Vec::with_capacity(files.len()) };
+    let target_dir = root.join(directory);
+    let mut source = row.clone();
+    source["rootDir"] = serde_json::json!(directory);
     for file in files {
         let relative = refactor_relative_path(file)?;
-        let destination = root.join(directory).join(relative);
+        let destination = target_dir.join(relative);
         observed.ancestors(
             root,
             destination.parent().ok_or_else(|| unsupported("fork refactor parent"))?,
         )?;
         observed.read(&destination)?;
-        let mut source = row.clone();
-        source["rootDir"] = serde_json::json!(directory);
         let path = files::source_path(root, &source, relative, observed)?;
         let before = required(observed, &path)?;
         if before.len() > 32 * 1024 * 1024 {

@@ -27,6 +27,7 @@ pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<C
 }
 
 fn matches_selected_record(row: &Value, selected: &[Selected]) -> bool {
+    let (entry_scope, entry_name) = crate::component_remove::lane::lane_id_parts(&row["id"]);
     selected
         .iter()
         .any(|entry| {
@@ -40,6 +41,6 @@ fn matches_selected_record(row: &Value, selected: &[Selected]) -> bool {
             let (scope, name) = identity
                 .split_once('/')
                 .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
-            crate::component_remove::lane::matches_component_entry(row, scope, name)
+            entry_name == name && (entry_scope == scope || entry_scope.is_empty())
         })
 }

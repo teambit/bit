@@ -75,8 +75,7 @@ impl Batch {
     pub fn scope_import_ids(&mut self) -> io::Result<Vec<String>> {
         let mut ids = Vec::new();
         for index in 0..self.items.len() {
-            let id = self.items[index].id.clone();
-            let key = selection::key(&self.bitmap, &id)?;
+            let key = selection::key(&self.bitmap, &self.items[index].id)?;
             let exported = key.is_none_or(|key| {
                 self.bitmap[&key]["scope"]
                     .as_str()
@@ -85,8 +84,11 @@ impl Batch {
                         |scope| !scope.trim().is_empty(),
                     )
             });
-            if exported && repository::model(self, selection::bare(&id))?.is_none() {
-                ids.push(id);
+            if exported {
+                let id = self.items[index].id.clone();
+                if repository::model(self, selection::bare(&id))?.is_none() {
+                    ids.push(id);
+                }
             }
         }
         Ok(ids)

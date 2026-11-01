@@ -23,16 +23,14 @@ pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     model_metadata(plan, id)
 }
 fn local_aspect(row: &Value) -> Option<&Value> {
-    row["config"]
-        .as_object()
-        .and_then(|cfg| {
-            cfg.get(ASPECT)
-                .or_else(|| {
-                    cfg.iter()
-                        .find_map(|(key, val)| {
-                            key.starts_with(&format!("{ASPECT}@"))
-                                .then_some(val)
-                        })
+    let cfg = row["config"].as_object()?;
+    cfg.get(ASPECT)
+        .or_else(|| {
+            cfg.iter()
+                .find_map(|(key, val)| {
+                    key.strip_prefix(ASPECT)
+                        .is_some_and(|rest| rest.starts_with('@'))
+                        .then_some(val)
                 })
         })
 }
@@ -118,7 +116,10 @@ fn matches_indexed_component(row: &Value, bare: &str) -> bool {
     row["isSymlink"] != true
         && ((row_name == name_part
             && (row_scope.is_empty() || scope_part.is_empty() || row_scope == scope_part))
-            || format!("{row_scope}/{row_name}") == bare
+            || bare
+                .strip_prefix(row_scope)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(row_name)
             || row_name == bare)
 }
 fn read(plan: &mut Plan, hash: &str) -> io::Result<Value> {

@@ -10,10 +10,11 @@ pub(super) fn merge(target: &mut Value, before: &Value, after: &Value) -> io::Re
         }
     }
     for (key, value) in changed {
-        if original.get(key) == Some(value) {
+        let previous = original.get(key);
+        if previous == Some(value) {
             continue;
         }
-        merge_entry(target, original.get(key), key, value)?;
+        merge_entry(target, previous, key, value)?;
     }
     Ok(())
 }

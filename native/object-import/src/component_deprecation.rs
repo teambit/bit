@@ -169,7 +169,11 @@ pub fn set_config(
         row["config"] = json!({});
     }
     if let Some(cfg) = row["config"].as_object_mut() {
-        cfg.retain(|cfg_key, _| !cfg_key.starts_with(&format!("{ASPECT}@")));
+        cfg.retain(|cfg_key, _| {
+            !cfg_key
+                .strip_prefix(ASPECT)
+                .is_some_and(|rest| rest.starts_with('@'))
+        });
     }
     let mut config = json!({"deprecate":!undo && range.is_none()});
     if undo {

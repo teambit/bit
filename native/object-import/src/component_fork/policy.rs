@@ -49,7 +49,10 @@ fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
     else {
         return row["id"].as_str().map(str::trim) == Some("@teambit/legacy");
     };
-    let (Some(rows), Some(identity)) = (excluded, component_identity(component)) else {
+    let Some(rows) = excluded.filter(|rows| !rows.is_empty()) else {
+        return false;
+    };
+    let Some(identity) = component_identity(component) else {
         return false;
     };
     rows.iter()

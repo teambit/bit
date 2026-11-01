@@ -262,8 +262,8 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
     let model_hash = find_indexed_model_hash(rows, scope, name)?;
     crate::merge_history::hash(model_hash)?;
     let model = freeze(root, model_hash)?;
-    let value =
-        outbound::read_object(&crate::scope_path(root).join("objects"), model_hash, "Component")?;
+    let objects_dir = crate::scope_path(root).join("objects");
+    let value = outbound::read_object(&objects_dir, model_hash, "Component")?;
     let model_scope = value["scope"].as_str().map_or("", str::trim);
     if (!model_scope.is_empty() && model_scope != scope)
         || value["name"].as_str().map(str::trim) != Some(name)
@@ -274,7 +274,7 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
         .ok_or_else(|| invalid("component version is not in model"))?;
     crate::merge_history::hash(hash)?;
     let version_object = freeze(root, hash)?;
-    let _value = outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Version")?;
+    outbound::read_object(&objects_dir, hash, "Version")?;
     Ok(RepositorySnapshot {
         index_before,
         objects: vec![model, version_object],
@@ -284,7 +284,7 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
 
 fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io::Result<&'a str> {
     let (scope, name) = (scope.trim(), name.trim());
-    let matches: Vec<_> = rows
+    let mut matches = rows
         .iter()
         .filter(|row| {
             let (row_scope, row_name) =
@@ -293,12 +293,14 @@ fn find_indexed_model_hash<'a>(rows: &'a [Value], scope: &str, name: &str) -> io
             row["isSymlink"] != true
                 && row_name == name
                 && (row_scope.is_empty() || row_scope == scope)
-        })
-        .collect();
-    if matches.len() != 1 {
+        });
+    let Some(matched) = matches
+        .next()
+        .filter(|_| matches.next().is_none())
+    else {
         return Err(invalid("component is not uniquely indexed"));
-    }
-    matches[0]["hash"]
+    };
+    matched["hash"]
         .as_str()
         .map(str::trim)
         .filter(|hash| !hash.is_empty())

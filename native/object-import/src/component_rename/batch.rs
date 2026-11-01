@@ -255,6 +255,9 @@ impl Batch {
         Ok(())
     }
     pub fn write_refactored_targets(&mut self, changed: &[String]) -> io::Result<()> {
+        if changed.is_empty() {
+            return Ok(());
+        }
         for plan in &mut self.plans {
             let target = plan.identity.target.trim();
             if !plan.identity.exported

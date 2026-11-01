@@ -184,9 +184,12 @@ impl Plan {
     /// Paths written by native materialization; source bodies stay on the filesystem.
     #[must_use]
     pub fn materialized(&self) -> Value {
-        let main_file = self.controls.bitmap
-            .get(&self.identity.target)
-            .or_else(|| self.controls.bitmap.get(&self.identity.target_name))
+        let rows = self.controls.bitmap.as_object();
+        let main_file = rows
+            .and_then(|map| {
+                map.get(&self.identity.target)
+                    .or_else(|| map.get(&self.identity.target_name))
+            })
             .or_else(|| {
                 identity::selected(&self.controls.bitmap, &self.identity.target)
                     .ok()

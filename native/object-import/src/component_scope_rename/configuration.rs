@@ -34,8 +34,9 @@ pub(super) fn publish(
 }
 fn backup(root: &Path, before: &[u8], scope: &str, file_id: &str) -> io::Result<()> {
     let directory = crate::scope_path(root).join("workspace-config-history");
-    fs::create_dir_all(directory.join("files"))?;
-    fs::write(directory.join("files").join(file_id), before)?;
+    let files_dir = directory.join("files");
+    fs::create_dir_all(&files_dir)?;
+    fs::write(files_dir.join(file_id), before)?;
     let mut metadata = fs::OpenOptions::new()
         .create(true)
         .append(true)

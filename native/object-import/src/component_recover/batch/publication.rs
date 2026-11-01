@@ -113,6 +113,9 @@ pub(super) fn after_import(batch: &mut Batch, published: &serde_json::Value) -> 
 }
 fn verify_unimported_rows(batch: &Batch, bitmap: &serde_json::Value) -> io::Result<()> {
     for (key, row) in batch.bitmap.as_object().ok_or_else(|| invalid("recovery bitmap object"))? {
+        if bitmap.get(key) == Some(row) {
+            continue;
+        }
         let imported = batch.items
             .iter()
             .any(|item| {
@@ -124,7 +127,7 @@ fn verify_unimported_rows(batch: &Batch, bitmap: &serde_json::Value) -> io::Resu
                             .as_ref()
                             == Some(key))
             });
-        if !imported && bitmap.get(key) != Some(row) {
+        if !imported {
             return Err(invalid("recovery import changed an unrelated bitmap row"));
         }
     }

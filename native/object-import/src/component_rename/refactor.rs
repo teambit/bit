@@ -17,14 +17,16 @@ pub(super) struct PatternCache(Mutex<HashMap<String, Arc<OnceLock<Compiled>>>>);
 impl PatternCache {
     fn get(&self, pattern: &str) -> io::Result<Arc<Regex>> {
         let mut guard = self.0.lock().map_err(|_| invalid("rename pattern cache unavailable"))?;
-        if guard.len() >= 16384 && !guard.contains_key(pattern) {
-            return Err(unsupported("rename pattern cache budget"));
-        }
-        let slot = Arc::clone(
-            guard
-                .entry(pattern.to_owned())
-                .or_insert_with(|| Arc::new(OnceLock::new())),
-        );
+        let slot = if let Some(existing) = guard.get(pattern) {
+            Arc::clone(existing)
+        } else {
+            if guard.len() >= 16384 {
+                return Err(unsupported("rename pattern cache budget"));
+            }
+            let created = Arc::new(OnceLock::new());
+            guard.insert(pattern.to_owned(), Arc::clone(&created));
+            created
+        };
         drop(guard);
         match slot.get_or_init(|| {
             Regex::new(pattern).map(Arc::new).map_err(|error| error.to_string())

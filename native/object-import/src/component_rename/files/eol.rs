@@ -17,7 +17,9 @@ impl Writer {
     pub(super) fn contents(self, bytes: Vec<u8>, windows: bool) -> Vec<u8> {
         match self {
             // ComponentWriter persists AbstractVinyl through eol.auto().
-            Self::Component if !crate::checkout::eol::binary(&bytes) => {
+            Self::Component
+                if (windows || bytes.contains(&b'\r')) && !crate::checkout::eol::binary(&bytes) =>
+            {
                 crate::checkout::eol::normalize(bytes, windows)
             }
             // NewComponentHelper and changed dependents call Workspace.write(),

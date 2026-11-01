@@ -108,7 +108,7 @@ impl Plan {
         if let Some(path) = &self.files {
             validate_directory(path)?;
         }
-        if self.package.try_exists()? {
+        if !self.package.as_os_str().is_empty() && self.package.try_exists()? {
             validate_directory(&self.package)?;
         }
         Ok(())
@@ -118,7 +118,7 @@ impl Plan {
         if let Some(path) = &self.files {
             remove_path(path)?;
         }
-        if self.package.try_exists()? {
+        if !self.package.as_os_str().is_empty() && self.package.try_exists()? {
             fs::remove_dir_all(&self.package)?;
         }
         backup_bitmap(&self.root, file_id, "remove")?;

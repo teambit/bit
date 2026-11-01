@@ -150,13 +150,14 @@ fn staged(root: &Path, bitmap: &Value, identities: &[&str]) -> io::Result<Option
     let length = rows.len();
     rows.retain(|row| {
         let (row_scope, row_name) = crate::component_remove::lane::lane_id_parts(&row["id"]);
-        let scoped = format!("{row_scope}/{row_name}");
         !identities
             .iter()
             .any(|identity| {
-                *identity == scoped
-                    || (row_scope.is_empty()
-                        && identity.split_once('/').map(|(_, nm)| nm) == Some(row_name))
+                identity
+                    .split_once('/')
+                    .is_some_and(|(sc, nm)| {
+                        nm == row_name && (sc == row_scope || row_scope.is_empty())
+                    })
             })
     });
     if rows.len() == length {

@@ -3,38 +3,33 @@ use super::{Plan, invalid};
 use std::{fs, io, path::Path};
 
 pub(super) fn initial(plan: &mut Plan, file_id: &str, reason: &str) -> io::Result<()> {
-    write(plan, &plan.controls.initial.clone(), file_id, reason)
+    write(&plan.root, &mut plan.controls.expected, &plan.controls.initial, file_id, reason)
 }
 pub(super) fn final_bitmap(plan: &mut Plan, file_id: &str) -> io::Result<()> {
-    write(plan, &plan.controls.bitmap.clone(), file_id, "rename")
+    write(&plan.root, &mut plan.controls.expected, &plan.controls.bitmap, file_id, "rename")
 }
 fn write(
-    plan: &mut Plan,
+    root: &Path,
+    expected: &mut Vec<u8>,
     bitmap: &serde_json::Value,
     file_id: &str,
     reason: &str,
 ) -> io::Result<()> {
     crate::component_remove::validate_file_id(file_id)?;
-    let path = plan.root.join(".bitmap");
+    let path = root.join(".bitmap");
     let metadata = fs::symlink_metadata(&path)?;
     if !metadata.is_file()
         || metadata.file_type().is_symlink()
-        || u64::try_from(plan.controls.expected.len()).ok() != Some(metadata.len())
-        || fs::read(&path)? != plan.controls.expected
+        || u64::try_from(expected.len()).ok() != Some(metadata.len())
+        || fs::read(&path)? != *expected
     {
         return Err(invalid("rename bitmap changed before publication"));
     }
-    if crate::inspection::render_workspace_bitmap(bitmap)? == plan.controls.expected {
+    if crate::inspection::render_workspace_bitmap(bitmap)? == *expected {
         return Ok(());
     }
-    crate::component_deprecation::write_bitmap(
-        &plan.root,
-        &plan.controls.expected,
-        bitmap,
-        file_id,
-        reason,
-    )?;
-    plan.controls.expected = fs::read(&path)?;
+    crate::component_deprecation::write_bitmap(root, expected, bitmap, file_id, reason)?;
+    *expected = fs::read(&path)?;
     Ok(())
 }
 pub(super) fn finish_original(
@@ -72,7 +67,7 @@ pub(super) fn finish_original(
     let (final_key, _) =
         super::identity::selected_any(&plan.controls.bitmap, &plan.identity.source)?;
     bitmap[&key] = plan.controls.bitmap[final_key].clone();
-    write(plan, &bitmap, file_id, &reason)?;
+    write(&plan.root, &mut plan.controls.expected, &bitmap, file_id, &reason)?;
     if !plan.options.deprecate {
         remove(&plan.root.join(&plan.identity.source_directory))?;
     }

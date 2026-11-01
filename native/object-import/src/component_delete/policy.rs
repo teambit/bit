@@ -152,7 +152,8 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
     let name = non_empty_str(&row["name"])
         .unwrap_or_else(|| {
             key_id
-                .strip_prefix(&format!("{scope}/"))
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(key_id)
                 .trim()
         });
@@ -202,19 +203,16 @@ fn read_model(root: &Path, identity: &str, objects: &mut Vec<FrozenObject>) -> i
 
 fn latest(model: &Value) -> io::Result<Option<String>> {
     let versions = model["versions"].as_object().ok_or_else(|| invalid("Component tags"))?;
-    versions
-        .keys()
-        .map(|tag| {
-            let trimmed = tag.trim();
-            Version::parse(trimmed)
-                .map(|version| (version, trimmed))
-                .map_err(io::Error::other)
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(|versions| {
-            versions
-                .into_iter()
-                .max_by(|(left, _), (right, _)| left.cmp(right))
-                .map(|(_, tag)| tag.to_owned())
-        })
+    let mut best: Option<(Version, &str)> = None;
+    for tag in versions.keys() {
+        let trimmed = tag.trim();
+        let version = Version::parse(trimmed).map_err(io::Error::other)?;
+        if best
+            .as_ref()
+            .is_none_or(|(current, _)| version >= *current)
+        {
+            best = Some((version, trimmed));
+        }
+    }
+    Ok(best.map(|(_, tag)| tag.to_owned()))
 }

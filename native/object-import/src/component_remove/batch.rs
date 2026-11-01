@@ -174,12 +174,16 @@ fn row_matches_identity(key: &str, row: &Value, identity: &str) -> bool {
         return false;
     }
     let key_bare = key_trimmed.rsplit_once('@').map_or(key_trimmed, |(prefix, _)| prefix.trim());
+    if key_trimmed == identity || key_bare == bare {
+        return true;
+    }
     let (scope, name) = crate::reset_lane::bitmap::row_identity(key_trimmed, row);
-    let full = match scope {
-        Some(sc) => format!("{sc}/{name}"),
-        None => name.to_owned(),
-    };
-    key_trimmed == identity || key_bare == bare || name == bare || full == bare
+    name == bare
+        || scope.is_some_and(|sc| {
+            bare.strip_prefix(sc)
+                .and_then(|rest| rest.strip_prefix('/'))
+                == Some(name)
+        })
 }
 fn select(root: &Path, bitmap: &Value, key: &str, row: &Value) -> io::Result<Selected> {
     let mut shape = row.clone();

@@ -97,18 +97,18 @@ fn validate_entry_name(name: &str) -> io::Result<()> {
 }
 
 pub(super) fn validate_scope(scope: &str) -> io::Result<()> {
+    let mut dots = 0usize;
     let valid = scope.len() >= 2
         && !scope.starts_with('.')
         && !scope.ends_with('.')
         && scope
             .bytes()
-            .filter(|byte| *byte == b'.')
-            .count()
-            <= 1
-        && scope
-            .bytes()
             .all(|byte| {
-                byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"$-_!.".contains(&byte)
+                dots += usize::from(byte == b'.');
+                dots <= 1
+                    && (byte.is_ascii_lowercase()
+                        || byte.is_ascii_digit()
+                        || b"$-_!.".contains(&byte))
             });
     if valid {
         return Ok(());

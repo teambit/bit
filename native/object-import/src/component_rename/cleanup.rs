@@ -33,22 +33,22 @@ pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
         tree.observed.ancestors(&plan.root, &directory)?;
         let names = entries(&directory)?;
         for name in &names {
-            observe(&mut tree, &directory.join(name), &mut pending)?;
+            observe(&mut tree, directory.join(name), &mut pending)?;
         }
         tree.directories.insert(directory, names);
     }
     plan.cleanup = Some(tree);
     Ok(())
 }
-fn observe(tree: &mut Tree, path: &Path, pending: &mut Vec<PathBuf>) -> io::Result<()> {
-    let metadata = fs::symlink_metadata(path)?;
+fn observe(tree: &mut Tree, path: PathBuf, pending: &mut Vec<PathBuf>) -> io::Result<()> {
+    let metadata = fs::symlink_metadata(&path)?;
     if metadata.file_type().is_symlink() || reparse(&metadata) {
         return Err(unsupported("rename cleanup requires regular paths"));
     }
     if metadata.is_dir() {
-        pending.push(path.to_owned());
+        pending.push(path);
     } else {
-        tree.observed.read(path)?;
+        tree.observed.read(&path)?;
     }
     Ok(())
 }

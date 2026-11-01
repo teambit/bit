@@ -61,12 +61,11 @@ fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String
 }
 fn matches(id: &str, parts: &[&str]) -> bool {
     let id = strip_version(id);
+    let short_name = id.split_once('/').map(|(_, name)| name);
     let matched = |pattern: &str| {
         let pat = strip_version(pattern);
         bit_workspace_config::glob::matches(pat, id)
-            || id
-                .split_once('/')
-                .is_some_and(|(_, name)| bit_workspace_config::glob::matches(pat, name))
+            || short_name.is_some_and(|name| bit_workspace_config::glob::matches(pat, name))
     };
     parts
         .iter()

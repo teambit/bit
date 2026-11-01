@@ -6,11 +6,7 @@ mod tests;
 use super::{super::validate_ancestors, HistoryState, invalid, outbound};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
-use std::{
-    collections::HashSet,
-    fs, io,
-    path::{Path, PathBuf},
-};
+use std::{collections::HashSet, fs, io, path::Path};
 
 pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
     let mut current = crate::validate::hexadecimal(&crate::merge_history::hash(head.trim())?);
@@ -45,7 +41,13 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
 
 pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Result<HistoryState> {
     let (scope, name) = (scope.trim(), name.trim());
-    let hash = format!("{:x}", Sha1::digest(format!("{scope}/{name}:VersionHistory").as_bytes()));
+    let digest = Sha1::new()
+        .chain_update(scope.as_bytes())
+        .chain_update(b"/")
+        .chain_update(name.as_bytes())
+        .chain_update(b":VersionHistory")
+        .finalize();
+    let hash = format!("{digest:x}");
     let objects = crate::scope_path(root).join("objects");
     let path = objects
         .join(&hash[..2])
@@ -92,7 +94,7 @@ pub(super) fn write(state: &HistoryState) -> io::Result<()> {
     Ok(())
 }
 
-fn ensure_absent(path: &PathBuf) -> io::Result<()> {
+fn ensure_absent(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(_) => Err(invalid("lane VersionHistory appeared before removal")),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),

@@ -42,10 +42,13 @@ pub(super) fn overlaid(
     relative: &str,
     original: Vec<u8>,
 ) -> io::Result<Vec<u8>> {
+    let Some(overlays) = component["sourceOverlays"].as_object() else {
+        return Ok(original);
+    };
     let relative = relative.trim();
-    let Some(path) = component["sourceOverlays"]
+    let Some(path) = overlays
         .get(relative)
-        .or_else(|| component["sourceOverlays"].get(relative.trim_start_matches("./")))
+        .or_else(|| overlays.get(relative.trim_start_matches("./")))
         .and_then(Value::as_str)
         .map(str::trim)
         .filter(|path| !path.is_empty())

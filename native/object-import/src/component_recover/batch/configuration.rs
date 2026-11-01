@@ -22,32 +22,34 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     let Some(before) = batch.proofs.read(&path)? else { return Ok(None) };
     let text = std::str::from_utf8(&before).map_err(io::Error::other)?;
     let parsed: Value = crate::parse_jsonc(&before)?;
-    let value = projection(&parsed)?;
+    let value = projection(parsed)?;
     let bytes = stringify_package(&value, &detect_indent(text), detect_newline(text))?.into_bytes();
     Ok(Some(Configuration { path, bytes }))
 }
-fn projection(parsed: &Value) -> io::Result<Value> {
+fn projection(mut parsed: Value) -> io::Result<Value> {
     if !parsed.is_object() {
         return Err(invalid("recovery component.json must be an object"));
     }
-    if !has_scoped_component_id(parsed) {
+    if !has_scoped_component_id(&parsed) {
         return Err(invalid("recovery component.json requires a scoped componentId"));
     }
     let mut extensions = parsed["extensions"]
-        .as_object()
-        .cloned()
+        .as_object_mut()
+        .map(std::mem::take)
         .unwrap_or_default();
     extensions.retain(|key, _| {
         let trimmed = key.trim();
         trimmed != REMOVE && !trimmed.starts_with("teambit.component/remove@")
     });
     extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
+    let propagate = parsed["propagate"] == true;
+    let component_id = parsed["componentId"].take();
     let mut value = serde_json::json!({
-        "componentId":parsed["componentId"],
-        "propagate":parsed["propagate"] == true,
+        "componentId":component_id,
+        "propagate":propagate,
     });
-    if let Some(default_scope) = parsed.get("defaultScope") {
-        value["defaultScope"] = default_scope.clone();
+    if let Some(default_scope) = parsed.get_mut("defaultScope").map(Value::take) {
+        value["defaultScope"] = default_scope;
     }
     value["extensions"] = Value::Object(extensions);
     Ok(value)

@@ -102,7 +102,11 @@ fn select_row<'a>(
                     || key_trimmed == id
                     || row_name == id
                     || row_scope(key_trimmed, row)
-                        .is_some_and(|scope| format!("{scope}/{row_name}") == id))
+                        .is_some_and(|scope| {
+                            id.strip_prefix(scope)
+                                .and_then(|rest| rest.strip_prefix('/'))
+                                == Some(row_name)
+                        }))
         });
     let (key, row) = rows
         .next()
@@ -204,29 +208,28 @@ fn directory(
     if options.preserve && !exported {
         return Ok(source.into());
     }
-    let template =
-        crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
-            .as_str()
-            .filter(|value| !value.is_empty())
-            .unwrap_or("components/{name}");
-    let template = if template.contains("{name}") {
-        template.to_owned()
+    let result = if let Some(path) = options.path.as_ref().filter(|_| exported) {
+        path.clone()
     } else {
-        format!("{template}/{{name}}")
+        let template =
+            crate::component_tracking::identity::workspace_aspect(workspace)["defaultDirectory"]
+                .as_str()
+                .filter(|value| !value.is_empty())
+                .unwrap_or("components/{name}");
+        let template = if template.contains("{name}") {
+            std::borrow::Cow::Borrowed(template)
+        } else {
+            std::borrow::Cow::Owned(format!("{template}/{{name}}"))
+        };
+        let (owner, name) = scope
+            .rsplit_once('.')
+            .unwrap_or(("", scope));
+        template
+            .replace("{scopeId}", scope)
+            .replace("{scope}", name)
+            .replace("{owner}", owner)
+            .replace("{name}", &options.target)
     };
-    let (owner, name) = scope
-        .rsplit_once('.')
-        .unwrap_or(("", scope));
-    let result = options.path
-        .clone()
-        .filter(|_| exported)
-        .unwrap_or_else(|| {
-            template
-                .replace("{scopeId}", scope)
-                .replace("{scope}", name)
-                .replace("{owner}", owner)
-                .replace("{name}", &options.target)
-        });
     if Path::new(&result)
         .components()
         .any(|part| !matches!(part, Component::Normal(_)))

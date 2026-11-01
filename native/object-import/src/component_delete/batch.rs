@@ -21,7 +21,7 @@ impl Batch {
             return Err(invalid("component deletion batch limit"));
         }
         let facts = dependency_facts(components, identities);
-        let mut plans = Vec::new();
+        let mut plans = Vec::with_capacity(identities.len());
         for id in identities {
             plans.push(Plan::prepare_with(
                 root,
@@ -39,10 +39,11 @@ impl Batch {
             if plan.bitmap.before != first.bitmap.before {
                 return Err(invalid("component workspace changed before deletion"));
             }
-            let projected = crate::parse_jsonc(&plan.bitmap.after)?;
-            for (key, row) in projected.as_object().ok_or_else(|| invalid("component bitmap"))? {
-                if row != &before[key] {
-                    bitmap[key] = row.clone();
+            let mut projected = crate::parse_jsonc(&plan.bitmap.after)?;
+            let rows = projected.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
+            for (key, row) in std::mem::take(rows) {
+                if row != before[&key] {
+                    bitmap[key] = row;
                 }
             }
         }
@@ -127,13 +128,12 @@ fn dependency_facts(
     components.map(|components| {
         components
             .iter()
-            .cloned()
-            .map(|mut component| {
+            .map(|component| {
                 let bare = component.identity
                     .split('@')
                     .next()
                     .map(str::trim);
-                if identities
+                let deleted = identities
                     .iter()
                     .any(|id| {
                         bare == Some(
@@ -143,11 +143,12 @@ fn dependency_facts(
                                 .unwrap_or(id)
                                 .trim(),
                         )
-                    })
-                {
-                    component.dependencies.clear();
+                    });
+                DependencyComponent {
+                    identity: component.identity.clone(),
+                    package_name: component.package_name.clone(),
+                    dependencies: if deleted { Vec::new() } else { component.dependencies.clone() },
                 }
-                component
             })
             .collect::<Vec<_>>()
     })

@@ -25,8 +25,10 @@ impl Configuration {
         let text = format!("{document}\n");
         let after = if cfg!(windows) {
             text.replace("\r\n", "\n").replace('\n', "\r\n")
-        } else {
+        } else if text.contains("\r\n") {
             text.replace("\r\n", "\n")
+        } else {
+            text
         }
         .into_bytes();
         Ok(Some(Self(Change { path, before, after })))
@@ -42,8 +44,9 @@ impl Configuration {
         crate::component_remove::validate_file_id(file_id)?;
         let file_id = file_id.trim();
         let base = crate::scope_path(root).join("workspace-config-history");
-        fs::create_dir_all(base.join("files"))?;
-        fs::write(base.join("files").join(file_id), &self.0.before)?;
+        let files_dir = base.join("files");
+        fs::create_dir_all(&files_dir)?;
+        fs::write(files_dir.join(file_id), &self.0.before)?;
         let mut metadata = fs::OpenOptions::new()
             .create(true)
             .append(true)

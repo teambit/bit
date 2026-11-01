@@ -44,10 +44,12 @@ fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
     if trimmed.is_empty() || trimmed == "." {
         return !files.is_empty();
     }
-    let prefix = format!("{trimmed}/");
     files
         .iter()
-        .any(|file| file.starts_with(&prefix))
+        .any(|file| {
+            file.strip_prefix(trimmed)
+                .is_some_and(|rest| rest.starts_with('/'))
+        })
 }
 fn entries(directory: &Path) -> io::Result<Vec<PathBuf>> {
     let mut entries = fs::read_dir(directory)?

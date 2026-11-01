@@ -25,7 +25,10 @@ pub(super) fn apply(
             let next = directory.replacen(&from, &to, 1);
             row["rootDir"] = json!(next);
             vec![json!({"from":directory,"to":next})]
-        } else if from.starts_with(&format!("{directory}/")) {
+        } else if from
+            .strip_prefix(&directory)
+            .is_some_and(|rest| rest.starts_with('/'))
+        {
             internal(root, &directory, row, &from, &to, &inventory_bitmap, observed)?
         } else {
             vec![]
@@ -48,15 +51,14 @@ pub(super) fn apply(
     Ok(changes)
 }
 fn normalize_root_dir(row: &Value) -> Option<String> {
-    row["rootDir"]
-        .as_str()
-        .map(|dir| {
-            dir.trim()
-                .replace('\\', "/")
-                .trim_matches('/')
-                .to_owned()
-        })
-        .filter(|dir| !dir.is_empty())
+    let trimmed = row["rootDir"].as_str()?.trim();
+    let normalized = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
+    let clean = normalized.trim_matches('/');
+    (!clean.is_empty()).then(|| clean.to_owned())
 }
 fn internal(
     root: &Path,

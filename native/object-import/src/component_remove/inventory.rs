@@ -5,7 +5,7 @@ use std::{io, path::Path};
 
 /// Whether the canonical pre-ignore component scan finds any files.
 pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Result<bool> {
-    let normalized = directory.trim().replace('\\', "/");
+    let normalized = normalize_dir(directory);
     let directory = normalized.trim_matches('/');
     let directory = if directory.is_empty() { "." } else { directory };
     if directory != "." && !super::safe_relative(Path::new(directory)) {
@@ -15,23 +15,24 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
         .as_object()
         .into_iter()
         .flat_map(|rows| rows.values())
-        .filter(|row| row["isAvailableOnCurrentLane"] != false)
-        .filter(|row| !is_removed_row(row))
+        .filter(|row| row["isAvailableOnCurrentLane"] != false && !is_removed_row(row))
         .filter_map(|row| {
-            row["rootDir"]
-                .as_str()
-                .map(|dir| {
-                    dir.trim()
-                        .replace('\\', "/")
-                        .trim_matches('/')
-                        .to_owned()
-                })
+            let norm = normalize_dir(row["rootDir"].as_str()?);
+            let other = norm.trim_matches('/');
+            (!other.is_empty() && is_nested_root_dir(directory, other)).then(|| root.join(other))
         })
-        .filter(|other| !other.is_empty() && is_nested_root_dir(directory, other))
-        .map(|other| root.join(other))
         .chain(std::iter::once(crate::scope_path(root)))
         .collect::<Vec<_>>();
     Ok(!inventory::tracking_scan(&root.join(directory), &excluded, directory == ".")?.is_empty())
+}
+
+fn normalize_dir(dir: &str) -> std::borrow::Cow<'_, str> {
+    let trimmed = dir.trim();
+    if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    }
 }
 
 fn is_removed_row(row: &Value) -> bool {

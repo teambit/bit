@@ -68,13 +68,16 @@ fn validate_existing(
     Ok(())
 }
 pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
-    Ok(path
+    let stripped = path
         .strip_prefix(root)
         .map_err(|_| unsupported("move outside workspace"))?
-        .to_string_lossy()
-        .replace('\\', "/")
-        .trim_matches('/')
-        .to_owned())
+        .to_string_lossy();
+    let normalized = if stripped.contains('\\') {
+        std::borrow::Cow::Owned(stripped.replace('\\', "/"))
+    } else {
+        stripped
+    };
+    Ok(normalized.trim_matches('/').to_owned())
 }
 pub(super) fn observe_tree(root: &Path, path: &Path, observed: &mut Observed) -> io::Result<()> {
     observed.ancestors(root, path)?;

@@ -18,7 +18,8 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
     let name = non_empty_field(row, "name")
         .unwrap_or_else(|| {
             key_id
-                .strip_prefix(&format!("{scope}/"))
+                .strip_prefix(scope)
+                .and_then(|rest| rest.strip_prefix('/'))
                 .unwrap_or(key_id)
                 .trim()
         });

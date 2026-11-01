@@ -94,23 +94,24 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
         "files",
         "wrapDir",
     ];
-    let shape = row
-        .as_object()
-        .is_some_and(|fields| {
-            fields
-                .keys()
-                .all(|field| allowed.contains(&field.as_str()))
-        });
+    let Some(fields) = row.as_object() else {
+        return false;
+    };
+    if !fields
+        .keys()
+        .all(|field| allowed.contains(&field.as_str()))
+    {
+        return false;
+    }
     let lane_only = row["onLanesOnly"] == true && row["isAvailableOnCurrentLane"] == true;
     let ordinary =
-        row.get("onLanesOnly").is_none() && row.get("isAvailableOnCurrentLane").is_none();
+        !fields.contains_key("onLanesOnly") && !fields.contains_key("isAvailableOnCurrentLane");
     let lane_fields = match kind {
         RowKind::LaneSnap => lane_only,
         RowKind::ExportedLane | RowKind::Staged | RowKind::Imported => lane_only || ordinary,
         RowKind::New => ordinary,
     };
-    shape
-        && lane_fields
+    lane_fields
         && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         && valid_optional_row_fields(row)
 }

@@ -22,30 +22,35 @@ pub fn probe_remote(
         .enable_all()
         .build()?
         .block_on(async {
+            let options = FetchOptions::without_dependencies(None);
             let mut result = BTreeMap::new();
             for id in ids {
                 let trimmed = id.trim();
-                let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
-                let scope = bare
-                    .split_once('/')
-                    .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
-                    .map(|(scope, _)| scope.trim())
-                    .ok_or_else(|| super::batch::invalid("recovery remote identity"))?;
+                let scope = extract_scope(trimmed)?;
+                let owned_id = trimmed.to_owned();
                 let deleted = match remotes.resolve(scope, network).await? {
-                    Remote::File(path) => objects::file(&path, trimmed)?,
+                    Remote::File(path) => objects::file(&path, &owned_id)?,
                     Remote::Http(url) => {
                         let items = network.fetch_bounded(
                             &url,
-                            &[trimmed.to_owned()],
-                            &FetchOptions::without_dependencies(None),
+                            std::slice::from_ref(&owned_id),
+                            &options,
                             128 * 1024 * 1024,
                         )
                         .await?;
-                        objects::http(&items, trimmed)?
+                        objects::http(&items, &owned_id)?
                     }
                 };
-                result.insert(trimmed.to_owned(), deleted);
+                result.insert(owned_id, deleted);
             }
             Ok(result)
         })
+}
+
+fn extract_scope(trimmed: &str) -> io::Result<&str> {
+    let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
+    bare.split_once('/')
+        .filter(|(scope, name)| !scope.trim().is_empty() && !name.trim().is_empty())
+        .map(|(scope, _)| scope.trim())
+        .ok_or_else(|| super::batch::invalid("recovery remote identity"))
 }

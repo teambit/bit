@@ -86,8 +86,9 @@ fn entry(
         return Ok((row, None));
     }
     for kind in [RowKind::Staged, RowKind::Imported, RowKind::LaneSnap] {
+        let Ok(row) = select(root, bitmap, id, keep, kind) else { continue };
         let Ok(model) = model(root, id, keep, kind) else { continue };
-        return Ok((select(root, bitmap, id, keep, kind)?, Some(model)));
+        return Ok((row, Some(model)));
     }
     Err(invalid("component scope state requires canonical removal"))
 }

@@ -97,8 +97,6 @@ fn batch_component(
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .ok_or_else(|| unsupported("scope rename loaded directory"))?;
-    let mut component = row.clone();
-    component["rootDir"] = Value::String(directory.into());
     let files = row["files"]
         .as_array()
         .filter(|rows| rows.len() <= 16_384)
@@ -113,7 +111,7 @@ fn batch_component(
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| unsupported("scope rename loaded path"))?;
-        let (mut change, _) = dependent_file(plan, &component, directory, relative, initial)?;
+        let (mut change, _) = dependent_file(plan, row, directory, relative, initial)?;
         let replaced = matchers.apply(&change.bytes)?;
         changed |= replaced != change.bytes;
         change.bytes = replaced;

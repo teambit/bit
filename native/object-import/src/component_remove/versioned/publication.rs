@@ -83,6 +83,7 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
     let rows =
         value["components"].as_array_mut().ok_or_else(|| invalid("lane component removal"))?;
     rows.retain(|row| {
+        let (entry_scope, entry_name) = crate::component_remove::lane::lane_id_parts(&row["id"]);
         !plans
             .iter()
             .any(|plan| {
@@ -90,7 +91,7 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
                 let (scope, name) = identity
                     .split_once('/')
                     .map_or(("", identity), |(scope, name)| (scope.trim(), name.trim()));
-                crate::component_remove::lane::matches_component_entry(row, scope, name)
+                entry_name == name && (entry_scope == scope || entry_scope.is_empty())
             })
     });
     fs::write(&first.path, outbound::encode_object(&first.hash, "Lane", &value)?)

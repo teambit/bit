@@ -40,14 +40,18 @@ fn bare_id(id: &str) -> &str {
 }
 
 fn used_removed_aspect<'a>(identities: &'a [String], extensions: &[Value]) -> Option<&'a str> {
+    if identities.is_empty() || extensions.is_empty() {
+        return None;
+    }
+    let ext_ids: Vec<String> = extensions
+        .iter()
+        .filter_map(extension_id)
+        .collect();
     identities
         .iter()
         .find(|removed| {
             let target = bare_id(removed);
-            extensions
-                .iter()
-                .filter_map(extension_id)
-                .any(|id| target == id)
+            ext_ids.iter().any(|id| id == target)
         })
         .map(|removed| removed.trim())
 }
