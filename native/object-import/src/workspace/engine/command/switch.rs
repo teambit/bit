@@ -151,6 +151,7 @@ impl LaneSelection {
             "additions":additions,"addedTargets":added_targets,"targets":selected});
         Ok(context)
     }
+    #[inline]
     fn allows(&self, identity: &str) -> bool {
         let identity = identity.trim();
         self.chosen
@@ -280,6 +281,7 @@ fn validate_membership(
         .map(|entry| (entry.identity.trim().to_owned(), entry.head.trim().to_owned()))
         .collect())
 }
+#[inline]
 fn entries(
     record: Option<&command_import::lane::Record>,
 ) -> io::Result<Vec<command_import::lane::Entry>> {

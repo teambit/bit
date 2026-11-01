@@ -40,6 +40,7 @@ fn policy(policy: &Policy, plan: &mut Plan) {
         }
     }
 }
+#[inline]
 fn apply_package_policy(policy: &Policy, plan: &mut Plan, field: usize, name: &str) {
     let trimmed = name.trim();
     if let Some(value) = version(&policy.peer_dependencies, trimmed) {
@@ -64,6 +65,7 @@ fn components(request: &Request, plan: &mut Plan) {
     }
 }
 
+#[inline]
 fn apply_component_policy(request: &Request, plan: &mut Plan, index: usize) -> bool {
     let name = effective_package_name(request.entries[index].package_name.as_deref());
     if let Some(value) = version(&request.policies.workspace_policy.peer_dependencies, name) {
@@ -79,11 +81,13 @@ fn apply_component_policy(request: &Request, plan: &mut Plan, index: usize) -> b
     true
 }
 
+#[inline]
 fn effective_package_name(name: Option<&str>) -> &str {
     name.map(str::trim)
         .filter(|value| !value.is_empty())
         .unwrap_or("undefined")
 }
+#[inline]
 fn legacy(plan: &mut Plan) {
     let name = "@teambit/legacy";
     let regular = version(&plan.packages[0], name);

@@ -21,6 +21,7 @@ pub(in crate::workspace::engine::command) fn import_count(
         .ok_or_else(|| invalid("switch addition count"))
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
     json!({"requested":count,"components":count,"objects":0,"performed":count > 0})
 }
@@ -39,6 +40,7 @@ pub(in crate::workspace::engine::command) fn additions(
     Ok(())
 }
 
+#[inline]
 fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> {
     let version = target["version"]
         .as_str()

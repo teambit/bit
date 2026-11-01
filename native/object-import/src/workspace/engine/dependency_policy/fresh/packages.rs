@@ -125,6 +125,7 @@ impl Reader {
         Ok(None)
     }
 }
+#[inline]
 fn source_extension(resolved: &str) -> bool {
     Path::new(resolved)
         .extension()
@@ -180,6 +181,7 @@ fn concrete(package: &Value, component: Option<&Value>) -> io::Result<Option<Str
     }
     Ok(version)
 }
+#[inline]
 fn dependent(package: &Value) -> io::Result<Option<String>> {
     // Canonical resolve-pkg-data reads this literal key, not the dependency's dynamic name.
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
@@ -191,6 +193,7 @@ fn dependent(package: &Value) -> io::Result<Option<String>> {
     }
     Ok(None)
 }
+#[inline]
 fn optional(value: Option<&Value>) -> io::Result<Option<String>> {
     match value {
         None | Some(Value::Null) => Ok(None),

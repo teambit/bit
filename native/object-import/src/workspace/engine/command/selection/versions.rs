@@ -104,6 +104,7 @@ pub(in crate::workspace::engine::command) fn reference(
     Ok(crate::validate::hexadecimal(&crate::merge_history::hash(version)?))
 }
 
+#[inline]
 fn head(model: &Value) -> io::Result<&str> {
     model["head"]
         .as_str()
@@ -252,6 +253,7 @@ fn ancestor(
     Ok(label(model, &hash))
 }
 
+#[inline]
 fn parents(version: &Value) -> io::Result<&Vec<Value>> {
     crate::read_version::parents(version)?;
     version["parents"].as_array().ok_or_else(|| invalid("command checkout parents"))
@@ -329,6 +331,7 @@ fn auxiliary(version: &Value, row: &mut Value, pending: &mut Vec<String>) {
     }
 }
 
+#[inline]
 fn short(version: &str) -> bool {
     (3..40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

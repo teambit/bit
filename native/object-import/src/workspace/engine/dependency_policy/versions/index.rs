@@ -40,6 +40,7 @@ impl<'a> Index<'a> {
         }
     }
 }
+#[inline]
 fn first(ids: &[String]) -> HashMap<&str, &str> {
     let mut index = HashMap::with_capacity(ids.len());
     for id in ids {
@@ -51,6 +52,7 @@ fn first(ids: &[String]) -> HashMap<&str, &str> {
     }
     index
 }
+#[inline]
 fn pinned_version(ver: &str) -> bool {
     !ver.is_empty() && !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
 }

@@ -18,12 +18,14 @@ use crate::workspace::engine::{
 use serde_json::{Value, json};
 use std::io;
 
+#[inline]
 pub(in crate::workspace::engine) fn detect(
     request: &Detect,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     detect_view(request, pool, None)
 }
+#[inline]
 pub(in crate::workspace::engine) fn detect_overlay(
     request: &Detect,
     pool: &rayon::ThreadPool,
@@ -65,12 +67,14 @@ fn detect_view(
     captured["readSet"] = serde_json::to_value(controls).map_err(io::Error::other)?;
     project::project(request, &captured, overlay).map(|value| (request.files.len(), value))
 }
+#[inline]
 pub(in crate::workspace::engine) fn apply(
     request: &Complete,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     apply_view(request, pool, None)
 }
+#[inline]
 pub(in crate::workspace::engine) fn apply_overlay(
     request: &Complete,
     pool: &rayon::ThreadPool,
@@ -146,6 +150,7 @@ fn validate_dev_files(files: &[String]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn controls(request: &Detect) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::with_capacity(5);
     for file in [

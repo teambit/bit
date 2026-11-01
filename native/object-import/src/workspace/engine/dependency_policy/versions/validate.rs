@@ -39,6 +39,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     }
     identities(request, &sources)
 }
+#[inline]
 fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> {
     if sources
         .iter()
@@ -62,6 +63,7 @@ fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> 
     }
     Ok(())
 }
+#[inline]
 fn identity(value: &str) -> bool {
     let trimmed = value.trim();
     let invalid_affix = trimmed.starts_with('@') || trimmed.ends_with('@');

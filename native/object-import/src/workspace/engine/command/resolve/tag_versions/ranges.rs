@@ -29,6 +29,7 @@ pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn update_dependencies(
     version: &mut Value,
     prefix: char,
@@ -55,6 +56,7 @@ fn update_dependencies(
     Ok(())
 }
 
+#[inline]
 fn prefix(version: &Value) -> io::Result<Option<char>> {
     let Some(rows) = version["extensions"].as_array() else { return Ok(None) };
     let value = rows

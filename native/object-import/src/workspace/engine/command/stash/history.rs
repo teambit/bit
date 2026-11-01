@@ -80,6 +80,7 @@ fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value
         .collect())
 }
 
+#[inline]
 fn contains(ids: &[String], target: &Value) -> bool {
     target["identity"]
         .as_str()
@@ -113,6 +114,7 @@ fn accept(retained: &mut Retained, plans: &[Value]) -> io::Result<()> {
     retained.repository.accept_published(&files)
 }
 
+#[inline]
 fn verify_published(
     expected: &[u8],
     packed: &[u8],

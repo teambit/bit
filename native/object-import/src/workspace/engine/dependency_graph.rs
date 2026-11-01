@@ -88,9 +88,11 @@ struct Row {
     error: Option<Value>,
 }
 
+#[inline]
 pub(super) fn apply(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     capture(request, pool, false)
 }
+#[inline]
 pub(super) fn capture(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -98,6 +100,7 @@ pub(super) fn capture(
 ) -> io::Result<(usize, Value)> {
     capture_view(request, pool, proof, None)
 }
+#[inline]
 pub(super) fn capture_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -177,6 +180,7 @@ impl Capture {
         }
         Ok(batch)
     }
+    #[inline]
     fn reserve(&mut self, file: &Path, budget: &Budget) -> io::Result<bool> {
         let Some(metadata) = budget.metadata(file)? else { return Ok(false) };
         self.bytes = self.bytes
@@ -188,6 +192,7 @@ impl Capture {
         Ok(true)
     }
 }
+#[inline]
 fn retain(scanned: Vec<Row>, rows: &mut HashMap<String, Row>, pending: &mut Vec<PathBuf>) {
     for row in scanned {
         let file = row.path_map.file.trim();

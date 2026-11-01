@@ -14,6 +14,7 @@ pub(super) struct Prepared {
     committed: bool,
 }
 impl Prepared {
+    #[inline]
     pub(super) fn commit(&mut self, root: &Path) -> io::Result<()> {
         if self.committed {
             return Err(invalid("stash already persisted"));
@@ -27,6 +28,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn metadata(
     retained: &Retained,
     message: Option<&str>,
@@ -107,7 +109,7 @@ pub(super) fn prepare(
     let (mut objects, rows, versions) = batch(retained, input, snapshots)?;
     let metadata = metadata(retained, input.message.as_deref(), &rows)?;
     let directory = scratch::Directory::create()?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(objects.len());
     objects.retain(|object| {
         object["type"] != "Source"
             || object["hash"]

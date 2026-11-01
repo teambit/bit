@@ -26,6 +26,7 @@ pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
     Ok(Value::Object(id))
 }
 
+#[inline]
 fn parse_parts(raw: &Value) -> io::Result<(&str, &str, Option<&str>)> {
     if let Some(text) = raw.as_str().map(str::trim) {
         let (bare, ver) = text
@@ -52,6 +53,7 @@ fn parse_parts(raw: &Value) -> io::Result<(&str, &str, Option<&str>)> {
         .ok_or_else(|| invalid("fresh component scope"))?;
     Ok((scope, name, raw["version"].as_str().map(str::trim)))
 }
+#[inline]
 pub(super) fn set_version(id: &mut Map<String, Value>, version: String) {
     // Projection already applied the actual legacy scoped/default-scope constructor.
     // A name-first ID has its default scope appended after legacy serialization.

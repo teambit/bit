@@ -39,6 +39,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {
         let file_path = Path::new(file.trim());
@@ -63,6 +64,7 @@ fn custom(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
     let file = file.trim();
     let file_path = Path::new(file);

@@ -107,7 +107,7 @@ fn validate(retained: &Retained, input: &Plan) -> io::Result<()> {
 
 fn validate_selection(targets: &[Value], ids: Option<&[String]>) -> io::Result<()> {
     if let Some(ids) = ids {
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::with_capacity(ids.len());
         for id in ids {
             let trimmed = id.trim();
             if trimmed.is_empty()
@@ -200,6 +200,7 @@ fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Val
         .ok_or_else(|| invalid("stash bitmap entry"))
 }
 
+#[inline]
 fn norm_root_dir(raw: &str) -> &str {
     let raw = raw.trim();
     raw.strip_prefix("./")
@@ -246,6 +247,7 @@ fn bitmap_entry(entry: &Value, scope: &str) -> Value {
     }
     Value::Object(output)
 }
+#[inline]
 fn default_scope(entry: &Value, scope: &str) -> Option<Value> {
     entry
         .get("defaultScope")
@@ -271,6 +273,7 @@ fn bitmap_value(entry: &Value, field: &str) -> Value {
     }
     value
 }
+#[inline]
 fn clean_config(value: &mut Value) {
     for config in value
         .as_object_mut()

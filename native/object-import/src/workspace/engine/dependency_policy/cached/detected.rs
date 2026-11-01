@@ -37,6 +37,7 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
         "ignored":ignored(finish)?,"missing":issues::missing(&detected["issues"])?}))
 }
 
+#[inline]
 fn entry(row: &Value) -> io::Result<Value> {
     let range = row
         .get("versionRange")
@@ -51,6 +52,7 @@ fn entry(row: &Value) -> io::Result<Value> {
     Ok(json!({"identity":identity(&row["id"])?,"packageName":pkg_name,"versionRange":range}))
 }
 
+#[inline]
 fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
     let fields =
         finish["manual"].as_array().ok_or_else(|| invalid("status manual dependency policy"))?;
@@ -113,6 +115,7 @@ fn identity(value: &Value) -> io::Result<String> {
     Ok(identity)
 }
 
+#[inline]
 fn concrete_version(version: &str) -> bool {
     !version.is_empty()
         && !version.eq_ignore_ascii_case("latest")

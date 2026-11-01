@@ -47,6 +47,7 @@ impl Projection<'_> {
         Ok(issues)
     }
 }
+#[inline]
 fn serialized_issue(kind: &str, data: &Map<String, Value>) -> io::Result<Value> {
     if data.len() > 4096 {
         return Err(super::invalid("fresh detection issue data"));

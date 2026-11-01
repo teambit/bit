@@ -29,6 +29,7 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
     apply_versions(&mut detected, request)?;
     Ok(detected)
 }
+#[inline]
 fn validate_issues(value: &Value) -> io::Result<()> {
     let issues = value.as_array().ok_or_else(|| invalid("fresh detection issues"))?;
     if issues.len() > 8 {
@@ -73,6 +74,7 @@ fn validate_issue(issue: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn validate_missing_packages(data: &str) -> io::Result<()> {
     let rows: Vec<Value> = serde_json::from_str(data).map_err(io::Error::other)?;
     if rows.len() > 4096 || rows.iter().any(invalid_missing_package_row) {
@@ -80,6 +82,7 @@ fn validate_missing_packages(data: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn invalid_missing_package_row(row: &Value) -> bool {
     !row["filePath"].is_string()
         || !row["isDevFile"].is_boolean()
@@ -159,6 +162,7 @@ fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> 
     }
     Ok(snap(version).then(|| version.to_ascii_lowercase()))
 }
+#[inline]
 fn snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

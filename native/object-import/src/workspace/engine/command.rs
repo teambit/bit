@@ -79,6 +79,7 @@ struct PreparedPlan {
     checkout_policy: Option<checkout_policy::Prepared>,
     switch_completion: Option<switch_completion::Retained>,
 }
+#[inline]
 pub(super) fn prepare(
     request: Prepare,
     state: &mut State,
@@ -106,6 +107,7 @@ pub(super) struct Apply {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+#[inline]
 fn valid_token(token: &str) -> bool {
     let trimmed = token.trim();
     (1..=256).contains(&trimmed.len()) && !trimmed.chars().any(char::is_control)

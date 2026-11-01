@@ -69,6 +69,7 @@ impl Output {
             env_own,
         }
     }
+    #[inline]
     pub(super) fn added(&mut self, field: usize, value: String) {
         let trimmed = value.trim();
         if trimmed.is_empty()
@@ -82,6 +83,7 @@ impl Output {
         self.added[field].push(value);
     }
 }
+#[inline]
 pub(super) fn unversioned(value: &str) -> &str {
     let trimmed = value.trim();
     match trimmed.rfind('@') {

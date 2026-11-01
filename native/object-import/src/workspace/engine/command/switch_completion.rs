@@ -39,6 +39,7 @@ pub(super) fn prepare(
     Ok(Some(Retained { root: record.request.root.clone(), bitmap, tracking, applied: false }))
 }
 impl Retained {
+    #[inline]
     pub(super) fn pending(&self) -> io::Result<()> {
         if self.applied {
             return Err(invalid("switch checkout already published"));
@@ -48,6 +49,7 @@ impl Retained {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn published(&mut self) -> io::Result<()> {
         self.bitmap.validate()?;
         self.applied = true;
@@ -71,6 +73,7 @@ impl Retained {
         Ok(json!({"completed":true,"warning":warning,"ownedWorkspaceWrites":writes}))
     }
 }
+#[inline]
 fn completion(record: &Record) -> io::Result<&Retained> {
     record.planned
         .as_ref()
@@ -101,6 +104,7 @@ pub(in crate::workspace::engine) fn complete(
     output["token"] = json!(record.token);
     Ok((1, output))
 }
+#[inline]
 fn cleanup(root: &Path) -> io::Result<()> {
     let path = root.join(".bitTmp");
     // Published pathExists follows symlinks and leaves dangling links untouched.

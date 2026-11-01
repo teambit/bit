@@ -7,6 +7,7 @@ use std::{
     io,
 };
 
+#[inline]
 pub(super) fn apply(context: &mut Value, lane: &[command_import::lane::Entry]) -> io::Result<()> {
     let order = status_load_order(context, lane)?;
     order_targets(context, &order)?;
@@ -73,6 +74,7 @@ pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result
     Ok(())
 }
 
+#[inline]
 fn target_identity(target: &Value) -> Option<&str> {
     target["identity"]
         .as_str()

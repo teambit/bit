@@ -34,6 +34,7 @@ pub(super) fn version(
     Ok(version)
 }
 
+#[inline]
 fn clean_dependencies(version: &mut Value) {
     for field in ["dependencies", "devDependencies", "peerDependencies"] {
         for dependency in version[field]
@@ -68,6 +69,7 @@ fn clean_extensions(version: &mut Value) {
     }
 }
 
+#[inline]
 fn clean_resolver_dependency(dependency: &mut Value) {
     remove_empty_version(dependency);
     if let Some(id) = dependency["id"]
@@ -82,6 +84,7 @@ fn clean_resolver_dependency(dependency: &mut Value) {
     }
 }
 
+#[inline]
 fn remove_empty_version(value: &mut Value) {
     if let Some(stripped) = value
         .as_str()

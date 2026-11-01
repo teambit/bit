@@ -50,6 +50,7 @@ pub(super) fn select(
     }
     Ok(default_version(index, identity, base))
 }
+#[inline]
 fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) -> Selected {
     let ver = version(identity);
     index.model
@@ -97,6 +98,7 @@ fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<C
     }
     Ok(None)
 }
+#[inline]
 fn concrete_version(ver: &str) -> bool {
     !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
 }
@@ -121,6 +123,7 @@ fn valid(request: &Request, spec: &str) -> io::Result<Choice> {
     }
     Ok(snap(spec).then(|| (spec.to_ascii_lowercase(), None)))
 }
+#[inline]
 fn grammar<'a>(request: &'a Request, spec: &str) -> io::Result<&'a super::wire::Grammar> {
     request.grammar
         .get(spec)

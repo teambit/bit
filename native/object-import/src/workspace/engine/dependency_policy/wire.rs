@@ -69,6 +69,7 @@ impl Plan {
     }
 }
 impl Request {
+    #[inline]
     pub(super) fn ignore(&self, field: usize, name: &str, removed: &mut [Vec<String>; 3]) -> bool {
         let trimmed = name.trim();
         if trimmed.is_empty() {
@@ -147,6 +148,7 @@ impl Request {
         Ok(())
     }
 }
+#[inline]
 pub(super) fn name(value: &str) -> bool {
     let value = value.trim();
     !value.is_empty()
@@ -168,6 +170,7 @@ pub(super) fn name(value: &str) -> bool {
                 | "__lookupSetter__",
         )
 }
+#[inline]
 pub(in crate::workspace::engine) fn version(map: &Packages, name: &str) -> Option<String> {
     let trimmed = name.trim();
     map.get(name)

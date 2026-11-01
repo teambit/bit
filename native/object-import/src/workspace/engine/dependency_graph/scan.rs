@@ -89,6 +89,7 @@ fn detected(
     Ok((ts, dependencies))
 }
 
+#[inline]
 fn read(file: &Path, budget: &AtomicUsize, resolver: &Budget) -> io::Result<Vec<u8>> {
     // Account actual reads rather than trusting metadata across concurrent edits.
     let bytes = resolver
@@ -122,6 +123,7 @@ fn extract(filename: &str, source: String, output_bytes: &AtomicUsize) -> io::Re
         .cloned()
         .collect())
 }
+#[inline]
 fn is_stylesheet(filename: &str) -> bool {
     Path::new(filename)
         .extension()

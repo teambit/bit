@@ -28,6 +28,7 @@ pub(super) fn execute(
     assemble_ordered(files.len(), batches)
 }
 
+#[inline]
 fn worker_batch(
     files: &[Prepared],
     directory: Option<&Path>,
@@ -52,6 +53,7 @@ fn worker_batch(
     }
 }
 
+#[inline]
 fn assemble_ordered(
     count: usize,
     batches: Vec<io::Result<Vec<(usize, FileDiff)>>>,

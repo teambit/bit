@@ -208,6 +208,7 @@ pub(in crate::workspace::engine) fn persist(
 }
 
 impl Retained {
+    #[inline]
     fn check(&self, token: &str) -> io::Result<()> {
         let token = token.trim();
         if token.is_empty() || token != self.token {

@@ -35,6 +35,7 @@ pub(in super::super) fn options(request: &Prepare) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn validate_alias(alias: &str) -> io::Result<()> {
     if alias.len() > 800
         || !alias
@@ -49,6 +50,7 @@ fn validate_alias(alias: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 pub(super) fn canonical(message: String) -> io::Error {
     crate::workspace::engine::response::canonical(message)
 }
@@ -151,6 +153,7 @@ pub(super) fn staged_main(root: &Path, context: &Value) -> io::Result<bool> {
     Ok(models.iter().any(|model| model_staged(model, &staged)))
 }
 
+#[inline]
 fn model_staged(model: &Value, staged: &std::collections::HashSet<&str>) -> bool {
     let versions = ["versions", "orphanedVersions"]
         .into_iter()

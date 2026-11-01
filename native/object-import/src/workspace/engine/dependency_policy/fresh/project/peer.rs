@@ -34,6 +34,7 @@ pub(super) fn range(package: &Package) -> Option<Value> {
     Some(Value::String(formatted))
 }
 
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

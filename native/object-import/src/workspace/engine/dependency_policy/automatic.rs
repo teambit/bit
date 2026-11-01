@@ -17,6 +17,7 @@ pub(super) fn apply(request: &Request, plan: &mut Plan) {
         }
     }
 }
+#[inline]
 fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<&str>) -> bool {
     let name = name.trim();
     plan.components
@@ -55,6 +56,7 @@ fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &
     }
     assign(plan, field, name, value, &existing);
 }
+#[inline]
 fn assign(plan: &mut Plan, field: usize, name: &str, value: &Value, existing: &[Option<usize>; 3]) {
     let range = value
         .as_str()
@@ -74,6 +76,7 @@ fn assign(plan: &mut Plan, field: usize, name: &str, value: &Value, existing: &[
         plan.ranges[index] = Some(range);
     }
 }
+#[inline]
 fn peers(request: &Request, plan: &mut Plan, name: &str, existing: &[Option<usize>; 3]) -> bool {
     plan.packages[0].shift_remove(name);
     plan.packages[1].shift_remove(name);

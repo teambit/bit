@@ -91,10 +91,12 @@ fn validate_state(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn valid_identity(identity: &str) -> bool {
     !identity.trim().is_empty() && !identity.chars().any(char::is_control)
 }
 
+#[inline]
 fn valid_map_entry(key: &str, val: &Value) -> bool {
     super::wire::name(key)
         && val

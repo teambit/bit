@@ -43,6 +43,7 @@ pub(super) fn chosen(
     Ok(Some(allowed))
 }
 
+#[inline]
 fn has_tracked(rows: &serde_json::Map<String, Value>) -> bool {
     rows.keys()
         .map(String::as_str)
@@ -86,6 +87,7 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
     Ok(selected)
 }
 
+#[inline]
 fn update_selection(selected: &mut Vec<String>, entries: &[Entry], pattern: &str, exclude: bool) {
     for entry in entries
         .iter()
@@ -100,6 +102,7 @@ fn update_selection(selected: &mut Vec<String>, entries: &[Entry], pattern: &str
     }
 }
 
+#[inline]
 pub(super) fn ordered(mut entries: Vec<Entry>, selected: Option<&[String]>) -> Vec<Entry> {
     if let Some(selected) = selected {
         entries.sort_by_key(|entry| {

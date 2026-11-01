@@ -22,6 +22,7 @@ pub(super) fn validate(kind: &str, data: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn untracked(value: &Value) -> io::Result<()> {
     if !value["nested"].is_boolean() {
         return Err(invalid("untracked issue nested flag"));
@@ -38,6 +39,7 @@ fn untracked(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn authored(value: &Value) -> io::Result<()> {
     let records = value.as_array().ok_or_else(|| invalid("relative authored issue records"))?;
     if records.len() > 4096 {
@@ -59,6 +61,7 @@ fn authored(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> bool {
     value
         .as_str()

@@ -46,6 +46,7 @@ pub(super) fn plan(
     if params["soft"] == true { Ok(()) } else { ranges::update(materials) }
 }
 
+#[inline]
 fn components(
     materials: &[Material],
     params: &Value,

@@ -47,6 +47,7 @@ pub(in super::super) fn append_skipped(
     Ok(())
 }
 
+#[inline]
 fn push_skipped(failed: &mut Vec<Value>, identity: &str, head: &str) {
     let id = format!("{identity}@{head}");
     if !failed

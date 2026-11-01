@@ -165,6 +165,7 @@ impl Replay {
         self.path_map.push(value);
         Ok(())
     }
+    #[inline]
     fn step(&mut self) -> io::Result<()> {
         self.receipts.steps += 1;
         if self.receipts.steps > 65536 {
@@ -184,6 +185,7 @@ impl Replay {
     }
 }
 impl Diagnostics {
+    #[inline]
     fn cached(&mut self, file: &str, cached: &Value) {
         if let Some(value) = cached.get("error") {
             self.errors.insert(file.to_owned(), value.clone());
@@ -197,6 +199,7 @@ impl Diagnostics {
     }
 }
 
+#[inline]
 fn push_unique(target: &mut Vec<String>, resolved: &str) {
     if !target
         .iter()

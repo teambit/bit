@@ -68,6 +68,7 @@ pub(super) fn prepare(
     objects.extend(sources);
     Ok(version)
 }
+#[inline]
 fn validated_parents(previous: Option<&str>) -> io::Result<Vec<&str>> {
     let mut parents = Vec::new();
     for parent in previous
@@ -98,6 +99,7 @@ fn capture_files(
     Ok(sources)
 }
 
+#[inline]
 fn base(component: &Component) -> Value {
     let mut fields = Map::new();
     for key in FIELDS {
@@ -114,6 +116,7 @@ fn base(component: &Component) -> Value {
     Value::Object(fields)
 }
 
+#[inline]
 fn validate_log(log: &Value) -> io::Result<()> {
     if !log.is_object()
         || log["date"]

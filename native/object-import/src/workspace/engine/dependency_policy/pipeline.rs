@@ -25,12 +25,14 @@ struct Resolution {
 
 /// The cold command owns these inputs: no public callbacks or dependency aliases
 /// exist between policy phases, package reads and version selection.
+#[inline]
 pub(in crate::workspace::engine) fn apply(
     request: &Request,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     apply_view(request, pool, None)
 }
+#[inline]
 pub(in crate::workspace::engine) fn apply_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -141,6 +143,7 @@ fn manual_package_names(finish: &Value) -> io::Result<Vec<&str>> {
     Ok(names)
 }
 
+#[inline]
 fn version_request(request: &Request, output: &Value) -> io::Result<versions::Request> {
     let resolution = &request.resolution;
     let policy = &request.initial.policies;

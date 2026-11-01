@@ -25,6 +25,7 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn remove_existing(request: &Request, output: &mut Output) {
     for name in request.environment.policy.keys() {
         let trimmed = name.trim();
@@ -63,6 +64,7 @@ fn resolve(request: &Request, name: &str) -> io::Result<String> {
     Ok(version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()))
 }
 
+#[inline]
 fn extract_model_component_version(identity: &str) -> Option<&str> {
     let trimmed = identity.trim();
     let (base, ver) = trimmed.rsplit_once('@')?;

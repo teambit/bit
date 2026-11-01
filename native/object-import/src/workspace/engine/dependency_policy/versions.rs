@@ -30,6 +30,7 @@ pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usiz
         .collect::<io::Result<Vec<_>>>()?;
     Ok((1, json!({"entries":entries,"extensions":extensions})))
 }
+#[inline]
 fn update(
     index: &index::Index<'_>,
     entry: &mut super::wire::Entry,
@@ -55,6 +56,7 @@ fn update(
     Ok(())
 }
 
+#[inline]
 fn updated_range(
     request: &Request,
     previous: Option<String>,

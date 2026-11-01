@@ -92,9 +92,11 @@ fn add_manual(issues: &mut Vec<Value>, missing: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn serialized(name: &str, data: &Value) -> io::Result<Value> {
     Ok(json!({"type":name,"data":serde_json::to_string(data).map_err(io::Error::other)?}))
 }
+#[inline]
 fn rows(value: &Value) -> io::Result<&[Value]> {
     value
         .as_array()

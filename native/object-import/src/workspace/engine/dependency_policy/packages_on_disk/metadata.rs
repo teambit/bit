@@ -64,12 +64,14 @@ fn identity(value: &Value) -> io::Result<(String, Option<&str>)> {
     };
     Ok((formatted, version))
 }
+#[inline]
 fn concrete_version(version: &str) -> bool {
     let version = version.trim();
     !version.is_empty()
         && !version.eq_ignore_ascii_case("latest")
         && !version.eq_ignore_ascii_case("head")
 }
+#[inline]
 fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
     match value {
         None | Some(Value::Null) => Ok(None),
@@ -77,6 +79,7 @@ fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
         _ => Err(invalid("dependency package version")),
     }
 }
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

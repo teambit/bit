@@ -61,6 +61,7 @@ impl State {
         Ok(())
     }
 
+    #[inline]
     pub(super) fn authored(
         &mut self,
         origin: &str,
@@ -344,6 +345,7 @@ fn merge_paths(dependency: &mut Value, path: Value) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn merge_specifiers(existing: &mut Value, path: &Value) -> io::Result<()> {
     let Some(incoming) = path["importSpecifiers"].as_array() else { return Ok(()) };
     let current = existing

@@ -84,6 +84,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     }))
 }
 
+#[inline]
 fn parse_ancestor(lower: &str) -> io::Result<Option<usize>> {
     let ancestor = lower
         .strip_prefix("head~")
@@ -96,6 +97,7 @@ fn parse_ancestor(lower: &str) -> io::Result<Option<usize>> {
     Ok(ancestor)
 }
 
+#[inline]
 fn version_arg(directive: &Value) -> io::Result<&str> {
     directive["version"]
         .as_str()

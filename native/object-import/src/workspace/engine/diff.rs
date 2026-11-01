@@ -46,11 +46,13 @@ pub(crate) struct FileDiff {
     same: bool,
 }
 impl FileDiff {
+    #[inline]
     pub(crate) fn without_contents(self) -> serde_json::Value {
         serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,
             "same":self.same,"fromEmpty":self.from_content.is_empty(),"toEmpty":self.to_content.is_empty()})
     }
 
+    #[inline]
     pub(crate) fn raw(self) -> serde_json::Value {
         serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,"same":self.same})
     }
@@ -117,6 +119,7 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
     }
     execute(&prepared, git, color)
 }
+#[inline]
 fn validate_git(git: &str, file_count: usize) -> io::Result<&str> {
     count(file_count)?;
     let git = git.trim();
@@ -125,6 +128,7 @@ fn validate_git(git: &str, file_count: usize) -> io::Result<&str> {
     }
     Ok(git)
 }
+#[inline]
 fn validate_relative_path(relative_path: &str) -> io::Result<()> {
     if relative_path.trim().is_empty()
         || relative_path.len() > 32768
@@ -163,9 +167,11 @@ fn execute(prepared: &[Prepared], git: &str, color: bool) -> io::Result<Vec<File
     )
 }
 
+#[inline]
 fn equivalent(left: Option<&[u8]>, right: Option<&[u8]>) -> bool {
     left == right || left.map(linux_hash) == right.map(linux_hash)
 }
+#[inline]
 fn linux_hash(bytes: &[u8]) -> String {
     if bytes.contains(&b'\r') {
         hash(&crate::checkout::eol::normalize(bytes.to_vec(), false))

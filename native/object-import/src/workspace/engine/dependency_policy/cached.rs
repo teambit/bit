@@ -53,12 +53,14 @@ pub(in crate::workspace::engine) struct Complete {
     finish: Value,
     resolution: Value,
 }
+#[inline]
 pub(in crate::workspace::engine) fn complete(
     request: &Complete,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     complete_view(request, pool, None)
 }
+#[inline]
 pub(in crate::workspace::engine) fn complete_overlay(
     request: &Complete,
     pool: &rayon::ThreadPool,
@@ -123,6 +125,7 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
     parse_cached_data(cache).map(Some)
 }
 
+#[inline]
 fn parse_cached_data(cache: &serde_json::Map<String, Value>) -> io::Result<Value> {
     let data = cache
         .get("data")

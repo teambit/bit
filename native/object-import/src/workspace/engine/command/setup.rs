@@ -52,6 +52,7 @@ pub(super) fn run(
     Ok((count, output))
 }
 
+#[inline]
 fn prepare_licenses(
     request: &Prepare,
     context: &Value,
@@ -67,6 +68,7 @@ fn prepare_licenses(
     Ok(())
 }
 
+#[inline]
 fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let mut targets = prepare::selected(request, context)?;
     if request.operation == Operation::Checkout
@@ -127,6 +129,7 @@ fn validate_license(scope: &str, repository: &mut repository::Repository) -> io:
     Ok(())
 }
 
+#[inline]
 pub(super) fn validate_licenses(
     context: &Value,
     repository: &mut repository::Repository,

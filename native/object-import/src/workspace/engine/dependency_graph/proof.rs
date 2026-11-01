@@ -36,6 +36,7 @@ struct Metadata {
     real_path: Option<PathBuf>,
 }
 impl Proof {
+    #[inline]
     pub(in crate::workspace::engine) fn is_content(&self) -> bool {
         self.exists.is_none() && self.metadata.is_none() && self.range.is_none()
     }
@@ -190,9 +191,11 @@ fn contents(file: &Path) -> io::Result<Option<Vec<u8>>> {
     }
     Ok(Some(bytes))
 }
+#[inline]
 pub(super) fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
+#[inline]
 pub(super) fn rows(mut proofs: Vec<Proof>) -> io::Result<Value> {
     proofs.sort_by(|left, right| left.path.cmp(&right.path));
     serde_json::to_value(proofs).map_err(io::Error::other)
@@ -275,6 +278,7 @@ pub(in crate::workspace::engine) fn restored_control(
     Ok(output)
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn validate_restored_control(original: &Proof) -> io::Result<()> {
     if original.range.is_some() {
         return Err(invalid("restored control cannot use a byte range"));
@@ -282,6 +286,7 @@ pub(in crate::workspace::engine) fn validate_restored_control(original: &Proof) 
     Ok(())
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn accept_published(
     proofs: &mut [Proof],
     files: &std::collections::HashMap<PathBuf, Vec<u8>>,

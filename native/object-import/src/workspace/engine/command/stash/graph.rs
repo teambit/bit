@@ -41,8 +41,9 @@ pub(super) fn project(
     Ok(None)
 }
 fn identities(context: &Value) -> io::Result<HashMap<String, Value>> {
-    let mut identities = HashMap::new();
-    for target in context["targets"].as_array().ok_or_else(|| invalid("stash graph targets"))? {
+    let targets = context["targets"].as_array().ok_or_else(|| invalid("stash graph targets"))?;
+    let mut identities = HashMap::with_capacity(targets.len());
+    for target in targets {
         let identity = target["identity"]
             .as_str()
             .map(str::trim)
@@ -92,10 +93,12 @@ fn previous_graph(previous: &str, repository: &mut Repository) -> io::Result<Val
     }
 }
 
+#[inline]
 fn id(row: &Component) -> Value {
     row.id.clone()
 }
 
+#[inline]
 fn key(id: &Value) -> String {
     format!(
         "{}/{}@{}",
@@ -137,6 +140,7 @@ fn edges(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     Ok(rows)
 }
 
+#[inline]
 fn array_or_empty<'a>(
     version: &'a Value,
     field: &str,
@@ -250,6 +254,7 @@ fn load(id: &Value, repository: &mut Repository) -> io::Result<Value> {
     harmony::project(&repository.read(&reference, "Version")?)
 }
 
+#[inline]
 fn ordered_id(id: &Value, identities: &HashMap<String, Value>) -> Value {
     identities
         .get(&key(id))
@@ -294,6 +299,7 @@ fn raw_dependency_ids(version: &mut Value, identities: &HashMap<String, Value>) 
     Ok(())
 }
 
+#[inline]
 fn array_mut_or_empty<'a>(
     version: &'a mut Value,
     field: &str,

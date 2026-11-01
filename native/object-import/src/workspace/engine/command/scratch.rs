@@ -46,6 +46,7 @@ impl Drop for Directory {
     }
 }
 
+#[inline]
 fn private_builder() -> fs::DirBuilder {
     let builder = fs::DirBuilder::new();
     #[cfg(unix)]

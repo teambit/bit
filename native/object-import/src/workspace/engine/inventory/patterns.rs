@@ -68,6 +68,7 @@ fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> 
     selected.sort_by_key(|(directory, _)| directory.split('/').count());
     selected
 }
+#[inline]
 pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> {
     let bit = root.join(".bitignore");
     if fs::symlink_metadata(&bit).is_ok_and(|metadata| metadata.is_file()) {
@@ -108,6 +109,7 @@ fn open_ignore_file(path: &Path, missing: bool) -> io::Result<Option<fs::File>> 
         Err(error) => Err(error),
     }
 }
+#[inline]
 fn parse(text: &str) -> Vec<String> {
     text.strip_prefix('\u{feff}')
         .unwrap_or(text)
@@ -120,6 +122,7 @@ fn parse(text: &str) -> Vec<String> {
         .map(str::to_owned)
         .collect()
 }
+#[inline]
 fn js_space(character: char) -> bool {
     matches!(
         character,

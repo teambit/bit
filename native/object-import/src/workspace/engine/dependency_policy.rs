@@ -53,6 +53,7 @@ fn ignored(request: &Request, plan: &mut Plan) {
     deduplicate_dev(request, plan);
 }
 
+#[inline]
 fn deduplicate_dev(request: &Request, plan: &mut Plan) {
     let [regular_packages, dev_packages, _] = &mut plan.packages;
     dev_packages.retain(|name, _| {

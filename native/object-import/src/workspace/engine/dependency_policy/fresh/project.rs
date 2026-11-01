@@ -169,6 +169,7 @@ impl Projection<'_> {
         Ok(true)
     }
 
+    #[inline]
     fn finish_core_aspects(&mut self) {
         // AutoDetectDeps processes unidentified packages before component packages,
         // then deduplicates only this origin file's combined list.
@@ -205,6 +206,7 @@ impl Projection<'_> {
         }
         Ok(())
     }
+    #[inline]
     fn relative_name(&self, origin: &str) -> io::Result<String> {
         relative::path(&self.request.component_root, Path::new(origin))
     }
@@ -352,6 +354,7 @@ fn identity(id: &Value) -> io::Result<String> {
         .ok_or_else(|| invalid("fresh component name"))?;
     Ok(format!("{scope}/{name}"))
 }
+#[inline]
 fn unversioned(id: &str) -> &str {
     let trimmed = id.trim();
     trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())

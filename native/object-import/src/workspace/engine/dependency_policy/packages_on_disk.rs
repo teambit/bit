@@ -22,12 +22,14 @@ pub(crate) struct Request {
     component_root: PathBuf,
     names: Vec<String>,
 }
+#[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     read_view(request, pool, None)
 }
+#[inline]
 pub(in crate::workspace::engine) fn read_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -114,6 +116,7 @@ fn package_name(name: &str) -> bool {
         .split('/')
         .all(package_part)
 }
+#[inline]
 fn package_part(part: &str) -> bool {
     !part.is_empty()
         && !matches!(part, "." | "..")
@@ -122,6 +125,7 @@ fn package_part(part: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
 }
 
+#[inline]
 fn dependent_manifest(directory: &Path, root: &Path, budget: &Budget) -> io::Result<Option<Value>> {
     for ancestor in directory.ancestors() {
         if let Some(value) = budget.package(&ancestor.join("package.json"))? {
@@ -133,6 +137,7 @@ fn dependent_manifest(directory: &Path, root: &Path, budget: &Budget) -> io::Res
     }
     Ok(None)
 }
+#[inline]
 fn locate(request: &Request, name: &str, budget: &Budget) -> io::Result<Option<PathBuf>> {
     for ancestor in request.component_root.ancestors() {
         let candidate = ancestor.join("node_modules").join(name);

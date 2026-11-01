@@ -103,6 +103,7 @@ fn component(
     });
     true
 }
+#[inline]
 fn package_version(request: &Request, name: &str, value: &Value) -> Option<String> {
     let trimmed = value
         .as_str()

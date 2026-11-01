@@ -177,6 +177,7 @@ pub(super) fn finish(
         .collect();
     Ok((files.len(), json!({"files":files})))
 }
+#[inline]
 fn is_ignored_root(ignored_root: &[String], path: &str) -> bool {
     ignored_root
         .iter()
@@ -193,6 +194,7 @@ fn is_ignored_root(ignored_root: &[String], path: &str) -> bool {
             }
         })
 }
+#[inline]
 fn keep_bitmap(plan: &Plan, paths: &mut Vec<String>) {
     if plan.workspace_root
         && plan.paths
@@ -212,6 +214,7 @@ pub(super) fn cancel(token: u64, state: &mut State) -> io::Result<(usize, Value)
     state.plans.remove(&token).ok_or_else(|| invalid("stale inventory token"))?;
     Ok((1, json!({"cancelled":true})))
 }
+#[inline]
 fn relative(root: &Path, file: &Path) -> io::Result<String> {
     let relative =
         file.strip_prefix(root).map_err(|_| invalid("inventory root outside workspace"))?;
@@ -227,6 +230,7 @@ fn relative(root: &Path, file: &Path) -> io::Result<String> {
 }
 
 /// Share the bounded inventory scanner with component tracking.
+#[inline]
 pub(crate) fn tracking_scan(
     root: &Path,
     excluded: &[PathBuf],
@@ -251,6 +255,7 @@ pub(crate) fn tracking_filter(paths: &[String], patterns: &[String]) -> io::Resu
         .collect())
 }
 
+#[inline]
 pub(crate) fn tracking_ignore(root: &Path) -> io::Result<Vec<String>> {
     patterns::own(root)
 }
