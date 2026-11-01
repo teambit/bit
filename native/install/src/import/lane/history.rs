@@ -1,5 +1,5 @@
 //! `LaneHistory` (`scopes/scope/objects/models/lane-history.ts`): one entry per
-//! saved lane state, keyed by a UUID, merged into the existing object.
+//! saved lane state, keyed by a UUID and merged into the existing object.
 
 use super::object::LaneObject;
 use crate::{

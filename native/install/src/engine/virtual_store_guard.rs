@@ -3,7 +3,7 @@
 //! workspace's `node_modules` (`assertSafeVirtualStoreTransition`).
 //!
 //! A layout switch rebuilds every injected component package from source, so a
-//! bit running from those directories would lose its own compiled code
+//! `bit` process running from those directories would lose its own compiled code
 //! mid-install.
 
 #[cfg(test)]

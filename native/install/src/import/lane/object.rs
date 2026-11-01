@@ -8,7 +8,7 @@ use serde_json::{Map, Value, json};
 pub const OLD_LANE_SCHEMA: &str = "0.0.0";
 
 /// A visible lane entry.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneComponent {
     pub scope: String,
     pub name: String,

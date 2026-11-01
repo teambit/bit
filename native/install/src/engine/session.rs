@@ -1,5 +1,5 @@
 //! What every engine call builds before `Install::new`: the HTTP client, the
-//! lazily loaded wanted lockfile and a multi-thread runtime
+//! lazily loaded wanted lockfile, and a multi-thread runtime
 //! (`run_install_inner` in `@pnpm/napi`).
 
 use super::{config_overlay::http_client, hooks::normalize};

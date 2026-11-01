@@ -14,7 +14,7 @@ use std::{
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
 /// An inflated object: its type header and JSON or raw content.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Parsed {
     pub kind: String,
     pub content: Vec<u8>,

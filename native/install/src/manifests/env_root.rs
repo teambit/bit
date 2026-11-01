@@ -9,7 +9,7 @@ use crate::model::DependencyMap;
 use indexmap::{IndexMap, IndexSet};
 
 /// Per package: version → envs requiring it, plus the `workspaceSingleton` and `override` flags.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct PeerVersions {
     versions: IndexMap<String, IndexSet<String>>,
     singleton: bool,
@@ -17,7 +17,7 @@ struct PeerVersions {
 }
 
 /// The merge result.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct EnvRoot {
     /// Env peers for the root manifest (`envSelfPeers.toVersionManifest()`).
     pub(super) peers: DependencyMap,

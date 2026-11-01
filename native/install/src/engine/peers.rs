@@ -2,7 +2,7 @@
 //! (`getMissingPeerDependencies`: `getPeerDependencyIssues(...)['.'].intersections`).
 //!
 //! A `dry_run` fresh resolve that writes nothing and collects the peer issues,
-//! like `@pnpm/napi`'s `getPeerDependencyIssues`.
+//! like `@pnpm/napi`'s `getPeerDependencyIssues` on a 32 MiB stack thread.
 
 #[cfg(test)]
 mod tests;

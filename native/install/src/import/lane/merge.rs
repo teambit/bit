@@ -1,6 +1,6 @@
 //! `sources.mergeLane(lane, isImport = true)` followed by `lanes.saveLane`
 //! (`ImportComponents.mergeAndSaveLaneObject`): fold the fetched lane into the
-//! local lane object of the same id, keeping local entries that diverged.
+//! local lane object of the same ID, keeping local entries that diverged.
 
 #[cfg(test)]
 mod tests;

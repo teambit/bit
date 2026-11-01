@@ -1,4 +1,4 @@
-//! The `file://` remote (`scope-api/lib/fetch.ts` with `ObjectsReadableGenerator`).
+//! Local `file://` remote (`scope-api/lib/fetch.ts` with `ObjectsReadableGenerator`).
 
 use super::{
     bitmap::Id,

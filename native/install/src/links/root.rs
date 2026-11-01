@@ -13,7 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// The aspect id of bit itself (`aspectLoader.mainAspect`).
+/// The aspect ID of Bit itself (`aspectLoader.mainAspect`).
 const MAIN_ASPECT_ID: &str = "teambit.harmony/bit";
 const MAIN_ASPECT_PACKAGE: &str = "@teambit/bit";
 const LINK_PREFIX: &str = "link:";

@@ -1,4 +1,5 @@
 //! Package manifest serialization and command-owned atomic publication errors.
+
 use super::{Manifest, is_symlink};
 use std::{fs, io, path::Path};
 #[inline]

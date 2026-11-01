@@ -1,4 +1,4 @@
-//! `linkDepsResolvedFromEnv` (`dependency-linker.ts`): a dependency a component
+//! `linkDepsResolvedFromEnv` (`dependency-linker.ts`): a dependency that a component
 //! policy marks `resolveFromEnv` is linked at the root from where its env resolves it.
 
 #[cfg(test)]

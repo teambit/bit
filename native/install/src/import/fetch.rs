@@ -13,6 +13,7 @@ use indexmap::IndexMap;
 use std::io;
 
 /// Fetches through the right transport for each remote scope.
+#[derive(Debug, Clone, Copy)]
 pub struct Fetcher<'a> {
     pub remotes: &'a Remotes,
     pub network: &'a Network,

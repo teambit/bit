@@ -1,5 +1,5 @@
 //! Remove `node_modules/.pnpm` directories the current lockfile no longer
-//! lists (`pnpm-prune-modules.ts`).
+//! lists (`pnpm-prune-modules.ts`), preserving directories loaded by the host.
 
 #[cfg(test)]
 mod tests;

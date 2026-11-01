@@ -1,4 +1,6 @@
 //! Engine errors rendered the way `pnpm-error-to-bit-error.ts` renders them.
+//!
+//! Preserves `ERR_PNPM_*` diagnostic codes and optional help hints.
 
 use miette::Diagnostic;
 use std::{error::Error, fmt, io};

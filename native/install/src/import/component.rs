@@ -1,4 +1,4 @@
-//! Merging fetched Component, Version and `VersionHistory` objects into local ones
+//! Merging fetched Component, Version, and `VersionHistory` objects into local ones
 //! (`MultipleComponentMerger`, `ModelComponentMerger` for imports,
 //! `ObjectsWritable.mergeVersionObject`/`mergeVersionHistory`).
 

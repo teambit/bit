@@ -49,7 +49,7 @@ pub struct ComponentLinkOptions<'a> {
 }
 
 /// One link of a component file into its package.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct FileLink {
     pub from: PathBuf,
     pub to: PathBuf,

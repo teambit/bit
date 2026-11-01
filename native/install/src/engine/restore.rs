@@ -27,7 +27,7 @@ use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
 /// The merged, serialized `DependenciesGraph` of the workspace components.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct RestoreInput {
     pub graph: Value,
     /// `--restore` fails the install on a graph it cannot convert; a restore
@@ -36,6 +36,7 @@ pub struct RestoreInput {
 }
 
 /// One package whose resolution has to come from the registry.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct PackageToResolve {
     pkg_id: String,
     name: String,

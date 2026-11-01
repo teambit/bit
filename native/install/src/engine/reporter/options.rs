@@ -1,4 +1,4 @@
-//! Released lynx nullish default and N-API `u32` conversion for reporter milliseconds.
+//! Released `lynx` nullish default and N-API `u32` conversion for reporter milliseconds.
 #[cfg(test)]
 mod tests;
 use serde_json::Value;

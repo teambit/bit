@@ -1,5 +1,5 @@
 //! One engine install (`lynx.install`): the `bit:` lockfile block and the
-//! `--update` lockfile handling around [`engine_call`], which runs pacquet's
+//! `--update` lockfile handling around [`engine_call`], which runs `pacquet`'s
 //! `Install` on a dedicated thread.
 
 mod engine_call;

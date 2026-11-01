@@ -1,5 +1,5 @@
 //! `_getEnvPeerDependencies`: env peers injected into each component when
-//! `resolveEnvPeersFromRoot` is off.
+//! `resolveEnvPeersFromRoot` is disabled.
 
 use super::{
     super::{

@@ -1,5 +1,5 @@
 //! `hoistDependencies`: per package, pick the root version and keep the
-//! conflicting requirements in their components.
+//! conflicting requirements in their respective components.
 
 use super::{Deduped, IndexEntry, Item};
 use crate::manifests::{

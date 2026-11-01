@@ -3,6 +3,8 @@
 //! Bit Cloud (`CloudMain.getCurrentUser`) and `anonymous` when the cloud does
 //! not answer. `fetchFromSymphonyViaGQL` uses a plain `fetch`, so no proxy or
 //! TLS setting applies here either.
+//!
+//! Enforces a 5-second timeout on the GraphQL user lookup.
 
 #[cfg(test)]
 mod tests;

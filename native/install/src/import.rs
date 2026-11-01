@@ -1,5 +1,5 @@
 //! Pre-install import of missing scope objects: `importer.importCurrentObjects()`
-//! (`objectsOnly`, so no workspace file is written). On main it imports the
+//! (`objectsOnly`, so no workspace file is written). On `main` it imports the
 //! objects of every exported `.bitmap` id (`importAccordingToBitMap`); on a
 //! remote lane it first fetches the lane object (`importObjectsOnLane`).
 

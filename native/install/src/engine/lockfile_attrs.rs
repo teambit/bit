@@ -1,5 +1,5 @@
 //! Bit's `bit:` block of `pnpm-lock.yaml` (`{ depsRequiringBuild, restoredFromModel? }`)
-//! and the `--update` lockfile removal.
+//! and the `--update` lockfile removal and rollback.
 //!
 //! The engine rewrites `pnpm-lock.yaml` from its typed model; top-level keys it
 //! does not define round-trip through [`Lockfile::extra`], so the block is read

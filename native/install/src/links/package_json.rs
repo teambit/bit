@@ -13,6 +13,7 @@ const DEPENDENCY_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 pub(super) const SOURCE_DIR: &str = "_src";
 
 /// What the generated manifest depends on besides the component itself.
+#[derive(Debug, Clone)]
 pub(super) struct PackageJsonContext<'a> {
     pub dependencies: Option<&'a ComponentDependencies>,
     /// `getCloudDomain()`, for `homepage`.

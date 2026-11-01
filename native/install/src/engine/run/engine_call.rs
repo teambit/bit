@@ -19,6 +19,7 @@ use serde_json::{Map, Value};
 use std::{io, path::PathBuf, sync::Arc};
 
 /// What one engine call produced.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Outcome {
     pub added: u64,
     pub removed: u64,

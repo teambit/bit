@@ -76,7 +76,7 @@ impl ReporterSettings {
 }
 
 /// Install outcome accumulated from the event stream.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct InstallStats {
     pub added: u64,
     pub removed: u64,

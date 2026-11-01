@@ -21,6 +21,7 @@ use std::{
 };
 
 /// What one install call adds to the settings.
+#[derive(Debug, Clone)]
 pub(super) struct CallOverlay<'a> {
     pub overrides: &'a DependencyMap,
     pub forced_harmony_version: Option<&'a str>,

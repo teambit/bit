@@ -1,4 +1,5 @@
 //! Link a component from a native manifest already prepared by a VCS operation.
+
 use super::{
     ComponentLinks, FileLink, LinkKind, Manifest, SOURCE_DIR, WorkspaceComponent,
     create_link_or_symlink, is_symlink, link_injected_package_json,

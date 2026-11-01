@@ -1,4 +1,4 @@
-//! `parse` of `@pnpm/deps.path`.
+//! `parse` and `removeSuffix` of `@pnpm/deps.path` for lockfile snapshot keys.
 
 use pnpm_deps_path::{DepPathSuffixIndex, index_of_dep_path_suffix};
 

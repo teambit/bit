@@ -1,5 +1,5 @@
 //! Filesystem primitives with the semantics of Bit's TypeScript helpers:
-//! `createLinkOrSymlink`, `symlink-dir` and `hardLinkDirectory`.
+//! `createLinkOrSymlink`, `symlink-dir`, and `hardLinkDirectory`.
 
 #[cfg(test)]
 mod tests;

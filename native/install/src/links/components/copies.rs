@@ -1,3 +1,5 @@
+//! Package copy destination resolution for injected and root-component directories.
+
 use super::{read_injected_deps, root_component_modules_dirs};
 use crate::model::WorkspaceComponent;
 use std::{

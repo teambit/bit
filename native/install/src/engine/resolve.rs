@@ -17,7 +17,7 @@ use serde_json::Value;
 use std::io;
 
 /// `ResolvedPackageVersion`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct ResolvedVersion {
     pub package_name: String,
     /// The resolved version, or the normalized spec of a non-registry

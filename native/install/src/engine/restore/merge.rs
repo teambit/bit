@@ -1,5 +1,5 @@
 //! Lockfile-document operations of the restore: dropping unreachable entries,
-//! scrubbing unpublishable packages and merging into the existing lockfile.
+//! scrubbing unpublishable packages, and merging into the existing lockfile.
 
 use super::dep_path::remove_suffix;
 use serde_json::{Map, Value};

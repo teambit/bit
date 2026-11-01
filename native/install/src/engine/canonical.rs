@@ -1,5 +1,7 @@
 //! Run the published `lynx.install` package step in this process after its
 //! retained `InstallMain` and dependency-installer callbacks have finished.
+//!
+//! Validates all package-manager inputs before any filesystem or network effect.
 
 mod environment;
 mod parse;

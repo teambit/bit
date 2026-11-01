@@ -27,7 +27,7 @@ use std::{
 const BIT_ROOTS_DIR: &str = ".bit_roots";
 
 /// Bit's hook chain plus what it needs to transform dependency manifests.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub(super) struct BitHooks {
     pub root: PathBuf,
     /// `rootComponents`: workspace projects drop their `workspace:` deps.

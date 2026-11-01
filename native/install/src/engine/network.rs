@@ -1,7 +1,7 @@
 //! Proxy and network settings: `DependencyResolverMain.getProxyConfig` /
 //! `getNetworkConfig`, which layer the `dependency-resolver` config, the pnpm
 //! config cascade and Bit's global config (`Http.getProxyConfig` /
-//! `Http.getNetworkConfig`).
+//! `Http.getNetworkConfig`) for outgoing registry requests.
 
 #[cfg(test)]
 mod tests;

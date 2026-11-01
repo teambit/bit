@@ -1,4 +1,6 @@
 //! Which dependency build scripts may run (`resolveScriptPolicies` in `lynx.ts`).
+//!
+//! Combines `@pnpm/plugin-trusted-deps` defaults, untrusted package exclusions, and user overrides.
 
 #[cfg(test)]
 mod tests;

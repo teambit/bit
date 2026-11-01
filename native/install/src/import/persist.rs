@@ -29,6 +29,7 @@ type Received = IndexMap<String, Vec<(String, Value)>>;
 
 /// `showProgress`: every 100 objects handed to the write queue restart the
 /// loader with `<importing ...>. downloaded N objects.` (skipped on CI).
+#[derive(Clone)]
 pub struct Progress<'a> {
     output: &'a Output,
     message: String,

@@ -18,7 +18,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::io;
 
-/// A lane object fetched from its remote.
+/// A lane object fetched from its remote scope.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteLane {
     pub id: LaneId,

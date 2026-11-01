@@ -26,6 +26,7 @@ const FLATTENED_REASON: &str =
     "which are flattened dependencies of components that don't have dependency-graph";
 
 /// One import run against the workspace scope.
+#[derive(Clone, Copy)]
 pub struct Importer<'a> {
     pub repo: &'a Repo,
     pub fetcher: &'a Fetcher<'a>,

@@ -1,4 +1,6 @@
 //! `dedupeSnapshotDepsToRootManifest`: let pnpm resolve conflicting root-provided versions.
+//!
+//! Drops snapshot dependency entries when the workspace root provides a different version.
 #[cfg(test)]
 mod tests;
 

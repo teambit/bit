@@ -1,4 +1,4 @@
-//! Preserve only the resolution settings shared by the graphs contributing packages.
+//! Preserve only the resolution settings shared by the dependency graphs contributing packages.
 #[cfg(test)]
 mod oracle;
 #[cfg(test)]

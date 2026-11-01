@@ -7,7 +7,7 @@ use std::{fs, io, path::Path};
 const LANE_KEY: &str = "_bit_lane";
 
 /// An exported component id with its `.bitmap` version.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
     pub scope: String,
     pub name: String,

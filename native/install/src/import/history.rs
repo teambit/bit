@@ -1,6 +1,6 @@
 //! `BIT_FETCH_INCOMPLETE_VERSION_HISTORY` (`ScopeComponentsImporter.getIncompleteVersionHistory`):
 //! a component whose local `VersionHistory` is not complete since the requested
-//! version is fetched again, and histories found complete record that fact in
+//! version is fetched again, and complete histories record that fact in
 //! `graphCompleteRefs`.
 
 #[cfg(test)]

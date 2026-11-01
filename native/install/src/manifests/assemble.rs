@@ -1,5 +1,7 @@
 //! From deduped dependencies to engine projects: `getComponentsManifests`,
 //! `toJson`, and the `linkedDependencies` merge of `installComponents`.
+//!
+//! Produces the root and component manifests included in the [`InstallPlan`].
 
 use super::{
     ManifestInput,

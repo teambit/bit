@@ -1,4 +1,4 @@
-//! Resolve [`EngineSettings`] once per command.
+//! Resolve [`EngineSettings`] once per command from workspace, global, and `.npmrc` settings.
 
 #[cfg(test)]
 mod tests;

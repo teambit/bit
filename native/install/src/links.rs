@@ -1,4 +1,4 @@
-//! `node_modules` links Bit owns around the engine call.
+//! `node_modules` links that Bit owns around the engine call.
 //!
 //! [`linked_root_deps`] and [`link_core_aspects_to_hoisted_store`] port `calculateLinkedDeps` of
 //! `dependency-linker.ts`: the running bit installation and its core aspects become `link:`

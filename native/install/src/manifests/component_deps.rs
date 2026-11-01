@@ -16,7 +16,7 @@ use crate::model::{
 use indexmap::IndexMap;
 
 /// One entry of a `DependencyList`, package or component.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Dep<'a> {
     pub(super) package_name: &'a str,
     pub(super) version: String,

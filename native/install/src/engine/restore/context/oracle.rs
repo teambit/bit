@@ -1,4 +1,4 @@
-//! Compare resolution-context retention with the published package manager.
+//! Compare resolution-context retention with the published `@teambit/pnpm` package manager.
 use serde_json::{Value, json};
 use std::process::Command;
 

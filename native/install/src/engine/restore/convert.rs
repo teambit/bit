@@ -28,7 +28,7 @@ const PACKAGE_FIELDS: [&str; 12] = [
     "version",
 ];
 
-/// The parts of a graph the conversion reads.
+/// The parts of a dependency graph the conversion reads.
 pub(super) struct Graph {
     pub packages: Map<String, Value>,
     pub edges: Vec<Value>,

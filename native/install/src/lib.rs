@@ -1,4 +1,4 @@
-//! Native `bit install`. See `docs/rust/native-install.md`.
+//! Native `bit install` implementation. See `docs/rust/native-install.md`.
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 

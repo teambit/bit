@@ -6,8 +6,9 @@ use serde_json::{Map, Value, json};
 
 /// A dependency field. `OptionalDependencies` doubles as the `optional-runtime`
 /// lifecycle of the dedupe index.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub(super) enum Field {
+    #[default]
     Dependencies,
     OptionalDependencies,
     DevDependencies,

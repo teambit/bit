@@ -18,14 +18,14 @@ pub(super) struct Item {
 }
 
 /// All requirements of one package, plus the workspace policy version to keep.
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct IndexEntry {
     pub(super) items: Vec<Item>,
     pub(super) preserved: Option<(String, Field)>,
 }
 
 /// The dedupe result (`DedupedDependencies`).
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Deduped {
     pub(super) root: DepsObject,
     pub(super) components: IndexMap<String, DepsObject>,
