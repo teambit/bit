@@ -103,7 +103,7 @@ fn conflict_warning(
             format!(
                 "{version} ({})",
                 envs.iter()
-                    .cloned()
+                    .map(String::as_str)
                     .collect::<Vec<_>>()
                     .join(", "),
             )

@@ -41,12 +41,9 @@ impl Session {
         } else {
             LazyLockfile::disabled()
         };
-        let lockfile_name = config.wanted_lockfile_name().trim();
-        let lockfile_name = if lockfile_name.is_empty() {
-            pnpm_lockfile::Lockfile::FILE_NAME
-        } else {
-            lockfile_name
-        };
+        let wanted = config.wanted_lockfile_name().trim();
+        let lockfile_name =
+            if wanted.is_empty() { pnpm_lockfile::Lockfile::FILE_NAME } else { wanted };
         Ok(Session {
             config,
             client: http_client(config)?,

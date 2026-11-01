@@ -316,7 +316,8 @@ fn link_injected_package_json(
     for dir in dirs
         .into_iter()
         .flatten()
-        .map(|dir| dir.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|dir| !dir.is_empty())
     {
         let dest = root.join(dir).join("package.json");

@@ -37,7 +37,8 @@ pub(super) fn merge(
     let mut cleaned = Vec::new();
     for dep in deps
         .iter()
-        .map(|dep| dep.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|dep| !dep.is_empty())
     {
         if !cleaned

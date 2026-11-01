@@ -268,14 +268,15 @@ impl<'a> Parents<'a> {
         let mut seen = HashSet::new();
         let mut queue = VecDeque::from([head.to_string()]);
         while let Some(hash) = queue.pop_front() {
-            if !seen.insert(hash.clone()) {
+            if seen.contains(&hash) {
                 continue;
             }
-            let parents = match self.known.get(&hash) {
-                Some(parents) => parents.clone(),
-                None => self.parents_of_version(&hash)?,
-            };
-            queue.extend(parents);
+            if let Some(parents) = self.known.get(&hash) {
+                queue.extend(parents.iter().cloned());
+            } else {
+                queue.extend(self.parents_of_version(&hash)?);
+            }
+            seen.insert(hash);
         }
         Some(seen)
     }

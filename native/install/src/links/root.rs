@@ -217,10 +217,8 @@ fn is_authored(aspect: &CoreAspect, ids: &[String]) -> bool {
 /// `getCoreAspectName`: `teambit.harmony/envs/core-aspect-env` → `envs.core-aspect-env`.
 fn core_aspect_name(id: &str) -> String {
     crate::policy::split_version(id.trim()).0
-        .split('/')
-        .skip(1)
-        .collect::<Vec<_>>()
-        .join(".")
+        .split_once('/')
+        .map_or_else(String::new, |(_, name)| name.replace('/', "."))
 }
 
 /// `isBitRepoWorkspace`: the running bit lives inside the workspace (a plain string prefix).

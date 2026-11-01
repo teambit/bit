@@ -86,15 +86,13 @@ async fn restore(
     let mut failed = resolve_packages(&mut lockfile, &graph, projects, settings).await?;
     // A component snap still without a resolution was never published: pnpm
     // re-resolves the dependency from the manifest instead.
-    for (pkg_id, package) in lockfile
-        .get("packages")
-        .and_then(Value::as_object)
-        .into_iter()
-        .flatten()
-    {
-        if !has_resolution(package) && graph.is_component(pkg_id) {
-            failed.insert(pkg_id.clone());
-        }
+    if let Some(packages) = lockfile.get("packages").and_then(Value::as_object) {
+        failed.extend(
+            packages
+                .iter()
+                .filter(|(pkg_id, package)| !has_resolution(package) && graph.is_component(pkg_id))
+                .map(|(pkg_id, _)| pkg_id.clone()),
+        );
     }
     if !failed.is_empty() {
         merge::scrub(&mut lockfile, &failed);

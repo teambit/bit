@@ -129,18 +129,12 @@ fn resolution_settings(
         dedupe_peers: config.dedupe_peers.unwrap_or(true),
         dedupe_injected_deps: false,
         engine_strict: config.engine_strict.unwrap_or(base.engine_strict),
-        node_version: config.node_version
-            .as_deref()
+        node_version: [config.node_version.as_deref(), base.node_version.as_deref()]
+            .into_iter()
+            .flatten()
             .map(str::trim)
-            .filter(|version| !version.is_empty())
-            .map(str::to_owned)
-            .or_else(|| {
-                base.node_version
-                    .as_deref()
-                    .map(str::trim)
-                    .filter(|version| !version.is_empty())
-                    .map(str::to_owned)
-            }),
+            .find(|version| !version.is_empty())
+            .map(str::to_owned),
         patched_dependencies: config.patched_dependencies.clone(),
         package_extensions: package_extensions(
             config.package_extensions.as_ref(),

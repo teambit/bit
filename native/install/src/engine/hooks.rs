@@ -129,12 +129,9 @@ fn remove_linked_only(manifest: &mut Map<String, Value>, name: &str) {
     if let Some(Value::Object(dependencies)) = manifest.get_mut("dependencies")
         && dependencies
             .get(name)
-            .is_some_and(|version| {
-                is_set(version)
-                    && !version
-                        .as_str()
-                        .is_some_and(|version| version.trim().starts_with("link:"))
-            })
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .is_some_and(|version| !version.is_empty() && !version.starts_with("link:"))
     {
         dependencies.remove(name);
     }

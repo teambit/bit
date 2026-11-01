@@ -189,13 +189,11 @@ impl Collector {
         if let Some(reference) = version["flattenedEdgesRef"].as_str() {
             let Some(edges) = self.repo.read(reference)? else { return Ok(false) };
             return Ok(bit_object_import::parse_jsonc(&edges.content)
-                .ok()
-                .and_then(|edges| {
-                    edges
+                .is_ok_and(|parsed| {
+                    parsed
                         .as_array()
-                        .map(|edges| !edges.is_empty())
-                })
-                .unwrap_or(false));
+                        .is_some_and(|list| !list.is_empty())
+                }));
         }
         Ok(version["flattenedEdges"]
             .as_array()

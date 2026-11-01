@@ -9,10 +9,12 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     if value.is_null() {
         return Ok(Some(Duration::from_millis(200)));
     }
-    let milliseconds = if let Some(integer) = value.as_u64() {
-        integer as u32
-    } else if let Some(integer) = value.as_i64() {
-        integer as u32
+    let milliseconds = if let Some(integer) = value
+        .as_u64()
+        .map(|num| num as u32)
+        .or_else(|| value.as_i64().map(|num| num as u32))
+    {
+        integer
     } else {
         let number = value.as_f64().ok_or_else(|| invalid_type(value))?;
         // napi_get_value_uint32 applies ECMAScript ToUint32, not Rust's saturating cast.

@@ -123,15 +123,12 @@ fn section_packages(section: Option<&Value>) -> Vec<String> {
 }
 
 fn is_removal(spec: &Value) -> bool {
-    spec.as_str().map(str::trim) == Some("-")
-        || spec
-            .get("version")
-            .and_then(Value::as_str)
-            .map(str::trim)
-            == Some("-")
-        || spec
-            .get("supportedRange")
-            .and_then(Value::as_str)
-            .map(str::trim)
-            == Some("-")
+    [
+        spec.as_str(),
+        spec.get("version").and_then(Value::as_str),
+        spec.get("supportedRange").and_then(Value::as_str),
+    ]
+    .into_iter()
+    .flatten()
+    .any(|val| val.trim() == "-")
 }

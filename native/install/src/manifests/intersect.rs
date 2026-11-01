@@ -18,7 +18,8 @@ impl Multi {
     fn from_range(range: &Range) -> io::Result<Self> {
         let singles = range.set
             .iter()
-            .map(|comps| create_single(comps))
+            .map(Vec::as_slice)
+            .map(create_single)
             .collect::<io::Result<Vec<_>>>()?;
         Ok(Multi(
             normalize(singles)?

@@ -175,10 +175,8 @@ fn same_file(src: &Path, dest: &Path) -> bool {
 /// `symlink()` with `avoidHardLink`: `symlink-dir` on unix; on Windows a true symlink
 /// (`noJunction`), falling back to [`link`] when the user may not create symlinks.
 fn symlink_or_link(src: &Path, dest: &Path) -> io::Result<()> {
-    if cfg!(windows) {
-        return true_symlink(src, dest).or_else(|_| link(src, dest));
-    }
-    true_symlink(src, dest)
+    let result = true_symlink(src, dest);
+    if cfg!(windows) { result.or_else(|_| link(src, dest)) } else { result }
 }
 
 /// `link()`: a hard link; a directory (`EPERM`) or a cross-device link gets a junction, which

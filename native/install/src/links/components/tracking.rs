@@ -60,16 +60,11 @@ pub(super) fn version(
     component: &WorkspaceComponent,
     package_context: &super::PackageJsonContext<'_>,
 ) {
-    if component.id.version
-        .as_deref()
-        .map(str::trim)
-        .is_some_and(|ver| matches!(ver, "latest" | "head"))
-    {
+    let id_version = component.id.version.as_deref().map(str::trim);
+    if id_version.is_some_and(|ver| matches!(ver, "latest" | "head")) {
         strip_component_id_version(manifest);
     }
-    if component.id.version
-        .as_deref()
-        .is_none_or(|ver| ver.trim().is_empty())
+    if id_version.is_none_or(str::is_empty)
         && package_context.props
             .get("version")
             .and_then(Value::as_str)

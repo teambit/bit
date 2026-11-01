@@ -69,8 +69,10 @@ impl Fetcher<'_> {
         let scope = scope.trim();
         let cleaned_ids: Vec<String> = ids
             .iter()
-            .map(|id| id.trim().to_string())
+            .map(String::as_str)
+            .map(str::trim)
             .filter(|id| !id.is_empty())
+            .map(str::to_owned)
             .collect();
         if scope.is_empty() || cleaned_ids.is_empty() {
             return Ok(Vec::new());

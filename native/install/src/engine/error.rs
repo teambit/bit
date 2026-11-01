@@ -16,16 +16,15 @@ pub struct EngineError {
 impl EngineError {
     /// Capture a pacquet diagnostic.
     pub fn from_diagnostic<Diag: Diagnostic + ?Sized>(error: &Diag) -> Self {
-        EngineError {
-            code: error
-                .code()
-                .map(|code| code.to_string().trim().to_owned())
-                .filter(|code| !code.is_empty()),
+        let non_empty = |text: Box<dyn fmt::Display + '_>| {
+            let rendered = text.to_string();
+            let trimmed = rendered.trim();
+            (!trimmed.is_empty()).then(|| trimmed.to_owned())
+        };
+        Self {
+            code: error.code().and_then(non_empty),
             message: error.to_string().trim().to_owned(),
-            hint: error
-                .help()
-                .map(|help| help.to_string().trim().to_owned())
-                .filter(|help| !help.is_empty()),
+            hint: error.help().and_then(non_empty),
         }
     }
 

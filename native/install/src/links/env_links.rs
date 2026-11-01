@@ -84,9 +84,7 @@ fn env_dir(
     let package = components
         .iter()
         .find(|component| component.id.to_string_without_version() == bare)
-        .map(|component| component.package_name.trim())
-        .filter(|pkg| !pkg.is_empty())
-        .map(str::to_owned)
+        .map(|component| component.package_name.as_str())
         .or_else(|| {
             env_packages
                 .get(bare)
@@ -97,11 +95,11 @@ fn env_dir(
                             (split_version(key.trim()).0.trim() == bare).then_some(pkg)
                         })
                 })
-                .map(|pkg| pkg.trim())
-                .filter(|pkg| !pkg.is_empty())
-                .map(str::to_owned)
+                .map(String::as_str)
         })
-        .unwrap_or_else(|| default_package_name(&component_id(bare)));
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .map_or_else(|| default_package_name(&component_id(bare)), str::to_owned);
     root.join("node_modules").join(package)
 }
 

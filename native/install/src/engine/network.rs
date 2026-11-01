@@ -23,12 +23,10 @@ pub struct ProxySettings {
 
 impl ProxySettings {
     fn is_set(&self) -> bool {
-        self.http_proxy
-            .as_deref()
-            .is_some_and(|url| !url.trim().is_empty())
-            || self.https_proxy
-                .as_deref()
-                .is_some_and(|url| !url.trim().is_empty())
+        [&self.http_proxy, &self.https_proxy]
+            .into_iter()
+            .flatten()
+            .any(|url| !url.trim().is_empty())
     }
 
     /// The engine's proxy config. The engine replaces its own wholesale.

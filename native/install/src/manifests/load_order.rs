@@ -67,7 +67,8 @@ fn split_envs<'a>(
     let envs_of_components = envs_of(components);
     let (envs, configured): (Vec<&str>, Vec<&str>) = extensions
         .iter()
-        .map(|ext| ext.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|ext| !ext.is_empty())
         .partition(|id| {
             envs_of_components.contains(id) || envs_of_components.contains(split_version(id).0)

@@ -113,7 +113,8 @@ pub(super) fn truthy(map: &DependencyMap, name: &str) -> bool {
             map.iter()
                 .find_map(|(key, val)| (key.trim() == trimmed).then_some(val))
         })
-        .map(|version| version.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .is_some_and(|version| !version.is_empty())
 }
 

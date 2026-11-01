@@ -367,12 +367,13 @@ pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
         .take_while(|(left, right)| left == right)
         .count();
     let mut result = PathBuf::new();
-    for _ in common..from.len() {
-        result.push("..");
-    }
-    for component in &to[common..] {
-        result.push(component.as_os_str());
-    }
+    result.extend(std::iter::repeat_n("..", from.len() - common));
+    result.extend(
+        to[common..]
+            .iter()
+            .copied()
+            .map(Component::as_os_str),
+    );
     result
 }
 

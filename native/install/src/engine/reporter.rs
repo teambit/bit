@@ -147,8 +147,9 @@ impl Renderer {
                 }
                 let capacity = lines
                     .iter()
-                    .map(|line| line.len() + 1)
-                    .sum();
+                    .map(String::len)
+                    .sum::<usize>()
+                    + lines.len();
                 let chunk = lines
                     .iter()
                     .fold(String::with_capacity(capacity), |mut chunk, line| {

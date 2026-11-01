@@ -72,18 +72,18 @@ async fn resolve_package(
     version: String,
     settings: &EngineSettings,
 ) -> io::Result<ResolvedVersion> {
-    let trimmed_ver = version.trim().to_string();
-    let bare_specifier = (!trimmed_ver.is_empty()).then(|| trimmed_ver.clone());
-    let wanted =
-        WantedDependency { alias: Some(name), bare_specifier, ..WantedDependency::default() };
+    let trimmed_ver = version.trim();
+    let wanted = WantedDependency {
+        alias: Some(name),
+        bare_specifier: (!trimmed_ver.is_empty()).then(|| trimmed_ver.to_owned()),
+        ..WantedDependency::default()
+    };
     let resolved = resolve(&wanted, settings).await?;
     let manifest = manifest_of(&resolved)?;
     Ok(ResolvedVersion {
         package_name: manifest_field(&manifest, "name"),
         version: manifest_field(&manifest, "version"),
-        wanted_range: (!trimmed_ver.is_empty()
-            && trimmed_ver.parse::<node_semver::Range>().is_ok())
-        .then_some(trimmed_ver),
+        wanted_range: wanted.bare_specifier.filter(|ver| ver.parse::<node_semver::Range>().is_ok()),
         is_semver: true,
         resolved_via: resolved.resolved_via,
         manifest: Some(manifest),

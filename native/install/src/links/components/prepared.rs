@@ -52,9 +52,7 @@ pub fn link_prepared_component(
     if manifest.is_some() {
         link_injected_package_json(root, component, &package, &read_injected_deps(root)?)?;
     }
-    if let Some(directory) = root_components_dir
-        && !pkg_name.is_empty()
-    {
+    if let Some(directory) = root_components_dir {
         link_packages_to_root_components(directory, root, &[pkg_name])?;
     }
     Ok(ComponentLinks {

@@ -76,19 +76,14 @@ pub fn record(
 /// when any, and always `updateDependents`.
 fn entry(lane: &LaneObject, message: &str, identity: &Identity) -> Value {
     let mut log = Map::new();
-    if let Some(username) = identity.username
-        .as_deref()
-        .map(str::trim)
-        .filter(|username| !username.is_empty())
-    {
-        log.insert("username".into(), json!(username));
-    }
-    if let Some(email) = identity.email
-        .as_deref()
-        .map(str::trim)
-        .filter(|email| !email.is_empty())
-    {
-        log.insert("email".into(), json!(email));
+    for (key, field) in [("username", &identity.username), ("email", &identity.email)] {
+        if let Some(value) = field
+            .as_deref()
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+        {
+            log.insert(key.into(), json!(value));
+        }
     }
     log.insert("message".into(), json!(message.trim()));
     log.insert("date".into(), json!(now_millis().to_string()));

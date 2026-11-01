@@ -187,11 +187,7 @@ impl Repo {
 
     fn remote_ref_path(&self, scope: &str, lane: &str) -> io::Result<PathBuf> {
         for segment in [scope, lane] {
-            if segment.is_empty()
-                || segment.contains(['/', '\\', '\0'])
-                || segment == "."
-                || segment == ".."
-            {
+            if matches!(segment, "" | "." | "..") || segment.contains(['/', '\\', '\0']) {
                 return Err(invalid(&format!("invalid remote lane segment {segment:?}")));
             }
         }

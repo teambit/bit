@@ -182,14 +182,15 @@ impl Importer<'_> {
                 .as_array()
                 .is_some_and(|edges| !edges.is_empty()));
         };
-        let edges = self.repo
+        Ok(self.repo
             .read(reference)?
-            .and_then(|edges| bit_object_import::parse_jsonc(&edges.content).ok());
-        Ok(edges.is_some_and(|edges| {
-            edges
-                .as_array()
-                .is_some_and(|list| !list.is_empty())
-        }))
+            .and_then(|edges| bit_object_import::parse_jsonc(&edges.content).ok())
+            .and_then(|edges| {
+                edges
+                    .as_array()
+                    .map(|list| !list.is_empty())
+            })
+            .unwrap_or(false))
     }
 
     fn flattened_exist(&self, version: &Value) -> bool {

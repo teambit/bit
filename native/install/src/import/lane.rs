@@ -73,12 +73,10 @@ impl RemoteLane {
     /// Whether the lane lists the component (`groupByLanes`).
     #[must_use]
     pub fn contains(&self, id: &Id) -> bool {
+        let (scope, name) = (id.scope.trim(), id.name.trim());
         self.ids_with_update_dependents()
             .iter()
-            .any(|lane_id| {
-                lane_id.scope.trim() == id.scope.trim()
-                    && lane_id.name.trim() == id.name.trim()
-            })
+            .any(|lane_id| lane_id.scope.trim() == scope && lane_id.name.trim() == name)
     }
 }
 

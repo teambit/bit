@@ -200,13 +200,12 @@ impl LaneObject {
         if self.update_dependent(scope, name).is_none() {
             return;
         }
-        let remaining: Vec<Id> = self.update_dependents
-            .take()
-            .into_iter()
-            .flatten()
-            .filter(|id| !(id.scope.trim() == scope && id.name.trim() == name))
-            .collect();
-        self.update_dependents = (!remaining.is_empty()).then_some(remaining);
+        if let Some(dependents) = &mut self.update_dependents {
+            dependents.retain(|id| !(id.scope.trim() == scope && id.name.trim() == name));
+            if dependents.is_empty() {
+                self.update_dependents = None;
+            }
+        }
         self.changed = true;
     }
 

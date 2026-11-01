@@ -151,9 +151,10 @@ pub(super) fn safe_intersect<'a>(ranges: impl Iterator<Item = &'a str>) -> Optio
     if rest.is_empty() {
         return Some(first.to_string());
     }
-    let mut acc: node_semver::Range = first.parse().ok()?;
-    for range in rest {
-        acc = acc.intersect(&range.parse().ok()?)?;
-    }
-    Some(acc.to_string())
+    let intersected = rest
+        .iter()
+        .try_fold(first.parse::<node_semver::Range>().ok()?, |acc, range| {
+            acc.intersect(&range.parse().ok()?)
+        })?;
+    Some(intersected.to_string())
 }

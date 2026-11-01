@@ -256,10 +256,7 @@ fn merge_subscriber_projects(
         } else {
             let manifest = manifests.entry(directory).or_default();
             let merged = spread(&[&dependencies, &manifest_field(manifest, "dependencies")]);
-            manifest.insert(
-                "dependencies".into(),
-                serde_json::to_value(merged).map_err(io::Error::other)?,
-            );
+            manifest.insert("dependencies".into(), map_value(&merged));
         }
     }
     Ok(())

@@ -275,7 +275,5 @@ fn merge_bit(existing: Option<&Value>, graph: Option<&Value>) -> Option<Value> {
 /// Everything before the first `(` (`removePeerSuffix` in `pnpm.package-manager.ts`).
 fn remove_peer_suffix(dep_path: &str) -> &str {
     let trimmed = dep_path.trim();
-    trimmed
-        .find('(')
-        .map_or(trimmed, |index| &trimmed[..index])
+    trimmed.split_once('(').map_or(trimmed, |(prefix, _)| prefix)
 }

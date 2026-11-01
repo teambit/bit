@@ -4,7 +4,7 @@ mod hoist;
 #[cfg(test)]
 mod tests;
 
-use super::deps::{DepsObject, Field, truthy};
+use super::deps::{DepsObject, Field};
 use crate::model::{DependencyMap, PolicyEntry};
 use indexmap::IndexMap;
 
@@ -96,10 +96,7 @@ fn insert_component_deps(
 fn merge_with_root(root: &DepsObject, deduped: &mut Deduped) {
     for field in Field::ALL {
         for (name, range) in root.get(field) {
-            let exists = [Field::Dependencies, Field::DevDependencies, Field::PeerDependencies]
-                .into_iter()
-                .any(|existing| truthy(deduped.root.get(existing), name));
-            if !exists {
+            if !deduped.root.has_direct(name) {
                 deduped.root.get_mut(field).insert(name.clone(), range.clone());
             }
         }

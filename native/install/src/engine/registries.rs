@@ -139,16 +139,17 @@ fn from_pnpm_config(config: &pnpm_config::Config, cloud_registry: &str) -> Regis
 /// `readConfig`'s registry list: `default` from `config.registry` unless the
 /// scope map sets it, then every scope (`resolved_registries` in napi).
 fn configured_registries(config: &pnpm_config::Config) -> Vec<(String, String)> {
-    let mut list = Vec::new();
-    if !config.registries_by_scope.contains_key("default") {
-        list.push(("default".to_string(), config.registry.trim().to_string()));
-    }
-    list.extend(
-        config.registries_by_scope
-            .iter()
-            .map(|(name, url)| (name.trim().to_string(), url.trim().to_string())),
-    );
-    list
+    let default = (!config.registries_by_scope.contains_key("default")).then(|| {
+        ("default".to_string(), config.registry.trim().to_string())
+    });
+    default
+        .into_iter()
+        .chain(
+            config.registries_by_scope
+                .iter()
+                .map(|(name, url)| (name.trim().to_string(), url.trim().to_string())),
+        )
+        .collect()
 }
 
 /// A scope registry prefers its scope-keyed credential; both fall back to the

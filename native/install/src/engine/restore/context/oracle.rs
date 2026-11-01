@@ -44,6 +44,6 @@ process.stdout.write(JSON.stringify(rows));
         let mut actual = existing.clone();
         super::merge(existing, graph, &mut actual);
         actual.retain(|key, _| super::KEYS.contains(&key.as_str()));
-        assert_eq!(json!(actual), row["result"], "{row}");
+        assert_eq!(json!(actual), row["result"], "mismatch for {row}");
     }
 }

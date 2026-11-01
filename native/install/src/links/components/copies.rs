@@ -23,7 +23,8 @@ pub fn component_package_copies(
         if let Some(copies) = injected_copy_paths(&injected, &key, &component.root_dir) {
             copies
                 .iter()
-                .map(|path| path.trim())
+                .map(String::as_str)
+                .map(str::trim)
                 .filter(|path| !path.is_empty())
                 .map(|path| root.join(path))
                 .collect()

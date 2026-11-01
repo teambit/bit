@@ -24,14 +24,16 @@ impl Id {
     /// `scope/name@version`, as the fetch protocol expects.
     #[must_use]
     pub fn to_request(&self) -> String {
-        match self.version
+        let mut request = self.without_version();
+        if let Some(version) = self.version
             .as_deref()
             .map(str::trim)
             .filter(|ver| !ver.is_empty())
         {
-            Some(version) => format!("{}@{version}", self.without_version()),
-            None => self.without_version(),
+            request.push('@');
+            request.push_str(version);
         }
+        request
     }
 
     #[must_use]

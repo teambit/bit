@@ -68,7 +68,7 @@ fn read_package_dirs(virtual_store_dir: &Path) -> io::Result<Vec<String>> {
             .file_name()
             .to_string_lossy()
             .into_owned();
-        if name != Lockfile::CURRENT_FILE_NAME && name != "node_modules" {
+        if !matches!(name.as_str(), Lockfile::CURRENT_FILE_NAME | "node_modules") {
             dirs.push(name);
         }
     }

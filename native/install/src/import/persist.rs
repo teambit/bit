@@ -43,7 +43,7 @@ impl<'a> Progress<'a> {
             .is_some_and(|value| {
                 let text = value.to_string_lossy();
                 let trimmed = text.trim();
-                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+                !matches!(trimmed, "" | "0") && !trimmed.eq_ignore_ascii_case("false")
             })
         {
             return None;

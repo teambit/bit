@@ -39,19 +39,18 @@ fn root_dependencies(
     root: Option<&Map<String, Value>>,
     overridden: &HashSet<String>,
 ) -> Map<String, Value> {
-    let mut root_deps = Map::new();
-    for field in ["devDependencies", "dependencies"] {
-        if let Some(entries) = root.and_then(|root| root.get(field).and_then(Value::as_object)) {
-            root_deps.extend(
-                entries
-                    .iter()
-                    .map(|(name, value)| (name.trim().to_owned(), value.clone()))
-                    .filter(|(name, _)| !name.is_empty()),
-            );
-        }
-    }
-    root_deps.retain(|name, _| !overridden.contains(name.trim()));
-    root_deps
+    let Some(root) = root else { return Map::new() };
+    ["devDependencies", "dependencies"]
+        .into_iter()
+        .filter_map(|field| root.get(field).and_then(Value::as_object))
+        .flatten()
+        .filter_map(|(name, value)| {
+            let trimmed = name.trim();
+            (!trimmed.is_empty() && !overridden.contains(trimmed)).then(|| {
+                (trimmed.to_owned(), value.clone())
+            })
+        })
+        .collect()
 }
 
 fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {

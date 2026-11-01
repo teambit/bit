@@ -74,17 +74,15 @@ fn yaml_virtual_store_dir(line: &str) -> Option<String> {
             .unwrap_or(value)
             .trim_end()
     };
-    let value = value
+    let mut value = value
         .strip_suffix(',')
         .unwrap_or(value)
         .trim_end();
-    let value = value.strip_prefix('"').unwrap_or(value);
-    let value = value.strip_suffix('"').unwrap_or(value);
-    let value = value.strip_prefix('\'').unwrap_or(value);
-    let value = value
-        .strip_suffix('\'')
-        .unwrap_or(value)
-        .trim();
+    for quote in ['"', '\''] {
+        value = value.strip_prefix(quote).unwrap_or(value);
+        value = value.strip_suffix(quote).unwrap_or(value);
+    }
+    let value = value.trim();
     (!value.is_empty() && !value.contains(['"', '\''])).then(|| value.to_string())
 }
 

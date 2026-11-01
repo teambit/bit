@@ -35,11 +35,11 @@ fn handle_preserved(deduped: &mut Deduped, name: &str, entry: &IndexEntry) -> io
     let Some((version, field)) = &entry.preserved else { return Ok(true) };
     let version = version.trim();
     set_root(deduped, *field, name, version);
-    let mut intersecting = Vec::new();
-    for item in &entry.items {
-        intersecting.push(intersect(&[item.range.trim(), version])?.is_some());
-    }
-    let mut kept = intersecting.into_iter();
+    let mut kept = entry.items
+        .iter()
+        .map(|item| Ok(intersect(&[item.range.trim(), version])?.is_some()))
+        .collect::<io::Result<Vec<_>>>()?
+        .into_iter();
     keep_in_components(deduped, name, &entry.items, |_| kept.next().unwrap_or(false));
     Ok(false)
 }

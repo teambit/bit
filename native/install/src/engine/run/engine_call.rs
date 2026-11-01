@@ -114,8 +114,10 @@ impl EngineCall {
                 .is_some_and(|version| !version.trim().is_empty()),
             never_build: self.settings.policy.scripts.never_build_package_names
                 .iter()
-                .map(|name| name.trim().to_owned())
+                .map(String::as_str)
+                .map(str::trim)
                 .filter(|name| !name.is_empty())
+                .map(str::to_owned)
                 .collect(),
             raw_manifests: projects
                 .iter()

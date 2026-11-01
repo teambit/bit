@@ -149,12 +149,10 @@ fn ids_to_import(bitmap: &Bitmap, lane: Option<&RemoteLane>) -> Vec<Id> {
     };
     let mut ids = lane.ids_with_update_dependents();
     for id in &bitmap.current_lane_ids {
+        let (scope, name) = (id.scope.trim(), id.name.trim());
         if !ids
             .iter()
-            .any(|existing| {
-                existing.scope.trim() == id.scope.trim()
-                    && existing.name.trim() == id.name.trim()
-            })
+            .any(|existing| existing.scope.trim() == scope && existing.name.trim() == name)
         {
             ids.push(id.clone());
         }

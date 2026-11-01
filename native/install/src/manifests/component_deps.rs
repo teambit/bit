@@ -202,7 +202,8 @@ fn missing(deps: &ComponentDependencies) -> (Vec<String>, Vec<String>) {
     let mut runtime: Vec<String> = Vec::new();
     for name in deps.missing_packages.runtime
         .iter()
-        .map(|name| name.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         if !runtime
@@ -215,7 +216,8 @@ fn missing(deps: &ComponentDependencies) -> (Vec<String>, Vec<String>) {
     let mut dev: Vec<String> = Vec::new();
     for name in deps.missing_packages.dev
         .iter()
-        .map(|name| name.trim())
+        .map(String::as_str)
+        .map(str::trim)
         .filter(|name| !name.is_empty())
     {
         if !dev

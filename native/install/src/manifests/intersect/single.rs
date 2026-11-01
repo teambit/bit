@@ -19,13 +19,11 @@ impl fmt::Display for Single {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Single::Ver(comparator) => formatter.write_str(comparator.value.trim()),
-            Single::Range(lower, upper) => {
-                let parts: Vec<&str> = [lower.value.trim(), upper.value.trim()]
-                    .into_iter()
-                    .filter(|value| !value.is_empty())
-                    .collect();
-                formatter.write_str(&parts.join(" "))
-            }
+            Single::Range(lower, upper) => match (lower.value.trim(), upper.value.trim()) {
+                ("", right) => formatter.write_str(right),
+                (left, "") => formatter.write_str(left),
+                (left, right) => write!(formatter, "{left} {right}"),
+            },
         }
     }
 }

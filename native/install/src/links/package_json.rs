@@ -292,12 +292,18 @@ impl Placeholders {
         let scope_id = component.id.effective_scope().map(str::to_owned);
         let (owner, scope) = match scope_id
             .as_deref()
-            .map(|id| id.split('.').collect::<Vec<_>>())
+            .and_then(|id| id.split_once('.'))
         {
-            Some(parts) if parts.len() > 1 => {
-                (Some(parts[0].to_owned()), Some(parts[1].to_owned()))
-            }
-            _ => (None, scope_id.clone()),
+            Some((owner, rest)) => (
+                Some(owner.to_owned()),
+                Some(
+                    rest.split('.')
+                        .next()
+                        .unwrap_or(rest)
+                        .to_owned(),
+                ),
+            ),
+            None => (None, scope_id.clone()),
         };
         let name = component.id.name.replace('/', ".");
         Self { main_file: component.main_file.clone(), name, scope, scope_id, owner }
