@@ -17,12 +17,10 @@ pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()>
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .ok_or_else(|| invalid("stash bitmap root"))?;
-        let mut entry = saved.clone();
-        let entry_map = entry.as_object_mut().ok_or_else(|| invalid("stash bitmap entry"))?;
-        entry_map.shift_remove("stashVersion");
-        entry_map.shift_remove("directory");
-        entry_map.insert("rootDir".into(), Value::String(root.to_owned()));
-        let id = identity(&entry)?;
+        if !saved.is_object() {
+            return Err(invalid("stash bitmap entry"));
+        }
+        let id = identity(saved)?;
         if rows
             .iter()
             .any(|row| identity(row).is_ok_and(|current| current == id))
@@ -34,6 +32,11 @@ pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()>
             return Err(invalid("stash new workspace root"));
         }
         lane::validate_roots(root, &rows)?;
+        let mut entry = saved.clone();
+        let entry_map = entry.as_object_mut().expect("checked object");
+        entry_map.shift_remove("stashVersion");
+        entry_map.shift_remove("directory");
+        entry_map.insert("rootDir".into(), Value::String(root.to_owned()));
         rows.push(entry);
         prepared.changed = true;
     }

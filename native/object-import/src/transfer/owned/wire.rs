@@ -86,6 +86,7 @@ struct References {
 }
 
 impl Version {
+    #[inline]
     pub(super) fn convert(&self) -> std::io::Result<collection::Version> {
         let expected = self.expected
             .as_ref()

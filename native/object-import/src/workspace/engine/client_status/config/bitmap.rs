@@ -31,9 +31,9 @@ fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     if bitmap["$schema-version"] != "17.0.0" || entries.len() > 4096 + metadata_rows {
         return Err(invalid("status bitmap schema or count"));
     }
-    let mut roots = HashSet::new();
-    let mut ids = HashSet::new();
-    let mut targets = Vec::new();
+    let mut roots = HashSet::with_capacity(entries.len());
+    let mut ids = HashSet::with_capacity(entries.len());
+    let mut targets = Vec::with_capacity(entries.len());
     for (key, value) in entries {
         if key == "$schema-version" || key == "_bit_lane" {
             continue;

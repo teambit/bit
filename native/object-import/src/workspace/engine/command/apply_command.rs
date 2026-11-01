@@ -89,36 +89,36 @@ pub(super) fn publish_sources(plan: &mut planning::Planned, root: &Path) -> io::
     }
     Ok(())
 }
-fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
+fn reason(record: &Record, plan: &planning::Planned) -> String {
     if super::checkout_stash::loading(&record.request.options) {
-        return Ok(String::new());
+        return String::new();
     }
     if record.request.operation == input::Operation::Merge {
         // ComponentWriter persists the changed bitmap before the later lane-specific
         // write, which is already clean and therefore creates no history entry.
-        return Ok("merge".to_owned());
+        return "merge".to_owned();
     }
     if record.request.operation == input::Operation::Switch {
-        return Ok("checkout".to_owned());
+        return "checkout".to_owned();
     }
     if plan.materials.iter().all(|material| material.keep_ours) {
-        return Ok(format!(
+        return format!(
             "checkout ({})",
             record.request.options.pattern
                 .as_deref()
                 .map(str::trim)
                 .filter(|pattern| !pattern.is_empty())
                 .unwrap_or("undefined"),
-        ));
+        );
     }
-    Ok("checkout".to_owned())
+    "checkout".to_owned()
 }
 pub(super) fn publish_bitmap(
     prepared: &mut PreparedPlan,
     record: &Record,
     file_id: &str,
 ) -> io::Result<(Option<String>, usize)> {
-    let reason = reason(record, &prepared.plan)?;
+    let reason = reason(record, &prepared.plan);
     let first = match &mut prepared.plan.merge {
         Some(merge) => merge.persist_first(&record.request.root)?,
         None => 0,

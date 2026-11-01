@@ -162,9 +162,10 @@ fn ancestors(
     let mut seen = existing.clone();
     let mut output = Vec::new();
     while let Some(reference) = pending.pop() {
-        if !seen.insert(reference.clone()) {
+        if seen.contains(&reference) {
             continue;
         }
+        seen.insert(reference.clone());
         if seen.len() > 4096 {
             return Err(invalid("command history limit"));
         }
@@ -186,6 +187,7 @@ fn ancestors(
     Ok(output)
 }
 
+#[inline]
 fn apply_rebased_version(row: &mut Value, version: &Value) {
     row["parents"] = version["parents"].clone();
     row["squashed"] = version["squashed"]["previousParents"].clone();

@@ -83,15 +83,17 @@ fn parse_metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<(serde_json::Value
         crate::metadata::inflate(bytes).ok_or_else(|| invalid("unsupported transfer object"))?;
     let (header, body) =
         inflated.split_once('\0').ok_or_else(|| invalid("missing transfer header"))?;
-    let fields = header.split(' ').collect::<Vec<_>>();
-    let declared = fields
-        .get(2)
-        .and_then(|field| field.parse::<usize>().ok())
-        .ok_or_else(|| invalid("unsupported transfer object header"))?;
-    if fields.len() != 3
-        || !fields[1].eq_ignore_ascii_case(&crate::validate::hexadecimal(&hash))
+    let mut fields = header.split(' ');
+    let (Some(kind), Some(raw_hash), Some(raw_len), None) =
+        (fields.next(), fields.next(), fields.next(), fields.next())
+    else {
+        return Err(invalid("unsupported transfer object header"));
+    };
+    let declared =
+        raw_len.parse::<usize>().map_err(|_| invalid("unsupported transfer object header"))?;
+    if !raw_hash.eq_ignore_ascii_case(&crate::validate::hexadecimal(&hash))
         || (declared != body.len() && declared != body.encode_utf16().count())
-        || !known(fields[0])
+        || !known(kind)
     {
         return Err(invalid("unsupported transfer object header"));
     }
@@ -100,9 +102,10 @@ fn parse_metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<(serde_json::Value
     if !value.is_object() {
         return Err(invalid("transfer metadata is not an object"));
     }
-    Ok((value, inflated.len(), fields[0].to_owned()))
+    Ok((value, inflated.len(), kind.to_owned()))
 }
 
+#[inline]
 fn known(kind: &str) -> bool {
     matches!(
         kind,

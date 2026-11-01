@@ -49,9 +49,6 @@ fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result
         .map(str::trim)
         .ok_or_else(|| invalid("lane addition name"))?;
     let bad_scope = scope.is_empty() || scope.contains('/') || matches!(scope, "." | "..");
-    let bad_segment = name
-        .split('/')
-        .any(|part| part.is_empty() || matches!(part, "." | ".."));
     if bad_scope
         || name.is_empty()
         || identity.len() > 1024
@@ -62,7 +59,9 @@ fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result
         || identity
             .chars()
             .any(|ch| ch == '\\' || ch.is_control())
-        || bad_segment
+        || name
+            .split('/')
+            .any(|part| part.is_empty() || matches!(part, "." | ".."))
     {
         return Err(invalid("lane addition identity"));
     }

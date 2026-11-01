@@ -293,7 +293,7 @@ fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Res
         keyed.push((key, crate::inspection::component_row(&entry)?));
     }
     keyed.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
-    let mut output = Map::new();
+    let mut output = Map::with_capacity(keyed.len() + 2);
     for (key, entry) in keyed {
         if output.insert(key, entry).is_some() {
             return Err(invalid("command duplicate bitmap identity"));

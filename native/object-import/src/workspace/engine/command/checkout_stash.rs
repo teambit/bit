@@ -8,13 +8,16 @@ use super::{
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
+#[inline]
 pub(super) fn loading(options: &Options) -> bool {
     options.stash.as_ref().is_some_and(|stash| stash.reset_ids.is_none())
 }
 
+#[inline]
 pub(super) fn new_only(options: &Options) -> bool {
-    loading(options)
-        && options.stash.as_ref().is_some_and(|stash| stash.versions.is_empty())
+    options.stash
+        .as_ref()
+        .is_some_and(|stash| stash.reset_ids.is_none() && stash.versions.is_empty())
 }
 
 pub(super) fn version<'a>(options: &'a Options, identity: &str) -> Option<&'a str> {

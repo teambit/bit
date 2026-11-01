@@ -44,11 +44,11 @@ impl State {
             .values()
             .flatten()
             .chain(self.plans.values().flat_map(|plan| plan.entries.iter()))
-            .filter_map(|entry| entry.path.as_ref())
+            .filter_map(|entry| entry.path.as_deref())
             .collect::<HashSet<_>>();
         let paths = self.spool_paths
             .iter()
-            .filter(|path| !retained.contains(path))
+            .filter(|path| !retained.contains(path.as_path()))
             .cloned()
             .collect::<Vec<_>>();
         for path in paths {

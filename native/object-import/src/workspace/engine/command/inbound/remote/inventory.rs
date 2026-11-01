@@ -375,8 +375,8 @@ fn lane_readme(version: &Value) -> io::Result<Vec<String>> {
 
 fn file_latest(path: &Path, scope: &str, ids: &[String]) -> io::Result<Vec<String>> {
     scope_file(path, scope)?;
-    let mut seen = HashSet::new();
-    let mut index = IndexMap::new();
+    let mut seen = HashSet::with_capacity(ids.len());
+    let mut index = IndexMap::with_capacity(ids.len());
     for row in file_list::index(path)? {
         let (name, hash) = file_list::indexed(&row, scope, &mut seen)?;
         index.insert(name, hash);

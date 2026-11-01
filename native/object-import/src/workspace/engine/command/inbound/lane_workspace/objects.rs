@@ -68,6 +68,7 @@ fn unmatched_roots(roots: &[Target], entries: &[lane::Entry]) -> Vec<Target> {
         .collect()
 }
 
+#[inline]
 fn entry_key(entry: &lane::Entry) -> (Option<&str>, &str) {
     let raw = entry.identity.trim();
     let bare = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
@@ -77,6 +78,7 @@ fn entry_key(entry: &lane::Entry) -> (Option<&str>, &str) {
     }
 }
 
+#[inline]
 fn target_key(target: &Target) -> (Option<&str>, &str) {
     (
         target.scope

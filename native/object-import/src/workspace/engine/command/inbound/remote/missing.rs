@@ -129,6 +129,7 @@ impl Objects<'_> {
             .unwrap_or(false)
     }
 
+    #[inline]
     fn object(&self, hash: &str, kind: &str) -> Option<Value> {
         crate::parse_jsonc(&self.body(hash, kind)?).ok()
     }
@@ -179,6 +180,7 @@ fn dependency_id(value: &Value) -> Option<String> {
     Some(format!("{scope}/{name}@{ver}"))
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

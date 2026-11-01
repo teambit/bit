@@ -65,6 +65,7 @@ fn retain_files(
     let mut files = Vec::with_capacity(rows.len());
     let mut paths = Vec::with_capacity(rows.len());
     let mut seen = HashSet::with_capacity(rows.len());
+    let version_root = private_root.join(version);
     for (row, bytes) in rows.iter().zip(contents) {
         let relative = row["relativePath"]
             .as_str()
@@ -79,7 +80,7 @@ fn retain_files(
         if !hash.eq_ignore_ascii_case(reference) {
             return Err(invalid("hidden lane Source hash mismatch"));
         }
-        let path = private_root.join(version).join(relative);
+        let path = version_root.join(relative);
         let token = state
             .retain(snapshots::Observation {
                 path: path.clone(),

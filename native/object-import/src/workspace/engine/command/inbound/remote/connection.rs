@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[inline]
 pub(super) fn connect(
     root: &Path,
     transport: &Transport,
@@ -77,6 +78,7 @@ pub(super) fn bare(
     Ok((remotes, network, global, local.to_owned()))
 }
 
+#[inline]
 pub(super) fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
     serde_json::from_value(bit_workspace_config::read_global_config(&transport.global_config_dir)?)
         .map_err(io::Error::other)

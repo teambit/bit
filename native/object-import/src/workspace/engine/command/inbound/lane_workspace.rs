@@ -163,6 +163,7 @@ fn select(
     Ok((selected, main, changed))
 }
 
+#[inline]
 fn visible_lane_head<'a>(
     visible: &'a HashMap<String, String>,
     key: &str,

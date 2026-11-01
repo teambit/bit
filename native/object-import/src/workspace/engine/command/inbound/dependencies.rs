@@ -112,7 +112,7 @@ pub(super) fn graph(
     imported: &PreparedImport,
 ) -> io::Result<(Adjacency, Vec<String>)> {
     let mut adjacency = HashMap::<String, Vec<Target>>::new();
-    let mut current = Vec::new();
+    let mut current = Vec::with_capacity(roots.len());
     for root in roots {
         let (version_name, version) = root_version(input, root, imported)?;
         current.push(format!("{}@{version_name}", identity(root)?));
@@ -140,9 +140,10 @@ fn layer(
         for dependency in adjacency.get(id).into_iter().flatten() {
             let name = identity(dependency)?;
             let versioned = versioned(dependency)?;
-            if roots.contains(&name) || !seen.insert(versioned.clone()) {
+            if roots.contains(&name) || seen.contains(&versioned) {
                 continue;
             }
+            seen.insert(versioned.clone());
             result.push(dependency.clone());
             next.push(versioned);
         }

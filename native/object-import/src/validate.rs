@@ -17,6 +17,7 @@ pub(crate) struct Outcome {
     pub(crate) metadata: Option<String>,
 }
 
+#[inline]
 pub(crate) fn hexadecimal(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut output = String::with_capacity(bytes.len() * 2);

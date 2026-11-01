@@ -45,10 +45,12 @@ impl Queue {
         self.paths.push_back(next);
         Ok(())
     }
+    #[inline]
     pub(super) fn pop(&mut self) -> Option<Vec<String>> {
         self.paths.pop_front()
     }
     // Completed eligible paths remain charged while retained in the result.
+    #[inline]
     pub(super) fn release(&mut self, path: &[String]) {
         self.nodes = self.nodes.saturating_sub(path.len());
         let path_bytes = path

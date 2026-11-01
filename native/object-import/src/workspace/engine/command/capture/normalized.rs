@@ -8,7 +8,12 @@ pub(super) fn read(
     targets: &[comparison::Target],
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<(read::Metadata, Vec<u8>)>> {
-    let mut paths = Vec::new();
+    let capacity = targets
+        .iter()
+        .map(|target| target.files.len())
+        .sum::<usize>()
+        .min(16384);
+    let mut paths = Vec::with_capacity(capacity);
     let mut bitmaps = HashSet::new();
     for target in targets {
         for file in &target.files {
@@ -40,6 +45,7 @@ fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata,
     Ok((metadata, contents))
 }
 
+#[inline]
 pub(super) fn is_root_bitmap(directory: &str, file: &str) -> bool {
     let clean_dir = directory
         .trim()

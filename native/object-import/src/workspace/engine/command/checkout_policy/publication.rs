@@ -39,12 +39,12 @@ impl Prepared {
             return Ok(None);
         }
         let mapped = update_map(updates)?;
-        let original = String::from_utf8(self.before.clone())
+        let original = std::str::from_utf8(&self.before)
             .map_err(|_| invalid("command workspace config UTF-8"))?;
         let mut text = if mapped.is_empty() {
-            original
+            original.to_owned()
         } else {
-            render_updates_kind(&original, &mapped, cfg!(windows), plan["merge"] != true)?
+            render_updates_kind(original, &mapped, cfg!(windows), plan["merge"] != true)?
         };
         if !conflicts.is_empty() {
             text = crate::config_merge::render_workspace_conflict(&text, &plan["conflicts"])?;
@@ -77,7 +77,7 @@ fn update_map(updates: &[Value]) -> io::Result<Map<String, Value>> {
     if updates.len() > 4096 {
         return Err(invalid("command workspace policy update row"));
     }
-    let mut mapped = Map::new();
+    let mut mapped = Map::with_capacity(updates.len());
     for update in updates {
         let row = update
             .as_array()

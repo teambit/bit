@@ -41,6 +41,7 @@ pub(super) fn freeze(
     Ok(frozen)
 }
 
+#[inline]
 fn entry(
     directory: &Path,
     descriptor: Descriptor,

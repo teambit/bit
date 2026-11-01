@@ -140,6 +140,7 @@ impl Archive {
         Ok(Self { file, path: path.to_path_buf(), digest: Sha1::new(), bytes: 0, complete: false })
     }
 
+    #[inline]
     fn write(&mut self, bytes: &[u8]) -> io::Result<()> {
         self.file.write_all(bytes)?;
         self.digest.update(bytes);
@@ -147,6 +148,7 @@ impl Archive {
         Ok(())
     }
 
+    #[inline]
     fn entry(&mut self, header: &[u8; 512], body: &[u8]) -> io::Result<()> {
         self.write(header)?;
         self.write(body)?;

@@ -18,6 +18,7 @@ pub(super) struct Captured {
     pub(super) metadata: Value,
     pub(super) files: Value,
 }
+#[inline]
 pub(super) fn all(
     root: &Path,
     inputs: Vec<Value>,
@@ -27,6 +28,7 @@ pub(super) fn all(
     all_with(root, inputs, snapshots, pool, false)
 }
 
+#[inline]
 pub(super) fn all_for_snapshot(
     root: &Path,
     inputs: Vec<Value>,

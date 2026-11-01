@@ -1,6 +1,7 @@
 use super::{Finalize, State, bitmap, invalid, proof, scratch};
 use serde_json::{Value, json};
 use std::io;
+#[inline]
 pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command finalize owner absent"))?;
     let token = input.token.trim();

@@ -69,6 +69,7 @@ fn validate_git_head(git_head: &str) -> io::Result<&str> {
     Ok(git_head)
 }
 
+#[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();
     trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim())
@@ -91,7 +92,7 @@ fn read_component_model(
     id: &str,
 ) -> io::Result<Option<Value>> {
     let bare = bare_id(id);
-    let mut candidates = Vec::new();
+    let mut candidates = Vec::with_capacity(3);
     if let Some(indexed) = indexed_component_hash(root, bare) {
         candidates.push(indexed);
     }

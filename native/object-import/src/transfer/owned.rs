@@ -128,12 +128,19 @@ fn staging(path: &Path, state: &State) -> io::Result<()> {
 }
 
 fn describe(token: &str, entries: &[Entry]) -> Value {
-    let objects: Vec<_> = entries.iter().enumerate().map(|(index, entry)| {
+    let mut compressed_bytes = 0_usize;
+    let mut raw_bytes = 0_usize;
+    let mut objects = Vec::with_capacity(entries.len());
+    for (index, entry) in entries.iter().enumerate() {
+        compressed_bytes += entry.compressed.len();
+        raw_bytes += entry.raw;
         let mut row = json!({"hash":crate::validate::hexadecimal(&entry.hash),"type":entry.kind,"index":index,"compressedPath":entry.path,"compressedSha1":crate::validate::hexadecimal(&Sha1::digest(&entry.compressed)),"bytes":entry.compressed.len()});
-        if let Some(scope) = &entry.scope { row["scope"] = json!(scope); }
-        row
-    }).collect();
-    json!({"token":token,"count":entries.len(),"objects":objects,"compressedBytes":entries.iter().map(|entry|entry.compressed.len()).sum::<usize>(),"rawBytes":entries.iter().map(|entry|entry.raw).sum::<usize>()})
+        if let Some(scope) = &entry.scope {
+            row["scope"] = json!(scope);
+        }
+        objects.push(row);
+    }
+    json!({"token":token,"count":entries.len(),"objects":objects,"compressedBytes":compressed_bytes,"rawBytes":raw_bytes})
 }
 
 pub(super) fn initialize(state: &mut State, input: &Value) -> io::Result<Value> {

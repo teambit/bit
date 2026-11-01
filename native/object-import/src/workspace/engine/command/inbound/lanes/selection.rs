@@ -56,6 +56,7 @@ fn resolve_alias(
     Ok(format!("{remote_scope}/{remote_lane}"))
 }
 
+#[inline]
 fn tracked(root: &Path) -> io::Result<Vec<String>> {
     tracked_for_separator(root, std::path::MAIN_SEPARATOR)
 }
@@ -95,6 +96,7 @@ fn tracked_for_separator(root: &Path, separator: char) -> io::Result<Vec<String>
 }
 
 fn scope_lanes(directory: &Path, scope: &str) -> io::Result<Vec<String>> {
+    let scope = scope.trim();
     let mut ids = Vec::new();
     for lane in fs::read_dir(directory)? {
         let lane = lane?;
@@ -107,7 +109,7 @@ fn scope_lanes(directory: &Path, scope: &str) -> io::Result<Vec<String>> {
             .map_err(|_| invalid("inbound remote lane UTF8"))?;
         let name = name.trim();
         if !name.is_empty() && !name.starts_with('.') && !matches!(name, "main" | "master") {
-            ids.push(format!("{}/{name}", scope.trim()));
+            ids.push(format!("{scope}/{name}"));
         }
     }
     Ok(ids)

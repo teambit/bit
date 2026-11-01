@@ -53,7 +53,7 @@ fn jobs(input: &Request) -> io::Result<Vec<(String, Vec<String>)>> {
     if input.selection.ids.len() > 4096 {
         return Err(invalid("remote latest versions id limit"));
     }
-    let mut grouped = IndexMap::<String, Vec<String>>::new();
+    let mut grouped = IndexMap::<String, Vec<String>>::with_capacity(input.selection.ids.len());
     for id in &input.selection.ids {
         let id = id.trim();
         let (scope, _) = identity(id)?;

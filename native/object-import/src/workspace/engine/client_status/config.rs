@@ -213,10 +213,14 @@ pub(in crate::workspace::engine) fn ignored_issues_at(root: &Path) -> io::Result
 }
 
 pub(in crate::workspace::engine) fn document(path: &Path) -> io::Result<Value> {
-    if !fs::symlink_metadata(path)?.is_file() {
+    let meta = fs::symlink_metadata(path)?;
+    if !meta.is_file() {
         return Err(invalid("status nonordinary configuration"));
     }
-    let mut bytes = Vec::new();
+    if meta.len() > 1024 * 1024 {
+        return Err(invalid("status configuration budget"));
+    }
+    let mut bytes = Vec::with_capacity(usize::try_from(meta.len()).unwrap_or(0));
     fs::File::open(path)?
         .take(1024 * 1024 + 1)
         .read_to_end(&mut bytes)?;

@@ -147,14 +147,12 @@ pub(super) fn indexed(
     let row_scope = row_scope_opt
         .filter(|val| !val.is_empty())
         .unwrap_or(scope);
+    if row_scope != scope || row["isSymlink"] == true || !seen.insert(name.to_owned()) {
+        return Err(invalid("inbound file index identity"));
+    }
     let scoped_hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let unscoped_hash = crate::validate::hexadecimal(&Sha1::digest(name.as_bytes()));
-    if row_scope != scope
-        || row["isSymlink"] == true
-        || !seen.insert(name.to_owned())
-        || (hash != scoped_hash && hash != unscoped_hash)
-    {
+    if hash != scoped_hash && hash != crate::validate::hexadecimal(&Sha1::digest(name.as_bytes())) {
         return Err(invalid("inbound file index identity"));
     }
     Ok((name.to_owned(), hash.to_owned()))
@@ -242,6 +240,7 @@ pub(super) fn extension(version: &Value, name: &str, flag: &str) -> bool {
         })
 }
 
+#[inline]
 fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

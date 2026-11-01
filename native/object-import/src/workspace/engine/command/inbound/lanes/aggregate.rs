@@ -14,9 +14,10 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     let mut import = connected(input, &main, &mut selection)?;
     import.prepare_main_fetch(&input.root, &main, input.options.all_history)?;
     let main_receipt = group(input, &main, &import)?;
-    let mut groups = vec![import.progress.len()];
+    let mut groups = Vec::with_capacity(selection.lanes.len() + 1);
+    groups.push(import.progress.len());
     let mut targets = Vec::new();
-    let mut lane_receipts = Vec::new();
+    let mut lane_receipts = Vec::with_capacity(selection.lanes.len() + 1);
     for lane in &selection.lanes {
         let before = snapshot(&import);
         let (lane_targets, counts) =
@@ -126,6 +127,7 @@ fn adjust(receipt: &mut Value, before: &HashMap<String, HashSet<String>>) -> io:
     Ok(())
 }
 
+#[inline]
 fn has_version(versions: &Value, latest: &Value) -> bool {
     let Some(latest) = latest
         .as_str()

@@ -112,11 +112,13 @@ pub(crate) fn remove(path: &Path) -> io::Result<()> {
 }
 
 #[cfg(not(windows))]
+#[inline]
 fn remove_leaf(path: &Path, _metadata: &fs::Metadata) -> io::Result<()> {
     fs::remove_file(path)
 }
 
 #[cfg(windows)]
+#[inline]
 fn remove_leaf(path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     use std::os::windows::fs::FileTypeExt;
     if metadata.file_type().is_symlink_dir() { fs::remove_dir(path) } else { fs::remove_file(path) }

@@ -3,6 +3,7 @@ use sha1::Digest;
 use std::{
     fs,
     io::{self, Write},
+    path::Path,
 };
 
 use super::{Plan, wire};
@@ -24,20 +25,18 @@ pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
     {
         return Err(invalid("archive mtime count or value differs"));
     }
-    crate::transfer::paths(
-        request.path.parent().ok_or_else(|| invalid("missing archive parent"))?,
-        &request.path,
-    )?;
+    let parent = request.path.parent().ok_or_else(|| invalid("missing archive parent"))?;
+    crate::transfer::paths(parent, &request.path)?;
     let wrappers = if fetch { Some(wrappers(plan, request)?) } else { None };
     let headers = preflight(plan, request, fetch)?;
     candidate(&request.path)?;
     if let Some(wrappers) = wrappers {
         return fetch_archive(plan, request, &wrappers, &headers);
     }
-    export_archive(plan, request)
+    export_archive(plan, request, parent)
 }
 
-fn export_archive(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
+fn export_archive(plan: &Plan, request: &wire::Archive, parent: &Path) -> io::Result<Value> {
     let descriptors = plan.entries
         .iter()
         .zip(&request.mtime_seconds)
@@ -48,11 +47,7 @@ fn export_archive(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
             body: Body::Snapshot(entry.compressed.to_vec()),
         })
         .collect();
-    let result = prepare(
-        request.path.parent().ok_or_else(|| invalid("missing archive parent"))?,
-        &request.path,
-        descriptors,
-    )?;
+    let result = prepare(parent, &request.path, descriptors)?;
     if result.compressed_bytes
         != plan.entries
             .iter()

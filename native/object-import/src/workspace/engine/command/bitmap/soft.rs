@@ -134,7 +134,7 @@ impl Prepared {
 }
 
 fn next_version(version: &str, log: &Value, pre_release: Option<&str>) -> Value {
-    let mut next = Map::new();
+    let mut next = Map::with_capacity(5);
     next.insert("version".into(), Value::String(version.trim().to_owned()));
     for field in ["message", "username", "email"] {
         if let Some(value) = log.get(field) {

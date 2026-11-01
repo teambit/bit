@@ -11,6 +11,7 @@ pub(in crate::workspace::engine) struct Complete {
     semver: Value,
 }
 
+#[inline]
 pub(in crate::workspace::engine) fn complete(
     input: Complete,
     state: &mut State,

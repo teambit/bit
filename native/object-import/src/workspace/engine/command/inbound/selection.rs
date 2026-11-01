@@ -57,6 +57,7 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
 
+#[inline]
 fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
     let valid_segment = |part: &str| {
         !part.is_empty()
@@ -76,6 +77,7 @@ fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
         && !raw_version.chars().any(char::is_control)
 }
 
+#[inline]
 fn normalize_target_version(raw_version: &str) -> &str {
     let raw_version = raw_version.trim();
     if raw_version.eq_ignore_ascii_case("head") || raw_version.eq_ignore_ascii_case("latest") {

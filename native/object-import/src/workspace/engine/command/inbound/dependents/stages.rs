@@ -30,6 +30,7 @@ struct Graph {
     read_set: Vec<proof::Proof>,
 }
 
+#[inline]
 pub(in super::super) fn needed(input: &Prepare) -> bool {
     let options = &input.options.dependencies.dependents;
     options.enabled || !options.via.is_empty()
@@ -199,6 +200,7 @@ fn current_target(value: &Value) -> io::Result<Target> {
     Ok(target)
 }
 
+#[inline]
 fn inline_target(raw: &str) -> io::Result<Target> {
     let mut target = super::super::requested_target(raw)?;
     if !raw.contains('@') {

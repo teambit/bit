@@ -44,6 +44,7 @@ fn normalize_receipt(receipt: &Value) -> io::Result<(String, Value, Value)> {
     Ok((path, before, after))
 }
 
+#[inline]
 fn digest(receipt: &Value, direct_key: &str, nested_key: &str) -> Value {
     let has_value = |val: &Value| {
         !val.is_null()

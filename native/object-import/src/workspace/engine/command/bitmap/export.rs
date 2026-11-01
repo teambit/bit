@@ -45,6 +45,7 @@ impl Prepared {
     }
 }
 
+#[inline]
 fn find_export_row<'a>(
     rows: &'a mut serde_json::Map<String, Value>,
     scope: &str,
@@ -55,6 +56,7 @@ fn find_export_row<'a>(
         .map(|(_, row)| row)
 }
 
+#[inline]
 fn export_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     let key = key.trim();
     if key.starts_with('$') || matches!(key, "_bit_lane" | "version") || !row.is_object() {

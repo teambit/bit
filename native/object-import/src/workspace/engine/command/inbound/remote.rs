@@ -70,7 +70,7 @@ pub(super) fn lane_objects(
         )
         .await?;
         let (mut remotes, _) =
-            collect((Vec::new(), 0), &input.root, id.scope.clone(), Some(items))?;
+            collect((Vec::with_capacity(1), 0), &input.root, id.scope.clone(), Some(items))?;
         let remote = remotes.pop().ok_or_else(|| invalid("inbound lane remote"))?;
         Ok(Some((remote, hash)))
     })

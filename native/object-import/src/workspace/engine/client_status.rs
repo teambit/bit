@@ -78,15 +78,15 @@ pub(super) fn scan(
         return Err(invalid("status scan already pending"));
     }
     let target = plan.targets.get(plan.cursor).ok_or_else(|| invalid("status scan exhausted"))?;
-    let exclude: Vec<_> = if target.directory == "." {
-        plan.targets
-            .iter()
-            .filter(|entry| entry.directory != ".")
-            .map(|entry| plan.root.join(&entry.directory))
-            .collect()
-    } else {
-        Vec::new()
-    };
+    let mut exclude = Vec::new();
+    if target.directory == "." {
+        exclude.reserve(plan.targets.len().saturating_sub(1));
+        for entry in &plan.targets {
+            if entry.directory != "." {
+                exclude.push(plan.root.join(&entry.directory));
+            }
+        }
+    }
     let input = serde_json::from_value(json!({"root":plan.root.join(&target.directory),
         "workspace":plan.root,"excludeDirs":exclude,"rootPolicy":input.root_policy}))
     .map_err(io::Error::other)?;

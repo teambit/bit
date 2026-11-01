@@ -36,6 +36,7 @@ pub(super) async fn main(
     }
 }
 
+#[inline]
 pub(super) fn file_order(rows: &mut [Listed]) {
     if rows.len() <= 1 {
         return;

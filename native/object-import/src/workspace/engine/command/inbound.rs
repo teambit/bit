@@ -238,7 +238,7 @@ pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Val
         .into_iter()
         .map(|(pattern, listed)| {
             let components: Vec<_> = listed
-                .iter()
+                .into_iter()
                 .map(|item| json!({"id":item.id(),"deprecated":item.deprecated}))
                 .collect();
             json!({"pattern":pattern,"components":components})

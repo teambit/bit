@@ -47,20 +47,19 @@ impl Transaction {
             || input.client_id.trim().is_empty()
             || input.client_id.len() > 4096
             || input.client_id.contains(char::is_control)
-            || input.scopes
-                .iter()
-                .any(|scope| {
-                    scope.trim().is_empty()
-                        || scope.len() > 4096
-                        || scope.contains(char::is_control)
-                })
         {
             return Err(invalid("unsupported transfer transaction"));
         }
         let mut seen = std::collections::HashSet::with_capacity(input.scopes.len());
         if !input.scopes
             .iter()
-            .all(|scope| seen.insert(scope.trim()))
+            .all(|scope| {
+                let trimmed = scope.trim();
+                !trimmed.is_empty()
+                    && scope.len() <= 4096
+                    && !scope.contains(char::is_control)
+                    && seen.insert(trimmed)
+            })
         {
             return Err(invalid("unsupported transfer transaction"));
         }

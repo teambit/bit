@@ -245,8 +245,10 @@ fn append_lane_dependency_progress(
     import: &mut command_import::PreparedImport,
     targets: &[Target],
 ) -> io::Result<()> {
+    let objects_dir = crate::scope_path(root).join("objects");
     let mut dependencies = command_import::Progress {
         reason: Some("for getting missing versions and dependencies".into()),
+        ids: Vec::with_capacity(targets.len()),
         ..Default::default()
     };
     for target in targets {
@@ -260,8 +262,7 @@ fn append_lane_dependency_progress(
             .filter(|graph| !graph.is_empty())
         {
             crate::merge_history::hash(graph)?;
-            if !crate::scope_path(root)
-                .join("objects")
+            if !objects_dir
                 .join(&graph[..2])
                 .join(&graph[2..])
                 .try_exists()?

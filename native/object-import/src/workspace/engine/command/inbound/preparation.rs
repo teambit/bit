@@ -158,6 +158,7 @@ fn complete_receipt(
     Ok(())
 }
 
+#[inline]
 pub(super) fn write_options(
     input: &Prepare,
     post_write_bitmap_history: bool,

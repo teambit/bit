@@ -25,16 +25,20 @@ pub(super) fn rows(
     }
     let latest_roots = latest_root_count(roots, depth);
     let object_phase = depth && (head_dependencies || latest_roots > 0);
-    let scopes = roots
-        .iter()
-        .filter_map(|root| {
-            root.scope
-                .as_deref()
-                .map(str::trim)
-                .filter(|scope| !scope.is_empty())
-        })
-        .collect::<HashSet<_>>()
-        .len();
+    let scopes = if object_phase {
+        roots
+            .iter()
+            .filter_map(|root| {
+                root.scope
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|scope| !scope.is_empty())
+            })
+            .collect::<HashSet<_>>()
+            .len()
+    } else {
+        0
+    };
     for row in &mut progress {
         adjust(row, roots, latest_roots, object_phase, head_dependencies, scopes);
     }
@@ -87,6 +91,7 @@ fn adjust(
     row["objects"] = json!(if object_phase { scopes } else { 0 });
 }
 
+#[inline]
 fn format_target_id(root: &Target) -> String {
     let (name, version) = (root.name.trim(), root.version.trim());
     match root.scope

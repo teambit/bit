@@ -12,19 +12,18 @@ pub(super) fn on_lane(context: &Value) -> bool {
 /// Checkout rewrites already tracked lane rows without changing their visibility.
 pub(super) fn tracked_checkout(context: &Value, component: &str) -> bool {
     let component = component.trim();
-    let tracked = context["lane"]["trackedTargets"]
+    context["lane"]["trackedTargets"]
         .as_array()
         .is_some_and(|rows| {
             rows.iter()
                 .any(|row| row["identity"].as_str().map(str::trim) == Some(component))
-        });
-    let inactive = context["lane"]["inactiveTargets"]
-        .as_array()
-        .is_some_and(|rows| {
-            rows.iter()
-                .any(|row| row["identity"].as_str().map(str::trim) == Some(component))
-        });
-    tracked && !inactive
+        })
+        && !context["lane"]["inactiveTargets"]
+            .as_array()
+            .is_some_and(|rows| {
+                rows.iter()
+                    .any(|row| row["identity"].as_str().map(str::trim) == Some(component))
+            })
 }
 
 /// Switching to main clears lane-only visibility when the component has a

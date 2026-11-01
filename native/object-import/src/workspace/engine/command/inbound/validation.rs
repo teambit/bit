@@ -3,9 +3,11 @@ use super::{Prepare, invalid};
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     validate_phase(input, true)
 }
+#[inline]
 pub(super) fn local(input: &Prepare) -> io::Result<()> {
     validate_phase(input, false)
 }
@@ -138,6 +140,7 @@ fn valid_operation(input: &Prepare) -> bool {
 }
 /// Objects-only imports write no bitmap history. A write keeps one; the caller
 /// installs dependencies after publication unless they are skipped.
+#[inline]
 fn valid_write_mode(input: &Prepare) -> bool {
     if input.options.objects_only {
         !input.options.skip_dependency_installation

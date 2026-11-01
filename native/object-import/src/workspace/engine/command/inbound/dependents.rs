@@ -34,7 +34,8 @@ fn select(
     let mut seen_unique = HashSet::new();
     for path in paths {
         for id in path {
-            if seen_unique.insert(id.clone()) {
+            if !seen_unique.contains(&id) {
+                seen_unique.insert(id.clone());
                 unique.push(id);
             }
         }
@@ -51,16 +52,17 @@ fn selected(ids: &[String], excluded: &mut HashSet<String>) -> io::Result<Vec<Ta
     if ids.len() > 4096 {
         return Err(invalid("inbound dependent target limit"));
     }
-    let mut counts = HashMap::<&str, usize>::new();
+    let mut counts = HashMap::<&str, usize>::with_capacity(ids.len());
     for id in ids {
         *counts.entry(bare(id)).or_default() += 1;
     }
-    let mut result = Vec::new();
+    let mut result = Vec::with_capacity(ids.len());
     for id in ids {
         let identity = bare(id);
-        if !excluded.insert(identity.to_owned()) {
+        if excluded.contains(identity) {
             continue;
         }
+        excluded.insert(identity.to_owned());
         let mut target = super::requested_target(id)?;
         if counts
             .get(identity)

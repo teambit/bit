@@ -71,16 +71,20 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
     let id = id.trim();
     let (target_scope, target_name) = id.split_once('/').unwrap_or(("", id));
     rows.iter()
-        .filter(|row| row["type"].as_str().unwrap_or("Component") == "Component")
-        .filter(|row| row["isSymlink"] != true)
         .find(|row| {
-            let (entry_scope, entry_name) = index_row_parts(row);
-            entry_name == target_name && (entry_scope == target_scope || entry_scope.is_empty())
+            row["type"].as_str().unwrap_or("Component") == "Component"
+                && row["isSymlink"] != true
+                && {
+                    let (entry_scope, entry_name) = index_row_parts(row);
+                    entry_name == target_name
+                        && (entry_scope == target_scope || entry_scope.is_empty())
+                }
         })
         .and_then(|row| row["hash"].as_str())
         .and_then(|hash| merge_history::hash(hash.trim()).ok())
 }
 
+#[inline]
 fn index_row_parts(row: &Value) -> (&str, &str) {
     if let Some(id_str) = row["id"].as_str().map(str::trim) {
         let bare = id_str.rsplit_once('@').map_or(id_str, |(base, _)| base.trim());

@@ -4,6 +4,7 @@ use super::{
 };
 use std::{io, path::Path};
 /// Lane-history refresh fetches no component closure and never publishes a Lane locally.
+#[inline]
 pub(in crate::workspace::engine::command) fn history_remote(
     root: &Path,
     home: &Path,

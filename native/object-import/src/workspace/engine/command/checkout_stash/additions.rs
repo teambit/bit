@@ -17,9 +17,9 @@ pub(in crate::workspace::engine::command) fn context(
     }
     let bitmap = crate::parse_jsonc(&std::fs::read(&bitmap_path)?)?;
     let existing = identities(&bitmap)?;
-    let mut additions = Vec::new();
-    let mut targets = Vec::new();
-    let mut seen = HashSet::new();
+    let mut additions = Vec::with_capacity(stash.bitmap_entries.len());
+    let mut targets = Vec::with_capacity(stash.bitmap_entries.len());
+    let mut seen = HashSet::with_capacity(stash.bitmap_entries.len());
     for entry in &stash.bitmap_entries {
         let Some((identity, version, mut row)) = addition(entry, &existing)? else {
             continue;
@@ -54,6 +54,7 @@ fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
         .collect())
 }
 
+#[inline]
 fn trimmed_field<'a>(row: &'a Value, key: &str, message: &str) -> io::Result<&'a str> {
     row[key]
         .as_str()

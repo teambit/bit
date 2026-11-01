@@ -248,7 +248,8 @@ fn local_component_model(root: &Path, scope: &str, name: &str) -> io::Result<Opt
 
 pub(crate) fn candidate_component_hashes(scope_dir: &Path, scope: &str, name: &str) -> Vec<String> {
     let mut hashes = indexed_component_hashes(scope_dir, scope, name);
-    for candidate in [format!("{scope}/{name}"), name.to_owned()] {
+    let scoped = format!("{scope}/{name}");
+    for candidate in [scoped.as_str(), name] {
         let hash = crate::validate::hexadecimal(&sha1::Sha1::digest(candidate.as_bytes()));
         if !hashes.contains(&hash) {
             hashes.push(hash);

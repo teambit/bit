@@ -244,6 +244,7 @@ fn policy_entry(field: &str, name: &str, value: &Value) -> io::Result<Value> {
     Ok(json!({"dependencyId":name,"lifecycleType":lifecycle,"value":{"version":version}}))
 }
 
+#[inline]
 fn is_resolver_id(id: &str) -> bool {
     id.strip_prefix(RESOLVER)
         .is_some_and(|rest| rest.is_empty() || rest.starts_with('@'))
