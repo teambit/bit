@@ -1,4 +1,6 @@
 //! Lane-related sections of `formatStatusOutput`.
+//!
+//! Extends [`Status`] with [`UPDATES_FROM_MAIN`] and lane divergence formatting.
 
 use super::{Status, ids};
 use crate::commands::status::js::{array, text};

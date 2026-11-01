@@ -1,4 +1,6 @@
 //! Dependency cache observations and fresh verification for a captured component.
+//!
+//! Extends [`Scan`] to resolve component dependencies via [`fresh`], [`policy`], and [`missing`] into [`Capture`].
 use super::{
     Capture, Scan, Value, decline, fresh, full_identity, io, json, missing, policy, spread, text,
 };

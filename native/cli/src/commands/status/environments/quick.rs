@@ -1,4 +1,6 @@
 //! Root provider startup for public quick status, without component hooks.
+//!
+//! [`run`] initializes [`Environments`] with [`root_aspects`] for `bit status --quick`.
 
 use super::{Environments, root_aspects};
 use serde_json::json;

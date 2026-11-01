@@ -1,4 +1,6 @@
-//! Native root collation with an Intl presentation adapter for tailored locales.
+//! Native root collation with an `Intl` presentation adapter for tailored locales.
+//!
+//! Uses [`collate`] when supported or falls back to [`Host`] locale sorting.
 
 use super::{
     collate,

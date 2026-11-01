@@ -1,4 +1,6 @@
 //! Workspace-level merge and permitted Harmony load diagnostics.
+//!
+//! [`collect`] inspects [`MergeConfig`] conflicts and [`Capture`] callback diagnostics.
 
 use super::capture::{self, Capture};
 use bit_install::config::MergeConfig;

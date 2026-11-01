@@ -1,7 +1,7 @@
 //! Fresh dependency detection, for components whose dependency cache entry
 //! is missing or stale, and the commit of their cache entries. The engine scans and
-//! resolves; this module supplies what Node knew: the dev-file patterns, the
-//! running Node's built-in modules, the bundled TypeScript version and the
+//! resolves; this module supplies what Node knew: the [`dev_files`] patterns, the
+//! running Node's built-in modules, the bundled `TypeScript` version and the
 //! core aspect packages.
 
 pub mod dev_files;

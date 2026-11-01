@@ -1,4 +1,6 @@
-//! `WorkspacePolicyFactory` and package.json precedence for status dependency facts.
+//! `WorkspacePolicyFactory` and `package.json` precedence for status dependency facts.
+//!
+//! [`Workspace`] merges [`RESOLVER`] and root `package.json` [`FIELDS`] into a unified policy map.
 
 use super::{FIELDS, RESOLVER};
 use crate::commands::status::js::{assign, decline, nullish, object, string_map};

@@ -1,4 +1,6 @@
 //! `DeprecationMain.isDeprecatedByIdWithoutLoadingComponent` over verified model heads.
+//!
+//! Extends [`Checks`] to detect deprecated [`Component`] dependencies across [`Range`] and [`Version`].
 
 use super::{Checks, Component, array, truthy, without_version};
 use node_semver::{Range, Version};

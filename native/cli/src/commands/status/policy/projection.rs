@@ -1,5 +1,7 @@
 //! `AspectsMerger.merge` over captured model/configuration facts. The shared
 //! installer merger owns origin precedence, removals, env filtering and ids.
+//!
+//! Projects [`ComponentId`] and workspace variant policies into effective status extensions.
 
 #[cfg(test)]
 mod tests;

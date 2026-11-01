@@ -1,4 +1,6 @@
 //! Bitmap states that need the canonical capture for write commands.
+//!
+//! [`capture_special`] handles special `.bitmap` entries into [`Capture`] via [`missing`].
 
 use super::{Capture, missing, text};
 use serde_json::Value;

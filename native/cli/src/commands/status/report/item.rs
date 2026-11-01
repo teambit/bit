@@ -1,5 +1,7 @@
 //! `format()` of `formatStatusOutput`: one component's line, with its
 //! symbol, local versions and issues.
+//!
+//! Extends [`Status`] and formats [`WithIssues`] items using [`Formatter`] and [`Chalk`].
 
 use super::{FAILURE, Status, TITLE_ONLY, WARNINGS, WithIssues};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};

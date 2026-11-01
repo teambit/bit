@@ -1,5 +1,7 @@
 //! `currentStatusMetadata`: the component metadata `statusCompare` compares
 //! with the stored version.
+//!
+//! Projects [`Policy`] and [`PACKAGE_FIELDS`] into status comparison [`Value`] payloads.
 
 use super::{
     super::js::{array, decline, text, truthy},

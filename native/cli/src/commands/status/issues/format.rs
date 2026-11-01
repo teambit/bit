@@ -1,4 +1,6 @@
 //! String forms of issue data in status JSON.
+//!
+//! [`join`] and [`list_or_text`] serialize issue [`Value`] payloads into comma-separated strings.
 
 use super::{array, text};
 use serde_json::Value;

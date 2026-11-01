@@ -1,6 +1,8 @@
 //! The dependency policy inputs of one component and its status metadata,
 //! with the environment and component `VariantPolicy` precedence used by
 //! the dependency resolver. Pending-configuration projections decline.
+//!
+//! Re-exports [`current_metadata`], [`peer_metadata`], [`model_of`], and [`pending_context`].
 
 pub use metadata::{current_metadata, peer_metadata};
 pub(super) use model::model_of;

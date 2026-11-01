@@ -1,5 +1,5 @@
-//! Facts about the Node.js CLI that dependency detection depends on: the
-//! built-in modules of the Node it runs on, and the TypeScript version its
+//! Facts about the Node.js CLI ([`NodeCli`]) that dependency detection depends on: the
+//! built-in modules of the Node it runs on, and the `TypeScript` version its
 //! import lookups bundle.
 
 use super::super::{

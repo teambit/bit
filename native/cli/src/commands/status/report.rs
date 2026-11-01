@@ -1,4 +1,6 @@
 //! `bit status` without `--json`: `StatusCmd.report` and `formatStatusOutput`.
+//!
+//! Coordinates [`item`], [`lane_updates`], [`render`], and [`sections`] to format status output.
 
 pub(in crate::commands) use item::issue_output;
 

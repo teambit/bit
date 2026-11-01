@@ -1,6 +1,6 @@
 //! Native `bit status` (`s`): the workspace engine of `bit-object-import`
 //! reads the workspace, models and dependency caches; this module computes
-//! policy, ignore and semver inputs, and formats the result or `--json`.
+//! [`policy`], ignore and semver inputs via [`capture`], and formats [`report`] or `--json`.
 
 pub(super) mod autosync;
 pub(super) mod cache;

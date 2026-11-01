@@ -1,4 +1,6 @@
 //! Select the callback boundary before snapshot control receipts are retained.
+//!
+//! [`configured`] inspects [`Engine`] and [`Inventory`] state to decide whether snapshot callbacks apply.
 use super::{array, component, text};
 use crate::commands::{
     engine::Engine,

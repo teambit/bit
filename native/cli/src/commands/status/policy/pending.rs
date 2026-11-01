@@ -1,5 +1,7 @@
 //! Pending merge configuration (`AspectsMerger.getMergeConfigCombined`),
 //! projected without changing merge-conflict or repository state.
+//!
+//! Loads [`MergeConfig`] and [`read_proof`] receipts from [`scope_path`] for status policy projection.
 
 use super::super::js::{array, decline, text};
 use bit_install::{

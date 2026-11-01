@@ -2,6 +2,8 @@
 //! to the characters ids and versions use. Locales whose collation tailors
 //! these characters (Danish puts uppercase first, Estonian moves `z`, Turkish
 //! splits `i`, Czech contracts `ch`) and any other character decline.
+//!
+//! Produces [`Ordering`] results matching V8 `String.prototype.localeCompare`.
 
 #[cfg(test)]
 mod collate_tests;

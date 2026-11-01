@@ -1,4 +1,6 @@
 //! Fully formatted issue objects supplied by installed Harmony callbacks.
+//!
+//! [`merge`] deduplicates and appends aspect callback issue [`Value`] records.
 
 #[cfg(test)]
 mod tests;

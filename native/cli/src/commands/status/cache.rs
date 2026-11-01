@@ -1,7 +1,9 @@
 //! The `no-fs-cache` feature, which makes the native capture detect dependencies
-//! afresh without cache writes, and Bit's cache root.
+//! afresh without cache writes, and Bit's cache root ([`cache_root`]).
 //! `dependencyCacheNeedsInvalidation` lives with the dependency cache in
 //! `bit_install::dependencies::cache::invalidation`.
+//!
+//! Resolves feature flags from [`global_config_dir`] and environment variables.
 
 pub use bit_workspace_config::cache_root;
 

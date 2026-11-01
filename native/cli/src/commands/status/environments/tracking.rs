@@ -1,4 +1,6 @@
 //! Project native tracking metadata into published classes before linking callbacks.
+//!
+//! Extends [`Environments`] with [`Environments::take_tracking_stdout`] and tracking projection over [`Host`].
 use super::Environments;
 use crate::host::Host;
 use serde_json::{Value, json};

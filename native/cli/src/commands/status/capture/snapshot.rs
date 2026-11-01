@@ -1,4 +1,6 @@
-//! Published pre-snapshot callback facts, without JavaScript VCS publication.
+//! Published pre-snapshot callback facts, without `JavaScript` VCS publication.
+//!
+//! [`snapshot_host`] prepares environment task discovery for [`Capture`] and [`Engine`].
 
 use super::{super::js::text, Capture, Engine, Value, array, decline, io, json};
 

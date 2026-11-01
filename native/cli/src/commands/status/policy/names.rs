@@ -1,4 +1,6 @@
 //! Default dependency binding prefixes and package names.
+//!
+//! [`default_prefix`] and package-name helpers derive npm package names from [`component`] metadata.
 
 use super::{Map, Value, component, decline, io, nullish, text};
 

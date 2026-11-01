@@ -1,6 +1,8 @@
 //! The capture of the current workspace, shared by status, diff and the
 //! workspace commands: each selected component's files and
-//! dependencies, and the commit that writes what the command staged.
+//! dependencies, and the [`commit`] that writes what the command staged.
+//!
+//! Re-exports [`workspace_issues`], [`issue_callbacks`], and [`commit_checkout_dependencies`].
 
 pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,

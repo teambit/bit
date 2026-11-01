@@ -1,4 +1,6 @@
 //! Capture one workspace target after bitmap, filesystem and policy checks.
+//!
+//! Implements [`Scan::target`] using [`bitmap`], [`missing`], [`policy`], and [`record`] on [`Capture`].
 
 use super::{Capture, Scan, bitmap, missing, policy, record, text};
 use serde_json::Value;

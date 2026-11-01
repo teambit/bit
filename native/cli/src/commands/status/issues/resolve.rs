@@ -1,5 +1,7 @@
 //! For snap and tag, the engine proves
 //! the models' heads and the dependencies outside the workspace.
+//!
+//! Resolves [`Component`] dependency versions and missing-dependency issues across [`HashMap`] stores.
 
 #[cfg(test)]
 mod resolve_tests;
