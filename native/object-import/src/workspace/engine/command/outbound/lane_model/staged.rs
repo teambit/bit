@@ -35,6 +35,7 @@ pub(super) fn lane_versions(
     Ok(output)
 }
 
+#[inline]
 fn selected_parents(
     dir: &Path,
     hash: &str,

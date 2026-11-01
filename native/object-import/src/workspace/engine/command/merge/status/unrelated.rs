@@ -42,6 +42,7 @@ pub(super) fn failure(input: &Input<'_>) -> io::Result<Value> {
     )
 }
 
+#[inline]
 pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
     let identity =
         target_identity(input.target).ok_or_else(|| invalid("command unrelated identity"))?;

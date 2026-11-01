@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io};
 
+#[inline]
 pub(super) fn prepare_staged_config(
     bytes: &[u8],
     selected: &[Selected],

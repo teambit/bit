@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io, path::Path};
 
+#[inline]
 pub(super) fn prepare_history(
     dir: &Path,
     scope: &str,

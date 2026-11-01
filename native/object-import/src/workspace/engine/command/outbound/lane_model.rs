@@ -42,7 +42,7 @@ pub(super) struct SelectedComponents {
     pub(super) histories: Vec<model::HistoryBytes>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ForkHistory {
     pub(super) parent: String,
     pub(super) external_count: usize,

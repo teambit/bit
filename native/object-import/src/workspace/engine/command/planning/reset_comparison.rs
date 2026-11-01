@@ -22,6 +22,7 @@ pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> 
     Ok(())
 }
 
+#[inline]
 fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, [u8; 20]>> {
     let mut files = BTreeMap::new();
     for row in value.as_array().ok_or_else(|| invalid("reset Source comparison files"))? {

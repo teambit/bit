@@ -40,6 +40,7 @@ pub(in crate::workspace::engine) fn apply(
     ))
 }
 
+#[inline]
 fn execute_transfer(retained: &mut Retained) -> io::Result<Vec<String>> {
     retained.transfer.progress.phase = "prepare";
     retained.local.packages.validate()?;

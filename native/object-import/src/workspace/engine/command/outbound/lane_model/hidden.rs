@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::Path};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Reconciled {
     pub exported: Value,
     pub local: Value,

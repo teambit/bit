@@ -3,6 +3,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     let mut roots = targets
         .iter()

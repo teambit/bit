@@ -3,6 +3,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct Input<'a> {
     pub(in crate::workspace::engine::command) index: usize,
     pub(in crate::workspace::engine::command) target: &'a Value,
@@ -13,6 +14,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub(in crate::workspace::engine::command) lane: Option<&'a Value>,
     pub(in crate::workspace::engine::command) distance: &'a Value,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct SelectionOptions {
     pub(in crate::workspace::engine::command) modified: bool,
     pub(in crate::workspace::engine::command) resolve_unrelated: Option<String>,

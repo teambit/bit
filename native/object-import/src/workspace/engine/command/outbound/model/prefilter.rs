@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in super::super) struct Prepared {
     root: PathBuf,
     histories: Vec<HistoryBytes>,

@@ -64,6 +64,7 @@ fn retain_plan(
     })
 }
 
+#[inline]
 fn plan_operation(
     record: &mut Record,
     input: &Plan,

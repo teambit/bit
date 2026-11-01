@@ -4,6 +4,7 @@ mod tests;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+#[inline]
 pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
     let Some(name) = name(config)? else { return Ok(None) };
     #[cfg(unix)]

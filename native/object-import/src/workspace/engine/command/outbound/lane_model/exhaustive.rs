@@ -20,6 +20,7 @@ pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
     Ok(entries)
 }
 
+#[inline]
 fn parse_update_dependent(update: &Value) -> io::Result<Value> {
     if let Some(raw) = update.as_str() {
         let (identity, head) = raw

@@ -5,6 +5,7 @@ use super::{
 };
 use std::io;
 
+#[inline]
 pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     let scope = lane.scope.trim();
     let lane_name = lane.name.trim();

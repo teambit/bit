@@ -3,6 +3,7 @@ use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
+#[inline]
 pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     let rows: Vec<Value> = crate::parse_jsonc(bytes)
         .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?;

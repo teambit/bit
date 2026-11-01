@@ -6,6 +6,7 @@ use super::{Planned, Record, input, invalid};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+#[inline]
 pub(super) fn report_if_applicable(
     record: &Record,
     plan: &mut Planned,

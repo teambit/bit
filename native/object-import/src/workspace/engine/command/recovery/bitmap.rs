@@ -19,6 +19,7 @@ pub(in crate::workspace::engine::command) fn project_snapshot(
     project_with(bitmap, validate_snapshot)
 }
 
+#[inline]
 fn validate_snapshot(config: &Value) -> io::Result<()> {
     let rows = config.as_object().ok_or_else(|| invalid("snapshot bitmap configuration"))?;
     if rows

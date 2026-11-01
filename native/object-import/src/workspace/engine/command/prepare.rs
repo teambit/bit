@@ -11,7 +11,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::io;
-
+#[inline]
 pub(super) fn context(
     request: &Prepare,
     pool: &rayon::ThreadPool,

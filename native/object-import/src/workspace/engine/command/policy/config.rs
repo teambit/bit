@@ -51,6 +51,7 @@ fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     Ok(Value::Object(merged))
 }
 
+#[inline]
 pub(super) fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
     if let Some(value) = value.get("value") {
         return Ok(value.clone());

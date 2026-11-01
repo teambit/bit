@@ -51,6 +51,7 @@ pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
     Ok(prepared)
 }
 
+#[inline]
 fn cloud_domain(input: &Prepare) -> io::Result<String> {
     Ok(super::hub::configuration(input)?
         .get("cloud_domain")

@@ -76,6 +76,7 @@ fn report(plan: &Value) -> io::Result<Value> {
     Ok(report)
 }
 
+#[inline]
 fn remove_conflicts(prepared: &mut Prepared, removed: &Value) -> io::Result<()> {
     let removed = projection::array(removed)?;
     if removed.is_empty() {

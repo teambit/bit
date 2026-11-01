@@ -3,6 +3,7 @@ use super::{array, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
+#[inline]
 pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Result<Value> {
     let rows = array(value)?;
     let mut identities = HashSet::with_capacity(rows.len());

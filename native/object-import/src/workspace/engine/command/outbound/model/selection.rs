@@ -70,6 +70,7 @@ pub(super) fn has_staged(model: &Value) -> bool {
 }
 /// The local versions of a staged model: the head's version name, the head,
 /// and every local Version (the head among them).
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Staged {
     pub(super) head: String,
     pub(super) hashes: Vec<String>,

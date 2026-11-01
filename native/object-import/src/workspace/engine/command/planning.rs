@@ -21,6 +21,7 @@ pub(super) struct Planned {
     pub(super) result: Value,
     pub(super) merge: Option<super::merge_planning::Prepared>,
 }
+#[inline]
 pub(super) fn checkout(
     record: &mut Record,
     current: Vec<Value>,
@@ -32,6 +33,7 @@ pub(super) fn checkout(
     checkout_captured(record, current, semver, snapshots, pool, false)
 }
 
+#[inline]
 pub(super) fn checkout_reset(
     record: &mut Record,
     current: Vec<Value>,

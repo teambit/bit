@@ -6,7 +6,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Additions {
     names: Vec<String>,
     destinations: Vec<Value>,
@@ -15,6 +15,7 @@ struct Additions {
     prospective: Vec<Value>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidates<'a> {
     root: &'a Path,
     selected: std::collections::HashSet<String>,

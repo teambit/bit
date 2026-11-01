@@ -51,6 +51,7 @@ pub(super) fn project(row: &mut super::Row, repository: &mut Repository) -> io::
     Ok(())
 }
 
+#[inline]
 fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::<Value>::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {

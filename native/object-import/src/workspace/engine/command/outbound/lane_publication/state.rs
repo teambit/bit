@@ -60,6 +60,7 @@ impl Prepared {
         Ok(())
     }
 
+    #[inline]
     fn validate_files(&self) -> io::Result<bool> {
         let root = &self.workspace.root;
         Ok(fs::read(root.join(".bitmap"))? == self.published.bitmap.before

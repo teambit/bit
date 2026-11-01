@@ -50,6 +50,7 @@ pub(super) struct FileBridge {
 }
 
 impl FileBridge {
+    #[inline]
     pub(super) fn spawn(node: &Path, bit_dir: &Path) -> io::Result<Self> {
         let mut child = Command::new(node)
             .args(["-e", SCRIPT])

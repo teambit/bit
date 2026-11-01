@@ -24,6 +24,7 @@ impl Publication {
         }
     }
 
+    #[inline]
     pub(super) fn receipt_ids(&self) -> (Vec<String>, Vec<String>) {
         match self {
             Self::Main(prepared) => (Vec::new(), prepared.removed_ids().to_vec()),

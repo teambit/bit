@@ -14,7 +14,7 @@ use std::{
     sync::Mutex,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(in super::super) struct Resolved {
     pub host: String,
     pub hub: bool,

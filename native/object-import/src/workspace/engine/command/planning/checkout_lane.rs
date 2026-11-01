@@ -3,6 +3,7 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::io;
 
+#[inline]
 pub(super) fn prepare(
     record: &mut Record,
     plan: &mut Planned,

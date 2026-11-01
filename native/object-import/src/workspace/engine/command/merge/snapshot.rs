@@ -40,6 +40,7 @@ pub(in crate::workspace::engine::command) fn local_model(
     metadata::model(input, head)
 }
 
+#[inline]
 pub(in crate::workspace::engine::command) fn prepare_models(
     staging: &Path,
     models: Vec<Value>,

@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     path: PathBuf,
     text: String,

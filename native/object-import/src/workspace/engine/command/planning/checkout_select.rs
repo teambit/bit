@@ -54,6 +54,7 @@ pub(super) fn select(
     Ok(selected)
 }
 
+#[inline]
 fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     let (scope, name) = identity
         .trim()

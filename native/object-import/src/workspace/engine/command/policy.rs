@@ -34,7 +34,7 @@ pub(super) struct Row {
     pub(super) receipts: Receipts,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Receipts {
     pub(super) dependencies: Option<Value>,
     pub(super) configuration: Value,
@@ -48,13 +48,13 @@ pub(super) struct Prepared {
     pub(super) overlay: Option<super::super::source_overlay::SourceOverlay>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {
     token: String,
     components: Vec<Component>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Component {
     identity: String,

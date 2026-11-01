@@ -25,7 +25,7 @@ pub(super) const CORES: &[&str] = &[
     "teambit.docs/docs",
 ];
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine::command) struct Defaults {
     pub(super) env: Value,

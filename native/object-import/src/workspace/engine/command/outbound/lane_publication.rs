@@ -30,6 +30,7 @@ pub(super) struct Prepared {
     report: Reported,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Acknowledgement {
     expected: HashSet<String>,
 }

@@ -3,6 +3,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
+#[inline]
 pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     let Some(readme) = lane
         .get("readmeComponent")

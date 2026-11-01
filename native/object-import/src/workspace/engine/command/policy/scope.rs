@@ -3,6 +3,7 @@ use super::{config, invalid, projection};
 use serde_json::{Value, json};
 use std::io;
 
+#[inline]
 pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
     projection::array(extensions)?
         .iter()

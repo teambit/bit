@@ -42,6 +42,7 @@ pub(super) fn capture(
     Ok(())
 }
 
+#[inline]
 fn validate_issue_packages(data: &Value) -> io::Result<()> {
     if let Some(items) = data.as_array() {
         if items.is_empty() {

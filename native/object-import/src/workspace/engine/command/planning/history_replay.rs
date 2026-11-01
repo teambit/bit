@@ -1,6 +1,7 @@
 use super::{Record, history, invalid};
 use serde_json::Value;
 use std::io;
+#[inline]
 pub(super) fn replay(
     record: &mut Record,
     identity: &str,

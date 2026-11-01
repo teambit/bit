@@ -13,6 +13,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     endpoint: String,
     cloud_domain: String,

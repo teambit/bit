@@ -3,6 +3,7 @@ use super::{Staged, history::parents, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
+#[inline]
 pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
     let head = model["head"]
         .as_str()

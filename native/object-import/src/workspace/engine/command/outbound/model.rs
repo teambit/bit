@@ -45,7 +45,7 @@ pub(super) struct ModelBytes {
     pub(super) after: Vec<u8>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct HistoryBytes {
     pub(super) hash: String,
     pub(super) bytes: Vec<u8>,

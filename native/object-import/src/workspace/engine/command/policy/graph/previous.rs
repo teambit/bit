@@ -5,6 +5,7 @@ use std::{collections::BTreeMap, io};
 // Canonical snapping reuses saved flattened graphs before loading dependency
 // Versions. Prove those graphs have the same ordered adjacency as the direct
 // metadata before reconstructing the reachable graph ourselves.
+#[inline]
 pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Result<()> {
     let edges = saved_edges(version, repository)?;
     let edges = edges.as_array().ok_or_else(|| invalid("command saved dependency graph"))?;

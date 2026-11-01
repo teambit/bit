@@ -14,7 +14,7 @@ use std::{
     io::{self, Write},
     path::{Path, PathBuf},
 };
-
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Component {
     unchanged: bool,
     model_hash: String,

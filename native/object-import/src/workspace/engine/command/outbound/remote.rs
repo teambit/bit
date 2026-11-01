@@ -54,6 +54,7 @@ impl Actions {
     }
 }
 
+#[inline]
 pub(super) fn host(input: &Prepare, scope: &str) -> io::Result<String> {
     let host = configured_host(input, scope)?;
     match Remote::from_host(&host)? {

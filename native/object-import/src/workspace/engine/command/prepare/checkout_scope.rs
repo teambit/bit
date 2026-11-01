@@ -8,6 +8,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidate {
     identity: String,
     scope: String,
