@@ -1,5 +1,5 @@
 //! The snap and tag reports: the engine's result, validated, and
-//! `snapResultReport` and `tagResultReport` of `@teambit/snapping` format it.
+//! `snapResultReport` and `tagResultReport` of `@teambit/snapping` format it via [`Labels`] and [`Report`].
 
 pub use labels::{Labels, PERSIST_TAG, SNAP, SOFT_TAG, TAG};
 

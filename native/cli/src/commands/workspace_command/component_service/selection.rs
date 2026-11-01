@@ -1,3 +1,6 @@
+//! Component selector resolution for built-in environment services.
+//!
+//! [`exact`] matches selector strings against workspace component [`Value`] entries.
 use super::{Value, invalid};
 use std::io;
 

@@ -1,4 +1,6 @@
 //! Published `is-binary-path` uses binary-extensions 2.3.0, not source-byte heuristics.
+//!
+//! [`note`] checks [`EXTENSIONS`] to return a ` (binary)` suffix for binary file paths.
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
 #[must_use]

@@ -1,4 +1,6 @@
 //! `bit ws-config list` and `bit ws-config clean` helpers.
+//!
+//! Inspects [`Workspace`] environment IDs against [`STANDARD_WRITER_ENVS`] and formats output with [`Chalk`].
 
 use crate::commands::color::Chalk;
 use bit_install::{config::aspect_id_without_version, workspace::Workspace};

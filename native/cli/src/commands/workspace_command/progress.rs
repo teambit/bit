@@ -1,6 +1,8 @@
 //! `commandProgress(progress, operation)`: the progress lines Bit's loader
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
+//!
+//! Coordinates [`history`] and [`inbound`] progress formatting over [`Output`].
 
 mod history;
 mod inbound;

@@ -1,4 +1,6 @@
 //! Resolve checkout predicates against the prepared workspace before capturing selected targets.
+//!
+//! Coordinates [`Engine`], [`Startup`] autosync, [`Capture`], and [`Environments`] for [`Request`].
 use super::{Request, array, checkout_lifecycle, decline, text};
 use crate::commands::{
     diff::selection,

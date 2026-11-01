@@ -1,4 +1,6 @@
 //! `BuilderMain.throwForComponentIssues` filters and formats snapshot blockers.
+//!
+//! Formats component issue blockers via [`issue_output`] and [`Chalk`].
 
 use crate::commands::{
     color::Chalk,

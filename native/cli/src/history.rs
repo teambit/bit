@@ -1,6 +1,8 @@
 //! The workspace command history the Node.js CLI's logger keeps:
 //! `<scope>/command-history`, one line when a command starts and one when it
 //! ends, `<ISO time> <pid> <arguments>, started|succeeded|failed`.
+//!
+//! Uses [`workspace`] scope path discovery to append command start and completion lines.
 
 #[cfg(test)]
 mod history_tests;

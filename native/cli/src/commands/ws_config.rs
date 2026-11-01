@@ -1,4 +1,4 @@
-//! Native `bit ws-config <sub-command>` (`bit workspace-config`) (`scopes/workspace/workspace-config-files/ws-config.cmd.ts`).
+//! Native `bit ws-config <sub-command>` (`bit workspace-config`, `scopes/workspace/workspace-config-files/ws-config.cmd.ts`) via [`collect_standard_env_ids`].
 
 pub(super) use self::clean::collect_standard_env_ids;
 

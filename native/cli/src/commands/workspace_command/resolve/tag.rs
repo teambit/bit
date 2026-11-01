@@ -1,6 +1,8 @@
 //! Which components `bit tag`'s patterns
 //! select, and with which entered version; and the versions the plan gives
 //! the tagged components.
+//!
+//! Matches [`component_patterns`] and validates semver tag specifiers.
 
 #[cfg(test)]
 mod tag_tests;

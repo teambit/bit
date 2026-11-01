@@ -1,4 +1,6 @@
 //! Snapshot receipts, semver collection, preparation validation, and squash logs.
+//!
+//! Coordinates [`Kind`], [`blockers`], [`defaults`], [`graphs`], [`receipt`], and [`tag`].
 
 use super::{
     Kind, blockers, defaults,

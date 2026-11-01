@@ -1,4 +1,6 @@
 //! Reuse the native consumer documentation-cache proofs before running a component service.
+//!
+//! [`prepare`] computes [`CatDocs`] entries for component [`Value`] records via [`cat_prepare`].
 use super::{Value, invalid, json};
 use crate::commands::add::docs::{CatDocs, cat_prepare};
 use std::{io, path::Path};

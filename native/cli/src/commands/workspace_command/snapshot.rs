@@ -3,6 +3,8 @@
 //! is captured again with a fresh dependency cache, the issues that block a
 //! snap are checked against the engine's prediction, and the engine writes
 //! the snaps with new hashes and the user's log.
+//!
+//! Re-exports [`receipt`], [`graphs`], and [`hidden_target`] for merge snapshot finalization.
 
 pub(super) mod receipt;
 

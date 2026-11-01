@@ -3,6 +3,8 @@
 //! controlling terminal, signals and the exit code are the Node.js CLI's own.
 //! On Windows the CLI runs as a child; Ctrl-C is left to it and its exit code
 //! is returned.
+//!
+//! Resolves the target Node.js CLI entry and execs or spawns it transparently.
 
 #[cfg(test)]
 mod delegate_tests;

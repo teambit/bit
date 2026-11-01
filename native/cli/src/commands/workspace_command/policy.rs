@@ -1,6 +1,8 @@
 //! When a merge changes a component's configuration, the engine asks for the
-//! built-in Node environment's defaults and, for the merged files, a fresh
-//! dependency detection, before it plans the merged metadata.
+//! built-in Node environment's [`defaults`] and, for the merged files, a fresh
+//! dependency [`Detection`], before it plans the merged metadata.
+//!
+//! Extends [`Steps`] over [`Capture`], [`Facts`], [`Pending`], and [`grammar`].
 
 use super::{Steps, defaults};
 use crate::commands::status::{

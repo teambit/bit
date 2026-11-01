@@ -1,4 +1,6 @@
 //! npm registry facts influence native semantic allocation before snapshot callbacks.
+//!
+//! [`resolve`] queries published package versions for [`Session`], [`ResolveRequest`], and [`Selection`].
 
 use super::{ResolveRequest, Selection, Session, array, decline, grammar, json, text};
 use crate::commands::status::{capture, policy};

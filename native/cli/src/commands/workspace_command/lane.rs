@@ -2,6 +2,8 @@
 //! ids, and the lane step (`commandLaneFinalize`) with what the engine
 //! cannot know about the lane objects it writes: history keys, logs and
 //! squash dates (`commandLaneReceipt`).
+//!
+//! Extends [`Steps`] with lane merge finalization and [`receipt`] generation.
 
 #[cfg(test)]
 mod lane_tests;

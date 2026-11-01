@@ -1,4 +1,6 @@
 //! Cooperative cancellation closes transport futures without rolling back acknowledged writes.
+//!
+//! Races in-flight [`Future`] operations against a cancellation signal using [`select`].
 #[cfg(test)]
 mod tests;
 

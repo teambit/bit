@@ -1,4 +1,6 @@
 //! Retain observable callback output when a write command owns an adapter failure.
+//!
+//! [`CallbackError`] wraps an [`io::Error`] cause alongside buffered startup and callback stdout.
 use std::{error::Error, fmt, io};
 
 #[derive(Debug)]

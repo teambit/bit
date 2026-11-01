@@ -1,5 +1,7 @@
 //! Published `getIdentity` caches its in-flight identity promise for the process.
 //! Store only resolved names or the initialization error; each log still gets a fresh date.
+//!
+//! Caches resolved [`User`] identity in [`IDENTITY`] using [`OnceLock`].
 #[cfg(test)]
 mod tests;
 

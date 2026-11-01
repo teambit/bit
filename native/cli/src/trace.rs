@@ -1,5 +1,7 @@
 //! `BIT_NATIVE_TRACE=1` prints every dispatch decision to stderr: which
 //! command ran natively, why one declined, and the exact delegated command.
+//!
+//! Exposes [`enabled`] and trace logging helpers for native dispatch inspection.
 
 use std::{env, fmt::Display};
 

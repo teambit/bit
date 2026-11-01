@@ -1,4 +1,6 @@
-//! Node's inspection of a filesystem callback error, which has no JavaScript stack frames.
+//! Node's inspection of a filesystem callback error, which has no `JavaScript` stack frames.
+//!
+//! Formats [`Failure`] properties (`errno`, `code`, `syscall`, `path`) with [`Chalk`].
 #[cfg(test)]
 mod tests;
 

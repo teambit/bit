@@ -1,7 +1,7 @@
 //! Where the Node.js Bit CLI is. Discovery inspects paths only; it never
 //! downloads, resolves modules or runs Node. In order:
 //!
-//! 1. `BIT_NODE_CLI`: the JavaScript entry, `@teambit/bit`'s `bin/bit` or a
+//! 1. `BIT_NODE_CLI`: the `JavaScript` entry, `@teambit/bit`'s `bin/bit` or a
 //!    checkout's `bin/bit.js`.
 //! 2. The entry beside this executable: `<dir>/../node_modules/@teambit/bit/bin/bit`,
 //!    the bvm layout once bvm ships this binary as `bin/bit`.

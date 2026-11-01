@@ -1,7 +1,7 @@
 //! `convertLockfileToGraph` (`lockfile-deps-graph-converter.ts`): a
 //! component's filtered lockfile as Bit's `DependenciesGraph`, serialized
 //! the way `DependenciesGraph.serialize()` writes it, with workspace
-//! components named by their versions.
+//! components named by their versions via [`Replacer`].
 
 #[cfg(test)]
 mod convert_tests;

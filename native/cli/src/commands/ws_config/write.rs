@@ -1,4 +1,6 @@
 //! `bit ws-config write` config file generation for standard environments.
+//!
+//! Generates tsconfig, eslint, and prettier config files for [`WriteOptions`] into [`WriteConfigFilesResult`].
 
 use super::{
     WriteOptions,

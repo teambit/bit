@@ -1,4 +1,6 @@
 //! Run published extension hooks between native selection and version allocation.
+//!
+//! Coordinates [`Session`], [`Workflow`], [`component_receipts`], and [`plus_ranges`].
 
 mod plus_ranges;
 

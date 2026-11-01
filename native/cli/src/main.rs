@@ -1,7 +1,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
-//! The `bit` executable. Commands implemented in Rust run in this process;
-//! every other command runs the Node.js Bit CLI, found by [`discovery`], with
+//! The `bit` executable. Commands implemented in Rust ([`commands`], [`native`]) run in this process;
+//! every other command runs the Node.js Bit CLI ([`delegate`]), found by [`discovery`], with
 //! the same arguments, terminal, environment and exit code. Nothing in the
 //! Node.js CLI knows about this binary. See `docs/rust-cli.md`.
 

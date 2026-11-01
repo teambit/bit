@@ -1,4 +1,6 @@
 //! The workspace snapshot range feature gate runs after pre-snap callbacks.
+//!
+//! [`validate`] checks [`Session`] and [`capture`] dependency ranges against the feature flag.
 use super::{Session, capture};
 use serde_json::{Value, json};
 use std::{env, fs, io, path::Path};

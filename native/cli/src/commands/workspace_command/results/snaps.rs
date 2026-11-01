@@ -1,6 +1,8 @@
 //! The merge's snapshot results: `mergeSnapResults` and `mergeSnapError`
 //! validated, and the snaps section
 //! of `mergeReport`.
+//!
+//! Formats snapped [`Id`] rows via [`rows`] and [`Formatter`].
 
 use super::rows;
 use crate::commands::{

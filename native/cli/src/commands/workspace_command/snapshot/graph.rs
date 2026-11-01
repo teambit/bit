@@ -4,7 +4,7 @@
 //! snap stores beside its Version (`dependenciesGraphRef`).
 //!
 //! The lockfile is read and filtered by pnpm's own `pnpm-lockfile` crate,
-//! the code `@pnpm/napi` runs for the Node.js CLI.
+//! the code `@pnpm/napi` runs for the Node.js CLI, re-exporting [`WorkspaceComponent`].
 
 pub use replacer::WorkspaceComponent;
 

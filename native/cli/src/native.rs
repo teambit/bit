@@ -1,6 +1,8 @@
 //! Native dispatch: the first argument names a command, and a command the
 //! [`commands`] table implements runs in process unless it
 //! declines its input or `BIT_NATIVE=off` is set.
+//!
+//! Emits dispatch diagnostics via [`trace`] when `BIT_NATIVE_TRACE=1` is enabled.
 
 #[cfg(test)]
 mod native_tests;

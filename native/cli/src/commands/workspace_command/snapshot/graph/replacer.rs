@@ -1,6 +1,8 @@
 //! `createFileVersionReplacer`: pnpm locks a workspace component as a
 //! directory dependency (`<package>@file:<dir>`); the graph names it by the
 //! component's version instead, as `snapToSemver` writes it.
+//!
+//! Matches `file:` specifiers with [`Regex`] and replaces them using [`HashMap`] version tables.
 
 #[cfg(test)]
 mod replacer_tests;

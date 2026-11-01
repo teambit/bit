@@ -1,4 +1,6 @@
 //! `@teambit/cli`'s output formatter (`output-formatter.ts`).
+//!
+//! [`Formatter`] provides section titles, bullet lists, and status symbols styled with [`Chalk`].
 
 use crate::commands::color::Chalk;
 

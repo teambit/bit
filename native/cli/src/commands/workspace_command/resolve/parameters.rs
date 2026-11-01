@@ -1,4 +1,6 @@
 //! `SnappingMain.snap` and `tag` parameters visible to published lifecycle hooks.
+//!
+//! Prepares [`Planned`] and [`Selection`] state for [`ResolveRequest`] and [`Workflow`] using [`Engine`].
 
 use super::{
     Planned, ResolveRequest, Selection, receipts::validate_preparation, workflow::Workflow,
