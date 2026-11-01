@@ -24,6 +24,9 @@ impl File {
     }
 }
 
+const DIVIDER: &str =
+    "--------------------------------------------------------------------------------";
+
 pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Value>> {
     let mut sections = Vec::new();
     let mut results = Vec::new();
@@ -45,10 +48,9 @@ pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Valu
         if conflicts.is_empty() {
             continue;
         }
-        let divider = "-".repeat(80);
         let identity = row.identity.trim();
         sections.push(format!(
-            "{divider}\n[*] {identity}\n{divider}\n{{\n{}\n}}",
+            "{DIVIDER}\n[*] {identity}\n{DIVIDER}\n{{\n{}\n}}",
             concatenate(conflicts),
         ));
         results.push(json!({"compIdStr":identity,"hasConflicts":true}));
@@ -148,10 +150,10 @@ fn basic(input: &Value, id: &str, conflict: &Value) -> io::Result<String> {
         ));
     }
     let inner = |text: &str| {
-        text.lines()
-            .skip(1)
-            .take(text.lines().count().saturating_sub(2))
-            .collect::<Vec<_>>()
+        let lines = text.lines().collect::<Vec<_>>();
+        lines
+            .get(1..lines.len().saturating_sub(1))
+            .unwrap_or_default()
             .join("\n")
     };
     Ok(format!(

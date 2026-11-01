@@ -157,8 +157,8 @@ fn validate_lane_overlap(context: &Value, additions: &[Value]) -> io::Result<()>
             if root == other
                 || root == "."
                 || other == "."
-                || root.starts_with(&format!("{other}/"))
-                || other.starts_with(&format!("{root}/"))
+                || std::path::Path::new(&root).starts_with(&other)
+                || std::path::Path::new(&other).starts_with(&root)
             {
                 return Err(invalid("checkout scope overlaps lane addition"));
             }

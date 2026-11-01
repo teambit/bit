@@ -40,13 +40,13 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
         .filter(|id| !id.is_empty());
     if matches!(retained.publication, Some(Publication::Lane { .. })) {
         let mut ids = identities.collect::<Vec<_>>();
-        ids.sort();
+        ids.sort_unstable();
         ids.dedup();
         return ids;
     }
     let ids = identities.collect::<Vec<_>>();
-    let mut result = Vec::new();
-    let mut seen_scopes = std::collections::HashSet::new();
+    let mut result = Vec::with_capacity(ids.len());
+    let mut seen_scopes = std::collections::HashSet::with_capacity(retained.pending.len());
     for pending in &retained.pending {
         let target_scope = pending.scope.trim();
         if !seen_scopes.insert(target_scope) {
@@ -60,7 +60,7 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
             })
             .cloned()
             .collect::<Vec<_>>();
-        group.sort();
+        group.sort_unstable();
         group.dedup();
         result.extend(group);
     }

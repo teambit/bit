@@ -55,11 +55,13 @@ fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(Strin
         .position(|byte| *byte == 0)
         .ok_or_else(|| invalid("recovery Lane header"))?;
     let header = std::str::from_utf8(&raw[..nul]).map_err(io::Error::other)?;
-    let fields = header.split(' ').collect::<Vec<_>>();
-    if fields.len() != 3 || fields[0] != "Lane" {
+    let mut fields = header.split(' ');
+    let (Some("Lane"), Some(raw_hash), Some(_), None) =
+        (fields.next(), fields.next(), fields.next(), fields.next())
+    else {
         return Err(invalid("recovery Lane type"));
-    }
-    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(fields[1])?);
+    };
+    let hash = crate::validate::hexadecimal(&crate::merge_history::hash(raw_hash)?);
     let value: Value = crate::parse_jsonc(&raw[nul + 1..]).map_err(io::Error::other)?;
     Ok((hash, value))
 }

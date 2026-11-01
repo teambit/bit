@@ -312,11 +312,12 @@ fn activate_inactive(policy: &Prepared, context: &mut Value) -> io::Result<()> {
 }
 
 fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value>> {
+    let context_targets = projection::array(&context["targets"])?;
     policy.rows
         .iter()
         .filter(|row| !row.baseline.scope_only)
         .map(|row| {
-            let mut target = projection::array(&context["targets"])?
+            let mut target = context_targets
                 .iter()
                 .find(|target| {
                     target["identity"].as_str().map(str::trim) == Some(row.identity.trim())
@@ -342,12 +343,16 @@ fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value
 pub(super) fn package_name(identity: &str, prefix: &str) -> String {
     let identity = identity.trim();
     let prefix = prefix.trim();
-    let mut name = identity.replace('/', ".");
-    let owner = format!("{}.", prefix.trim_start_matches('@'));
-    if prefix != "@bit" && name.starts_with(&owner) {
-        name = name[owner.len()..].to_owned();
-    }
-    format!("{prefix}/{name}")
+    let name = identity.replace('/', ".");
+    let owner = prefix.trim_start_matches('@');
+    let stripped = if prefix == "@bit" {
+        name.as_str()
+    } else {
+        name.strip_prefix(owner)
+            .and_then(|rest| rest.strip_prefix('.'))
+            .unwrap_or(&name)
+    };
+    format!("{prefix}/{stripped}")
 }
 
 fn prepare_components(

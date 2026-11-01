@@ -50,8 +50,12 @@ fn project_with(
     bitmap: &Value,
     validate: fn(&Value) -> io::Result<()>,
 ) -> io::Result<(Value, HashMap<String, Value>)> {
+    let capacity = bitmap
+        .as_object()
+        .ok_or_else(|| invalid("recovery bitmap"))?
+        .len();
     let mut projected = bitmap.clone();
-    let mut configs = HashMap::new();
+    let mut configs = HashMap::with_capacity(capacity);
     for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("recovery bitmap"))? {
         let trimmed_key = key.trim();
         if trimmed_key.starts_with('$') || matches!(trimmed_key, "_bit_lane" | "version") {

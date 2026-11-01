@@ -35,16 +35,14 @@ impl Actions {
                 if let Some(adapter) = crate::export_actions::current() {
                     return adapter.call(&path, name, options);
                 }
-                if self.file.is_none() {
-                    self.file = Some(FileBridge::spawn(
+                let bridge = match &mut self.file {
+                    Some(bridge) => bridge,
+                    None => self.file.insert(FileBridge::spawn(
                         &retained.network.node_executable,
                         &retained.network.bit_dir,
-                    )?);
-                }
-                self.file
-                    .as_mut()
-                    .ok_or_else(|| invalid("outbound file action bridge"))?
-                    .call(&path, name, options)
+                    )?),
+                };
+                bridge.call(&path, name, options)
             }
             Remote::Http(url) => {
                 let network = network(retained)?;

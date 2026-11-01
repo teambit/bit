@@ -149,12 +149,15 @@ fn scope_fields(current: &Value) -> io::Result<Vec<Value>> {
 pub(super) fn automatic(merged: &Value) -> io::Result<Value> {
     ["dependencies", "devDependencies", "peerDependencies"]
         .iter()
-        .map(|field| selected_policy(&merged[projection::RESOLVER]["policy"][*field], false))
+        .map(|field| {
+            selected_policy(&merged[projection::RESOLVER]["policy"][*field], false)
+                .map(Value::Object)
+        })
         .collect::<io::Result<Vec<_>>>()
         .map(Value::Array)
 }
 
-fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
+fn selected_policy(value: &Value, forced: bool) -> io::Result<serde_json::Map<String, Value>> {
     let mut output = serde_json::Map::new();
     let rows = if value.is_null() { &[][..] } else { projection::array(value)?.as_slice() };
     for row in rows {
@@ -173,7 +176,7 @@ fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
             .ok_or_else(|| invalid("command policy version"))?;
         output.insert(name.to_owned(), json!(version));
     }
-    Ok(Value::Object(output))
+    Ok(output)
 }
 
 pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
@@ -190,10 +193,6 @@ pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
             continue;
         };
         let forced = selected_policy(value, true)?;
-        let forced = forced
-            .as_object()
-            .ok_or_else(|| invalid("command forced policy"))?
-            .clone();
         if forced.is_empty() {
             policy.remove(field);
         } else {

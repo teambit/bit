@@ -2,6 +2,8 @@ mod checkout_import;
 mod checkout_lane;
 mod checkout_scope;
 mod roots;
+#[cfg(test)]
+mod tests;
 use super::input::{Operation, Prepare};
 use crate::{
     command_import,
@@ -9,9 +11,6 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::io;
-
-#[cfg(test)]
-mod tests;
 
 pub(super) fn context(
     request: &Prepare,
@@ -177,15 +176,13 @@ pub(super) fn extend_models(
         Some(imported) => status_models::read_overlay(&models, pool, &imported.overlay)?,
         None => status_models::read(&models, pool)?,
     };
+    let Value::Object(models) = models else {
+        return Err(invalid("command models"));
+    };
     context
         .as_object_mut()
         .ok_or_else(|| invalid("command context"))?
-        .extend(
-            models
-                .as_object()
-                .ok_or_else(|| invalid("command models"))?
-                .clone(),
-        );
+        .extend(models);
     Ok(())
 }
 fn validate(request: &Prepare) -> io::Result<()> {

@@ -8,8 +8,8 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
     if retained.snap.is_none() {
         return Ok(());
     }
-    let common = receipt["log"].clone();
-    let mut logs = Map::new();
+    let common = &receipt["log"];
+    let mut logs = Map::with_capacity(retained.materials.len());
     for material in &retained.materials {
         let mut log = common.clone();
         merge(&mut log, editor(receipt, &material.identity))?;

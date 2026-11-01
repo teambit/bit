@@ -12,8 +12,8 @@ pub(super) fn lane(
     if !has_lane_assignment(&bitmap) {
         return Ok(None);
     }
-    let mut imported = command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
     let id = super::super::lane_context::current_id(&bitmap, &context["scope"])?;
+    let mut imported = command_import::prepare_lane(&request.root, &request.global_remotes_file)?;
     if imported.load_lane(&id)?.is_none_or(|lane| lane.is_new) {
         return Ok(None);
     }

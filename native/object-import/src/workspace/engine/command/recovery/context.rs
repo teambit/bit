@@ -89,7 +89,7 @@ fn validate(request: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn controls(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
-    let mut proofs = Vec::new();
+    let mut proofs = Vec::with_capacity(7);
     for name in [".bitmap", "workspace.jsonc", "package.json", "merge-conflict"] {
         proof::read(&request.root.join(name), &mut proofs)?;
     }
@@ -235,7 +235,8 @@ fn select(context: &Value, pending: &Value, request: &Prepare) -> io::Result<(Ve
     if selected.len() != 1 {
         return Err(invalid("recovery unresolved selection empty"));
     }
-    Ok((selected.clone(), json!(remaining_rows(rows, &selected))))
+    let remaining = remaining_rows(rows, &selected);
+    Ok((selected, json!(remaining)))
 }
 
 fn remaining_rows(rows: &[Value], selected: &[Value]) -> Vec<Value> {

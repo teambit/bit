@@ -1,6 +1,8 @@
 pub(in crate::workspace::engine::command) use callbacks::extensions as callback_extensions;
 
 mod callbacks;
+#[cfg(test)]
+mod tests;
 
 use super::super::invalid;
 use serde::{Deserialize, Serialize};
@@ -113,9 +115,10 @@ fn apply_slots(entries: &mut Vec<Value>, defaults: &Defaults) -> io::Result<()> 
 }
 
 fn configured_entries(stored: &Value, configs: &Value) -> io::Result<Vec<Value>> {
-    let mut entries = Vec::new();
     let stored = array(stored)?;
-    for config in array(configs)? {
+    let configs = array(configs)?;
+    let mut entries = Vec::with_capacity(configs.len());
+    for config in configs {
         let identity = super::scope::identity(config)?;
         let source = stored_entry(stored, &identity);
         let mut entry = config.clone();
@@ -307,6 +310,3 @@ pub(super) fn array(value: &Value) -> io::Result<&Vec<Value>> {
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("command policy rows"))
 }
-
-#[cfg(test)]
-mod tests;

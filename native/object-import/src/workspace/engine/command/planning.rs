@@ -92,8 +92,12 @@ fn checkout_captured(
 }
 
 fn is_keyword_target(to: &str) -> bool {
-    let lower = to.to_ascii_lowercase();
-    matches!(lower.as_str(), "head" | "latest" | "reset" | "main") || lower.starts_with("head~")
+    ["head", "latest", "reset", "main"]
+        .iter()
+        .any(|keyword| to.eq_ignore_ascii_case(keyword))
+        || to
+            .get(..5)
+            .is_some_and(|prefix| prefix.eq_ignore_ascii_case("head~"))
 }
 
 pub(super) fn validate_current(record: &Record, current: &[Value]) -> io::Result<()> {
@@ -148,7 +152,7 @@ fn expanded_imports(
         .zip(selections)
         .map(|(target, selection)| import_target(target, selection))
         .collect::<io::Result<Vec<_>>>()?;
-    let mut expanded = Vec::new();
+    let mut expanded = Vec::with_capacity(targets.len());
     for ((target, selection), original) in targets
         .into_iter()
         .zip(selections)
@@ -364,7 +368,7 @@ fn select_captured(
     semver: &Value,
     recovery_reset: bool,
 ) -> io::Result<Vec<Value>> {
-    let mut selections = Vec::new();
+    let mut selections = Vec::with_capacity(plan.captured.len());
     for (index, captured) in plan.captured.iter().enumerate() {
         selections.push(checkout_select::select(
             record,

@@ -12,7 +12,8 @@ pub(super) fn validate(path: &Path) -> io::Result<()> {
         return Err(invalid("reset config extended attributes"));
     }
     let parent = path.parent().ok_or_else(|| invalid("reset config parent"))?;
-    if parent.is_symlink() || !parent.is_dir() {
+    let parent_meta = fs::symlink_metadata(parent).map_err(|_| invalid("reset config parent"))?;
+    if parent_meta.file_type().is_symlink() || !parent_meta.is_dir() {
         return Err(invalid("reset config parent"));
     }
     let temporary = parent.join(format!(

@@ -59,6 +59,13 @@ fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
     Ok(Some(candidate))
 }
 
+fn inbound_overlay<'a>(
+    state: &'a command::State,
+    token: Option<&str>,
+) -> io::Result<Option<&'a crate::command_import::Overlay>> {
+    command::inbound::overlay(state, import_token(token)?)
+}
+
 fn overlay_reads(
     request: Request,
     snapshots: &mut snapshots::State,
@@ -68,26 +75,17 @@ fn overlay_reads(
         Request::WorkspaceDiff(input) => super::status_models::workspace_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(
-                &snapshots.command,
-                import_token(input.import_token.as_deref())?,
-            )?,
+            inbound_overlay(&snapshots.command, input.import_token.as_deref())?,
         ),
         Request::VersionDiff(input) => super::status_models::version_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(
-                &snapshots.command,
-                import_token(input.import_token.as_deref())?,
-            )?,
+            inbound_overlay(&snapshots.command, input.import_token.as_deref())?,
         ),
         Request::VersionParentChain(input) => super::status_models::parent_diff::read_overlay(
             &input,
             pool,
-            command::inbound::overlay(
-                &snapshots.command,
-                import_token(input.import_token.as_deref())?,
-            )?,
+            inbound_overlay(&snapshots.command, input.import_token.as_deref())?,
         ),
         Request::StatusLaneUpdates(input) => {
             pool.install(|| command::inbound::lane_updates(&input, &snapshots.command, pool))

@@ -12,9 +12,13 @@ pub(super) fn prepare(
     let lane = lane
         .map(str::trim)
         .filter(|name| !name.is_empty());
-    let object_count = pending
+    let scope_object_counts = pending
         .iter()
         .map(|batch| batch.objects.len())
+        .collect::<Vec<_>>();
+    let object_count = scope_object_counts
+        .iter()
+        .copied()
         .fold(0_usize, usize::saturating_add);
     let file_remote = pending
         .iter()
@@ -33,7 +37,7 @@ pub(super) fn prepare(
         "lane":lane,
         "componentCount":count,
         "scopes":pending.iter().map(|batch| batch.scope.trim()).collect::<Vec<_>>(),
-        "scopeObjectCounts":pending.iter().map(|batch| batch.objects.len()).collect::<Vec<_>>(),
+        "scopeObjectCounts":scope_object_counts,
         "fileRemote":file_remote,
         "forkHistory":fork,
         "objectCount":object_count})

@@ -94,7 +94,6 @@ fn modification(
     if record.request.operation == input::Operation::Switch {
         return switch_modification(record, captured, model);
     }
-    let mut staged = histories.clone();
     let Some(model) = model else {
         if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
             return Err(invalid("reset Source comparison requires a stored component"));
@@ -118,6 +117,7 @@ fn modification(
         identity,
         model,
     );
+    let mut staged = histories.clone();
     let distance = staged.distance(
         &record.request.root,
         identity,

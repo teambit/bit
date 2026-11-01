@@ -93,6 +93,9 @@ fn matches_material_identity(output: &Value, identity: &str) -> bool {
                 .as_str()
                 .map(str::trim)
                 .filter(|scope| !scope.is_empty())
-                .map_or_else(|| name == identity, |scope| format!("{scope}/{name}") == identity)
+                .map_or_else(
+                    || name == identity,
+                    |scope| identity.split_once('/') == Some((scope, name)),
+                )
         })
 }

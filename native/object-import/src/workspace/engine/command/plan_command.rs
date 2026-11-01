@@ -96,7 +96,9 @@ fn prepare_checkout_policy(
     let root = record.targets
         .iter()
         .find(|target| target["directory"].as_str().map(str::trim) == Some("."));
-    if let Some(root) = root
+    if let Some(root_identity) = root
+        .and_then(|target| target["identity"].as_str())
+        .map(str::trim)
         && planned.materials
             .iter()
             .any(|material| {
@@ -105,9 +107,7 @@ fn prepare_checkout_policy(
                     .map(str::trim)
                     .is_some_and(|id| {
                         id.rsplit_once('@')
-                            .is_some_and(|(identity, _)| {
-                                root["identity"].as_str().map(str::trim) == Some(identity.trim())
-                            })
+                            .is_some_and(|(identity, _)| identity.trim() == root_identity)
                     })
                     && material.files
                         .iter()

@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use super::super::{invalid, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
@@ -6,8 +9,9 @@ use std::io;
 /// snap metadata only needs the checked-out Version. Missing objects are a
 /// proven absence, not permission to omit an existing issue-bearing Version.
 pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Result<Value> {
-    let mut output = Vec::new();
-    for model in context["models"].as_array().ok_or_else(|| invalid("resolve issue models"))? {
+    let models = context["models"].as_array().ok_or_else(|| invalid("resolve issue models"))?;
+    let mut output = Vec::with_capacity(models.len());
+    for model in models {
         let identity = model_identity(context, model)?;
         let lane_head = find_lane_head(context, &identity);
         let mut heads = Vec::new();
@@ -84,6 +88,3 @@ fn find_lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
         .find(|row| row["identity"].as_str().map(str::trim) == Some(identity.trim()))?["currentHead"]
         .as_str()
 }
-
-#[cfg(test)]
-mod tests;

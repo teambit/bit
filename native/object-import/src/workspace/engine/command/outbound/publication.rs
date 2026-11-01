@@ -2,6 +2,8 @@
 pub(super) use self::reconcile::present as reconcile_present;
 mod reconcile;
 mod removed;
+#[cfg(test)]
+mod tests;
 use self::reconcile::prepare_staged_config;
 use super::{Prepare, invalid, model::Selected};
 use crate::store::Store;
@@ -202,7 +204,8 @@ fn prepare_bitmap(
 }
 
 fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
-    let staged = read_optional(&crate::scope_path(root).join("staged-snaps"))?;
+    let scope_dir = crate::scope_path(root);
+    let staged = read_optional(&scope_dir.join("staged-snaps"))?;
     if staged
         .as_ref()
         .is_some_and(|bytes| bytes.len() > 4 * 1024 * 1024)
@@ -214,10 +217,10 @@ fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
         .map(|scope| Ok((scope.clone(), read_optional(&refs_path(root, scope))?)))
         .collect::<io::Result<BTreeMap<_, _>>>()?;
     Ok(Preimage {
-        index: fs::read(crate::scope_path(root).join("index.json"))?,
+        index: fs::read(scope_dir.join("index.json"))?,
         refs,
         staged,
-        staged_config: read_optional(&crate::scope_path(root).join("staged-config/main.json"))?,
+        staged_config: read_optional(&scope_dir.join("staged-config/main.json"))?,
     })
 }
 
@@ -288,14 +291,13 @@ impl Prepared {
     }
 
     fn validate_preimage(&self) -> io::Result<()> {
-        if fs::read(crate::scope_path(&self.root).join("index.json"))?
-            != self.preimage.index
-        {
+        let scope_dir = crate::scope_path(&self.root);
+        if fs::read(scope_dir.join("index.json"))? != self.preimage.index {
             return Err(invalid("outbound local index changed"));
         }
+        let objects = scope_dir.join("objects");
         for item in &self.components {
-            let object = crate::scope_path(&self.root)
-                .join("objects")
+            let object = objects
                 .join(&item.model_hash[..2])
                 .join(&item.model_hash[2..]);
             if fs::read(object)? != item.model_before {
@@ -303,7 +305,6 @@ impl Prepared {
             }
         }
         self.bitmap.validate()?;
-        let scope_dir = crate::scope_path(&self.root);
         if read_optional(&scope_dir.join("staged-snaps"))? != self.preimage.staged
             || read_optional(&scope_dir.join("staged-config/main.json"))?
                 != self.preimage.staged_config
@@ -358,20 +359,17 @@ fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io
 /// The remote ref of `item`, replaced or added.
 fn set_ref(rows: &mut Vec<Value>, scope: &str, item: &Selected) -> io::Result<()> {
     let (scope, name, head) = (scope.trim(), item.name.trim(), item.head.trim());
-    let matches: Vec<usize> = rows
-        .iter()
-        .enumerate()
-        .filter(|(_, row)| {
+    let value = json!({"id":{"scope":scope,"name":name},"head":head});
+    let mut matching = rows
+        .iter_mut()
+        .filter(|row| {
             crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(
                 row, scope, name,
             )
-        })
-        .map(|(index, _)| index)
-        .collect();
-    let value = json!({"id":{"scope":scope,"name":name},"head":head});
-    match matches.as_slice() {
-        [] => rows.push(value),
-        [index] => rows[*index] = value,
+        });
+    match (matching.next(), matching.next()) {
+        (None, None) => rows.push(value),
+        (Some(row), None) => *row = value,
         _ => return Err(invalid("outbound duplicate remote ref")),
     }
     Ok(())
@@ -400,6 +398,3 @@ fn write_refs(path: &Path, bytes: &[u8]) -> io::Result<()> {
     file.write_all(bytes)?;
     file.sync_all()
 }
-
-#[cfg(test)]
-mod tests;

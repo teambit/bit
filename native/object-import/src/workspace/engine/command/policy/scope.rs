@@ -119,14 +119,14 @@ pub(super) fn apply(
     versions: &[Value; 3],
 ) -> io::Result<Value> {
     let original = projection::array(extensions)?;
+    let incoming = projection::array(&versions[2]["extensions"])?;
     let merged = config::normalized(merged)?;
     let configs = merged.as_object().ok_or_else(|| invalid("scope merged configuration"))?;
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(configs.len() + original.len());
     for (id, config) in configs {
         if config == "-" {
             continue;
         }
-        let incoming = projection::array(&versions[2]["extensions"])?;
         let candidates = || original.iter().chain(incoming.iter());
         let mut selected = candidates()
             .find(|entry| identity(entry).is_ok_and(|identity| identity == *id))

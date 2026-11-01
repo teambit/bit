@@ -76,20 +76,17 @@ fn initial(
     selected: Vec<String>,
     request: &Prepare,
 ) -> Retained {
-    let finalized = super::publication::Phase::Pending(super::refresh::Callbacks::default());
-    let snap = request.ordinary_snap.then(|| request.options.clone());
     Retained {
         record,
         pending,
         selected,
         materials: Vec::new(),
         result: Value::Null,
-        finalized,
-        snap,
+        finalized: super::publication::Phase::Pending(super::refresh::Callbacks::default()),
+        snap: request.ordinary_snap.then(|| request.options.clone()),
         tag: request.tag_options.clone(),
     }
 }
-
 fn pending_rows(request: &Prepare) -> io::Result<Vec<Value>> {
     let path = crate::scope_path(&request.root).join("unmerged.json");
     if request.ordinary_snap && !path.try_exists()? {
@@ -154,9 +151,8 @@ fn attach_configuration(
     configs: &std::collections::HashMap<String, Value>,
 ) -> io::Result<()> {
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("resolve targets"))? {
-        if let Some(config) = target["directory"]
-            .as_str()
-            .and_then(|path| configs.get(path))
+        if let Some(path) = target["directory"].as_str()
+            && let Some(config) = configs.get(path)
         {
             target["bitmapConfig"] = config.clone();
             if request.ordinary_snap {
@@ -166,24 +162,17 @@ fn attach_configuration(
     }
     Ok(())
 }
-
 fn bind_next_versions(bitmap: &Value, context: &mut Value) -> io::Result<()> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("tag persist bitmap"))?;
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("tag persist targets"))? {
         let dir = target["directory"].as_str().ok_or_else(|| invalid("tag persist directory"))?;
-        let matches = |entry: &&Value| {
-            entry["rootDir"]
-                .as_str()
-                .map(|raw| {
-                    raw.strip_prefix("./")
-                        .unwrap_or(raw)
-                        .trim_end_matches('/')
-                })
-                == Some(dir)
-        };
         let entry = entries
             .values()
-            .find(matches)
+            .find(|entry| {
+                let Some(raw) = entry["rootDir"].as_str() else { return false };
+                let stripped = raw.strip_prefix("./").unwrap_or(raw);
+                stripped.trim_end_matches('/') == dir
+            })
             .ok_or_else(|| invalid("tag persist bitmap entry"))?;
         target["nextVersion"] = entry["nextVersion"].clone();
     }
@@ -262,12 +251,9 @@ fn token(state: &mut State) -> io::Result<String> {
 
 fn validate_extensions(context: &Value) -> io::Result<()> {
     for version in context["versions"].as_array().ok_or_else(|| invalid("resolve versions"))? {
-        let mut seen = std::collections::HashSet::new();
-        for row in version[1]["extensions"]
-            .as_array()
-            .into_iter()
-            .flatten()
-        {
+        let Some(rows) = version[1]["extensions"].as_array() else { continue };
+        let mut seen = std::collections::HashSet::with_capacity(rows.len());
+        for row in rows {
             if !seen.insert(extension_identity(row)?) {
                 return Err(invalid("resolve duplicate extension identity"));
             }
@@ -275,20 +261,21 @@ fn validate_extensions(context: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-
 fn extension_identity(row: &Value) -> io::Result<String> {
-    [row.get("name"), row.get("legacyId"), row.get("extensionId"), row.get("id")]
-        .into_iter()
-        .flatten()
-        .find(|val| {
-            val.as_str()
-                .is_some_and(|text| !text.trim().is_empty())
-                || val
-                    .as_object()
-                    .is_some_and(|map| !map.is_empty())
-        })
-        .map(ToString::to_string)
-        .ok_or_else(|| invalid("resolve extension identity"))
+    for key in ["name", "legacyId", "extensionId", "id"] {
+        let val = &row[key];
+        let non_empty_str = val
+            .as_str()
+            .is_some_and(|text| !text.trim().is_empty());
+        if non_empty_str
+            || val
+                .as_object()
+                .is_some_and(|map| !map.is_empty())
+        {
+            return Ok(val.to_string());
+        }
+    }
+    Err(invalid("resolve extension identity"))
 }
 
 fn pending_configuration(context: &mut Value, pending: &[Value], snapshot: bool) -> io::Result<()> {
@@ -365,50 +352,40 @@ fn load_models(
         .iter()
         .map(|target| json!({"identity":target["identity"],"version":target["version"]}))
         .collect::<Vec<_>>();
-    for target in context["lane"]["targets"]
-        .as_array()
-        .into_iter()
-        .flatten()
-    {
-        let target = json!({"identity":target["identity"],"version":target["head"]});
-        if !targets.contains(&target) {
-            targets.push(target);
+    if let Some(lane_targets) = context["lane"]["targets"].as_array() {
+        for target in lane_targets {
+            let target = json!({"identity":target["identity"],"version":target["head"]});
+            if !targets.contains(&target) {
+                targets.push(target);
+            }
         }
     }
     let raw = json!({"root":request.root,"history":false,"includeHeads":false,"targets":targets});
     let input = serde_json::from_value(raw).map_err(io::Error::other)?;
     let (_, models) =
         crate::workspace::engine::status_models::read_overlay(&input, pool, &imported.overlay)?;
-    let models = models.as_object().ok_or_else(|| invalid("resolve models"))?;
+    let Value::Object(models) = models else { return Err(invalid("resolve models")) };
     context
         .as_object_mut()
         .ok_or_else(|| invalid("resolve context"))?
-        .extend(models.clone());
+        .extend(models);
     Ok(())
 }
-
+fn non_empty(value: &Value) -> Option<&str> {
+    let text = value.as_str()?.trim();
+    (!text.is_empty()).then_some(text)
+}
 fn bind_models(context: &Value, repository: &mut repository::Repository) -> io::Result<()> {
     for model in context["models"].as_array().ok_or_else(|| invalid("resolve models"))? {
-        let name = model["name"]
-            .as_str()
-            .map(str::trim)
-            .filter(|name| !name.is_empty());
-        let name = name.ok_or_else(|| invalid("resolve model name"))?;
-        let scope = model["scope"]
-            .as_str()
-            .map(str::trim)
-            .filter(|scope| !scope.is_empty());
-        let identity = scope.map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
+        let name = non_empty(&model["name"]).ok_or_else(|| invalid("resolve model name"))?;
+        let identity = non_empty(&model["scope"])
+            .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}"));
         if repository.read_component(&identity)? != *model {
             return Err(invalid("resolve model changed"));
         }
     }
     for version in context["versions"].as_array().ok_or_else(|| invalid("resolve versions"))? {
-        let hash = version[0]
-            .as_str()
-            .map(str::trim)
-            .filter(|hash| !hash.is_empty());
-        let hash = hash.ok_or_else(|| invalid("resolve version reference"))?;
+        let hash = non_empty(&version[0]).ok_or_else(|| invalid("resolve version reference"))?;
         if repository.read(hash, "Version")? != version[1] {
             return Err(invalid("resolve version changed"));
         }

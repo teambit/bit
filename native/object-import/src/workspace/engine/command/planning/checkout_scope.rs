@@ -16,9 +16,11 @@ pub(super) fn prepare(
     plan.result["newFromScope"] = Value::Array(names.clone());
     let additions = record.context["scopeAdditions"]
         .as_array()
-        .ok_or_else(|| invalid("checkout scope addition destinations"))?
-        .clone();
-    for destination in additions {
+        .ok_or_else(|| invalid("checkout scope addition destinations"))?;
+    if additions.is_empty() {
+        return Ok(());
+    }
+    for destination in additions.clone() {
         let (identity, version) = addition_target(&destination)?;
         if plan.captured
             .iter()

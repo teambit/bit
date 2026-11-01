@@ -18,9 +18,14 @@ mod remote;
 
 use super::{super::invalid, State};
 use bit_client_transfer::tar::ObjectItem;
+use publication_state::Publication;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::{collections::HashMap, io, path::PathBuf};
+use std::{
+    collections::{HashMap, hash_map::Entry},
+    io,
+    path::PathBuf,
+};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -137,8 +142,6 @@ struct Pending {
     objects: Vec<ObjectItem>,
 }
 
-use publication_state::Publication;
-
 struct Plan {
     count: usize,
     resume: Option<ResumeContext>,
@@ -180,10 +183,9 @@ pub(in crate::workspace::engine) fn prepare(
     let mut receipt =
         receipt::prepare(&token, plan.count, &plan.pending, lane, plan.fork_history.as_ref());
     receipt["centralHub"] = json!(hub.is_some());
-    if let (Some(target), Some(source)) =
-        (receipt.as_object_mut(), packages.receipt(None).as_object())
+    if let (Some(target), Value::Object(source)) = (receipt.as_object_mut(), packages.receipt(None))
     {
-        target.extend(source.clone());
+        target.extend(source);
     }
     if input.resolution.preflight() {
         receipt["preflight"] = json!(true);
@@ -254,8 +256,9 @@ fn resume_context(
 fn hosts(input: &Prepare, selected: &[model::Selected]) -> io::Result<HashMap<String, String>> {
     let mut hosts = HashMap::new();
     for item in selected {
-        if !hosts.contains_key(&item.scope) {
-            hosts.insert(item.scope.clone(), remote::host(input, &item.scope)?);
+        if let Entry::Vacant(entry) = hosts.entry(item.scope.clone()) {
+            let host = remote::host(input, &item.scope)?;
+            entry.insert(host);
         }
     }
     Ok(hosts)

@@ -154,13 +154,13 @@ fn strip_local_env(extensions: &mut Map<String, Value>, record: &Record) {
     else {
         return;
     };
-    let env = env.to_owned();
     if !record.targets
         .iter()
-        .any(|target| target["identity"].as_str().map(str::trim) == Some(env.as_str()))
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(env))
     {
         return;
     }
+    let env = env.to_owned();
     let key = extensions
         .keys()
         .find(|key| {

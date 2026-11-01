@@ -76,18 +76,17 @@ pub(super) fn attach(
     if !imported.lane_import_histories().is_empty() {
         return Err(invalid("checkout fetched lane history requires canonical handling"));
     }
-    context["lane"] = json!({"currentId":current_id,"current":current});
-    let inactive = inactive_targets(request, context, &bitmap, &current, pool)?;
-    context["lane"]["inactiveTargets"] = json!(inactive);
+    let effective = status_context::configuration::effective(&request.root, &request.home)?;
+    let settings = config::configuration_value(&request.root, &effective, true)?;
+    let inactive = inactive_targets(request, context, &bitmap, &settings, &current, pool)?;
     let additions = if to_head {
-        additions(request, context, imported, &bitmap, &current)?
+        additions(request, context, imported, &bitmap, &settings, &current, &inactive)?
     } else {
         Additions::default()
     };
-    context["lane"]["newFromLane"] = json!(additions.names);
-    context["lane"]["additions"] = json!(additions.destinations);
-    context["lane"]["addedTargets"] = json!(additions.targets);
-    context["lane"]["trackedTargets"] = json!(additions.tracked);
+    context["lane"] = json!({"currentId":current_id,"current":current,"inactiveTargets":inactive,
+        "newFromLane":additions.names,"additions":additions.destinations,
+        "addedTargets":additions.targets,"trackedTargets":additions.tracked});
     Ok(())
 }
 
@@ -95,20 +94,16 @@ fn inactive_targets(
     request: &Prepare,
     context: &Value,
     bitmap: &Value,
+    settings: &Value,
     current: &command_import::lane::Record,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<Value>> {
-    let settings = config::configuration_value(
-        &request.root,
-        &status_context::configuration::effective(&request.root, &request.home)?,
-        true,
-    )?;
     let heads = command_import::lane::entries(&current.value)?
         .into_iter()
         .map(|entry| entry.identity)
         .collect::<HashSet<_>>();
     let projected =
-        super::super::lane_context::visibility::switch_targets(bitmap, &settings, false, &heads)?;
+        super::super::lane_context::visibility::switch_targets(bitmap, settings, false, &heads)?;
     let active = context["targets"].as_array().ok_or_else(|| invalid("checkout active targets"))?;
     let selected = projected
         .into_iter()
@@ -127,7 +122,7 @@ fn inactive_targets(
         home: request.home.clone(),
         history: false,
     };
-    let metadata = status_context::metadata_with_targets(&input, pool, &settings, selected)?;
+    let metadata = status_context::metadata_with_targets(&input, pool, settings, selected)?;
     metadata["targets"]
         .as_array()
         .cloned()
@@ -139,23 +134,18 @@ fn additions(
     context: &Value,
     imported: &mut command_import::PreparedImport,
     bitmap: &Value,
+    settings: &Value,
     current: &command_import::lane::Record,
+    inactive: &[Value],
 ) -> io::Result<Additions> {
     let selected = selected_identities(request, context)?;
-    let settings = config::configuration_value(
-        &request.root,
-        &status_context::configuration::effective(&request.root, &request.home)?,
-        true,
-    )?;
-    let bitmap = super::super::lane_context::visibility::identity_bitmap(bitmap, &settings)?;
+    let bitmap = super::super::lane_context::visibility::identity_bitmap(bitmap, settings)?;
     let candidates = Candidates {
         root: &request.root,
         selected,
         tracked: bitmap_identities(&bitmap)?,
         targets: context["targets"].as_array().ok_or_else(|| invalid("checkout targets"))?,
-        inactive: context["lane"]["inactiveTargets"]
-            .as_array()
-            .ok_or_else(|| invalid("checkout inactive targets"))?,
+        inactive,
         workspace_only: request.options.workspace_only,
     };
     let mut result = Additions::default();
@@ -169,7 +159,7 @@ fn additions(
         imported,
         &request.root,
         &bitmap,
-        &settings,
+        settings,
         &result.prospective,
     )?;
     result.targets =

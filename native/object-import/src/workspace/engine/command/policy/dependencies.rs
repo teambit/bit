@@ -70,7 +70,7 @@ pub(in crate::workspace::engine) fn detect(
     {
         return Err(invalid("command dependency detect phase"));
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(input.components.len());
     for (row, receipt) in policy.rows
         .iter_mut()
         .filter(|row| !row.baseline.scope_only)
@@ -171,8 +171,8 @@ fn complete_rows(
     };
     validate_application_files(&policy.rows)?;
     super::graph::validate_previous(&policy.rows, &mut record.repository)?;
-    let mut caches = Vec::new();
-    let mut issue_targets = Vec::new();
+    let mut caches = Vec::with_capacity(receipts.len());
+    let mut issue_targets = Vec::with_capacity(receipts.len());
     let mut issues = Vec::new();
     for (row, receipt) in policy.rows
         .iter_mut()

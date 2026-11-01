@@ -23,15 +23,11 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     roots.sort_unstable_by(|left, right| {
         std::path::Path::new(left).cmp(std::path::Path::new(right))
     });
-    if roots
-        .iter()
-        .filter(|root| **root == ".")
-        .count()
-        > 1
-    {
+    let total = roots.len();
+    roots.retain(|root| *root != ".");
+    if total - roots.len() > 1 {
         return Err(invalid("command duplicate workspace root"));
     }
-    roots.retain(|root| *root != ".");
     if roots
         .windows(2)
         .any(|pair| std::path::Path::new(pair[1]).starts_with(pair[0]))

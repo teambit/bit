@@ -43,14 +43,21 @@ fn matching_for_separator(
 }
 
 fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> io::Result<()> {
+    let suffix = &prefix[2..];
     for (index, entry) in entries.enumerate() {
         if index >= 65536 {
             return Err(invalid("checkout short reference directory budget"));
         }
         let name = entry?.file_name();
-        let Some(name) = name.to_str() else { continue };
-        let hash = format!("{}{}", &prefix[..2], name.trim().to_ascii_lowercase());
-        if hash.starts_with(prefix) && crate::merge_history::hash(&hash).is_ok() {
+        let Some(name) = name.to_str().map(str::trim) else { continue };
+        if !name
+            .get(..suffix.len())
+            .is_some_and(|head| head.eq_ignore_ascii_case(suffix))
+        {
+            continue;
+        }
+        let hash = format!("{}{}", &prefix[..2], name.to_ascii_lowercase());
+        if crate::merge_history::hash(&hash).is_ok() {
             refs.insert(hash);
         }
     }

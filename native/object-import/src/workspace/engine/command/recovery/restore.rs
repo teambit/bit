@@ -1,6 +1,8 @@
 mod main;
 mod paths;
 mod projection;
+#[cfg(test)]
+mod tests;
 
 use super::{
     super::{invalid, proof},
@@ -113,7 +115,8 @@ fn report_items(prepared: &mut Prepared) {
 }
 fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> io::Result<()> {
     let root = &prepared.root;
-    let backup = crate::scope_path(root).join("last-merged");
+    let scope_dir = crate::scope_path(root);
+    let backup = scope_dir.join("last-merged");
     let lane_id = prepared.objects.lane
         .as_ref()
         .map(|lane| lane.id.trim().trim_matches('/'))
@@ -121,15 +124,16 @@ fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> i
         .unwrap_or("main");
     crate::checkout::plan::relative_path(lane_id)?;
     let staged_config = format!("staged-config/{lane_id}.json");
+    let staged_snaps_path = scope_dir.join("staged-snaps");
     for (source, destination) in
         [("staged-snaps", "staged-snaps"), ("staged-config.json", staged_config.as_str())]
     {
         let source = backup.join(source);
-        let destination = crate::scope_path(root).join(destination);
+        let destination = scope_dir.join(destination);
         paths::staged(&prepared.root, &destination, proofs)?;
         proof::read(&destination, proofs)?;
         let bytes = proof::read(&source, proofs)?;
-        if destination == crate::scope_path(root).join("staged-snaps") {
+        if destination == staged_snaps_path {
             prepared.staged_snaps.clone_from(&bytes);
         }
         prepared.mutations.staged_bytes.push(bytes.clone());
@@ -218,5 +222,3 @@ impl Prepared {
         Ok(())
     }
 }
-#[cfg(test)]
-mod tests;

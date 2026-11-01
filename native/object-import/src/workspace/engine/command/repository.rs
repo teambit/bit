@@ -43,16 +43,18 @@ impl Repository {
             Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
             Err(error) => return Err(error),
         };
-        match metadata.get("license") {
-            None | Some(Value::Null) => Ok(()),
-            Some(Value::String(text)) => {
-                if !scope.is_empty() && !text.trim().is_empty() {
-                    self.checkout_license.insert(scope.to_owned(), text.clone());
-                }
-                Ok(())
+        if let Some(license) = metadata
+            .get("license")
+            .filter(|val| !val.is_null())
+        {
+            let text = license
+                .as_str()
+                .ok_or_else(|| super::super::invalid("command scope license shape"))?;
+            if !scope.is_empty() && !text.trim().is_empty() {
+                self.checkout_license.insert(scope.to_owned(), text.to_owned());
             }
-            _ => Err(super::super::invalid("command scope license shape")),
         }
+        Ok(())
     }
     pub(super) fn checkout_license(&self, identity: &str) -> Option<&str> {
         let (scope, _) = identity
@@ -234,20 +236,18 @@ impl Repository {
             .overlay()
             .and_then(|overlay| overlay.refs(scope))
         {
-            Ok(rows.to_vec())
-        } else {
-            let file = self.directory
-                .parent()
-                .ok_or_else(|| super::super::invalid("command scope path"))?
-                .join("refs/remotes")
-                .join(scope)
-                .join("main");
-            let bytes = proof::read(&file, &mut self.proofs)?;
-            Ok(match bytes {
-                Some(bytes) => crate::parse_jsonc(&bytes)
-                    .and_then(|val| serde_json::from_value(val).map_err(io::Error::other))?,
-                None => Vec::new(),
-            })
+            return Ok(rows.to_vec());
+        }
+        let scope_dir =
+            self.directory.parent().ok_or_else(|| super::super::invalid("command scope path"))?;
+        let file = scope_dir
+            .join("refs/remotes")
+            .join(scope)
+            .join("main");
+        match proof::read(&file, &mut self.proofs)? {
+            Some(bytes) => crate::parse_jsonc(&bytes)
+                .and_then(|val| serde_json::from_value(val).map_err(io::Error::other)),
+            None => Ok(Vec::new()),
         }
     }
     pub(super) fn overlay(&self) -> Option<&command_import::Overlay> {
@@ -331,10 +331,9 @@ impl Repository {
         self.imported.as_ref().map(command_import::PreparedImport::planned_index)
     }
     pub(super) fn progress(&self) -> Value {
-        let Some(imported) = &self.imported else {
-            return serde_json::json!({"bitmapCount":0,"imports":[]});
-        };
-        import_progress(imported)
+        self.imported
+            .as_ref()
+            .map_or_else(|| serde_json::json!({"bitmapCount":0,"imports":[]}), import_progress)
     }
     pub(super) fn complete_lane_histories(
         &mut self,

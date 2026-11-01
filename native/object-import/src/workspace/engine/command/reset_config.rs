@@ -191,10 +191,10 @@ fn document(identity: &str, version: &str, stored: &Value, original: &Value) -> 
 
 fn ordered_extensions<'a>(stored: &'a Value, original: &Value) -> io::Result<Vec<&'a Value>> {
     let rows = stored["extensions"].as_array().ok_or_else(|| invalid("reset model extensions"))?;
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::with_capacity(rows.len());
     let unique: Vec<_> = rows
         .iter()
-        .filter(|row| seen.insert(row["name"].clone()))
+        .filter(|row| seen.insert(&row["name"]))
         .collect();
     let specific = unique
         .iter()

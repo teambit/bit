@@ -12,10 +12,10 @@ impl Repository {
             imported.accept_recovery_objects(root, objects)?;
         }
         for (hash, bytes) in objects {
-            let hash = hash.trim().to_ascii_lowercase();
-            if crate::merge_history::hash(&hash).is_err() {
+            let Ok(digest) = crate::merge_history::hash(hash) else {
                 continue;
-            }
+            };
+            let hash = crate::validate::hexadecimal(&digest);
             let path = self.directory
                 .join(&hash[..2])
                 .join(&hash[2..]);

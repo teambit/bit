@@ -99,12 +99,13 @@ fn external(
     let mut seen = workspace.clone();
     let mut output = Vec::new();
     while let Some(identity) = queue.pop_front() {
-        if !seen.insert(identity.clone()) {
+        if seen.contains(&identity) {
             continue;
         }
-        if seen.len() > 4096 {
+        if seen.len() >= 4096 {
             return Err(invalid("issue graph budget"));
         }
+        seen.insert(identity.clone());
         let owned_edges;
         let edges = if let Some(edges) = graph.get(&identity) {
             absent_or_ordinary_model(&identity, repository)?;

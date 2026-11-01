@@ -69,10 +69,12 @@ fn ordered<'a>(
     selected: &[String],
     selected_set: &HashSet<&str>,
 ) -> io::Result<Vec<&'a Value>> {
-    let mut ordered = current
-        .iter()
-        .filter(|row| !selected_set.contains(row["identity"].as_str().map_or("", str::trim)))
-        .collect::<Vec<_>>();
+    let mut ordered = Vec::with_capacity(current.len());
+    ordered.extend(
+        current
+            .iter()
+            .filter(|row| !selected_set.contains(row["identity"].as_str().map_or("", str::trim))),
+    );
     for identity in selected {
         let identity = identity.trim();
         ordered.push(

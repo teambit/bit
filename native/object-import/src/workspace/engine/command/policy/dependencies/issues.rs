@@ -31,8 +31,7 @@ pub(super) fn capture(
         if issue["type"].as_str().map(str::trim) != Some("MissingManuallyConfiguredPackages") {
             return Err(invalid("command unsupported merged dependency issue"));
         }
-        let data = parse_issue_packages(&issue["data"])?;
-        if data.is_empty() || data.iter().any(String::is_empty) {
+        if parse_issue_packages(&issue["data"])?.is_empty() {
             return Err(invalid("command dependency issue packages"));
         }
     }
@@ -50,10 +49,14 @@ fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
         return items
             .iter()
             .map(|item| {
-                item.as_str()
+                let text = item
+                    .as_str()
                     .map(str::trim)
-                    .map(str::to_owned)
-                    .ok_or_else(|| invalid("command dependency issue data"))
+                    .ok_or_else(|| invalid("command dependency issue data"))?;
+                if text.is_empty() {
+                    return Err(invalid("command dependency issue packages"));
+                }
+                Ok(text.to_owned())
             })
             .collect();
     }
@@ -61,10 +64,16 @@ fn parse_issue_packages(data: &Value) -> io::Result<Vec<String>> {
         data.as_str().ok_or_else(|| invalid("command dependency issue data"))?,
     )
     .map_err(io::Error::other)?;
-    Ok(parsed
+    parsed
         .into_iter()
-        .map(|item| item.trim().to_owned())
-        .collect())
+        .map(|item| {
+            let trimmed = item.trim();
+            if trimmed.is_empty() {
+                return Err(invalid("command dependency issue packages"));
+            }
+            Ok(trimmed.to_owned())
+        })
+        .collect()
 }
 
 pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Value> {

@@ -21,10 +21,11 @@ impl Prepared {
         Ok(())
     }
     pub(in super::super) fn controls(&self) -> Controls {
+        let scope_dir = crate::scope_path(&self.root);
         let mut expected = BTreeMap::from([
             (self.root.join(".bitmap"), Some(self.bitmap.clone())),
             (self.root.join("workspace.jsonc"), Some(self.workspace.clone())),
-            (crate::scope_path(&self.root).join("unmerged.json"), Some(b"[]".to_vec())),
+            (scope_dir.join("unmerged.json"), Some(b"[]".to_vec())),
             (self.root.join("merge-conflict"), None),
         ]);
         for ((_, destination), bytes) in
@@ -32,14 +33,14 @@ impl Prepared {
         {
             expected.insert(destination.clone(), bytes.clone());
         }
+        let objects = scope_dir.join("objects");
         for (hash, bytes) in self.main_objects() {
             let hash = hash.trim().to_ascii_lowercase();
             if crate::merge_history::hash(&hash).is_err() {
                 continue;
             }
             expected.insert(
-                crate::scope_path(&self.root)
-                    .join("objects")
+                objects
                     .join(&hash[..2])
                     .join(&hash[2..]),
                 Some(bytes.clone()),
@@ -47,7 +48,7 @@ impl Prepared {
         }
         Controls {
             expected,
-            backup: crate::scope_path(&self.root).join("last-merged"),
+            backup: scope_dir.join("last-merged"),
             removals: self.mutations.removals.clone(),
         }
     }

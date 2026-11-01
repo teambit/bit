@@ -34,6 +34,9 @@ pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io
 
 pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
     let edges = edges.as_array().ok_or_else(|| invalid("resolve saved graph edges"))?;
+    if edges.is_empty() {
+        return Ok(());
+    }
     if edges.len() > 16384 {
         return Err(invalid("resolve saved graph edge budget"));
     }

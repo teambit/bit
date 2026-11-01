@@ -2,10 +2,8 @@ use super::{Value, invalid};
 use std::io;
 
 pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
-    let mut config = value
-        .as_object()
-        .cloned()
-        .ok_or_else(|| invalid("reset aspect config"))?;
+    let source = value.as_object().ok_or_else(|| invalid("reset aspect config"))?;
+    let mut config = source.clone();
     config.remove("__specific");
     let name = name.trim();
     match name

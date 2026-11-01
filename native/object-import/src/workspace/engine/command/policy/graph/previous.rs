@@ -1,4 +1,4 @@
-use super::{Repository, direct, invalid, key, load};
+use super::{Repository, direct, invalid, key, load, same_id};
 use serde_json::Value;
 use std::{collections::BTreeMap, io};
 
@@ -24,7 +24,7 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
             .1;
         if let Some(existing) = outgoing
             .iter_mut()
-            .find(|existing| key(&existing["target"]).ok().as_deref() == Some(target.as_str()))
+            .find(|existing| same_id(&existing["target"], &edge["target"]))
         {
             *existing = edge.clone();
         } else {

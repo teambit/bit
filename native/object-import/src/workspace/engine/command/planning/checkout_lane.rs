@@ -97,13 +97,17 @@ fn filter_tracked_results(context: &Value, result: &mut Value) -> io::Result<()>
     let tracked = context["lane"]["trackedTargets"]
         .as_array()
         .ok_or_else(|| invalid("checkout lane tracked targets"))?;
+    let components = result["components"]
+        .as_array_mut()
+        .ok_or_else(|| invalid("checkout lane component result"))?;
     let identities = tracked
         .iter()
         .filter_map(row_identity)
         .collect::<std::collections::HashSet<_>>();
-    result["components"]
-        .as_array_mut()
-        .ok_or_else(|| invalid("checkout lane component result"))?
-        .retain(|row| row_identity(row).is_none_or(|identity| !identities.contains(&identity)));
+    if !identities.is_empty() {
+        components.retain(|row| {
+            row_identity(row).is_none_or(|identity| !identities.contains(&identity))
+        });
+    }
     Ok(())
 }

@@ -4,8 +4,9 @@ use serde_json::Value;
 use std::{collections::HashSet, io};
 
 pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Result<Value> {
-    let mut identities = HashSet::new();
-    for row in array(value)? {
+    let rows = array(value)?;
+    let mut identities = HashSet::with_capacity(rows.len());
+    for row in rows {
         let object = row.as_object().ok_or_else(|| invalid("snapshot callback aspect"))?;
         if object
             .keys()

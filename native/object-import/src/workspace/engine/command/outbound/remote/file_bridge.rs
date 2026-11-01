@@ -92,9 +92,9 @@ impl FileBridge {
         bytes.push(b'\n');
         self.input.write_all(&bytes)?;
         self.input.flush()?;
-        let reply = self.read_reply()?;
+        let mut reply = self.read_reply()?;
         match reply["ok"].as_bool() {
-            Some(true) => Ok(reply["value"].clone()),
+            Some(true) => Ok(reply["value"].take()),
             Some(false) => Err(io::Error::other(
                 reply["message"]
                     .as_str()
@@ -108,7 +108,7 @@ impl FileBridge {
     }
 
     fn read_reply(&mut self) -> io::Result<Value> {
-        let mut line = Vec::new();
+        let mut line = Vec::with_capacity(256);
         loop {
             let available = self.output.fill_buf()?;
             if available.is_empty() {

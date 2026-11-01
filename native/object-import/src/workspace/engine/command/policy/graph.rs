@@ -20,14 +20,14 @@ pub(super) fn project(row: &mut super::Row, repository: &mut Repository) -> io::
         if edges.len() >= 16384 || seen.len() > 4096 {
             return Err(invalid("command dependency graph budget"));
         }
-        let source_key = key(&edge["source"])?;
+        let _ = key(&edge["source"])?;
         let target = edge["target"].clone();
         let identity = key(&target)?;
         if !edges
             .iter()
             .any(|existing: &Value| {
-                key(&existing["source"]).ok().as_deref() == Some(source_key.as_str())
-                    && key(&existing["target"]).ok().as_deref() == Some(identity.as_str())
+                same_id(&existing["source"], &edge["source"])
+                    && same_id(&existing["target"], &target)
             })
         {
             edges.push(edge);
@@ -55,13 +55,11 @@ fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::<Value>::new();
     for (field, kind) in [("dependencies", "prod"), ("devDependencies", "dev")] {
         for dependency in projection::array(&version[field])? {
-            let target_key = key(&dependency["id"])?;
+            let _ = key(&dependency["id"])?;
             let edge = json!({"source":source,"target":dependency["id"],"type":kind});
             if let Some(previous) = edges
                 .iter_mut()
-                .find(|previous| {
-                    key(&previous["target"]).ok().as_deref() == Some(target_key.as_str())
-                })
+                .find(|previous| same_id(&previous["target"], &dependency["id"]))
             {
                 *previous = edge;
             } else {
@@ -80,11 +78,11 @@ fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> i
             .or_else(|| extension.get("id"))
             .filter(|value| !value.is_null())
         {
-            let target_key = key(id)?;
+            let _ = key(id)?;
             let edge = json!({"source":source,"target":id,"type":"ext"});
             if let Some(existing) = edges
                 .iter_mut()
-                .find(|edge| key(&edge["target"]).ok().as_deref() == Some(target_key.as_str()))
+                .find(|edge| same_id(&edge["target"], id))
             {
                 *existing = edge;
             } else {
@@ -142,6 +140,12 @@ fn key(id: &Value) -> io::Result<String> {
         .filter(|version| !version.is_empty())
         .ok_or_else(|| invalid("command graph version"))?;
     Ok(format!("{scope}/{name}@{version}"))
+}
+
+pub(super) fn same_id(left: &Value, right: &Value) -> bool {
+    ["scope", "name", "version"]
+        .into_iter()
+        .all(|field| left[field].as_str().map(str::trim) == right[field].as_str().map(str::trim))
 }
 
 pub(super) fn validate_previous(

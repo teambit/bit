@@ -76,9 +76,10 @@ fn reports(
     selected: &[String],
     semver: &Value,
 ) -> io::Result<Vec<Value>> {
-    let mut rows = candidates.iter().map(|(entry, version)| {
+    let mut rows = Vec::with_capacity(candidates.len() + selected.len());
+    rows.extend(candidates.iter().map(|(entry, version)| {
         json!({"identity":entry.identity,"version":entry.head,"current":version})
-    }).collect::<Vec<_>>();
+    }));
     for identity in selected {
         let row = current
             .iter()
@@ -140,6 +141,9 @@ fn enrich_packages(version: &mut Value) -> io::Result<()> {
         .and_then(|row| row["data"]["dependencies"].as_array())
         .cloned()
         .unwrap_or_default();
+    if entries.is_empty() {
+        return Ok(());
+    }
     for field in ["dependencies", "devDependencies"] {
         for dependency in version[field]
             .as_array_mut()

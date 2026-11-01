@@ -68,21 +68,21 @@ fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<
     {
         return Err(invalid("reset missing materialization"));
     }
-    let components = plan.result["components"]
-        .as_array_mut()
-        .ok_or_else(|| invalid("reset missing components"))?;
-    components.retain(|component| component["id"].as_str().map(str::trim) != Some(id.as_str()));
-    plan.result["failedComponents"]
-        .as_array_mut()
+    let result = plan.result.as_object_mut().ok_or_else(|| invalid("reset missing result"))?;
+    result
+        .get_mut("components")
+        .and_then(Value::as_array_mut)
+        .ok_or_else(|| invalid("reset missing components"))?
+        .retain(|component| component["id"].as_str().map(str::trim) != Some(id.as_str()));
+    result
+        .get_mut("failedComponents")
+        .and_then(Value::as_array_mut)
         .ok_or_else(|| invalid("reset missing failures"))?
         .push(json!({"id":id,"unchangedMessage":format!("component {identity} is not modified"),
             "unchangedLegitimately":true}));
-    let added = plan.result
-        .as_object_mut()
-        .ok_or_else(|| invalid("reset missing result"))?
+    result
         .entry("addedComponents")
-        .or_insert_with(|| json!([]));
-    added
+        .or_insert_with(|| json!([]))
         .as_array_mut()
         .ok_or_else(|| invalid("reset missing additions"))?
         .push(Value::String(id));

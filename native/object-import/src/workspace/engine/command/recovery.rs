@@ -147,13 +147,14 @@ pub(in crate::workspace::engine) fn apply(
         return Err(invalid("recovery token changed"));
     }
     let mut retained = state.recovery.take().ok_or_else(|| invalid("recovery owner absent"))?;
+    let count = retained.record.targets.len();
     if let Some(result) = publication::failed_checkout(input, &retained)? {
-        return Ok((retained.record.targets.len(), json!({"applied":true,"result":result})));
+        return Ok((count, json!({"applied":true,"result":result})));
     }
     let mut prepared =
         retained.record.planned.take().ok_or_else(|| invalid("recovery plan absent"))?;
     if let Some(result) = publication::validate_apply(input, &retained, &prepared)? {
-        return Ok((retained.record.targets.len(), json!({"applied":true,"result":result})));
+        return Ok((count, json!({"applied":true,"result":result})));
     }
     proof::verify(&input.dependency_read_set)?;
     let checkout = reset::publish(&retained.record, &mut prepared, file_id);
@@ -167,7 +168,7 @@ pub(in crate::workspace::engine) fn apply(
         }
         (Operation::LaneAbort, Ok(_)) => {}
     }
-    Ok((retained.record.targets.len(), json!({"applied":true,"result":retained.result})))
+    Ok((count, json!({"applied":true,"result":retained.result})))
 }
 fn write_pending(root: &std::path::Path, pending: &Value) -> io::Result<()> {
     // UnmergedComponents.write uses JSON.stringify(..., null, 2).

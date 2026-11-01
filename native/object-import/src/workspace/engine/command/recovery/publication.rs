@@ -62,6 +62,9 @@ fn restore_models(
     record: &mut super::super::Record,
     objects: &[(String, Vec<u8>)],
 ) -> io::Result<()> {
+    if objects.is_empty() {
+        return Ok(());
+    }
     let models = record.context["models"]
         .as_array_mut()
         .ok_or_else(|| invalid("recovery context models"))?;

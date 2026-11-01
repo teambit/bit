@@ -1,4 +1,6 @@
 mod saved;
+#[cfg(test)]
+mod tests;
 
 use super::super::{invalid, repository::Repository, resolve_snapshot::Material};
 use serde_json::{Value, json};
@@ -128,11 +130,14 @@ fn children(
         edges.reverse();
         return Ok(edges);
     }
-    let version = match projected {
-        Some(value) => value.clone(),
-        None => load(repository, target)?,
+    let loaded;
+    let version = if let Some(value) = projected {
+        value
+    } else {
+        loaded = load(repository, target)?;
+        &loaded
     };
-    let mut children = edges(target, &version)?;
+    let mut children = edges(target, version)?;
     children.reverse();
     Ok(children)
 }
@@ -249,6 +254,3 @@ fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {
     super::super::policy::graph::validate_saved(&value, repository)?;
     crate::workspace::engine::status_models::harmony::project(&value)
 }
-
-#[cfg(test)]
-mod tests;

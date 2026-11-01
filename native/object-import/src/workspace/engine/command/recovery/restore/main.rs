@@ -1,4 +1,7 @@
 //! Restore main's mutable component objects from the upstream `LastMerged` snapshot.
+#[cfg(test)]
+#[path = "main_tests.rs"]
+mod tests;
 use super::{invalid, proof};
 use serde_json::Value;
 use std::{
@@ -19,9 +22,9 @@ impl Main {
             return Ok(None);
         }
         let names = filenames(&directory)?;
-        let mut objects = Vec::new();
+        let mut objects = Vec::with_capacity(names.len());
         let mut total = 0;
-        let mut identities = std::collections::HashSet::new();
+        let mut identities = std::collections::HashSet::with_capacity(names.len());
         for name in &names {
             let bytes = proof::read(&directory.join(name), proofs)?
                 .ok_or_else(|| invalid("main recovery backup disappeared"))?;
@@ -69,7 +72,7 @@ fn filenames(directory: &Path) -> io::Result<Vec<String>> {
     if names.len() > 4096 {
         return Err(invalid("main recovery object limit"));
     }
-    names.sort();
+    names.sort_unstable();
     Ok(names)
 }
 fn decode(bytes: &[u8]) -> io::Result<(String, Vec<u8>)> {
@@ -116,7 +119,3 @@ fn validate_index(
     }
     Ok(())
 }
-
-#[cfg(test)]
-#[path = "main_tests.rs"]
-mod tests;

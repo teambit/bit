@@ -11,6 +11,10 @@ pub(super) fn prepare(
     record: &Record,
     semver: &Value,
 ) -> io::Result<Option<(Publication, Value)>> {
+    let policy = &record.context["workspace"][projection::RESOLVER]["policy"];
+    if !policy.is_object() {
+        return Ok(None);
+    }
     let records = prepared.rows
         .iter()
         .filter(|row| !row.fast_forward && !row.ours_conflict)
@@ -36,19 +40,15 @@ pub(super) fn prepare(
                 "conflict":policy.map(|policy| &policy["conflict"]["value"])})
         })
         .collect::<Vec<_>>();
-    let policy = &record.context["workspace"][projection::RESOLVER]["policy"];
-    if !policy.is_object() || records.is_empty() {
+    if records.is_empty() {
         return Ok(None);
     }
     let plan = crate::config_merge::apply(
         "configWorkspaceMerge",
-        &json!({
-        "records":records,"policy":policy,"semver":semver}),
+        &json!({"records":records,"policy":policy,"semver":semver}),
     )?;
     remove_conflicts(prepared, &plan["removePackages"])?;
-    let publication = Publication::merged(&record.request.root, &plan)?;
-    let report = report(&plan)?;
-    Ok(Some((publication, report)))
+    Ok(Some((Publication::merged(&record.request.root, &plan)?, report(&plan)?)))
 }
 
 fn report(plan: &Value) -> io::Result<Value> {

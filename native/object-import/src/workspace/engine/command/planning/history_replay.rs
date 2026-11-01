@@ -49,12 +49,15 @@ fn stage_heads<'a>(
     let remote = remote
         .map(str::trim)
         .filter(|val| !val.is_empty());
-    let lower = to.to_ascii_lowercase();
     match stage {
-        Some("resolveTarget") if lower.starts_with("head~") => Some([head, None]),
-        Some("resolveTarget") if resolves_heads(&lower, model, head, remote) => {
-            Some([head, remote])
+        Some("resolveTarget")
+            if to
+                .get(..5)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case("head~")) =>
+        {
+            Some([head, None])
         }
+        Some("resolveTarget") if resolves_heads(to, model, head, remote) => Some([head, remote]),
         Some("hasVersion") if crate::merge_history::hash(to).is_ok() => Some([head, None]),
         Some("mergePending") => Some([head, remote]),
         _ => None,

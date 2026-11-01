@@ -60,13 +60,8 @@ fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     {
         return Err(invalid("recovery escaping directory"));
     }
-    if root
-        .join(directory)
-        .starts_with(crate::scope_path(root))
-        || root
-            .join(directory)
-            .starts_with(root.join(".git"))
-    {
+    let candidate = root.join(directory);
+    if candidate.starts_with(crate::scope_path(root)) || candidate.starts_with(root.join(".git")) {
         return Err(invalid("recovery scope removal"));
     }
     if previous

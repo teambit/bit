@@ -1,4 +1,6 @@
 //! `Repository.getChownOptions`: configured Unix group ownership for pending objects.
+#[cfg(all(test, unix))]
+mod tests;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
@@ -54,21 +56,22 @@ pub(super) fn owner(scope: &Path, pending: &Path) -> io::Result<Option<(u32, u32
 #[cfg(unix)]
 fn parse(groups: &str, name: &str) -> io::Result<Option<u32>> {
     let name = name.trim();
-    let row = groups
+    let raw_gid = groups
         .lines()
         .map(str::trim)
         .filter(|row| !row.is_empty() && !row.starts_with('#'))
-        .find(|row| row.split(':').next().map(str::trim) == Some(name))
+        .find_map(|row| {
+            let mut fields = row.split(':');
+            (fields.next().map(str::trim) == Some(name)).then(|| {
+                fields.nth(1).unwrap_or_default().trim()
+            })
+        })
         .ok_or_else(|| {
             io::Error::other(format!(
                 r#"unable to resolve group id of "{name}", the group does not exist"#,
             ))
         })?;
-    let gid = row
-        .split(':')
-        .nth(2)
-        .unwrap_or_default()
-        .trim()
+    let gid = raw_gid
         .parse::<u32>()
         .map_err(|_| {
             io::Error::other(format!(
@@ -78,6 +81,3 @@ fn parse(groups: &str, name: &str) -> io::Result<Option<u32>> {
     // JavaScript's `gid ? {...} : null` leaves group zero without an override.
     Ok((gid != 0).then_some(gid))
 }
-
-#[cfg(all(test, unix))]
-mod tests;
