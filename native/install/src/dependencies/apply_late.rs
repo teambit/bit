@@ -46,6 +46,7 @@ pub fn auto_detect(
     }
 }
 
+#[inline]
 fn uses_component(detected: &Detected, name: &str) -> bool {
     detected.components
         .iter()
@@ -53,6 +54,7 @@ fn uses_component(detected: &Detected, name: &str) -> bool {
         .any(|dependency| dependency.package_name.as_deref() == Some(name))
 }
 
+#[inline]
 fn find(detected: &Detected, field: usize, name: &str) -> Option<LegacyDependency> {
     detected.components[field]
         .iter()
@@ -95,6 +97,7 @@ fn apply_one(detected: &mut Detected, field: usize, name: &str, version: &str) {
 
 /// `handlePeerDependencyOverride`; `true` when the package is dropped entirely
 /// (`@types/*` peers are provided by the env).
+#[inline]
 fn peer_override(detected: &mut Detected, name: &str) -> bool {
     detected.packages[DEV].shift_remove(name);
     detected.packages[RUNTIME].shift_remove(name);
@@ -110,6 +113,7 @@ fn peer_override(detected: &mut Detected, name: &str) -> bool {
     false
 }
 
+#[inline]
 fn set_peer_range(detected: &mut Detected, name: &str, version: &str) {
     detected.components[PEER]
         .iter_mut()
@@ -271,6 +275,7 @@ fn add_component(
 }
 
 /// `_manuallyAddPackage`: the value, or for `+` the version in the workspace `package.json`.
+#[inline]
 fn manual_version(workspace: &Workspace<'_>, name: &str, value: &str) -> Option<String> {
     let value = value.trim();
     if value != overrides::ADD {
@@ -292,13 +297,13 @@ fn manual_version(workspace: &Workspace<'_>, name: &str, value: &str) -> Option<
 
 /// `removeCompDepsFromPackages`.
 pub fn remove_components_from_packages(detected: &mut Detected) {
-    let names: Vec<&str> = detected.components
+    let names: std::collections::HashSet<&str> = detected.components
         .iter()
         .flatten()
         .filter_map(|dependency| dependency.package_name.as_deref().map(str::trim))
         .filter(|name| !name.is_empty())
         .collect();
     for packages in &mut detected.packages {
-        packages.retain(|name, _| !names.contains(&name.trim()));
+        packages.retain(|name, _| !names.contains(name.trim()));
     }
 }

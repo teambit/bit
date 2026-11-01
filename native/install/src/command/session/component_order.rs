@@ -39,6 +39,7 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
     Ok(())
 }
 
+#[inline]
 fn normalize_order_identity(identity: &str) -> &str {
     let trimmed = identity.trim().trim_matches('/');
     match trimmed.rfind('@') {

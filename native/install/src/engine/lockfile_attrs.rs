@@ -18,6 +18,7 @@ const BIT_KEY: &str = "bit";
 
 /// The `bit:` block of the wanted lockfile, if any. A malformed lockfile fails
 /// the install itself later with a proper error.
+#[inline]
 pub(super) fn read(root: &Path) -> Option<Map<String, Value>> {
     let lockfile = Lockfile::load_from_path(&root.join(Lockfile::FILE_NAME)).ok().flatten()?;
     lockfile.extra
@@ -34,7 +35,7 @@ pub(super) fn merge(
 ) -> Option<Map<String, Value>> {
     let Some(deps) = deps_requiring_build else { return pre_install };
     let mut attrs = pre_install.unwrap_or_default();
-    let mut cleaned = Vec::new();
+    let mut cleaned = Vec::with_capacity(deps.len());
     for dep in deps
         .iter()
         .map(String::as_str)
@@ -91,6 +92,7 @@ pub(super) fn remove_for_update(root: &Path, update_all: bool) -> io::Result<Opt
 }
 
 /// Put back a lockfile [`remove_for_update`] removed.
+#[inline]
 pub(super) fn restore_after_failure(root: &Path, contents: Option<Vec<u8>>) -> io::Result<()> {
     if let Some(contents) = contents {
         fs::write(root.join(Lockfile::FILE_NAME), contents)?;

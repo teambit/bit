@@ -66,6 +66,7 @@ pub fn build(
     list
 }
 
+#[inline]
 fn component(
     id: ComponentId,
     package_name: String,
@@ -101,6 +102,7 @@ fn extensions(
 
 /// `resolveExtensionsList`: a workspace component's `.bitmap` id, else the configured
 /// version, which a dependency of the component on another version does not change.
+#[inline]
 fn resolve_extension_id(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,
@@ -116,6 +118,7 @@ fn resolve_extension_id(
     versions::resolve(workspace, subject, inputs, &id, Lifecycle::Dev, None).unwrap_or(id)
 }
 
+#[inline]
 fn extension_id(workspace: &Workspace<'_>, key: &str) -> Option<ComponentId> {
     let key = key.trim();
     if key.starts_with("file:") {
@@ -185,6 +188,7 @@ fn add_serialized(dependency: &Value, package_name: String, list: &mut Component
     list.components.push(component(id, package_name, lifecycle, is_extension));
 }
 
+#[inline]
 fn serialized_package_name(dependency: &Value) -> Option<String> {
     let field = if dependency["__type"] == "component" { "packageName" } else { "id" };
     dependency[field]
@@ -194,6 +198,7 @@ fn serialized_package_name(dependency: &Value) -> Option<String> {
         .map(str::to_owned)
 }
 
+#[inline]
 fn lifecycle(value: &Value) -> Lifecycle {
     match value.as_str().map(str::trim) {
         Some("dev") => Lifecycle::Dev,

@@ -10,6 +10,7 @@ use std::{
 
 impl Resolver<'_> {
     /// `resolvePackagePath` from the component dir, then `resolvePackageData`.
+    #[inline]
     pub fn package(&mut self, from: &Path, name: &str) -> io::Result<Resolved> {
         let name = name.trim();
         let Some(manifest) = self.find_manifest(from, name)? else {
@@ -79,6 +80,7 @@ impl Resolver<'_> {
 /// `resolvePackageData` of a found `package.json`: a component, a package with its
 /// version, or missing (`name` is the specifier's package name).
 /// The `@teambit/bit` component package as its core aspect; any other resolution as is.
+#[inline]
 pub(super) fn bit_aspect(resolved: Resolved) -> Resolved {
     match resolved {
         Resolved::Component(found) if found.package_name == BIT_ASPECT.1 => {
@@ -88,6 +90,7 @@ pub(super) fn bit_aspect(resolved: Resolved) -> Resolved {
     }
 }
 
+#[inline]
 pub(super) fn from_manifest(manifest: &Value, name: &str) -> Resolved {
     let Some(package_name) = manifest["name"]
         .as_str()
@@ -177,6 +180,7 @@ fn peer_range(manifest: &Value, concrete: Option<&str>) -> Option<String> {
     })
 }
 
+#[inline]
 pub(super) fn package_main(directory: &Path) -> Option<String> {
     let bytes = fs::read(directory.join("package.json")).ok()?;
     let manifest = serde_json::from_slice::<Value>(&bytes)

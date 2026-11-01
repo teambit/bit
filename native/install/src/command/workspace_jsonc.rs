@@ -33,9 +33,10 @@ pub fn edit(
 fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Result<()> {
     let file_id = file_id.trim();
     if scope_path
-        .to_string_lossy()
-        .trim()
-        .is_empty()
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
         || file_id.is_empty()
         || matches!(file_id, "." | "..")
         || file_id.contains(['/', '\\'])
@@ -59,6 +60,7 @@ fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Re
 }
 
 // JsonVinyl persists through AbstractVinyl's eol.auto, after backing up the original bytes.
+#[inline]
 fn platform_eol(text: String) -> String {
     if !cfg!(windows) && !text.contains('\r') {
         return text;

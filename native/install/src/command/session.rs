@@ -43,6 +43,7 @@ pub struct Session<'a> {
 impl Session<'_> {
     /// `workspace.list()` as the component loader announces it: every
     /// bitmap component, the workspace-root component included.
+    #[inline]
     pub fn loading(&self, loaded: &Loaded) {
         let count = loaded.workspace.active().count();
         if count != 0 {
@@ -72,6 +73,7 @@ impl Session<'_> {
 }
 
 /// The workspace root: the closest directory with a `workspace.jsonc`.
+#[inline]
 pub fn find_root(cwd: &Path) -> io::Result<PathBuf> {
     cwd.ancestors()
         .find(|dir| dir.join("workspace.jsonc").is_file())
@@ -119,11 +121,13 @@ impl Loaded {
     }
 
     /// Yarn is a JavaScript package manager: such workspaces keep the TypeScript command.
+    #[inline]
     pub fn uses_yarn(&self) -> bool {
         self.config.dependency_resolver.package_manager.as_deref().map(str::trim) == Some(YARN)
     }
 
     /// `workspace.name`: the configured name, else the root directory's name.
+    #[inline]
     pub fn workspace_name(&self, root: &Path) -> String {
         self.config.workspace.name
             .as_deref()

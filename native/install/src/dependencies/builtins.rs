@@ -50,6 +50,7 @@ const BUILTINS: [&str; 45] = [
 ];
 
 /// Whether `specifier` names a built-in module or one of its subpaths (`fs/promises`).
+#[inline]
 #[must_use]
 pub fn is_builtin(specifier: &str) -> bool {
     let trimmed = specifier.trim();

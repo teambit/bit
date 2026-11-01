@@ -76,6 +76,7 @@ impl ScopeJson {
     }
 
     /// The remote lane a local lane tracks.
+    #[inline]
     #[must_use]
     pub fn tracking(&self, local_lane: &str) -> Option<&TrackLane> {
         let local_lane = local_lane.trim();
@@ -88,6 +89,7 @@ impl ScopeJson {
     }
 }
 
+#[inline]
 fn parse_scope_json(text: &str) -> io::Result<ScopeJson> {
     if let Ok(parsed) = serde_json::from_str(text) {
         return Ok(parsed);

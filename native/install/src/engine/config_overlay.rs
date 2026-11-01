@@ -91,6 +91,7 @@ fn cascade_auth_headers(config: &Config) -> HashMap<String, String> {
 }
 
 /// The HTTP client of an engine call.
+#[inline]
 pub(super) fn http_client(config: &'static Config) -> io::Result<Arc<ThrottledClient>> {
     Ok(Arc::new(
         ThrottledClient::for_installs(
@@ -193,6 +194,7 @@ fn manifest_overrides(call: &CallOverlay<'_>) -> DependencyMap {
 
 /// With root components, the components' own packages are not hoisted unless
 /// `hoistInjectedDependencies` is set.
+#[inline]
 fn hoist_pattern(settings: &EngineSettings, external_dependencies: &[String]) -> Vec<String> {
     let mut pattern = settings.layout.hoist_pattern.clone();
     if !pattern.is_empty() && !settings.layout.hoist_injected_dependencies {
@@ -283,6 +285,7 @@ fn apply_policy(config: &mut Config, settings: &EngineSettings) -> io::Result<()
 }
 
 /// The derivations `build_config` runs after the overlay.
+#[inline]
 fn finish(config: &mut Config, settings: &EngineSettings) {
     config.apply_virtual_store_only_derivation();
     let virtual_store_dir_explicit = config.explicit_settings.contains_key("virtualStoreDir");
@@ -319,6 +322,7 @@ fn pin_unkeyed_header(settings: &EngineSettings) -> HashMap<String, String> {
     by_uri
 }
 
+#[inline]
 fn import_method(value: &str) -> Option<PackageImportMethod> {
     match value.trim() {
         "auto" => Some(PackageImportMethod::Auto),

@@ -71,6 +71,7 @@ pub struct WorkspaceConfig {
 }
 
 /// `scope/name@version` → `scope/name`. Ids never start with `@`.
+#[inline]
 #[must_use]
 pub fn aspect_id_without_version(id: &str) -> &str {
     let id = id.trim();
@@ -118,6 +119,7 @@ impl WorkspaceConfig {
     }
 
     /// The config of an aspect, matched without its version.
+    #[inline]
     #[must_use]
     pub fn aspect(&self, id: &str) -> Option<&Value> {
         let id = aspect_id_without_version(id);
@@ -203,6 +205,7 @@ impl WorkspaceConfig {
     }
 
     /// `<rootComponentsDirectory or node_modules>/.bit_roots`, absolute.
+    #[inline]
     #[must_use]
     pub fn root_components_path(&self, root: &Path) -> PathBuf {
         let base = self.workspace.root_components_directory
@@ -214,6 +217,7 @@ impl WorkspaceConfig {
     }
 }
 
+#[inline]
 fn invalid_config(path: &Path, error: &dyn std::fmt::Display) -> io::Error {
     io::Error::new(
         io::ErrorKind::InvalidData,

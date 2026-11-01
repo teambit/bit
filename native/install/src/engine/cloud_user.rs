@@ -53,6 +53,7 @@ pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<
 }
 
 /// Name the cloud user in the user agent, unless the pnpm config sets one.
+#[inline]
 pub fn apply_cloud_username(settings: &mut EngineSettings, username: &str) {
     let username = username.trim();
     if settings.registry.cloud_user_agent && !username.is_empty() {

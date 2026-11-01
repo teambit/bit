@@ -88,7 +88,7 @@ fn enrich(error: io::Error, calculated: &Calculated, output: &Output) -> io::Err
 
 /// Snap-pinned dependencies outside the workspace whose hash the error mentions.
 fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (String, Vec<String>)> {
-    let local: Vec<String> = calculated.components
+    let local: std::collections::HashSet<String> = calculated.components
         .iter()
         .map(|component| component.id.to_string_without_version())
         .collect();
@@ -110,7 +110,7 @@ fn record_unpublished_dep(
     found: &mut IndexMap<String, (String, Vec<String>)>,
     dependent: &str,
     dep_id: &crate::model::ComponentId,
-    local: &[String],
+    local: &std::collections::HashSet<String>,
     lower_message: &str,
 ) {
     let Some(version) = dep_id.version
@@ -139,6 +139,7 @@ fn record_unpublished_dep(
     }
 }
 
+#[inline]
 fn is_snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

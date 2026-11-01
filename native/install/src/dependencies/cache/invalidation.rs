@@ -16,6 +16,7 @@ use std::{
 };
 
 /// `<root>/.bit/cache/components/deps`, the workspace's dependency cache.
+#[inline]
 #[must_use]
 pub fn deps_dir(root: &Path) -> PathBuf {
     crate::config::scope_path(root)
@@ -61,11 +62,13 @@ pub fn needs_invalidation(root: &Path, cache: &Path) -> io::Result<bool> {
 }
 
 /// `Math.min`: `NaN` wins.
+#[inline]
 fn js_min(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() { f64::NAN } else { left.min(right) }
 }
 
 /// `fs.stat(path).mtimeMs`, `None` when the path does not exist.
+#[inline]
 fn mtime_ms(path: &Path) -> io::Result<Option<f64>> {
     let metadata = match fs::metadata(path) {
         Ok(metadata) => metadata,
@@ -96,6 +99,7 @@ fn entry_times(cache: &Path) -> io::Result<Vec<f64>> {
     Ok(times)
 }
 
+#[inline]
 fn file_times(file: &Path) -> io::Result<Vec<f64>> {
     match fs::read(file) {
         Ok(bytes) => Ok(bucket_times(&String::from_utf8_lossy(&bytes))),
@@ -151,6 +155,7 @@ fn bucket_times(text: &str) -> Vec<f64> {
 }
 
 /// `readdirOrEmpty`: missing directories and files read as empty.
+#[inline]
 fn read_dir_or_empty(dir: &Path) -> io::Result<Vec<PathBuf>> {
     match fs::read_dir(dir) {
         Ok(entries) => entries
@@ -166,6 +171,7 @@ fn read_dir_or_empty(dir: &Path) -> io::Result<Vec<PathBuf>> {
 }
 
 /// JavaScript truthiness of a JSON value.
+#[inline]
 fn truthy(value: Option<&Value>) -> bool {
     match value {
         None | Some(Value::Null) => false,

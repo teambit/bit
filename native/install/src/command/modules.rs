@@ -79,7 +79,7 @@ async fn run_cycles(
     calculated: &mut Calculated,
 ) -> io::Result<Vec<String>> {
     let CycleContext { loaded, links, restore } = *context;
-    let mut previous = HashSet::new();
+    let mut previous = HashSet::with_capacity(MAX_CYCLES);
     for cycle in 1..=MAX_CYCLES {
         let has_missing_local_components = calculated.outcome.has_missing_local_components;
         let result = engine_run::run(session, loaded, calculated, restore).await?;
@@ -190,6 +190,7 @@ fn may_skip(session: &Session<'_>, calculated: &Calculated, request: &AfterInsta
     )
 }
 
+#[inline]
 fn print_manifest_messages(session: &Session<'_>, calculated: &Calculated) {
     for warning in &calculated.outcome.warnings {
         session.output.warning(warning);
@@ -221,6 +222,7 @@ fn prepare_directories(loaded: &Loaded, calculated: &Calculated) -> io::Result<(
     root_dirs.iter().try_for_each(fs::create_dir_all)
 }
 
+#[inline]
 fn remove_path(path: &Path) -> io::Result<()> {
     let meta = match fs::symlink_metadata(path) {
         Ok(meta) => meta,
@@ -285,6 +287,7 @@ fn provided_by_root(calculated: &Calculated, links: &DependencyMap) -> HashSet<S
     provided
 }
 
+#[inline]
 fn dependency_names(field: Option<&Value>) -> Vec<String> {
     field
         .and_then(Value::as_object)

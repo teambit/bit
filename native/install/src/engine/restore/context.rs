@@ -8,6 +8,7 @@ use serde_json::{Map, Value, json};
 
 const KEYS: [&str; 3] = ["pnpmfileChecksum", "settings", "overrides"];
 
+#[inline]
 pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
     let mut context = Map::new();
     for (source, target) in [
@@ -40,6 +41,7 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
     context
 }
 
+#[inline]
 pub(super) fn merge(
     existing: &Map<String, Value>,
     graph: &Map<String, Value>,
@@ -67,6 +69,7 @@ pub(super) fn merge(
     }
 }
 
+#[inline]
 fn has_resolutions(lockfile: &Map<String, Value>) -> bool {
     ["packages", "snapshots"]
         .iter()

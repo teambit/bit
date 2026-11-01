@@ -39,6 +39,7 @@ pub(super) async fn run(
     .await
 }
 
+#[inline]
 fn component_id(id: &crate::model::ComponentId) -> String {
     let mut identity = id.to_string_without_version();
     if let Some(version) = id.version
@@ -52,6 +53,7 @@ fn component_id(id: &crate::model::ComponentId) -> String {
     identity
 }
 
+#[inline]
 fn package_options(
     session: &Session<'_>,
     loaded: &Loaded,
@@ -79,6 +81,7 @@ fn package_options(
     Ok(options)
 }
 
+#[inline]
 fn copy_config(raw: &mut Value, options: &mut Value) {
     for key in [
         "autoInstallPeers",

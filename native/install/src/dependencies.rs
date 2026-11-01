@@ -1,10 +1,5 @@
-//! Per-component dependency lists: detection, overrides and versions.
-//!
-//! This is the dependency computation Bit performs while loading a workspace
-//! component (`DependenciesLoader`): detection (from Bit's dependency cache when
-//! fresh, otherwise by scanning the files), `ApplyOverrides`, version resolution
-//! and `extractDepsFromLegacy`. The result is what the `dependency-resolver`
-//! aspect data holds after the component loads.
+//! Per-component dependency lists (`DependenciesLoader`): detection, `ApplyOverrides`,
+//! version resolution, and `extractDepsFromLegacy`.
 
 pub mod cache;
 pub(crate) mod data;
@@ -96,6 +91,7 @@ pub struct Workspace<'a> {
 impl Workspace<'_> {
     /// The `.bitmap` id matching `id` without version (`getIdFromBitMap`).
     #[must_use]
+    #[inline]
     pub fn bitmap_id(&self, id: &ComponentId) -> Option<&ComponentId> {
         self.components
             .iter()
@@ -105,11 +101,13 @@ impl Workspace<'_> {
 
     /// Whether `id` is a Bit core aspect.
     #[must_use]
+    #[inline]
     pub fn is_core_aspect(&self, id: &ComponentId) -> bool {
         self.is_core_aspect_id(&id.to_string_without_version())
     }
 
     #[must_use]
+    #[inline]
     pub fn is_core_aspect_id(&self, id: &str) -> bool {
         let id = id.trim();
         is_core_env(id)
@@ -121,6 +119,7 @@ impl Workspace<'_> {
     /// The package name of a component: the workspace component's, else the default
     /// `componentIdToPackageName` naming.
     #[must_use]
+    #[inline]
     pub fn package_name(&self, id: &ComponentId) -> String {
         self.components
             .iter()
@@ -131,6 +130,7 @@ impl Workspace<'_> {
 
 /// `componentIdToPackageName` without a binding prefix or `pkg` configuration.
 #[must_use]
+#[inline]
 pub fn default_package_name(id: &ComponentId) -> String {
     let scope = id.effective_scope().unwrap_or_default();
     let flat_name = id.name.replace('/', ".");
@@ -256,10 +256,7 @@ async fn subject<'a>(
 }
 
 /// `getEnvPolicyFromEnvId` for the component itself: its `env.jsonc` policy, else
-/// its `getDependencies()` when it is an env (a user env is never a core env, so
-/// legacy `peerDependencies` do not become its own peers). A component of an aspect
-/// env is an env only when it is registered as one: `getEnvDefinitionById` does not
-/// load it, and loading an aspect that is not an env costs seconds.
+/// its `getDependencies()` when it is an env or a registered aspect env.
 async fn own_env(
     component: &WorkspaceComponent,
     reader: &EnvJsoncReader<'_>,
@@ -296,6 +293,7 @@ async fn own_env(
     policy::env::from_config(&config, false).map(Some)
 }
 
+#[inline]
 fn has_env_jsonc(component: &WorkspaceComponent) -> bool {
     component.files
         .iter()

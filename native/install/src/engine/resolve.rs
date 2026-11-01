@@ -139,6 +139,7 @@ async fn resolve(
     resolver.resolve(wanted, &options).await.map_err(|error| io::Error::other(error.to_string()))
 }
 
+#[inline]
 fn manifest_of(resolved: &ResolveResult) -> io::Result<Value> {
     resolved.package.manifest
         .as_deref()
@@ -146,6 +147,7 @@ fn manifest_of(resolved: &ResolveResult) -> io::Result<Value> {
         .ok_or_else(|| io::Error::other("The resolved package has no manifest"))
 }
 
+#[inline]
 fn manifest_field(manifest: &Value, field: &str) -> String {
     manifest
         .get(field)

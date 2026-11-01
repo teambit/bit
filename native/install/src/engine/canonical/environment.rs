@@ -50,6 +50,7 @@ impl Captured {
             .then_some(Self { vars, cwd })
     }
 
+    #[inline]
     pub(super) fn with<ReadValue>(&self, read: impl FnOnce() -> ReadValue) -> ReadValue {
         let previous = CAPTURED.with(|slot| slot.replace(Some(self.clone())));
         let _guard = Restore(previous);
@@ -69,6 +70,7 @@ impl Captured {
             })
     }
 
+    #[inline]
     fn get(&self, name: &str) -> Option<&str> {
         if cfg!(windows) {
             self.vars
@@ -94,6 +96,7 @@ impl Drop for Restore {
 pub(super) struct CapturedHost;
 
 impl EnvVar for CapturedHost {
+    #[inline]
     fn var(name: &str) -> Option<String> {
         CAPTURED.with(|slot| {
             slot.borrow()
@@ -118,6 +121,7 @@ impl EnvVar for CapturedHost {
 }
 
 impl EnvVarOs for CapturedHost {
+    #[inline]
     fn var_os(name: &str) -> Option<OsString> {
         Self::var(name).map(OsString::from)
     }
@@ -148,6 +152,7 @@ impl GetCurrentDir for CapturedHost {
 }
 
 impl LinkProbe for CapturedHost {
+    #[inline]
     fn can_link_between_dirs(from_dir: &Path, to_dir: &Path) -> bool {
         Host::can_link_between_dirs(from_dir, to_dir)
     }

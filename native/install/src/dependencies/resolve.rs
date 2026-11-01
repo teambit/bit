@@ -85,6 +85,7 @@ pub struct Resolver<'a> {
 
 impl<'a> Resolver<'a> {
     #[must_use]
+    #[inline]
     pub fn new(
         root: &'a Path,
         components: &'a [WorkspaceComponent],
@@ -94,6 +95,7 @@ impl<'a> Resolver<'a> {
     }
 
     /// Classify `specifier` imported from `file` (relative to the component dir).
+    #[inline]
     pub fn resolve(
         &mut self,
         component: &WorkspaceComponent,
@@ -270,6 +272,7 @@ impl<'a> Resolver<'a> {
 }
 
 /// An origin file `filing-cabinet` resolves through TypeScript.
+#[inline]
 fn is_typescript_origin(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
@@ -282,6 +285,7 @@ fn is_typescript_origin(path: &Path) -> bool {
 
 /// `resolvePackageNameByPath`: `@scope/name` or `name` of a specifier.
 #[must_use]
+#[inline]
 pub fn package_name(specifier: &str) -> String {
     let specifier = specifier.trim();
     let mut parts = specifier.split('/');
@@ -342,6 +346,7 @@ fn commonjs_lookup(target: &Path) -> Option<PathBuf> {
         .or_else(|| with_extensions(&target.join("index"), &COMMONJS_EXTENSIONS))
 }
 
+#[inline]
 fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
     extensions
         .iter()
@@ -350,6 +355,7 @@ fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
 }
 
 /// `./file.js` may name `./file.ts` (TypeScript's extension substitution).
+#[inline]
 fn strip_script_extension(target: &Path) -> Option<PathBuf> {
     let extension = target.extension()?.to_str()?;
     ["js", "jsx", "mjs", "cjs"]
@@ -358,8 +364,9 @@ fn strip_script_extension(target: &Path) -> Option<PathBuf> {
         .then(|| target.with_extension(""))
 }
 
+#[inline]
 fn normalize(path: &Path) -> PathBuf {
-    let mut result = PathBuf::new();
+    let mut result = PathBuf::with_capacity(path.as_os_str().len());
     for part in path.components() {
         match part {
             Component::ParentDir => {

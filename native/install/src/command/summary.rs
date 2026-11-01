@@ -35,7 +35,7 @@ fn another_install_required(
     recurring: bool,
     non_loaded: &[String],
 ) -> Option<String> {
-    let mut envs_list: Vec<&str> = Vec::new();
+    let mut envs_list: Vec<&str> = Vec::with_capacity(non_loaded.len());
     for env in non_loaded
         .iter()
         .map(|env| env.trim().trim_matches('/'))
@@ -65,6 +65,7 @@ fn another_install_required(
 }
 
 /// `(end - start) / 1000` printed as a JavaScript number.
+#[inline]
 fn seconds(elapsed: Duration) -> String {
     let millis = elapsed.as_millis();
     let fraction = millis % 1000;

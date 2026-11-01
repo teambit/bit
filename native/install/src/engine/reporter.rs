@@ -51,6 +51,7 @@ pub struct ReporterSettings {
 
 impl ReporterSettings {
     #[must_use]
+    #[inline]
     pub fn new(info: &HostInfo) -> Self {
         ReporterSettings {
             append_only: false,
@@ -62,6 +63,7 @@ impl ReporterSettings {
             color: info.color,
         }
     }
+    #[inline]
     pub(crate) fn apply_throttle_progress(
         &mut self,
         value: Option<&serde_json::Value>,
@@ -175,6 +177,7 @@ impl Renderer {
         true
     }
 
+    #[inline]
     fn emit(&self, chunk: &str) {
         if let Some(sink) = &self.output {
             (sink.0)(chunk);
@@ -187,6 +190,7 @@ impl Renderer {
 }
 
 /// A high-volume progress update that may be dropped under throttling.
+#[inline]
 fn is_coalesceable(event: &LogEvent) -> bool {
     match event {
         LogEvent::Progress(_) => true,
@@ -197,11 +201,13 @@ fn is_coalesceable(event: &LogEvent) -> bool {
     }
 }
 
+#[inline]
 fn renderer_slot() -> &'static Mutex<Option<Renderer>> {
     static SLOT: OnceLock<Mutex<Option<Renderer>>> = OnceLock::new();
     SLOT.get_or_init(|| Mutex::new(None))
 }
 
+#[inline]
 fn stats_slot() -> &'static Mutex<Option<InstallStats>> {
     static SLOT: OnceLock<Mutex<Option<InstallStats>>> = OnceLock::new();
     SLOT.get_or_init(|| Mutex::new(None))
@@ -212,6 +218,7 @@ fn stats_slot() -> &'static Mutex<Option<InstallStats>> {
 pub(super) struct ReporterGuard;
 
 impl ReporterGuard {
+    #[inline]
     pub(super) fn install(renderer: Option<Renderer>) -> Self {
         if let Ok(mut slot) = renderer_slot().lock() {
             *slot = renderer;
@@ -223,6 +230,7 @@ impl ReporterGuard {
     }
 
     /// The stats accumulated so far.
+    #[inline]
     pub(super) fn take_stats() -> InstallStats {
         stats_slot()
             .lock()

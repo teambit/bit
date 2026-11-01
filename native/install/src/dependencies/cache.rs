@@ -62,6 +62,7 @@ pub fn read(
 }
 
 /// `ComponentID.toString()`: `scope/name@version`, the version omitted for new components.
+#[inline]
 fn key(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();
     match component.id.version
@@ -75,6 +76,7 @@ fn key(component: &WorkspaceComponent) -> String {
 }
 
 /// Whether the filesystem cache is disabled through `BIT_FEATURES`.
+#[inline]
 #[must_use]
 pub fn disabled() -> bool {
     std::env::var("BIT_FEATURES")
@@ -87,6 +89,7 @@ pub fn disabled() -> bool {
 
 /// Store the detection of `component` the way `saveDependenciesDataInCache` does,
 /// so the TypeScript loader reads it back.
+#[inline]
 pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected) -> io::Result<()> {
     put(&scope.dependency_cache(), &key(component), &format::serialize(detected).to_string())
 }
@@ -97,9 +100,10 @@ pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
     let key = key.trim();
     if key.is_empty()
         || cache
-            .to_string_lossy()
-            .trim()
-            .is_empty()
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
     {
         return Ok(());
     }
@@ -124,9 +128,10 @@ pub fn remove_entry(cache: &Path, key: &str) -> io::Result<()> {
     let key = key.trim();
     if key.is_empty()
         || cache
-            .to_string_lossy()
-            .trim()
-            .is_empty()
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
     {
         return Ok(());
     }
@@ -173,6 +178,7 @@ fn put_content(cache: &Path, data: &[u8]) -> io::Result<String> {
     Ok(format!("sha512-{}", STANDARD.encode(digest)))
 }
 
+#[inline]
 fn segmented(root: &Path, hash: &str) -> PathBuf {
     if hash.len() < 4 {
         return root.join(hash);
@@ -183,6 +189,7 @@ fn segmented(root: &Path, hash: &str) -> PathBuf {
 }
 
 /// Lowercase hex digits of `bytes`.
+#[inline]
 pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes
         .iter()

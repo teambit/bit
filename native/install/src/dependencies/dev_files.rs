@@ -80,6 +80,7 @@ pub struct EnvPatterns<'a> {
 }
 
 impl<'a> EnvPatterns<'a> {
+    #[inline]
     pub fn new(
         reader: &'a EnvJsoncReader<'a>,
         host: &'a dyn Host,
@@ -139,7 +140,7 @@ pub fn dev_patterns(
     config: &DevPatternConfig,
     env: &EnvDevPatterns,
 ) -> IndexMap<String, Vec<String>> {
-    let mut patterns: IndexMap<String, Vec<String>> = IndexMap::new();
+    let mut patterns: IndexMap<String, Vec<String>> = IndexMap::with_capacity(5);
     patterns.insert("config".to_owned(), configured_dev_patterns(component));
     patterns.insert(TESTER.to_owned(), env.tests.clone().unwrap_or_else(|| config.tests.clone()));
     for (aspect, env_list, cfg_list) in
@@ -173,6 +174,7 @@ pub fn dev_patterns(
     patterns
 }
 
+#[inline]
 fn configured_dev_patterns(component: &WorkspaceComponent) -> Vec<String> {
     component.config
         .get(DEV_FILES)
@@ -187,6 +189,7 @@ fn configured_dev_patterns(component: &WorkspaceComponent) -> Vec<String> {
 }
 
 /// `computeDevFiles(...).list()`: the component files matching any aspect's patterns.
+#[inline]
 #[must_use]
 pub fn dev_files(
     component: &WorkspaceComponent,
@@ -203,6 +206,7 @@ pub fn dev_files(
         .collect()
 }
 
+#[inline]
 fn strings(value: &Value) -> Vec<String> {
     match value {
         Value::Array(items) => items
@@ -217,6 +221,7 @@ fn strings(value: &Value) -> Vec<String> {
     }
 }
 
+#[inline]
 fn strings_of(items: &[&str]) -> Vec<String> {
     items
         .iter()

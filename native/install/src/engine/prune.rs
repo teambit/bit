@@ -40,6 +40,7 @@ pub fn prune_modules(root: &Path, keep: &HashSet<String>) -> io::Result<()> {
 }
 
 /// `fs.remove`: a directory tree, or a file or symlink.
+#[inline]
 fn remove(path: &Path) -> io::Result<()> {
     let meta = match fs::symlink_metadata(path) {
         Ok(meta) => meta,
@@ -56,6 +57,7 @@ fn remove(path: &Path) -> io::Result<()> {
 /// The package directories of the virtual store. With the global virtual
 /// store only `lock.yaml` and the hoisted `node_modules` live here; a
 /// lockfile-only install leaves no directory at all.
+#[inline]
 fn read_package_dirs(virtual_store_dir: &Path) -> io::Result<Vec<String>> {
     let entries = match fs::read_dir(virtual_store_dir) {
         Ok(entries) => entries,

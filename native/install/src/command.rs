@@ -174,6 +174,7 @@ async fn begin(session: &Session<'_>) -> io::Result<Begin> {
 
 /// Without `showExternalPackageManagerPrompt`, `InstallMain.install` writes the
 /// dependencies to `package.json` instead of installing.
+#[inline]
 fn writes_package_json(options: &InstallOptions, loaded: &Loaded) -> bool {
     !options.external_prompt
         && loaded.config.dependency_resolver.external_package_manager == Some(true)
@@ -239,12 +240,13 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
 }
 
 /// `publishIpcEvent('onPostInstall')`: watchers (`bit start`, `bit watch`) reload on it.
+#[inline]
 fn publish_post_install_event(scope_path: &Path) -> io::Result<()> {
-    if scope_path.as_os_str().is_empty()
-        || scope_path
-            .to_string_lossy()
-            .trim()
-            .is_empty()
+    if scope_path
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
     {
         return Ok(());
     }

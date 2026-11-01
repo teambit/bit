@@ -43,11 +43,13 @@ impl EngineError {
 
     /// The engine error an [`io::Error`] carries, if any.
     #[must_use]
+    #[inline]
     pub fn from_io(error: &io::Error) -> Option<&Self> {
         error.get_ref().and_then(|inner| inner.downcast_ref::<Self>())
     }
 
     #[must_use]
+    #[inline]
     pub fn into_io(self) -> io::Error {
         io::Error::other(self)
     }
@@ -74,6 +76,7 @@ impl fmt::Display for EngineError {
 impl Error for EngineError {}
 
 /// Convert a pacquet diagnostic into an [`io::Error`].
+#[inline]
 pub(super) fn diagnostic<Diag: Diagnostic + ?Sized>(error: &Diag) -> io::Error {
     EngineError::from_diagnostic(error).into_io()
 }

@@ -117,6 +117,7 @@ fn style(source: &str) -> Vec<String> {
 }
 
 /// A style import target as a specifier: `~pkg` is a package, anything else a relative file.
+#[inline]
 fn style_specifier(target: &str) -> Option<String> {
     let trimmed = target.trim();
     if trimmed.is_empty() {
@@ -142,6 +143,7 @@ fn style_specifier(target: &str) -> Option<String> {
     }
 }
 
+#[inline]
 fn quoted(text: &str) -> Option<String> {
     let quote = text
         .chars()
@@ -154,6 +156,7 @@ fn quoted(text: &str) -> Option<String> {
 }
 
 /// `found` without repeated specifiers, keeping the first occurrence.
+#[inline]
 pub fn dedupe(found: Vec<String>) -> Vec<String> {
     let mut result: Vec<String> = Vec::with_capacity(found.len());
     for specifier in found {

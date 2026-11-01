@@ -56,7 +56,7 @@ impl Registries {
     /// the default registry.
     #[must_use]
     pub fn auth_header_by_uri(&self) -> IndexMap<String, String> {
-        let mut result = IndexMap::new();
+        let mut result = IndexMap::with_capacity(self.scopes.len() + 2);
         for registry in self.scopes.values() {
             let uri = registry.uri.trim();
             let auth = registry.auth_header_value.trim();
@@ -78,6 +78,7 @@ impl Registries {
 
 /// `BIT_CLOUD_REGISTRY`: `https://node-registry.<cloud domain>/`.
 #[must_use]
+#[inline]
 pub fn bit_cloud_registry(global: &GlobalConfig) -> String {
     let domain = global_string(global, "cloud_domain").unwrap_or(DEFAULT_CLOUD_DOMAIN);
     format!("https://node-registry.{domain}/")
@@ -108,6 +109,7 @@ pub(super) fn resolve(
 }
 
 /// The default registry is npmjs or unset, so Bit's registry proxies it.
+#[inline]
 fn is_npmjs(uri: &str) -> bool {
     let trimmed = uri.trim().trim_end_matches('/');
     trimmed.is_empty() || trimmed.eq_ignore_ascii_case(NPM_REGISTRY.trim_end_matches('/'))
@@ -116,7 +118,10 @@ fn is_npmjs(uri: &str) -> bool {
 /// `getRegistries(config)` plus the `bit` scope registry when it is missing.
 fn from_pnpm_config(config: &pnpm_config::Config, cloud_registry: &str) -> Registries {
     let by_scope = config.auth_headers.to_by_scope();
-    let mut registries = Registries::default();
+    let mut registries = Registries {
+        default: Registry::default(),
+        scopes: IndexMap::with_capacity(config.registries_by_scope.len() + 1),
+    };
     for (name, url) in configured_registries(config) {
         let header = registry_auth_header(&by_scope, &name, &url).unwrap_or_default();
         let registry =
@@ -159,6 +164,7 @@ fn configured_registries(config: &pnpm_config::Config) -> Vec<(String, String)> 
 
 /// A scope registry prefers its scope-keyed credential; both fall back to the
 /// registry-wide (`@`) one.
+#[inline]
 fn registry_auth_header(by_scope: &AuthHeadersByScope, name: &str, url: &str) -> Option<String> {
     let scoped = by_scope.get(&nerf_dart(url))?;
     let own = if name == "default" { None } else { scoped.get(name) };
@@ -167,6 +173,7 @@ fn registry_auth_header(by_scope: &AuthHeadersByScope, name: &str, url: &str) ->
 }
 
 /// `Bearer <user.token>`, or empty without a token (`getBitAuthConfig`).
+#[inline]
 fn bit_auth_header(global: &GlobalConfig) -> String {
     global_string(global, "user.token").map_or_else(String::new, |token| format!("Bearer {token}"))
 }
@@ -191,6 +198,7 @@ fn add_auth_to_scoped_bit_registries(
 }
 
 /// A global config value as a non-empty string.
+#[inline]
 pub(super) fn global_string<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
     global
         .get(key)

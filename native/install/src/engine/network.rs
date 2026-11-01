@@ -22,6 +22,7 @@ pub struct ProxySettings {
 }
 
 impl ProxySettings {
+    #[inline]
     fn is_set(&self) -> bool {
         [&self.http_proxy, &self.https_proxy]
             .into_iter()
@@ -30,6 +31,7 @@ impl ProxySettings {
     }
 
     /// The engine's proxy config. The engine replaces its own wholesale.
+    #[inline]
     pub(super) fn to_engine(&self) -> pnpm_network::ProxyConfig {
         let non_empty = |url: &Option<String>| {
             url.as_deref()
@@ -100,6 +102,7 @@ impl NetworkSettings {
     }
 
     /// The engine's TLS config. The engine replaces its own wholesale.
+    #[inline]
     pub(super) fn to_tls(&self) -> pnpm_network::TlsConfig {
         let tls = &self.tls;
         pnpm_network::TlsConfig {
@@ -150,6 +153,7 @@ pub(super) fn proxy(
 }
 
 /// `{ ...global, ...pnpm config, ...dependency-resolver config }`.
+#[inline]
 pub(super) fn network(
     config: &pnpm_config::Config,
     dependency_resolver: &DependencyResolverConfig,
@@ -161,6 +165,7 @@ pub(super) fn network(
 }
 
 /// The first set global config value of `keys`.
+#[inline]
 fn first<'a>(global: &'a GlobalConfig, keys: &[&str]) -> Option<&'a Value> {
     keys.iter()
         .find_map(|key| {
@@ -302,6 +307,7 @@ pub(super) fn read_ca_file(path: &Path) -> io::Result<Option<Vec<String>>> {
 }
 
 /// `Number(value)` of a global config value (a number or a numeric string).
+#[inline]
 fn number<Number: TryFrom<u64>>(value: Option<&Value>) -> Option<Number> {
     let value = match value? {
         Value::Number(number) => number.as_u64()?,
@@ -312,6 +318,7 @@ fn number<Number: TryFrom<u64>>(value: Option<&Value>) -> Option<Number> {
 }
 
 /// A boolean, or the strings `"true"`/`"false"`.
+#[inline]
 fn boolean(value: &Value) -> Option<bool> {
     match value {
         Value::Bool(value) => Some(*value),
@@ -320,6 +327,7 @@ fn boolean(value: &Value) -> Option<bool> {
     }
 }
 
+#[inline]
 fn string_list(value: &Value) -> Option<Vec<String>> {
     match value {
         Value::String(text) => Some(vec![text.clone()]),
@@ -336,6 +344,7 @@ fn string_list(value: &Value) -> Option<Vec<String>> {
     }
 }
 
+#[inline]
 fn no_proxy_value(setting: &NoProxySetting) -> Value {
     match setting {
         NoProxySetting::Bypass => Value::Bool(true),
@@ -344,6 +353,7 @@ fn no_proxy_value(setting: &NoProxySetting) -> Value {
 }
 
 /// `true`, or a comma-separated host list (as `@pnpm/napi` parses it).
+#[inline]
 fn parse_no_proxy(value: &Value) -> Option<NoProxySetting> {
     match value {
         Value::Bool(true) => Some(NoProxySetting::Bypass),

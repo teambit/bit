@@ -97,12 +97,14 @@ pub struct DependencyResolverConfig {
 
 impl DependencyResolverConfig {
     /// `rootComponents`, default `false`.
+    #[inline]
     #[must_use]
     pub fn has_root_components(&self) -> bool {
         self.root_components.unwrap_or(false)
     }
 
     /// `nodeLinker`: `hoisted` for yarn, otherwise `isolated` unless configured.
+    #[inline]
     #[must_use]
     pub fn node_linker(&self) -> &str {
         if let Some(linker) = self.node_linker
@@ -126,12 +128,14 @@ impl DependencyResolverConfig {
     }
 
     /// `linkCoreAspects`, default `true`.
+    #[inline]
     #[must_use]
     pub fn link_core_aspects(&self) -> bool {
         self.link_core_aspects.unwrap_or(true)
     }
 
     /// `resolveEnvPeersFromRoot`, default `true`.
+    #[inline]
     #[must_use]
     pub fn resolve_env_peers_from_root(&self) -> bool {
         self.resolve_env_peers_from_root.unwrap_or(true)

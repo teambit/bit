@@ -4,6 +4,7 @@ mod tests;
 use serde_json::Value;
 use std::{io, time::Duration};
 
+#[inline]
 pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     let Some(value) = value else { return Ok(None) };
     let milliseconds = match value {
@@ -31,6 +32,7 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     Ok(Some(Duration::from_millis(u64::from(milliseconds))))
 }
 
+#[inline]
 fn invalid_type(value: &Value) -> io::Error {
     let kind = match value {
         Value::Null => "Null",

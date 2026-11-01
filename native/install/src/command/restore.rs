@@ -61,12 +61,14 @@ pub fn input(
 /// graphs of the imported components). The engine restores it like the stored graphs,
 /// only with root components (`dependenciesGraphToLockfile`), and a failure fails the
 /// install only with `restoreFromDependenciesGraph` (`failOnDependenciesGraphError`).
+#[inline]
 fn explicit(options: &InstallOptions) -> Option<RestoreInput> {
     let graph = options.dependencies_graph.clone()?;
     Some(RestoreInput { graph, fail_on_error: options.restore })
 }
 
 /// `formatWarningSummary`.
+#[inline]
 fn warn(session: &Session<'_>, message: &str) {
     let output = &session.output;
     let symbol = output.paint(Style::Yellow, "\u{26A0}");

@@ -12,17 +12,20 @@ pub struct ComponentModel {
 }
 
 impl ComponentModel {
+    #[inline]
     #[must_use]
     pub const fn new(version: Option<Value>) -> Self {
         Self { version }
     }
 
+    #[inline]
     #[must_use]
     pub const fn exists(&self) -> bool {
         self.version.is_some()
     }
 
     /// `packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`.
+    #[inline]
     #[must_use]
     pub fn packages(&self) -> FieldMaps {
         let Some(version) = &self.version else { return FieldMaps::default() };
@@ -32,6 +35,7 @@ impl ComponentModel {
     }
 
     /// `getAllPackageDependencies()`: runtime then dev packages.
+    #[inline]
     #[must_use]
     pub fn all_packages(&self) -> IndexMap<String, String> {
         let Some(version) = &self.version else { return IndexMap::new() };
@@ -65,12 +69,14 @@ impl ComponentModel {
     }
 
     /// The raw `Version` object.
+    #[inline]
     #[must_use]
     pub const fn raw(&self) -> Option<&Value> {
         self.version.as_ref()
     }
 }
 
+#[inline]
 fn is_dependency_resolver_extension(extension: &Value) -> bool {
     crate::workspace::extension_name(extension)
         .as_deref()

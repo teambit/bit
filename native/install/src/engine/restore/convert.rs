@@ -1,6 +1,4 @@
-//! Bit's serialized `DependenciesGraph` → a `pnpm-lock.yaml` document
-//! (`convertGraphToLockfile` in `lockfile-deps-graph-converter.ts`, before the
-//! resolution pass).
+//! Bit's serialized `DependenciesGraph` → a `pnpm-lock.yaml` document (`convertGraphToLockfile`).
 
 use super::dep_path::{parse, remove_suffix};
 use crate::model::Project;
@@ -66,6 +64,7 @@ impl Graph {
     }
 
     /// Whether the package is a workspace component.
+    #[inline]
     pub(super) fn is_component(&self, pkg_id: &str) -> bool {
         self.packages
             .get(pkg_id)
@@ -75,8 +74,7 @@ impl Graph {
             })
     }
 
-    /// Drop `name@file:` packages a graph can carry for workspace components
-    /// (`dropOrphanFilePkgs`).
+    /// Drop `name@file:` packages (`dropOrphanFilePkgs`).
     fn drop_orphan_file_packages(&mut self) {
         let is_file = |id: &str| {
             parse(id).non_semver_version.is_some_and(|version| version.starts_with("file:"))
@@ -116,6 +114,7 @@ impl Graph {
     }
 }
 
+#[inline]
 fn retain_neighbours(edges: &mut [Value], keep: impl Fn(&Value) -> bool) {
     for edge in edges {
         if let Some(Value::Array(neighbours)) = edge.get_mut("neighbours") {
@@ -124,12 +123,14 @@ fn retain_neighbours(edges: &mut [Value], keep: impl Fn(&Value) -> bool) {
     }
 }
 
+#[inline]
 pub(super) fn edge_id(edge: &Value) -> &str {
     edge.get("id")
         .and_then(Value::as_str)
         .map_or("", str::trim)
 }
 
+#[inline]
 fn edge_pkg_id(edge: &Value) -> &str {
     edge.pointer("/attr/pkgId")
         .and_then(Value::as_str)
@@ -138,6 +139,7 @@ fn edge_pkg_id(edge: &Value) -> &str {
         .unwrap_or_else(|| edge_id(edge))
 }
 
+#[inline]
 fn neighbour_id(neighbour: &Value) -> &str {
     neighbour
         .get("id")
@@ -145,14 +147,14 @@ fn neighbour_id(neighbour: &Value) -> &str {
         .map_or("", str::trim)
 }
 
+#[inline]
 fn neighbours(edge: &Value) -> &[Value] {
     edge.get("neighbours")
         .and_then(Value::as_array)
         .map_or(&[], Vec::as_slice)
 }
 
-/// The lockfile document of the graph: `packages`, `snapshots`, the importers
-/// of `projects` and the `bit:` block. Resolutions are filled in later.
+/// The lockfile document of the graph: `packages`, `snapshots`, `importers`, and `bit:`.
 pub(super) fn to_lockfile(graph: &Graph, projects: &[Project], root: &Path) -> Map<String, Value> {
     let mut entries = Entries::new(graph);
     for edge in graph.edges
@@ -215,8 +217,7 @@ impl<'graph> Entries<'graph> {
         self.packages.insert(pkg_id.to_string(), Value::Object(self.package(pkg_id)));
     }
 
-    /// `(name, ref)` of a neighbour; a neighbour without an edge of its own
-    /// gets an empty snapshot and its package entry.
+    /// `(name, ref)` of a neighbour; a leaf neighbour gets an empty snapshot and package entry.
     fn dependency_ref(&mut self, neighbour: &Value) -> (String, Value) {
         let id = neighbour_id(neighbour);
         let parsed = parse(id);
@@ -238,6 +239,7 @@ impl<'graph> Entries<'graph> {
         }
     }
 
+    #[inline]
     fn package(&self, pkg_id: &str) -> Map<String, Value> {
         self.graph.packages
             .get(pkg_id)
@@ -246,6 +248,7 @@ impl<'graph> Entries<'graph> {
     }
 }
 
+#[inline]
 fn lockfile_package(package: &Value) -> Map<String, Value> {
     PACKAGE_FIELDS
         .iter()
@@ -347,8 +350,8 @@ fn direct_dependency_ref(root_edge: &Value, name: &str, specifier: &str) -> Opti
     Some(parse(neighbour_id(found)).to_ref())
 }
 
-/// The lockfile importer id of a project: its POSIX path relative to the
-/// lockfile root, or `.`.
+/// The lockfile importer id of a project: its POSIX path relative to `root`, or `.`.
+#[inline]
 pub(super) fn importer_id(root: &Path, dir: &Path) -> String {
     let relative = posix(&relative(root, dir));
     if relative.is_empty() { ".".to_string() } else { relative }
@@ -380,6 +383,7 @@ pub(super) fn relative(from: &Path, to: &Path) -> PathBuf {
     result
 }
 
+#[inline]
 fn posix(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }

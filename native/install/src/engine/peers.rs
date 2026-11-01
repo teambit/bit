@@ -81,6 +81,7 @@ fn peer_issues(
 }
 
 /// A full fresh resolve, never frozen, never short-circuited, that writes nothing.
+#[inline]
 fn configure<'a>(
     install: Install<'a, Vec<DependencyGroup>>,
     workspace_projects: Option<Vec<pnpm_workspace::Project>>,
@@ -137,6 +138,7 @@ pub(super) fn intersections(issues: &PeerDependencyIssues) -> MissingPeers {
 
 /// Intersect semver ranges pairwise; `None` when one fails to parse or the
 /// intersection is empty. A single range passes through verbatim.
+#[inline]
 pub(super) fn safe_intersect<'a>(ranges: impl Iterator<Item = &'a str>) -> Option<String> {
     let mut unique: Vec<&str> = Vec::new();
     for range in ranges

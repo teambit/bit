@@ -35,6 +35,7 @@ pub(super) fn dedupe(
     Ok(())
 }
 
+#[inline]
 fn root_dependencies(
     root: Option<&Map<String, Value>>,
     overridden: &HashSet<String>,
@@ -53,6 +54,7 @@ fn root_dependencies(
         .collect()
 }
 
+#[inline]
 fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
     lockfile
         .get("overrides")
@@ -69,6 +71,7 @@ fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
         .collect()
 }
 
+#[inline]
 fn wins(name: &str, reference: &Value, root: Option<&Value>, peer: bool) -> bool {
     let Some((reference, root)) = reference
         .as_str()

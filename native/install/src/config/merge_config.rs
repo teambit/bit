@@ -66,6 +66,7 @@ impl MergeConfig {
         Self { conflicts, unmerged: IndexMap::new() }
     }
 
+    #[inline]
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.conflicts.is_empty() && self.unmerged.is_empty()
@@ -95,11 +96,13 @@ impl MergeConfig {
     }
 
     /// The parsed component entry before environment and auto-policy normalization.
+    #[inline]
     pub fn raw_component(&self, id: &str) -> io::Result<Option<Value>> {
         self.parsed(id)
     }
 
     /// Whether an entry is unparseable because merge markers remain.
+    #[inline]
     #[must_use]
     pub fn has_conflict(&self, id: &str) -> bool {
         self.conflicts
@@ -157,7 +160,7 @@ fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
     let Value::Array(entries) = crate::jsonc::parse(&text)? else {
         return Ok(IndexMap::new());
     };
-    let mut unmerged = IndexMap::new();
+    let mut unmerged = IndexMap::with_capacity(entries.len());
     for entry in entries {
         let Some(id) = unmerged_id(&entry["id"]) else { continue };
         if let Some(config) = entry.get("mergedConfig").filter(|config| config.is_object()) {
@@ -167,6 +170,7 @@ fn load_unmerged(scope: &Path) -> io::Result<IndexMap<String, Value>> {
     Ok(unmerged)
 }
 
+#[inline]
 fn unmerged_id(id: &Value) -> Option<String> {
     if let Some(raw) = id
         .as_str()
@@ -256,6 +260,7 @@ fn extract_auto_deps(config: &mut Map<String, Value>) -> Map<String, Value> {
     auto_deps
 }
 
+#[inline]
 fn entries_to_object<'a>(entries: impl Iterator<Item = &'a Value>) -> Map<String, Value> {
     entries
         .filter_map(|entry| {
@@ -276,6 +281,7 @@ fn entries_to_object<'a>(entries: impl Iterator<Item = &'a Value>) -> Map<String
 }
 
 /// JavaScript truthiness.
+#[inline]
 pub(crate) fn truthy(value: &Value) -> bool {
     match value {
         Value::Null => false,

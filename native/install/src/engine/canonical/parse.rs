@@ -52,10 +52,12 @@ impl<'a> Request<'a> {
     }
 }
 
+#[inline]
 fn absolute(value: &Value) -> Option<PathBuf> {
     parse_absolute_str(value.as_str()?)
 }
 
+#[inline]
 fn parse_absolute_str(text: &str) -> Option<PathBuf> {
     let trimmed = text.trim();
     if trimmed.is_empty() || trimmed.contains(['\0', '\n', '\r']) {
@@ -65,6 +67,7 @@ fn parse_absolute_str(text: &str) -> Option<PathBuf> {
     path.is_absolute().then_some(path)
 }
 
+#[inline]
 fn projects(manifests: &Map<String, Value>, root: &Path) -> Option<Vec<Project>> {
     let parsed: Vec<Project> = manifests
         .iter()
@@ -119,6 +122,7 @@ const OPTIONS: &[&str] = &[
     "forcedHarmonyVersion",
 ];
 
+#[inline]
 fn supported_options(options: &Map<String, Value>) -> bool {
     options
         .keys()

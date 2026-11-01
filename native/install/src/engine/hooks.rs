@@ -103,6 +103,7 @@ fn read_workspace_package(manifest: &mut Map<String, Value>) {
     manifest.insert("dependencies".to_string(), Value::Object(dependencies.into_iter().collect()));
 }
 
+#[inline]
 fn object_entries(value: Option<&Value>) -> IndexMap<String, Value> {
     value
         .and_then(Value::as_object)
@@ -117,6 +118,7 @@ fn object_entries(value: Option<&Value>) -> IndexMap<String, Value> {
 
 /// `@teambit/legacy` / `@teambit/harmony` are linked from bvm: drop them from
 /// `dependencies` unless linked, and always from `peerDependencies`.
+#[inline]
 fn remove_linked_only(manifest: &mut Map<String, Value>, name: &str) {
     let is_set = |value: &Value| {
         value
@@ -140,8 +142,9 @@ fn remove_linked_only(manifest: &mut Map<String, Value>, name: &str) {
 }
 
 /// Lexically normalize an absolute path (`path.join` semantics).
+#[inline]
 pub(super) fn normalize(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
+    let mut normalized = PathBuf::with_capacity(path.as_os_str().len());
     for component in path.components() {
         match component {
             Component::CurDir => {}

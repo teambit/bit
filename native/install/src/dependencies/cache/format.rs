@@ -55,6 +55,7 @@ pub fn serialize(detected: &Detected) -> Value {
 
 /// `Dependency.serialize()`. The relative paths of a relative cross-component import
 /// are not tracked natively; the cache reader ignores them.
+#[inline]
 fn dependency(dependency: &LegacyDependency) -> Value {
     let mut value = Map::with_capacity(4);
     value.insert("id".to_owned(), dependency_id(dependency));
@@ -76,6 +77,7 @@ fn dependency(dependency: &LegacyDependency) -> Value {
     Value::Object(value)
 }
 
+#[inline]
 fn dependency_id(dependency: &LegacyDependency) -> Value {
     let mut id = Map::with_capacity(3);
     if let Some(scope) = dependency.id.scope
@@ -106,7 +108,7 @@ fn dependency_id(dependency: &LegacyDependency) -> Value {
 
 /// `IssuesList.serialize()`: `[{ type, data: "<json>" }]`.
 fn issues(detected: &Detected) -> Vec<Value> {
-    let mut issues = Vec::new();
+    let mut issues = Vec::with_capacity(3);
     if !detected.missing_files.is_empty() {
         issues.push(issue("MissingDependenciesOnFs", &json!(detected.missing_files)));
     }
@@ -141,6 +143,7 @@ fn issues(detected: &Detected) -> Vec<Value> {
     issues
 }
 
+#[inline]
 fn issue(kind: &str, data: &Value) -> Value {
     json!({ "type": kind, "data": data.to_string() })
 }

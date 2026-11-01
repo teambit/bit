@@ -27,6 +27,7 @@ pub struct CanonicalInstall {
 impl CanonicalInstall {
     /// Return `None` before build-script PATH preparation or engine effects.
     #[must_use]
+    #[inline]
     pub fn prepare(payload: &Value, info: &HostInfo) -> Option<Self> {
         let request = parse::Request::new(payload)
             .filter(|request| request.environment.can_inherit_parent())?;

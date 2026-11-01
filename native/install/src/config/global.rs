@@ -127,12 +127,14 @@ impl EffectiveConfig {
     }
 
     /// `BIT_CONFIG_<KEY>`: dots become underscores, upper-cased.
+    #[inline]
     #[must_use]
     pub fn env_variable_name(key: &str) -> String {
         bit_workspace_config::environment_key(key)
     }
 
     /// `getConfig(key)`. An empty environment variable does not count, as in JavaScript.
+    #[inline]
     #[must_use]
     pub fn get(&self, key: &str) -> Option<String> {
         let key = key.trim();
@@ -143,6 +145,7 @@ impl EffectiveConfig {
     }
 
     /// `getConfigBoolean`: `"true"`/`"false"`; anything else is an error.
+    #[inline]
     pub fn get_bool(&self, key: &str) -> io::Result<Option<bool>> {
         let key = key.trim();
         match self.get(key).as_deref().map(str::trim) {
@@ -197,6 +200,7 @@ impl EffectiveConfig {
     }
 
     /// `getCloudDomain()`.
+    #[inline]
     #[must_use]
     pub fn cloud_domain(&self) -> String {
         self.get(keys::CLOUD_DOMAIN)

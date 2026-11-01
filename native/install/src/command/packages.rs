@@ -37,6 +37,7 @@ pub fn validate(packages: &[String], loaded: &Loaded) -> io::Result<Vec<String>>
 }
 
 /// `workspace.resolveComponentId` + `componentPackageName` for a component id argument.
+#[inline]
 fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
     let argument = argument.trim();
     let id = argument
@@ -74,7 +75,7 @@ pub async fn add(
         return Err(invalid("the workspace policy does not support dev dependencies"));
     }
     let config_prefix = loaded.config.dependency_resolver.save_prefix.as_deref();
-    let mut entries = Vec::new();
+    let mut entries = Vec::with_capacity(packages.len());
     for package in packages {
         let resolved = match engine::resolve_remote_version(package, &loaded.engine).await {
             Ok(resolved) => resolved,
@@ -93,6 +94,7 @@ pub async fn add(
 }
 
 /// `getVersionWithSavePrefix`.
+#[inline]
 pub fn version_with_save_prefix(
     version: &str,
     prefix: Option<&str>,
@@ -123,6 +125,7 @@ pub fn version_with_save_prefix(
     Ok(with_prefix)
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }

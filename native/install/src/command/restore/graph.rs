@@ -12,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 pub const ROOT: &str = ".";
 
 /// `isEmpty()`.
+#[inline]
 pub fn is_empty(graph: &Value) -> bool {
     packages(graph).is_empty() && edges(graph).is_empty()
 }
@@ -92,11 +93,13 @@ fn same_direct(left: &Value, right: &Value) -> bool {
 }
 
 /// `isWildcardSpecifier`.
+#[inline]
 fn is_wildcard(specifier: &Value) -> bool {
     specifier.is_null() || matches!(specifier.as_str().map(str::trim), Some("" | "*"))
 }
 
 /// `nodeIdLessThan`.
+#[inline]
 fn node_id_less_than(left: &str, right: &str) -> bool {
     match (version_of(left), version_of(right)) {
         (Some(left), Some(right)) => semver::gt(&right, &left).unwrap_or(false),
@@ -190,14 +193,17 @@ fn reachable(root: &Value, by_id: &HashMap<String, Value>) -> (HashSet<String>, 
 }
 
 /// A JavaScript `Map` by id: first position, last value.
+#[inline]
 fn dedupe_by_id(edges: Vec<Value>) -> Vec<Value> {
-    let mut by_id: indexmap::IndexMap<String, Value> = indexmap::IndexMap::new();
+    let mut by_id: indexmap::IndexMap<String, Value> =
+        indexmap::IndexMap::with_capacity(edges.len());
     for edge in edges {
         by_id.insert(id(&edge).to_owned(), edge);
     }
     by_id.into_values().collect()
 }
 
+#[inline]
 fn neighbour_ids(edge: &Value) -> Vec<String> {
     edge["neighbours"]
         .as_array()
@@ -210,6 +216,7 @@ fn neighbour_ids(edge: &Value) -> Vec<String> {
         .unwrap_or_default()
 }
 
+#[inline]
 fn root_mut(graph: &mut Value) -> Option<&mut Value> {
     graph["edges"]
         .as_array_mut()?
@@ -217,6 +224,7 @@ fn root_mut(graph: &mut Value) -> Option<&mut Value> {
         .find(|edge| edge["id"] == ROOT)
 }
 
+#[inline]
 pub fn id(value: &Value) -> &str {
     value
         .as_str()
@@ -225,6 +233,7 @@ pub fn id(value: &Value) -> &str {
         .map_or("", str::trim)
 }
 
+#[inline]
 pub fn packages(graph: &Value) -> &Map<String, Value> {
     static EMPTY: std::sync::OnceLock<Map<String, Value>> = std::sync::OnceLock::new();
     graph["packages"]
@@ -232,6 +241,7 @@ pub fn packages(graph: &Value) -> &Map<String, Value> {
         .unwrap_or_else(|| EMPTY.get_or_init(Map::new))
 }
 
+#[inline]
 pub fn edges(graph: &Value) -> &[Value] {
     graph["edges"]
         .as_array()

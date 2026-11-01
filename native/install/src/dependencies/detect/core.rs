@@ -9,6 +9,7 @@ pub(super) struct Import {
     id: String,
 }
 
+#[inline]
 pub(super) fn import(
     resolver: &mut Resolver<'_>,
     component: &WorkspaceComponent,
@@ -42,6 +43,7 @@ pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
     ids
 }
 
+#[inline]
 fn relative(from: &Path, to: &Path) -> String {
     let from: Vec<_> = from
         .components()

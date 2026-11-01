@@ -175,6 +175,7 @@ fn add_missing_files(
 }
 
 /// `removeFileExtension` of a `/`-separated path.
+#[inline]
 fn without_extension(path: &Path) -> String {
     let text = path.to_string_lossy().replace('\\', "/");
     for suffix in [".d.ts", ".d.mts", ".d.cts"] {
@@ -188,8 +189,9 @@ fn without_extension(path: &Path) -> String {
 }
 
 /// Resolve `.` and `..` of a relative path without touching the filesystem.
+#[inline]
 fn normalize_relative(path: &Path) -> std::path::PathBuf {
-    let mut result = std::path::PathBuf::new();
+    let mut result = std::path::PathBuf::with_capacity(path.as_os_str().len());
     for part in path.components() {
         match part {
             std::path::Component::ParentDir => {
@@ -263,6 +265,7 @@ fn packages(
 }
 
 /// `_addTypesPackagesForTypeScript`: `@types/<name>` from the workspace policy, else the model.
+#[inline]
 fn types_package(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,
@@ -277,6 +280,7 @@ fn types_package(
 }
 
 /// `packageToDefinetlyTyped`.
+#[inline]
 #[must_use]
 pub fn definitely_typed(name: &str) -> String {
     let name = name.trim();
@@ -373,6 +377,7 @@ fn add_relative(subject: &Subject<'_>, detected: &mut Detected, id: ComponentId,
 }
 
 /// `isEqualWithoutVersion`.
+#[inline]
 #[must_use]
 pub fn same(left: &ComponentId, right: &ComponentId) -> bool {
     left.name.trim() == right.name.trim()

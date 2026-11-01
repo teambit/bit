@@ -17,6 +17,7 @@ const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 /// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.
 type Entry = (usize, String, Value);
 
+#[inline]
 fn resolver_key(document: &Document) -> String {
     document
         .value()
@@ -110,6 +111,7 @@ pub fn add_to_root_policy(
 
 /// `WorkspacePolicy.add`: an entry with the same name in any lifecycle is
 /// updated, kept, or an error.
+#[inline]
 fn admits(policy: &[Entry], name: &str, existing: ExistingEntries) -> io::Result<bool> {
     let name = name.trim();
     if !policy
@@ -148,6 +150,7 @@ fn config_entries(policy: &Value) -> Vec<Entry> {
 }
 
 /// `entry.value.preserve ? entry.value : entry.value.version`.
+#[inline]
 fn entry_value(value: &Value) -> Value {
     let Value::Object(object) = value else { return value.clone() };
     let version = object
@@ -160,11 +163,13 @@ fn entry_value(value: &Value) -> Value {
     version
 }
 
+#[inline]
 fn truthy(value: &Value) -> bool {
     !matches!(value, Value::Null | Value::Bool(false)) && value.as_str() != Some("")
 }
 
 /// `toConfigObject`: both fields, later entries win, keys sorted.
+#[inline]
 fn to_config_object(entries: &[Entry]) -> [IndexMap<String, Value>; 2] {
     let mut fields: [IndexMap<String, Value>; 2] = Default::default();
     for (index, name, value) in entries {

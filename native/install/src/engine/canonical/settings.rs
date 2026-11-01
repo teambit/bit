@@ -83,7 +83,7 @@ fn apply_registry(settings: &mut EngineSettings, request: &Request<'_>) -> Optio
     }
     let mut registries = Registries {
         default: Registry { uri: default, ..Registry::default() },
-        ..Registries::default()
+        scopes: IndexMap::with_capacity(request.network.registry_map.len()),
     };
     for (key, value) in request.network.registry_map {
         if key == "default" {
@@ -94,10 +94,8 @@ fn apply_registry(settings: &mut EngineSettings, request: &Request<'_>) -> Optio
         if scope.is_empty() || uri.is_empty() {
             return None;
         }
-        registries.scopes.insert(
-            scope.to_string(),
-            Registry { uri: uri.to_string(), ..Registry::default() },
-        );
+        let reg = Registry { uri: uri.to_string(), ..Registry::default() };
+        registries.scopes.insert(scope.to_string(), reg);
     }
     settings.registry.registries = registries;
     settings.registry.auth_header_by_uri = string_map(request.network.auth_headers)?;
@@ -304,10 +302,12 @@ fn install_plan(request: &Request<'_>) -> Option<InstallPlan> {
     })
 }
 
+#[inline]
 fn optional<'a>(map: &'a Map<String, Value>, key: &str) -> Option<&'a Value> {
     map.get(key)
 }
 
+#[inline]
 fn string(map: &Map<String, Value>, key: &str) -> Option<Option<String>> {
     match optional(map, key) {
         None | Some(Value::Null) => Some(None),
@@ -316,6 +316,7 @@ fn string(map: &Map<String, Value>, key: &str) -> Option<Option<String>> {
     }
 }
 
+#[inline]
 fn boolean(map: &Map<String, Value>, key: &str) -> Option<Option<bool>> {
     match optional(map, key) {
         None | Some(Value::Null) => Some(None),
@@ -324,6 +325,7 @@ fn boolean(map: &Map<String, Value>, key: &str) -> Option<Option<bool>> {
     }
 }
 
+#[inline]
 fn wide_integer(map: &Map<String, Value>, key: &str) -> Option<Option<u64>> {
     match optional(map, key) {
         None | Some(Value::Null) => Some(None),
@@ -331,6 +333,7 @@ fn wide_integer(map: &Map<String, Value>, key: &str) -> Option<Option<u64>> {
     }
 }
 
+#[inline]
 fn integer(map: &Map<String, Value>, key: &str) -> Option<Option<u32>> {
     wide_integer(map, key)?
         .map(u32::try_from)
@@ -374,7 +377,7 @@ fn json_map_option(map: &Map<String, Value>, key: &str) -> Option<Option<IndexMa
         Some(Value::Object(value)) => Some(Some(
             value
                 .iter()
-                .map(|(key, value)| (key.clone(), value.clone()))
+                .map(|(k, v)| (k.clone(), v.clone()))
                 .collect(),
         )),
         _ => None,

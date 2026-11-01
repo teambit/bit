@@ -51,6 +51,7 @@ fn remove_ignored_components(deps: &FieldMaps, detected: &mut Detected) {
     detected.missing.retain(|entry| !entry.packages.is_empty());
 }
 
+#[inline]
 fn is_ignored_name(ignore: &[String], name: &str) -> bool {
     let target = name.trim();
     ignore
@@ -66,6 +67,7 @@ fn remove_ignored_packages(deps: &FieldMaps, detected: &mut Detected) {
 }
 
 /// `removeDevAndEnvDepsIfTheyAlsoRegulars`.
+#[inline]
 fn remove_dev_if_regular(detected: &mut Detected) {
     let [runtime_packages, dev_packages, _] = &mut detected.packages;
     dev_packages.retain(|name, _| !runtime_packages.contains_key(name));
@@ -97,6 +99,7 @@ fn apply_model_peers(model: &ComponentModel, deps: &FieldMaps, detected: &mut De
 }
 
 /// `applyPackageJson`: the workspace `package.json` makes a package a peer or sets its version.
+#[inline]
 fn apply_package_json(package_json: &Manifest, detected: &mut Detected) {
     let peers = string_map(package_json.get("peerDependencies"));
     let regular = string_map(package_json.get("dependencies"));
@@ -159,6 +162,7 @@ fn move_by_versions(
 }
 
 /// `makeLegacyAsPeer`: `@teambit/legacy` is always a `^` peer.
+#[inline]
 fn make_legacy_peer(detected: &mut Detected) {
     const LEGACY: &str = "@teambit/legacy";
     let runtime = detected.packages[RUNTIME].shift_remove(LEGACY);
@@ -177,6 +181,7 @@ fn make_legacy_peer(detected: &mut Detected) {
     }
 }
 
+#[inline]
 fn string_map(value: Option<&Value>) -> IndexMap<String, String> {
     value.map(super::data::string_map).unwrap_or_default()
 }

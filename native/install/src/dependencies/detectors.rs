@@ -46,6 +46,7 @@ pub struct Detectors<'a> {
 }
 
 impl<'a> Detectors<'a> {
+    #[inline]
     pub fn new(
         host: &'a dyn Host,
         core_aspects: &'a [CoreAspect],
@@ -104,6 +105,7 @@ impl<'a> Detectors<'a> {
 
     /// A non-core env, or a non-core aspect configured for the workspace or the
     /// component, may bring a detector.
+    #[inline]
     fn may_have_detectors(&self, component: &WorkspaceComponent) -> bool {
         !is_core_env(&component.env_id)
             || !self.workspace_aspects.is_empty()
@@ -148,6 +150,7 @@ fn parse(entry: &Value) -> CustomDetection {
     CustomDetection { specifiers: scan::dedupe(specifiers), typescript, lookups }
 }
 
+#[inline]
 fn specifier_str(value: &Value) -> Option<&str> {
     non_empty_str(value)
         .or_else(|| value.get("specifier").and_then(non_empty_str))
@@ -156,6 +159,7 @@ fn specifier_str(value: &Value) -> Option<&str> {
         .or_else(|| value.get("name").and_then(non_empty_str))
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

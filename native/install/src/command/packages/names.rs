@@ -6,6 +6,7 @@ const ALLOWED_PREFIXES: [&str; 8] =
 const BLOCKLIST: [&str; 2] = ["node_modules", "favicon.ico"];
 
 /// The package name of an install argument, without its version or tag.
+#[inline]
 #[must_use]
 pub fn extract_package_name(argument: &str) -> String {
     let argument = argument.trim();
@@ -33,6 +34,7 @@ pub fn extract_package_name(argument: &str) -> String {
 }
 
 /// Whether `name` can be installed from a registry (`validForOldPackages`).
+#[inline]
 #[must_use]
 pub fn is_valid_package_name(name: &str) -> bool {
     if name.is_empty() || name.starts_with(['.', '_']) || name.trim() != name {
@@ -51,6 +53,7 @@ pub fn is_valid_package_name(name: &str) -> bool {
 }
 
 /// `/^(?:@([^/]+?)\/)?([^/]+?)$/` for a scoped name.
+#[inline]
 fn scoped_parts(name: &str) -> Option<(&str, &str)> {
     let (user, package) = name.strip_prefix('@')?.split_once('/')?;
     (!user.is_empty()
@@ -61,6 +64,7 @@ fn scoped_parts(name: &str) -> Option<(&str, &str)> {
 }
 
 /// `encodeURIComponent(part) === part`.
+#[inline]
 fn is_url_safe(part: &str) -> bool {
     !part.is_empty()
         && part

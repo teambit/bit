@@ -16,6 +16,7 @@ pub(super) struct DependencyPath {
 
 impl DependencyPath {
     /// `version` + patch hash + peers hash (`depPathToRef`).
+    #[inline]
     pub(super) fn to_ref(&self) -> String {
         let base_version = self.version
             .as_deref()
@@ -74,6 +75,7 @@ pub(super) fn parse(dep_path: &str) -> DependencyPath {
 }
 
 /// Strip the peer and patch suffix (`removeSuffix`).
+#[inline]
 pub(super) fn remove_suffix(dep_path: &str) -> &str {
     pnpm_deps_path::remove_suffix(dep_path.trim())
 }

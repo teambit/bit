@@ -42,6 +42,7 @@ async fn load_with_status(
     ordered(&session.root, components, &receipt)
 }
 
+#[inline]
 pub(crate) fn identity(component: &WorkspaceComponent) -> String {
     let mut id = component.id.to_string_without_version();
     if let Some(version) = component.id.version
@@ -109,6 +110,7 @@ fn ordered_row(
     Ok(component)
 }
 
+#[inline]
 fn trim_rel(rel: &str) -> &str {
     rel.trim()
         .trim_start_matches("./")
@@ -116,6 +118,7 @@ fn trim_rel(rel: &str) -> &str {
         .trim_end_matches(['/', '\\'])
 }
 
+#[inline]
 fn remove_matching(
     remaining: &mut HashMap<String, WorkspaceComponent>,
     id: &str,

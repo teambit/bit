@@ -78,6 +78,7 @@ impl Detected {
 
     /// Whether Bit would not cache this data (`shouldBlockSavingInCache`): every
     /// detection issue is a cache blocker.
+    #[inline]
     #[must_use]
     pub fn blocks_cache(&self) -> bool {
         !self.missing.is_empty()
@@ -104,6 +105,7 @@ impl Detected {
 }
 
 /// Serialized `Dependency[]`: `{ id: { scope, name, version }, packageName, versionRange }`.
+#[inline]
 #[must_use]
 pub fn legacy_dependencies(value: &Value) -> Vec<LegacyDependency> {
     value
@@ -117,6 +119,7 @@ pub fn legacy_dependencies(value: &Value) -> Vec<LegacyDependency> {
         .unwrap_or_default()
 }
 
+#[inline]
 fn legacy_dependency(value: &Value) -> Option<LegacyDependency> {
     Some(LegacyDependency {
         id: id_from_object(value)?,
@@ -172,6 +175,7 @@ pub fn id_from_object(value: &Value) -> Option<ComponentId> {
     })
 }
 
+#[inline]
 fn id_from_str(raw: &str) -> Option<ComponentId> {
     let (bare, version) = crate::policy::split_version(raw);
     let (scope, name) = bare
@@ -188,6 +192,7 @@ fn id_from_str(raw: &str) -> Option<ComponentId> {
 }
 
 /// A `{ name: version }` JSON object as a string map.
+#[inline]
 #[must_use]
 pub fn string_map(value: &Value) -> IndexMap<String, String> {
     value
@@ -291,6 +296,7 @@ fn untracked_entry(entry: &Value) -> Untracked {
     Untracked { nested: entry["nested"].as_bool().unwrap_or(false), files }
 }
 
+#[inline]
 fn string_list(value: &Value) -> Vec<String> {
     value
         .as_array()

@@ -117,6 +117,7 @@ fn from_overrides(
     valid_component_version(found)
 }
 
+#[inline]
 fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> {
     let package = package.trim();
     if package.is_empty() {
@@ -129,6 +130,7 @@ fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> 
     valid_component_version(found)
 }
 
+#[inline]
 fn in_fields(fields: &FieldMaps, name: &str) -> bool {
     let name = name.trim();
     fields
@@ -143,6 +145,7 @@ fn in_fields(fields: &FieldMaps, name: &str) -> bool {
 /// `getValidComponentVersion(version).version`: a snap hash, a semver version, or the
 /// coerced version of a range.
 #[must_use]
+#[inline]
 pub fn valid_component_version(version: &str) -> Option<String> {
     let trimmed = version.trim();
     let normalized = trimmed
@@ -168,6 +171,7 @@ pub fn valid_component_version(version: &str) -> Option<String> {
     None
 }
 
+#[inline]
 fn is_snap(version: &str) -> bool {
     version.len() == 40 && is_hash(version)
 }
