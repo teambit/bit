@@ -1,4 +1,4 @@
-//! Unit tests for `bit internalize` option parsing and `component.json` inspection.
+//! Unit tests for `bit internalize` [`Options`] parsing ([`parse_options`]) and `component.json` inspection ([`is_entry_internal`]).
 
 use super::{Options, is_entry_internal, parse_options};
 use bit_install::workspace::Bitmap;

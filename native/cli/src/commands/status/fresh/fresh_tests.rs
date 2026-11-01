@@ -1,4 +1,4 @@
-//! Unit tests for default dev-file pattern matching and core aspect package naming.
+//! Unit tests for default dev-file pattern matching ([`is_dev_file`]) and core aspect package naming ([`core_package_name`]).
 
 use super::{core_package_name, dev_files::is_dev_file};
 

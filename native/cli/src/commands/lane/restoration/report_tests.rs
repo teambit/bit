@@ -1,4 +1,4 @@
-//! Unit tests for lane restoration partition merging and file-status JSON projection.
+//! Unit tests for lane restoration partition merging ([`merge`]) and file-status JSON projection ([`project`]).
 
 use super::{merge, project};
 use crate::commands::color::Chalk;

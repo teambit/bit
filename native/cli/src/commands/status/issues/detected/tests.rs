@@ -1,4 +1,4 @@
-//! Oracle tests comparing detected component issue serialization against released `@teambit/component-issues`.
+//! Oracle tests comparing detected component [`Issue`] serialization against released `@teambit/component-issues`.
 
 use super::super::Issue;
 use serde_json::Value;

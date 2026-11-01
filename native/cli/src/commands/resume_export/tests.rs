@@ -1,4 +1,4 @@
-//! Unit tests for `bit resume-export` option parsing.
+//! Unit tests for `bit resume-export` [`Options`] parsing ([`parse_options`]).
 
 use super::{Options, parse_options};
 

@@ -1,4 +1,4 @@
-//! Unit tests for `bit link` option parsing, package-name rewiring, and summary formatting.
+//! Unit tests for `bit link` [`Options`] parsing ([`parse_options`]), package-name rewiring ([`replace_package_name`]), and [`LinkSummary`] formatting ([`render_report`], [`render_json`]).
 
 use super::{
     Options,

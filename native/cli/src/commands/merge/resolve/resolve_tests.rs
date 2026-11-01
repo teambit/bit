@@ -1,4 +1,4 @@
-//! Unit tests for `bit merge --resolve` option parsing and resolved-component report formatting.
+//! Unit tests for `bit merge --resolve` option parsing ([`parse`]) and resolved-component report formatting ([`format`]).
 
 use super::{format, parse};
 use crate::commands::color::Chalk;

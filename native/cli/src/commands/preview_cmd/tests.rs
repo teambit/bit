@@ -1,4 +1,4 @@
-//! Unit tests for `bit preview` generate and serve option parsing.
+//! Unit tests for `bit preview` [`GenerateOptions`] ([`parse_generate_options`]) and [`ServeOptions`] ([`parse_serve_options`]) parsing.
 
 use super::{GenerateOptions, ServeOptions, parse_generate_options, parse_serve_options};
 

@@ -1,4 +1,4 @@
-//! Unit tests for `bit schema` option parsing, stored schema extraction, and bare-scope pattern resolution.
+//! Unit tests for `bit schema` [`Options`] / [`ParsedCommand`] parsing ([`parse_options`], [`parse_command`]), stored schema extraction ([`extract_stored_schema`]), and bare-scope pattern resolution ([`resolve_scope_schema_json`]).
 
 use super::{
     DiffOptions, Options, ParsedCommand,

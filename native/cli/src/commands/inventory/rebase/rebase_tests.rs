@@ -1,4 +1,4 @@
-//! Unit tests for POSIX path joining and ignore-pattern rebasing.
+//! Unit tests for POSIX path joining ([`join_linux`]) and ignore-pattern rebasing ([`pattern`]).
 
 use super::{join_linux, pattern};
 

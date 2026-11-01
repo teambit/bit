@@ -1,4 +1,4 @@
-//! Unit tests for `bit start` option parsing and missing workspace/scope detection.
+//! Unit tests for `bit start` option parsing ([`parse_options`]) and missing workspace/scope detection ([`is_outside_workspace_and_scope`]).
 
 use super::{is_outside_workspace_and_scope, parse_options};
 

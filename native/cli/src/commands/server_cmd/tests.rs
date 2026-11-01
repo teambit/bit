@@ -1,4 +1,4 @@
-//! Unit tests for `bit server` port and compile option parsing.
+//! Unit tests for `bit server` [`Options`] port and compile option parsing ([`parse_options`]).
 
 use super::{Options, parse_options};
 

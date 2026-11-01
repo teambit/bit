@@ -1,4 +1,4 @@
-//! Unit tests for `bit ripple` subcommand parsing and positive integer limit validation.
+//! Unit tests for `bit ripple` [`Subcommand`] parsing ([`parse_subcommand`]) and positive integer limit validation ([`parse_positive_int`]).
 
 use super::{Subcommand, parse_positive_int, parse_subcommand};
 

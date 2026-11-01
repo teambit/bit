@@ -1,4 +1,4 @@
-//! Unit tests for `bit git` subcommand parsing and `.bitmap` conflict merge strategies.
+//! Unit tests for `bit git` [`Parsed`] subcommand parsing ([`parse_args`]) and `.bitmap` conflict merge strategies ([`merge_bitmap_contents`]).
 
 use super::{Chalk, Parsed, format_unrecognized, merge_bitmap_contents, parse_args};
 use std::ffi::OsString;

@@ -1,4 +1,4 @@
-//! Unit tests for `bit mcp-server` subcommand parsing and editor configuration file generation.
+//! Unit tests for `bit mcp-server` [`Subcommand`] parsing ([`parse_subcommand`]) and editor configuration file generation ([`execute_setup`], [`execute_rules`]).
 
 use super::{
     SetupOptions, Subcommand, execute_setup, parse_subcommand,

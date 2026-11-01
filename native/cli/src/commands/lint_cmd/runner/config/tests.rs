@@ -1,4 +1,4 @@
-//! Unit tests for `bit lint` `ESLint` tsconfig filename hashing and plain-object hashing.
+//! Unit tests for `bit lint` `ESLint` [`Config`] tsconfig filename hashing and plain-object hashing ([`hash::hash`]).
 
 use super::{Config, hash};
 use serde_json::json;

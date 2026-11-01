@@ -1,4 +1,4 @@
-//! Unit tests for `bit graph` option parsing and dependency cycle filtering.
+//! Unit tests for `bit graph` [`Options`] parsing ([`parse_options`]), [`fast_graph_error`], and [`CompGraph`] dependency cycle filtering.
 
 use super::{
     Options, fast_graph_error,

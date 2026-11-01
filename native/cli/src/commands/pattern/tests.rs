@@ -1,4 +1,4 @@
-//! Unit tests for `bit pattern` argument parsing and stateful selector rejection.
+//! Unit tests for `bit pattern` [`Options`] argument parsing ([`parse_options`]) and stateful selector rejection.
 
 use super::{Options, parse_options};
 use std::ffi::OsString;
