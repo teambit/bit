@@ -10,6 +10,7 @@ use std::{
 
 use super::{MAX_RAW, invalid, path, wire};
 
+/// Read, validate, and normalize a snapshot `Source` payload.
 pub(super) fn read(
     object: &wire::Object,
     maximum: usize,

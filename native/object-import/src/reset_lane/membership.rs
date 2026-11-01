@@ -53,6 +53,7 @@ pub(super) fn project(
 }
 
 #[inline]
+#[must_use]
 fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {
     let (row_scope, row_name) = super::row_id_parts(id);
     (row_scope == scope || row_scope.is_empty()) && row_name == name

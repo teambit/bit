@@ -105,6 +105,7 @@ fn remove_detached(model: &mut Value, removed: &[String]) -> io::Result<()> {
 }
 
 #[inline]
+#[must_use]
 fn is_removed(value: &Value, removed: &[String]) -> bool {
     value
         .as_str()

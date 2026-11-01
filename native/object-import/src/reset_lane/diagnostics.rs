@@ -5,14 +5,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct CanonicalError {
     message: String,
     prefix: Vec<Write>,
     proofs: Vec<(PathBuf, Option<Vec<u8>>)>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Write {
     path: PathBuf,
     before: Vec<u8>,
@@ -26,6 +26,7 @@ impl fmt::Display for CanonicalError {
 }
 impl std::error::Error for CanonicalError {}
 
+#[inline]
 pub(super) fn error(message: impl Into<String>) -> io::Error {
     io::Error::other(CanonicalError {
         message: message.into(),

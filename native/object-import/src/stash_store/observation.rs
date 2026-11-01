@@ -8,7 +8,7 @@ use std::{
 };
 const LIMIT: usize = 32 * 1024 * 1024;
 const ENTRY_LIMIT: usize = 4096;
-#[derive(PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Observation {
     directory: PathBuf,
     files: BTreeMap<String, Vec<u8>>,
@@ -26,18 +26,22 @@ impl Observation {
         Ok(())
     }
     #[inline]
+    #[must_use]
     pub(super) fn directory(&self) -> &Path {
         &self.directory
     }
     #[inline]
+    #[must_use]
     pub(super) fn files(&self) -> &BTreeMap<String, Vec<u8>> {
         &self.files
     }
     #[inline]
+    #[must_use]
     pub(super) fn file(&self, name: &str) -> Option<&[u8]> {
         self.files.get(name.trim()).map(Vec::as_slice)
     }
     #[inline]
+    #[must_use]
     pub(super) fn latest(&self) -> Option<&str> {
         self.files.last_key_value().map(|(name, _)| name.as_str())
     }

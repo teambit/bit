@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct Batch {
     root: PathBuf,
     head_only: bool,
@@ -17,13 +18,14 @@ pub struct Batch {
     controls: Vec<crate::reset_lane::controls::Control>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selected {
     identities: Vec<String>,
     force: bool,
 }
 
 impl Batch {
+    #[inline]
     pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
         Self::prepare_with(root, head_only, None)
     }

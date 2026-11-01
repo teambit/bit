@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Repository {
     root: PathBuf,
     index_before: Vec<u8>,

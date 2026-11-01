@@ -107,6 +107,7 @@ fn identity(value: Option<&Value>) -> io::Result<()> {
 }
 
 #[inline]
+#[must_use]
 fn segment(text: &str, slash: bool) -> bool {
     !text.is_empty()
         && text.len() <= 4096

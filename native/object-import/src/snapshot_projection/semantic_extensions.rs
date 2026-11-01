@@ -3,6 +3,7 @@ use std::io;
 use super::{component_id, get, invalid, object, text};
 use crate::js_json::Value;
 
+/// Sort and filter extension configurations for semantic `Version` hashing.
 pub(super) fn configs(value: &Value) -> io::Result<(Value, Vec<(usize, Value)>)> {
     let Value::Array(entries) = value else {
         return Err(invalid("extensions required"));

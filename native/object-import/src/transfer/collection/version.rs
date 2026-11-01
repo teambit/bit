@@ -5,6 +5,7 @@ use serde_json::Value;
 use super::{References, Version};
 use crate::transfer::{MAX_BYTES, MAX_OBJECTS, invalid, object};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Loaded {
     pub(super) compressed: Vec<u8>,
     pub(super) references: References,

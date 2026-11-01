@@ -9,7 +9,7 @@ mod version;
 use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, invalid, object};
 use std::{collections::HashSet, io, path::Path};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct References {
     pub(crate) sources: Vec<[u8; 20]>,
     pub(crate) artifacts: Vec<[u8; 20]>,
@@ -17,12 +17,14 @@ pub(crate) struct References {
     pub(crate) graph: Option<[u8; 20]>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Version {
     pub(crate) hash: [u8; 20],
     pub(crate) locally_changed: bool,
     pub(crate) expected: Option<References>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Mode {
     Export { strict_local_artifacts: bool },
     Fetch { include_artifacts: bool },

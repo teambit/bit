@@ -124,6 +124,7 @@ fn uses_removed(version: &Value, scope: &str, name: &str, removed: &HashSet<&str
 }
 
 #[inline]
+#[must_use]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)

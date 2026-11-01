@@ -69,7 +69,7 @@ fn merge_reset_uses_common_lane_baseline_and_preserves_merged_main_tag() {
 #[test]
 fn head_only_merge_reset_reports_published_multiple_parent_failure() {
     let (_fixture, repository) = merged();
-    let error = selection::select(&repository, true).err().expect("head error");
+    let error = selection::select(&repository, true).expect_err("head error");
     assert_eq!(diagnostics::diagnostic(&error),Some(format!("removeComponentVersions found multiple parents for a local (un-exported) version {MERGE} of scope/comp").as_str()));
 }
 
@@ -78,7 +78,7 @@ fn corruption_does_not_become_an_owned_canonical_reset_error() {
     let (_fixture, repository) = merged();
     fs::write(object_path(&repository.objects, MERGE), b"broken compressed Version")
         .expect("corrupt");
-    let error = selection::select(&repository, false).err().expect("corrupt fails");
+    let error = selection::select(&repository, false).expect_err("corrupt fails");
     assert_eq!(diagnostics::diagnostic(&error), None);
 }
 

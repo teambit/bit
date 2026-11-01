@@ -3,6 +3,7 @@ use std::io;
 use super::{choose, get, insert, invalid, object};
 use crate::js_json::Value;
 
+/// Project raw `Component` fields into their canonical snapshot object representation.
 pub(super) fn component(fields: &Value) -> io::Result<Value> {
     let mut output = choose(
         fields,

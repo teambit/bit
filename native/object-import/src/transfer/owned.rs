@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Entry {
     pub(super) hash: [u8; 20],
     pub(super) scope: Option<String>,
@@ -24,6 +24,7 @@ pub(super) struct Entry {
     pub(super) path: Option<PathBuf>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     pub(super) entries: Vec<Entry>,
     pub(super) objects_hash: String,

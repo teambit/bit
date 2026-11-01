@@ -41,19 +41,20 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct ObjectChange {
     hash: String,
     before: Vec<u8>,
     after: Option<Vec<u8>>,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BytesChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,
     after: Vec<u8>,
@@ -62,6 +63,7 @@ struct BitmapChange {
 
 /// A fully prepared explicit lane reset. Unsupported graph and lane states
 /// decline before any object or bitmap changes.
+#[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     identity: String,
@@ -73,6 +75,7 @@ pub struct Plan {
     selection: Selection,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BitmapState {
     before: Vec<u8>,
     document: Value,
@@ -84,6 +87,7 @@ struct BitmapState {
     restored: bool,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Repository {
     objects: PathBuf,
     lane_scope: String,
@@ -95,13 +99,14 @@ struct Repository {
     reads: proofs::ReadSet,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Heads {
     current: String,
     remote: Option<String>,
     baseline: Option<String>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selection {
     removed: Vec<String>,
     next: Option<String>,

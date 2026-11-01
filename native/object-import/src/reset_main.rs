@@ -23,19 +23,20 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BytesChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct ObjectChange {
     hash: String,
     before: Vec<u8>,
     after: Option<Vec<u8>>,
 }
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Input {
     root: PathBuf,
     identity: String,
@@ -45,6 +46,7 @@ struct Input {
 
 /// A prepared main-lane reset. No files change until `commit` checks the
 /// exact Component, index and bitmap projection against the live workspace.
+#[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     input: Input,
     object: ObjectChange,

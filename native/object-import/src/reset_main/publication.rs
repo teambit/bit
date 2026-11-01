@@ -47,6 +47,7 @@ pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()>
     }
 }
 
+/// Back up `.bitmap` into `.bit/bitmap-history/` before publishing a reset.
 pub fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
     let file_id = file_id.trim();
     validate_file_id(file_id)?;

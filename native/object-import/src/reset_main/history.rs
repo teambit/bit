@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::Path};
 
+/// Persist selected pending main-lane versions in `VersionHistory` before resetting them.
 pub(super) fn pending(
     root: &Path,
     identity: &str,

@@ -2,6 +2,7 @@ use std::{collections::HashSet, io, path::Path};
 
 use super::{Descriptor, Entry, MAX_BYTES, invalid, object};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Frozen {
     pub(super) entries: Vec<Entry>,
     pub(super) missing: HashSet<[u8; 20]>,

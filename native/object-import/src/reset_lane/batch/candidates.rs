@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Discovery {
     pub(super) identities: Vec<String>,
     pub(super) population: Vec<ObjectChange>,
@@ -20,6 +21,7 @@ pub(super) struct Discovery {
 }
 
 impl Discovery {
+    #[inline]
     pub(super) fn failure(&self, error: io::Error) -> io::Error {
         diagnostics::with_population(
             error,

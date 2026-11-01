@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Serialize {
     pub(super) objects: Vec<Object>,
@@ -10,7 +10,7 @@ pub(super) struct Serialize {
     pub(super) pretty: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Object {
     #[serde(rename = "type")]
@@ -22,7 +22,7 @@ pub(super) struct Object {
     pub(super) body: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Workspace {
     pub(super) path: PathBuf,
@@ -32,14 +32,14 @@ pub(super) struct Workspace {
     pub(super) normalization: Normalization,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Repository {
     pub(super) objects_directory: PathBuf,
     pub(super) hash: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Commit {
     #[serde(deserialize_with = "deserialize_token")]
@@ -65,7 +65,7 @@ where
     Ok(if trimmed.len() == token.len() { token } else { trimmed.to_owned() })
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Owner {
     pub(super) uid: u32,

@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
 /// A selected stash remains present until checkout has completed successfully.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedLoad {
     observation: Observation,
     filename: String,

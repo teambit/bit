@@ -96,6 +96,7 @@ fn target_version(id: &Value) -> io::Result<String> {
         .ok_or_else(|| invalid("snapshot target version missing"))
 }
 #[inline]
+#[must_use]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()
@@ -116,6 +117,7 @@ fn target(id: &Value, components: &[Value]) -> io::Result<Option<usize>> {
     Ok(found)
 }
 #[inline]
+#[must_use]
 fn is_snap(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

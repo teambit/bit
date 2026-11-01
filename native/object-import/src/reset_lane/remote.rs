@@ -63,6 +63,7 @@ fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String
     Ok(found.map(|digest| crate::validate::hexadecimal(&digest)))
 }
 
+#[inline]
 pub(super) fn exported_head(
     root: &Path,
     bitmap: &BitmapState,

@@ -14,6 +14,7 @@ use std::{
 
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug)]
 pub(crate) struct Store {
     directory: PathBuf,
     owner: Option<(u32, u32)>,

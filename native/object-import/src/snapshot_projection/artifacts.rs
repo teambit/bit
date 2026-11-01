@@ -2,6 +2,7 @@ use super::{get, invalid, object};
 use crate::js_json::Value;
 use std::io;
 
+/// Convert builder artifact entries in a snapshot extension data object.
 pub(super) fn convert(data: &Value) -> io::Result<Value> {
     let artifacts = get(data, "artifacts");
     if !artifacts.truthy()? {

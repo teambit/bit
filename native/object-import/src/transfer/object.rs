@@ -106,6 +106,7 @@ fn parse_metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<(serde_json::Value
 }
 
 #[inline]
+#[must_use]
 fn known(kind: &str) -> bool {
     matches!(
         kind,

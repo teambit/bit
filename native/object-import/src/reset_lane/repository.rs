@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Loaded {
     objects: PathBuf,
     lane_hash: String,
@@ -16,6 +17,7 @@ struct Loaded {
 }
 
 impl Repository {
+    #[inline]
     pub(super) fn load(
         root: &Path,
         bitmap: &BitmapState,
@@ -25,6 +27,7 @@ impl Repository {
         Self::load_inner(root, bitmap, scope, name, true)
     }
 
+    #[inline]
     pub(super) fn staged(
         root: &Path,
         bitmap: &BitmapState,

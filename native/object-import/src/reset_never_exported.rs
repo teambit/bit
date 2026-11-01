@@ -12,6 +12,7 @@ use std::{
 
 type SelectedRow = (String, PathBuf, Option<Vec<u8>>);
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     before: Vec<u8>,

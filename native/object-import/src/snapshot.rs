@@ -14,7 +14,7 @@ use std::{
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_RAW: usize = 32 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
@@ -27,7 +27,7 @@ enum Request {
     Index { components: Vec<Value>, lanes: Vec<Value>, objects: Vec<Value> },
     IndexWrite { objects_directory: PathBuf, owner: Option<Owner>, contents: String },
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Owner {
     uid: u32,
@@ -35,11 +35,12 @@ struct Owner {
 }
 impl Owner {
     #[inline]
+    #[must_use]
     fn pair(owner: Option<Self>) -> Option<(u32, u32)> {
         owner.map(|owner| (owner.uid, owner.gid))
     }
 }
-#[derive(Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,
     id: u32,
@@ -50,10 +51,14 @@ struct Response {
     data: Option<Value>,
 }
 impl Response {
-    fn success(id: u32, completed: usize, data: Value) -> Self {
+    #[inline]
+    #[must_use]
+    const fn success(id: u32, completed: usize, data: Value) -> Self {
         Self { version: 1, id, completed, skipped: Vec::new(), failed: false, data: Some(data) }
     }
-    fn failure(id: u32) -> Self {
+    #[inline]
+    #[must_use]
+    const fn failure(id: u32) -> Self {
         Self { version: 1, id, completed: 0, skipped: Vec::new(), failed: true, data: None }
     }
 }

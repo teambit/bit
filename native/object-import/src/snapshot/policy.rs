@@ -2,7 +2,7 @@ use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Plan {
     hash: String,
@@ -15,7 +15,7 @@ pub(super) struct Plan {
     #[serde(flatten)]
     head_policy: HeadPolicy,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HeadPolicy {
     set_head_as_parent: bool,

@@ -167,6 +167,7 @@ fn dependency_id(value: &Value) -> Option<std::borrow::Cow<'_, str>> {
     Some(std::borrow::Cow::Owned(format!("{scope}/{name}@{version}")))
 }
 
+#[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value
         .as_str()

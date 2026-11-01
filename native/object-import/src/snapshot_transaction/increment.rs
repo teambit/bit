@@ -100,6 +100,8 @@ fn parsed_parts(values: Vec<Value>) -> Vec<Value> {
     parsed
 }
 
+#[inline]
+#[must_use]
 fn numeric_coercible(value: &Value) -> bool {
     value.is_number()
         || value

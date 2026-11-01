@@ -49,7 +49,8 @@ impl BitmapState {
         Ok(Self { before, document, key, lane_scope, lane_name, exported, staged_config, restored })
     }
 
-    /// Scope.isExported excludes only unscoped visible workspace IDs; hidden scoped IDs remain exported.
+    /// `Scope.isExported` excludes only unscoped visible workspace IDs; hidden scoped IDs remain exported.
+    #[must_use]
     pub(super) fn component_is_exported(&self, model: &Value) -> bool {
         model["scope"]
             .as_str()

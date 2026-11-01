@@ -4,6 +4,7 @@ use super::{ObjectChange, Repository, changed, invalid, object_hash, outbound};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+#[inline]
 pub(super) fn version_history(repository: &Repository, identity: &str) -> io::Result<ObjectChange> {
     project_history(&repository.objects, identity, &repository.heads.current)
 }

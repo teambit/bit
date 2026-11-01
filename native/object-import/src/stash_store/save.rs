@@ -3,6 +3,7 @@ use super::{invalid, observation::Observation};
 use serde::Serialize;
 use serde_json::Value;
 use std::{fs, io, path::Path};
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedSave {
     observation: Observation,
     filename: String,

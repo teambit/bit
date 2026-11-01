@@ -21,6 +21,7 @@ pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> 
     found.map(str::to_owned).ok_or_else(|| invalid("lane reset bitmap identity absent"))
 }
 
+#[must_use]
 pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>, &'a str) {
     let key = key.trim();
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());

@@ -15,6 +15,7 @@ use std::{
 
 use super::{MAX_RAW, invalid, source, wire};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     pub(super) kind: String,
     pub(super) hash: String,

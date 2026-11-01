@@ -150,6 +150,8 @@ fn hexadecimal(bytes: &[u8]) -> String {
     text
 }
 
+#[inline]
+#[must_use]
 fn is_sha1_hex(hash: &str) -> bool {
     hash.len() == 40
         && hash
@@ -157,6 +159,8 @@ fn is_sha1_hex(hash: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+#[inline]
+#[must_use]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }

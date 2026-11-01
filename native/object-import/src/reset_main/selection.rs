@@ -9,6 +9,7 @@ use std::{
 };
 
 /// The local refs to remove, their user-facing labels, and the surviving head.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Selection {
     pub removed: Vec<String>,
     pub labels: Vec<String>,

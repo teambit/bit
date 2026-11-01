@@ -37,10 +37,11 @@ const REPOSITORY: &[&str] = &[
     "postPersist",
 ];
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     journals: HashMap<String, Journal>,
 }
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Journal {
     token: String,
     phases: &'static [&'static str],
@@ -50,14 +51,14 @@ struct Journal {
     revision: u32,
     terminal: bool,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {
     #[serde(default)]
     soft: bool,
     count: usize,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Receipt {
     token: String,

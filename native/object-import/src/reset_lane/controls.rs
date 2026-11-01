@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Control {
     path: PathBuf,
     before: Vec<u8>,

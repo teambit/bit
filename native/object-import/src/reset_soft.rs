@@ -10,11 +10,13 @@ use std::{
 };
 
 /// A component and the pending tag removed from its bitmap entry.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub identity: String,
     pub version: String,
 }
 
+#[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,
     pattern: Option<String>,
@@ -25,6 +27,7 @@ pub struct Plan {
 }
 
 impl Plan {
+    #[inline]
     pub fn prepare(root: &Path, pattern: Option<&str>) -> io::Result<Self> {
         Self::prepare_with(
             root,

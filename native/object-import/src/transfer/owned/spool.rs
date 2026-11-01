@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Pending(Vec<PathBuf>);
 impl Drop for Pending {
     fn drop(&mut self) {

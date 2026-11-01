@@ -6,6 +6,7 @@ use std::{
     io,
 };
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Node {
     id: Value,
     locator: Value,

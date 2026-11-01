@@ -10,7 +10,7 @@ use std::{
     io::{self, Read, Write},
     path::{Path, PathBuf},
 };
-#[derive(Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Object {
     #[serde(rename = "type")]
@@ -19,7 +19,7 @@ pub(super) struct Object {
     body: Option<String>,
     workspace: Option<Workspace>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 enum Kind {
     Source,
     Version,
@@ -32,7 +32,9 @@ enum Kind {
     ExportMetadata,
 }
 impl Kind {
-    fn name(&self) -> &'static str {
+    #[inline]
+    #[must_use]
+    const fn name(self) -> &'static str {
         match self {
             Self::Source => "Source",
             Self::Version => "Version",
@@ -46,18 +48,19 @@ impl Kind {
         }
     }
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Workspace {
     path: PathBuf,
     hash: String,
 }
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Prepared {
     hash: String,
     compressed: Vec<u8>,
     inflated_size: usize,
 }
-#[derive(Serialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Written {
     hash: String,

@@ -7,12 +7,14 @@ use std::io;
 use super::{choose, get, hexadecimal, invalid, object, text};
 use crate::js_json::{Value, stringify};
 
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Semantic {
     pub bytes: Vec<u8>,
     pub hash: String,
     pub config_assignments: Vec<(usize, Value)>,
 }
 
+/// Compute the canonical semantic JSON payload and SHA-1 hash for a `Version`.
 pub fn semantic(fields: &Value) -> io::Result<Semantic> {
     object(fields)?;
     let (configs, assignments) = extensions::configs(get(fields, "extensions"))?;

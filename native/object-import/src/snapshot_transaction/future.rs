@@ -3,14 +3,14 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
     components: Vec<Component>,
     params: Params,
     semver: Value,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Component {
     versions: Vec<String>,
@@ -21,13 +21,13 @@ struct Component {
     entered_version: Option<String>,
     tag_data: Option<Tag>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Tag {
     version_to_tag: String,
     prerelease_id: Option<String>,
 }
-#[derive(Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Params {
     release_type: String,
@@ -39,6 +39,7 @@ struct Params {
     pre_release_id: Option<String>,
     has_tag_data: bool,
 }
+#[derive(Debug, Default, Clone, PartialEq)]
 struct Choice<'a> {
     release: &'a str,
     exact: Option<&'a str>,
