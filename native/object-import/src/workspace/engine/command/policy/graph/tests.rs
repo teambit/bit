@@ -1,3 +1,5 @@
+//! Unit tests for depth-first flattened dependency edge projection and proofs.
+
 use super::{Repository, project};
 use crate::workspace::engine::command::{policy::Row, scratch};
 use serde_json::{Value, json};

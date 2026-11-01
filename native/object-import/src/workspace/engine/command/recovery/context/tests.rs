@@ -1,3 +1,5 @@
+//! Unit tests for `merge --abort` pending component selection and ordering.
+
 use super::{Prepare, select};
 use serde_json::json;
 fn request(pattern: Option<&str>) -> Prepare {

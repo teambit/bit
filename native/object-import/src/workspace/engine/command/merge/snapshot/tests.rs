@@ -1,3 +1,5 @@
+//! Unit tests for merge snapshot schema projection, squash lanes, and models.
+
 use super::metadata;
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};

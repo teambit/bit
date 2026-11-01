@@ -1,3 +1,5 @@
+//! Unit tests for tag pattern matching order and wildcard eligibility checks.
+
 use super::pattern_order;
 use serde_json::json;
 

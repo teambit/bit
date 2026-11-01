@@ -1,3 +1,5 @@
+//! Unit tests for finalizing component automatic peer and plus-range dependencies.
+
 use super::{Request, apply};
 use serde_json::{Value, json};
 

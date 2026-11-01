@@ -1,3 +1,5 @@
+//! Unit tests for parallel merge snapshot source capture and budget enforcement.
+
 use super::{super::PENDING_GRAPH_VERSION, Budget, capture, digest, rekey};
 use rayon::ThreadPoolBuilder;
 use serde_json::json;

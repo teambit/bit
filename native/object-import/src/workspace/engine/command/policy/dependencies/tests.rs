@@ -1,3 +1,5 @@
+//! Unit tests for snap dependency issue filtering and issue receipt formatting.
+
 use super::{
     super::{Baseline, Row},
     capture_issues,

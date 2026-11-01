@@ -1,3 +1,5 @@
+//! Unit tests for merge preflight cache rekey file classification and policy guards.
+
 use serde_json::json;
 
 #[test]

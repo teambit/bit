@@ -1,3 +1,5 @@
+//! Unit tests for separating automatic and forced merge dependency policies.
+
 use super::{automatic, normalized, projection};
 use serde_json::json;
 

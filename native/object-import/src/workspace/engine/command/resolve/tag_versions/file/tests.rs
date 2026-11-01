@@ -1,3 +1,5 @@
+//! Unit tests for `--versions-file` explicit entry and default release matching.
+
 use super::tag_data;
 use serde_json::{Value, json};
 

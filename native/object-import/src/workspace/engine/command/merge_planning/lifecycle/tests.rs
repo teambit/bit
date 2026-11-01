@@ -1,3 +1,5 @@
+//! Unit tests for merge lifecycle persistence notifications on empty merges.
+
 use super::{Prepared, merge};
 use crate::workspace::engine::command::scratch;
 use serde_json::json;

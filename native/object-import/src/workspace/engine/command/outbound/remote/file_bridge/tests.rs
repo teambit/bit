@@ -1,3 +1,5 @@
+//! Unit tests for the persistent Node file-remote action bridge process.
+
 use super::FileBridge;
 use serde_json::json;
 use std::{
@@ -8,6 +10,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug)]
 struct Fixture(PathBuf);
 
 impl Fixture {

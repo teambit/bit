@@ -1,3 +1,5 @@
+//! Unit tests for builder artifact hashing, confinement, and read proofs.
+
 use super::{artifacts, metadata};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};
 use serde_json::{Value, json};

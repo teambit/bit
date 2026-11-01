@@ -1,3 +1,5 @@
+//! Unit tests for per-scope remote ref preparation and host validation.
+
 use super::{Selected, prepare_refs, validate_selected};
 use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelBytes};
 use serde_json::{Value, json};

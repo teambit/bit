@@ -1,3 +1,5 @@
+//! Unit tests for command setup inactive metadata and addition destination proofs.
+
 use super::{Prepare, component_controls, proof};
 use crate::workspace::engine::command::{lane_context, scratch::Directory};
 use serde_json::json;

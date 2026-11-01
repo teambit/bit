@@ -1,3 +1,5 @@
+//! Unit tests for verifying published `VersionHistory` payloads during stash.
+
 use super::verify_published;
 use crate::read_budget::Budget;
 use flate2::{Compression, write::ZlibEncoder};

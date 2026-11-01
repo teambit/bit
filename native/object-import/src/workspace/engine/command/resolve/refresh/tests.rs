@@ -1,3 +1,5 @@
+//! Unit tests for callback-owned source proof replacement after pre-snap hooks.
+
 use super::{SourceChange, replace_owned_proofs};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};
 use std::fs;

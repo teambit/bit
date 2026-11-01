@@ -1,3 +1,5 @@
+//! Unit tests for snap pattern filtering and negation guard rules.
+
 use super::{Options, filter_pattern};
 use serde_json::json;
 

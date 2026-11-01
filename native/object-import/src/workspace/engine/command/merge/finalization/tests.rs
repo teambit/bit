@@ -1,3 +1,5 @@
+//! Unit tests for merge finalization `node_modules` links and manifest planning.
+
 use super::{Input, prepare};
 use crate::workspace::engine::command::scratch::Directory;
 use serde_json::{Value, json};

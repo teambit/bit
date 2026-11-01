@@ -1,3 +1,5 @@
+//! Unit tests for fresh dependency component ID property serialization order.
+
 use super::{serialize, set_version};
 use serde_json::json;
 #[test]

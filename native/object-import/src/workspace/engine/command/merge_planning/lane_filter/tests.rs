@@ -1,3 +1,5 @@
+//! Unit tests for hidden lane component metadata projection and package hydration.
+
 use super::prepare_hidden_metadata;
 use crate::workspace::engine::{command::capture::Captured, status_models::comparison::Target};
 use serde_json::json;

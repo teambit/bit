@@ -1,3 +1,5 @@
+//! Unit tests for fast-forward merge model staging and deferred publication.
+
 use super::{model, selection};
 use serde_json::json;
 

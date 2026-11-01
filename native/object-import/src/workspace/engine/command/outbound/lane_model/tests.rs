@@ -1,3 +1,5 @@
+//! Unit tests for outbound lane snap selection up to the remote head.
+
 use super::{model, staged::lane_versions};
 use serde_json::{Value, json};
 use std::{fs, path::Path, time::SystemTime};

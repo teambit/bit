@@ -1,3 +1,5 @@
+//! Unit tests for restoring main-branch component models from `.bit/last-merged`.
+
 use super::Main;
 use serde_json::json;
 use std::fs;

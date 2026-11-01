@@ -1,3 +1,5 @@
+//! Unit tests for stash cross-component flattened dependency graph traversal.
+
 use super::{HashMap, Repository, key, traverse};
 use serde_json::json;
 

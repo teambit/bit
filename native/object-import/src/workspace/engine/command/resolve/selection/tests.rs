@@ -1,3 +1,5 @@
+//! Unit tests for pending vs. explicit workspace component selection order.
+
 use super::select;
 use serde_json::json;
 

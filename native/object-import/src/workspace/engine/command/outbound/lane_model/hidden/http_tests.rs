@@ -1,3 +1,5 @@
+//! Unit tests for HTTP fetching of hidden lane model update-dependent objects.
+
 use super::{fetch_http, model};
 use bit_client_transfer::{
     GlobalConfig,

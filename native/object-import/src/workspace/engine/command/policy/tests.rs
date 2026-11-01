@@ -1,3 +1,5 @@
+//! Unit tests for activating written inactive targets in workspace policy context.
+
 use super::{Baseline, Prepared, Row, activate_inactive, workspace_id};
 use serde_json::{Value, json};
 

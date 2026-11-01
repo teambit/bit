@@ -1,3 +1,5 @@
+//! Unit tests for pending merge lane identifier scope resolution.
+
 use super::lane_id;
 use serde_json::json;
 

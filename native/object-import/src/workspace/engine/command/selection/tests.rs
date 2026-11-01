@@ -1,3 +1,5 @@
+//! Unit tests for checkout version selection messages and observation flags.
+
 use super::{Options, Repository, Selection, select};
 use serde_json::{Value, json};
 use std::path::Path;

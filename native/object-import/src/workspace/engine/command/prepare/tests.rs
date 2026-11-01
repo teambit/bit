@@ -1,3 +1,5 @@
+//! Unit tests for command target pattern selection and overlapping root checks.
+
 use super::{Prepare, checkout_lane::bitmap_identities, json, selected, validate};
 
 fn request(pattern: &str) -> Prepare {

@@ -1,3 +1,5 @@
+//! Unit tests for outbound export prefilter stale discovery rejection.
+
 use super::{HistoryBytes, Prepared};
 use std::{
     fs,
@@ -7,6 +9,7 @@ use std::{
 
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Debug)]
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Self {

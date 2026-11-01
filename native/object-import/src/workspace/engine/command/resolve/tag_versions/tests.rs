@@ -1,3 +1,5 @@
+//! Unit tests for semantic version planning across selected and automatic components.
+
 use super::{Material, plan};
 use crate::workspace::engine::command::resolve_snapshot::{Participation, VersionState};
 use serde_json::{Value, json};

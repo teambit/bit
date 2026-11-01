@@ -1,3 +1,5 @@
+//! Unit tests for snapshot publication staging, `.bit/staged-snaps`, and config guards.
+
 use super::{Input, tests::fixture};
 use serde_json::{Value, json};
 use std::fs;

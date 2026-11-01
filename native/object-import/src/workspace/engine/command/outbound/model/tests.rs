@@ -1,3 +1,5 @@
+//! Unit tests for outbound staged model identity and version selection.
+
 use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};
 

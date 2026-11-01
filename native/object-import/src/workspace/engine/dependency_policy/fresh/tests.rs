@@ -1,3 +1,5 @@
+//! Unit tests for fresh component dependency detection and policy resolution.
+
 use super::{Detect, detect, proof};
 use serde_json::{Value, json};
 use std::{
@@ -6,6 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+#[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

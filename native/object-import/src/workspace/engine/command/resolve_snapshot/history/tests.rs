@@ -1,3 +1,5 @@
+//! Unit tests for `VersionHistory` object updates during tag snapshot resolution.
+
 use super::tag_histories;
 use crate::workspace::engine::{
     command::{
@@ -16,6 +18,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+#[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Fixture {
     fn new() -> Self {

@@ -1,3 +1,5 @@
+//! Unit tests for merge dependency import verification and stale capture rejection.
+
 use super::{Budget, Comparison, Source, compare, proof};
 use std::{
     collections::HashSet,

@@ -1,3 +1,5 @@
+//! Unit tests for external component issue graph adjacency and model proofs.
+
 use super::{Repository, external};
 use crate::workspace::engine::command::scratch;
 use serde_json::json;

@@ -1,3 +1,5 @@
+//! Unit tests for `switch --pattern` multimatch filtering and error messages.
+
 use super::{Entry, filter};
 
 fn entry(identity: &str) -> Entry {

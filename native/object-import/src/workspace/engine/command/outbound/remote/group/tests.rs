@@ -1,3 +1,5 @@
+//! Unit tests for `/etc/group` parsing and scope `groupName` configuration.
+
 use super::{name, parse};
 use serde_json::json;
 #[test]
