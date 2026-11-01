@@ -37,7 +37,12 @@ impl WorkspaceSnapshot {
     }
 
     fn restore(&self, root: &Path) {
-        if root.as_os_str().is_empty() || root.to_string_lossy().trim().is_empty() {
+        if root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
+        {
             return;
         }
         if let Some(bytes) = &self.bitmap {
@@ -148,11 +153,13 @@ fn apply_pr_value_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option
     }
 }
 
+#[inline]
 fn valid_pr_val(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 
+#[inline]
 fn consume_bool_flag(rest: &[&str], idx: usize, target: &mut bool) -> usize {
     if let Some(&next) = rest.get(idx + 1)
         && matches!(next, "true" | "false")
@@ -164,6 +171,7 @@ fn consume_bool_flag(rest: &[&str], idx: usize, target: &mut bool) -> usize {
     idx + 1
 }
 
+#[inline]
 pub(super) fn run_pr(root: &Path, args: &[OsString], opts: &PrOptions) -> io::Result<Outcome> {
     workspace_command::execute_then(root, args, "pr", |_output| execute_pr(root, opts))
 }
@@ -227,6 +235,7 @@ fn resolve_lane_name(
     Ok(sanitize_lane_name(branch))
 }
 
+#[inline]
 fn sanitize_lane_name(raw: &str) -> String {
     raw.trim_matches(|ch: char| !ch.is_ascii_alphanumeric())
         .chars()
@@ -238,6 +247,7 @@ fn sanitize_lane_name(raw: &str) -> String {
         .collect()
 }
 
+#[inline]
 fn current_bitmap_lane(root: &Path) -> Option<String> {
     let bytes = fs::read(root.join(".bitmap")).ok()?;
     let bitmap = parse_jsonc(&bytes).ok()?;

@@ -125,6 +125,7 @@ fn match_pkg(
     Ok(None)
 }
 
+#[inline]
 fn dep_matches(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bool {
     let name = name.trim();
     let name_ok = dep.package_name == name
@@ -175,6 +176,7 @@ fn apply_pkg_removal(
     Ok(true)
 }
 
+#[inline]
 pub(super) fn render_remove(
     formatter: &Formatter,
     removed: &[(String, Vec<String>)],

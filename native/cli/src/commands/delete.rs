@@ -16,6 +16,7 @@ use std::{env, ffi::OsString, io, path::Path};
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
 pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a confirmation, but this session is non-interactive (no TTY, CI, or an AI agent) so the confirmation prompt cannot be shown.\nre-run with --silent to skip the confirmation, or run the command in an interactive terminal";
 
+#[inline]
 fn parse_hard_flag(trimmed: &str) -> Option<bool> {
     if trimmed == "--hard" {
         return Some(true);
@@ -30,6 +31,7 @@ fn parse_hard_flag(trimmed: &str) -> Option<bool> {
     }
 }
 
+#[inline]
 fn is_hard_delete(args: &[&str]) -> bool {
     let mut hard = false;
     for &arg in args {
@@ -98,6 +100,7 @@ fn resolve_delete_root(
     workspace_command::workspace_or_fail(args, "delete")
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -174,6 +177,7 @@ fn execute(
     }
     Ok(report(&prepared, &format))
 }
+#[inline]
 fn report(prepared: &Prepared, format: &Formatter) -> Report {
     let items = prepared.plan
         .plans()
@@ -185,6 +189,7 @@ fn report(prepared: &Prepared, format: &Formatter) -> Report {
     Report { data: Formatter::join(&[format.success_summary("successfully deleted the following components"), items, format.hint(r#"to update the remote, please tag/snap and then export. to revert, please use "bit recover""#)]), code: 0, details: None }
 }
 
+#[inline]
 fn preflight(root: &Path, options: &options::Options<'_>) -> io::Result<()> {
     if add::ProjectedLinker::state_pattern(options.pattern) {
         preparation::validate_options(root, options)?;

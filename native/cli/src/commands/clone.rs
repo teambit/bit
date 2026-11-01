@@ -123,6 +123,7 @@ fn apply_clone_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn take_non_flag(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
@@ -190,6 +191,7 @@ fn validate_component_id(id: &str) -> Result<String, String> {
     })
 }
 
+#[inline]
 pub(super) fn parse_component_name(id_str: &str) -> Option<String> {
     let without_ver = id_str.trim().split('@').next()?.trim();
     let (scope, full_name) = without_ver.split_once('/')?;
@@ -201,6 +203,7 @@ pub(super) fn parse_component_name(id_str: &str) -> Option<String> {
     (!name.is_empty()).then(|| name.to_owned())
 }
 
+#[inline]
 fn resolve_clone_path(cwd: &Path, dir: &str) -> PathBuf {
     let candidate = Path::new(dir);
     let joined =
@@ -208,6 +211,7 @@ fn resolve_clone_path(cwd: &Path, dir: &str) -> PathBuf {
     normalize_lexical(&joined)
 }
 
+#[inline]
 fn normalize_lexical(path: &Path) -> PathBuf {
     let mut out = PathBuf::with_capacity(path.as_os_str().len());
     for comp in path.components() {

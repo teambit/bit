@@ -47,6 +47,7 @@ pub(super) fn prepare(
     Ok(Prepared { lanes, force, groups })
 }
 
+#[inline]
 fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
     if lanes {
         return ids
@@ -59,6 +60,7 @@ fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn unversioned(id: &str) -> &str {
     let trimmed = id.trim();
     match trimmed.rfind('@') {
@@ -197,6 +199,7 @@ fn spawn_group(
     }
 }
 
+#[inline]
 async fn scope_receipt(
     network: &Network,
     url: &str,
@@ -211,6 +214,7 @@ async fn scope_receipt(
     }
 }
 
+#[inline]
 async fn hub_receipt(
     network: &Network,
     url: &str,

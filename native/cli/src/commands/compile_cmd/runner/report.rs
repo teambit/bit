@@ -25,6 +25,7 @@ pub(super) fn create(
     Ok(Report { data, code: i32::from(!options.json && failures > 0), details: None })
 }
 
+#[inline]
 fn json_rows(rows: &[Compiled]) -> Vec<Value> {
     rows.iter()
         .map(|row| {
@@ -70,6 +71,7 @@ fn text(
     Formatter::join(&[items, format!("{summary}\n{timing}")])
 }
 
+#[inline]
 fn item(row: &Compiled, verbose: bool, formatter: &Formatter) -> String {
     let identity = row.identity.trim();
     let mut line = if row.errors.is_empty() {

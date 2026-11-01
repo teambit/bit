@@ -42,25 +42,22 @@ pub(super) struct Identity<'a> {
 
 impl Identity<'_> {
     pub(super) fn is_self(&self, candidate: &str) -> bool {
-        let base_id = if self.scope.is_empty() {
-            self.name.to_owned()
-        } else {
-            format!("{}/{}", self.scope, self.name)
-        };
+        let stripped = split_pkg_to_name_and_ver(candidate).0;
+        if stripped == self.package_name || stripped == self.name {
+            return true;
+        }
         let scoped_pkg = format!("@{}/{}", self.scope, self.name);
         let scoped_dot_pkg = format!("@{}/{}", self.scope, self.name.replace('/', "."));
-        let stripped = split_pkg_to_name_and_ver(candidate).0;
-        stripped == self.package_name
-            || stripped == scoped_pkg
+        stripped == scoped_pkg
             || stripped == scoped_dot_pkg
-            || stripped == base_id
-            || stripped == self.name
+            || (!self.scope.is_empty() && stripped == format!("{}/{}", self.scope, self.name))
             || stripped.starts_with(&format!("{}/", self.package_name))
             || stripped.starts_with(&format!("{scoped_pkg}/"))
             || stripped.starts_with(&format!("{scoped_dot_pkg}/"))
     }
 }
 
+#[inline]
 pub(super) fn split_pkg_to_name_and_ver(raw: &str) -> (&str, Option<&str>) {
     let raw = raw.trim();
     if let Some(rest) = raw.strip_prefix('@') {
@@ -299,11 +296,8 @@ pub(super) fn parse_manifest_comp_id(comp_id: &Value) -> Option<(&str, &str, Opt
         .map_or((raw, None), |(id, ver)| (id, Some(ver.trim())));
     let (scope, name) = bare.split_once('/')?;
     let (scope, name) = (scope.trim(), name.trim());
-    (!scope.is_empty() && !name.is_empty()).then_some((
-        scope,
-        name,
-        ver.filter(|val| !val.is_empty()),
-    ))
+    let ver = ver.filter(|val| !val.is_empty());
+    (!scope.is_empty() && !name.is_empty()).then_some((scope, name, ver))
 }
 
 pub(super) fn scanned_specifiers(comp_dir: &Path, rel_file: &str) -> Vec<String> {
@@ -322,15 +316,14 @@ fn normalize_rel_path(path: &Path) -> String {
     for part in path.components() {
         match part {
             Component::Normal(seg) => parts.extend(seg.to_str()),
-            Component::ParentDir => {
-                parts.pop();
-            }
+            Component::ParentDir => _ = parts.pop(),
             _ => {}
         }
     }
     parts.join("/")
 }
 
+#[inline]
 fn extract_package_name(specifier: &str) -> &str {
     let specifier = specifier.trim();
     if specifier.starts_with('@') {
@@ -346,6 +339,7 @@ fn extract_package_name(specifier: &str) -> &str {
     }
 }
 
+#[inline]
 pub(super) fn workspace_comp_dep(
     other: &WorkspaceComponent,
     lifecycle: &'static str,
@@ -368,6 +362,7 @@ pub(super) fn workspace_comp_dep(
     }
 }
 
+#[inline]
 pub(super) fn package_dep(pkg_name: &str, ver: &str, lifecycle: &'static str) -> ResolvedDep {
     ResolvedDep {
         id: pkg_name.to_owned(),
@@ -381,6 +376,7 @@ pub(super) fn package_dep(pkg_name: &str, ver: &str, lifecycle: &'static str) ->
     }
 }
 
+#[inline]
 pub(super) fn upsert_dep(deps: &mut Vec<ResolvedDep>, entry: ResolvedDep) {
     if let Some(existing) = deps
         .iter_mut()

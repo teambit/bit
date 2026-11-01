@@ -85,6 +85,7 @@ pub(super) fn resolve_display_name(root: &Path, pkg_name: &str) -> String {
     pkg_name.to_owned()
 }
 
+#[inline]
 pub(super) fn node_sort_key(root: &Path, node: &NodeId) -> (String, String) {
     match node {
         NodeId::Importer(importer_id) => {
@@ -94,6 +95,7 @@ pub(super) fn node_sort_key(root: &Path, node: &NodeId) -> (String, String) {
     }
 }
 
+#[inline]
 pub(super) fn name_ver_from_dep_path(
     lockfile: &Lockfile,
     dep_path: &PkgNameVerPeer,
@@ -108,6 +110,7 @@ pub(super) fn name_ver_from_dep_path(
     (dep_path.name.to_string(), version)
 }
 
+#[inline]
 pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
     let (left, right) = (left.trim(), right.trim());
     match (node_semver::Version::parse(left), node_semver::Version::parse(right)) {
@@ -116,12 +119,14 @@ pub(super) fn compare_versions(left: &str, right: &str) -> std::cmp::Ordering {
     }
 }
 
+#[inline]
 pub(super) fn format_name_ver(name: &str, version: &str) -> String {
     let name = name.trim();
     let version = version.trim();
     if version.is_empty() { name.to_owned() } else { format!("{name}@{version}") }
 }
 
+#[inline]
 pub(super) fn render_archy(node: &TreeNode) -> String {
     let mut out = String::new();
     render_archy_node(node, "", "", &mut out);
@@ -140,6 +145,7 @@ fn render_archy_node(node: &TreeNode, connector: &str, prefix: &str, out: &mut S
     }
 }
 
+#[inline]
 fn child_archy_frames(prefix: &str, last: bool, has_children: bool) -> (String, String) {
     let branch = if last { "\u{2514}" } else { "\u{251c}" };
     let stem = if has_children { "\u{252c}" } else { "\u{2500}" };

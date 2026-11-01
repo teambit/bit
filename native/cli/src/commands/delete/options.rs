@@ -48,6 +48,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
         scope: scope(modifier),
     })
 }
+#[inline]
 pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,
     pattern: &mut Option<&'a str>,
@@ -58,6 +59,7 @@ pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
     }
     Some(())
 }
+#[inline]
 fn apply_inline_or_pattern<'a>(
     arg: &'a str,
     modifier: &mut Option<(&'a str, &'a str)>,
@@ -75,6 +77,7 @@ fn apply_inline_or_pattern<'a>(
     }
     Some(())
 }
+#[inline]
 fn scope(modifier: Option<(&str, &str)>) -> Scope {
     match modifier {
         Some(("--range", value)) if !value.trim().is_empty() => Scope::Range(value.trim().into()),

@@ -24,9 +24,8 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         ["get", rest @ ..] => parse_get(rest),
         ["debug", rest @ ..] => {
             let id = single_dep_token(rest)?;
-            (is_supported_pattern(id) && !id.contains(['*', ',', '!'])).then(|| Subcommand::Debug {
-                id: id.to_owned(),
-            })
+            let valid = is_supported_pattern(id) && !id.contains(['*', ',', '!']);
+            valid.then(|| Subcommand::Debug { id: id.to_owned() })
         }
         ["usage", rest @ ..] => parse_usage(rest),
         ["blame", rest @ ..] => parse_blame(rest),
@@ -40,14 +39,14 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
     }
 }
 
+#[inline]
 fn single_dep_token<'a>(rest: &[&'a str]) -> Option<&'a str> {
     let tokens = crate::commands::scope_set::collect_non_flag_tokens(rest)?;
-    let [tok] = tokens.as_slice() else {
-        return None;
-    };
+    let [tok] = tokens.as_slice() else { return None };
     Some(*tok)
 }
 
+#[inline]
 fn consume_trailing_deps<'a>(
     iter: impl Iterator<Item = &'a str>,
     out: &mut Vec<&'a str>,
@@ -139,6 +138,7 @@ fn parse_diagnose(rest: &[&str]) -> Option<Subcommand> {
     }
 }
 
+#[inline]
 fn valid_diagnose_pkg(val: &str) -> Option<String> {
     let trimmed = val.trim();
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
@@ -169,22 +169,13 @@ fn parse_circular(rest: &[&str]) -> Option<Subcommand> {
     Some(Subcommand::Circular { json, include_deps })
 }
 
+#[inline]
 fn is_known_deps_subcommand(sub: &str) -> bool {
-    matches!(
-        sub,
-        "get"
-            | "remove"
-            | "unset"
-            | "debug"
-            | "set"
-            | "reset"
-            | "eject"
-            | "blame"
-            | "usage"
-            | "diagnose"
-            | "circular"
-            | "write",
-    )
+    const KNOWN: [&str; 12] = [
+        "get", "remove", "unset", "debug", "set", "reset", "eject", "blame", "usage", "diagnose",
+        "circular", "write",
+    ];
+    KNOWN.contains(&sub)
 }
 
 fn parse_set(rest: &[&str]) -> Option<Subcommand> {
@@ -299,6 +290,7 @@ pub(in crate::commands) fn parse_why(args: &[&str]) -> Option<Subcommand> {
     parse_usage_args(&filtered).map(|(dep_name, depth)| Subcommand::Why { dep_name, depth })
 }
 
+#[inline]
 fn parse_usage(rest: &[&str]) -> Option<Subcommand> {
     parse_usage_args(rest).map(|(dep_name, depth)| Subcommand::Usage { dep_name, depth })
 }
@@ -372,6 +364,7 @@ fn split_pkg_name_and_explicit_ver(raw: &str) -> Option<(String, String)> {
     Some((name.to_owned(), snap_to_semver(ver)))
 }
 
+#[inline]
 fn is_valid_pkg_name(name: &str) -> bool {
     if let Some(scoped) = name.strip_prefix('@') {
         scoped
@@ -384,6 +377,7 @@ fn is_valid_pkg_name(name: &str) -> bool {
     }
 }
 
+#[inline]
 pub(in crate::commands::deps) fn snap_to_semver(ver: &str) -> String {
     if ver.len() == 40
         && ver

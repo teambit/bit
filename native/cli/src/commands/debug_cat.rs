@@ -81,10 +81,12 @@ struct IdJsonOptions {
     json: bool,
 }
 
+#[inline]
 fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
     parse_id_options(args, true)
 }
 
+#[inline]
 fn parse_single_id(args: &[&str]) -> Option<String> {
     parse_id_options(args, false).map(|opts| opts.id)
 }
@@ -137,14 +139,13 @@ fn run_object(args: &[OsString]) -> io::Result<Outcome> {
     emit_text(&root, args, "cat-object", false, data)
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
-            let lower = val
-                .to_string_lossy()
-                .trim()
-                .to_ascii_lowercase();
-            !matches!(lower.as_str(), "" | "0" | "false")
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
         })
 }
 
@@ -264,12 +265,7 @@ fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
     let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
     let mut val = match bit_object_import::read_scope_object(&scope_dir, &vh_hash) {
         Ok(Some((kind, val))) if kind == "VersionHistory" => val,
-        Ok(None) => json!({
-            "name": name,
-            "scope": scope,
-            "versions": [],
-            "graphCompleteRefs": [],
-        }),
+        Ok(None) => json!({"name": name, "scope": scope, "versions": [], "graphCompleteRefs": []}),
         _ => return Ok(Outcome::Declined("cat-version-history object invalid".into())),
     };
     let Some(map) = val.as_object_mut() else {
@@ -320,14 +316,17 @@ pub(in crate::commands) fn emit_scope_not_found(
     Ok(Outcome::Declined(format!("{command} requires a scope")))
 }
 
+#[inline]
 pub(in crate::commands) fn scope_dir_for(root: &ScopeRoot) -> PathBuf {
     if root.bare { root.path.clone() } else { bit_object_import::scope_path(&root.path) }
 }
 
+#[inline]
 pub(in crate::commands) fn sha1_hex(input: &str) -> String {
     format!("{:x}", Sha1::digest(input.as_bytes()))
 }
 
+#[inline]
 pub(in crate::commands) fn format_json_4(val: &Value) -> io::Result<String> {
     let mut buf = Vec::with_capacity(256);
     let mut ser =

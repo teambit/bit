@@ -37,11 +37,11 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
 }
 pub(super) fn remove(directories: &[PathBuf]) -> io::Result<()> {
     for directory in directories {
-        if directory.as_os_str().is_empty()
-            || directory
-                .to_string_lossy()
-                .trim()
-                .is_empty()
+        if directory
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
         {
             continue;
         }
@@ -67,6 +67,7 @@ pub(super) fn publish(files: &[Emitted], batch_size: usize) -> io::Result<()> {
     }
     Ok(())
 }
+#[inline]
 fn write_emitted_content(opened: &mut fs::File, content: &str) -> io::Result<()> {
     if !cfg!(windows) && !content.contains('\r') {
         return opened.write_all(content.as_bytes());
@@ -89,6 +90,7 @@ fn open_batch(files: &[Emitted]) -> io::Result<Vec<fs::File>> {
     }
     error.map_or(Ok(opened), Err)
 }
+#[inline]
 fn open_file(file: &Emitted) -> io::Result<fs::File> {
     let parent = file.path.parent().ok_or_else(|| io::Error::other("compiler output directory"))?;
     if !parent.as_os_str().is_empty() {

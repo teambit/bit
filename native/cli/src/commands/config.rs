@@ -46,6 +46,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     result.map(Outcome::Exit)
 }
 
+#[inline]
 fn execute(
     stores: &stores::Stores,
     options: &Options,

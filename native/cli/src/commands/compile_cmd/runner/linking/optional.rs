@@ -33,6 +33,7 @@ pub(super) fn apply(
     }
     Ok(())
 }
+#[inline]
 fn optional(entries: &[PolicyEntry], name: &str) -> bool {
     let name = name.trim();
     !name.is_empty()
@@ -97,6 +98,7 @@ fn component(
     })
 }
 
+#[inline]
 fn split_component_identity(entry: &Value) -> io::Result<(&str, &str)> {
     let raw = entry["identity"]
         .as_str()

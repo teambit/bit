@@ -80,6 +80,7 @@ enum Prepared {
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::Set { .. } => "set",
@@ -147,6 +148,7 @@ fn run_without_workspace(
     )
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -295,6 +297,7 @@ fn prepare_non_mutating(
     }
 }
 
+#[inline]
 fn prepare_remove_cmd(
     mutation: BitmapMutation,
     bitmap: &Bitmap,
@@ -342,6 +345,7 @@ fn prepare_reset_or_eject(
 }
 
 impl Prepared {
+    #[inline]
     fn commit(self, chalk: Chalk) -> io::Result<Report> {
         let data = match self {
             Self::Set {

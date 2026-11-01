@@ -39,6 +39,7 @@ pub(in crate::commands) fn validate(
     Ok(())
 }
 
+#[inline]
 fn is_safe_rel_path(file: &str) -> bool {
     let path = Path::new(file);
     !file.is_empty()
@@ -48,6 +49,7 @@ fn is_safe_rel_path(file: &str) -> bool {
             .any(|part| matches!(part, std::path::Component::ParentDir))
 }
 
+#[inline]
 fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
     io::Error::other(format!(
         "error: component in path \"{}\" was not found, the following options are available depending on the situation:\n1. if the component directory was deleted by mistake, you can restore it by running \"bit checkout reset <component-id>\".\n2. if the component-dir was renamed, you can use \"bit move <old-dir> <new-dir>\" to move it to the new location.\n3. if the component directory was deleted deliberately, you can remove the component from the workspace by running \"bit remove <component-id>\".",
@@ -83,6 +85,7 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
     ))
 }
 
+#[inline]
 fn row_scope_or_default<'a>(row: &'a Value, fallback_scope: &'a str) -> &'a str {
     row["scope"]
         .as_str()

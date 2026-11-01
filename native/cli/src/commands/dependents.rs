@@ -82,6 +82,7 @@ fn finish_dependents(
     }
 }
 
+#[inline]
 fn emit_dependents_err(
     root: &Path,
     args: &[OsString],
@@ -200,6 +201,7 @@ fn find_fallback_bitmap_entry<'a>(
     (!has_version).then(|| find_bitmap_entry_by_dir(bitmap, without_version)).flatten()
 }
 
+#[inline]
 fn find_bitmap_entry_by_dir<'a>(bitmap: &'a Bitmap, raw_dir: &str) -> Option<&'a BitmapEntry> {
     let normalized = inventory::normalize(raw_dir);
     let dir = normalized.strip_prefix("./").unwrap_or(&normalized);
@@ -214,6 +216,7 @@ fn find_bitmap_entry_by_dir<'a>(bitmap: &'a Bitmap, raw_dir: &str) -> Option<&'a
         .flatten()
 }
 
+#[inline]
 pub(super) fn is_unscoped_bitmap_row(row: &Value) -> bool {
     row["scope"]
         .as_str()

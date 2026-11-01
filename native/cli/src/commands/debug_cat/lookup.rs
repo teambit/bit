@@ -28,6 +28,7 @@ pub(in crate::commands) fn load_cat_component(
     (v_kind == "Version").then_some(ver_val)
 }
 
+#[inline]
 fn split_cat_id(raw_id: &str) -> Option<(&str, Option<&str>)> {
     let raw_id = raw_id.trim();
     let (bare_id, version_opt) = raw_id
@@ -36,6 +37,7 @@ fn split_cat_id(raw_id: &str) -> Option<(&str, Option<&str>)> {
     (!bare_id.is_empty() && version_opt != Some("")).then_some((bare_id, version_opt))
 }
 
+#[inline]
 fn is_head_alias(ver: &str) -> bool {
     matches!(ver, "latest" | "head")
 }
@@ -62,12 +64,9 @@ fn load_scope_component_model(scope_dir: &Path, bare_id: &str) -> Option<(String
     if kind != "Component" {
         return None;
     }
-    let id_without_ver = match comp_scope
-        .as_deref()
-        .filter(|scope| !scope.is_empty())
-    {
-        Some(scope) => format!("{scope}/{comp_name}"),
-        None => comp_name,
+    let id_without_ver = match comp_scope.as_deref() {
+        Some(scope) if !scope.is_empty() => format!("{scope}/{comp_name}"),
+        _ => comp_name,
     };
     Some((id_without_ver, comp_val))
 }
@@ -213,6 +212,7 @@ pub(in crate::commands) fn resolve_lane_entry(
     Some((scope.to_owned(), id.to_owned(), row["hash"].as_str()?.to_owned()))
 }
 
+#[inline]
 fn find_lane_in_index(
     lanes: &[Value],
     scope: &str,
@@ -262,6 +262,7 @@ pub(in crate::commands) fn resolve_component_entry(
     ))
 }
 
+#[inline]
 fn matches_exact_index_row(row: &Value, bare_id: &str) -> bool {
     let (scope, name) = index_row_scope_and_name(row);
     if scope.is_empty() {
@@ -336,6 +337,7 @@ pub(in crate::commands) fn diagnose_lane_lookup_error(
     diagnose_unscoped_lane_error(lanes, id)
 }
 
+#[inline]
 fn missing_lane_msg(id: &str, scope: &str, name: &str, for_history: bool) -> String {
     if for_history {
         let lane_str = if name == "main" { "main".to_owned() } else { format!("{scope}/{name}") };

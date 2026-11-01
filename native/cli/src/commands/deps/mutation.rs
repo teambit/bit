@@ -133,6 +133,7 @@ pub(in crate::commands) fn apply_dep_resolver_config(
     Ok(())
 }
 
+#[inline]
 fn component_json_path(root: &Path, entry: &BitmapEntry) -> Option<PathBuf> {
     let root_dir = entry.root_dir.trim();
     if root_dir.is_empty() {
@@ -248,6 +249,7 @@ pub(super) fn prepare_set(
     Ok((mutation, changed_comps, added_packages))
 }
 
+#[inline]
 fn set_policy_field(spec: &SetSpec<'_>) -> &'static str {
     if spec.dev {
         "devDependencies"
@@ -297,6 +299,7 @@ pub(super) fn prepare_list_action(
     Ok((mutation, spec.summary, comps))
 }
 
+#[inline]
 pub(super) fn format_json_indent_4(val: &Value) -> io::Result<String> {
     let mut buf = Vec::with_capacity(256);
     let mut ser =
@@ -329,6 +332,7 @@ pub(super) fn commit_set(
     ]))
 }
 
+#[inline]
 pub(super) fn commit_list_action(
     formatter: &Formatter,
     mutation: &BitmapMutation,
@@ -343,6 +347,7 @@ pub(super) fn commit_list_action(
     Ok(Formatter::join(&[formatter.success_summary(summary), items.join("\n")]))
 }
 
+#[inline]
 pub(super) fn outside_workspace_failure(subcommand: &Subcommand) -> Option<(bool, &'static str)> {
     match subcommand {
         Subcommand::Debug { .. }

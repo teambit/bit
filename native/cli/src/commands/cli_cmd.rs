@@ -94,11 +94,13 @@ pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
         })
 }
 
+#[inline]
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {
     let ["generate", rest @ ..] = args else { return false };
     docs_enabled(rest) && valid_docs_options(rest)
 }
 
+#[inline]
 fn docs_enabled(rest: &[&str]) -> bool {
     let mut enabled = false;
     for &arg in rest {
@@ -111,6 +113,7 @@ fn docs_enabled(rest: &[&str]) -> bool {
     enabled
 }
 
+#[inline]
 fn valid_docs_options(rest: &[&str]) -> bool {
     let mut index = 0;
     while index < rest.len() {
@@ -150,11 +153,13 @@ fn docs_option_len(rest: &[&str]) -> Option<usize> {
     }
 }
 
+#[inline]
 fn is_non_flag_value(val: &str) -> bool {
     let trimmed = val.trim();
     !trimmed.is_empty() && !trimmed.starts_with('-')
 }
 
+#[inline]
 pub(super) fn render_docs_frontmatter(version: &str) -> String {
     format!(
         "---\ndescription: 'Bit command synopses. Bit version: {version}'\nlabels: ['cli', 'mdx', 'docs']\n---",

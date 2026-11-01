@@ -46,6 +46,7 @@ impl Policy {
         }
         Ok(Some(Self { before, document, items }))
     }
+    #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         let path = root.join("workspace.jsonc");
         let metadata = fs::symlink_metadata(&path)?;
@@ -57,6 +58,7 @@ impl Policy {
         }
         Ok(())
     }
+    #[inline]
     pub(super) fn commit(&self, root: &Path, file_id: &str) -> io::Result<()> {
         edit_workspace_config(
             root,
@@ -68,10 +70,12 @@ impl Policy {
             },
         )
     }
+    #[inline]
     pub(super) fn report(&self, format: &Formatter) -> String {
         format.section("pinned deleted components to their main version", "these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main", &self.items.iter().map(|item| format.item(item)).collect::<Vec<_>>())
     }
 }
+#[inline]
 fn range(document: &Document, tag: &str) -> io::Result<String> {
     let tag = tag.trim();
     if tag.len() == 40 && tag.bytes().all(|byte| byte.is_ascii_hexdigit()) {
@@ -87,6 +91,7 @@ fn range(document: &Document, tag: &str) -> io::Result<String> {
     Ok(range)
 }
 
+#[inline]
 fn resolve_save_prefix(document: &Document) -> io::Result<String> {
     let prefix = document
         .get(&[RESOLVER, "savePrefix"])

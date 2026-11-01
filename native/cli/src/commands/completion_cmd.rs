@@ -82,6 +82,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 pub(super) fn valid_options(args: &[&str]) -> bool {
     for (idx, &arg) in args.iter().enumerate() {
         let arg = arg.trim();
@@ -107,6 +108,7 @@ pub(super) fn valid_options(args: &[&str]) -> bool {
     true
 }
 
+#[inline]
 pub(super) fn is_zsh_shell() -> bool {
     ["SHELL", "ZSH_NAME"]
         .into_iter()
@@ -120,6 +122,7 @@ pub(super) fn is_zsh_shell() -> bool {
         })
 }
 
+#[inline]
 pub(super) const fn render_completion_script(zsh: bool) -> &'static str {
     if zsh { ZSH_COMPLETION_SCRIPT } else { BASH_COMPLETION_SCRIPT }
 }

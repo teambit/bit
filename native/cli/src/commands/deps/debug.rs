@@ -48,6 +48,7 @@ struct ManualPolicy {
 }
 
 impl ManualPolicy {
+    #[inline]
     fn is_empty(&self) -> bool {
         self.runtime.is_empty()
             && self.dev.is_empty()
@@ -170,6 +171,7 @@ fn parse_manual_config(config: &Value) -> Result<ManualPolicy, Failure> {
     parse_manual_fields(fields)
 }
 
+#[inline]
 fn manual_version(value: &Value) -> Option<&str> {
     if let Some(version) = value.as_str() {
         return Some(version);
@@ -221,6 +223,7 @@ fn validate_manual_component(
     Ok(())
 }
 
+#[inline]
 fn builtin_env_deps(env_id: &str) -> Result<(Deps, Deps, Deps), Failure> {
     match bit_install::config::aspect_id_without_version(env_id.trim()) {
         "teambit.harmony/node" => Ok((&[], NODE_DEV, &[])),
@@ -269,6 +272,7 @@ fn render_debug(root: &Path, (runtime, dev, peer): (Deps, Deps, Deps)) -> Result
     format_json_indent_4(&value).map_err(Failure::from)
 }
 
+#[inline]
 fn render_manual(root: &Path, manual: &ManualPolicy) -> Result<String, Failure> {
     let groups = manual_groups(manual);
     let all = groups.runtime
@@ -306,6 +310,7 @@ fn manual_groups(manual: &ManualPolicy) -> ManualGroups<'_> {
     ManualGroups { runtime, dev, peer }
 }
 
+#[inline]
 fn validate_manual_rows(root: &Path, all: &[&SourcedDep<'_>]) -> Result<(), Failure> {
     let node_modules = root.join("node_modules");
     let mut seen = HashSet::with_capacity(all.len());
@@ -370,6 +375,7 @@ fn missing_names<'a>(manual: &'a ManualPolicy, groups: &'a ManualGroups<'_>) -> 
         .collect()
 }
 
+#[inline]
 fn manual_versions(deps: &[SourcedDep<'_>]) -> Value {
     Value::Array(
         deps.iter()
@@ -378,6 +384,7 @@ fn manual_versions(deps: &[SourcedDep<'_>]) -> Value {
     )
 }
 
+#[inline]
 fn versions(deps: &[(&str, &str)]) -> Value {
     Value::Array(
         deps.iter()

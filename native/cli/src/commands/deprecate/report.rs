@@ -22,6 +22,7 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
     }
     sections(changed, unchanged, undo, verb, format)
 }
+#[inline]
 fn sections(
     changed: &[String],
     unchanged: &[String],
@@ -43,6 +44,7 @@ fn sections(
     ])
 }
 
+#[inline]
 fn format_items(ids: &[String], format: &Formatter) -> Vec<String> {
     ids.iter()
         .map(|id| id.trim())
@@ -51,6 +53,7 @@ fn format_items(ids: &[String], format: &Formatter) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 fn range_report(
     plan: &Plan,
     options: &Options<'_>,
@@ -64,6 +67,7 @@ fn range_report(
     format_range_summary(plan.changed(), plan.unchanged(), range, verb, unchanged_state, format)
 }
 
+#[inline]
 fn format_range_summary(
     changed: &[String],
     unchanged: &[String],

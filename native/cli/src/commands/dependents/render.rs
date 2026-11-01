@@ -20,6 +20,7 @@ pub(super) struct DepGraph {
 }
 
 impl DepGraph {
+    #[inline]
     pub(super) fn add_node(&mut self, id: &str) {
         let id = id.trim();
         if !id.is_empty() && !self.nodes.contains(id) {
@@ -69,6 +70,7 @@ impl DepGraph {
     }
 }
 
+#[inline]
 pub(super) fn render_dependents_report(
     target_id: &str,
     bare_id: &str,
@@ -135,6 +137,7 @@ pub(in crate::commands) fn render_honeywell_table(rows: &[Vec<String>]) -> Strin
     out
 }
 
+#[inline]
 fn column_widths(rows: &[Vec<String>]) -> Vec<usize> {
     let col_count = rows
         .iter()
@@ -151,6 +154,7 @@ fn column_widths(rows: &[Vec<String>]) -> Vec<usize> {
     widths
 }
 
+#[inline]
 fn render_honeywell_row(row: &[String], widths: &[usize]) -> String {
     let cells = row
         .iter()
@@ -169,6 +173,7 @@ fn render_honeywell_row(row: &[String], widths: &[usize]) -> String {
     format!("║{cells}║\n")
 }
 
+#[inline]
 fn honeywell_border(widths: &[usize], left: char, fill: char, mid: char, right: char) -> String {
     let segments = widths
         .iter()

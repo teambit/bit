@@ -63,6 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("compile execution delegated".into()))
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -72,6 +73,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+#[inline]
 fn emit_compile_error(
     root: &Path,
     args: &[OsString],
@@ -209,6 +211,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+#[inline]
 fn apply_short_compile_flags(arg: &str, options: &mut Options) -> Option<()> {
     let flags = arg.strip_prefix('-')?;
     if flags.is_empty() || flags.starts_with('-') {

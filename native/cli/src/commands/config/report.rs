@@ -55,6 +55,7 @@ fn git(key: &str) -> String {
     parse_git_config(&text, key)
 }
 
+#[inline]
 fn parse_git_config(text: &str, key: &str) -> String {
     text.lines()
         .filter_map(|line| {
@@ -121,6 +122,7 @@ fn formatted(values: &Map<String, Value>, json: bool) -> io::Result<String> {
         .join("\n"))
 }
 
+#[inline]
 fn display(value: &Value) -> String {
     match value {
         Value::Null => String::new(),
@@ -136,6 +138,7 @@ fn display(value: &Value) -> String {
 }
 
 // ConfigGetter indexes a normal JavaScript object, including its inherited Object.prototype.
+#[inline]
 fn inherited(key: &str) -> bool {
     matches!(
         key,

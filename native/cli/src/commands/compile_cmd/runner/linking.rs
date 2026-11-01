@@ -86,6 +86,7 @@ impl Links {
     }
 }
 
+#[inline]
 fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
     let trimmed = identity.trim();
     let bare = trimmed

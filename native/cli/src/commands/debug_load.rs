@@ -49,6 +49,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("debug-load trace inspection delegated".into()))
 }
 
+#[inline]
 fn emit_debug_load_error(
     root: &Path,
     args: &[OsString],
@@ -95,6 +96,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { id: id?, json })
 }
 
+#[inline]
 fn is_ignored_debug_load_flag(arg: &str) -> bool {
     matches!(
         arg,
@@ -120,6 +122,7 @@ fn is_ignored_debug_load_flag(arg: &str) -> bool {
     )
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -203,6 +206,7 @@ fn missing_component_error(root: &Path, raw_id: &str) -> Option<String> {
     ))
 }
 
+#[inline]
 fn exists_in_scope_index(root: &Path, name: &str) -> bool {
     crate::commands::scope_set::selection::exists_in_scope_index(root, name)
 }

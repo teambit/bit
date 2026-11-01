@@ -97,6 +97,7 @@ fn preflight_hard_guard(
     Ok(None)
 }
 
+#[inline]
 fn preflight_workspace_hard_err(root: Option<&Path>, update_main: bool) -> Option<io::Error> {
     let ws_root = root?;
     if super::ci_enabled() || super::super::installation::Installer::needs_canonical(ws_root) {
@@ -143,6 +144,7 @@ pub(in crate::commands) fn lanes(
     execute(args, &context, prepared, false)
 }
 
+#[inline]
 fn execute(
     args: &[OsString],
     context: &Context,
@@ -197,6 +199,7 @@ fn execute_bare(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+#[inline]
 fn receipt_report(receipts: &[Value], lanes: bool, chalk: Chalk) -> String {
     if lanes { report::lanes(receipts, chalk) } else { report::components(receipts, chalk) }
 }
@@ -269,6 +272,7 @@ fn apply_hard_arg<'a>(
     Some(())
 }
 
+#[inline]
 fn apply_combined_hard_short(flag: &str, state: &mut ParseState<'_>) -> bool {
     if !flag.starts_with('-')
         || flag.starts_with("--")
@@ -358,6 +362,7 @@ fn validate_global_remotes(config_dir: &Path) -> io::Result<()> {
     }
 }
 
+#[inline]
 fn validate_remote_hosts(value: &Value) -> io::Result<()> {
     if value.is_null() {
         return Ok(());

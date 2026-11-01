@@ -68,6 +68,7 @@ fn compile(
     Ok(compiled)
 }
 
+#[inline]
 fn source_path(source: &Value) -> io::Result<PathBuf> {
     if let Some(path) = source["absolutePath"]
         .as_str()
@@ -121,6 +122,7 @@ fn append(
     Ok(())
 }
 
+#[inline]
 fn parse_emitted_file(file: &Value) -> io::Result<(&str, &str)> {
     let relative = file["outputPath"]
         .as_str()

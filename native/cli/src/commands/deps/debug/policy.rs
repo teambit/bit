@@ -53,6 +53,7 @@ fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
         || duplicate_plus
 }
 
+#[inline]
 fn supported_plus_mix(manual: &ManualPolicy) -> bool {
     let supported_runtime_mix = !manual.runtime.is_empty()
         && !manual.unresolved_runtime_plus.is_empty()
@@ -163,6 +164,7 @@ pub(super) fn apply_lifecycle_precedence(manual: &mut ManualPolicy) {
     manual.unresolved_dev_plus.retain(|name| !peer_names.contains(name.as_str()));
 }
 
+#[inline]
 fn unresolved_plus(values: &Value) -> Vec<String> {
     values
         .as_object()
@@ -175,6 +177,7 @@ fn unresolved_plus(values: &Value) -> Vec<String> {
         .collect()
 }
 
+#[inline]
 pub(super) fn supported_policy(policy: &Value) -> bool {
     policy.is_null()
         || policy
@@ -192,6 +195,7 @@ pub(super) fn supported_policy(policy: &Value) -> bool {
             })
 }
 
+#[inline]
 pub(super) fn empty_policy(policy: &Value) -> bool {
     policy.is_null()
         || policy
@@ -203,6 +207,7 @@ pub(super) fn empty_policy(policy: &Value) -> bool {
             })
 }
 
+#[inline]
 pub(super) fn manual_entries(policy: &Map<String, Value>) -> Result<ManualPolicy, Failure> {
     if policy.is_empty() || !supported_fields(policy) || !supported_entries(policy) {
         return Err(Failure::Declined("configured versioned deps debug delegated".into()));
@@ -210,6 +215,7 @@ pub(super) fn manual_entries(policy: &Map<String, Value>) -> Result<ManualPolicy
     parse_manual_fields(policy)
 }
 
+#[inline]
 fn supported_fields(policy: &Map<String, Value>) -> bool {
     policy
         .keys()
@@ -234,6 +240,7 @@ fn supported_entries(policy: &Map<String, Value>) -> bool {
     true
 }
 
+#[inline]
 fn valid_entry<'a>(field: &str, name: &'a str, value: &Value, seen: &mut HashSet<&'a str>) -> bool {
     let Some(version) = manual_version(value).map(str::trim) else { return false };
     let name = name.trim();

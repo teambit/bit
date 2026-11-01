@@ -35,8 +35,11 @@ pub(super) fn try_run(
     options: &Options,
 ) -> io::Result<Option<Outcome>> {
     if args.is_empty()
-        || root.as_os_str().is_empty()
-        || root.to_string_lossy().trim().is_empty()
+        || root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
         || !root.is_dir()
     {
         return Ok(None);
@@ -58,6 +61,7 @@ pub(super) fn try_run(
     .map(Some)
 }
 
+#[inline]
 fn format_compile_error(error: &io::Error, args: &[OsString]) -> io::Error {
     workspace_command::filesystem_error::report(error, crate::commands::color::Chalk::detect(args))
 }

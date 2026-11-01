@@ -55,6 +55,7 @@ impl Stores {
         Ok(Self { entries })
     }
 
+    #[inline]
     pub(super) fn history_scope(&self) -> Option<&Path> {
         self.entries
             .iter()
@@ -67,6 +68,7 @@ impl Stores {
             .parent()
     }
 
+    #[inline]
     pub(super) fn combined(&self) -> Map<String, Value> {
         let value = |origin| {
             self.entries
@@ -127,6 +129,7 @@ impl Stores {
             })
     }
 
+    #[inline]
     pub(super) fn write(&self) -> io::Result<()> {
         for store in &self.entries {
             if store.change.is_some() || store.missing {
@@ -191,6 +194,7 @@ impl Store {
     }
 }
 
+#[inline]
 fn read_source(origin: &str, path: &Path) -> io::Result<Value> {
     if origin == "global" {
         let directory =
@@ -204,6 +208,7 @@ fn read_source(origin: &str, path: &Path) -> io::Result<Value> {
     bit_workspace_config::parse_jsonc(&bytes)
 }
 
+#[inline]
 fn aspect(value: &Value) -> &str {
     bit_workspace_config::workspace_store_key(value)
 }

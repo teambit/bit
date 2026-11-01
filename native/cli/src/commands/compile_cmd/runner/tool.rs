@@ -35,19 +35,26 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
     Ok(rows)
 }
 
+#[inline]
 fn resolve_compiler_tool() -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let Target::Entry(cli) = discovery::find()? else {
         return Err(io::Error::other("compiler tool installation"));
     };
     if cli.node
-        .to_string_lossy()
-        .trim()
-        .is_empty()
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
     {
         return Err(io::Error::other("compiler tool node binary"));
     }
     let package = cli.bit_dir
-        .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
+        .filter(|dir| {
+            !dir.as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
+        })
         .ok_or_else(|| io::Error::other("compiler tool package root"))?
         .join("package.json");
     if !package.is_file() {
@@ -56,6 +63,7 @@ fn resolve_compiler_tool() -> io::Result<(std::path::PathBuf, std::path::PathBuf
     Ok((cli.node, package))
 }
 
+#[inline]
 fn write_compiler_request(child: &mut std::process::Child, request: &[u8]) -> io::Result<()> {
     let mut stdin = child.stdin.take().ok_or_else(|| io::Error::other("compiler tool stdin"))?;
     let input = stdin.write_all(request).and_then(|()| stdin.flush());

@@ -39,6 +39,7 @@ pub(super) struct MatchedTree {
     pub node: TreeNode,
 }
 
+#[inline]
 pub(super) fn prepare_usage(
     root: &Path,
     bitmap_val: &Value,
@@ -53,6 +54,7 @@ pub(super) fn prepare_usage(
     find_usages_in_workspace(root, bitmap_val, dep_name, chalk)
 }
 
+#[inline]
 fn is_component_id(dep_name: &str) -> bool {
     let trimmed = dep_name.trim();
     !trimmed.is_empty() && trimmed.contains('/') && !trimmed.starts_with('@')
@@ -109,6 +111,7 @@ fn match_component_dep_usage(
     Ok(Some(format!("{} (using dep in version {})", query.1.bold(&comp_id), dep.version)))
 }
 
+#[inline]
 fn dep_matches_query(dep: &ResolvedDep, name: &str, req_ver: Option<&str>) -> bool {
     let name = name.trim();
     let name_ok = dep.package_name == name
@@ -190,6 +193,7 @@ fn build_reverse_graph(lockfile: &Lockfile) -> (HashSet<NodeId>, ReverseMap) {
     (visited, reverse_map)
 }
 
+#[inline]
 fn outgoing_edges(lockfile: &Lockfile, node: &NodeId) -> Vec<(String, NodeId)> {
     match node {
         NodeId::Importer(importer_id) => importer_outgoing_edges(lockfile, importer_id),
@@ -297,6 +301,7 @@ fn package_matches_query(
     name_ok && version_matches_query(pkg.1, query_ver)
 }
 
+#[inline]
 fn version_matches_query(version: &str, query_ver: Option<&str>) -> bool {
     let Some(req) = query_ver
         .map(str::trim)
@@ -335,6 +340,7 @@ fn walk_reverse(
         .collect()
 }
 
+#[inline]
 fn expand_reverse_edge(
     env: (&Path, &Lockfile, &ReverseMap),
     edge: (&NodeId, &str),

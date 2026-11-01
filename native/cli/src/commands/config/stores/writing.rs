@@ -7,11 +7,11 @@ use std::{
 };
 
 pub(super) fn write(store: &Store) -> io::Result<()> {
-    if store.path.as_os_str().is_empty()
-        || store.path
-            .to_string_lossy()
-            .trim()
-            .is_empty()
+    if store.path
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
     {
         return Err(io::Error::other("config store path is empty"));
     }
@@ -67,7 +67,13 @@ fn scope(store: &Store) -> io::Result<Value> {
 fn workspace(store: &Store) -> io::Result<()> {
     let root = store.root
         .as_deref()
-        .filter(|path| !path.as_os_str().is_empty() && !path.to_string_lossy().trim().is_empty())
+        .filter(|path| {
+            !path
+                .as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
+        })
         .ok_or_else(|| io::Error::other("workspace config root"))?;
     let identity = aspect(&store.source).to_owned();
     let Some((raw_key, value)) = &store.change else { return Ok(()) };
@@ -95,6 +101,7 @@ fn workspace(store: &Store) -> io::Result<()> {
     Ok(())
 }
 
+#[inline]
 fn global(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let mut options = fs::OpenOptions::new();
     options
@@ -113,11 +120,13 @@ fn global(path: &Path, bytes: &[u8]) -> io::Result<()> {
 }
 
 #[cfg(unix)]
+#[inline]
 fn private(path: &Path) -> io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
     fs::set_permissions(path, fs::Permissions::from_mode(0o600))
 }
 #[cfg(not(unix))]
+#[inline]
 fn private(_path: &Path) -> io::Result<()> {
     Ok(())
 }

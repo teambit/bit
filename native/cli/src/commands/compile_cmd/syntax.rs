@@ -69,19 +69,26 @@ fn collect_parse_error_inputs(
     }
     Ok(inputs)
 }
+#[inline]
 fn find_parser_entry() -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let Target::Entry(cli) = discovery::find()? else {
         return Err(io::Error::other("compiler parser installation"));
     };
     if cli.node
-        .to_string_lossy()
-        .trim()
-        .is_empty()
+        .as_os_str()
+        .as_encoded_bytes()
+        .iter()
+        .all(u8::is_ascii_whitespace)
     {
         return Err(io::Error::other("compiler parser node binary"));
     }
     let package = cli.bit_dir
-        .filter(|dir| !dir.as_os_str().is_empty() && !dir.to_string_lossy().trim().is_empty())
+        .filter(|dir| {
+            !dir.as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
+        })
         .ok_or_else(|| io::Error::other("compiler parser package"))?
         .join("package.json");
     if !package.is_file() {

@@ -76,10 +76,12 @@ fn run_workspace(
     })
 }
 
+#[inline]
 const fn command_name(undo: bool) -> &'static str {
     if undo { "undeprecate" } else { "deprecate" }
 }
 
+#[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
         .is_some_and(|value| {

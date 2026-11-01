@@ -211,6 +211,7 @@ fn read_logs(root: &Path, id: &ComponentId) -> Result<Vec<Value>, Failure> {
         .ok_or_else(|| Failure::Declined("component log versions absent".into()))
 }
 
+#[inline]
 fn matches_dependency(dep: &ResolvedDep, query: &str) -> bool {
     let query = query.trim();
     dep.package_name == query
@@ -219,6 +220,7 @@ fn matches_dependency(dep: &ResolvedDep, query: &str) -> bool {
         || dep.comp_bare_id.as_deref() == Some(query)
 }
 
+#[inline]
 fn blame_row(row: &Value, version: &str) -> Result<BlameRow, Failure> {
     let normalized = log::normalize(row).map_err(|error| Failure::Declined(error.to_string()))?;
     Ok(BlameRow {
@@ -248,6 +250,7 @@ fn blame_row(row: &Value, version: &str) -> Result<BlameRow, Failure> {
     })
 }
 
+#[inline]
 fn render(rows: &[BlameRow], component: &str, dependency: &str, chalk: Chalk) -> String {
     if rows.is_empty() {
         return Formatter::new(chalk).hint(&format!(

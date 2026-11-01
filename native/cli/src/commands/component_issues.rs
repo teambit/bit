@@ -240,6 +240,7 @@ fn parse(args: &[&str]) -> Option<bool> {
     Some(json)
 }
 
+#[inline]
 fn parse_json_flag(arg: &str) -> Option<bool> {
     match arg {
         "-j" | "--json" => Some(true),
@@ -254,6 +255,7 @@ fn parse_json_flag(arg: &str) -> Option<bool> {
     }
 }
 
+#[inline]
 fn issues_json() -> Value {
     Value::Array(
         ISSUES

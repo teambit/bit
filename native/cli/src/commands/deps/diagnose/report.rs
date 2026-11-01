@@ -50,13 +50,9 @@ pub(in crate::commands::deps) fn run(
         Err(Failure::User(message)) => {
             if env::var_os("CI")
                 .is_some_and(|val| {
-                    !matches!(
-                        val.to_string_lossy()
-                            .trim()
-                            .to_ascii_lowercase()
-                            .as_str(),
-                        "" | "0" | "false",
-                    )
+                    let text = val.to_string_lossy();
+                    let trimmed = text.trim();
+                    !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
                 })
             {
                 return Ok(Outcome::Declined("CI deps diagnose error stack".into()));
@@ -118,12 +114,14 @@ fn inspect(root: &Path, origins: bool) -> Result<Diagnosis, Failure> {
     })
 }
 
+#[inline]
 fn unsupported_origin(package: &PackageInfo) -> bool {
     package.peer
         && package.versions.len() > 1
         && package.origins.iter().any(|origin| !origin.explicit)
 }
 
+#[inline]
 fn count_copies(entries: &[String]) -> HashMap<String, usize> {
     let mut copies = HashMap::new();
     for entry in entries {
@@ -134,6 +132,7 @@ fn count_copies(entries: &[String]) -> HashMap<String, usize> {
     copies
 }
 
+#[inline]
 fn package_name(entry: &str) -> Option<String> {
     let entry = entry.trim();
     if let Some((scope, rest)) = entry.split_once('+')
@@ -179,6 +178,7 @@ fn collect_component_packages(
     Ok(packages)
 }
 
+#[inline]
 fn explicit_policy(policy: Option<&serde_json::Value>, dep: &ResolvedDep) -> bool {
     let field = match dep.lifecycle {
         "peer" => "peerDependencies",
@@ -198,7 +198,9 @@ fn explicit_policy(policy: Option<&serde_json::Value>, dep: &ResolvedDep) -> boo
         == Some(dep.version.trim())
 }
 
+#[inline]
 fn add_dependency(packages: &mut Vec<PackageInfo>, dep: ResolvedDep, origin: VersionOrigin) {
+    let peer = dep.lifecycle == "peer";
     if let Some(info) = packages
         .iter_mut()
         .find(|info| info.name == dep.package_name)
@@ -206,13 +208,13 @@ fn add_dependency(packages: &mut Vec<PackageInfo>, dep: ResolvedDep, origin: Ver
         if !info.versions.contains(&dep.version) {
             info.versions.push(dep.version);
         }
-        info.peer |= dep.lifecycle == "peer";
+        info.peer |= peer;
         info.origins.push(origin);
     } else {
         packages.push(PackageInfo {
             name: dep.package_name,
             versions: vec![dep.version],
-            peer: dep.lifecycle == "peer",
+            peer,
             copies: 0,
             origins: vec![origin],
         });
@@ -300,6 +302,7 @@ fn impact_table(rows: &[Vec<String>], chalk: Chalk) -> String {
     lines.join("\n")
 }
 
+#[inline]
 fn spread_copies(package: &PackageInfo) -> usize {
     if package.copies == 0 { package.versions.len() } else { package.copies }
 }

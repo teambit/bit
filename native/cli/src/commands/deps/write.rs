@@ -150,8 +150,9 @@ fn collect_comp_dep_rows(
     Ok(())
 }
 
+#[inline]
 fn dedupe_rows(rows: &[CandidateRow]) -> Result<Map<String, Value>, Failure> {
-    let mut selected: Map<String, Value> = Map::new();
+    let mut selected: Map<String, Value> = Map::with_capacity(rows.len());
     let mut selected_root: HashSet<String> = HashSet::new();
     for row in rows {
         if !row.name.trim().is_empty() {
@@ -185,6 +186,7 @@ fn apply_candidate_row(
     Ok(())
 }
 
+#[inline]
 fn should_overwrite(old: (&str, bool), incoming: (&str, bool)) -> Result<bool, Failure> {
     if old.1 && !incoming.1 {
         return Ok(false);
@@ -199,6 +201,7 @@ fn should_overwrite(old: (&str, bool), incoming: (&str, bool)) -> Result<bool, F
         .is_some_and(|(left_ver, right_ver)| left_ver.compare(&right_ver) == Ordering::Greater))
 }
 
+#[inline]
 pub(super) fn commit_write(
     root: &Path,
     target: WriteTarget,

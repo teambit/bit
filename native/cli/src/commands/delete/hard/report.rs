@@ -3,6 +3,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
+#[inline]
 pub(super) fn components(receipts: &[Value], chalk: Chalk) -> String {
     let format = Formatter::new(chalk);
     receipts
@@ -85,6 +86,7 @@ fn section(ids: &[String], title: &str, format: &Formatter) -> String {
     )
 }
 
+#[inline]
 fn strip_latest_or_head(id: &str) -> &str {
     let id = id.trim();
     id.strip_suffix("@latest")
@@ -92,6 +94,7 @@ fn strip_latest_or_head(id: &str) -> &str {
         .unwrap_or(id)
 }
 
+#[inline]
 fn list(value: &Value) -> Vec<String> {
     value
         .as_array()
@@ -125,6 +128,7 @@ fn receipt_entry_id(entry: &Value) -> Option<String> {
     })
 }
 
+#[inline]
 pub(super) fn lanes(receipts: &[Value], chalk: Chalk) -> String {
     let ids = receipts
         .iter()

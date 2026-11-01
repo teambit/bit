@@ -31,61 +31,75 @@ pub struct Chalk {
 
 impl Chalk {
     /// `chalk.supportsColor` for stdout, given the command's arguments.
+    #[inline]
     pub fn detect(args: &[OsString]) -> Self {
         Self { enabled: level(args, io::stdout().is_terminal()) > 0 }
     }
 
     #[cfg(test)]
+    #[inline]
     pub const fn new(enabled: bool) -> Self {
         Self { enabled }
     }
 
+    #[inline]
     pub const fn enabled(self) -> bool {
         self.enabled
     }
 
+    #[inline]
     pub fn red(self, text: &str) -> String {
         self.apply(&[RED], text)
     }
 
+    #[inline]
     pub fn green(self, text: &str) -> String {
         self.apply(&[GREEN], text)
     }
 
+    #[inline]
     pub fn yellow(self, text: &str) -> String {
         self.apply(&[YELLOW], text)
     }
 
+    #[inline]
     pub fn cyan(self, text: &str) -> String {
         self.apply(&[CYAN], text)
     }
 
+    #[inline]
     pub fn white(self, text: &str) -> String {
         self.apply(&[WHITE], text)
     }
 
+    #[inline]
     pub fn gray(self, text: &str) -> String {
         self.apply(&[GRAY], text)
     }
 
+    #[inline]
     pub fn dim(self, text: &str) -> String {
         self.apply(&[DIM], text)
     }
 
+    #[inline]
     pub fn bold(self, text: &str) -> String {
         self.apply(&[BOLD], text)
     }
 
+    #[inline]
     pub fn underline(self, text: &str) -> String {
         self.apply(&[UNDERLINE], text)
     }
 
     /// `chalk.bold.white`.
+    #[inline]
     pub fn bold_white(self, text: &str) -> String {
         self.apply(&[BOLD, WHITE], text)
     }
 
     /// `chalk.yellow.bold`.
+    #[inline]
     pub fn yellow_bold(self, text: &str) -> String {
         self.apply(&[YELLOW, BOLD], text)
     }
@@ -178,6 +192,7 @@ fn forced(args: &[OsString]) -> Option<u32> {
 }
 
 /// `parseInt(text, 10)` for a level: leading digits, `NaN` (here `None`) otherwise.
+#[inline]
 fn parse_int(text: &str) -> Option<u32> {
     let trimmed = text.trim_start();
     let digit_len = trimmed
@@ -227,6 +242,7 @@ fn terminal_level(min: u32) -> u32 {
     if var("COLORTERM").is_some() { 1 } else { min }
 }
 
+#[inline]
 fn var(name: &str) -> Option<String> {
     env::var(name).ok()
 }

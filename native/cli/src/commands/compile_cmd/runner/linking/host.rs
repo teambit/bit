@@ -4,6 +4,7 @@ use bit_install::host::{AfterInstall, AfterInstallResult, Host};
 use serde_json::{Value, json};
 use std::io;
 pub(super) struct Builtin;
+#[inline]
 fn unsupported() -> io::Error {
     io::Error::other("unexpected compiler environment callback")
 }
@@ -38,6 +39,7 @@ impl Host for Builtin {
     }
 }
 
+#[inline]
 fn is_supported_builtin_env(env_id: &str) -> bool {
     let trimmed = env_id.trim();
     !trimmed.is_empty()

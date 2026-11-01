@@ -34,7 +34,8 @@ fn combine_versioned_policies(
     mut bitmap: ManualPolicy,
     mut saved: ManualPolicy,
 ) -> Result<ManualPolicy, Failure> {
-    let mut names = HashMap::new();
+    let mut names =
+        HashMap::with_capacity(bitmap.runtime.len() + bitmap.dev.len() + bitmap.peer.len());
     for (lifecycle, rows) in
         [("runtime", &bitmap.runtime), ("dev", &bitmap.dev), ("peer", &bitmap.peer)]
     {
@@ -54,16 +55,17 @@ fn merge_special(
     saved: ManualPolicy,
     regular: &HashMap<String, (&'static str, String)>,
 ) -> Result<(), Failure> {
-    let mut plus = HashMap::new();
-    for (lifecycle, rows) in [
+    let mut plus: HashMap<String, &'static str> = [
         ("runtime", &bitmap.unresolved_runtime_plus),
         ("dev", &bitmap.unresolved_dev_plus),
         ("peer", &bitmap.unresolved_peer_plus),
-    ] {
-        for name in rows {
-            plus.insert(name.clone(), lifecycle);
-        }
-    }
+    ]
+    .into_iter()
+    .flat_map(|(lifecycle, rows)| {
+        rows.iter()
+            .map(move |name| (name.clone(), lifecycle))
+    })
+    .collect();
     if plus
         .keys()
         .any(|name| regular.contains_key(name))
@@ -143,6 +145,7 @@ fn merge_ignored(
     Ok(())
 }
 
+#[inline]
 fn overlapping_policy() -> Failure {
     Failure::Declined("overlapping versioned deps debug policies delegated".into())
 }
@@ -268,6 +271,7 @@ fn plain_model(model: &ModelData, env_id: &str, manual: Option<&ManualPolicy>) -
     resolver.next().is_none() && plain_dependencies(deps, env_id, manual)
 }
 
+#[inline]
 fn allowed_config(extension: &Value, env_id: &str, manual: Option<&ManualPolicy>) -> bool {
     let config = &extension["config"];
     if crate::commands::update_cmd::matches_aspect(

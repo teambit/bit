@@ -50,6 +50,7 @@ pub(super) enum Subcommand {
 }
 
 impl Subcommand {
+    #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {
             Self::Bare => "ci",
@@ -60,6 +61,7 @@ impl Subcommand {
         }
     }
 
+    #[inline]
     const fn init_banner(&self) -> &'static str {
         match self {
             Self::Bare => "",
@@ -123,6 +125,7 @@ fn run_bare(cwd: &Path, root_opt: Option<&Path>, args: &[OsString]) -> io::Resul
     }
 }
 
+#[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")
         .is_some_and(|val| {
@@ -266,8 +269,9 @@ pub(super) fn validate_sync_options(opts: &SyncOptions) -> Result<(), String> {
     Ok(())
 }
 
+#[inline]
 fn collect_sync_selectors(opts: &SyncOptions) -> Vec<String> {
-    let mut selectors = Vec::new();
+    let mut selectors = Vec::with_capacity(3);
     if let Some(lane) = &opts.lane {
         selectors.push(format!(r#"a lane argument ("{lane}")"#));
     }
@@ -280,6 +284,7 @@ fn collect_sync_selectors(opts: &SyncOptions) -> Vec<String> {
     selectors
 }
 
+#[inline]
 fn sync_winner_label(opts: &SyncOptions) -> String {
     if opts.main {
         "--main".into()
@@ -318,6 +323,7 @@ pub(super) fn run_git(root: &Path, git_args: &[&str]) -> io::Result<String> {
     }
 }
 
+#[inline]
 pub(super) fn git_current_branch(root: &Path) -> Option<String> {
     run_git(root, &["symbolic-ref", "-q", "--short", "HEAD"])
         .or_else(|_| run_git(root, &["rev-parse", "--abbrev-ref", "HEAD"]))
@@ -325,6 +331,7 @@ pub(super) fn git_current_branch(root: &Path) -> Option<String> {
         .filter(|branch| !branch.is_empty())
 }
 
+#[inline]
 pub(super) fn git_last_commit_message(root: &Path) -> Option<String> {
     run_git(root, &["log", "-1", "--pretty=%B"])
         .ok()

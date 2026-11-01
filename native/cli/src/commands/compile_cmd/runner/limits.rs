@@ -18,6 +18,7 @@ pub(super) fn batch_size(root: &Path) -> io::Result<usize> {
     parse_concurrency_limit(&value)
 }
 
+#[inline]
 fn parse_concurrency_limit(value: &str) -> io::Result<usize> {
     let trimmed = value.trim();
     let number = if trimmed.is_empty() {
@@ -33,6 +34,7 @@ fn parse_concurrency_limit(value: &str) -> io::Result<usize> {
     }
     Ok(number)
 }
+#[inline]
 fn read(path: &Path) -> io::Result<Value> {
     match fs::read(path) {
         Ok(bytes) => bit_object_import::parse_jsonc(&bytes),
@@ -51,11 +53,11 @@ pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
             return Err(io::Error::other("compiler empty component identity"));
         }
         for file in &row.files {
-            if file.path.as_os_str().is_empty()
-                || file.path
-                    .to_string_lossy()
-                    .trim()
-                    .is_empty()
+            if file.path
+                .as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
                 || file.path
                     .components()
                     .any(|part| matches!(part, std::path::Component::ParentDir))

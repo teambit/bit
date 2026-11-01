@@ -43,6 +43,7 @@ impl WorkspaceDepsContext {
         }
     }
 
+    #[inline]
     fn apply_model_policy_item(
         &self,
         item: &Value,
@@ -143,6 +144,7 @@ impl WorkspaceDepsContext {
     }
 }
 
+#[inline]
 fn lifecycle_from_str(raw: Option<&str>) -> &'static str {
     match raw.map(str::trim) {
         Some("dev") => "dev",
@@ -189,6 +191,7 @@ fn apply_model_dep_item(item: &Value, identity: &Identity<'_>, deps: &mut Vec<Re
     );
 }
 
+#[inline]
 fn model_item_pkg_and_ver<'a>(
     item: &'a Value,
     obj_id: Option<&'a str>,

@@ -41,6 +41,7 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
     Ok(ids)
 }
 
+#[inline]
 fn match_wildcard_inventory_id(id: String, scope: &str, name: &str) -> Option<String> {
     let (found_scope, found_name) = id.trim().split_once('/')?;
     let found_scope = found_scope.trim();
@@ -58,6 +59,7 @@ fn match_wildcard_inventory_id(id: String, scope: &str, name: &str) -> Option<St
     }
 }
 
+#[inline]
 fn literal(pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     let (scope, name) =
@@ -104,6 +106,7 @@ fn inventory(
     }
 }
 
+#[inline]
 fn wildcard(pattern: &str, text: &str) -> bool {
     let (mut pattern_index, mut text_index, mut star, mut retry) = (0, 0, None, 0);
     let pattern = pattern.as_bytes();
@@ -129,6 +132,7 @@ fn wildcard(pattern: &str, text: &str) -> bool {
         .all(|byte| *byte == b'*')
 }
 
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }

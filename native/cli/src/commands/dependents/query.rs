@@ -34,11 +34,7 @@ pub(super) fn run_dependents_query(
     let scope_dependents = build_scope_graph(&scope_dir).dependents_of(&target_id);
     let workspace_dependents = build_workspace_graph(&scope_dir, &ws).dependents_of(&target_id);
     if options.json {
-        let payload = json!({
-            "scopeDependents": scope_dependents,
-            "workspaceDependents": workspace_dependents,
-            "id": target_id,
-        });
+        let payload = json!({"scopeDependents": scope_dependents, "workspaceDependents": workspace_dependents, "id": target_id});
         return serde_json::to_string_pretty(&payload)
             .map_err(|err| Failure::Declined(err.to_string()));
     }
@@ -141,12 +137,14 @@ fn resolve_missing_scope_target(
     Err(Failure::Declined("component not found in workspace or scope".into()))
 }
 
+#[inline]
 fn latest_version_label(comp_val: &Value) -> Option<String> {
     let head = comp_val["head"].as_str()?;
     crate::commands::show_cmd::remote_show::find_tag_for_hash(comp_val, head)
         .or_else(|| Some(head.to_owned()))
 }
 
+#[inline]
 fn build_scope_graph(scope_dir: &Path) -> DepGraph {
     let mut graph = DepGraph::default();
     for row in active_index_rows(scope_dir) {
@@ -264,6 +262,7 @@ fn load_workspace_comp_version(scope_dir: &Path, comp: &WorkspaceComponent) -> O
     read_comp_version(scope_dir, &comp_val, ver)
 }
 
+#[inline]
 fn read_comp_version(scope_dir: &Path, comp_val: &Value, ver: &str) -> Option<Value> {
     let ver_hash = crate::commands::graph_cmd::builder::resolve_ver_hash(comp_val, ver)?;
     let (v_kind, ver_val) = bit_object_import::read_scope_object(scope_dir, &ver_hash).ok()??;
@@ -290,6 +289,7 @@ fn add_scanned_ws_edges(
     }
 }
 
+#[inline]
 fn matches_pkg_spec(raw_spec: &str, pkg: &str) -> bool {
     !pkg.is_empty()
         && raw_spec
@@ -315,6 +315,7 @@ fn match_ws_target(ws: &Workspace, self_name: &str, raw_spec: &str) -> Option<St
     None
 }
 
+#[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()
         .map(str::trim)

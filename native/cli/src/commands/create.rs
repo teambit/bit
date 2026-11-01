@@ -59,6 +59,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("create requires generator aspect runtime".into()))
 }
 
+#[inline]
 fn parse_scope_from_component_id_str(raw: &str) -> (Option<&str>, &str) {
     let Some((potential_scope, rest)) = raw.split_once('/') else {
         return (None, raw);
@@ -105,6 +106,7 @@ pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), St
     Ok(())
 }
 
+#[inline]
 fn pascal_case(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
     let mut capitalize_next = true;
@@ -177,11 +179,13 @@ fn apply_create_token<'a>(
     Some(())
 }
 
+#[inline]
 fn take_value(val: &str) -> Option<String> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
 }
 
+#[inline]
 fn has_inline_create_value(token: &str) -> bool {
     ["--aspect=", "-a=", "--template=", "-t=", "--path=", "-p=", "--env=", "-e="]
         .iter()

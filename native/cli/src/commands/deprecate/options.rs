@@ -18,6 +18,7 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     Some(Options { pattern: pattern?, replacement, range })
 }
 
+#[inline]
 fn consume_trailing_pattern<'a>(rest: &[&'a str], pattern: &mut Option<&'a str>) -> Option<()> {
     for &arg in rest {
         pattern
@@ -60,6 +61,7 @@ fn apply_arg<'a>(
     }
 }
 
+#[inline]
 fn set_non_conflicting<'a>(slot: &mut Option<&'a str>, val: &'a str) -> Option<()> {
     if slot.is_some_and(|prev| prev != val) {
         return None;
@@ -68,6 +70,7 @@ fn set_non_conflicting<'a>(slot: &mut Option<&'a str>, val: &'a str) -> Option<(
     Some(())
 }
 
+#[inline]
 fn apply_inline_flag<'a>(
     arg: &'a str,
     replacement: &mut Option<&'a str>,
@@ -82,6 +85,7 @@ fn apply_inline_flag<'a>(
     false
 }
 
+#[inline]
 fn valid_val(val: &str) -> Option<&str> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(val)

@@ -40,6 +40,7 @@ impl Options {
         options.valid().then_some(options)
     }
 
+    #[inline]
     fn consume_trailing_values<'a>(
         &mut self,
         iterator: impl Iterator<Item = &'a str>,
@@ -55,6 +56,7 @@ impl Options {
     }
 }
 
+#[inline]
 fn is_color_flag(arg: &str) -> bool {
     matches!(
         arg,
@@ -113,6 +115,7 @@ impl Options {
         }
     }
 
+    #[inline]
     fn set_flag(&mut self, arg: &str) -> Option<()> {
         match arg {
             "-l" | "-l=true" | "--local" | "--local=true" | "-lt" | "-tl" => {
@@ -148,6 +151,7 @@ impl Options {
         Some(())
     }
 
+    #[inline]
     fn valid(&self) -> bool {
         if matches!(self.command.as_str(), "get" | "set" | "del")
             && self.values

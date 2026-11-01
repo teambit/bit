@@ -79,6 +79,7 @@ fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failu
     Ok(PackageReport { package_name: package, pnpm_dirs })
 }
 
+#[inline]
 pub(super) fn entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
     let dirs = physical_entries(virtual_store)?;
     if !dirs.is_empty() {
@@ -119,6 +120,7 @@ fn lockfile_entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
         .unwrap_or_default())
 }
 
+#[inline]
 fn parse_copy(suffix: &str) -> PackageCopy {
     let (version, peers) = suffix
         .split_once('_')
@@ -177,6 +179,7 @@ fn render(report: &PackageReport<'_>, chalk: Chalk) -> String {
     lines.join("\n")
 }
 
+#[inline]
 pub(super) fn table(rows: &[Vec<String>]) -> String {
     let col_count = rows
         .iter()
@@ -207,6 +210,7 @@ pub(super) fn table(rows: &[Vec<String>]) -> String {
     lines.join("\n")
 }
 
+#[inline]
 pub(super) fn locale_number(value: usize) -> String {
     let digits = value.to_string();
     let mut result = String::with_capacity(digits.len() + digits.len() / 3);

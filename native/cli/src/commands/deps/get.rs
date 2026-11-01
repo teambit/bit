@@ -45,23 +45,16 @@ pub(super) fn run_bare_scope(
     else {
         return Ok(Outcome::Declined("deps get: bare scope component not found".into()));
     };
-    let Ok(rows) = collect_scope_rows_from_dir(
-        &scope_root,
-        &scope.path,
-        &id_with_ver,
-        if tree { 64 } else { 8 },
-    ) else {
+    let max_depth = if tree { 64 } else { 8 };
+    let Ok(rows) = collect_scope_rows_from_dir(&scope_root, &scope.path, &id_with_ver, max_depth)
+    else {
         return Ok(Outcome::Declined("deps get: bare scope dependency model unavailable".into()));
     };
     let Ok(data) = render_get_result(&id_with_ver, &id_without_ver, rows, tree, chalk) else {
         return Ok(Outcome::Declined("deps get: bare scope render declined".into()));
     };
-    workspace_command::execute_with_scope(
-        &scope.path,
-        args,
-        "get",
-        &Report { data, code: 0, details: None },
-    )
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with_scope(&scope.path, args, "get", &report)
 }
 
 pub(super) fn prepare_get(
@@ -228,6 +221,7 @@ fn render_get_result(
     Ok(render_dep_info_table(id_with_ver, rows, chalk))
 }
 
+#[inline]
 fn assemble_dep_tree(id: &str, rows: &[DepInfoRow]) -> TreeNode {
     let children = rows
         .iter()
@@ -264,6 +258,7 @@ fn render_dep_info_table(root_id: &str, rows: Vec<DepInfoRow>, chalk: Chalk) -> 
     format!("\n{}\n{rendered}", chalk.bold("Dependencies Details"))
 }
 
+#[inline]
 fn display_id(id: &str) -> String {
     let id = id.trim();
     id.strip_suffix("@0.0.1-new")
@@ -304,6 +299,7 @@ fn collect_dep_info_rows(
     rows
 }
 
+#[inline]
 fn push_dep_row(
     rows: &mut Vec<DepInfoRow>,
     visited: &mut HashSet<String>,
@@ -317,6 +313,7 @@ fn push_dep_row(
     }
 }
 
+#[inline]
 fn lifecycle_to_dep_type(lifecycle: &str) -> &'static str {
     match lifecycle {
         "dev" => "dev",
@@ -325,6 +322,7 @@ fn lifecycle_to_dep_type(lifecycle: &str) -> &'static str {
     }
 }
 
+#[inline]
 fn child_component_deps(
     root: &Path,
     ctx: &WorkspaceDepsContext,

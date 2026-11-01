@@ -138,6 +138,7 @@ fn clear_caches(cwd: &Path, workspace_root: Option<&Path>) -> Vec<&'static str> 
     Vec::new()
 }
 
+#[inline]
 fn format_report(cleared: &[&str], chalk: Chalk) -> String {
     if cleared.is_empty() {
         return String::new();
@@ -152,6 +153,7 @@ fn format_report(cleared: &[&str], chalk: Chalk) -> String {
     format!("{summary}\n{items}")
 }
 
+#[inline]
 fn format_remote_report(remote: &str, result: &Value, chalk: Chalk) -> String {
     let formatter = Formatter::new(chalk);
     if is_truthy(result) {
@@ -161,6 +163,7 @@ fn format_remote_report(remote: &str, result: &Value, chalk: Chalk) -> String {
     }
 }
 
+#[inline]
 fn is_truthy(value: &Value) -> bool {
     match value {
         Value::Null | Value::Bool(false) => false,

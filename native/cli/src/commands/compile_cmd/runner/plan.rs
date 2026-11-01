@@ -94,6 +94,7 @@ fn validate_order(root: &Path, compiled: &[Compiled], options: &Options) -> io::
     Ok(())
 }
 
+#[inline]
 fn validated_batch_size(root: &Path) -> io::Result<usize> {
     let batch_size = limits::batch_size(root)?;
     if batch_size == 0 {
@@ -102,6 +103,7 @@ fn validated_batch_size(root: &Path) -> io::Result<usize> {
     Ok(batch_size)
 }
 
+#[inline]
 fn selection(options: &Options) -> Selection {
     let mut exact = Vec::with_capacity(options.components.len());
     for component in options.components

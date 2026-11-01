@@ -8,6 +8,7 @@ pub(super) struct Prepared {
     pub policy: Option<policy::Policy>,
 }
 impl Prepared {
+    #[inline]
     pub(super) fn prepare(
         root: &Path,
         options: &Options<'_>,
@@ -43,6 +44,7 @@ impl Prepared {
         let policy = prepare_policy(root, &plan);
         Ok(Self { plan, policy })
     }
+    #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         if let Some(policy) = &self.policy {
             policy.validate(root)?;
@@ -50,6 +52,7 @@ impl Prepared {
         Ok(())
     }
 }
+#[inline]
 fn prepare_policy(root: &Path, plan: &Batch) -> Option<policy::Policy> {
     let pins = plan
         .plans()
@@ -94,6 +97,7 @@ fn validate(bitmap: &serde_json::Value, ids: &[String], options: &Options<'_>) -
     }
     Ok(())
 }
+#[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)
 }
@@ -124,6 +128,7 @@ fn dependency_facts(rows: &[serde_json::Value]) -> io::Result<Vec<DependencyComp
         .collect()
 }
 
+#[inline]
 pub(super) fn validate_options(root: &Path, options: &Options<'_>) -> io::Result<()> {
     validate(&selection::bitmap(root)?, &[], options)
 }
