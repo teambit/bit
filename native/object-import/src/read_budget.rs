@@ -1,4 +1,4 @@
-//! Atomic shared byte-budget reservation ([`Budget`], [`Budget::reserve`], [`Budget::read`], [`invalid`]) for bounded parallel regular-file reads.
+//! Atomic shared byte-budget reservation ([`Budget`], [`Budget::new`], [`Budget::reserve`], [`Budget::read`], [`invalid`]) for bounded parallel regular-file reads.
 
 use std::{
     fs::File,

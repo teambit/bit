@@ -14,7 +14,7 @@ pub(super) struct Version {
     unrelated: Option<String>,
     squashed: Option<Vec<String>>,
 }
-/// Finds the first intersection indices (`incomingIndex`, `existingIndex`) between `existing` and `incoming`.
+/// Finds the first intersection indices (`incomingIndex`, `existingIndex`) between `existing` and [`Version`] `incoming`.
 pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Value> {
     references_valid(existing)?;
     validate_incoming(incoming)?;

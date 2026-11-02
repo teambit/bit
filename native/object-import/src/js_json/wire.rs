@@ -1,4 +1,4 @@
-//! Tagged ([`TaggedValue`]) and compact ([`ValueVisitor`], [`Utf16`], [`TextVisitor`]) `serde` deserialization for [`Value`].
+//! Tagged ([`TaggedValue`]) and compact ([`ValueVisitor`], [`Utf16`], [`TextVisitor`]) `serde` [`Deserialize`] implementation for [`Value`].
 
 #[cfg(test)]
 #[path = "wire/tests.rs"]

@@ -1,4 +1,4 @@
-//! Per-component merge strategy, head-update, and squash decision evaluation ([`apply`], `mergeApplyDecision`).
+//! Per-component merge strategy, head-update, and squash decision evaluation ([`apply`], [`bucket`], [`boolean`], `mergeApplyDecision`).
 
 use super::invalid;
 use serde_json::{Value, json};

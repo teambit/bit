@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-/// `isPlusVersion`: returns whether `version` is an exact, caret, or tilde plus placeholder (`+`, `+^`, `+~`).
+/// `isPlusVersion`: returns whether `version` is an exact, caret, or tilde plus placeholder (`+`, `+^`, `+~`) handled by [`resolve`].
 #[inline]
 #[must_use]
 pub fn is_plus(version: &str) -> bool {

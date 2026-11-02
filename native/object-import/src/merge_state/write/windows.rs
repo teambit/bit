@@ -1,4 +1,4 @@
-//! Keep an original handle open ([`open`], [`same_file_identity`], [`validate`], [`OPEN_REPARSE_POINT`]) while checking Windows file identity before truncation.
+//! Keep an original handle open ([`open`], [`same_file_identity`], [`validate`], [`OPEN_REPARSE_POINT`], [`REPARSE_POINT`]) while checking Windows file identity before truncation.
 
 use super::invalid;
 use std::{

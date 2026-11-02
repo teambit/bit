@@ -1,4 +1,4 @@
-//! Session-scoped merge, checkout, snapshot, inspection, and transfer [`Request`] dispatcher ([`State`], [`write`], [`MAX_JSON`], [`protocol`]) over framed I/O.
+//! Session-scoped merge, checkout, snapshot, inspection, and transfer [`Request`] dispatcher ([`State`], [`write`], [`MAX_JSON`], [`protocol`], [`execution`]) over framed I/O.
 
 pub(crate) mod write;
 

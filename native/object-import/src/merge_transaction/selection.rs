@@ -1,4 +1,4 @@
-//! Merge status outcome partitioning ([`results`]: `failed`, `remove`, `succeeded`, `visible`).
+//! Merge status outcome partitioning ([`results`], [`visible`], [`identity`]: `failed`, `remove`, `succeeded`, `visible`).
 
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};

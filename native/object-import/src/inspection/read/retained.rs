@@ -1,4 +1,4 @@
-//! Retained workspace snapshot [`Observation`] lookup ([`load`], [`load_shared`], [`observed`]) and shared [`Budget`] accounting.
+//! Retained workspace snapshot [`Observation`] lookup ([`load`], [`load_shared`], [`observed`], [`verified_hash`]) and shared [`Budget`] accounting.
 
 use super::{hash, invalid, raw, wire};
 use crate::{

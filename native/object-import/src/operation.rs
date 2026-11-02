@@ -1,4 +1,4 @@
-//! Bounded import merge plans ([`Operation`], [`HistoryPlan`], [`ComponentPlan`]) over caller-owned canonical `Component`, `Version`, and `VersionHistory` values.
+//! Bounded import merge plans ([`Operation`], [`HistoryPlan`], [`ComponentPlan`], [`IndexPlan`], [`plan`]) over caller-owned canonical `Component`, `Version`, and `VersionHistory` values.
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{

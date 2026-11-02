@@ -40,7 +40,7 @@ struct Receipt {
     phase: String,
     next_count: Option<usize>,
 }
-/// Deserialized `historyResetFork` request payload splitting a `components` phase into `count` child tokens.
+/// Deserialized `historyResetFork` request payload splitting a `components` [`Record`] phase into `count` child tokens.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Fork {

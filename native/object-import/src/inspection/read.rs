@@ -1,4 +1,4 @@
-//! Bounded workspace file reading ([`File`], [`Budget`]), hash computation, and optional snapshot spooling.
+//! Bounded workspace file reading ([`File`], [`Budget`], [`capture`], [`validate_snapshot_directory`]), hash computation, and optional snapshot spooling.
 
 mod parallel;
 mod retained;

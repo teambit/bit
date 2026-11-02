@@ -3,7 +3,7 @@
 use super::writer::Writer;
 use std::io;
 
-/// Writes a JSON-escaped string literal from `UTF-16` code `units` into `writer`.
+/// Writes a JSON-escaped string literal from `UTF-16` code `units` into [`Writer`] `writer`.
 pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
     if units.is_empty() {
         return writer.bytes(b"\"\"");

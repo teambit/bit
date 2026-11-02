@@ -1,4 +1,4 @@
-//! Publish a local, unexported lane rename or remote-scope change ([`Change`], [`Plan`], [`ReadmePlan`], [`ReadmeRemoval`]) across [`Store`] and workspace files.
+//! Publish a local, unexported lane rename or remote-scope change ([`Change`], [`Plan`], [`ReadmePlan`], [`ReadmeRemoval`], [`Original`], [`Objects`], [`Documents`]) across [`Store`] and workspace files.
 pub use readme::{ReadmePlan, ReadmeRemoval};
 
 mod readme;

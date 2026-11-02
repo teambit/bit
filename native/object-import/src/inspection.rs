@@ -66,7 +66,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         _ => Err(invalid("unsupported inspection operation")),
     }
 }
-/// Captures workspace file snapshots for an `inspectionBegin` request and registers a session token in `state`.
+/// Captures workspace file snapshots for an `inspectionBegin` request and registers a session token in [`State`].
 pub(crate) fn begin(
     input: &Value,
     state: &mut State,

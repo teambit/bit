@@ -4,7 +4,7 @@ use super::{MAX_BYTES, MAX_FILES, files, invalid, read, wire};
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Checks whether any workspace file at `paths` under `root` differs from `load_models` (up to [`MAX_FILES`] and [`MAX_BYTES`]).
+/// Checks whether any workspace file at `paths` under `root` [`Path`] differs from `load_models` (up to [`MAX_FILES`] and [`MAX_BYTES`]).
 /// A cold command owns these reads outright: no public model or Source aliases
 /// exist yet, so only the comparison result needs to cross the runtime boundary.
 #[inline]

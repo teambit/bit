@@ -63,7 +63,7 @@ fn source_code(mut left: Js, mut right: Js) -> io::Result<Value> {
     )
 }
 
-/// Remaps semantic extension `config_assignments` indices back to their original pre-sort positions using `mutations`.
+/// Remaps semantic extension `config_assignments` [`Js`] indices back to their original pre-sort positions using `mutations`.
 fn assignments(rows: Vec<(usize, Js)>, mutations: &Value) -> io::Result<Value> {
     let order = mutations["extensionOrder"]
         .as_array()

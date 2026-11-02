@@ -83,7 +83,7 @@ fn validate_file(file: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Finds the `teambit.pipelines/builder` aspect entry in `Version` `extensions` `entries`, if present.
+/// Finds the `teambit.pipelines/builder` aspect entry in `Version` `extensions` [`Value`] `entries`, if present.
 #[inline]
 fn find_builder_extension(entries: &[Value]) -> Option<&Value> {
     entries

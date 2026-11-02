@@ -1,4 +1,4 @@
-//! Crash-recovery `.bitmap` ([`bitmap`]), file-copy ([`copy_file`], [`validate_copy`]), and component-reset ([`reset`], [`Operation`], [`State`]) planning primitives.
+//! Crash-recovery `.bitmap` ([`bitmap`]), file-copy ([`copy_file`], [`validate_copy`]), and component-reset ([`reset`], [`Operation`], [`State`], [`path`]) planning primitives.
 
 pub(crate) mod jsonc;
 

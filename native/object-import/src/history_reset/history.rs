@@ -53,7 +53,7 @@ fn invalid_key(key: &[u16]) -> bool {
     }
     all_whitespace
 }
-/// Computes the removed and retained entry indices when pruning `keys` from a `LaneHistory` object.
+/// Computes the removed and retained entry indices when pruning `keys` from a `LaneHistory` [`Request`] object.
 pub(super) fn prune(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     bound(request.keys.len())?;

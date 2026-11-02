@@ -60,7 +60,7 @@ fn aggregate_record(groups: &mut Groups, record: &Value, field: &str) -> io::Res
     Ok(())
 }
 
-/// Aggregates non-forced `(name, version)` dependency entries for `component` into `groups`.
+/// Aggregates non-forced `(name, version)` dependency `entries` for `component` into [`Groups`].
 fn aggregate_entries(groups: &mut Groups, entries: &[Value], component: &str) -> io::Result<()> {
     for entry in entries {
         if entry["force"] == true {

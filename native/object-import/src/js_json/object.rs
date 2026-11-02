@@ -1,4 +1,4 @@
-//! `ECMAScript` property ordering ([`entries`], [`validate_key`], [`index`]: integer indices first, then insertion order) for [`Value`] objects.
+//! `ECMAScript` property ordering ([`entries`], [`validate_key`], [`index`], [`invalid`]: integer indices first, then insertion order) for [`Value`] objects.
 
 use super::{Value, invalid};
 use std::{collections::HashSet, io};

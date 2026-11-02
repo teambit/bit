@@ -61,7 +61,7 @@ pub(super) fn text_slice(value: &Js) -> io::Result<&[u16]> {
         Err(invalid("inspection expected string"))
     }
 }
-/// Borrows the element slice of `Js::Array` `value`.
+/// Borrows the element slice of [`Js::Array`] `value`.
 #[inline]
 pub(super) fn array(value: &Js) -> io::Result<&[Js]> {
     if let Js::Array(rows) = value { Ok(rows) } else { Err(invalid("inspection expected array")) }

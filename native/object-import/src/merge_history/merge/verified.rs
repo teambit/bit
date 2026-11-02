@@ -1,4 +1,4 @@
-//! Pre-verified three-way file merge execution ([`verified`], [`validate_models`], [`normalize_path`], [`Prepared`], [`Request`]) using retained `Source` and workspace bytes.
+//! Pre-verified three-way file merge execution ([`verified`], [`validate_models`], [`normalize_path`], [`Prepared`], [`Request`], [`execute`]) using retained `Source` and workspace bytes.
 
 use super::{MAX_RAW, Prepared, Request, count, execute, hash, invalid, path, text};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Resolve parent lane or `main` origin state ([`Origin`]) for `lane create` and `lane merge-move`.
+//! Resolve parent lane or `main` origin state ([`Origin`], [`Documents`]) for `lane create` and `lane merge-move`.
 
 use super::{Documents, invalid, valid_hash};
 use crate::workspace::engine::command::outbound;

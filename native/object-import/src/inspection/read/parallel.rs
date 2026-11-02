@@ -1,4 +1,4 @@
-//! Parallel workspace file capture ([`capture`], [`smaller`]) with serial [`capture_file`] fallback on shared [`Budget`] contention.
+//! Parallel workspace file capture ([`capture`], [`smaller`], [`File`]) with serial [`capture_file`] fallback on shared [`Budget`] contention.
 
 use super::{File, capture_file, capture_shared, wire};
 use crate::read_budget::Budget;

@@ -1,4 +1,4 @@
-//! Bounded `git merge-file` subprocess execution ([`git`], [`workspace_merge`], [`MergeBytes`]) for three-way text file merges.
+//! Bounded `git merge-file` subprocess execution ([`git`], [`execute`], [`workspace_merge`], [`MergeBytes`], [`Process`]) for three-way text file merges.
 
 #[cfg(test)]
 mod tests;

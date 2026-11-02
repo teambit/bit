@@ -1,4 +1,4 @@
-//! Bounded byte-buffer writer ([`Writer`]) for compact and pretty-printed [`Value`] nodes.
+//! Bounded byte-buffer writer ([`Writer`], [`MAX_BYTES`], [`MAX_NODES`]) for compact and pretty-printed [`Value`] nodes.
 
 use std::io;
 

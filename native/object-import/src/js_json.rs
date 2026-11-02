@@ -1,4 +1,4 @@
-//! Accessor-free `JavaScript` data representation ([`Value`]) and `JSON.stringify` formatting.
+//! Accessor-free `JavaScript` data representation ([`Value`], [`stringify`], [`stringify_indented`]) and `JSON.stringify` formatting.
 
 #[path = "js_json/object.rs"]
 mod object;

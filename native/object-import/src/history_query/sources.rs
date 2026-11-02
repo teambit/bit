@@ -64,7 +64,7 @@ pub(super) struct Sources<'a> {
     descriptors: Vec<Value>,
     loads: Vec<usize>,
 }
-/// Per-query cached `Source` body entry with its descriptor `index` and `fresh` load flag.
+/// Per-query cached `Source` body entry with its descriptor `index` and `fresh` load flag in [`Sources`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Stored {
     body: Vec<u8>,

@@ -1,4 +1,4 @@
-//! Safe regular-file truncation, write, and metadata restoration ([`commit`], [`commit_metadata`]) for merge state files.
+//! Safe regular-file truncation, write, and metadata restoration ([`commit`], [`commit_metadata`], [`validate_existing`], [`validate_path`]) for merge state files.
 
 #[cfg(windows)]
 mod windows;

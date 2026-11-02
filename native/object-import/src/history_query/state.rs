@@ -33,7 +33,7 @@ impl State {
         let directory = directory(&input)?;
         self.insert(bfs::begin(input)?, directory)
     }
-    /// Executes a `historyQueryPopulateBegin` `VersionHistory` population and registers the plan under a new token.
+    /// Executes a `historyQueryPopulateBegin` `VersionHistory` population and registers the [`Plan`] under a new token.
     pub(super) fn populate_begin(&mut self, input: Value) -> io::Result<Value> {
         let directory = directory(&input)?;
         self.insert(populate::begin(input)?, directory)
