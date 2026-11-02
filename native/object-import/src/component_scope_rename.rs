@@ -20,6 +20,7 @@ pub struct Options {
     pub deprecate: bool,
     pub skip_install: bool,
 }
+/// Retained scope-rename component selection and `workspace.jsonc` `defaultScope` preimage.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Selection {
     root: PathBuf,

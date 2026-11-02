@@ -30,6 +30,7 @@ pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
     Ok(())
 }
 
+/// Return `true` when a loaded component receipt `row` matches `identity` without version.
 #[inline]
 fn row_matches_identity(row: &Value, identity: &str) -> bool {
     row["identity"]

@@ -24,6 +24,7 @@ pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
     };
     Ok(Item { id: id.into(), key, action, files: vec![], configuration: None })
 }
+/// Classify a `.bitmap`-tracked component `id` and stage scope source files when `WriteFromScope` applies.
 fn tracked(
     batch: &mut Batch,
     id: &str,

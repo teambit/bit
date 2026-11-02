@@ -19,6 +19,7 @@ pub(crate) struct Conflict {
     path: PathBuf,
     contents: String,
 }
+/// RAII temporary directory used to stage `base` and `other` inputs for `git merge-file`.
 #[derive(Debug, PartialEq, Eq)]
 struct Directory(PathBuf);
 impl Directory {

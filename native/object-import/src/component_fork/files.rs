@@ -20,6 +20,7 @@ pub(super) struct Copy {
     pub destination: PathBuf,
     pub bytes: Vec<u8>,
 }
+/// Validate source files, apply identity refactoring when requested, and stage [`Copy`] entries.
 pub(super) fn prepare(
     root: &Path,
     options: &Options,

@@ -41,6 +41,7 @@ pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+/// Filter active `.bitmap` entries to component IDs matching the positive/negative glob `parts`.
 fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String>> {
     let mut result = Vec::new();
     for (key, row) in bitmap.as_object().ok_or_else(|| invalid("component bitmap"))? {

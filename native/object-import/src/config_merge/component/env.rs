@@ -15,6 +15,7 @@ pub(super) fn populate(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     Ok(())
 }
+/// Resolve the `teambit.envs/envs` aspect descriptor (`id`, `sourceIndex`, `version`) for `side`.
 fn one(engine: &mut Engine<'_>, side: &str) -> io::Result<Value> {
     let list = array(engine.input, side)?;
     let extension = list

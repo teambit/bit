@@ -43,6 +43,7 @@ pub(super) fn select(
     }
     Ok(selected)
 }
+/// Resolve a single `pattern` relative to `cwd` into candidate filesystem paths under `root`.
 fn candidates(
     root: &Path,
     cwd: &Path,

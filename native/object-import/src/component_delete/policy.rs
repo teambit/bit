@@ -16,6 +16,7 @@ pub struct DependencyComponent {
     pub dependencies: Vec<String>,
 }
 
+/// Deletion pinning decision for a lane component referenced by retained workspace dependents.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Decision {
     pub(super) pin: Option<Pin>,

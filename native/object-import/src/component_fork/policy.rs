@@ -43,6 +43,7 @@ pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
     }
     Ok(output)
 }
+/// Return `true` when `row` is `@teambit/legacy` or matches an entry in `excluded`.
 fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
     let Some(component) = row
         .get("componentId")

@@ -39,6 +39,7 @@ impl PreparedImport {
     }
 }
 
+/// Helper namespace for computing two-level loose object paths under `.bit/objects`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct LooseObject;
 impl LooseObject {

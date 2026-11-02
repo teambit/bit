@@ -29,6 +29,7 @@ pub(in crate::component_remove) fn publish(
     }
     Ok(())
 }
+/// Merge and serialize all `index.json` updates across `plans` against a single preimage per file.
 fn changes(plans: &[VersionedPlan]) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let mut grouped: Vec<(&Change, Value)> = Vec::new();
     for change in plans.iter().map(|plan| &plan.index) {

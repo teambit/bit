@@ -44,6 +44,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     }
     Ok(())
 }
+/// Apply `other` policy additions and `base`-to-`other` removals when `current` equals `base`.
 fn other_changed(state: &mut State<'_, '_>) -> io::Result<()> {
     for index in 0..state.policies[1].len() {
         let dep = state.policies[1][index].clone();

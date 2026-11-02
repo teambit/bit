@@ -25,6 +25,7 @@ pub struct VersionedPlan {
     history: Option<HistoryState>,
 }
 
+/// Retained `VersionHistory` object path and optional pre/post-write byte payloads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct HistoryState {
     path: PathBuf,

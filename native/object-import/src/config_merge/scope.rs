@@ -40,6 +40,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         .collect::<Vec<_>>();
     Ok(json!({"fields":output,"appendOrder":order}))
 }
+/// Validate all scope-policy field objects and their nested entries in `input`.
 fn fields(input: &[Value]) -> io::Result<()> {
     let mut names = Vec::with_capacity(input.len());
     for field in input {

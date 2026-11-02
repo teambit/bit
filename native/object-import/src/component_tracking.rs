@@ -1,4 +1,4 @@
-//! Retained component tracking plans ([`Plan`], [`Options`]) publishing `.bitmap` only after linking succeeds.
+//! Retained component tracking plans ([`Plan`], [`Options`], [`identity`], [`observe`]) publishing `.bitmap` only after linking succeeds.
 pub(crate) mod identity;
 pub(crate) mod observe;
 

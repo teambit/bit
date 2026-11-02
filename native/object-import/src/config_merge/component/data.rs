@@ -43,6 +43,7 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     Ok(())
 }
+/// Extract a trimmed non-empty string slice from `value`, or return an `invalid(message)` error.
 #[inline]
 fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<&'a str> {
     value

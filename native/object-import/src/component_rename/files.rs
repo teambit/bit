@@ -13,7 +13,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-
+/// Staged source-to-destination file write with permissions, preimage proof, and EOL policy.
 #[derive(Debug, Clone)]
 pub(super) struct Change {
     pub(super) source: PathBuf,

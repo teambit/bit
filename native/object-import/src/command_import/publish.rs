@@ -38,6 +38,7 @@ pub(super) fn reusing(
 ) -> io::Result<Object> {
     reusing_candidates(hash, kind, value, incoming)
 }
+/// Reuse the first candidate [`Object`] whose inflated bytes match `value`, or encode a new loose [`Object`].
 pub(super) fn reusing_candidates(
     hash: &str,
     kind: &str,

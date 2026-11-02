@@ -20,6 +20,7 @@ pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
         (scope == old).then(|| new.to_owned())
     }
 }
+/// Collect per-component rename [`crate::component_rename::Options`] for `.bitmap` entries matching `options.old`.
 pub(super) fn entries_with_default(
     bitmap: &Value,
     default_scope: &str,

@@ -18,6 +18,7 @@ pub(super) struct Identity {
     pub directory: String,
     pub main: String,
 }
+/// Resolve and validate the target [`Identity`], directory, and main file for a component fork.
 pub(super) fn prepare(
     root: &Path,
     options: &Options,

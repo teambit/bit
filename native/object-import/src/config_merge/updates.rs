@@ -13,6 +13,7 @@ struct Plan {
     warnings: Vec<String>,
     has_deps: bool,
 }
+/// Plan workspace dependency policy updates and conflicts from `workspaceEntries` and `componentDeps`.
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     let entries = array(input, "workspaceEntries")?;
     let dependencies = array(input, "componentDeps")?;

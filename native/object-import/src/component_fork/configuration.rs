@@ -23,6 +23,7 @@ pub(super) fn insert(
     rows.insert(key, row);
     Ok(())
 }
+/// Assemble the `.bitmap` aspect configuration object for a newly forked component.
 fn config(options: &Options, source: &Value) -> io::Result<Value> {
     let mut result = json!({});
     if source["skipConfig"] != true {

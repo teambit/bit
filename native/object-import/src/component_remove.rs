@@ -44,6 +44,7 @@ pub struct Plan {
     lane: Option<Lane>,
 }
 
+/// Pre- and post-removal `.bitmap` byte snapshots for a single-component removal [`Plan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,

@@ -18,6 +18,7 @@ pub(super) fn compare(left: &Value, right: &Value) -> io::Result<Ordering> {
     }
     prerelease(array(left, "prerelease")?, array(right, "prerelease")?)
 }
+/// Compare two semver prerelease identifier arrays according to `SemVer` 2.0.0 precedence rules.
 fn prerelease(left: &[Value], right: &[Value]) -> io::Result<Ordering> {
     if left.is_empty() != right.is_empty() {
         return Ok(if left.is_empty() { Ordering::Greater } else { Ordering::Less });

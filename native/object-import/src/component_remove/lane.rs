@@ -20,6 +20,7 @@ pub(crate) struct Lane {
     pub(super) value: Value,
 }
 
+/// Extract the `(scope, name)` pair from a lane or component `id` string or object [`Value`].
 #[inline]
 pub(crate) fn lane_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {

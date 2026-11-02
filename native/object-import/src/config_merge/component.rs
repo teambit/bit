@@ -36,6 +36,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         json!({"configRows":engine.rows,"logs":engine.logs,"dataAssignments":engine.assignments,"conflictedAspects":engine.conflicts,"state":{"handledExtIds":engine.handled,"envs":engine.envs}}),
     )
 }
+/// Merge all unhandled aspect configuration entries from the `current` side of `engine`.
 fn current(engine: &mut Engine<'_>) -> io::Result<()> {
     let entries = array(engine.input, "current")?;
     engine.handled.reserve(entries.len());

@@ -53,6 +53,7 @@ pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
         }
     }
 }
+/// Construct an [`io::ErrorKind::InvalidData`] error with `message`.
 #[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

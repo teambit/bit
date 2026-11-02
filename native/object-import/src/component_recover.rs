@@ -22,7 +22,7 @@ use std::{
 
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
-
+/// Retained single-component recovery plan restoring files and `.bitmap` state from local scope objects.
 pub struct Plan {
     root: PathBuf,
     bitmap: Bitmap,

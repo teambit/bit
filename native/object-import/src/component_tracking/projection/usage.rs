@@ -45,6 +45,7 @@ pub(super) fn filter(
     Ok(())
 }
 
+/// Reject adding files outside an existing component's `rootDir` unless `candidate.directory` encloses `rootDir`.
 fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<()> {
     if let Some(root) = existing
         .and_then(|row| row["rootDir"].as_str())

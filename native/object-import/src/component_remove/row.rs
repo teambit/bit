@@ -45,6 +45,7 @@ pub(super) fn supported_row<'a>(
     Ok((name, scope))
 }
 
+/// Return `true` when `.bitmap` entry `(key, row)` has a version matching `kind`'s requirement.
 #[inline]
 fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     let version = row["version"]

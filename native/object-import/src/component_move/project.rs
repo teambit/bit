@@ -53,6 +53,7 @@ pub(super) fn apply(
     }
     Ok(changes)
 }
+/// Normalize a `.bitmap` row's `rootDir` to forward slashes without leading or trailing slashes.
 #[inline]
 fn normalize_root_dir(row: &Value) -> Option<String> {
     let trimmed = row["rootDir"].as_str()?.trim();

@@ -10,6 +10,7 @@ pub(super) enum Writer {
     Workspace,
 }
 impl Writer {
+    /// Select the [`Writer`] end-of-line policy for a rename target given `exported` and `preserve`.
     #[must_use]
     #[inline]
     pub(super) const fn target(exported: bool, preserve: bool) -> Self {

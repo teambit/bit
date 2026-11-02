@@ -37,6 +37,7 @@ pub(super) fn dependent(
     Ok(())
 }
 
+/// Load a callback-supplied source overlay for `relative` when present, or return `original`.
 pub(super) fn overlaid(
     plan: &mut Plan,
     component: &Value,

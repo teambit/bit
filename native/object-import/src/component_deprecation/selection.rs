@@ -46,6 +46,7 @@ fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
 }
+/// Locate the active `.bitmap` entry key matching `id` by full identity, name, or key prefix.
 pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
     let trimmed = id.trim();
     let id = match trimmed.rsplit_once('@') {

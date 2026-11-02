@@ -35,6 +35,7 @@ pub(in crate::component_remove) fn validate(
     Ok(())
 }
 
+/// Strip any `@version` suffix from `id` and return the trimmed bare component identity.
 #[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();

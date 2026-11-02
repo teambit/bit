@@ -43,6 +43,7 @@ pub(super) fn validate(
     Ok(())
 }
 
+/// Validate workspace-root (`"."`) component ownership against a newly tracked `directory`.
 fn root_owner(
     row: &Value,
     owner: &str,

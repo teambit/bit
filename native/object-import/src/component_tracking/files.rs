@@ -64,6 +64,7 @@ pub(super) fn read(
     order(&mut kept);
     Ok(kept)
 }
+/// Filter scanned relative `paths` in `directory` against workspace and default ignore patterns.
 fn filtered(
     plan: &mut Plan,
     directory: &str,

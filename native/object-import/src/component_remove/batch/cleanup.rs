@@ -16,6 +16,7 @@ pub(in crate::component_remove) struct Cleanup {
     staged: Option<Change>,
     pending: Option<Change>,
 }
+/// Retained file modification with path, pre-write byte proof, and projected post-write bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Change {
     pub(super) path: PathBuf,

@@ -23,6 +23,7 @@ pub struct LocalBatch {
     proofs: crate::component_tracking::observe::Observed,
 }
 impl LocalBatch {
+    /// Prepare a retained multi-component local removal [`LocalBatch`] for `identities`.
     #[inline]
     pub fn prepare(
         root: &Path,

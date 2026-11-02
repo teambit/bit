@@ -15,6 +15,7 @@ pub(super) fn retain(engine: &mut Engine<'_>) -> io::Result<()> {
     Ok(())
 }
 
+/// Return the winning `other` input entry for `row` when `merged` came from the `other` side.
 fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> {
     let merged = &row["merged"];
     if let Some(source) = merged.get("source") {

@@ -16,6 +16,7 @@ pub(crate) struct Engine<'a> {
     pub conflicts: Vec<Value>,
 }
 impl<'a> Engine<'a> {
+    /// Validate required input arrays and initialize a new per-component `ConfigMerger` [`Engine`].
     pub(super) fn new(input: &'a Value) -> io::Result<Self> {
         for side in ["current", "base", "other", "workspaceIds", "otherLaneIds", "coreNames"] {
             array(input, side)?;

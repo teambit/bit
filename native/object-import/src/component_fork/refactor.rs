@@ -13,6 +13,7 @@ pub struct Refactor {
     groups: Vec<Group>,
     observed: Observed,
 }
+/// Retained file copies and original byte snapshots for a single component in a fork [`Refactor`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Group {
     files: Vec<files::Copy>,

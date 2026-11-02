@@ -17,6 +17,7 @@ pub(super) fn scope(row: &Value) -> Option<&str> {
                 .filter(|scope| !scope.is_empty())
         })
 }
+/// Extract the bare component name from a `.bitmap` `(key, row)` entry, ignoring metadata keys.
 #[inline]
 pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     let key = key.trim();

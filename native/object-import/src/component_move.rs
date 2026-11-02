@@ -24,6 +24,7 @@ pub struct Plan {
     observed: Observed,
 }
 impl Plan {
+    /// Validate move paths, project `.bitmap` updates, and capture filesystem preimages for `bit move`.
     pub fn prepare(root: &Path, cwd: &Path, from: &str, to: &str) -> io::Result<Self> {
         if !root.is_absolute() || !cwd.is_absolute() {
             return Err(invalid("move root and cwd paths must be absolute"));

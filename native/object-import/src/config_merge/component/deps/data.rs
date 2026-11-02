@@ -29,6 +29,7 @@ pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     Ok(())
 }
 
+/// Extract a trimmed non-empty dependency identifier (`id` or `componentId`) from `dep`.
 #[inline]
 fn dep_id(dep: &Value) -> Option<&str> {
     dep["id"]

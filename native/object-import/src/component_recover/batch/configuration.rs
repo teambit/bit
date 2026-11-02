@@ -27,6 +27,7 @@ pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Confi
     let bytes = stringify_package(&value, &detect_indent(text), detect_newline(text))?.into_bytes();
     Ok(Some(Configuration { path, bytes }))
 }
+/// Project `parsed` `component.json` with `teambit.component/remove` set to `{"removed": false}`.
 fn projection(mut parsed: Value) -> io::Result<Value> {
     if !parsed.is_object() {
         return Err(invalid("recovery component.json must be an object"));

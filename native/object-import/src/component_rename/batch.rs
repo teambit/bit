@@ -45,6 +45,7 @@ impl Batch {
         });
         results.into_iter().collect()
     }
+    /// Validate and combine prepared component rename [`Plan`]s into a single [`Batch`] transaction.
     pub fn prepare(root: &Path, mut plans: Vec<Plan>) -> io::Result<Self> {
         if plans.len() > 4096 {
             return Err(invalid("rename batch plan count limit"));

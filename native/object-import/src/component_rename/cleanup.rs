@@ -12,6 +12,7 @@ pub(super) struct Tree {
     directories: BTreeMap<PathBuf, Vec<String>>,
     observed: crate::component_tracking::observe::Observed,
 }
+/// Capture preimages of all directories and files under the old component root when moving directories.
 pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
     let source_dir = plan.identity.source_directory.trim().trim_matches('/');
     let target_dir = plan.identity.target_directory.trim().trim_matches('/');

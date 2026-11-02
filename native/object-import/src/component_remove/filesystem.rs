@@ -32,6 +32,7 @@ pub(super) fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBu
     Ok(package)
 }
 
+/// Verify that all existing ancestor segments of `relative` under `root` are real directories.
 pub(crate) fn validate_ancestors(root: &Path, relative: &Path) -> io::Result<()> {
     let mut path = root.to_owned();
     for part in relative.components() {

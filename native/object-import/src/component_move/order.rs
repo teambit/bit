@@ -37,6 +37,7 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
     }
     Ok(ordered)
 }
+/// Return `true` when `path` exists as a regular directory and is not a symlink.
 #[inline]
 fn is_real_directory(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())

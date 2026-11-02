@@ -38,6 +38,7 @@ impl PatternCache {
     }
 }
 
+/// Replace occurrences of `source` (and its camel/PascalCase variants) with `target` in `bytes`.
 #[inline]
 pub(crate) fn content(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     ContentMatcher::new(source, target, Arc::new(PatternCache::default())).apply(bytes)

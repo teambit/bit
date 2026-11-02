@@ -26,6 +26,7 @@ pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Re
     Ok(!inventory::tracking_scan(&root.join(directory), &excluded, directory == ".")?.is_empty())
 }
 
+/// Normalize backslashes in `dir` to forward slashes after trimming whitespace.
 #[inline]
 fn normalize_dir(dir: &str) -> std::borrow::Cow<'_, str> {
     let trimmed = dir.trim();
