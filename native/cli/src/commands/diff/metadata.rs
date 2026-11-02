@@ -19,7 +19,7 @@ use std::io;
 const ID_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"];
 
-/// `diffMetadata(left, right)`: `None` when nothing differs.
+/// `diffMetadata(left, right)` across [`Side`]s via [`fields`] and [`dependency_fields`]: `None` when nothing differs.
 pub fn diff(left: &Side, right: &Side, chalk: Chalk) -> io::Result<Option<Vec<Value>>> {
     let left_ver = left.version.trim();
     let right_ver = right.version.trim();

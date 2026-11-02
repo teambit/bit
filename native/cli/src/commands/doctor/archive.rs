@@ -8,7 +8,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-/// Writes a diagnostic TAR archive when `options.file` is requested, returning the saved filename.
+/// Writes a diagnostic TAR archive when `options.file` is requested via [`walk`] and [`append_results`], returning the saved filename.
 pub(super) fn save(
     context: &Context,
     options: &Options,

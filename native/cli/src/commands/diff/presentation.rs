@@ -26,7 +26,7 @@ struct Versions<'a> {
     historical: bool,
 }
 
-/// Formats and emits the final terminal or `--json` [`Outcome`] for a computed diff `result`.
+/// Formats and emits the final terminal or `--json` [`Outcome`] ([`Report`]) for a computed diff `result` via [`progress::render_progress`].
 pub(super) fn run_report(
     root: &Path,
     args: &[OsString],

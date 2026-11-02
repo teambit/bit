@@ -75,7 +75,7 @@ pub(super) enum Subcommand {
     Unrecognized(String),
 }
 
-/// Prepared execution state for a `bit deps` / `bit why` subcommand.
+/// Prepared execution state for a `bit deps` / `bit why` [`Subcommand`] ([`BitmapMutation`], [`RemovedByComp`], [`WriteTarget`]).
 enum Prepared {
     Set { mutation: BitmapMutation, changed_comps: Vec<String>, added_packages: Value },
     Remove { mutation: BitmapMutation, removed: RemovedByComp, unset: bool },

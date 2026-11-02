@@ -37,7 +37,7 @@ struct CandidateRow {
     root: bool,
 }
 
-/// Collects workspace, variant, and component dependency ranges for `bit deps write`.
+/// Collects workspace, variant, and component dependency ranges for `bit deps write` ([`WriteTarget`]) via [`CandidateRow`].
 pub(super) fn prepare_write(
     root: &Path,
     bitmap_val: &Value,

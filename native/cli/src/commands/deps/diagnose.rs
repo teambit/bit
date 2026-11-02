@@ -28,7 +28,7 @@ struct PackageCopy {
     peer_suffix: Option<String>,
 }
 
-/// Runs `bit deps diagnose --package <package>` and prints installed package copy details.
+/// Runs `bit deps diagnose --package <package>` via [`inspect`] and prints installed [`PackageCopy`] details.
 pub(super) fn run_package(
     root: &Path,
     args: &[OsString],

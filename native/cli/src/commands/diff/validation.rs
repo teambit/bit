@@ -26,7 +26,7 @@ pub(super) fn diff_failure(
     }
 }
 
-/// Classify a `read` error as a user-facing `bit diff` error when applicable.
+/// Classify a `read` error as a user-facing `bit diff` error via [`missing_component_error`] or [`git_missing`] when applicable.
 pub(super) fn command_error(
     root: &Path,
     options: &options::Options,

@@ -9,7 +9,7 @@ use crate::commands::status::js::{array, text, truthy};
 use serde_json::{Value, json};
 use std::io;
 
-/// `filesDiff`: every file whose formatted diff is not empty.
+/// `filesDiff`: every file in `row` ([`Value`]) whose formatted diff ([`one_file_diff`]) is not empty.
 #[inline]
 pub(super) fn files_diff(
     row: &Value,

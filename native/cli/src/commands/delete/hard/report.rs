@@ -5,7 +5,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
-/// Formats all remote hard-delete `receipts` into the human-readable terminal report.
+/// Formats all remote hard-delete `receipts` ([`Value`]) into the human-readable terminal report via [`component`].
 #[inline]
 pub(super) fn components(receipts: &[Value], chalk: Chalk) -> String {
     let format = Formatter::new(chalk);

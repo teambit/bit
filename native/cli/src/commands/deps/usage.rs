@@ -34,7 +34,7 @@ pub(super) struct TreeNode {
     pub children: Vec<TreeNode>,
 }
 
-/// Matched package display name, resolved version, and reverse dependency [`TreeNode`] for `bit deps usage`.
+/// Matched package display name, resolved version, and reverse dependency [`TreeNode`] for `bit deps usage` ([`prepare_usage`]).
 pub(super) struct MatchedTree {
     pub display_name: String,
     pub version: String,

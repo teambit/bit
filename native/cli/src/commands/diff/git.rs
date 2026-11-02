@@ -8,7 +8,7 @@ use bit_install::config::{
 };
 use std::{io, path::Path};
 
-/// Resolves the configured `git_path` from [`EffectiveConfig`], `BIT_CONFIG_GIT_PATH`, or `"git"`.
+/// Resolves the configured `git_path` from [`EffectiveConfig`], `BIT_CONFIG_GIT_PATH`, or `"git"` via [`normalize_git_executable`].
 pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
     let global = load_global_config(&cache_root().join("config"))?;
     let workspace_root =

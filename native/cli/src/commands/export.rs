@@ -33,7 +33,7 @@ pub const COMMAND: Command = Command { name: "export", aliases: &["e"], run };
 
 use lifecycle::Lifecycle;
 use options::{Options, parse};
-/// Runs `bit export` ([`COMMAND`]), bootstrapping the workspace [`Engine`] and [`Lifecycle`] before remote persistence.
+/// Runs `bit export` ([`COMMAND`]), bootstrapping the workspace [`Engine`] and [`Lifecycle`] before [`run_started`] or [`startup_failure`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));

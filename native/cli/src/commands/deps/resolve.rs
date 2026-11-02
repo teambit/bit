@@ -14,7 +14,7 @@ use std::{
 
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
-/// Single resolved component, package, or aspect dependency with lifecycle and version metadata.
+/// Single resolved component, package, or aspect dependency with lifecycle and version metadata in [`WorkspaceDepsContext`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ResolvedDep {
     pub id: String,

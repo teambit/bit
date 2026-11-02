@@ -62,7 +62,7 @@ pub(super) fn remove(directories: &[PathBuf]) -> io::Result<()> {
     }
     Ok(())
 }
-/// Writes `files` to disk in chunks bounded by `batch_size`.
+/// Writes `files` ([`Emitted`]) to disk in chunks bounded by `batch_size` via [`open_batch`] and [`write_emitted_content`].
 pub(super) fn publish(files: &[Emitted], batch_size: usize) -> io::Result<()> {
     let batch_size = batch_size.max(1);
     for batch in files.chunks(batch_size) {

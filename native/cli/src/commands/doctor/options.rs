@@ -23,7 +23,7 @@ pub(super) struct Includes {
     pub exclude_scope: bool,
 }
 impl Options {
-    /// Parses `args` into [`Options`] when they fit the native `bit doctor` grammar.
+    /// Parses `args` into [`Options`] via [`Self::apply_arg`] when they fit the native `bit doctor` grammar.
     pub fn parse(args: &[&str]) -> Option<Self> {
         let mut options = Self::default();
         let mut cursor = 0;

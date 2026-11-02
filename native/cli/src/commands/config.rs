@@ -50,7 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     result.map(Outcome::Exit)
 }
 
-/// Writes prepared [`stores::Stores`] mutations to disk and renders `text` to stdout.
+/// Writes prepared [`stores::Stores`] mutations to disk and renders `text` to stdout with [`Chalk`] and [`ExitCode`].
 #[inline]
 fn execute(
     stores: &stores::Stores,

@@ -20,7 +20,7 @@ use bit_install::{
 };
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
-/// Lists all active workspace components and their assigned environment IDs in table or `--json` format.
+/// Lists all active workspace components and their assigned environment IDs via [`collect_component_envs`] and [`format_envs_list`].
 pub(super) fn run_list(
     root: &Path,
     args: &[OsString],

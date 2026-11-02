@@ -16,7 +16,7 @@ pub(super) struct Request<'a> {
     pub chalk: Chalk,
 }
 
-/// Computes parent-to-target diff payloads for all components selected by `request`.
+/// Computes parent-to-target diff payloads for all components selected by `request` ([`Request`]) via [`selected_identities`] and [`one_parent`].
 pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
     let engine = request.engine;
     let identities = selected_identities(

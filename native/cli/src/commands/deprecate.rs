@@ -13,7 +13,7 @@ use std::{env, ffi::OsString, io};
 pub const COMMAND: Command = Command { name: "deprecate", aliases: &["d"], run };
 /// Descriptor for the `bit undeprecate` CLI command.
 pub const UNDEPRECATE: Command = Command { name: "undeprecate", aliases: &[], run };
-/// Executes `bit deprecate` or `bit undeprecate`.
+/// Executes `bit deprecate` ([`COMMAND`]) or `bit undeprecate` ([`UNDEPRECATE`]) via [`run_workspace`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("deprecation arguments are not UTF-8".into()));

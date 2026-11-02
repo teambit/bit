@@ -11,7 +11,7 @@ use bit_install::{
 use serde_json::{Value, json};
 use std::{collections::HashMap, path::Path};
 
-/// Validates a versioned component's model and returns its built-in environment ID and combined [`ManualPolicy`].
+/// Validates a versioned [`WorkspaceComponent`]'s model and returns its built-in environment ID and combined [`ManualPolicy`].
 pub(super) fn plan(
     root: &Path,
     ctx: &WorkspaceDepsContext,

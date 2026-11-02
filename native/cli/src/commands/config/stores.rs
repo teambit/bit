@@ -75,7 +75,7 @@ impl Stores {
             .parent()
     }
 
-    /// Merges the `global`, `scope`, and `workspace` [`Store`] layers into a single combined map.
+    /// Merges the `global`, `scope`, and `workspace` [`Store`] layers into a single combined [`Map`] via [`merge_layers`].
     #[inline]
     pub(super) fn combined(&self) -> Map<String, Value> {
         let value = |origin| {

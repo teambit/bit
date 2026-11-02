@@ -47,7 +47,7 @@ use std::{
 /// Descriptor for the `bit diff` CLI command.
 pub const COMMAND: Command = Command { name: "diff", aliases: &[], run };
 
-/// Executes `bit diff` inside a workspace when arguments fit the native diff grammar.
+/// Executes `bit diff` ([`COMMAND`]) inside a workspace via [`run_workspace`] when arguments fit the native diff grammar.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));

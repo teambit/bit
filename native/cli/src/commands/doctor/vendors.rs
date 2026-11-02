@@ -2,7 +2,7 @@
 use super::catalog::Diagnosis;
 use serde_json::{Value, json};
 use std::process::Command;
-/// Runs `command` with `argument` and returns its trimmed stdout version string when successful.
+/// Runs `command` ([`executable`]) with `argument` and returns its trimmed stdout version string when successful.
 #[inline]
 pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Option<String> {
     let output = Command::new(executable(command))

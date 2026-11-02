@@ -52,7 +52,7 @@ pub(super) fn prepare(
     Ok(Prepared { lanes, force, groups })
 }
 
-/// Normalizes `ids` for a bit.cloud hub delete request, appending `@latest` for component deletes.
+/// Normalizes `ids` for a bit.cloud hub delete request via [`unversioned`], appending `@latest` for component deletes.
 #[inline]
 fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
     if lanes {

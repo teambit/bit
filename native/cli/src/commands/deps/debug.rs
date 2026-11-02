@@ -59,7 +59,7 @@ impl ManualPolicy {
             && self.ignored_names.is_empty()
     }
 }
-/// Grouped runtime, dev, and peer [`SourcedDep`] entries for manual dependency debug rendering.
+/// Grouped runtime, dev, and peer [`SourcedDep`] entries for manual dependency debug rendering via [`render_manual`].
 struct ManualGroups<'a> {
     runtime: Vec<SourcedDep<'a>>,
     dev: Vec<SourcedDep<'a>>,

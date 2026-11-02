@@ -67,7 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     finish_dependents(&root, args, &options, Chalk::detect(args))
 }
 
-/// Executes [`run_dependents_query`] and emits the formatted or `--json` `bit dependents` report.
+/// Executes [`run_dependents_query`] and emits the formatted or `--json` `bit dependents` [`Report`] ([`Outcome`]).
 fn finish_dependents(
     root: &Path,
     args: &[OsString],

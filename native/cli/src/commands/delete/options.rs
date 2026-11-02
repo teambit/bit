@@ -52,7 +52,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
         scope: scope(modifier),
     })
 }
-/// Consumes positional pattern tokens following `--`, rejecting multiple or flag-like values.
+/// Consumes positional pattern tokens following `--`, rejecting multiple or flag-like values for [`parse`].
 #[inline]
 pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,

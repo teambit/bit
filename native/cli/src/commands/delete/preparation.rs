@@ -21,7 +21,7 @@ impl Prepared {
         let ids = selection::ids(root, options.pattern)?;
         Self::selected(root, options, &ids)
     }
-    /// Prepares a [`Prepared`] soft-delete plan for pre-selected component `ids`.
+    /// Prepares a [`Prepared`] soft-delete plan for pre-selected component `ids` via [`validate`] and [`prepare_policy`].
     pub(super) fn selected(root: &Path, options: &Options<'_>, ids: &[String]) -> io::Result<Self> {
         let bitmap = selection::bitmap(root)?;
         validate(&bitmap, ids, options)?;

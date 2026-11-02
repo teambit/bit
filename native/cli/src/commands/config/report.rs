@@ -7,7 +7,7 @@ use bit_workspace_config::{environment_value, truthy};
 use serde_json::{Map, Value};
 use std::{io, process::Command};
 
-/// Formats the terminal or `--json` output for a prepared `bit config` invocation.
+/// Formats the terminal or `--json` output for a prepared `bit config` invocation via [`get`] or [`list`].
 pub(super) fn render(stores: &Stores, options: &Options, chalk: Chalk) -> io::Result<String> {
     match options.command.as_str() {
         "set" => Ok(chalk.green("added configuration successfully")),

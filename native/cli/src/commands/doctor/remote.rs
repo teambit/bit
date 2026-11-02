@@ -22,7 +22,7 @@ pub(super) struct Plan {
     name: String,
 }
 
-/// Resolves `--remote` from `options` and `context` into a [`Plan`] when present.
+/// Resolves `--remote` from `options` ([`Options`]) and `context` ([`Context`]) into a [`Plan`] via [`build_remotes_and_network`].
 pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option<Plan>> {
     let Some(name) = options.remote
         .as_deref()

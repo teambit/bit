@@ -14,7 +14,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// The pattern's target: by directory first, then by id or name.
+/// The pattern's target via [`literal`] or [`glob`]: by directory first, then by id or name.
 pub(in crate::commands) fn select(
     targets: &[Value],
     pattern: Option<&str>,

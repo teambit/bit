@@ -40,7 +40,7 @@ impl Plan {
         write::validate_sources(&loaded.files)?;
         Ok(Self { loaded, batch_size, links, directories, compiled })
     }
-    /// Commits [`Loaded`] component state, writes [`Compiled`] output files, and refreshes component links.
+    /// Commits [`Loaded`] component state, writes [`Compiled`] output files via [`write::publish`], and refreshes [`Links`].
     pub(super) fn run(
         &mut self,
         root: &Path,

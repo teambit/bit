@@ -12,7 +12,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Projects and filters raw `result` diff rows according to [`Options`] output flags.
+/// Projects and filters raw `result` ([`Value`]) diff rows via [`filter_one`] according to [`Options`] output flags.
 #[inline]
 pub(super) fn filtered(result: &Value, options: &Options) -> io::Result<Value> {
     let rows = array(Some(result), "diff results")?;

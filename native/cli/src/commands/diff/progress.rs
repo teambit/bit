@@ -4,7 +4,7 @@ use super::options;
 use serde_json::Value;
 use std::{fs, path::Path};
 
-/// Emits component-loading and version-import status lines onto `output` during `bit diff`.
+/// Emits component-loading and version-import ([`imports`]) status lines onto `output` during `bit diff`.
 pub(super) fn render_progress(
     output: &bit_install::output::Output,
     root: &Path,

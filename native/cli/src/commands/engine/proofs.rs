@@ -10,7 +10,7 @@ use std::{collections::HashSet, io, ops::Range};
 const MAX_PROOFS: usize = 16384;
 
 impl Engine {
-    /// Deduplicates `proofs` and verifies them in bounded [`MAX_REQUEST`] frames before committing mutations.
+    /// Deduplicates `proofs` ([`Value`]) and verifies them in bounded [`MAX_REQUEST`] [`frames`] before committing mutations.
     #[inline]
     pub(in crate::commands) fn validate_read_set(
         &mut self,

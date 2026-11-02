@@ -29,7 +29,7 @@ pub(super) struct Range {
     pub to: Option<String>,
 }
 
-/// Parses `args` into [`Options`] when they fit the native `bit diff` grammar.
+/// Parses `args` into [`Options`] via [`parse_arg`] when they fit the native `bit diff` grammar.
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut index = 0;

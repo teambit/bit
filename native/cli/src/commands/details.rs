@@ -17,7 +17,7 @@ use std::{
 /// Descriptor for the `bit details` CLI command.
 pub const COMMAND: Command = Command { name: "details", aliases: &[], run };
 
-/// Executes `bit details` and prints the stored `last-command-details` content.
+/// Executes `bit details` ([`COMMAND`], [`valid_args`]) and prints the stored `last-command-details` content via [`render_details`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     if !valid_args(args) {
         return Ok(Outcome::Declined("arguments outside the native `details` grammar".to_owned()));

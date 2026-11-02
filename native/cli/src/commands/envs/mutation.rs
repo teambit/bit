@@ -64,7 +64,7 @@ impl BitmapContext {
     }
 }
 
-/// Stages an [`EnvBatch`] or [`EnvUpdatePlan`] for `subcommand` against the workspace at `root`.
+/// Stages an [`EnvBatch`] or [`EnvUpdatePlan`] ([`Prepared`]) for `subcommand` ([`Subcommand`]) against the workspace at `root`.
 pub(super) fn prepare(
     root: &Path,
     subcommand: &Subcommand,

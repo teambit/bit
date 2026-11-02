@@ -80,7 +80,7 @@ fn is_color_flag(arg: &str) -> bool {
 }
 
 impl Options {
-    /// Consumes a single flag or positional `arg` for the active `bit config` subcommand.
+    /// Consumes a single flag or positional `arg` for the active `bit config` subcommand on [`Options`].
     fn argument<'a>(
         &mut self,
         arg: &'a str,

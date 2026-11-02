@@ -25,7 +25,7 @@ struct BlameRow {
     version: String,
 }
 
-/// Runs `bit deps blame <component> <dependency>` and renders the blame table.
+/// Runs `bit deps blame <component> <dependency>` via [`inspect`] and renders the blame table with [`Chalk`].
 pub(super) fn run(
     root: &Path,
     args: &[OsString],

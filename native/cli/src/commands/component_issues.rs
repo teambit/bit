@@ -32,7 +32,7 @@ struct IssueDefinition {
     is_tag_blocker: bool,
 }
 
-/// Static catalog of all component issue definitions displayed by `bit component-issues`.
+/// Static catalog of all component issue definitions ([`IssueDefinition`], [`ISSUES_ASPECT_ID`]) displayed by `bit component-issues`.
 const ISSUES: &[IssueDefinition] = &[
     IssueDefinition {
         name: "MissingPackagesDependenciesOnFs",

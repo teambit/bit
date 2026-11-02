@@ -78,7 +78,7 @@ impl Component<'_> {
             configs: configs(&extensions, true)?,
         })
     }
-    /// Builds the `printable` metadata map (`packageName`, `language`, `bindingPrefix`, `mainFile`, `files`, etc.).
+    /// Builds the `printable` [`Map`] (`packageName`, `language`, `bindingPrefix`, `mainFile`, `files`, etc.) for [`Side`].
     fn printable(
         &self,
         value: &Value,

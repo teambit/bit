@@ -26,7 +26,7 @@ pub(super) struct RemoveSpec<'a> {
     pub remove_only_if_exists: bool,
 }
 
-/// Stages `.bitmap` and `component.json` edits for `bit deps remove` or `bit deps unset`.
+/// Stages `.bitmap` ([`Bitmap`]) and `component.json` edits for `bit deps remove` or `bit deps unset` via [`remove_for_entry`].
 pub(super) fn prepare_remove(
     mut mutation: BitmapMutation,
     bitmap: &Bitmap,

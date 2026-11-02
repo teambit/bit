@@ -25,7 +25,7 @@ pub(super) struct Policy {
     items: Vec<String>,
 }
 impl Policy {
-    /// Prepares a [`Policy`] edit for all non-empty `pins`, or returns `Ok(None)` when `pins` is empty.
+    /// Prepares a [`Policy`] edit for all non-empty `pins` ([`Pin`]) via [`range`], or returns `Ok(None)` when `pins` is empty.
     pub(super) fn prepare_many(root: &Path, pins: &[&Pin]) -> io::Result<Option<Self>> {
         if pins.is_empty() {
             return Ok(None);

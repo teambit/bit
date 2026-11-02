@@ -37,7 +37,7 @@ pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
     replace_first(&body, header_b, &format!("+++ {name} ({label_b})\n"))
 }
 
-/// Returns the lazily compiled pair of `--- a...` and `+++ b...` unified diff header [`Regex`] values.
+/// Returns the lazily compiled [`OnceLock`] pair of `--- a...` and `+++ b...` unified diff header [`Regex`] values for [`format`].
 #[inline]
 fn headers() -> &'static (Regex, Regex) {
     static HEADERS: OnceLock<(Regex, Regex)> = OnceLock::new();

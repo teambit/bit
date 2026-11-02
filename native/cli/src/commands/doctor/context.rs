@@ -15,7 +15,7 @@ pub(super) struct Context {
     pub timestamp: i64,
 }
 impl Context {
-    /// Discovers workspace and scope paths and loads merged configuration for `bit doctor`.
+    /// Discovers workspace and [`scope`] paths and loads merged configuration for `bit doctor` via [`optional_json`].
     pub fn load() -> io::Result<Self> {
         let cwd = env::current_dir()?;
         let root = bit_workspace_config::workspace_root(&cwd).unwrap_or(cwd);

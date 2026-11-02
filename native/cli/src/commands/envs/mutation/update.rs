@@ -87,7 +87,7 @@ impl EnvUpdatePlan {
     }
 }
 
-/// Resolves [`TargetEnv`] versions and prepares an [`EnvUpdatePlan`] across matching components.
+/// Resolves [`TargetEnv`] versions and prepares an [`EnvUpdatePlan`] ([`Prepared`]) across matching components in [`BitmapContext`].
 pub(super) fn prepare_update(
     mut ctx: BitmapContext,
     raw_env_id: Option<&str>,

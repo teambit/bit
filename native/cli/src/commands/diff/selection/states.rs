@@ -11,7 +11,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Filters `targets` and `capture` against stateful predicates (`$modified`, `$new`, etc.) after status capture.
+/// Filters `targets` and `capture` ([`Capture`]) via [`select_capture`] and [`retain_capture`] against stateful predicates (`$modified`, `$new`, etc.).
 pub(in crate::commands::diff) fn after_capture(
     engine: &mut Engine,
     root: &Path,

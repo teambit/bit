@@ -52,7 +52,7 @@ fn is_hard_delete(args: &[&str]) -> bool {
     hard
 }
 
-/// Executes `bit delete` for local workspace soft-deletion or `--hard` remote deletion.
+/// Executes `bit delete` ([`COMMAND`]) for local workspace soft-deletion ([`Prepared`]) or `--hard` ([`is_hard_delete`]) remote deletion.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
