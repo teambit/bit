@@ -50,6 +50,7 @@ impl History {
         history
     }
 
+    /// Creates a [`History`] handle pointing at `<scope>/command-history` without writing a start line.
     #[must_use]
     #[inline]
     fn new(scope: &Path, args: &[OsString]) -> Self {

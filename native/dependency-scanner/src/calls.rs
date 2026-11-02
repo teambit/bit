@@ -61,6 +61,7 @@ pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     matched && (ts || !in_optional_chain(node))
 }
 
+/// Returns `true` when `object` is `require` or `import.meta`.
 #[inline]
 fn is_resolve_receiver(object: &Expression<'_>) -> bool {
     match object.without_parentheses() {

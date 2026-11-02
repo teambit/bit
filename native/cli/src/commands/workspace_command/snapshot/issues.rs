@@ -72,7 +72,7 @@ fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
     if scope.is_empty() { name == target } else { target.split_once('/') == Some((scope, name)) }
 }
 
-/// The tag-blocking issues: their type and their data as JSON.
+/// Extracts the tag-blocking issues of `component` with serialized JSON data.
 #[inline]
 fn blockers(component: &Value) -> io::Result<Value> {
     let issues = array(component.get("issues"), "component issues")?

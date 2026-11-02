@@ -54,6 +54,7 @@ impl<'ast> Visit<'ast> for Classifier {
         };
     }
 }
+/// Classifies a `CallExpression` (`require`, AMD `require([...])`, `define`, or `*.require`) into [`Classification`].
 #[inline]
 fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classification {
     match callee.without_parentheses() {

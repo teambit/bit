@@ -25,6 +25,7 @@ pub(super) const STANDARD_WRITERS: &[(&str, &str, &str, &str)] = &[
     ("prettier", "PrettierConfigWriter", ".prettierrc.cjs", "// bit-generated-prettier-config"),
 ];
 
+/// Formats `env_ids` and their standard config writers for `bit ws-config list`.
 #[must_use]
 #[inline]
 pub(super) fn format_list_output(env_ids: &[String], chalk: Chalk) -> String {

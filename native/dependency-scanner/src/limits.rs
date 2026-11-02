@@ -12,6 +12,7 @@ use std::{
 pub(crate) const REQUEST_BYTES: usize = 8 * 1024 * 1024;
 /// Maximum allowed size (`1 MiB`) for a single scanned source file.
 pub(crate) const SOURCE_BYTES: usize = 1024 * 1024;
+/// Maximum number of files (`4096`) accepted in a single embedded batch scan request.
 pub(crate) const BATCH_FILES: usize = 4096;
 
 #[inline]

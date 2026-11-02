@@ -48,6 +48,7 @@ pub struct NodeCli {
     pub source: Source,
 }
 
+/// Discovery source from which a [`NodeCli`] entry was resolved.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Source {
     Env,

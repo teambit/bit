@@ -13,6 +13,7 @@ use std::{io, time::Duration};
 
 /// Maximum single NDJSON line length (`4 MiB`) accepted from `Http.pushToCentralHub`.
 const MAX_LINE: usize = 4 * 1024 * 1024;
+/// Maximum total response byte budget (`32 MiB`) accepted from `Http.pushToCentralHub`.
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
 /// Parsed response and progress messages returned by `Http.pushToCentralHub`.

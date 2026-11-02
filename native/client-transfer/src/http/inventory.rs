@@ -33,6 +33,7 @@ fn fallback_error(error: &io::Error) -> io::Error {
     io::Error::other(OldServerFallbackError(error.to_string()))
 }
 
+/// `GraphQL` query (`list`) including `includeDeleted` and `teambit.component/remove` aspect data.
 const LIST_DELETED_QUERY: &str = r#"query list($namespaces: [String!], $includeDeleted: Boolean) { scope { components(namespaces: $namespaces, includeDeleted: $includeDeleted) { id { scope version name } aspects(include: ["teambit.component/remove"]) { id config } deprecation { isDeprecate } } } }"#;
 const LATEST_VERSIONS_QUERY: &str =
     "query getLatestVersions($ids: [String]!) { scope { _legacyLatestVersions(ids: $ids) } }";

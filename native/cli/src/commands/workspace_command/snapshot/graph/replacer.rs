@@ -71,7 +71,7 @@ impl Replacer {
         Ok(Self { pattern, replacements, components: ids })
     }
 
-    /// `replaceFileVersion(s)`.
+    /// Replaces `@file:<dir>` lockfile specifiers in `text` (`replaceFileVersion`).
     #[must_use]
     pub fn replace(&self, text: &str) -> String {
         let Some(pattern) = self.pattern

@@ -45,6 +45,7 @@ pub fn command(target: &Target, args: &[OsString]) -> Command {
     }
 }
 
+/// Constructs the `node <entry> <args>` [`Command`] for `cli`, prepending Node's directory to `PATH`.
 #[inline]
 fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
     let mut command = Command::new(&cli.node);

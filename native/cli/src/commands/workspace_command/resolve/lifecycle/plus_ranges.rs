@@ -63,6 +63,7 @@ fn targets<'a>(session: &'a Session<'_>, plan: &'a Value) -> Vec<(String, &'a Va
     targets
 }
 
+/// Extracts a trimmed, non-empty string slice from `value`.
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

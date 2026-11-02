@@ -15,7 +15,7 @@ pub(in crate::commands) fn apply(planned: &mut Planned, root: &Path) -> io::Resu
     Ok(receipt)
 }
 
-/// Both graceful install/compiler errors still reach LaneSwitcher.saveLanesData.
+/// Both graceful install/compiler errors still reach `LaneSwitcher.saveLanesData`.
 #[inline]
 pub(in crate::commands) fn complete(planned: &mut Planned, receipt: &Value) -> io::Result<()> {
     if !valid_switch_receipt(receipt, "requiresSwitchCompletion", &planned.token) {

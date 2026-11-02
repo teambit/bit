@@ -55,6 +55,7 @@ pub fn parse<'a>(args: &[&'a str], kind: Kind) -> Option<(Workflow, Vec<&'a str>
     Some((workflow, remaining))
 }
 
+/// Expands `-b` to `--build`.
 #[inline]
 fn workflow_alias(raw: &str) -> &str {
     if raw == "-b" { "--build" } else { raw }

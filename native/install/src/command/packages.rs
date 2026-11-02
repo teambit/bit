@@ -95,7 +95,7 @@ pub async fn add(
     policy_edit::add_to_root_policy(session, loaded, &entries, lifecycle)
 }
 
-/// `getVersionWithSavePrefix`.
+/// Prepends the configured or default `^` save prefix to `version` (`getVersionWithSavePrefix`).
 #[inline]
 pub fn version_with_save_prefix(
     version: &str,

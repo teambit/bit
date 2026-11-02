@@ -44,7 +44,7 @@ pub(super) fn before_snapshot(
         Ok(json!([]))
     }
 }
-
+/// Runs post-allocation snapshot build and package-generation lifecycle hooks when `lifecycle` is active.
 #[inline]
 pub(super) fn finish(
     session: &mut Session<'_>,

@@ -61,6 +61,7 @@ const SCRIPT: &str = concat!(
 /// Maximum duration (`5s`) waited for the Node.js host child process to exit gracefully on shutdown.
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 
+/// Persistent newline-delimited JSON-RPC host managing the embedded Node.js child process.
 pub struct Host {
     cli: NodeCli,
     root: PathBuf,

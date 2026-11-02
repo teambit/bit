@@ -28,6 +28,7 @@ struct State {
 thread_local! {
     static CURRENT: RefCell<Option<Cancellation>> = const { RefCell::new(None) };
 }
+/// RAII guard restoring the previous thread-local [`Cancellation`] owner on drop.
 #[derive(Debug)]
 struct Restore(Option<Cancellation>);
 impl Drop for Restore {

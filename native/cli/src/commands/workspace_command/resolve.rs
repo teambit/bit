@@ -34,8 +34,7 @@ use receipts::{Resolved, auto_snap_report, check_token, identities, pattern_ids,
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// `bit snap`, `bit tag` or `bit merge --resolve`: the engine's
-/// `commandSnap*`, `commandTag*` or `commandResolve*`.
+/// `bit snap`, `bit tag`, or `bit merge --resolve`: the engine's `commandSnap*`, `commandTag*`, or `commandResolve*`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Snap,

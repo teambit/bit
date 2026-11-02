@@ -42,6 +42,7 @@ impl CallbackError {
 }
 
 impl fmt::Display for CallbackError {
+    /// Formats the underlying [`io::Error`] cause without the buffered stdout fields.
     #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.cause.fmt(formatter)

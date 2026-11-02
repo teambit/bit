@@ -27,6 +27,7 @@ pub(super) struct WriteResults {
     pub skipped_paths: Vec<String>,
 }
 
+/// Per-writer summary of real, extending, and skipped configuration files.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct OneConfigWriterIdResult {

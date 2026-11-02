@@ -30,7 +30,7 @@ struct Import {
     components: u64,
     objects: u64,
 }
-
+/// Validated command progress receipt tracking component loads and object imports.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Progress {
     bitmap_count: u64,

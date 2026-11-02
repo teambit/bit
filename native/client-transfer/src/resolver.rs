@@ -96,6 +96,7 @@ impl Resolver {
         tokio::task::spawn_blocking(move || resolver.run(&scope)).await.map_err(io::Error::other)?
     }
 
+    /// Spawns `self.node` synchronously to execute [`SCRIPT`] for `scope` and returns the trimmed URL.
     #[inline]
     fn run(&self, scope: &str) -> io::Result<String> {
         let node = if self.node

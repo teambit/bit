@@ -81,6 +81,7 @@ impl Save {
     }
 }
 
+/// Extracts non-empty trimmed component identity strings from array `value`.
 #[inline]
 fn identities(value: &Value) -> io::Result<Vec<String>> {
     array(Some(value), "stash identities")?

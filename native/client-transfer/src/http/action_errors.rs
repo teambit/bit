@@ -44,6 +44,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Maps action error `code` and JSON `error` payload to a typed [`io::Error`].
 #[inline]
 fn action_error(code: Option<u64>, error: &Value, url: &str, message: String) -> io::Error {
     match code {

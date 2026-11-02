@@ -41,6 +41,7 @@ fn needs_escaping(value: &str, delimiter: char) -> bool {
         .any(|ch| ch == '\\' || ch == delimiter || ch.is_control())
 }
 
+/// Selects the quote delimiter (`'`, `"`, or `` ` ``) matching Node's `util.inspect` string formatting.
 #[inline]
 fn select_delimiter(value: &str) -> char {
     if !value.contains('\'') {

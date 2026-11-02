@@ -99,7 +99,7 @@ fn warn_fallback(name: &str, reason: &str, args: &[OsString]) {
     }
 }
 
-/// The fallback warning's text.
+/// Formats the fallback warning message for `name` and `reason`.
 #[must_use]
 #[inline]
 fn fallback_message(name: &str, reason: &str) -> String {

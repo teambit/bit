@@ -45,6 +45,7 @@ pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
     }
 }
 
+/// Extracts the attached [`WithDetails`] diagnostic string from `error`'s causal chain, if any.
 #[inline]
 fn downcast_details(error: &io::Error) -> Option<&str> {
     std::iter::successors(

@@ -17,6 +17,7 @@ pub(super) fn load(factory: impl FnOnce() -> io::Result<User>) -> io::Result<Use
     IDENTITY.load(factory)
 }
 
+/// Process-wide once-cell cache holding the resolved [`User`] or initialization [`Failure`].
 struct Cache {
     value: OnceLock<Result<User, Failure>>,
 }

@@ -40,6 +40,7 @@ pub(super) fn capture(
     capture_reader(root, request, startup, reader)
 }
 
+/// Captures workspace targets, sources, and docs for `request` using an already-started `engine`.
 #[inline]
 pub(super) fn capture_retained(
     root: &Path,

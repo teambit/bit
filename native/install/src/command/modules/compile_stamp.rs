@@ -20,7 +20,6 @@ use std::{
 
 /// Schema version of the persisted `afterInstall` compile stamp; bumped when fingerprint shape changes.
 const VERSION: u32 = 1;
-
 /// The manifest fields whose `link:`/`file:` values are checked.
 const DEPENDENCY_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
@@ -47,6 +46,7 @@ enum Output {
 }
 
 impl Output {
+    /// Returns the filesystem [`Path`] recorded by this [`Output`] variant.
     #[inline]
     fn path(&self) -> &Path {
         match self {

@@ -83,6 +83,7 @@ impl Ignore {
         self
     }
 
+    /// Returns the compiled [`Rule`] slice in insertion order.
     #[must_use]
     #[inline]
     pub fn rules(&self) -> &[Rule] {

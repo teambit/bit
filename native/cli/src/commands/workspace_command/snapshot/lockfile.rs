@@ -44,6 +44,7 @@ fn target_identity(target: &Value) -> Option<&str> {
         .map(without_version)
 }
 
+/// Extracts a trimmed, non-empty string slice from `value`.
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

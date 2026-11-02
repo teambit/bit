@@ -72,6 +72,7 @@ fn parse_source(file: &File, source: &str, source_type: SourceType, ts: bool) ->
     }
     extract_source(file, source, ts, &parsed.program)
 }
+/// Classifies `program` and runs [`Scanner`] to extract dependencies into an [`Outcome`].
 fn extract_source(file: &File, source: &str, ts: bool, program: &Program<'_>) -> Outcome {
     if !ts && let Some(result) = classification_outcome(file, program) {
         return result;

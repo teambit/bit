@@ -49,6 +49,7 @@ impl std::io::Write for ByteCount {
     }
 }
 
+/// Scans `file` and reserves its serialized JSON byte size from `remaining`.
 #[inline]
 fn bounded(
     file: &File,

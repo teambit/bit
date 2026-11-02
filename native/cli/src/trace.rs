@@ -12,6 +12,7 @@ pub fn enabled() -> bool {
     env::var_os("BIT_NATIVE_TRACE").is_some_and(|value| is_active_trace_value(&value))
 }
 
+/// Returns `true` when `value` is a non-empty, truthy `BIT_NATIVE_TRACE` setting.
 #[inline]
 fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
     let text = value.to_string_lossy();

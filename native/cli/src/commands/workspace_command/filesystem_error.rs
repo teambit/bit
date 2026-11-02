@@ -67,6 +67,7 @@ pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error 
     }
 }
 
+/// Wraps `error` into a [`Failure`] for a two-operand filesystem `operation` (`source -> target`).
 #[must_use]
 #[inline]
 pub(in crate::commands) fn paired_failure(

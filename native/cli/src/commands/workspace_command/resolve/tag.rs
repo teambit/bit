@@ -85,6 +85,7 @@ pub fn selections_with_state(
     Ok((Some(Value::Array(rows)), loads))
 }
 
+/// Evaluates non-stateful tag pattern `entered` at `index` against `context`.
 #[inline]
 fn ordinary_selection(context: &Value, entered: &str, index: usize) -> io::Result<Vec<Value>> {
     let selected = selections(context, &[entered.to_string()])?

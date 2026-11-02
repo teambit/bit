@@ -26,6 +26,7 @@ struct Proof {
     nodes: usize,
 }
 impl Proof {
+    /// Increments node and depth counters and invokes `step` when within AST bounds (`depth < 128`, `nodes <= 16384`).
     #[inline]
     fn walk_within(&mut self, step: impl FnOnce(&mut Self)) {
         self.nodes += 1;

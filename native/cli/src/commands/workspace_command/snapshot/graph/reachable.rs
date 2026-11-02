@@ -60,6 +60,7 @@ fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -
         .then_some(environment)
 }
 
+/// Selects the component's own importer (and optional `root` importer) with other workspace packages removed.
 #[inline]
 fn selected_importers(
     lockfile: &Value,

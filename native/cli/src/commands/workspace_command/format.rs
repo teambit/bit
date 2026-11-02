@@ -32,6 +32,7 @@ impl Formatter {
         self.chalk.red("\u{2716}")
     }
 
+    /// Returns the yellow warning symbol (`⚠`).
     #[must_use]
     #[inline]
     pub fn warn_symbol(&self) -> String {

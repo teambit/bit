@@ -84,7 +84,7 @@ impl FetchOptions {
         }
     }
 
-    /// `importWithoutDeps` with the defaults: the given versions only.
+    /// `importWithoutDeps` with default selection options: fetches the given versions only.
     #[inline]
     #[must_use]
     pub fn without_dependencies(lane_id: Option<String>) -> Self {

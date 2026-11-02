@@ -81,8 +81,7 @@ fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
     Ok(root.join(root_directory).join(".bit_roots"))
 }
 
-/// One component's graph: its importers, without the other workspace
-/// packages, filtered by pnpm and converted.
+/// Builds one component's dependency graph from its lockfile importers via pnpm filtering and [`convert::convert`].
 fn graph(
     lockfile: &Value,
     component: &Snapped<'_>,

@@ -36,6 +36,7 @@ impl Step {
         Self { regex, global, replacement }
     }
 
+    /// Applies this replacement step to `text` with `anchored` (`has_inner_slash`).
     #[must_use]
     #[inline]
     pub fn apply(&self, text: &str, anchored: bool) -> String {

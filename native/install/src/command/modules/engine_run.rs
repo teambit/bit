@@ -20,6 +20,7 @@ use std::{io, time::Instant};
 const PRE_SUBSCRIBERS: &str = "running pre install subscribers";
 /// Progress status message displayed while running package installation via pnpm.
 const RUNNING: &str = "running package installation using pnpm";
+/// Progress status message displayed while running post-install subscribers.
 const POST_SUBSCRIBERS: &str = "running post install subscribers";
 /// Codes an unpublished snap dependency can surface as.
 const NO_MATCHING_VERSION: [&str; 3] = [

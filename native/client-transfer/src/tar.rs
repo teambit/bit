@@ -15,6 +15,7 @@ use std::io::{self, Read};
 const START: &str = ".BIT.START";
 /// Sentinel tar entry name (`.BIT.END`) marking the end of a remote object stream.
 const END: &str = ".BIT.END";
+/// Sentinel tar entry name (`.BIT.ERROR`) carrying a remote server error payload.
 const ERROR: &str = ".BIT.ERROR";
 /// `OBJECT_LIST_CURRENT_SCHEMA`.
 const SCHEMA: &str = "1.0.0";

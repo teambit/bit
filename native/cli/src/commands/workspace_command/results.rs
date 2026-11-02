@@ -66,6 +66,7 @@ pub enum Status {
 }
 
 impl Status {
+    /// Parses a wire `FileStatus` key (`merged`, `manual`, `updated`, etc.) into [`Status`].
     #[inline]
     pub(in crate::commands) fn parse(name: &str) -> io::Result<Self> {
         let name = name.trim();

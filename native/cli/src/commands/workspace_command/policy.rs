@@ -58,8 +58,7 @@ impl Steps<'_> {
         Ok(Prepared { plan, caches })
     }
 
-    /// `commandDependencyDetect` and `commandDependencyComplete` for the
-    /// projected targets.
+    /// Runs `commandDependencyDetect` and `commandDependencyComplete` for the projected targets.
     fn dependencies(
         &mut self,
         preparation: &Value,

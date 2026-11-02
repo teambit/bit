@@ -12,6 +12,7 @@ use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 /// Serialized `DependenciesGraph` schema version (`"2.0"`).
 const SCHEMA_VERSION: &str = "2.0";
+/// Root edge identifier (`"."`) in a serialized `DependenciesGraph`.
 const ROOT_EDGE_ID: &str = ".";
 /// Lockfile package fields retained in a serialized dependency graph, in `pick` order.
 const PACKAGE_FIELDS: [&str; 12] = [

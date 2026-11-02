@@ -59,6 +59,7 @@ pub struct Listed {
 }
 
 impl Listed {
+    /// Parses a remote `list` `GraphQL` component entry into [`Listed`].
     #[inline]
     fn parse(component: &Value) -> io::Result<Self> {
         let id = &component["id"];

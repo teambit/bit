@@ -57,6 +57,7 @@ pub struct Compiler {
 }
 
 impl Default for Compiler {
+    /// Returns a [`Compiler`] initialized with [`Compiler::new`].
     #[inline]
     fn default() -> Self {
         Self::new()

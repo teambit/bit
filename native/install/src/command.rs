@@ -97,6 +97,7 @@ pub async fn run_with_options(
     Box::pin(install(&session)).await
 }
 
+/// Executes the full `bit install` flow for `session`.
 async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     let options = session.options;
     let (loaded, packages) = match begin(session).await? {

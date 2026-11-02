@@ -16,6 +16,7 @@ use std::{
 const GLOBAL_REMOTES: &str = "global-remotes.json";
 /// Global config key (`CFG_CLOUD_DOMAIN_KEY`) overriding the default Bit Cloud domain.
 const CFG_CLOUD_DOMAIN: &str = "cloud_domain";
+/// Global config key (`CFG_SYMPHONY_URL_KEY`) overriding the Bit Cloud Symphony hub URL.
 const CFG_SYMPHONY_URL: &str = "symphony_url";
 
 /// The remotes this process resolved, by [`Remotes::cache_key`].

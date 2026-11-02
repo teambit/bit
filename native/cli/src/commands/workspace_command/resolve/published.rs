@@ -63,6 +63,7 @@ fn enabled(request: &ResolveRequest<'_>, plan: &Value) -> bool {
         && tag_options["versionsFile"].is_null()
 }
 
+/// Collects tagged and auto-tagged component candidates requiring npm registry version checks.
 #[inline]
 fn candidates(session: &Session<'_>, plan: &Value) -> io::Result<Vec<Value>> {
     let selected = plan.get("tagPatternSelections");

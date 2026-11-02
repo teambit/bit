@@ -85,6 +85,7 @@ impl User {
         identity::load(|| Self::read(root))
     }
 
+    /// Reads `user.name` and `user.email` from layered Bit config and git config.
     fn read(root: &Path) -> io::Result<Self> {
         let global = load_global_config(&cache_root().join("config"))?;
         let scope = ScopeJson::load(&scope_path(root))?;

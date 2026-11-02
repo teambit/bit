@@ -41,6 +41,7 @@ pub const SNAP: Labels = Labels {
     tag: false,
 };
 
+/// Report label preset for `bit tag`.
 pub const TAG: Labels = Labels {
     versioned: "taggedComponents",
     automatic: "autoTaggedResults",

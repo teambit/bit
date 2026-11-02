@@ -41,6 +41,7 @@ impl Network {
         projection(value, scope)
     }
 
+    /// Streams and parses the bounded JSON body of a `doctor` `GraphQL` `response`.
     async fn doctor_response(&self, response: reqwest::Response) -> io::Result<Value> {
         let mut stream = response.bytes_stream();
         let mut bytes = Vec::new();

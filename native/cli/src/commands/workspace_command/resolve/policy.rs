@@ -52,6 +52,7 @@ fn policy_alias(raw: &str) -> &str {
     }
 }
 
+/// Returns `true` when `flag` is a recognized snapshot policy flag (including tag-only flags when `tag` is `true`).
 #[inline]
 fn is_policy_flag(flag: &str, tag: bool) -> bool {
     matches!(flag, "--ignore-issues" | "--rebuild-deps-graph" | "--no-lock-deps")

@@ -73,6 +73,7 @@ pub(super) fn snapshot(root: &Path, request: &ResolveRequest<'_>, workflow: &Wor
     params
 }
 
+/// Copies tag-specific release, version, and persistence options from `options` into `params`.
 fn tag(params: &mut Value, options: &Value) {
     for field in
         ["exactVersion", "releaseType", "autoTagReleaseType", "preReleaseId", "incrementBy"]

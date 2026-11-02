@@ -92,7 +92,7 @@ pub async fn calculate(
         subscriber_links: linked_root_deps.clone(),
     })
 }
-
+/// Loads `root-envs` and `root-apps` installation components when `rootComponents` is enabled.
 async fn root_manifest_loading(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     if loaded.config.dependency_resolver.has_root_components() {
         super::session::installation_components::load(session, loaded, "root-envs").await?;
