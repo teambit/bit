@@ -1,4 +1,4 @@
-//! Target and base `Source` object loading with optional import overlay support.
+//! Target and base [`Source`] object loading ([`load_with_overlay`]) with optional import [`overlay`] support.
 
 pub(super) use overlay::body;
 mod overlay;

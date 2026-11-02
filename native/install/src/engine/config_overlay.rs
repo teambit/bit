@@ -5,7 +5,7 @@
 //! The engine holds a `&'static Config`. Configs are interned by content, so a
 //! long-lived process that installs repeatedly leaks one config per distinct
 //! configuration rather than one per call.
-//! Applies store, registry, layout, manifest-rewrite, and network overlays to `pnpm_config::Config`.
+//! Applies store, registry, layout, manifest-rewrite, and network overlays to [`Config`].
 
 #[cfg(test)]
 mod tests;

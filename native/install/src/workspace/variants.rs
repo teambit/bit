@@ -1,4 +1,4 @@
-//! Shared native workspace variant matching helpers.
+//! Shared native workspace variant matching helpers for [`VariantConfig`].
 //!
 //! Re-exports [`VariantConfig`] and [`by_root_dir_and_name`] from `bit_workspace_config::variants`.
 

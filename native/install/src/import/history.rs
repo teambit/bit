@@ -3,7 +3,7 @@
 //! version is fetched again, and complete histories record that fact in
 //! `graphCompleteRefs`.
 //!
-//! Traverses parent pointers in `VersionHistory` objects and persists updated `graphCompleteRefs`.
+//! Traverses parent pointers in `VersionHistory` objects and persists updated `graphCompleteRefs` when [`refetch_requested`] is enabled.
 
 #[cfg(test)]
 mod tests;

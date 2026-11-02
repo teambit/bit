@@ -1,4 +1,4 @@
-//! Version manifest verification and `Source` resolution against in-memory import overlays.
+//! Version manifest verification ([`verify`]) and `Source` resolution against in-memory import [`Overlay`]s.
 
 #[cfg(test)]
 mod tests;

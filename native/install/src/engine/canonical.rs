@@ -1,7 +1,7 @@
 //! Run the published `lynx.install` package step in this process after its
 //! retained `InstallMain` and dependency-installer callbacks have finished.
 //!
-//! Validates all package-manager inputs before any filesystem or network effect.
+//! Validates all package-manager inputs before any filesystem or network effect via [`CanonicalInstall`].
 //! Declines unsupported options cleanly so callers can fall back before mutations occur.
 
 mod environment;

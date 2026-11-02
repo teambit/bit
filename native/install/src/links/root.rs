@@ -1,6 +1,6 @@
 //! Links from the workspace to the running bit installation (`dependency-linker.ts`).
 //!
-//! Builds `link:` entries for `@teambit/bit` and core aspects and syncs hoisted virtual-store links.
+//! Builds `link:` entries ([`LinkOptions`]) for `@teambit/bit` and core aspects and syncs hoisted virtual-store links.
 
 #[cfg(test)]
 mod tests;

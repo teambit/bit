@@ -1,7 +1,7 @@
 //! `updateDependenciesVersions`: the version of each component dependency and
 //! configured extension, by the canonical strategy order.
 //!
-//! Consults forced overrides, auto-detect policies, merge-config entries, workspace `.bitmap` versions, and model versions.
+//! Consults forced overrides, auto-detect policies, merge-config entries, workspace `.bitmap` versions, and model versions via [`update`].
 
 use super::{Subject, Workspace, data::Detected, detect::same};
 use crate::{

@@ -1,5 +1,5 @@
 //! Bit's serialized `DependenciesGraph` → a `pnpm-lock.yaml` document (`convertGraphToLockfile`).
-//! Translates graph nodes and edges into lockfile `importers`, `packages`, and `snapshots` maps.
+//! Translates graph nodes and edges into lockfile `importers`, `packages` ([`PACKAGE_FIELDS`]), and `snapshots` maps.
 
 use super::dep_path::{parse, remove_suffix};
 use crate::model::Project;

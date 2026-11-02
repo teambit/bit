@@ -2,7 +2,7 @@
 //! `PnpmPackageManager.getRegistries`) with Bit's cloud registry layered on
 //! top (`DependencyResolverMain.getRegistries`) and nerf-darted auth headers.
 //!
-//! Normalizes registry URLs, bearer tokens, basic auth credentials, and `@bit` scope fallbacks.
+//! Normalizes registry URLs, bearer tokens, basic auth credentials, and `@bit` scope fallbacks into [`Registries`].
 
 #[cfg(test)]
 mod tests;

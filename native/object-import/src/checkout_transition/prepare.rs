@@ -1,4 +1,4 @@
-//! Checkout plan preparation: target source loading, current file hashing, and three-way merge rows.
+//! Checkout plan preparation ([`prepare`]): target [`sources`] loading, [`current`] file hashing, and three-way [`merge`] rows.
 
 pub(super) mod sources;
 

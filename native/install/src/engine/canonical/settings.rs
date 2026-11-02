@@ -1,4 +1,4 @@
-//! Apply the already-computed published package-manager arguments and settings to `pacquet`.
+//! Apply the already-computed published package-manager arguments and settings to `pacquet` via [`prepare`].
 
 use super::{Prepared, environment::CapturedHost, parse::Request};
 use crate::{

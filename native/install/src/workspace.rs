@@ -6,7 +6,7 @@
 //! config-merge file, `component.json`, the scope model and variants), the env
 //! and the package name. Nothing is filtered out: [`BitmapEntry`] says whether
 //! an entry is removed or unavailable on the current lane.
-//! Coordinates file discovery, aspect merging, and package name derivation per component.
+//! Coordinates file discovery ([`FileRules`]), aspect merging ([`AspectEntry`]), and package name derivation per component.
 
 pub mod aspects;
 

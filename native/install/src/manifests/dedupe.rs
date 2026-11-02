@@ -1,6 +1,6 @@
 //! `dedupeDependencies`: hoist what the components agree on into the root.
 //!
-//! Indexes per-component dependency ranges and delegates conflict resolution to [`hoist`].
+//! Indexes per-component dependency ranges ([`IndexEntry`]) and delegates conflict resolution to [`hoist`].
 
 mod hoist;
 #[cfg(test)]

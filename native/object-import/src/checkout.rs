@@ -1,4 +1,4 @@
-//! Bounded checkout source reading, EOL normalization, and atomic workspace file writing.
+//! Bounded checkout source reading ([`read_sources`]), [`eol`] normalization, and atomic workspace file writing.
 
 pub(crate) mod cache;
 pub(crate) mod eol;

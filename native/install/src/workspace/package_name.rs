@@ -1,6 +1,6 @@
 //! Component ID to package name resolution (`componentIdToPackageName`).
 //!
-//! Evaluates `teambit.pkg/pkg` `packageJson` templates, `bindingPrefix`, and default `@owner/scope.name` rules.
+//! Evaluates `teambit.pkg/pkg` `packageJson` templates, [`binding_prefix_by_default_scope`], and default `@owner/scope.name` rules.
 
 use crate::model::ComponentId;
 use serde_json::{Map, Value};

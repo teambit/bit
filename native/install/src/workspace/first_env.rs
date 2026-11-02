@@ -4,7 +4,7 @@
 //! component's env. An aspect that is not in the workspace is read from the
 //! scope at its configured version, or at its head without one.
 //!
-//! Assigns fallback environment IDs from configured environment aspects on components.
+//! Assigns fallback environment IDs from configured environment aspects on components via [`resolve`].
 
 #[cfg(test)]
 mod tests;

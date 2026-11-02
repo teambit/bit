@@ -1,4 +1,4 @@
-//! Base source loading and three-way file merge execution for checkout preparation.
+//! Base source loading and three-way file merge execution ([`rows`]) for checkout preparation.
 
 use super::{
     super::{invalid, plan, wire},

@@ -12,7 +12,7 @@ use std::{
     time::Duration,
 };
 
-/// How [`create_link_or_symlink`] links a path (`avoidHardLink` in TypeScript).
+/// How [`create_link_or_symlink`] links a path (`avoidHardLink` in `TypeScript`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum LinkKind {
     /// An absolute symlink, as `Symlink.write` creates for component files.

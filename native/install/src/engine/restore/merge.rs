@@ -1,7 +1,7 @@
 //! Lockfile-document operations of the restore: dropping unreachable entries,
 //! scrubbing unpublishable packages, and merging into the existing lockfile.
 //!
-//! Prunes orphaned `packages` and `snapshots` entries after merging restored importer graphs.
+//! Prunes orphaned `packages` and `snapshots` ([`SNAPSHOT_DEP_TYPES`]) entries after merging restored importer graphs.
 
 use super::dep_path::remove_suffix;
 use serde_json::{Map, Value};

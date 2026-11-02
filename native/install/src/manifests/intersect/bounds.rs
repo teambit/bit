@@ -1,6 +1,6 @@
 //! Comparator helpers of `semver-range-intersect` (`utils.js`).
 //!
-//! Normalizes prerelease stripping and equality checks across comparators.
+//! Normalizes prerelease stripping and equality checks across [`Comparator`]s.
 //! Selects stricter lower and upper bounds when merging intersecting range intervals.
 
 use super::super::semver::{Comparator, SemVer};

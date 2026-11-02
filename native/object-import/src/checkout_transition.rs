@@ -1,4 +1,4 @@
-//! Stateful checkout transition state machine for preparing, applying, and materializing checkout plans.
+//! Stateful checkout transition state machine ([`State`]) for preparing, applying ([`apply`]), and materializing checkout plans.
 
 mod apply;
 mod materialize;

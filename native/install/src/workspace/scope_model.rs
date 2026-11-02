@@ -2,7 +2,7 @@
 //! the model's `bindingPrefix`. Objects are zlib-deflated files at
 //! `<scope>/objects/<2 hex>/<38 hex>` holding `<type> <hash> <size>\0<json>`.
 //!
-//! Reads component models and version objects to extract stored extensions, files, and package names.
+//! Reads component models and version objects into [`ModelData`] to extract stored extensions, files, and package names.
 
 #[cfg(test)]
 mod tests;

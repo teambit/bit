@@ -1,7 +1,7 @@
 //! `_getEnvPeerDependencies`: env peers injected into each component when
 //! `resolveEnvPeersFromRoot` is disabled.
 //!
-//! Resolves `+` peer placeholders from component dependencies or defaults them to `*`.
+//! Resolves `+` peer placeholders from [`ComponentDependencies`] or defaults them to `*`.
 
 use super::{
     super::{

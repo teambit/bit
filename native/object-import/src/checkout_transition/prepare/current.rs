@@ -1,4 +1,4 @@
-//! Current workspace file loading, snapshot verification, and SHA-1 hashing for checkout plans.
+//! Current workspace file loading ([`Loaded`]), snapshot verification, and SHA-1 hashing via [`load_with_overlay`].
 
 mod parallel;
 #[cfg(test)]

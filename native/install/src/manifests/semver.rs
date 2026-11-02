@@ -5,7 +5,7 @@
 //! (the dedupe's range intersection) runs on semver 6, whose desugared upper
 //! bounds lack semver 7's `-0` suffix. Those strings reach the root manifest
 //! and the lockfile, so both are reproduced.
-//! Provides [`Flavor::V6`] and [`Flavor::V7`] range parsing and comparison helpers.
+//! Provides [`Flavor::V6`] and [`Flavor::V7`] [`Range`] parsing and comparison helpers.
 
 #[cfg(test)]
 pub(crate) mod tests;

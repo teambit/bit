@@ -9,7 +9,7 @@ const MAX_LENGTH: usize = 256;
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
 /// A parsed version. Prerelease identifiers keep their source text; numeric
-/// identifiers compare numerically, like JavaScript's `compareIdentifiers`.
+/// identifiers compare numerically, like `JavaScript`'s `compareIdentifiers`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct SemVer {
     pub(crate) major: u64,

@@ -1,6 +1,6 @@
 //! `ManifestDependenciesObject`: the dependency fields of one manifest.
 //!
-//! Models `dependencies`, `optionalDependencies`, `devDependencies`, and `peerDependencies` maps.
+//! Models `dependencies`, `optionalDependencies`, `devDependencies`, and `peerDependencies` maps via [`Field`].
 
 use crate::model::{DependencyMap, Lifecycle, Manifest};
 use indexmap::IndexMap;

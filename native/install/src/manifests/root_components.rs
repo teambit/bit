@@ -1,7 +1,7 @@
 //! Root components: one `.bit_roots/<id>` project per env and app
 //! (`_getRootManifests`).
 //!
-//! Assembles isolated root component manifests and their forced env dependencies.
+//! Assembles isolated root component [`Manifest`]s and their forced env dependencies.
 //! Injects workspace component link specifiers and remote filter policies into `.bit_roots` projects.
 
 use super::{

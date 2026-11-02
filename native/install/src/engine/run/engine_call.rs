@@ -1,7 +1,7 @@
 //! pacquet's `Install` on a dedicated 32 MiB-stack thread with its own
 //! multi-thread runtime, configured like `@pnpm/napi`'s `run_install_inner`.
 //!
-//! Executes lockfile resolution, package materialization, and `depsRequiringBuild` collection.
+//! Executes lockfile resolution, package materialization, and `depsRequiringBuild` collection into [`Outcome`].
 
 use super::super::{
     EngineInstallOptions, EngineSettings,

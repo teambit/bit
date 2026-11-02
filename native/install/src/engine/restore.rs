@@ -2,7 +2,7 @@
 //! dependency graphs before installing (`dependenciesGraphToLockfile` in
 //! `pnpm.package-manager.ts` and `convertGraphToLockfile`).
 //!
-//! Resolves missing package tarballs/integrities and merges converted graph lockfiles into `pnpm-lock.yaml`.
+//! Resolves missing package tarballs/integrities and merges converted [`Graph`] lockfiles into `pnpm-lock.yaml`.
 
 mod context;
 mod convert;

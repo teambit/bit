@@ -3,7 +3,7 @@
 //! aspects, workspace variants and the model's other aspects, first wins per
 //! aspect. Then its env (`calculateEnvId`).
 //!
-//! Resolves component aspect lists and determines the effective environment ID.
+//! Resolves component [`AspectEntry`] lists and determines the effective environment ID ([`DEFAULT_ENV`]).
 
 pub use crate::policy::CORE_ENVS;
 

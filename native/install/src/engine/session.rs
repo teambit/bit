@@ -2,7 +2,7 @@
 //! lazily loaded wanted lockfile, and a multi-thread runtime
 //! (`run_install_inner` in `@pnpm/napi`).
 //!
-//! Owns the per-invocation `tokio::runtime::Runtime`, `ThrottledClient`, and `LazyLockfile`.
+//! Owns the per-invocation `tokio::runtime::Runtime`, [`ThrottledClient`], and [`LazyLockfile`] in [`Session`].
 
 use super::{config_overlay::http_client, hooks::normalize};
 use crate::model::Project;

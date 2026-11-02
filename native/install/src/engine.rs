@@ -5,7 +5,7 @@
 //! aspect. The install itself mirrors how `@pnpm/napi` drives
 //! `pnpm_package_manager::Install` (`napi/src/install.rs`), with native workspace
 //! manifest preprocessing and pnpm overrides for removed core dependencies.
-//! Exposes lockfile restoration, peer missing checks, and remote version resolution.
+//! Exposes lockfile restoration, peer missing checks, and remote version resolution via [`install`].
 
 pub use canonical::CanonicalInstall;
 pub use cloud_user::{

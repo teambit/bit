@@ -1,7 +1,7 @@
 //! From deduped dependencies to engine projects: `getComponentsManifests`,
 //! `toJson`, and the `linkedDependencies` merge of `installComponents`.
 //!
-//! Produces the root and component manifests included in the [`InstallPlan`].
+//! Produces the root and component [`Manifest`]s included in the [`InstallPlan`].
 //! Computes deterministic manifest hashes to detect multi-cycle install convergence.
 
 use super::{

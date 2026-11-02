@@ -1,6 +1,6 @@
 //! Version helpers shared by the manifest calculation stages.
 //!
-//! Converts snap hashes to `0.0.0-<hash>` semver strings and classifies range vs. exact specifiers.
+//! Converts snap hashes to `0.0.0-<hash>` semver strings ([`snap_to_semver`]) and classifies range vs. exact specifiers.
 
 use super::semver::valid_range;
 use crate::model::{Lifecycle, PolicyEntry};

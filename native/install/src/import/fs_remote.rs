@@ -1,5 +1,5 @@
 //! Local `file://` remote (`scope-api/lib/fetch.ts` with `ObjectsReadableGenerator`).
-//! Reads component, lane, and version-history objects directly from a bare local scope directory.
+//! Reads component, lane, and version-history objects directly from a bare local scope directory via [`fetch`].
 
 use super::{
     bitmap::Id,

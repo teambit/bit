@@ -1,6 +1,6 @@
 //! Compare resolution-context retention with the published `@teambit/pnpm` package manager.
 //!
-//! Verifies all 144 combinations of `pnpmfileChecksum`, `settings`, and `overrides` against `mergeGraphLockfileIntoExisting`.
+//! Verifies all 144 combinations of `pnpmfileChecksum`, `settings`, and `overrides` against `mergeGraphLockfileIntoExisting` in [`resolution_context_matches_released_lockfile_merger`].
 use serde_json::{Value, json};
 use std::process::Command;
 

@@ -3,7 +3,7 @@
 //! A port of `WorkspaceManifestFactory` (`dependency-resolver`), the root
 //! components part of `InstallMain._getComponentsManifests`, and the manifest
 //! preparation of `DependencyInstaller.installComponents`.
-//! Coordinates dependency deduplication, semver intersection, and `.bit_roots` manifest assembly.
+//! Coordinates dependency deduplication, semver intersection, and `.bit_roots` manifest assembly via [`manifests_hash`].
 
 pub(crate) mod semver;
 

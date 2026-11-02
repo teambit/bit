@@ -1,4 +1,4 @@
-//! Prepared checkout plan state, body spooling, and token lifecycle management.
+//! Prepared checkout [`Plan`] state ([`State`]), body spooling, and token lifecycle management.
 
 use super::{invalid, wire};
 use serde_json::{Value, json};

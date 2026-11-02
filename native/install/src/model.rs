@@ -1,7 +1,7 @@
 //! Types shared between the install stages. Each stage owns its own internals;
 //! these are the values passed between them (see `docs/rust/native-install.md`).
 //!
-//! Defines [`ComponentId`], [`WorkspaceComponent`], [`ComponentDependencies`], [`EnvPolicy`], and [`InstallPlan`].
+//! Defines [`ComponentId`], [`WorkspaceComponent`], [`ComponentDependencies`], [`EnvPolicy`], [`Manifest`], and [`InstallPlan`].
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};

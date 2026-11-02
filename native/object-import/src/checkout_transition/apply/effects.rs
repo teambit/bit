@@ -1,4 +1,4 @@
-//! Three-way merge row effect application onto checkout file lists and status maps.
+//! Three-way merge row effect application ([`apply`]) onto checkout [`File`] lists and status maps.
 
 use super::{
     super::{invalid, plan},

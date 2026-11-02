@@ -2,7 +2,7 @@
 //! manifests preserve it (`componentsManifestsMap`), and the env peers resolve their
 //! conflicts in it: the version an env lists last wins.
 //!
-//! Orders core environments, custom workspace environments, configured extensions, and regular components.
+//! Orders core environments, custom workspace environments, configured extensions, and regular components via [`load_order`].
 
 #[cfg(test)]
 mod tests;

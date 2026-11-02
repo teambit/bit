@@ -1,7 +1,7 @@
 //! `WorkspaceManifestFactory.buildComponentDependenciesMap`: one dependencies
 //! object per component package name.
 //!
-//! Translates component and package dependency lists into per-component `DepsObject` maps.
+//! Translates component and package dependency lists ([`Dep`]) into per-component [`DepsObject`] maps.
 
 mod env_peers;
 #[cfg(test)]

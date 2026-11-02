@@ -5,7 +5,7 @@
 //! A layout switch rebuilds every injected component package from source, so a
 //! `bit` process running from those directories would lose its own compiled code
 //! mid-install.
-//! Compares canonicalized `.modules.yaml` virtual-store paths against the running `bit` binary directory.
+//! Compares canonicalized `.modules.yaml` virtual-store paths against the running `bit` binary directory via [`assert_safe_transition`].
 
 #[cfg(test)]
 mod tests;

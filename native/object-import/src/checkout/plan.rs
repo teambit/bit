@@ -1,4 +1,4 @@
-//! Checkout file-status diffing, manifest verification, and source preloading.
+//! Checkout file-status diffing, manifest verification ([`verify_manifest`]), and source preloading.
 pub(crate) use verification::{verify_manifest, verify_manifest_value};
 #[cfg(test)]
 mod tests;

@@ -1,5 +1,5 @@
 //! The regular expressions of npm's `semver` (`internal/re.js`), built from the
-//! same sources and run by an `ECMAScript` regex engine so that every match,
+//! same sources and run by an `ECMAScript` regex engine ([`Regex`]) so that every match,
 //! capture and replacement behaves like the `JavaScript` original. Only the
 //! strict (non-`loose`) forms are used by Bit.
 

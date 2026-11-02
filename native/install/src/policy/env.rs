@@ -1,6 +1,6 @@
 //! `EnvPolicy.fromConfigObject` and the `env.jsonc` `extends` merge (`mergeEnvManifestPolicy`).
 //!
-//! Parses `peers`, `components`, and legacy dependency sections from `env.jsonc` manifests.
+//! Parses `peers`, `components`, and legacy dependency sections from `env.jsonc` manifests via [`from_config`].
 
 use super::entries::{self, VariantOptions, from_variant_config, merge, truthy, uniq};
 use crate::model::{EnvPolicy, Lifecycle, PolicyEntry};

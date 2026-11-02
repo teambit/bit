@@ -4,7 +4,7 @@
 //! The engine rewrites `pnpm-lock.yaml` from its typed model; top-level keys it
 //! does not define round-trip through [`Lockfile::extra`], so the block is read
 //! before the install and re-asserted after it.
-//! Synchronizes `bit:` metadata across both the root `pnpm-lock.yaml` and `.pnpm/lock.yaml`.
+//! Synchronizes `bit:` metadata ([`BIT_KEY`]) across both the root `pnpm-lock.yaml` and `.pnpm/lock.yaml`.
 
 #[cfg(test)]
 mod tests;

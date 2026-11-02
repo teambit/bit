@@ -1,4 +1,4 @@
-//! Workspace file materialization from prepared checkout plan buffers.
+//! Workspace file materialization ([`apply`]) from prepared checkout [`plan`] buffers.
 
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};

@@ -1,12 +1,12 @@
 //! The Lane model (`scopes/scope/objects/models/lane.ts`): parsing, the
 //! mutations the import merge uses, and `toObject()` serialization.
 //!
-//! Preserves schema version, readme components, log metadata, and `isDeleted` component flags.
+//! Preserves schema version ([`OLD_LANE_SCHEMA`]), readme components, log metadata, and `isDeleted` component flags in [`LaneComponent`].
 
 use crate::import::bitmap::Id;
 use serde_json::{Map, Value, json};
 
-/// Lanes without `isDeleted` data (the old lane schema in TypeScript).
+/// Lanes without `isDeleted` data (the old lane schema in `TypeScript`).
 pub const OLD_LANE_SCHEMA: &str = "0.0.0";
 
 /// A visible lane entry.

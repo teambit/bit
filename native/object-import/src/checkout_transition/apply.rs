@@ -1,4 +1,4 @@
-//! Checkout plan application and conflict resolution strategy evaluation.
+//! Checkout plan application ([`apply`]) and conflict resolution strategy evaluation for [`File`] entries.
 
 mod effects;
 #[cfg(test)]

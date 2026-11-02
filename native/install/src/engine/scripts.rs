@@ -1,7 +1,7 @@
 //! Which dependency build scripts may run (`resolveScriptPolicies` in `lynx.ts`).
 //!
-//! Combines `@pnpm/plugin-trusted-deps` defaults, untrusted package exclusions, and user overrides.
-//! Evaluates `allowScripts`, `dangerouslyAllowAllScripts`, and `BIT_ALLOW_SCRIPTS` overlays.
+//! Combines `@pnpm/plugin-trusted-deps` defaults, untrusted package exclusions ([`UNTRUSTED_PACKAGE_NAMES`]), and user overrides.
+//! Evaluates `allowScripts`, `dangerouslyAllowAllScripts`, and `BIT_ALLOW_SCRIPTS` overlays into [`ScriptPolicy`].
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! Complete read-only Source loads: return verified raw bodies and canonical cache weights.
 //!
-//! Streams verified `Source` object contents over the helper framing protocol.
+//! Streams verified `Source` object contents ([`Record`]) over the helper framing protocol into [`Output`].
 use super::{MAX_BYTES, Request, Response, cache, invalid, repository, request};
 use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};

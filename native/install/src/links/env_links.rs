@@ -21,7 +21,7 @@ use std::{
 };
 
 /// The root `link:` dependencies resolved from envs, and the messages for the
-/// dependencies an env cannot resolve (`logger.console` in TypeScript).
+/// dependencies an env cannot resolve (`logger.console` in `TypeScript`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct EnvLinks {
     pub links: DependencyMap,

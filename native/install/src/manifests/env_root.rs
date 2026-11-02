@@ -1,6 +1,6 @@
 //! `mergeEnvPeersToRoot`: env peers installed once at the workspace root.
 //!
-//! Resolves singleton and override environment peer policies and injects conflicting peers per env.
+//! Resolves singleton and override environment peer policies into [`EnvRoot`] and injects conflicting peers per env.
 
 use super::{
     ManifestInput,

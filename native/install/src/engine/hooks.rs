@@ -1,8 +1,8 @@
 //! Bit's `readPackage` hooks (`createReadPackageHooks` in `lynx.ts`),
 //! implemented natively.
 //!
-//! The hooks are recorded in the lockfile as `pnpmfileChecksum: bit-1`, exactly
-//! like the `TypeScript` integration (`readPackageHookChecksum` wraps its
+//! The hooks are recorded in the lockfile as `pnpmfileChecksum: bit-1` ([`READ_PACKAGE_HOOKS_CHECKSUM`]),
+//! exactly like the `TypeScript` integration (`readPackageHookChecksum` wraps its
 //! `JavaScript` hook in `@pnpm/napi`'s `ChecksummedHooks`), so both produce and
 //! reuse the same lockfiles.
 

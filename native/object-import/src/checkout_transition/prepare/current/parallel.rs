@@ -1,4 +1,4 @@
-//! Rayon parallel workspace file reader with serial fallback on concurrent file modifications.
+//! Rayon parallel workspace file reader ([`load`]) with serial fallback on concurrent file modifications.
 
 #[cfg(test)]
 mod tests;

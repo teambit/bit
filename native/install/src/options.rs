@@ -2,7 +2,7 @@
 //! (`cli-parser.ts`: `boolean-negation: false`, camel-case expansion) for the
 //! CLI flags `install.cmd.tsx` declares.
 //!
-//! Parses CLI arguments and programmatic `WorkspaceInstallOptions` into [`InstallOptions`].
+//! Parses CLI arguments and programmatic `WorkspaceInstallOptions` into [`InstallOptions`] and [`ExistingEntries`].
 
 #[cfg(test)]
 mod tests;

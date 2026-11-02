@@ -2,7 +2,7 @@
 //! (`components/legacy/loader/loader.ts`, ora 5 with the `dots` spinner on
 //! stdout), `chalk` colors and `pretty-time` durations.
 //!
-//! Manages terminal spinners, ANSI color formatting, and elapsed time rendering.
+//! Manages terminal spinners, ANSI color formatting ([`Style`]), and elapsed time rendering.
 
 #[cfg(test)]
 mod tests;

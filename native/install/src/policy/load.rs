@@ -6,7 +6,7 @@
 //! objects (the pre-install import fetches it). `extends` is resolved the same way.
 //! An env without `env.jsonc` falls back to `getDependencies()` and is marked
 //! `without_manifest`.
-//! Resolves `extends` chains up to 16 levels across workspace, scope, and `node_modules` `env.jsonc` files.
+//! Resolves `extends` chains up to 16 levels across workspace, [`Scope`], and `node_modules` `env.jsonc` files.
 
 use super::{env, scope::Scope};
 use crate::{

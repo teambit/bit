@@ -1,5 +1,5 @@
 //! `NodeModuleLinker.link()`: workspace components as packages in `node_modules`.
-//! Creates source file symlinks, writes generated `package.json` files, and syncs `.bit_roots` copies.
+//! Creates source file symlinks, writes generated `package.json` files, and syncs `.bit_roots` copies via [`component_package_copies`].
 
 pub use copies::component_package_copies;
 pub use prepared::{link_prepared_component, prepared_package_manifest};
