@@ -1,6 +1,6 @@
 //! `brace-expansion` numeric/alphabetic sequences, before minimatch parsing.
 //!
-//! [`expand`] ([`LIMIT`]) expands bounded numeric and alphabetic brace ranges or declines via [`decline`].
+//! [`expand`] ([`Sequence`], [`sequence`], [`LIMIT`]) expands bounded numeric and alphabetic brace ranges or declines via [`decline`].
 
 use crate::commands::status::js::decline;
 use std::io;

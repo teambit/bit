@@ -2,7 +2,7 @@
 //! state are snapped by the engine's `commandResolve*` requests, and reported like `MergeCmd`'s resolved
 //! components.
 //!
-//! Resolves component [`Id`] targets with [`Startup`] autosync and formats [`Report`] output via [`Formatter`] and [`Chalk`].
+//! Resolves component [`Id`] targets ([`Options`], [`parse`], [`FLAGS`]) with [`Startup`] autosync and formats [`Report`] output via [`Formatter`] and [`Chalk`].
 
 use crate::{
     commands::{

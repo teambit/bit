@@ -91,6 +91,7 @@ fn codemods_json(items: &[CodemodResult]) -> Vec<Value> {
         .collect()
 }
 
+/// Converts [`LinkToDirResult`] entries into the `linkToDirResults` JSON array.
 #[inline]
 fn target_links_json(items: &[LinkToDirResult]) -> Vec<Value> {
     items

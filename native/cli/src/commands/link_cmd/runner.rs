@@ -40,7 +40,7 @@ const PRESERVED_MANIFEST_KEYS: &[&str] = &[
     "peerDependenciesMeta",
     "bit",
 ];
-
+/// Executes `bit link` natively when `root` and `options` are eligible, or returns `Ok(None)` to delegate.
 pub(super) fn try_run(
     root: &Path,
     cwd: &Path,

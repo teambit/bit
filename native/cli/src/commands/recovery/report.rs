@@ -76,6 +76,7 @@ fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     })
 }
 
+/// Formats the `"The following have been restored successfully"` bullet section for `items`.
 fn lane_restored_summary(items: &[Value], format: &Formatter) -> io::Result<String> {
     let restored = items
         .iter()

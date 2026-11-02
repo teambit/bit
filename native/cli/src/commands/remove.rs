@@ -1,6 +1,6 @@
 //! `RemoveMain`'s local batch removal with retained provider startup and native scope publication.
 //!
-//! Coordinates [`COMMAND`], [`preparation`], [`load_free`], [`options`], and [`report`] into a [`Report`].
+//! Coordinates [`COMMAND`], [`run`], [`work`], [`load`], [`preparation`], [`load_free`], [`options`], and [`report`] into a [`Report`].
 pub(super) mod preparation;
 
 mod load_free;

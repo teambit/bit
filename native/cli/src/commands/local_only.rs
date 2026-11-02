@@ -1,6 +1,6 @@
 //! Native `bit local-only <set|unset|list> [component-pattern]` (`LocalOnlyCmd` in `scopes/workspace/workspace/commands/local-only-cmd.ts`).
 //!
-//! Updates `.bitmap` ([`Bitmap`]) local-only entries ([`COMMAND`]) for [`selection`] patterns and formats a [`Report`].
+//! Updates `.bitmap` ([`Bitmap`]) local-only entries ([`COMMAND`], [`Subcommand`], [`Prepared`]) for [`selection`] patterns and formats a [`Report`].
 
 #[cfg(test)]
 mod tests;

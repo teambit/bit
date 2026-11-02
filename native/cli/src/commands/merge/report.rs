@@ -4,7 +4,7 @@
 //! removed and conflict sections stay empty. `bit lane merge` gets the
 //! whole result (`MergeLaneCmd`).
 //!
-//! Formats workspace config updates via [`policy`] ([`Mode`], [`REMOVED`]) and renders output with [`Chalk`].
+//! Formats workspace config updates via [`policy`] ([`Mode`], [`format`], [`REMOVED`]) and renders output with [`Chalk`].
 
 mod policy;
 

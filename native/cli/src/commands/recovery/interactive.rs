@@ -1,6 +1,6 @@
 //! Confirmation precedes restoration and any configured component callbacks.
 //!
-//! [`run`] and [`prompt`] confirm with [`confirm`] before executing [`Prepared`] recovery and [`installation_session`] for [`Options`].
+//! [`run`] and [`prompt`] confirm with [`confirm`] before executing [`Prepared`] recovery and [`installation_session`] for [`Options`] and [`Kind`].
 use super::{
     Chalk, Engine, Installer, Kind, Options, Outcome, Prepared, Startup, Value, array, execute,
     failure, format_result, installation_session, prepare_request, workspace_command,

@@ -1,6 +1,6 @@
 //! Scalar remote inventory and latest-version facts, without importing repository objects.
 //!
-//! [`list`] queries [`Session`] and [`Engine`] to populate [`Row`] and [`WorkspaceRow`] entries for [`Options`].
+//! [`list`] ([`request`], [`parse_row_id`], [`row`]) queries [`Session`] and [`Engine`] to populate [`Row`] and [`WorkspaceRow`] entries for [`Options`].
 
 use super::{Options, Row, WorkspaceRow, decline};
 use crate::commands::{

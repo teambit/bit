@@ -86,6 +86,7 @@ fn apply_log_arg<'a>(options: &mut Options<'a>, trimmed: &'a str) -> Option<()> 
     Some(())
 }
 
+/// Splits a boolean `bit log` flag (or `--flag=true`/`--flag=false` assignment) into `(flag, value)`.
 #[inline]
 fn parse_log_flag_value(arg: &str) -> Option<(&str, bool)> {
     match arg.split_once('=') {

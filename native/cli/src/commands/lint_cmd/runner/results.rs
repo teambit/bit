@@ -96,6 +96,7 @@ pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
     result
 }
 
+/// Returns `true` when both `totalErrorCount` and `totalFatalErrorCount` on `result` are zero.
 #[inline]
 fn clean(result: &Value) -> bool {
     ["totalErrorCount", "totalFatalErrorCount", "totalWarningCount"]

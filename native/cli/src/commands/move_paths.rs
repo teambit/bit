@@ -94,6 +94,7 @@ fn run_workspace(
     })
 }
 
+/// Formats the human-readable terminal summary of moved component paths in `plan`.
 #[inline]
 fn report(plan: &Plan, format: &Formatter) -> io::Result<String> {
     let sections = plan

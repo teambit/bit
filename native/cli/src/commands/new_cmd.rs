@@ -93,6 +93,7 @@ pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), Stri
     validate_template_source(cwd, options)
 }
 
+/// Validates `--load-from`, `--aspect`, and built-in starter template names in `options`.
 fn validate_template_source(cwd: &Path, options: &Options) -> Result<(), String> {
     if let Some(load_from) = options.load_from.as_deref() {
         if options.aspect.is_none() {

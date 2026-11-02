@@ -62,7 +62,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     failure::present(root.as_deref(), args, &rows, &options, &session)
 }
-
+/// Returns the decline reason when `options` or `root` require delegating `bit list` to `Node.js`.
 #[inline]
 fn unsupported(root: Option<&Path>, options: &Options) -> Option<&'static str> {
     if root.is_none() && options.remote.is_none() {

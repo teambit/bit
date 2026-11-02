@@ -34,7 +34,7 @@ struct Options {
     json: bool,
     remote: bool,
 }
-
+/// Error classification distinguishing declined pattern evaluations from user-facing pattern errors.
 enum Failure {
     Declined(String),
     User(String),

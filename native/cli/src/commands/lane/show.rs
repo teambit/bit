@@ -1,6 +1,6 @@
 //! Native `bit lane show` for a local lane or main.
 //!
-//! [`show`] inspects local or remote [`LaneData`] via [`Session`], [`read_for_scope`], and [`project_http`] and renders [`components_report`].
+//! [`show`] ([`outside_scope_show`], [`emit_selected`]) inspects local or remote [`LaneData`] via [`Session`], [`read_for_scope`], and [`project_http`] and renders [`components_report`].
 
 use super::list::{
     LaneData, components_report, project_http, read_for_scope,

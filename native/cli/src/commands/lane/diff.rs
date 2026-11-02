@@ -1,6 +1,6 @@
 //! Native `bit lane diff` handling when a base version object is missing on the filesystem.
 //!
-//! [`run`] queries [`Engine`] and renders component file/config diffs via [`files`], [`git`], [`list`], [`show`], and [`Report`].
+//! [`run`] ([`outside_workspace_diff`], [`validate_workspace_diff`]) queries [`Engine`] and renders component file/config diffs via [`files`], [`git`], [`list`], [`show`], and [`Report`].
 
 use super::{list, show};
 use crate::{

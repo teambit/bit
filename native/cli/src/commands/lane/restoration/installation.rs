@@ -1,6 +1,6 @@
 //! Each history partition completes its own actual install and outer compile on one Host.
 //!
-//! [`run`] coordinates [`ProjectedLinker`], [`Installer`], and [`Environments`] across [`Planned`] checkout partitions.
+//! [`run`] ([`compile`], [`compiler_error`]) coordinates [`ProjectedLinker`], [`Installer`], and [`Environments`] across [`Planned`] checkout partitions.
 use crate::commands::{
     add::ProjectedLinker,
     installation::Installer,

@@ -87,6 +87,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+/// Applies a single `bit link` CLI flag or positional component pattern `arg` onto `options`.
 #[inline]
 fn apply_token<'a>(
     arg: &'a str,

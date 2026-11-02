@@ -35,7 +35,7 @@ pub(super) struct SetupOptions {
     pub include_additional: Option<String>,
     pub is_global: bool,
 }
-
+/// Parsed `bit mcp-server` subcommand (`setup`, `rules`, or an unrecognized subcommand token).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Setup(SetupOptions),

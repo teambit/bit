@@ -95,6 +95,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+/// Applies a single `bit login` CLI flag (and any value argument from `iter`) onto `options`.
 fn apply_login_arg<'a>(
     arg: &'a str,
     iter: &mut impl Iterator<Item = &'a str>,

@@ -1,6 +1,6 @@
 //! Local, unexported lane metadata changes.
 //!
-//! Re-exports [`history_diff`] and [`updates`] and handles local lane [`rename`] and readme ([`ReadmePlan`]) operations.
+//! Re-exports [`history_diff`] and [`updates`] and handles local lane [`rename`], [`change_scope`], and readme ([`ReadmePlan`]) operations.
 
 pub(super) use query::{history_diff, updates};
 

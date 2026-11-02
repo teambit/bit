@@ -79,7 +79,7 @@ fn resolve_target_scope(cwd: &Path, ws_root: Option<&Path>, options: &Options) -
         scope_dir.is_dir().then_some(scope_dir)
     }
 }
-
+/// Resolves `raw_id` from workspace `ws_root` or `scope_dir` into a [`ResolvedComponent`].
 fn resolve_component(
     ws_root: Option<&Path>,
     scope_dir: &Path,

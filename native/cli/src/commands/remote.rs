@@ -1,6 +1,6 @@
 //! Native `bit remote` (`bit remote`, `bit remote list`, `bit remote add`, `bit remote del`).
 //!
-//! Coordinates [`COMMAND`], [`options`], and [`stores`] to inspect or mutate global and scope remotes into [`Outcome`].
+//! Coordinates [`COMMAND`], [`run`], [`options`], and [`stores`] to inspect or mutate global and scope remotes into [`Outcome`].
 
 mod options;
 mod stores;

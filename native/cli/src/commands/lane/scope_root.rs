@@ -1,6 +1,6 @@
 //! A lane inspection can start in a workspace or directly in a bare scope.
 //!
-//! [`ScopeRoot`] and [`discover`] resolve the scope directory and object paths using [`workspace`] and [`sha1_hex`].
+//! [`ScopeRoot`], [`discover`], and [`diagnose_component_lookup_error`] resolve the scope directory and object paths using [`workspace`] and [`sha1_hex`].
 use crate::{
     commands::{color::Chalk, debug_cat::sha1_hex},
     workspace,

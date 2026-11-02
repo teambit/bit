@@ -1,6 +1,6 @@
 //! Historical lane targets use retained native selection and complete checkout phases.
 //!
-//! [`run`] coordinates [`diagnostics`], [`options`], [`session`], [`installation`], and [`report`] for lane checkout/revert.
+//! [`run`] ([`run_in_workspace`], [`failure`]) coordinates [`diagnostics`], [`options`], [`session`], [`installation`], and [`report`] for lane checkout/revert.
 mod diagnostics;
 mod installation;
 mod options;

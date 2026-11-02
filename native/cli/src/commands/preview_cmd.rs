@@ -75,6 +75,7 @@ fn run_generate(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("generate-preview execution delegated".into()))
 }
 
+/// Validates workspace `.bitmap` pattern selection for `bit generate-preview` inside `root`.
 fn try_run_workspace_generate(
     root: &Path,
     args: &[OsString],

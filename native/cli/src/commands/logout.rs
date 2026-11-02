@@ -1,6 +1,6 @@
 //! Native `bit logout` (`LogoutCmd` in `scopes/cloud/cloud/logout.cmd.ts`).
 //!
-//! Clears stored cloud authentication tokens ([`COMMAND`], [`global_config_dir`]) and formats confirmation via [`Formatter`].
+//! Clears stored cloud authentication tokens ([`COMMAND`], [`clear_auth_config`], [`global_config_dir`]) and formats confirmation via [`Formatter`].
 
 #[cfg(test)]
 mod tests;

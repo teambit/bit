@@ -80,7 +80,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     execute_log(args, root.as_deref(), &options)
 }
-
+/// Reads local or remote component log entries for `options` and renders the output.
 fn execute_log(
     args: &[OsString],
     root: Option<&Path>,

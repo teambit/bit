@@ -51,6 +51,7 @@ pub(super) fn result(error: &io::Error) -> Option<&Value> {
         .downcast_ref::<Restored>()
         .map(|error| &error.0)
 }
+/// Appends any unprinted startup or build stdout from a [`crate::host::callback_error::CallbackError`] onto `startup`.
 #[inline]
 pub(super) fn retain(startup: &mut Startup, error: &io::Error) {
     if let Some(error) = error

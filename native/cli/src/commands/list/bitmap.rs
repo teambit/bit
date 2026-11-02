@@ -1,7 +1,7 @@
 //! The `.bitmap` entries `bit list` reads: `getAllBitIds()`,
 //! `getComponentDir()`, the current lane and whether a component is on it.
 //!
-//! Exposes [`Entry`] (`on_current_lane`) and bitmap parsing helpers for workspace list queries.
+//! Exposes [`Bitmap`], [`Entry`] (`on_current_lane`), and [`read`] bitmap parsing helpers for workspace list queries.
 
 use super::decline;
 use serde_json::Value;

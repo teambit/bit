@@ -1,7 +1,7 @@
 //! Read-only `multimatch` selection with the shared native minimatch grammar.
 //! Bit splits commas and `@` versions before matching, even inside globs.
 //!
-//! [`matching`] and [`matches`] use [`glob`] and [`ranges`] expansion to evaluate multi-clause component patterns.
+//! [`matching`] and [`matches`] use [`glob`] and [`ranges`] (`expand`) expansion to evaluate multi-clause component patterns.
 
 mod ranges;
 #[cfg(test)]

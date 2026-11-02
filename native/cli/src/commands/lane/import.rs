@@ -1,7 +1,7 @@
 //! Native lane import on main switches; on another lane it publishes the
 //! fetched Lane and component objects without changing the workspace.
 //!
-//! [`run`] coordinates [`Engine`], [`Installer`], and [`ProjectedLinker`] to produce a [`Report`] via [`Formatter`].
+//! [`run`] ([`outside_workspace_import`], [`bootstrap`], [`active`]) coordinates [`Engine`], [`Installer`], and [`ProjectedLinker`] to produce a [`Report`] via [`Formatter`].
 
 use super::{
     super::{

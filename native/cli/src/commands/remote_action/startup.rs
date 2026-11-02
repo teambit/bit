@@ -72,6 +72,7 @@ fn is_main_lane(name: &str) -> bool {
     bare.is_empty() || bare.rsplit('/').next().map(str::trim) == Some("main")
 }
 
+/// Returns `true` when `scope.jsonc` in `scope` and global config contain only core aspects.
 fn scope_supported(scope: &Path) -> io::Result<bool> {
     let path = scope.join("scope.jsonc");
     let raw = match fs::read(path) {

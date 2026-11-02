@@ -67,6 +67,7 @@ pub(super) fn prepare(options: &Options, args: &[OsString]) -> Result<Prepared, 
     }
 }
 
+/// Prepares the [`Prepared`] table report for `bit remote` or `bit remote list`.
 fn prepare_list(
     global: bool,
     cwd: &Path,

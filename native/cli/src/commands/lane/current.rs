@@ -93,6 +93,7 @@ pub(super) fn scope(root: &Path) -> io::Result<Value> {
     scope_for(root, false)
 }
 
+/// Reads and parses `scope.json` inside `root` (directly when `bare` is true, or under `.bit`/`scope` otherwise).
 #[inline]
 pub(super) fn scope_for(root: &Path, bare: bool) -> io::Result<Value> {
     let path = if bare { root.to_owned() } else { bit_object_import::scope_path(root) };

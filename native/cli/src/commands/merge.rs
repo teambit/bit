@@ -2,7 +2,7 @@
 //! (`workspace_command`) with the merge options and report, and
 //! `bit merge --resolve` ([`resolve`]), retaining one provider session through snapshots.
 //!
-//! Coordinates [`COMMAND`], [`install`], [`lifecycle`], [`report`], [`resolve`], [`failures`], and [`options`] submodules.
+//! Coordinates [`COMMAND`], [`run`], [`install`], [`lifecycle`], [`report`], [`resolve`], [`failures`], and [`options`] submodules.
 
 pub(super) mod install;
 pub(super) mod lifecycle;

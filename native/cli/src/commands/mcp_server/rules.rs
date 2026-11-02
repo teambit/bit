@@ -14,6 +14,7 @@ const RULES_EDITORS: &[&str] = &["vscode", "cursor", "roo", "cline", "claude-cod
 /// Embedded Markdown rules template for consumer (non-Bit-workspace) projects.
 const TEMPLATE_CONSUMER: &str =
     include_str!("../../../../../components/mcp/mcp-config-writer/bit-rules-consumer-template.md");
+/// Embedded Markdown rules template for Git-backed Bit workspace projects.
 const TEMPLATE_GIT: &str =
     include_str!("../../../../../components/mcp/mcp-config-writer/bit-git-rules-template.md");
 const TEMPLATE_STANDARD: &str =

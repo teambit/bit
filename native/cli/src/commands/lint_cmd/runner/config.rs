@@ -82,6 +82,7 @@ fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<V
     Ok(expanded)
 }
 
+/// Normalizes `directory` and appends the relative `../../<directory>/<value>` pattern to `expanded`.
 #[inline]
 fn push_expanded_pattern(expanded: &mut Vec<Value>, directory: &str, value: &str) {
     let trimmed = directory.trim();

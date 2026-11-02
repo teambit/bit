@@ -92,6 +92,7 @@ fn children_may_remain(error: &io::Error) -> bool {
         || (cfg!(windows) && error.kind() == io::ErrorKind::PermissionDenied)
 }
 
+/// Unlinks a non-directory file or symlink at `path` on Unix platforms.
 #[cfg(not(windows))]
 #[inline]
 fn unlink(path: &Path) -> io::Result<()> {

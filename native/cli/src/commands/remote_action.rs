@@ -68,6 +68,7 @@ impl Plan {
         }
     }
 
+    /// Runs `work` inside the workspace or bare-scope terminal lifecycle wrapper for `command`.
     #[inline]
     pub(super) fn execute(
         &self,

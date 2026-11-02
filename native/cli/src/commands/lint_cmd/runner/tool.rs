@@ -76,6 +76,7 @@ impl Session {
         Ok(value)
     }
 
+    /// Reads and parses a single newline-delimited JSON response line from the `ESLint` worker stdout.
     #[inline]
     fn read(&mut self) -> io::Result<Value> {
         let mut bytes = Vec::new();

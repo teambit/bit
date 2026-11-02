@@ -1,6 +1,6 @@
 //! Inspect lanes in configured file and HTTP remotes through the repository engine.
 //!
-//! [`run`] queries remote [`LaneData`] entries via [`Session`] and [`Engine`] and formats a [`Report`].
+//! [`run`] ([`prepare`], [`text_report`]) queries remote [`LaneData`] entries via [`Session`] and [`Engine`] and formats a [`Report`].
 use super::{LaneData, Tracking, array, lane, read_current, report_others};
 use crate::{
     commands::{

@@ -1,6 +1,6 @@
 //! Continue the same provider session through a real merge-resolution snapshot.
 //!
-//! [`run`] drives [`Planned`] auto-snap or tag continuation with [`Progress`] and [`resolve`] for [`Options`].
+//! [`run`] ([`continue_snapshot`], [`snap_results`]) drives [`Planned`] auto-snap or tag continuation with [`Progress`] and [`resolve`] for [`Options`].
 use super::Options;
 use crate::commands::{
     status::{

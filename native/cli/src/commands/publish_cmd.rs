@@ -96,6 +96,7 @@ fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Validates workspace pattern selection and package configuration for `bit publish` inside `root`.
 fn execute_workspace_publish(
     root: &Path,
     args: &[OsString],

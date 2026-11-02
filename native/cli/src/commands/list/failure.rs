@@ -84,6 +84,7 @@ pub(super) fn owned(
     bare(args, options, session, &error)
 }
 
+/// Renders a command-owned `bit list` failure inside workspace `root` using [`workspace_command`].
 fn workspace(
     root: &Path,
     args: &[OsString],
