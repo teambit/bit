@@ -91,6 +91,7 @@ fn refs(value: &Value) -> io::Result<Value> {
     Ok(Value::Array(list))
 }
 
+/// Extracts a trimmed reference hash string from `value` (string, `ref`, or `hash` field).
 #[inline]
 fn ref_str(value: &Value) -> Option<&str> {
     value

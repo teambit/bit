@@ -86,6 +86,7 @@ fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates and records read proofs for existing ordinary directory ancestors of `path` under `root`.
 fn ancestors(root: &Path, path: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<()> {
     for ancestor in path
         .ancestors()

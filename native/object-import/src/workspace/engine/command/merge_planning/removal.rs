@@ -62,6 +62,7 @@ pub(super) fn remove(root: &Path, removed: &[Removed]) -> io::Result<()> {
     Ok(())
 }
 
+/// Populates `prepared.publication.removed` and `planned.result["removedComponents"]` for removed targets.
 pub(super) fn prepare(
     planned: &mut planning::Planned,
     prepared: &mut Prepared,

@@ -18,6 +18,7 @@ pub(super) const REMOVAL: &str = "teambit.component/remove";
 /// Aspect ID for the pipeline builder core aspect (`teambit.pipelines/builder`).
 const BUILDER: &str = "teambit.pipelines/builder";
 
+/// Aspect ID for the dependency resolver core aspect (`teambit.dependencies/dependency-resolver`).
 pub(super) const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 pub(super) const CORES: &[&str] = &[
     "teambit.envs/envs",

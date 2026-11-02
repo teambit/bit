@@ -1,4 +1,4 @@
-//! [`validate`] ownership boundaries and [`select_pattern`] before selecting or combining checkout targets.
+//! [`validate`] ownership boundaries, [`select_pattern`], and [`matches_identity`] before selecting or combining checkout targets.
 
 use super::invalid;
 use serde_json::Value;

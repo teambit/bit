@@ -12,6 +12,7 @@ use std::{
 
 /// Maximum byte length accepted for a single JSON line reply from the file-scope bridge process.
 const MAX_REPLY_BYTES: usize = 4 * 1024 * 1024;
+/// Inline Node.js script that loads `@teambit/legacy.scope-api` and serves line-delimited JSON action requests.
 const SCRIPT: &str = r"
 const readline = require('node:readline');
 // The parent owns ExportMain's protected communication phase and prints its Ctrl+C warning.

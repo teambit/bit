@@ -76,6 +76,7 @@ impl<'a> Grammar<'a> {
         })
     }
 }
+/// Indexed before/after source file maps and sorted union of relative file names for comparison.
 struct Files<'a> {
     before: BTreeMap<&'a str, &'a Value>,
     after: BTreeMap<&'a str, &'a Value>,

@@ -1,4 +1,4 @@
-//! Lane component [`metadata`], [`Additions`] discovery, and [`Candidates`] target selection.
+//! Lane component [`metadata`], [`attach`], [`Additions`] discovery, and [`Candidates`] target selection.
 
 use super::{Operation, Prepare, selected};
 use crate::{

@@ -43,7 +43,7 @@ pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     })
 }
 
-/// Parses a validated `(scope, name, version)` tuple from a `scope/name@version` resume identifier.
+/// Parses a validated `(scope, name, version)` tuple from a `scope/name@version` resume identifier for [`ResumeContext`].
 #[inline]
 fn parse_resume_id(id: &str) -> io::Result<(String, String, String)> {
     let (identity, version) = id

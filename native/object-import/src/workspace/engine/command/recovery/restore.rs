@@ -77,6 +77,7 @@ pub(super) fn prepare(
     prepared.validate()?;
     Ok(prepared)
 }
+/// Prepares lane-abort backup restorations, directory removals, and control file copies on `prepared`.
 fn prepare_lane(
     prepared: &mut Prepared,
     bitmap_path: &Path,

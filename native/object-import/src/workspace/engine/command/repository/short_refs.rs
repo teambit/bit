@@ -1,4 +1,4 @@
-//! Repository short refs [`matching`] every stored object, as `Repository.getFullRefFromShortHash` does.
+//! Repository short refs [`matching`] and [`unique`] across every stored object, as `Repository.getFullRefFromShortHash` does.
 
 #[cfg(test)]
 mod tests;

@@ -56,6 +56,7 @@ fn normalize_root_dir(dir: &str) -> &str {
     if stripped.is_empty() { "." } else { stripped }
 }
 
+/// Strips per-component `config` maps from `bitmap`, validates each with `validate`, and returns `(projected, configs)`.
 fn project_with(
     bitmap: &Value,
     validate: fn(&Value) -> io::Result<()>,

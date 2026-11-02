@@ -1,4 +1,4 @@
-//! `Source` object hashing and compression via [`prepare`] and [`capture`] for [`Input`] under [`Budget`].
+//! `Source` object hashing and compression via [`prepare`], [`capture`], and [`edges`] for [`Input`] under [`Budget`].
 
 #[cfg(test)]
 mod tests;

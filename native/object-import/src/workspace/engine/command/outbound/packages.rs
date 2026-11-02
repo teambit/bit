@@ -90,6 +90,7 @@ fn roots(input: &Prepare, workspace: &Value) -> io::Result<Option<std::path::Pat
     Ok(Some(input.root.join(base).join(".bit_roots")))
 }
 
+/// Captures read proofs for workspace, global, `.bitmap`, and scope control files on `input`.
 fn controls(input: &Prepare) -> io::Result<Vec<proof::Proof>> {
     let scope = crate::scope_path(&input.root);
     let mut proofs = Vec::with_capacity(6);

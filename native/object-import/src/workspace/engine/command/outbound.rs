@@ -1,4 +1,4 @@
-//! Outbound export owner ([`Candidates`], [`Prepare`], [`stage`], [`apply`], [`finalize`]): [`stage`] captures [`model`] and [`lane_model`] closures;
+//! Outbound export owner ([`Candidates`], [`Prepare`], [`Apply`], [`stage`], [`apply`], [`finalize`]): [`stage`] captures [`model`] and [`lane_model`] closures;
 //! [`apply`] transfers [`ObjectItem`] payloads via [`remote`] and [`hub`];
 //! [`finalize`] publishes [`publication`] and [`lane_publication`] from [`receipt`].
 

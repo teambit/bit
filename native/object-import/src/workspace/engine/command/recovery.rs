@@ -56,6 +56,7 @@ pub(in crate::workspace::engine) struct Plan {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+/// Deserialized request to restore `last-merged` controls for a planned recovery transaction.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Restore {

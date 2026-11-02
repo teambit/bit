@@ -80,6 +80,7 @@ fn target_ids(target: &Value) -> io::Result<(&str, String)> {
     Ok((identity, full_id))
 }
 
+/// Finds the lane target entry in `input.lane["targets"]` matching `target_id`.
 #[inline]
 fn lane_target<'a>(input: &'a Input<'_>, target_id: Option<&str>) -> Option<&'a Value> {
     input.lane

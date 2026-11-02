@@ -85,6 +85,7 @@ impl Prepared {
                 .join(&hash[2..]),
         )
     }
+    /// Verifies that all captured control and object preimages in `self.preimages` remain unchanged on disk.
     fn validate(&self) -> io::Result<()> {
         for (path, before) in &self.preimages {
             if read(path)? != *before {

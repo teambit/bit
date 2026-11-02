@@ -55,6 +55,7 @@ pub(super) fn prepare(record: &Record, plan: &planning::Planned) -> io::Result<P
 pub(super) fn checkout(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, true)
 }
+/// Shared implementation preparing `component.json` reset writes for `plan` with `checkout` mode.
 fn prepare_with(record: &Record, plan: &planning::Planned, checkout: bool) -> io::Result<Prepared> {
     let mut prepared = Prepared { proofs: Vec::new(), writes: Vec::new() };
     for material in &plan.materials {

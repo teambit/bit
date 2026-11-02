@@ -25,7 +25,7 @@ pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> 
     Ok(())
 }
 
-/// Collects a map from validated relative path to 20-byte `Source` SHA-1 digest from `value`.
+/// Collects a map from validated relative path to 20-byte `Source` SHA-1 digest from `value` for [`prove_changed`].
 #[inline]
 fn files(value: &Value, model: bool) -> io::Result<BTreeMap<&str, [u8; 20]>> {
     let mut files = BTreeMap::new();

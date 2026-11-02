@@ -69,6 +69,7 @@ pub(super) fn host(input: &Prepare, scope: &str) -> io::Result<String> {
     Ok(host)
 }
 
+/// Resolves the configured remote host URL for `scope` without filesystem checks.
 #[inline]
 pub(super) fn configured_host(input: &Prepare, scope: &str) -> io::Result<String> {
     Ok(super::hub::resolve(input, scope)?.host)

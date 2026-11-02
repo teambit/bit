@@ -1,4 +1,4 @@
-//! Auto-snap [`version`] and [`base_version`] metadata, dependency graph, and [`receipt`] validation for [`Input`] snapshots.
+//! Auto-snap [`version`], [`base_version`], [`build_status`], and [`receipt`] validation for [`Input`] snapshots.
 use super::{Input, invalid};
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};

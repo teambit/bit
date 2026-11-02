@@ -35,6 +35,7 @@ impl File {
 const DIVIDER: &str =
     "--------------------------------------------------------------------------------";
 
+/// Builds the `merge-conflict` [`File`] on `policy` under `root` and returns per-component conflict statuses.
 pub(super) fn prepare(policy: &mut Prepared, root: &Path) -> io::Result<Vec<Value>> {
     let mut sections = Vec::new();
     let mut results = Vec::new();

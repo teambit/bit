@@ -1,4 +1,4 @@
-//! [`candidates`], [`fast_forward`], [`lane_filter`], [`loading`], [`preflight`], and [`lifecycle`] for [`Prepared`].
+//! [`candidates`], [`fast_forward`], [`lane_filter`], [`loading`], [`preflight`], and [`lifecycle`] for [`Prepared`] via [`plan`].
 
 pub(super) use candidates::select_targets;
 

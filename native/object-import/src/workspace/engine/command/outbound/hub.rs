@@ -86,6 +86,7 @@ fn execute(retained: &mut Retained) -> io::Result<Vec<String>> {
     acknowledge(retained, &reply.data)
 }
 
+/// Packs all scoped objects in `pending` into a tar archive and computes the combined SHA-1 hex digest.
 fn payload(pending: &[Pending]) -> io::Result<(Vec<u8>, String)> {
     let objects = scoped_objects(pending);
     let mut hash = Sha1::new();

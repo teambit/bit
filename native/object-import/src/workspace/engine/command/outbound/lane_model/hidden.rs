@@ -90,6 +90,7 @@ fn entries(lane: &Value) -> io::Result<Vec<String>> {
         _ => Err(invalid("outbound hidden entries")),
     }
 }
+/// Splits `value` (`scope/name@hash`) into its trimmed `(identity, hash)` pair and validates the hash.
 fn identity(value: &str) -> io::Result<(&str, &str)> {
     let (id, hash) = value
         .trim()

@@ -69,6 +69,7 @@ fn component_id_key(value: &Value) -> Option<(&str, &str, &str)> {
     (!scope.is_empty() && !name.is_empty()).then_some((scope, name, version))
 }
 
+/// Returns the `dependencies` array from the `teambit.dependencies/dependency-resolver` aspect on `output`.
 #[inline]
 fn resolver_dependencies(output: &Value) -> Option<&Vec<Value>> {
     output["extensions"]

@@ -87,6 +87,7 @@ fn strip_head_or_latest(id: &str) -> &str {
     }
 }
 
+/// Resolves a normalized aspect identifier string from an object-valued `extensionId` `id`.
 fn object_extension_identity(id: &Value) -> io::Result<String> {
     let raw_name = id["name"]
         .as_str()

@@ -38,6 +38,7 @@ pub(in crate::workspace::engine::command) fn validate_application_files(
     metadata::no_application_files(files)
 }
 
+/// Builds an updated local `Component` model JSON payload with `head` from `input`.
 #[inline]
 pub(in crate::workspace::engine::command) fn local_model(
     input: &Value,

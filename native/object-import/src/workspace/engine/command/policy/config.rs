@@ -1,4 +1,4 @@
-//! Per-component `ConfigMerger` [`merge`] invocation and [`projection`] policy reconciliation.
+//! Per-component `ConfigMerger` [`merge`], [`merged_config`], and [`projection`] policy reconciliation.
 
 #[cfg(test)]
 mod tests;

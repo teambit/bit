@@ -1,4 +1,4 @@
-//! `last-merged` [`Lane`] backup restoration via [`prepare`] for `merge --abort` on a lane.
+//! `last-merged` [`Lane`] backup restoration via [`prepare`], [`read_backup`], and [`validate_index`] for `merge --abort` on a lane.
 
 use super::super::{invalid, merge::snapshot, proof, scratch};
 use flate2::read::ZlibDecoder;

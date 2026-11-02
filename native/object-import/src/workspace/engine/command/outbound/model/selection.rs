@@ -82,6 +82,7 @@ pub(super) struct Staged {
     pub(super) labels: Vec<String>,
 }
 
+/// Collects all local `Version` hashes and labels from `model["state"]["versions"]`, requiring `head` to be present.
 pub(super) fn staged(model: &Value) -> io::Result<Staged> {
     let rows =
         model["state"]["versions"].as_object().ok_or_else(|| invalid("outbound local versions"))?;

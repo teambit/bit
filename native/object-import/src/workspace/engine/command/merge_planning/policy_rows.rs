@@ -1,4 +1,4 @@
-//! Construct `ConfigMerger` policy rows on [`Prepared`] via [`fast_forward`] and [`binding_prefix`] helpers.
+//! Construct `ConfigMerger` policy rows on [`Prepared`] via [`fast_forward`], [`binding_prefix`], and [`append_fast_forward`] helpers.
 
 #[cfg(test)]
 mod tests;

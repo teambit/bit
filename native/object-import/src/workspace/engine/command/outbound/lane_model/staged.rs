@@ -1,4 +1,4 @@
-//! Select only lane-origin `Version` objects newer than the remote lane head via [`lane_versions`].
+//! Select only lane-origin `Version` objects newer than the remote lane head via [`lane_versions`] and [`selected_versions`].
 //! Stops traversal at `previous_head` or when reaching main-lane ancestor versions.
 
 use super::{ComponentContext, ComponentId, MAX_OBJECTS, exhaustive, invalid, model};

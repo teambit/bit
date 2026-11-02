@@ -62,7 +62,7 @@ fn identity(row: &Value) -> io::Result<String> {
     object_identity(row)
 }
 
-/// Extracts and validates a `scope/name` aspect identity from an object-valued `row["extensionId"]`.
+/// Extracts and validates a `scope/name` aspect identity from an object-valued `row["extensionId"]` for [`identity`].
 #[inline]
 fn object_identity(row: &Value) -> io::Result<String> {
     let id = row["extensionId"]

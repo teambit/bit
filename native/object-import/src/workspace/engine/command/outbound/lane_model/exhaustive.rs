@@ -1,4 +1,4 @@
-//! Select every tracked lane/main component via [`lane_entries`] and [`workspace_entries`] with its complete `Version` ancestry.
+//! Select every tracked lane/main component via [`lane_entries`], [`parse_update_dependent`], and [`workspace_entries`] with its complete `Version` ancestry.
 
 use super::{ComponentId, Loaded, MAX_OBJECTS, Prepare, invalid, model};
 use serde_json::{Value, json};

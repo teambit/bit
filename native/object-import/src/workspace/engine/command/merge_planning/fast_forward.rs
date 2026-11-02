@@ -1,4 +1,4 @@
-//! Plan fast-forward [`materialization`] and model updates on [`Prepared`] via [`prepare`].
+//! Plan fast-forward [`materialization`] and model updates on [`Prepared`] via [`prepare`] and [`validate_target`].
 
 #[cfg(test)]
 mod tests;

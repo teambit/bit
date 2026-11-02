@@ -61,6 +61,7 @@ impl Main {
         store.finish_batch()
     }
 }
+/// Returns the sorted list of regular filenames inside `last-merged/main-components` `directory`.
 fn filenames(directory: &Path) -> io::Result<Vec<String>> {
     if directory.is_symlink() {
         return Err(invalid("main recovery directory symlink"));

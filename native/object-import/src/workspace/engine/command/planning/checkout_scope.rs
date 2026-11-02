@@ -1,4 +1,4 @@
-//! Materialize newly discovered default-scope components into [`Planned`] via [`prepare`] and [`prepare_if_enabled`].
+//! Materialize newly discovered default-scope components into [`Planned`] via [`prepare`], [`addition_target`], and [`prepare_if_enabled`].
 //! Rejects duplicate additions already present in `plan.captured`.
 
 use super::{Planned, Record, capture, invalid, prepare_one};

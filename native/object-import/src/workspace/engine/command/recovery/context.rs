@@ -1,4 +1,4 @@
-//! Workspace context, model, and [`proof`] assembly into [`Retained`] via [`prepare`] and [`guards`].
+//! Workspace context, model, and [`proof`] assembly into [`Retained`] via [`prepare`], [`capture_targets`], and [`guards`].
 
 mod guards;
 #[cfg(test)]

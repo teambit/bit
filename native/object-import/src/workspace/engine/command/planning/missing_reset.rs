@@ -1,5 +1,5 @@
 //! Node reports a missing tracked directory or main file restored by
-//! `checkout reset` as an unchanged component and an addition via [`report_if_applicable`],
+//! `checkout reset` as an unchanged component and an addition via [`report_if_applicable`] and [`report_one`],
 //! even though files are written ([`Record`], [`Planned`]).
 
 use super::{Planned, Record, input, invalid};

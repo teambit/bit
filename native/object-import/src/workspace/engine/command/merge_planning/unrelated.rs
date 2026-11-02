@@ -1,4 +1,4 @@
-//! Resolve unrelated [`Selected`] component [`history`] via [`distance`] and [`prepare`] during lane merge planning.
+//! Resolve unrelated [`Selected`] component [`history`] via [`distance`], [`prepare`], and [`one`] during lane merge planning.
 
 use super::{Record, Selected, history, invalid};
 use serde_json::{Value, json};

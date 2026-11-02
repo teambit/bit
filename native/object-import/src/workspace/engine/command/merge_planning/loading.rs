@@ -1,4 +1,4 @@
-//! Load [`Selected`] component models, heads, and gap versions via [`load_selected`].
+//! Load [`Selected`] component models, [`heads`], and gap versions via [`load_selected`] and [`import_gap`].
 
 use super::{Action, Record, Selected, capture, invalid, lane_filter, model, selection};
 use serde_json::Value;

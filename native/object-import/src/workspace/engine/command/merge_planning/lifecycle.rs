@@ -1,4 +1,4 @@
-//! Lifecycle transitions ([`Prepared`], [`Finalized`], [`Record`], [`bitmap`]) for merge plans and lane finalization.
+//! Lifecycle transitions ([`Prepared`], [`Finalized`], [`Record`], [`bitmap`], [`proof`]) for merge plans and lane finalization.
 #[cfg(test)]
 mod tests;
 use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};

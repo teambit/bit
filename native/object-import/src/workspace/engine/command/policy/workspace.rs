@@ -96,6 +96,7 @@ fn remove_conflicts(prepared: &mut Prepared, removed: &Value) -> io::Result<()> 
     Ok(())
 }
 
+/// Removes package conflict entries matching `removed` from component `configRows` `rows`.
 fn remove_rows(rows: &mut [Value], removed: &[Value]) {
     for entry in rows
         .iter_mut()

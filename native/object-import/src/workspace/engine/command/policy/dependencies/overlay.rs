@@ -1,4 +1,4 @@
-//! Merged component file [`SourceOverlay`] assembly via [`prepare`] for post-merge scanning.
+//! Merged component file [`SourceOverlay`] assembly via [`prepare`], [`apply_row`], and [`overlay_files`] for post-merge scanning.
 
 use super::{Record, invalid, planning};
 use crate::workspace::engine::source_overlay::SourceOverlay;
