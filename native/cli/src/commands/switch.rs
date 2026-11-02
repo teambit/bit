@@ -1,4 +1,4 @@
-//! Native `bit switch <lane>` through the workspace
+//! Native `bit switch <lane>` ([`COMMAND`]) through the workspace
 //! command's prepare, plan, capture and apply lifecycle.
 //!
 //! Coordinates [`installation`], [`options`], and [`report`] and re-exports [`import_options`].

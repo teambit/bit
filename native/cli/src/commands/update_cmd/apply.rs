@@ -1,6 +1,6 @@
 //! Apply resolved dependency version updates to `workspace.jsonc`, `.bitmap`, and `component.json`.
 //!
-//! Writes [`ResolvedUpdate`] mutations per [`Target`] using [`BitmapMutation`] and [`apply_dep_resolver_config`].
+//! [`apply_updates`] writes [`ResolvedUpdate`] mutations per [`Target`] using [`BitmapMutation`] and [`apply_dep_resolver_config`].
 use super::{collect::Target, resolve::ResolvedUpdate};
 use crate::{
     commands::{

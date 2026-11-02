@@ -1,6 +1,6 @@
 //! Keep qualified diagnostic details outside the command error's red message.
 //!
-//! [`WithDetails`] pairs an [`io::Error`] message with uncolored diagnostic detail lines for [`Chalk`].
+//! [`WithDetails`] pairs an [`io::Error`] message with uncolored diagnostic detail lines for [`Chalk`] output.
 use crate::commands::color::Chalk;
 use std::{
     fmt,

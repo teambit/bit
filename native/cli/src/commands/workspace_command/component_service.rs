@@ -1,6 +1,6 @@
 //! Prepare built-in service components and retain loader effects until the command owns execution.
 //!
-//! Coordinates [`filesystem`], [`docs`], [`load`] ([`Loaded`]), and [`selection`] submodules.
+//! Coordinates [`filesystem`], [`docs`], [`load`] ([`Loaded`]), and [`selection`] ([`Selection`], [`Progress`]) submodules.
 pub(in crate::commands) mod filesystem;
 pub(in crate::commands) use load::Loaded;
 mod docs;

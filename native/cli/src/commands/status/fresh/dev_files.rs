@@ -2,7 +2,7 @@
 //! default dev patterns, as `matchPatterns` decides with `minimatch` 3.0.5.
 //!
 //! `minimatch(file, '**/<name>')` lets `**` match any number of directories
-//! that do not start with a dot, and matches the file name with the segment
+//! that do not start with a dot, and matches the file name with the [`NAMES`] segment
 //! [`Regex`] below (`dot: false`, case-sensitive).
 
 use regress::Regex;

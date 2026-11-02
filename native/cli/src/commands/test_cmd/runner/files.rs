@@ -1,6 +1,6 @@
 //! Resolve explicit test files without running component loaders or user tests.
 //!
-//! Matches [`Bitmap`] and [`Component`] paths via [`glob`] and [`paths`] into [`Selected`].
+//! [`select`] matches [`Bitmap`] and [`Component`] paths via [`glob`] and [`paths`] into [`Selected`].
 use super::{invalid, paths};
 use crate::commands::workspace_command::component_service::Component;
 use bit_install::{dependencies::glob, workspace::Bitmap};

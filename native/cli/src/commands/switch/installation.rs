@@ -1,6 +1,6 @@
 //! `ComponentWriter` finalization preserves the same providers, bitmap and two compile phases.
 //!
-//! Coordinates [`ProjectedLinker`], [`Installer`], and [`Planned`] execution with [`Formatter`].
+//! [`run`] coordinates [`ProjectedLinker`], [`Installer`], and [`Planned`] execution with [`Formatter`] and [`Output`].
 use crate::commands::{
     add::ProjectedLinker,
     color::Chalk,

@@ -1,6 +1,6 @@
 //! Plan the main and lane history publications.
 //!
-//! Builds a [`Plan`] over [`ScopeRoot`] by resolving [`lanes`], [`ancestry`], and [`metadata_proofs`].
+//! [`prepare`] builds a [`Plan`] over [`ScopeRoot`] by resolving [`lanes`], [`ancestry`], and [`metadata_proofs`].
 use super::{
     Path, PathBuf, Plan, ScopeRoot, Value, ancestry, encode, fs, json, lanes, metadata_proofs,
     object_path, read, resolve_component_entry, sha1_hex, stored,

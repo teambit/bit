@@ -1,6 +1,6 @@
 //! Retained main-history refresh for `status --lanes`.
 //!
-//! Queries [`Engine`] to refresh main-lane component heads when inspecting lane updates.
+//! [`Refreshes`] queries [`Engine`] to refresh main-lane component heads when inspecting lane updates.
 
 use super::{
     Engine,

@@ -1,4 +1,4 @@
-//! Native `bit test [pattern-or-test-file...]` (`TestCmd`, alias `at`).
+//! Native `bit test [pattern-or-test-file...]` ([`COMMAND`]; `TestCmd`, alias `at`).
 //!
 //! Owns workspace validation and built-in single-component JSON test orchestration
 //! via [`runner`]. External Jest runs user tests; unsupported services decline before loader effects.

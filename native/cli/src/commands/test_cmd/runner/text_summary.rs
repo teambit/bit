@@ -1,6 +1,6 @@
 //! Render the released final tester summary from the native aggregate.
 //!
-//! [`Summary`] formats component, suite, test, and coverage totals with [`Chalk`].
+//! [`Summary`] formats component, suite, test, and coverage [`Value`] totals with [`Chalk`].
 use crate::commands::color::Chalk;
 use serde_json::Value;
 use std::{ffi::OsString, fmt::Write};

@@ -1,7 +1,7 @@
 //! The issues status adds to what dependency detection found, formatted as
 //! `IssuesList.toObjectIncludeDataAsString()` formats them.
 //!
-//! Coordinates [`callbacks`], [`cycles`], [`deprecated`], [`detected`], [`format`], [`kinds`], [`removed`], and [`resolve`].
+//! Coordinates [`callbacks`], [`cycles`], [`deprecated`], [`detected`], [`format`], [`kinds`], [`removed`], and [`resolve`] into [`Issue`] sets.
 
 mod callbacks;
 mod cycles;

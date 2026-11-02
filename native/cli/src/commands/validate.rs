@@ -1,6 +1,6 @@
-//! Native `bit validate [component-pattern]` (`scopes/defender/validator/validate.cmd.ts`).
+//! Native `bit validate [component-pattern]` ([`COMMAND`]; `scopes/defender/validator/validate.cmd.ts`).
 //!
-//! Coordinates [`runner`] and [`lint_and_types`] across check-types, lint, and test validation steps.
+//! Coordinates [`runner`] and [`lint_and_types`] across [`VALID_TASKS`] (`check-types`, `lint`, and `test`) validation steps.
 
 mod lint_and_types;
 mod runner;

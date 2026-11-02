@@ -1,4 +1,4 @@
-//! Native `bit tag [component-patterns...]`: the engine plans and writes the
+//! Native `bit tag [component-patterns...]` ([`COMMAND`]): the engine plans and writes the
 //! tags ([`resolve`]), with the tag [`options`] and [`Report`].
 //!
 //! Coordinates [`diagnostics`], [`version_file`], [`Planned`] execution, and [`versions`] output formatting.

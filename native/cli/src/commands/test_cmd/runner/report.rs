@@ -1,6 +1,6 @@
 //! Project external Jest results into the released tester JSON contract.
 //!
-//! [`report`] transforms raw Jest [`Value`] output into a command [`Report`].
+//! [`report`] transforms raw Jest [`Value`] output at a workspace [`Path`] into a command [`Report`].
 use crate::commands::workspace_command::results::Report;
 use serde_json::{Value, json};
 use std::{io, path::Path};

@@ -2,7 +2,7 @@
 //! stored version, with bitmap configuration applied, for components that
 //! only use the built-in Node environment.
 //!
-//! Merges stored version and `.bitmap` extension entries into JSON [`Value`] arrays.
+//! Merges [`CORES`], stored version, and `.bitmap` extension entries into JSON [`Value`] arrays.
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! Keep the external Jest process alive across native cache publication.
 //!
-//! Coordinates [`Assets`], [`stream`], and the Node.js Jest worker [`Child`] process.
+//! [`Session`] coordinates [`Assets`], [`stream`], and the Node.js Jest worker [`Child`] process.
 mod stream;
 
 use super::{Value, assets::Assets, invalid, json};

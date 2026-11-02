@@ -2,7 +2,7 @@
 //! with the environment and component `VariantPolicy` precedence used by
 //! the dependency resolver. Pending-configuration projections decline.
 //!
-//! Re-exports [`current_metadata`], [`peer_metadata`], [`model_of`], and [`pending_context`].
+//! Re-exports [`current_metadata`], [`peer_metadata`], [`model_of`], and [`pending_context`] over [`Workspace`] policies.
 
 pub use metadata::{current_metadata, peer_metadata};
 pub(super) use model::model_of;

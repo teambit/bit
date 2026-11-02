@@ -1,6 +1,6 @@
 //! Dependency parser and detector dispatch in the retained environment session.
 //!
-//! Extends [`Environments`] with [`Environments::parser`] for custom aspect dependency detectors.
+//! Extends [`Environments`] with [`Environments::parser`] for custom aspect dependency detectors over [`Value`].
 use super::{Environments, Value, decline, io, json, text};
 use std::path::Path;
 

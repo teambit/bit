@@ -1,6 +1,6 @@
 //! Interleave switch source capture with the published ordered class loader.
 //!
-//! Coordinates [`Engine`], [`Environments`], [`Inventory`], and [`Scan`] into [`Capture`].
+//! [`scan`] coordinates [`Engine`], [`Environments`], [`Inventory`], and [`Scan`] into [`Capture`].
 
 use super::{
     Capture, Engine, Environments, Inventory, Path, Scan, ScanBehavior, Value, array, decline,

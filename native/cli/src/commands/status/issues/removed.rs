@@ -1,6 +1,6 @@
 //! Dependencies on components removed in this workspace.
 //!
-//! Extends [`Checks`] with [`Checks::removed_dependencies`] to emit [`Issue`] entries for [`Component`] targets.
+//! Extends [`Checks`] with [`Checks::removed_dependencies`] to emit [`Issue`] entries for [`Component`] and [`Value`] targets.
 
 use super::{Checks, Component, Issue, array, without_version};
 use serde_json::Value;

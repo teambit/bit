@@ -1,6 +1,6 @@
 //! Qualify named groups whose ownership is already the process default.
 //!
-//! [`qualify_parents`] verifies parent directory group ownership across [`Path`] and [`PathBuf`] targets.
+//! [`qualify_parents`] and [`has_etc_group_proof`] verify parent directory group ownership across [`Path`] and [`PathBuf`] targets.
 #[cfg(unix)]
 use std::fs;
 use std::path::{Path, PathBuf};

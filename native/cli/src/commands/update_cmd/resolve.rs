@@ -1,6 +1,6 @@
 //! Resolve latest matching versions for dependency update [`Candidate`] entries.
 //!
-//! Evaluates semver ranges and registry metadata for [`Options`] and [`Target`] sources.
+//! [`resolve_updates`] evaluates semver ranges and registry metadata into [`ResolvedUpdate`] rows for [`Options`] and [`Target`].
 use super::{
     Options,
     collect::{Candidate, Target},

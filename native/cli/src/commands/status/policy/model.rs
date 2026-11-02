@@ -1,4 +1,4 @@
-//! Stored Version selection and Harmony dependency validation for status metadata.
+//! Stored `Version` selection and Harmony dependency validation for status metadata.
 //!
 //! [`model_of`] locates the stored component [`Value`] model for a workspace identity.
 

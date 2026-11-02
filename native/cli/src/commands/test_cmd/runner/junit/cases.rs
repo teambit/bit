@@ -1,6 +1,6 @@
 //! Test case and suite formatting for `JUnit` XML reports.
 //!
-//! [`Case`] represents an individual Jest assertion serialized with [`xml`] escaping.
+//! [`Case`] represents an individual Jest assertion serialized from [`Value`] rows with [`xml`] escaping.
 use super::xml;
 use serde_json::Value;
 use std::{fmt::Write, io};

@@ -1,6 +1,6 @@
 //! Keep the failing operation and path when deleting consumed coverage artifacts.
 //!
-//! [`directory`] removes coverage directories and formats errors via [`failure`].
+//! [`directory`] removes coverage directories at [`Path`] locations and formats errors via [`failure`].
 use crate::commands::workspace_command::filesystem_error::failure;
 use std::{fs, io, path::Path};
 

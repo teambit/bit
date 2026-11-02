@@ -1,6 +1,6 @@
 //! Move an existing history to a qualified local trash directory before rebuilding.
 //!
-//! Computes [`target`] trash paths and applies [`Plan`] moves with [`filesystem_error`] reporting.
+//! Computes [`target`] trash [`PathBuf`] locations and applies [`Plan`] moves with [`filesystem_error`] reporting.
 use super::{Plan, existing_mode, filesystem_error};
 use std::{
     fs, io,

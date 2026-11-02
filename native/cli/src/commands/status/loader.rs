@@ -1,6 +1,6 @@
 //! `StatusCmd.report` progress messages after status preflight.
 //!
-//! [`Progress`] flushes buffered startup, load, and issue stdout around [`Output`] spinner phases.
+//! [`Progress`] and [`render`] flush buffered startup, load, and issue stdout around [`Output`] spinner phases.
 
 use bit_install::output::Output;
 use std::io;

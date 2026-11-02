@@ -1,6 +1,6 @@
 //! Rust tester selection, loader effects and JSON reports around external Jest.
 //!
-//! Coordinates [`assets`], [`config`], [`coverage`], [`files`], [`junit`], [`multi`], [`paths`], [`plan`], and [`report`].
+//! [`run`] coordinates [`assets`], [`config`], [`coverage`], [`files`], [`junit`], [`multi`], [`paths`], [`plan`], and [`report`].
 mod assets;
 mod config;
 mod coverage;

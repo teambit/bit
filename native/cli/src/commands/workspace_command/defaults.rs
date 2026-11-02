@@ -2,7 +2,7 @@
 //! the engine can build its metadata. Every value is a constant of the
 //! environment, apart from the dev files.
 //!
-//! Coordinates [`Engine`], [`Request`], [`checkout_scope`], and [`checkout_selection`].
+//! Coordinates [`Engine`], [`Request`], [`Policy`], [`checkout_scope`], and [`checkout_selection`].
 
 #[cfg(test)]
 mod defaults_tests;

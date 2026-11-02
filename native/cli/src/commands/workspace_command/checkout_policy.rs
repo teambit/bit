@@ -1,6 +1,6 @@
 //! Semver grammar for the engine-owned workspace policy update after checkout.
 //!
-//! Extends [`Steps`] with [`Steps::checkout_policy`] using [`grammar`] semver snapshots.
+//! Extends [`Steps`] with [`Steps::checkout_policy`] and [`semver`] using [`grammar`] semver snapshots.
 use super::{Steps, array, decline, text};
 use crate::commands::status::grammar;
 use serde_json::{Value, json};

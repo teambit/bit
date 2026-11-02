@@ -1,6 +1,6 @@
-//! Native `bit version` (`VersionCmd` in `scopes/harmony/cli/version.cmd.ts`).
+//! Native `bit version` ([`COMMAND`]; `VersionCmd` in `scopes/harmony/cli/version.cmd.ts`).
 //!
-//! Resolves the installed Bit version via [`NodeCli`] and records invocations in [`History`].
+//! Resolves the installed Bit version via [`NodeCli`] and records invocations in [`History`] into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

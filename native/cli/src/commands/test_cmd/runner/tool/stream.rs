@@ -1,6 +1,6 @@
 //! Keep tool control separate from inherited user stdout and stderr.
 //!
-//! Communicates with the Jest worker over a loopback [`TcpListener`] and [`TcpStream`] using [`Assets`].
+//! [`Stream`] communicates with the Jest worker over a loopback [`TcpListener`] and [`TcpStream`] using [`Assets`].
 #[cfg(test)]
 mod tests;
 

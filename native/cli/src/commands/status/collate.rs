@@ -3,7 +3,7 @@
 //! these characters (Danish puts uppercase first, Estonian moves `z`, Turkish
 //! splits `i`, Czech contracts `ch`) and any other character decline.
 //!
-//! Produces [`Ordering`] results matching V8 `String.prototype.localeCompare`.
+//! [`root_locale`] and [`ROOT_LANGUAGES`] produce [`Ordering`] results matching V8 `String.prototype.localeCompare`.
 
 #[cfg(test)]
 mod collate_tests;

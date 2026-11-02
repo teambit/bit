@@ -1,6 +1,6 @@
 //! Command-owned publication, report output, and history after preflight.
 //!
-//! Re-exports [`print_error`] and [`with_error_details`] and emits [`Report`] and [`History`] into [`Outcome`].
+//! Re-exports [`print_error`] and [`with_error_details`] and [`execute_with`] emits [`Report`] and [`History`] into [`Outcome`].
 pub(in crate::commands) use error::print as print_error;
 pub use error::with_error_details;
 mod error;

@@ -1,4 +1,4 @@
-//! Native `bit templates` (`scopes/generator/generator/templates.cmd.ts`).
+//! Native `bit templates` ([`COMMAND`]; `scopes/generator/generator/templates.cmd.ts`).
 //!
 //! Queries [`select_templates`] and [`WORKSPACE_STARTER_ASPECTS`] and renders via [`format_templates_report`].
 

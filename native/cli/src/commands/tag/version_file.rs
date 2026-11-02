@@ -1,6 +1,6 @@
 //! `VersionFileParser`: exact component lines, comments and the last DEFAULT.
 //!
-//! Parses `--ver-file` inputs and scope proofs ([`read_proof`]) into JSON [`Value`] maps.
+//! [`read`] parses `--ver-file` inputs and scope proofs ([`read_proof`]) into [`Captured`] JSON [`Value`] maps.
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! Environment issue facts after native dependency detection.
 //!
-//! [`issues`] merges environment diagnostic records with [`full_identity`] resolution.
+//! [`issues`] merges environment diagnostic [`Value`] records with [`full_identity`] resolution.
 
 use crate::commands::status::js::{array, decline, full_identity, text};
 use serde_json::{Value, json};

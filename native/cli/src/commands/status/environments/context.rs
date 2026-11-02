@@ -1,6 +1,6 @@
 //! Initialize provider callbacks before native command controls are captured.
 //!
-//! [`read_context`] and related helpers initialize [`Environments`] over [`WorkspaceComponent`] sets.
+//! [`read_context`] and [`read_snapshot_context`] initialize [`Environments`] over [`WorkspaceComponent`] sets.
 use super::{
     Environments, WorkspaceComponent, array, component, core_ids, needs_facts, root_aspects,
 };

@@ -1,7 +1,7 @@
 //! Dependency cycles among the captured components (`Graph.findCycles()`),
 //! found with Tarjan's algorithm.
 //!
-//! [`filter_graph_for_cycles`] and cycle detection helpers inspect [`Component`] dependency edges.
+//! [`filter_graph_for_cycles`] and cycle detection helpers inspect [`Component`] dependency edges across [`Path`] roots.
 
 use super::Component;
 use std::{
