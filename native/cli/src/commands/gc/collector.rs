@@ -1,4 +1,4 @@
-//! Garbage collection root seeding ([`prepare_workspace_garbage`]) and a write-free [`Plan`] for `bit gc` via [`GcGraph`] and [`GcResult`].
+//! Garbage collection root seeding ([`prepare_workspace_garbage`], [`prepare_with_workspace_ids`]) and a write-free [`Plan`] for `bit gc` via [`GcGraph`] and [`GcResult`].
 mod publication;
 
 use super::{

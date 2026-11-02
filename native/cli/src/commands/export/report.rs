@@ -40,8 +40,7 @@ struct Transfers {
     items: Vec<(String, usize)>,
 }
 
-/// The prepared export, which must own a token, name its scopes and count
-/// the objects of each.
+/// The [`Prepared`] export, which must own a token, name its scopes via [`parse_transfers`], and count the objects of each.
 pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
     let token = text(value.get("token"))?;
     let nothing_to_export = value["nothingToExport"]

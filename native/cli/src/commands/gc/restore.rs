@@ -1,6 +1,6 @@
 //! Restore claimed backups; leave a failed recovery discoverable by the next invocation.
 //!
-//! Coordinates workspace and [`bare`] scope trash restoration ([`copy`], [`Error`]) for [`Options`].
+//! Coordinates workspace and [`bare`] scope trash restoration ([`preflight`], [`run`], [`copy`], [`Error`]) for [`Options`].
 mod copy;
 use super::{
     Options, bare,

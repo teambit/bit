@@ -1,6 +1,6 @@
 //! `Scope.ensureScopeJson` and the directories `Scope.ensureDir` owns.
 //!
-//! [`document`] serializes `scope.json` [`Value`] documents (`name`, `groupName`, `version`, `lanes`) for bare or workspace scopes.
+//! [`document`], [`valid_name`], and [`local_name`] serialize `scope.json` [`Value`] documents (`name`, `groupName`, `version`, `lanes`) for bare or workspace scopes.
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 

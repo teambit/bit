@@ -1,6 +1,6 @@
 //! Preserve released object descriptions and decline unqualified asynchronous report ordering.
 //!
-//! [`preflight`] and [`deleted`] verify deterministic [`Object`] ordering before verbose deletion output.
+//! [`preflight`] and [`deleted`] verify deterministic [`Object`] ordering via [`description`] before verbose deletion output.
 use super::repository::{Object, identity, text, unsupported};
 use std::{collections::BTreeMap, io};
 

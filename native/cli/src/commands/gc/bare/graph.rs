@@ -1,6 +1,6 @@
 //! `collectGarbage`: retain full local/lane history and only the requested flattened dependency versions.
 //!
-//! [`Collector`] traverses [`Object`] nodes across [`BTreeMap`] stores while recording visited hashes in [`HashSet`].
+//! [`Collector`] traverses [`Object`] nodes across [`BTreeMap`] stores while recording visited hashes in [`HashSet`] and [`IndexSet`].
 use super::repository::{self, Object, digest, identity, strings, text, unsupported};
 use indexmap::IndexSet;
 use serde_json::Value;

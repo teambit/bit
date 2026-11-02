@@ -11,7 +11,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-/// Rewrites self-references and AST identifiers in `plan`'s staged source files for a single forked component.
+/// Rewrites self-references and AST identifiers in `plan`'s ([`Plan`]) staged source files for a single forked component.
 pub(super) fn source(
     root: &Path,
     options: &component_fork::Options,

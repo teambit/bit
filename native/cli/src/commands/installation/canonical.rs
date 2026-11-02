@@ -22,7 +22,7 @@ enum Continuation {
     Receipt(Value),
 }
 
-/// Resume the same published installation promise after each native engine call.
+/// Resume the same published installation promise ([`Continuation`]) via [`run`] after each native engine call.
 pub(super) fn call(
     host: &Host,
     info: &HostInfo,

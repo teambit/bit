@@ -33,7 +33,7 @@ pub struct Receipt {
     workspace_policy: Option<Value>,
 }
 
-/// Validates the engine's inbound JSON receipt `value` into a structured [`Receipt`].
+/// Validates the engine's inbound JSON receipt `value` into a structured [`Receipt`] with [`Details`] rows.
 pub fn validate(value: &Value) -> io::Result<Receipt> {
     let rows = array(value.get("importedIds"), "imported ids")?;
     let details = array(value.get("importDetails"), "import details")?;

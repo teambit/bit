@@ -28,7 +28,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
-/// Executes `bit format` in a workspace or reports bare-scope / missing-host errors.
+/// Executes `bit format` ([`COMMAND`]) in a workspace via [`runner::run`] or reports bare-scope / [`HOST_NOT_FOUND_ERR`] errors.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("format arguments are not UTF-8".into()));

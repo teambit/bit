@@ -81,7 +81,7 @@ fn emit_fast_graph_error(cwd: &Path, args: &[OsString], err: &'static str) -> io
     })
 }
 
-/// Executes [`execute_workspace_graph`] and formats the result within the workspace command harness.
+/// Executes [`execute_workspace_graph`] for [`Options`] and formats the result into a [`Report`] within the workspace command harness.
 fn finish_graph(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let formatter = Formatter::new(Chalk::detect(args));
     match execute_workspace_graph(root, options, &formatter) {

@@ -2,7 +2,7 @@
 //! `installPackagesGracefully` runs, through the native installer and the
 //! `JavaScript` host. The compile `compileGracefully` repeats runs inside it.
 //!
-//! Dispatches [`component_ids`], [`changed_component_ids`], [`Input`], [`Terminal`], and [`InstallOptions`] configuration through [`install`] and [`canonical`].
+//! Dispatches [`Installer`], [`ImportErrors`], [`component_ids`], [`changed_component_ids`], [`Input`], [`Terminal`], and [`InstallOptions`] configuration through [`install`] and [`canonical`].
 
 mod canonical;
 

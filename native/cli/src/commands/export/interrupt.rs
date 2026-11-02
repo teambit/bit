@@ -29,7 +29,7 @@ const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the ex
 /// RAII guard that blocks `SIGINT` / Ctrl+C cancellation while remote export communication is active.
 pub(super) struct Guard(platform::Previous);
 impl Guard {
-    /// Installs the platform Ctrl+C handler and activates the export interrupt guard.
+    /// Installs the [`platform`] Ctrl+C handler and activates the export interrupt [`Guard`] ([`ACTIVE`], [`ENABLED`], [`COLOR`]).
     #[inline]
     pub(super) fn new(quiet: bool) -> io::Result<Self> {
         if ACTIVE.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {

@@ -27,7 +27,7 @@ pub(super) struct Flags {
     pub verbose: bool,
 }
 
-/// The same bounded, explicit export grammar as the production JS adapter.
+/// The same bounded, explicit export [`Options`] grammar ([`apply_export_arg`], [`push_export_id`]) as the production JS adapter.
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options {
         ids: Vec::new(),

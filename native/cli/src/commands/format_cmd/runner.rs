@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::{ffi::OsString, io, path::Path, time::Instant};
 use workspace_command::component_service::{Loaded, Selection};
 
-/// Executes component selection, Prettier invocation, file writing, and report generation for `bit format`.
+/// Executes component [`Selection`], `Prettier` invocation ([`tool::format`]), file writing ([`write::apply`]), and [`report::create`] for `bit format`.
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let started = Instant::now();
     let selection = Selection {

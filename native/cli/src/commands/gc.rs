@@ -86,7 +86,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     bare::run(&root.path, args, &options)
 }
 
-/// Executes workspace `bit gc` against `root` and its local scope directory.
+/// Executes workspace `bit gc` against `root` ([`ScopeRoot`]) and its local scope directory for [`Options`].
 fn run_workspace_gc(root: &ScopeRoot, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let scope_dir = workspace::scope_path(&root.path);
     let index = match restore::workspace_index(&root.path, &scope_dir) {

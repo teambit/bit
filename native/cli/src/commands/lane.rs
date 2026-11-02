@@ -43,7 +43,7 @@ fn is_color_flag(arg: &str) -> bool {
     )
 }
 
-/// Entry point for `bit lane` (`bit l`).
+/// Entry point for `bit lane` (`bit l`, [`COMMAND`]) dispatching lane subcommands.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(raw_argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

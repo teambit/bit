@@ -24,7 +24,7 @@ fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
     regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
 }
 
-/// Resolves wildcard patterns in `options.ids` against `commandOutboundCandidates` when on `main`.
+/// Resolves wildcard patterns in `options.ids` ([`Options`]) against `commandOutboundCandidates` via [`compile_pattern`] when on `main`.
 pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<Vec<String>> {
     if !options.ids.iter().any(|id| options::is_pattern(id)) {
         return Ok(options.ids.clone());

@@ -14,7 +14,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
-/// Builds and renders the dependency [`CompGraph`] for a bare scope directory.
+/// Builds and renders the dependency [`CompGraph`] via [`build_scope_graph`] and [`render_scope_graph`] for a bare scope directory.
 #[inline]
 pub(super) fn execute_scope_graph(
     scope_dir: &Path,

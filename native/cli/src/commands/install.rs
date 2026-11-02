@@ -31,7 +31,7 @@ use std::{
 };
 /// Descriptor for the `bit install` (`bit in`) CLI command.
 pub const COMMAND: Command = Command { name: "install", aliases: &["in"], run };
-/// Entry point for `bit install` (`bit in`).
+/// Entry point for `bit install` (`bit in`, [`COMMAND`]) delegating preflight to [`prepare`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Prepared { argv, cli, cwd, root } = match prepare(args)? {
         Ok(prepared) => prepared,

@@ -22,7 +22,7 @@ pub(super) struct Options {
     pub pattern: Option<String>,
     pub scope_fork: bool,
 }
-/// Parses `argv` into [`Options`] when they fit the native `bit fork` or `bit scope fork` grammar.
+/// Parses `argv` into [`Options`] via [`parse_flag`] and [`assign_positions`] when they fit the native `bit fork` or `bit scope fork` grammar.
 pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     let mut options = Options { scope_fork, ..Options::default() };
     let mut positions = Vec::new();

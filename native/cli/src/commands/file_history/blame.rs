@@ -21,7 +21,7 @@ use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 /// Descriptor for the `bit blame` CLI command.
 pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run };
 
-/// Parses `args` into `(file_path, include_message)` when they fit the native `bit blame` grammar.
+/// Parses `args` into `(file_path, include_message)` via [`consume_trailing_path`] when they fit the native `bit blame` grammar.
 pub(super) fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     let mut path = None;
     let mut include_message = false;

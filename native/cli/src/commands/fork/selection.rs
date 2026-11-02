@@ -12,7 +12,7 @@ pub(super) struct Selected {
     pub remote: Vec<String>,
     pub target_scope: String,
 }
-/// Resolves `options` against local workspace `state` and remote scopes into [`Selected`] targets.
+/// Resolves `options` ([`Options`]) against local workspace `state` ([`local_matches`]) and [`remotes::ids`] into [`Selected`] targets.
 pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Result<Selected> {
     let scope = options.scope
         .as_deref()

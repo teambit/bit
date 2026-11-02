@@ -1,4 +1,4 @@
-//! Shared inbound request metadata ([`Preflight`], [`prepare_into`], [`prepare_into_with`]) for [`Options`] and [`Engine`]; local eligibility never starts transport or providers.
+//! Shared inbound request metadata ([`Preflight`], [`local_preflight`], [`prepare_into`], [`prepare_into_with`]) for [`Options`] and [`Engine`]; local eligibility never starts transport or providers.
 use super::options::Options;
 use crate::commands::{
     engine::Engine,

@@ -9,7 +9,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Appends `workspace.jsonc`, `.bitmap`, and `package.json` provisioning [`Action`]s onto `plan`.
+/// Appends `workspace.jsonc` ([`config`]), `.bitmap` ([`bitmap`]), and `package.json` provisioning [`Action`]s onto `plan`.
 pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::Result<()> {
     let path = plan.root.join("workspace.jsonc");
     let existing = if options.resets.hard { None } else { config::existing(&path)? };

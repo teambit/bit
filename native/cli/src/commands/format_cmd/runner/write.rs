@@ -1,4 +1,4 @@
-//! Publish Prettier's source bytes ([`apply`], [`publish_components`], [`filesystem`]) and preserve the formatter service's JSON errors.
+//! Publish Prettier's source bytes ([`apply`], [`publish_components`], [`validate`], [`publish`], [`filesystem`]) and preserve the formatter service's JSON errors.
 use super::{Value, invalid};
 use crate::commands::workspace_command::component_service::filesystem;
 use std::{fs, io, path::Path};

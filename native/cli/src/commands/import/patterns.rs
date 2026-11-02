@@ -1,7 +1,7 @@
 //! `getBitIdsForNonLanes`: the ids `bit import` fetches, with each wildcard
 //! pattern listed on its remote (`Lister.getRemoteCompIdsByWildcards`).
 //!
-//! Resolves [`has_wildcard`] patterns ([`Selection`], [`select`], [`listed`]) against remotes via [`Engine`] for [`Options`].
+//! Resolves [`has_wildcard`] patterns ([`Selection`], [`select`], [`listed`], [`list`]) against remotes via [`Engine`] for [`Options`].
 //! Preserves `sortListScopeResults` collation and `ComponentIdList.uniqFromArray` deduplication.
 
 use super::options::{Options, has_wildcard};

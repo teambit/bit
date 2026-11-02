@@ -1,6 +1,6 @@
 //! Workspace collection resolves canonical identities first, then one stored legacy alias.
 //!
-//! [`Models`] indexes component identities, [`Sha1`] hashes, and legacy aliases from [`ScopeInventory`].
+//! [`Models`] and [`normalize`] index component identities, [`Sha1`] hashes, and legacy aliases from [`ScopeInventory`].
 use super::super::inventory::{ScopeInventory, sorted_dir_entries};
 use serde_json::Value;
 use sha1::{Digest, Sha1};

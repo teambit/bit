@@ -28,7 +28,7 @@ struct Plan {
     index: Option<Vec<u8>>,
 }
 
-/// Executes bare-scope `bit gc` against `scope` according to `options`.
+/// Executes bare-scope `bit gc` against `scope` according to `options` ([`Options`]) via [`prepare`].
 pub(super) fn run(scope: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     if cfg!(windows) {
         return Ok(Outcome::Declined(

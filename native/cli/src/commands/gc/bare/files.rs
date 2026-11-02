@@ -1,6 +1,6 @@
 //! Preserve `fs-extra.move(overwrite: true)` checks and the released filesystem errors.
 //!
-//! [`preflight_moves`] and [`move_object`] validate that object source paths are non-directory files before moving.
+//! [`preflight_moves`] and [`move_object`] validate via [`check_target`] and [`check_parents`] that object source paths are non-directory files before moving.
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 

@@ -7,7 +7,7 @@ use crate::commands::{
 use bit_object_import::component_fork::{self, Plan};
 use serde_json::{Value, json};
 use std::{io, path::Path};
-/// Prepares and commits the file copy, `.bitmap` entry, and package link for a single forked `source` component.
+/// Prepares and commits the file copy ([`Plan`]), `.bitmap` entry, and package link for a single forked `source` component.
 pub(super) fn run(
     root: &Path,
     options: &Options,

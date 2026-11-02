@@ -27,7 +27,7 @@ impl Results {
         }
     }
 }
-/// Executes a local, remote, or pattern-based `bit fork` operation and returns its [`Report`].
+/// Executes a [`local`], [`remote::run`], or pattern-based `bit fork` operation and returns its [`Report`].
 pub(super) fn run(
     root: &Path,
     options: &Options,

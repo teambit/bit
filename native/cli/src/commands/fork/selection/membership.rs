@@ -5,7 +5,7 @@ mod tests;
 use super::bare;
 use serde_json::Value;
 
-/// Partitions combined `local` and `remote` matches into local bare IDs and remote full IDs.
+/// Partitions combined `local` and `remote` matches into local bare IDs ([`bare`]) and remote full IDs via [`equal`].
 #[inline]
 pub(super) fn classify(
     local: &[String],

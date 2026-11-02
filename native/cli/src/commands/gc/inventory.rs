@@ -1,6 +1,6 @@
 //! Scope object, remote-ref, stash, and stray-file inventory for `bit gc`.
 //!
-//! Collects [`ObjectEntry`] records, staged snaps, stashed hashes, and unmerged roots into a write-free scope inventory.
+//! Collects [`ObjectEntry`] records, staged snaps, stashed hashes, and unmerged roots ([`ScopeRootRefs`]) into a write-free [`ScopeInventory`] via [`load_scope_inventory`].
 
 use super::graph::{
     comp_value_key,

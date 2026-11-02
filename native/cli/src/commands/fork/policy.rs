@@ -10,7 +10,7 @@ use std::{
 };
 /// Aspect ID of the Bit dependency resolver in `workspace.jsonc`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
-/// Updates `workspace.jsonc` dependency-resolver policy with forked dependency `facts` and notifies `linker`.
+/// Updates `workspace.jsonc` dependency-resolver policy ([`RESOLVER`]) with forked dependency `facts` via [`build_policy`] and notifies `linker`.
 pub(super) fn persist(
     root: &Path,
     linker: &mut ProjectedLinker,

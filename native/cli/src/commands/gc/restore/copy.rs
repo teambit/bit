@@ -1,6 +1,6 @@
 //! Copy backup entries with the released fs-extra traversal and overwrite rules.
 //!
-//! [`preflight`] validates source and destination metadata via [`check`] and [`failure`] before copying.
+//! [`preflight`] and [`run`] validate source and destination metadata via [`check`] and [`failure`] before copying.
 mod check;
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};

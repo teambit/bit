@@ -20,7 +20,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 pub(in crate::commands) fn run_scope(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, true)
 }
-/// Shared entry point for `bit fork` (`scope_fork == false`) and `bit scope fork` (`scope_fork == true`).
+/// Shared entry point for `bit fork` (`scope_fork == false`) and `bit scope fork` (`scope_fork == true`) via [`execute`].
 fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("fork arguments are not UTF-8".into()));

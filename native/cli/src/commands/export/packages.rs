@@ -22,7 +22,7 @@ struct Plan {
     version_data: Value,
 }
 
-/// Materializes `node_modules` links and `package.json` manifests for all `staged` exported components.
+/// Materializes `node_modules` links and `package.json` manifests for all `staged` exported components via [`plans`] and [`link_prepared_component`].
 pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
     let plans = plans(staged)?;
     let root_components_dir = match staged.get("rootComponentsDir") {

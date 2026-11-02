@@ -14,7 +14,7 @@ extern "C" fn interrupt(_signal: libc::c_int) {
         }
     }
 }
-/// Registers the `SIGINT` handler for `bit export` and returns the [`Previous`] disposition.
+/// Registers the `SIGINT` [`interrupt`] handler for `bit export` and returns the [`Previous`] disposition.
 #[inline]
 pub(super) fn install() -> io::Result<Previous> {
     let mut previous = MaybeUninit::<libc::sigaction>::uninit();

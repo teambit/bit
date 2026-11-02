@@ -1,6 +1,6 @@
 //! Import adoption and noninteractive reverse-graph selection flags.
 //!
-//! Defines [`AdoptionOptions`], [`DependentsOptions`], and [`Values`] serialized into engine request payloads.
+//! Defines [`AdoptionOptions`], [`DependentsOptions`], and [`Values`] ([`values`]) serialized into engine request payloads.
 use serde_json::{Value, json};
 
 /// Flags controlling component directory adoption (`--track-only`, `--write-to-empty-dir`, `--write-deps`).

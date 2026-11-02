@@ -11,7 +11,7 @@ use std::{fs, io, path::Path, time::Instant};
 pub(in crate::commands) struct RecoverOptions {
     pub skip_write_config_files: bool,
 }
-/// Imports soft-deleted components back into `root` during `bit recover` and returns the updated `.bitmap`.
+/// Imports soft-deleted components back into `root` during `bit recover` via [`Planned::plan_with`] and [`render`] and returns the updated `.bitmap`.
 #[inline]
 pub(in crate::commands) fn recover_import(
     root: &Path,

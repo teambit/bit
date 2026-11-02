@@ -7,7 +7,7 @@ use crate::commands::{
 use bit_object_import::component_fork::RemoteCapture;
 use serde_json::{Value, json};
 use std::{io, path::Path};
-/// Fetches remote `ids` via [`RemoteCapture`] and copies each component into the workspace.
+/// Fetches remote `ids` via [`RemoteCapture`] and [`connection`] and copies each component into the workspace via [`copy_sources`].
 pub(super) fn run(
     root: &Path,
     options: &Options,

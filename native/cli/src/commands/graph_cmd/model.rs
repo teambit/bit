@@ -31,7 +31,7 @@ pub(crate) struct CompGraph {
     pub(crate) edges: Vec<GraphEdge>,
 }
 
-/// Returns `val` unchanged when already trimmed, or allocates a trimmed `String` otherwise.
+/// Returns `val` unchanged when already trimmed, or allocates a trimmed `String` otherwise for [`CompGraph`].
 #[inline]
 fn trim_owned(val: String) -> String {
     if val.len() == val.trim().len() { val } else { val.trim().to_owned() }

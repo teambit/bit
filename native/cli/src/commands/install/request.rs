@@ -1,6 +1,6 @@
 //! Retained installer Host requests and the scoped lane installation boundary.
 //!
-//! Bridges [`needs_canonical_install`], [`JsHost`], and [`Host`] IPC calls with [`WorkspaceConfig`] resolution.
+//! Bridges [`needs_canonical_install`], [`lane_installation`], [`JsHost`], and [`Host`] IPC calls with [`WorkspaceConfig`] resolution.
 
 use super::JsHost;
 use crate::{commands::status::cache::cache_root, host::Host};

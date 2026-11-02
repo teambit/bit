@@ -5,7 +5,7 @@ use bit_object_import::export_progress::Event;
 use std::env;
 
 impl Exported {
-    /// Emits initial component-loading and exporting status lines before remote transfer starts.
+    /// Emits initial component-loading and exporting status lines onto [`Output`] before remote transfer starts.
     #[inline]
     pub(super) fn progress_before(&self, output: &Output) {
         if self.selected_ids {

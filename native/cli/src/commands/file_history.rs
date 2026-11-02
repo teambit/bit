@@ -27,7 +27,7 @@ pub(super) enum Target {
     Unowned,
 }
 
-/// Reads, orders, and normalizes the version history of a workspace file `input` via [`Engine`].
+/// Reads, orders, and normalizes the version history of a workspace file `input` via [`classify_target`] and [`Engine`].
 #[inline]
 pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<Value>)> {
     let Target::Versioned { identity, file, lane } = classify_target(root, input)? else {

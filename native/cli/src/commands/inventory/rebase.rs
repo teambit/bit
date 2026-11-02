@@ -54,7 +54,7 @@ pub fn join_linux(parts: &[&str]) -> String {
     }
 }
 
-/// `path.posix.normalize`.
+/// `path.posix.normalize` over `/`-delimited path segments via [`resolve`].
 #[must_use]
 #[inline]
 pub fn normalize(path: &str) -> String {

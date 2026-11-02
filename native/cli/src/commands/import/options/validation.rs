@@ -1,6 +1,6 @@
 //! Command-line flag and wildcard pattern validation for `bit import` and `bit fetch`.
 //!
-//! [`args`] verifies supported flags ([`WriteOptions`], [`DependencyOptions`]) and [`valid_pattern`] syntax before workspace execution.
+//! [`args`] and [`mode`] verify supported flags ([`WriteOptions`], [`DependencyOptions`]) and [`valid_pattern`] syntax before workspace execution.
 use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 
 /// Returns whether all `flags` and `ids` belong to the supported native `bit import` grammar.
