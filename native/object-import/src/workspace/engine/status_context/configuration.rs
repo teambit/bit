@@ -43,6 +43,7 @@ fn find_versioned_aspect<'a>(
 }
 
 /// Apply global aspect settings to an already retained workspace document.
+/// Shallow-merges [`RESOLVER`] settings when `~/.bitrc.jsonc` exists.
 pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value> {
     if !workspace.is_object() {
         return Err(super::invalid("workspace aspect configuration"));

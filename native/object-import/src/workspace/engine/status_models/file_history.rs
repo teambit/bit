@@ -70,6 +70,7 @@ fn rows(root: &Path, file: &str, logs: &[Value]) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Builds a single version's file history entry for `file` from `log` using `reader` and `cache`.
 fn row(
     directory: &Path,
     file: &str,

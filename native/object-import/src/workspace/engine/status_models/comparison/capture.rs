@@ -93,6 +93,7 @@ fn build_target_files(
             .collect(),
     )
 }
+/// Normalizes `bytes` (including root `.bitmap` canonicalization) and computes [`read::Metadata`] for `path`.
 #[inline]
 fn capture(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<read::Metadata> {
     let original = bytes.len();

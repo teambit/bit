@@ -67,6 +67,7 @@ struct Budgets {
     packed: Budget,
     output: Budget,
 }
+/// Deducts `captured` workspace file costs from `MAX_RAW` and constructs the remaining [`Budgets`].
 #[inline]
 fn source_budgets(captured: &[Vec<capture::File>]) -> io::Result<Budgets> {
     let used = captured

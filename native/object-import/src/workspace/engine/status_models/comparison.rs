@@ -89,6 +89,7 @@ fn compare_all(
 }
 
 /// Compares a single workspace `target` and its captured `files` against stored `model`.
+/// Aligns log and dependency ordering before computing semantic and field-level differences.
 pub(in crate::workspace::engine) fn compare(
     target: &Target,
     files: &Value,

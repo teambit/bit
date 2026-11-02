@@ -87,6 +87,7 @@ enum Leading {
 }
 
 /// Classifies the leading whitespace of `line` into [`Leading`].
+/// Counts only the initial contiguous run of spaces or tabs.
 #[inline]
 fn leading(line: &str) -> Leading {
     let run = |character: char| line.len() - line.trim_start_matches(character).len();

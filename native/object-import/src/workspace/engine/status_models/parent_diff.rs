@@ -88,6 +88,7 @@ fn model(
         .ok_or_else(|| invalid("version parent model absent"))
 }
 
+/// Builds a reverse lookup map from version SHA-1 reference to tag name across `model`.
 fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
     if ["versions", "orphanedVersions"]
         .into_iter()

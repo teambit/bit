@@ -80,6 +80,7 @@ fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<
     }
     node_candidate(&target, directory_only, typed, false, budget)
 }
+/// Returns `true` when `specifier` ends with `/` or targets `.` or `..` directly.
 #[inline]
 fn is_directory_only(specifier: &str) -> bool {
     specifier.ends_with('/') || matches!(specifier.rsplit('/').next(), Some("." | ".."))

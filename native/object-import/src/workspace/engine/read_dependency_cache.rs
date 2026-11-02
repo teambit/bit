@@ -66,6 +66,7 @@ pub fn cache_stale(
     freshness::stale(root, files, timestamp, pool)
 }
 
+/// Returns `true` when `timestamp` is a non-negative integer millisecond value within safe `f64` bounds.
 #[inline]
 fn valid_timestamp(timestamp: f64) -> bool {
     timestamp.is_finite()

@@ -87,6 +87,7 @@ pub(super) fn read(
 }
 
 /// Reads a single `Version` object at `reference`, returning `Ok(None)` when absent and not in `required`.
+/// Validates the loaded object against Harmony schema rules before returning.
 fn read_single(
     reader: &Reader<'_>,
     reference: &String,

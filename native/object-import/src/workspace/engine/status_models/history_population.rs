@@ -33,6 +33,7 @@ pub(super) fn prepare(
 }
 
 /// Loads an existing `VersionHistory` object at `hash` or initializes an empty one when `stage` is set.
+/// Verifies that the loaded history's `name` and `scope` match `model` and `identity`.
 fn load_or_init_history(
     reader: &Reader<'_>,
     model: &Value,

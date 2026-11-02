@@ -17,6 +17,7 @@ pub(super) struct Index<'a> {
 }
 impl<'a> Index<'a> {
     /// Builds an [`Index`] over bitmap, lane, model, and env-own version sources in `request`.
+    /// Records `None` for any unversioned identity that appears more than once in `bitmap`.
     pub(super) fn new(request: &'a Request) -> Self {
         let mut bitmap = HashMap::with_capacity(request.sources.bitmap.len());
         for id in &request.sources.bitmap {

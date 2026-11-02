@@ -44,6 +44,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     identities(request, &sources)
 }
 /// Validates component identities and package names across `request` and `sources`.
+/// Returns an `InvalidInput` error when any identity or package name violates syntax bounds.
 #[inline]
 fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> {
     if sources

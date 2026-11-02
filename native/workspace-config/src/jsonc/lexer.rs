@@ -37,6 +37,7 @@ struct Lexer<'a> {
     line: usize,
 }
 
+/// Tokenizes `text` into a sequence of `JSONC` [`Token`] items with 1-based line spans.
 #[inline]
 pub(super) fn tokenize(text: &str) -> io::Result<Vec<Token>> {
     let mut lexer = Lexer { text, chars: text.char_indices().peekable(), line: 1 };

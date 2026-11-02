@@ -75,6 +75,7 @@ pub(super) fn read_with_budget<Record: Send>(
         })
         .collect()
 }
+/// Reads `files` in parallel using a shared [`Budget`] of `maximum` raw bytes.
 fn parallel<Record: Send>(
     files: &[PathBuf],
     pool: &ThreadPool,

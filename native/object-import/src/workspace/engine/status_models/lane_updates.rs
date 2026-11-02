@@ -76,6 +76,7 @@ pub(in crate::workspace::engine) fn read(
 }
 
 /// Computes pending updates from `request.forked_lane_id` against `current` and `overlay`.
+/// Verifies that `current.forked_from` matches `request.forked_lane_id` before comparing heads.
 fn forked_updates(
     request: &Request,
     overlay: &Overlay,

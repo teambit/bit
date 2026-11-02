@@ -83,6 +83,7 @@ pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> 
         read(&root.join(".gitignore"), true)
     }
 }
+/// Reads and parses a bounded ignore file at `path`, returning an empty list when `missing` is allowed.
 fn read(path: &Path, missing: bool) -> io::Result<Vec<String>> {
     let Some(input) = open_ignore_file(path, missing)? else {
         return Ok(Vec::new());

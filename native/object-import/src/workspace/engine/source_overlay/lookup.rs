@@ -78,6 +78,7 @@ impl SourceOverlay {
         }
         Ok(None)
     }
+    /// Resolves [`Metadata`] for `path` through the sealed overlay and appends read-set `proofs`.
     pub(in crate::workspace::engine) fn metadata(
         &self,
         path: &Path,

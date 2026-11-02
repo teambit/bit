@@ -44,6 +44,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
 }
 
 /// Groups flat `captured` [`File`] entries back into per-target vectors matching `request.targets`.
+/// Rejects trailing unconsumed entries when `captured` does not match the total file count.
 #[inline]
 fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<Vec<File>>> {
     let mut captured = captured.into_iter();

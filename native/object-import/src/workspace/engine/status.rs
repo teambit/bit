@@ -17,7 +17,7 @@ pub(super) struct File {
 
 /// Preserve first-match path lookup and target order, including duplicate paths.
 ///
-/// Hash comparisons are ASCII case-insensitive after trimming and enforce `MAX_RAW` path budgets.
+/// Hash comparisons are ASCII case-insensitive after trimming and enforce `MAX_RAW` path and 32 KiB per-path budgets.
 #[inline]
 pub(super) fn compare(target: &[File], current: &[File]) -> io::Result<(usize, Value)> {
     super::count(target.len())?;

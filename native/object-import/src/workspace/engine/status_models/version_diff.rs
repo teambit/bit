@@ -94,6 +94,7 @@ fn load_pair(
     Ok((from, (*to).clone()))
 }
 
+/// Builds the list of [`Target`] version requests needed to compare `request.from_version` and `request.to_version`.
 #[inline]
 fn target_versions(request: &Request) -> Vec<Target> {
     let identity = request.identity.trim();

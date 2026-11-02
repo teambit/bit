@@ -58,6 +58,7 @@ struct Directories {
     entries: usize,
     bytes: usize,
 }
+/// Collects all non-cyclic directories under `root` in depth-first order.
 fn directories(root: &Path) -> io::Result<Vec<PathBuf>> {
     let text = root
         .to_str()

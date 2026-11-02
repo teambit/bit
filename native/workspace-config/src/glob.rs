@@ -87,6 +87,7 @@ fn glob(pattern: &[char], text: &[char]) -> bool {
     }
 }
 
+/// Matches a literal `character` at the start of `text` and recurses on `rest` via [`glob`].
 #[inline]
 fn literal(rest: &[char], character: char, text: &[char]) -> bool {
     text.first() == Some(&character) && glob(rest, &text[1..])

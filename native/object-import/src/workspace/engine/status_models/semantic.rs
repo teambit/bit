@@ -94,6 +94,7 @@ fn falsy(value: &Value) -> bool {
     }
 }
 
+/// Projects a single `extensions` entry `row` into its canonical semantic hash representation.
 #[inline]
 fn extension(row: &Value) -> io::Result<Value> {
     let mut value = json!({"rawConfig":row.get("config").cloned().unwrap_or_else(|| json!({}))});

@@ -71,6 +71,7 @@ fn remote_with_parent(
 }
 
 /// Parses and validates `updateDependents` `<scope>/<name>@<sha1>` entries from `lane`.
+/// Rejects duplicate component identities or lists exceeding 4,096 entries.
 fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
     let Some(value) = lane
         .get("updateDependents")

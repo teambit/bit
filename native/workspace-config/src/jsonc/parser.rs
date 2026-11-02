@@ -65,6 +65,7 @@ impl Parser {
         self.tokens.get(self.index)
     }
 
+    /// Advances the token cursor by one and updates `self.inline` when the next token shares the line.
     #[inline]
     fn next(&mut self) {
         let previous = self.tokens.get(self.index).map(|token| token.end_line);

@@ -72,6 +72,7 @@ fn reference(model: &Value, version: &str) -> io::Result<String> {
 }
 
 /// Reads and decodes all `Source` file blobs referenced by `version["files"]` under `directory`.
+/// Enforces a 4,096-file count limit and 8 MiB raw/packed read budgets.
 #[inline]
 fn files(directory: &std::path::Path, version: &Value) -> io::Result<Vec<Value>> {
     let rows = version["files"].as_array().ok_or_else(|| invalid("cat Version files"))?;

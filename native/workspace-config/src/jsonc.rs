@@ -38,6 +38,7 @@ pub struct Document {
 
 impl Document {
     /// Parses `text` into a comment-preserving `JSONC` [`Document`].
+    /// Preserves leading `before_all` and trailing `after_all` comment blocks.
     #[inline]
     pub fn parse(text: &str) -> io::Result<Self> {
         let parsed = parser::parse(text)?;

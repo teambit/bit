@@ -17,7 +17,7 @@ pub(super) struct Spool {
     hash: String,
 }
 impl Spool {
-    /// Parses and validates a [`Spool`] descriptor from `value`.
+    /// Parses and validates a [`Spool`] descriptor from `value`, enforcing the 1 MiB slice limit.
     pub(super) fn parse(value: &Value) -> io::Result<Self> {
         let path = value["spoolPath"]
             .as_str()

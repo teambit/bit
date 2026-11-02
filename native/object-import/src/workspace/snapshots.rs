@@ -45,6 +45,7 @@ fn valid_hash(hash: &str) -> bool {
 }
 
 impl State {
+    /// Retains `snapshot` under [`MAX_BYTES`] and [`MAX_FILES`], evicting oldest entries first.
     #[inline]
     pub(crate) fn retain(&mut self, snapshot: Observation) -> Option<u64> {
         let content_len = snapshot.contents.len();

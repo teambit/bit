@@ -79,6 +79,7 @@ fn segmented(mut path: PathBuf, hash: &str) -> PathBuf {
     path.push(&hash[4..]);
     path
 }
+/// Returns `true` when `value` is `null`, `false`, `""`, or `0`.
 #[inline]
 fn falsy(value: &Value) -> bool {
     matches!(value, Value::Null | Value::Bool(false))

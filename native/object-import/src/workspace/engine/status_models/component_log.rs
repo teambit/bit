@@ -75,6 +75,7 @@ fn lane_head(request: &Request) -> io::Result<Option<String>> {
         .and_then(|lane| lane.heads.get(request.identity.trim()).cloned()))
 }
 
+/// Loads the `ModelComponent` matching `request.identity` from the local scope.
 fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
     let snapshot = load(
         &ModelsRequest {

@@ -52,6 +52,7 @@ pub(crate) struct FileDiff {
     same: bool,
 }
 impl FileDiff {
+    /// Projects [`FileDiff`] without `fromContent`/`toContent` strings while retaining emptiness flags.
     #[inline]
     pub(crate) fn without_contents(self) -> serde_json::Value {
         serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,

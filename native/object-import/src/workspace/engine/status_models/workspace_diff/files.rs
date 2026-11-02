@@ -86,6 +86,7 @@ fn model_files(model: Option<&Value>) -> io::Result<&[Value]> {
     }
     Ok(files)
 }
+/// Reads all stored `Source` file blobs for `files` in parallel under `budgets` and `overlay`.
 fn model_sources(
     request: &Request,
     files: &[Value],

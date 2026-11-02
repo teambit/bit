@@ -47,6 +47,7 @@ impl Matcher {
             changes: Vec::new(),
         })
     }
+    /// Filters `paths` against the compiled ignore policy, running in parallel when `paths.len() >= 128`.
     pub(super) fn filter(&mut self, paths: &[String], pool: &ThreadPool) -> Vec<String> {
         if paths.len() < 128 {
             return paths

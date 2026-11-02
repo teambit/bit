@@ -84,6 +84,7 @@ fn lane_network(request: &Request, local: &str, scope_config: &Value) -> io::Res
 }
 
 /// Resolves the configured [`Remote`] endpoint for `scope` from local `scope.json` or `global_remotes_file`.
+/// Rejects empty, dot, or slash-containing `scope` names before reading configuration files.
 pub(super) fn configured_remote(
     root: &Path,
     scope: &str,

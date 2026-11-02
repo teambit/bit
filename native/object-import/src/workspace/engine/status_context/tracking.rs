@@ -78,6 +78,7 @@ fn observe(
 }
 
 /// Loads normalized `component.json` and `package.json` metadata for `target` under `root`.
+/// Rejects `target["directory"]` paths that resolve to non-directory entries on disk.
 fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Value> {
     let directory = target["directory"]
         .as_str()

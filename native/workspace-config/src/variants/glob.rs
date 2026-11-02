@@ -84,6 +84,7 @@ fn segment_matches(pattern: &str, name: &str) -> bool {
     wildcard(&pattern, &name)
 }
 
+/// Matches character slice `pattern` against `name` supporting `*`, `?`, `[...]`, and `\` escapes.
 #[inline]
 fn wildcard(pattern: &[char], name: &[char]) -> bool {
     match pattern.split_first() {

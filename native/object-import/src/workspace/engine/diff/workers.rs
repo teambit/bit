@@ -33,6 +33,7 @@ pub(super) fn execute(
 }
 
 /// Executes a single worker loop pulling file indices from `next` until `files` is exhausted.
+/// Advances `next` to `files.len()` on error so sibling workers stop claiming remaining work.
 #[inline]
 fn worker_batch(
     files: &[Prepared],

@@ -91,6 +91,7 @@ fn quote(value: &str) -> String {
     output
 }
 
+/// Formats a finite `f64` `value` using `ECMAScript` number-to-string rules, or `"null"` otherwise.
 #[inline]
 fn number(value: f64) -> String {
     if value.is_finite() {

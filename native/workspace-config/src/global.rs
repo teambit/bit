@@ -43,7 +43,7 @@ pub fn read_global_config_with(
 }
 
 /// Install's supported scalar setting projection preserves empty strings and boolean/number text.
-/// Non-scalar JSON values (`Null`, `Array`, `Object`) return `None`.
+/// Non-scalar JSON values (`Null`, `Array`, and `Object`) return `None`.
 #[must_use]
 #[inline]
 pub fn config_string(value: &Value) -> Option<String> {

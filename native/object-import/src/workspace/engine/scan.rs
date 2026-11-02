@@ -90,6 +90,7 @@ impl Scan<'_> {
         }
         self.file(file, name)
     }
+    /// Returns `true` when `file` or `name` matches `.git`, `.bit.map.json`, or an excluded directory.
     #[inline]
     fn excluded(&self, file: &Path, name: &str) -> bool {
         matches!(name, ".git" | ".bit.map.json")

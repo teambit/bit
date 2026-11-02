@@ -83,6 +83,7 @@ impl Control {
     }
 }
 
+/// Projects staged workspace deprecation `config` across every log entry in `rows`.
 #[inline]
 pub(super) fn staged(rows: &mut [Value], config: &Value) {
     let range = (config["deprecate"] != Value::Bool(false))

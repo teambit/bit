@@ -30,6 +30,7 @@ pub(in crate::workspace::engine) struct Policy {
     pub(in crate::workspace::engine) dependencies: Packages,
     pub(in crate::workspace::engine) peer_dependencies: Packages,
 }
+/// Wire request for initial dependency policy planning over packages, components, and missing groups.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

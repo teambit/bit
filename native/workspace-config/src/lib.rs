@@ -53,6 +53,7 @@ pub fn environment_key(key: &str) -> String {
 }
 
 /// Empty environment variables do not override a configured value.
+/// Looks up the process environment variable named by [`environment_key`].
 #[must_use]
 #[inline]
 pub fn environment_value(key: &str) -> Option<String> {

@@ -77,6 +77,7 @@ fn sorted_matches<'a>(
 }
 
 /// Aspects of the matches until one stops propagation; the first default scope.
+/// Preserves `max_specificity` and `matched_rules` across all matched variants.
 fn merge_matches(matches: Vec<MatchedVariant<'_>>) -> VariantConfig {
     let mut result =
         VariantConfig { propagate: true, max_specificity: -1.0, ..VariantConfig::default() };

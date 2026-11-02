@@ -37,6 +37,7 @@ pub(super) struct Policy {
     pub(super) merge: [Versions; 3],
     pub(super) prefix: Option<String>,
 }
+/// Pre-classified `SemVer` grammar flags and optional coerced version for a policy spec.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Grammar {
