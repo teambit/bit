@@ -16,6 +16,7 @@ fn unmodified_save_still_populates_missing_existing_history() {
     qualify(false);
 }
 
+/// Runs `bit stash save --message history` after deleting `comp1`'s `VersionHistory` object and asserts its recreation.
 fn qualify(modified: bool) {
     let helper = workspace();
     let hash =

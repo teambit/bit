@@ -14,6 +14,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Writes `bar/component.json` for `bar/foo` with `propagate: true` and the given `extensions` map.
 fn configure(helper: &Helper, extensions: &Value) {
     helper.output_file("bar/component.json", &json!({
         "componentId":{"scope":helper.scopes.remote,"name":"bar/foo"},"propagate":true,"extensions":extensions

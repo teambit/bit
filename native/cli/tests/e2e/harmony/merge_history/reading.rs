@@ -48,6 +48,7 @@ fn divergent_lane_logs_match_all_published_views() {
     compare_log(&helper);
 }
 
+/// Creates a workspace with `bar/foo` tagged at `0.0.1` and published to the remote scope.
 fn versions() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

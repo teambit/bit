@@ -23,6 +23,7 @@ fn lane_merge_retains_one_compiled_provider_through_snapshot() {
     qualify("lane merge dev --auto-merge-resolve theirs -m merged -x", false, false);
 }
 
+/// Verifies `bit lane merge --build` executes the configured builder pipeline once.
 #[test]
 fn lane_merge_build_uses_the_published_pipeline_once() {
     qualify("lane merge dev --auto-merge-resolve theirs --build -m merged -x", false, true);

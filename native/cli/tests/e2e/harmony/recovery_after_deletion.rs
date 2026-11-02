@@ -18,7 +18,7 @@ fn mark_versions_built(objects_dir: &Path) {
         }
     }
 }
-/// Rewrites a single `Version` object at `obj_path` from `"buildStatus":"pending"` to `"succeed"`.
+/// Rewrites a single `Version` object at `obj_path` from `"buildStatus":"pending"` to `"succeed"` in place.
 fn mark_version_object_built(obj_path: &Path) {
     let Ok(compressed) = fs::read(obj_path) else { return };
     let mut raw = Vec::new();

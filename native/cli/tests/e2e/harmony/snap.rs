@@ -11,6 +11,7 @@ const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; }";
 /// Fixture source for `comp3/index.js` version 2.
 const COMP3_V2: &str = "module.exports = () => 'comp3 v2';";
 
+/// Verifies `bit snap` before `bit tag` and `bit reset --head` on a snapped component.
 #[test]
 fn snap_before_tag_and_untag_a_snap() {
     let helper = Helper::new();

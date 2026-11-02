@@ -10,7 +10,7 @@ const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; };"
 /// Fixture source for `bar/foo.js` version 3 on a lane.
 const FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; };";
 
-/// Verifies switching to a remote lane, diffing, snapping, and switching with `--alias`.
+/// Verifies switching to a remote lane, diffing, snapping, and switching with `--alias` ([`FOO_V2`], [`FOO_V3`]).
 #[test]
 fn switch_to_remote_lane_diff_snap_alias_and_local_lane() {
     let helper = Helper::new();

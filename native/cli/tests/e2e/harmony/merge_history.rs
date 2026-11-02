@@ -19,6 +19,7 @@ pub(super) fn unrelated() -> (Helper, PathBuf) {
     unrelated_with(crate::helper::remote::publish)
 }
 
+/// Creates a workspace with two unrelated lanes (`left` and `right`) published via `publish`.
 pub(super) fn unrelated_with(publish: fn(&Helper)) -> (Helper, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

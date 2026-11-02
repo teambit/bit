@@ -7,7 +7,7 @@ mod older;
 
 use crate::helper::{Helper, parse};
 
-/// Verifies transitive `updateDependents` cascade, promotion on import, and concurrent export divergence rejection.
+/// Verifies transitive `updateDependents` cascade, promotion on import, and concurrent export divergence rejection ([`Helper`]).
 #[test]
 fn scenarios_3_4_5_6_local_snap_cascades_update_dependents() {
     let helper = Helper::new();

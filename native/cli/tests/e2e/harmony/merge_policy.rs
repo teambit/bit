@@ -34,6 +34,7 @@ fn stable(text: &str) -> String {
         .join("\n")
 }
 
+/// Recursively collects non-`.bit`/`.git`/`node_modules` files under `directory` relative to `root`.
 fn workspace_files(root: &Path, directory: &Path, files: &mut BTreeMap<String, Vec<u8>>) {
     for entry in fs::read_dir(directory).unwrap() {
         let path = entry.unwrap().path();

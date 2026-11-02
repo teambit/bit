@@ -2,7 +2,7 @@
 //! Covers dependency policy preservation, deleted components, and head updates during `bit lane merge`.
 
 use crate::helper::{Helper, parse};
-/// Verifies that merging `main` into a lane retains `@types/*` packages added on `main`.
+/// Verifies that merging `main` into a lane retains `@types/*` packages added on `main` ([`Helper`]).
 #[test]
 fn merging_main_retains_the_types_package_added_by_the_incoming_side() {
     use crate::{commands::move_paths::support::setup, helper::config};

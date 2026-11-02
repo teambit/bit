@@ -50,6 +50,7 @@ fn workspace(main_exists: bool) -> Helper {
     }
     helper
 }
+/// Installs and configures the custom `env/lane-delay` aspect in `helper`.
 pub(super) fn install_delay(helper: &Helper) {
     let source = include_str!("lane_delay.cjs");
     helper.output_file("lane-delay/index.js", source);

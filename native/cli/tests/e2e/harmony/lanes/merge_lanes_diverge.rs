@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use std::path::PathBuf;
 
-/// Creates a two-component workspace with `dev` diverged from `main` and imported objects ready for merge.
+/// Creates a two-component workspace with `dev` diverged from `main` and imported objects ready for merge ([`PathBuf`]).
 fn setup_diverged_lane() -> (Helper, String, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

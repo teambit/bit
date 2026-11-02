@@ -57,6 +57,7 @@ fn source(root: &Path, hash: &str) -> Vec<u8> {
     assert!(bytes.starts_with(b"Source "));
     bytes[start..].to_vec()
 }
+/// Inflates a `.tgz` archive from `bytes` and normalizes entry paths and contents against `root`.
 fn archive(root: &Path, bytes: &[u8]) -> Value {
     let mut tar = Vec::new();
     GzDecoder::new(bytes).read_to_end(&mut tar).unwrap();

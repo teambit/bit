@@ -79,7 +79,7 @@ fn stale_pinned_dependency_lives_in_another_scope_cross_scope_pin() {
     assert!(!cat_ver.status.success());
 }
 
-/// Verifies that `bit lane merge` fetches a referenced dependency snap that exists only on the lane scope.
+/// Verifies that `bit lane merge` fetches a referenced dependency snap that exists only on the lane scope ([`Helper`]).
 #[test]
 fn referenced_snap_is_only_on_the_lane_scope_fresh_import() {
     let helper = Helper::new();

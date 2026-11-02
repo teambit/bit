@@ -1,4 +1,4 @@
-//! The released scope cascade ([`compare`]) predates identity matching for older snapshots.
+//! The released scope cascade ([`compare`], [`hidden_head`]) predates identity matching for older snapshots.
 //! Compares carried metadata with its fast-forward result, then asserts every upstream cascade change.
 //! Verifies hidden dependent version parent, log message, and lane origin updates across scopes.
 use crate::helper::{Helper, parse};

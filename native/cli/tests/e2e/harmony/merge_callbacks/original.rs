@@ -33,6 +33,7 @@ fn copy(from: &Path, to: &Path) {
     setup::copy_dir(from, to);
     timestamps(from, to);
 }
+/// Recursively copies file modification timestamps from directory tree `from` onto `to`.
 fn timestamps(from: &Path, to: &Path) {
     for entry in fs::read_dir(from).unwrap() {
         let entry = entry.unwrap();

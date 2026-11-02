@@ -1,5 +1,5 @@
 //! Snapshot range validation matches the released guard and its feature
-//! opt-in (`plus-range-versions`, [`plus_ranges_require_the_feature_before_snapshot_publication`]) for `+^` peer dependency version ranges.
+//! opt-in (`plus-range-versions`, [`plus_ranges_require_the_feature_before_snapshot_publication`], [`normalize_hash`]) for `+^` peer dependency version ranges.
 use super::{version, workspace};
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;

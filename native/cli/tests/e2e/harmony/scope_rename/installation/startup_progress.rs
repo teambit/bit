@@ -11,7 +11,7 @@ const BANNER: &str =
     "Packages are hard linked from the content-addressable store to the virtual store.\n";
 
 /// pnpm may sample its initial zero-add state before immediately redrawing the banner.
-/// Keep all other progress, control sequences and package/lifecycle output byte-exact.
+/// Keep all other progress, control sequences and package/lifecycle output byte-exact ([`MARKER`], [`FRAME`], [`BANNER`]).
 pub(crate) fn project(text: &str) -> String {
     let Some((before, progress)) = text.split_once(MARKER) else {
         return text.to_owned();

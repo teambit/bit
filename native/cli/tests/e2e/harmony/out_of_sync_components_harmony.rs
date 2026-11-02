@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/out-of-sync-components-harmony.e2e.ts` ([`out_of_sync_components_between_scope_and_consumer`]).
+//! End-to-end tests for `e2e/harmony/out-of-sync-components-harmony.e2e.ts` ([`out_of_sync_components_between_scope_and_consumer`], [`build_tagged_component_when_scope_has_no_components`]).
 //! Covers syncing `.bitmap` and local scope versions when workspace and scope state diverge.
 
 use crate::helper::{Helper, config};

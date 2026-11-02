@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/scope-trust.e2e.ts` ([`workspace_scope_trust_gate_and_cli_commands`]).
+//! End-to-end tests for `e2e/harmony/scope-trust.e2e.ts` ([`workspace_scope_trust_gate_and_cli_commands`], [`TRUSTED_SCOPES_KEY`]).
 //! Covers `trustedScopes` enforcement and refusal diagnostics when loading external workspace aspects.
 
 use crate::helper::{Helper, config};

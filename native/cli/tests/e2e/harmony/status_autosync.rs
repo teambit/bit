@@ -57,6 +57,7 @@ fn enable(helper: &Helper) {
     }
 }
 
+/// Runs `command` against a fresh `bitmapAutoSync` workspace and asserts native/Node parity.
 fn parity(command: &str, ci: bool) {
     qualify(&workspace(), command, ci);
 }

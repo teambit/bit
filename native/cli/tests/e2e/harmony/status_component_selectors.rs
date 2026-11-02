@@ -17,6 +17,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Asserts that native and Node `bit diff "<pattern>" --json` produce identical JSON output.
 fn parity(helper: &Helper, pattern: &str) {
     let command = format!(r#"diff "{pattern}" --json"#);
     let copy = helper.clone_workspace();

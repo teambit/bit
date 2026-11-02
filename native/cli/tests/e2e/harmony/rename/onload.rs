@@ -45,6 +45,7 @@ fn exported_rename_materializes_in_memory_source_changes_without_touching_origin
     assert!(text.contains("// source onLoad mutation"));
     assert!(text.contains("comp2"));
 }
+/// Verifies that renaming a new component reloads the target identity before materializing `onLoad` mutations.
 #[test]
 fn new_rename_reloads_the_target_consumer_after_renaming_the_bitmap_identity() {
     let helper = configured(false);

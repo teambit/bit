@@ -31,6 +31,7 @@ fn workspace_in_scope(with_remote: bool) -> Helper {
     helper
 }
 
+/// Runs `command` in native and Node workspaces and asserts identical output, `.bitmap`, and local scope list.
 fn compare(helper: &Helper, command: &str) {
     let oracle = helper.clone_workspace();
     let node = Helper::cmd_in_with(&oracle, command, &[("BIT_NATIVE", OsStr::new("off"))]);

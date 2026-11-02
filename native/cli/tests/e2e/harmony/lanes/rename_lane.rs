@@ -7,7 +7,7 @@ use crate::helper::{Helper, config};
 /// Target lane name used when testing `bit lane rename` on an unexported local lane.
 const RENAMED_LANE: &str = "new-dev";
 
-/// Verifies that renaming a local lane and switching to `main` and back preserves `_bit_lane.exported == false`.
+/// Verifies that renaming a local lane and switching to `main` and back preserves `_bit_lane.exported == false` ([`RENAMED_LANE`]).
 #[test]
 fn rename_local_lane_switch_to_main_and_switch_back() {
     let helper = Helper::new();

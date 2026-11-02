@@ -45,6 +45,7 @@ fn exported_deprecating_rename_creates_new_identity_and_bidirectional_provenance
         assert!(ids.contains(&format!("{}/{name}", helper.scopes.remote)));
     }
 }
+/// Verifies that renaming an exported component supports `--scope` and `--delete` on the original component.
 #[test]
 fn exported_rename_can_change_the_new_scope_and_delete_the_old_component() {
     for flag in ["--scope org.ui", "--delete"] {

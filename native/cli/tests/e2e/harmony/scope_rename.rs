@@ -76,6 +76,7 @@ fn owner_rename_keeps_component_directories_across_multiple_scopes() {
     ids.sort_unstable();
     assert_eq!(ids, vec!["replacement.one/comp1", "replacement.two/comp2"]);
 }
+/// Verifies that `bit scope rename` succeeds on `defaultScope` even when no workspace components match the old scope.
 #[test]
 fn default_only_scope_rename_does_not_require_a_matching_component() {
     let helper = support::workspace(0, false);

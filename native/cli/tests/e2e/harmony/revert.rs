@@ -37,6 +37,7 @@ fn tagged_twice() -> (Helper, std::path::PathBuf) {
     (helper, before_revert)
 }
 
+/// Recursively reads files under `relative` inside `root` into `files`.
 fn capture(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>) {
     let path = root.join(relative);
     if path.is_file() {

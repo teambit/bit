@@ -51,6 +51,7 @@ fn new_component_scope_namespace_and_nondefault_source_scope_are_respected() {
         assert_eq!(support::show(&helper, name, "id"), format!("{scope}/{name}"));
     }
 }
+/// Verifies that `bit rename --refactor` replaces exact package specifiers without altering prefix-matching imports.
 #[test]
 fn refactoring_replaces_exact_package_imports_without_replacing_longer_names() {
     let helper = support::workspace(2, false);

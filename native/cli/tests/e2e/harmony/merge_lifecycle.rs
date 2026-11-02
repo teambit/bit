@@ -32,12 +32,14 @@ fn divergent() -> Helper {
     helper
 }
 
+/// Verifies that automatic `bit lane merge` materializes merged sources and creates a snap matching Node.
 #[test]
 fn automatic_lane_merge_materializes_then_snaps_like_node() {
     let helper = divergent();
     compare(&helper, "lane merge dev --auto-merge-resolve theirs -m merged -x");
 }
 
+/// Asserts that native `command` matches Node on `helper` across stdout, `.bitmap`, files, and `Version` object.
 fn compare(helper: &Helper, command: &str) {
     let oracle = helper.clone_workspace();
     let native = helper.native_run(command);

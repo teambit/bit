@@ -20,6 +20,7 @@ pub(super) fn pending() -> Helper {
     pending_with(false)
 }
 
+/// Creates a manual merge-pending workspace with the callback hook aspect optionally configured to fail.
 fn pending_with(fail: bool) -> Helper {
     let helper = super::snapshot_environments::callback_workspace(fail);
     let id = format!("{}/callbacks/hook", helper.scopes.remote);

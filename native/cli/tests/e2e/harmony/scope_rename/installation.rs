@@ -35,6 +35,7 @@ fn durations(text: &str) -> String {
         .collect::<String>();
     startup_progress::project(&durations)
 }
+/// Replaces the completion duration suffix on a single progress `line` with `<duration>)`.
 fn completion(line: &str) -> String {
     let (body, newline) = if let Some(body) = line.strip_suffix("\r\n") {
         (body, "\r\n")

@@ -38,6 +38,7 @@ fn scope_fork_filters_partial_patterns_with_an_explicit_target_scope() {
     );
     fork::assert_origins(&helper, &["comp1", "comp3"]);
 }
+/// Verifies that `bit scope fork` resolves overlapping component name prefixes (`comp1` and `comp1/ui`) into separate root directories.
 #[test]
 fn scope_fork_resolves_component_name_prefixes_without_nested_root_ownership() {
     let helper = support::workspace(1, true);

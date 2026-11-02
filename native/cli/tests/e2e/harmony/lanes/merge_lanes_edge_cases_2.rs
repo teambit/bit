@@ -1,7 +1,7 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-edge-cases-2.e2e.ts` for `bit lane merge` naming and conflict edge cases ([`naming_conflict_introduced_during_the_merge`]) across lanes.
 
 use crate::helper::{Helper, parse};
-/// Verifies that a directory naming conflict introduced during `bit lane merge` allocates a suffixed directory.
+/// Verifies that a directory naming conflict introduced during `bit lane merge` allocates a suffixed directory ([`Helper`]).
 #[test]
 fn naming_conflict_introduced_during_the_merge() {
     let helper = Helper::new();

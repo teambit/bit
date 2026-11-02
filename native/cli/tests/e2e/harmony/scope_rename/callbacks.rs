@@ -61,6 +61,7 @@ fn batch_loads_all_originals_before_adding_and_invokes_real_registered_onadd_cal
         );
     }
 }
+/// Verifies that a second `onAdd` callback failure during `bit scope rename` retains the first renamed component's deprecation state.
 #[test]
 fn second_onadd_failure_preserves_the_first_renamed_component_and_the_second_add_prefix() {
     let helper = configured(true);

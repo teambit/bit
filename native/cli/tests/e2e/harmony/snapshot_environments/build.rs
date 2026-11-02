@@ -38,6 +38,7 @@ fn build_workspace(fail: bool) -> Helper {
     build_workspace_with(fail, false)
 }
 
+/// Creates a workspace configured with [`BUILD_ENV`] and optional builder or `modifyPackageJson` failure injection.
 fn build_workspace_with(fail: bool, package_fail: bool) -> Helper {
     build_workspace_options(fail, package_fail, false)
 }

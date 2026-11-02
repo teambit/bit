@@ -62,6 +62,7 @@ fn compile_mixed_baseline(helper: &crate::helper::Helper) {
     );
 }
 
+/// Asserts that `comp3` is deprecated with `newId` pointing to `replacement.scope` and all components are listed.
 fn assert_mixed_results(helper: &crate::helper::Helper, map: &serde_json::Value, old: &str) {
     let source = map
         .as_object()

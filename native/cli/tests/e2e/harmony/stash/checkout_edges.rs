@@ -1,5 +1,5 @@
 //! New-component stash checkout preserves embedded scopes and existing authored
-//! identities across `.git/bit` embedded repository layouts ([`embedded_scope_restores_new_components_without_creating_model_heads`]).
+//! identities across `.git/bit` embedded repository layouts ([`embedded_scope_restores_new_components_without_creating_model_heads`], [`existing_new_identity_is_skipped_without_replacing_its_root_or_sources`]).
 use super::support::{command, compare_stashes, node, workspace};
 use crate::helper::config;
 use std::fs;

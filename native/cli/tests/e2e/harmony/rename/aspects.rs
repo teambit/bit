@@ -58,6 +58,7 @@ fn new_aspect_rename_changes_directory_filenames_and_classes_unless_preserved() 
         );
     }
 }
+/// Verifies that renaming an exported aspect with `--deprecate` updates only the newly created component sources.
 #[test]
 fn exported_aspect_rename_changes_only_the_new_component_sources() {
     let helper = workspace(true);

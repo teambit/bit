@@ -42,6 +42,7 @@ fn forced_and_named_merge_strategies_preserve_local_and_stashed_files() {
         assert!(!helper.scopes.local_path.join(".bit/stash/stash-1.json").exists());
     }
 }
+/// Verifies that `bit stash load` on an empty stash or with conflicting/invalid strategy flags matches Node errors.
 #[test]
 fn empty_load_and_invalid_strategy_errors_match_the_published_cli() {
     let helper = workspace();

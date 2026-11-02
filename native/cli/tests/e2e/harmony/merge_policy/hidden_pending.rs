@@ -60,6 +60,7 @@ fn hidden_head(helper: &Helper) -> String {
         .to_owned()
 }
 
+/// Verifies that a hidden `updateDependents` fast-forward cascades when the visible merge updates its dependency.
 #[test]
 fn hidden_fast_forward_cascades_when_the_visible_merge_changes_its_older_dependency() {
     let helper = workspace();

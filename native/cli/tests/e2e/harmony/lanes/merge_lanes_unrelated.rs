@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Verifies `--resolve-unrelated` lane merges when a component has unrelated history across origin and lane scopes.
+/// Verifies `--resolve-unrelated` lane merges when a component has unrelated history across origin and lane scopes ([`Helper`]).
 #[test]
 fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane() {
     let helper = Helper::new();

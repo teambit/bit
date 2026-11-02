@@ -35,6 +35,7 @@ pub(super) fn command(helper: &Helper, oracle: &Path, command: &str) {
         config::read_jsonc(&oracle.join(".bitmap")),
     );
 }
+/// Runs `command` in `root` with `BIT_NATIVE=off`.
 pub(super) fn node(root: &Path, command: &str) -> crate::helper::Run {
     Helper::cmd_in_with(root, command, &[("BIT_NATIVE", OsStr::new("off"))])
 }

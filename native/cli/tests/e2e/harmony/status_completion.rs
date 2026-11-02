@@ -46,6 +46,7 @@ fn circular_dependency_flags_match_node() {
     }
 }
 
+/// Verifies that global `.bitrc.jsonc` aspect settings merge before `workspace.jsonc` settings in `bit status`.
 #[test]
 fn global_aspect_settings_merge_before_workspace_settings() {
     let helper = Helper::new();

@@ -52,6 +52,7 @@ fn compare(helper: &Helper, baseline: &Path, remote: &Path, head: &str, command:
     assert_eq!(helper.read_bit_map(), bitmap);
 }
 
+/// Captures the current `dev` lane, `head` version object, `.bitmap`, `comp2` source, and package tree.
 fn state(helper: &Helper, head: &str) -> Value {
     json!({
         "lane":parse(&helper.native("cat-lane dev")),

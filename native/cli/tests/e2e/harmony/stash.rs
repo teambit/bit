@@ -52,6 +52,7 @@ fn manual_load_preserves_the_published_conflict_labels() {
     assert!(actual.contains("<<<<<<< 0.0.1 modified"));
     assert!(actual.contains(">>>>>>> stash"));
 }
+/// Verifies that `bit stash load` uses the stashed parent as merge base even after a new tag on `comp1`.
 #[test]
 fn stash_parent_remains_the_merge_base_after_a_new_tag() {
     shared_base(true);

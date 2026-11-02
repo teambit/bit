@@ -4,7 +4,7 @@
 
 use crate::helper::{FOO_FIXTURE, Helper, len, parse};
 
-/// Verifies snapping on `main` and a new lane while blocking `bit tag` when checked out to a lane.
+/// Verifies snapping on `main` and a new lane while blocking `bit tag` when checked out to a lane ([`Helper`]).
 #[test]
 fn create_snap_on_main_then_on_new_lane_and_block_tag_on_lane() {
     let helper = Helper::new();

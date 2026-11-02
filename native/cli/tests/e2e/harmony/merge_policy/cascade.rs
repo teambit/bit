@@ -39,6 +39,7 @@ fn incoming(helper: &Helper, mixed: bool) {
     }
 }
 
+/// Writes `main` branch edits to `comp1/index.js` and `comp2/index.js` in `helper`.
 fn current(helper: &Helper, mixed: bool) {
     for component in ["comp1", "comp2"] {
         let path = helper.scopes.local_path.join(component).join("index.js");

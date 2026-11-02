@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/merge-config.e2e.ts` for aspect configuration merge conflicts and resolution ([`show_aspect_config`], [`diverge_with_config_possible_to_merge_and_different_versions`]).
+//! Port of `e2e/harmony/merge-config.e2e.ts` for aspect configuration merge conflicts and resolution ([`show_aspect_config`], [`diverge_with_config_possible_to_merge_and_different_versions`], [`diverge_with_conflicted_config_ours_and_theirs`]).
 //! Covers auto-merged aspect configs, `merge-conflict` file generation, and `--resolve` conflict workflows.
 
 use crate::helper::{Helper, parse};

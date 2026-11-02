@@ -82,6 +82,7 @@ fn stash_binary_and_crlf_sources_match_published_storage_and_restoration() {
     }
 }
 
+/// Custom workspace aspect source registering an `onComponentLoad` hook that sets scalar metadata on `bar/foo`.
 const SCALAR_HOOK: &str = r"const {WorkspaceAspect}=require('@teambit/workspace');
 const fs=require('fs');
 class Hook {

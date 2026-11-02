@@ -31,6 +31,7 @@ fn workspace() -> Helper {
     config::set_workspace_key(&helper.scopes.local_path, &id, serde_json::json!({}));
     helper
 }
+/// Creates a workspace where `bar/foo` diverges between `main` and an exported `dev` lane under `env/merge`.
 pub(super) fn lane() -> Helper {
     let helper = workspace();
     node(&helper, "tag bar/foo -m base");

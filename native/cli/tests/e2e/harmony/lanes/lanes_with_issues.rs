@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse, remote};
 use std::fs;
 
-/// Writes and tracks `comp1`, `comp2`, and `comp3` with source suffix `suffix`.
+/// Writes and tracks `comp1`, `comp2`, and `comp3` with source suffix `suffix` via [`Helper`].
 fn populate_three(helper: &Helper, suffix: &str) {
     for index in 1..=3 {
         helper.output_file(

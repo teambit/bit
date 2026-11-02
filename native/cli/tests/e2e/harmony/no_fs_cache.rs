@@ -18,6 +18,7 @@ fn cache(root: &Path) -> std::path::PathBuf {
     root.join(".bit/cache/components/deps")
 }
 
+/// Returns all relative file paths and contents under `directory` sorted by path.
 fn cache_contents(directory: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
     let mut files = Vec::new();
     if directory.exists() {

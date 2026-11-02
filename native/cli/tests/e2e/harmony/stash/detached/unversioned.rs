@@ -42,6 +42,7 @@ fn new_aspect(helper: &Helper) -> String {
     format!("{}/fresh/aspect", helper.scopes.remote)
 }
 
+/// Asserts that `actual` and `expected` have identical scope objects and only `VersionHistory` objects were added after `before`.
 fn assert_history_prefix(before: &BTreeMap<String, Vec<u8>>, actual: &Path, expected: &Path) {
     let published = inflated_objects(actual);
     assert_eq!(published, inflated_objects(expected));

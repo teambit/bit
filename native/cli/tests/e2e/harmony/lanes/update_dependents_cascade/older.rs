@@ -29,6 +29,7 @@ fn older_hidden_dependency_cascades_to_the_new_lane_head() {
     );
 }
 
+/// Verifies that a transitive hidden `updateDependents` chain pointing at older snaps cascades without becoming visible.
 #[test]
 fn older_hidden_dependency_cascades_transitively_without_becoming_visible() {
     let helper = fixture(true);

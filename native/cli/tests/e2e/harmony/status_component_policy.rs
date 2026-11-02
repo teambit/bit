@@ -24,6 +24,7 @@ fn workspace(policy: &Value) -> Helper {
     helper
 }
 
+/// Runs `command` in native and Node workspaces and asserts identical exit code and output.
 fn parity(helper: &Helper, command: &str) {
     let copy = helper.clone_workspace();
     let native = helper.native_run(command);
