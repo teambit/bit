@@ -3,7 +3,6 @@
 pub(super) mod batch;
 mod eol;
 mod preflight;
-
 use self::preflight::overlaid;
 use super::{Plan, invalid, refactor, unsupported};
 use serde_json::Value;
@@ -23,6 +22,7 @@ pub(super) struct Change {
     before: Vec<u8>,
     writer: eol::Writer,
 }
+/// Prepare refactored source file [`Change`]s and dependent component edits for `plan`.
 pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     let component = facts["components"]
         .as_array()

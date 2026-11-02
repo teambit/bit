@@ -32,7 +32,7 @@ struct HistoryState {
     before: Option<Vec<u8>>,
     after: Option<Vec<u8>>,
 }
-
+/// Retained file modification or deletion with preimage proof `before` and optional `after` bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Change {
     path: PathBuf,

@@ -60,6 +60,7 @@ fn tracked(
     }
     Ok((tracked_head(batch, selection::bare(id), model)?, vec![]))
 }
+/// Inspect the local head `Version` object of a tracked component to check for soft-deletion metadata.
 fn tracked_head(batch: &mut Batch, id: &str, model: Option<&Value>) -> io::Result<Action> {
     let Some(model) = model else { return Ok(Action::None) };
     let version = repository::head(batch, id, model)?

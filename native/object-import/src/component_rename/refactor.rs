@@ -8,6 +8,7 @@ use std::{
     sync::{Arc, Mutex, OnceLock},
 };
 
+/// Cached or error result of compiling a regular expression pattern.
 type Compiled = Result<Arc<Regex>, String>;
 
 /// Compilation is lazy so an invalid pattern still fails at the first text

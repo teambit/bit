@@ -43,6 +43,7 @@ pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
     plan.cleanup = Some(tree);
     Ok(())
 }
+/// Record a file preimage or enqueue a subdirectory under `tree` while rejecting symlinks/reparse points.
 fn observe(tree: &mut Tree, path: PathBuf, pending: &mut Vec<PathBuf>) -> io::Result<()> {
     let metadata = fs::symlink_metadata(&path)?;
     if metadata.file_type().is_symlink() || reparse(&metadata) {

@@ -37,6 +37,7 @@ impl LocalBatch {
         }
         preparation::prepare(root, identities, keep_files, track, components)
     }
+    /// Parse and return the pre-removal `.bitmap` JSON [`Value`].
     #[inline]
     pub fn bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.before)

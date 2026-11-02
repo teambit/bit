@@ -66,6 +66,7 @@ fn resolve_source_scope<'a>(
             .filter(|val| !val.is_empty());
     row_scope(key, source).or(ws_default_scope).ok_or_else(|| unsupported("rename source scope"))
 }
+/// Extract a non-empty concrete version (excluding `"latest"` and `"head"`) from `(key, source)`.
 fn extract_source_version(key: &str, source: &Value) -> Option<String> {
     source["version"]
         .as_str()

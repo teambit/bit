@@ -9,6 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Canonical aspect ID (`"teambit.component/deprecation"`) for component deprecation metadata.
 const ASPECT: &str = "teambit.component/deprecation";
 
 /// Retained `.bitmap` and observation plan for component deprecation or undeprecation.

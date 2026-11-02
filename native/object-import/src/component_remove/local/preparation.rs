@@ -80,6 +80,7 @@ fn packages(
     Ok(())
 }
 
+/// Select and prepare a single component's `.bitmap` row and optional [`VersionedPlan`] for removal.
 fn entry(
     root: &Path,
     bitmap: &Value,

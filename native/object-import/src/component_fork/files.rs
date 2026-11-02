@@ -61,6 +61,7 @@ pub(super) fn prepare(
     budget(&output)?;
     Ok(output)
 }
+/// Apply optional source-ID, variable, and filename refactoring to a forked file's `bytes`.
 fn transform(
     options: &Options,
     source: &Value,

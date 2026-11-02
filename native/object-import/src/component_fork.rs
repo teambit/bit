@@ -77,6 +77,7 @@ impl Plan {
         plan.validate()?;
         Ok(plan)
     }
+    /// Return the resolved scoped target identity (`"<scope>/<name>"`) of the forked component.
     #[must_use]
     #[inline]
     pub fn target_identity(&self) -> &str {

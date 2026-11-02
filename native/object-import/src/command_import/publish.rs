@@ -56,6 +56,7 @@ pub(super) fn reusing_candidates(
     object(hash, kind, value)
 }
 
+/// Serialize a scope object header (`"<kind> <hash> <utf16_len>\0"`) followed by its JSON body.
 #[inline]
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     let hash = hash.trim();

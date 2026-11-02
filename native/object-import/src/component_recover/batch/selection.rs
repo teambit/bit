@@ -45,6 +45,7 @@ fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
 }
+/// Locate the `.bitmap` key matching `id` by full identity, bare name, or key prefix.
 pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
     let bare = bare(id);
     let rows = bitmap.as_object().ok_or_else(|| invalid("recovery bitmap object"))?;

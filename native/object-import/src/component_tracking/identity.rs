@@ -55,6 +55,7 @@ fn generated(
     validate(&identity)?;
     Ok((identity, options.namespace.is_none(), None))
 }
+/// Resolve an explicit `--id` component name and optional scope against existing `.bitmap` entries.
 fn explicit(
     id: &str,
     bitmap: &Value,

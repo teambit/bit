@@ -58,6 +58,7 @@ pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+/// Return `true` when JSON `value` is JavaScript-truthy (`true`, non-zero number, non-empty string, or object/array).
 #[inline]
 fn truthy(value: &Value) -> bool {
     match value {

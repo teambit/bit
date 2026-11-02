@@ -56,6 +56,7 @@ pub(super) fn prepare(
     }
     Ok(())
 }
+/// Resolve the initial target scope for `directory`, deferring vendor-directory errors when `generated`.
 fn initial_scope(
     facts: &Value,
     directory: &str,

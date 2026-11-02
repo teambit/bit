@@ -53,6 +53,7 @@ pub(in crate::component_rename) fn batch_dependents(
     Ok((output, identities))
 }
 
+/// Extract the bare `<scope>/<name>` or `<name>` component identity from a loaded component `row`.
 fn row_identity(row: &Value) -> Option<String> {
     if let Some(identity) = row["identity"]
         .as_str()

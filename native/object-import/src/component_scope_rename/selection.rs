@@ -53,6 +53,7 @@ pub(super) fn entries_with_default(
     Ok(entries)
 }
 
+/// Return `true` when `.bitmap` entry `(trimmed_key, row)` is a metadata key or inactive/removed component.
 #[inline]
 fn is_skipped_row(trimmed_key: &str, row: &Value) -> bool {
     trimmed_key.is_empty()

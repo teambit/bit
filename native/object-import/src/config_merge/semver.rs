@@ -31,6 +31,7 @@ fn prerelease(left: &[Value], right: &[Value]) -> io::Result<Ordering> {
     }
     Ok(left.len().cmp(&right.len()))
 }
+/// Compare two single prerelease identifier values (numeric < alphanumeric, ASCII lexical order).
 fn identifier(left: &Value, right: &Value) -> io::Result<Ordering> {
     match (numeric(left), numeric(right)) {
         (Some(left_number), Some(right_number)) => Ok(left_number.total_cmp(&right_number)),

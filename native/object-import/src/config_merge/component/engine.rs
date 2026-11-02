@@ -31,6 +31,7 @@ impl<'a> Engine<'a> {
             conflicts: Vec::new(),
         })
     }
+    /// Emit the initial `config-merger` debug banner and `currentLabel`/`otherLabel` log lines.
     pub(super) fn start(&mut self) -> io::Result<()> {
         self.log(
             "debug",

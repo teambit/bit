@@ -42,6 +42,7 @@ pub(super) fn row_name<'a>(key: &'a str, row: &'a Value) -> Option<&'a str> {
     Some(key_id.split_once('/').map_or(key_id, |(_, name)| name.trim()))
         .filter(|name| !name.is_empty())
 }
+/// Look up the single `.bitmap` component row matching `name` and optional `selected_scope`.
 pub(super) fn find<'a>(
     bitmap: &'a Value,
     name: &str,

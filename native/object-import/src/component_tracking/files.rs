@@ -4,6 +4,7 @@ use super::{Plan, error, paths, unsupported};
 use crate::workspace::engine::inventory;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
+/// Glob patterns that are always ignored during `bit add` directory scans.
 const ALWAYS: &[&str] = &[
     "**/.DS_Store",
     "**/.env",

@@ -73,6 +73,7 @@ fn other_changed(state: &mut State<'_, '_>) -> io::Result<()> {
     }
     Ok(())
 }
+/// Merge a single dependency policy entry `name` across `current`, `other`, and `base` in `state`.
 fn one(state: &mut State<'_, '_>, name: &str) -> io::Result<()> {
     let Some(other) = state.policies[1]
         .iter()

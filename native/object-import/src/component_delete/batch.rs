@@ -52,6 +52,7 @@ impl Batch {
         }
         Ok(Self { plans, after: inspection::render_workspace_bitmap(&bitmap)? })
     }
+    /// Return the individual component deletion [`Plan`]s in this batch.
     #[must_use]
     #[inline]
     pub fn plans(&self) -> &[Plan] {

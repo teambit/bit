@@ -47,6 +47,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         json!({"updates":plan.updates,"conflicts":plan.conflicts,"logs":plan.logs,"warnings":plan.warnings,"hasDeps":plan.has_deps}),
     )
 }
+/// Decide whether a single dependency (`name`, `workspace`, `component`) produces an update, conflict, or skip.
 fn decide(
     plan: &mut Plan,
     input: &Value,

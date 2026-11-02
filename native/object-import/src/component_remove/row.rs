@@ -61,6 +61,7 @@ fn has_supported_version(key: &str, row: &Value, kind: RowKind) -> bool {
     if kind == RowKind::New { version.is_none() } else { version.is_some() }
 }
 
+/// Resolve the non-empty component scope from `row["scope"]`, `row["defaultScope"]`, or `fallback`.
 #[inline]
 fn scope<'a>(row: &'a Value, fallback: Option<&'a str>) -> io::Result<&'a str> {
     row["scope"]

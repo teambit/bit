@@ -50,7 +50,7 @@ struct BitmapChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
-
+/// Lifecycle state classification of a `.bitmap` component row for removal validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RowKind {
     New,

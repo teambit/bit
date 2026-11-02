@@ -63,6 +63,7 @@ fn excluded_dependency(row: &Value, excluded: Option<&Vec<Value>>) -> bool {
                 || component_identity(row).as_deref() == Some(identity.as_str())
         })
 }
+/// Extract the bare `<scope>/<name>` component identity from a string or object `component` [`Value`].
 #[inline]
 fn component_identity(component: &Value) -> Option<String> {
     component

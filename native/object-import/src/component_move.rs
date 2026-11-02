@@ -50,6 +50,7 @@ impl Plan {
             observed,
         })
     }
+    /// Return the projected post-move `.bitmap` JSON [`Value`].
     #[must_use]
     #[inline]
     pub const fn bitmap(&self) -> &Value {

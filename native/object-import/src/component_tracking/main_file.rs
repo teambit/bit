@@ -2,6 +2,7 @@
 
 use super::{error, paths, unsupported};
 use std::{io, path::Path};
+/// Ordered file extensions checked when inferring a component's `mainFile`.
 const EXTENSIONS: &[&str] =
     &["js", "ts", "jsx", "tsx", "cjs", "mjs", "mts", "cts", "css", "scss", "less", "sass"];
 /// Selects or infers the component `mainFile` relative path from `files` and `explicit`/`existing`.

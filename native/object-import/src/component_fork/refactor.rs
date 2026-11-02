@@ -20,6 +20,7 @@ struct Group {
     initial: Vec<Vec<u8>>,
 }
 impl Refactor {
+    /// Prepare a retained multi-component file [`Refactor`] plan for `rows` and replacement `pairs`.
     pub fn prepare(
         root: &Path,
         rows: &[Value],

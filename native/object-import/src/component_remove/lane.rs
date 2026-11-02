@@ -39,6 +39,7 @@ pub(crate) fn lane_id_parts(id: &Value) -> (&str, &str) {
     (scope, name)
 }
 
+/// Validate the active lane in `bitmap` and verify that it tracks `(scope, component_name)`.
 pub(super) fn select_lane(
     root: &Path,
     bitmap: &Value,

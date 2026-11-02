@@ -45,6 +45,7 @@ fn config(options: &Options, source: &Value) -> io::Result<Value> {
     }
     Ok(result)
 }
+/// Build the `forkedFrom` provenance descriptor (`scope`, `name`, optional `version`) for `source`.
 fn forked_from(options: &Options, source: &Value) -> io::Result<Value> {
     let (scope, name) = source_id(options, source)?;
     if let Some(id) = source.get("sourceId").filter(|id| id.is_object()) {

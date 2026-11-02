@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Maximum byte budget (`32 MiB`) for `config-merge` conflict files.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Prepared `config-merge` conflict entry with its token, file path, and rendered conflict text.

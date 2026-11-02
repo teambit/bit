@@ -73,6 +73,7 @@ pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Resu
     }
 }
 
+/// Verify that the on-disk `VersionHistory` object still matches its captured preimage `state`.
 pub(super) fn validate(root: &Path, state: &HistoryState) -> io::Result<()> {
     let parent = state.path.parent().ok_or_else(|| invalid("history path"))?;
     validate_ancestors(root, parent.strip_prefix(root).map_err(|_| invalid("history path"))?)?;

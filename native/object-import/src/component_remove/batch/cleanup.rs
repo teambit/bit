@@ -24,6 +24,7 @@ pub(super) struct Change {
     pub(super) after: Vec<u8>,
 }
 impl Change {
+    /// Verify that the on-disk file at `self.path` is a regular file matching `self.before`.
     #[inline]
     pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
         let metadata = fs::symlink_metadata(&self.path)?;

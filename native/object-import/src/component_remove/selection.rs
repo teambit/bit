@@ -61,6 +61,7 @@ fn matching(bitmap: &serde_json::Value, parts: &[&str]) -> io::Result<Vec<String
     }
     Ok(result)
 }
+/// Return `true` when component `id` matches the positive and negative glob `parts`.
 #[inline]
 fn matches(id: &str, parts: &[&str]) -> bool {
     let id = strip_version(id);

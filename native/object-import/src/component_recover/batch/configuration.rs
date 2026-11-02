@@ -57,6 +57,7 @@ fn projection(mut parsed: Value) -> io::Result<Value> {
     Ok(value)
 }
 
+/// Return `true` when `parsed` `component.json` defines a scoped `componentId` or `defaultScope`.
 #[inline]
 fn has_scoped_component_id(parsed: &Value) -> bool {
     let str_scoped = parsed["componentId"]

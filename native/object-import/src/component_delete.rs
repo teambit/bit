@@ -35,7 +35,7 @@ pub struct Plan {
     full_id: String,
     entire: bool,
 }
-
+/// Pre- and post-deletion `.bitmap` byte snapshots for a single-component deletion [`Plan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,

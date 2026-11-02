@@ -39,6 +39,7 @@ fn local_aspect(row: &Value) -> Option<&Value> {
                 })
         })
 }
+/// Read deprecation aspect metadata for `id` from its stored `Component` and `Version` objects.
 fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     let Some(hash) = model_hash(plan, id)? else {
         return Ok(serde_json::json!({}));

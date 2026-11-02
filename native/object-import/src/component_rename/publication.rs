@@ -12,6 +12,7 @@ pub(super) fn initial(plan: &mut Plan, file_id: &str, reason: &str) -> io::Resul
 pub(super) fn final_bitmap(plan: &mut Plan, file_id: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.bitmap, file_id, "rename")
 }
+/// Verify `.bitmap` against `expected` and write the updated `bitmap` with backup history.
 fn write(
     root: &Path,
     expected: &mut Vec<u8>,

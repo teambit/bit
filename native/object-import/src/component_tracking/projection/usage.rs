@@ -64,6 +64,7 @@ fn existing_root(candidate: &Candidate, existing: Option<&Value>) -> io::Result<
     Ok(())
 }
 
+/// Record an `alreadyUsed` warning entry for `file` under the owning component `name` and `row`.
 #[inline]
 fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
     let scope = rows::scope(row).unwrap_or_default();

@@ -45,6 +45,7 @@ fn incoming<'a>(input: &'a Value, row: &Value) -> io::Result<Option<&'a Value>> 
         }))
 }
 
+/// Return `true` when `id` (stripped of any `@version`) equals `"teambit.envs/envs"`.
 #[inline]
 fn is_envs_aspect_id(id: &str) -> bool {
     let trimmed = id.trim();

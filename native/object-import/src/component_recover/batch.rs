@@ -14,6 +14,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
+/// Canonical aspect ID (`"teambit.component/remove"`) for soft-deleted component metadata.
 const REMOVE: &str = "teambit.component/remove";
 /// Per-component recovery classification determining how `bit recover` restores the component.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

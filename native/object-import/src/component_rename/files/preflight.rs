@@ -84,6 +84,7 @@ pub(super) fn overlaid(
     super::super::required(&mut plan.observed, path)
 }
 
+/// Return `true` when `path` resides inside a `bit-native-callback-*` temporary directory `root`.
 #[inline]
 fn is_private_callback_root(root: &Path, path: &Path) -> bool {
     path.starts_with(root)

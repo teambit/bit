@@ -59,6 +59,7 @@ fn fields(input: &[Value]) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validate a single scope dependency policy `entry` (`name`, `version`, and optional boolean `force`).
 #[inline]
 fn validate_entry(entry: &Value) -> io::Result<()> {
     validate::fields(entry, &["name", "version", "force"])?;

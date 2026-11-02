@@ -72,6 +72,7 @@ pub struct Plan {
     cleanup: Option<cleanup::Tree>,
     context: PreparationContext,
 }
+/// Retained `.bitmap` and `workspace.jsonc` control preimages and projected states for a rename [`Plan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Controls {
     bitmap: Value,

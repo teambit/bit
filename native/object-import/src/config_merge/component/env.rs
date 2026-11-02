@@ -49,6 +49,7 @@ fn one(engine: &mut Engine<'_>, side: &str) -> io::Result<Value> {
     Ok(env)
 }
 
+/// Return `true` when `entry` is the `teambit.envs/envs` aspect extension.
 #[inline]
 fn is_envs_extension(entry: &Value) -> bool {
     entry["name"]

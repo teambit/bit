@@ -42,6 +42,7 @@ pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Resul
 fn is_real_directory(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.is_dir() && !meta.file_type().is_symlink())
 }
+/// Return `true` when `files` contains at least one path nested under `directory`.
 #[inline]
 fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
     let trimmed = directory.trim().trim_matches('/');

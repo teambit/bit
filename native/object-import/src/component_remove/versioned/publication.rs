@@ -61,6 +61,7 @@ fn changes(plans: &[VersionedPlan]) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
         })
         .collect()
 }
+/// Retain only component index entries present in both `value` and `after`.
 #[inline]
 fn intersect(value: &mut Value, after: &Value) -> io::Result<()> {
     let (rows, retained) = if let Some(rows) = value.as_array_mut() {

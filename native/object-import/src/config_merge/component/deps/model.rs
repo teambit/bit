@@ -49,6 +49,7 @@ impl<'a, 'b> State<'a, 'b> {
             .collect::<io::Result<Vec<_>>>()?;
         Ok(Self { engine, configs, policies, data, merged: json!({}), conflicted: json!({}) })
     }
+    /// Return `true` when `configs[left]` and `configs[right]` have identical `configJson` values.
     #[inline]
     pub(super) fn same(&self, left: usize, right: usize) -> bool {
         self.configs[left]

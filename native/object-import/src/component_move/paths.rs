@@ -71,6 +71,7 @@ fn validate_existing(
     }
     Ok(())
 }
+/// Strip `root` from `path` and return a forward-slash relative path without leading/trailing slashes.
 #[inline]
 pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
     let stripped = path

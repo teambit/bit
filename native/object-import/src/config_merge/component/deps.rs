@@ -55,6 +55,7 @@ fn append(policy: &mut Value, field: &str, row: Value) {
         map.insert(field.to_owned(), Value::Array(vec![row]));
     }
 }
+/// Map a dependency `lifecycle` (`"runtime"`, `"dev"`, `"peer"`) to its manifest policy field name.
 #[inline]
 fn field(lifecycle: &str) -> io::Result<&'static str> {
     match lifecycle.trim() {

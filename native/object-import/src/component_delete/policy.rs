@@ -23,6 +23,7 @@ pub(super) struct Decision {
     pub(super) loaded: bool,
 }
 
+/// Package name and `main` version to pin in dependent workspace components upon lane deletion.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pin {
     pub package_name: String,

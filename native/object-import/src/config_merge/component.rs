@@ -66,6 +66,7 @@ fn current(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     Ok(())
 }
+/// Merge all unhandled aspect configuration entries from the `other` side of `engine`.
 fn other(engine: &mut Engine<'_>) -> io::Result<()> {
     for (index, entry) in array(engine.input, "other")?.iter().enumerate() {
         let raw_id = entry["stringId"]

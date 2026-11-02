@@ -60,6 +60,7 @@ pub(super) fn prepare(
     let key = if duplicate_name { target.clone() } else { name.into() };
     Ok(Identity { target, key, name: name.into(), scope: scope.into(), directory, main })
 }
+/// Resolve the target component `mainFile` relative path, refactoring its leaf name when applicable.
 fn resolve_main(
     options: &Options,
     source: &Value,

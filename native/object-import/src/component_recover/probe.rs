@@ -1,4 +1,6 @@
 //! `ScopeComponentLoader` remote object cache inspection ([`probe_remote`]) without local scope publication.
+//!
+//! Resolves `file://` and HTTP remotes per component ID to check soft-deletion status in memory.
 pub(crate) mod objects;
 use bit_client_transfer::{
     fetch::FetchOptions,

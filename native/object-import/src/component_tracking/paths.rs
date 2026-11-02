@@ -63,6 +63,7 @@ fn candidates(
         Ok(Vec::new())
     }
 }
+/// Verify that `path` is a non-symlink directory under `root` and return its workspace-relative path.
 fn tracked_directory(root: &Path, cwd: &Path, path: &Path) -> io::Result<String> {
     let relative = relative(root, path)?;
     let metadata = fs::symlink_metadata(path)?;

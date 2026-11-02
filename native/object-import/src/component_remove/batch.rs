@@ -1,4 +1,6 @@
 //! Single `.bitmap` publication ([`NewBatch`]) for `StashMain` removal of new components, including [`cleanup`] and aspect [`usage`] validation.
+//!
+//! Validates component directories and `node_modules` links before removing sources and updating `.bitmap`.
 pub(super) mod cleanup;
 pub(super) mod usage;
 

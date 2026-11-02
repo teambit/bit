@@ -30,6 +30,7 @@ pub(super) fn object(batch: &mut Batch, hash: &str, kind: &str) -> io::Result<Op
     batch.proofs.read(&path)?;
     Ok(Some(value))
 }
+/// Look up the `Component` model object for `bare` via `index.json` or SHA-1 hash fallback.
 pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> {
     let index = index(batch)?;
     let rows = index["components"]

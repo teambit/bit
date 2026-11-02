@@ -70,6 +70,7 @@ impl Batch {
             packages: None,
         })
     }
+    /// Return the number of component rename [`Plan`]s in this batch.
     #[must_use]
     #[inline]
     pub fn len(&self) -> usize {

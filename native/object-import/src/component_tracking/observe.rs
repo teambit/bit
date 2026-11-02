@@ -52,6 +52,7 @@ impl Observed {
         self.files.insert(path.to_owned(), hash);
         Ok(bytes)
     }
+    /// Read and sort the directory entry names at `path` and record the listing proof.
     pub(crate) fn directory(&mut self, path: &Path) -> io::Result<Vec<String>> {
         let names = directory(path)?;
         if let Some(original) = self.directories.get(path) {

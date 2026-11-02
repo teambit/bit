@@ -42,6 +42,7 @@ fn publish_files(batch: &Batch) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validate `path` under `root`, create parent directories as needed, and write `bytes`.
 #[inline]
 fn write_verified_file(root: &Path, path: &Path, bytes: &[u8]) -> io::Result<()> {
     destination(root, path)?;

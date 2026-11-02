@@ -36,6 +36,7 @@ impl Configuration {
         .into_bytes();
         Ok(Some(Self(Change { path, before, after })))
     }
+    /// Verify that `workspace.jsonc` on disk still matches the pre-removal byte snapshot.
     #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         self.0.validate()

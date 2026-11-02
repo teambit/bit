@@ -44,6 +44,7 @@ fn dep_id(dep: &Value) -> Option<&str> {
         })
 }
 
+/// Format and log the dependency-resolver `data` entries for `side` (`"current"`, `"other"`, or `"base"`).
 fn log_side_data(state: &mut State<'_, '_>, index: usize, side: &str) {
     use std::fmt::Write as _;
     let entries = state.data[index]

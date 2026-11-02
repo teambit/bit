@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Map of published filesystem paths to their exact post-publication byte contents.
 type PublishedFiles = HashMap<PathBuf, Vec<u8>>;
 type Publication = (PublishedFiles, Vec<Value>);
 

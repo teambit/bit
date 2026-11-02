@@ -39,6 +39,7 @@ pub(crate) fn identity(key: &str, row: &Value) -> Option<String> {
     })
 }
 
+/// Extract a trimmed non-empty string field `field` from a `.bitmap` component `row`.
 #[inline]
 fn non_empty_field<'a>(row: &'a Value, field: &str) -> Option<&'a str> {
     row[field]

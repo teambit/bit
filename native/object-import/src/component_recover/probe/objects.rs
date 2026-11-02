@@ -46,6 +46,7 @@ fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
     Err(missing(id))
 }
 
+/// Look up a `Component` model object in `scope/index.json` matching `(target_scope, target_name)`.
 fn read_indexed_remote_model(
     scope: &Path,
     target_scope: &str,

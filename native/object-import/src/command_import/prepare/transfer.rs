@@ -1,4 +1,6 @@
-//! Component, `Version`, `VersionHistory`, and `Source` object reception ([`receive`]) into [`PreparedImport`].
+//! `Component`, `Version`, `VersionHistory`, and `Source` object reception ([`receive`]) into [`PreparedImport`].
+//!
+//! Validates incoming `Version` metadata, stages `Source` blobs, and merges component models via [`receive_lane`] and [`receive_dependency`].
 
 use super::{
     PreparedImport, Target, history, identity, invalid, merge, object_hash, read_model,

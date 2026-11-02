@@ -52,6 +52,7 @@ fn non_empty_str<'a>(value: &'a serde_json::Value, message: &str) -> io::Result<
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid(message))
 }
+/// Return `entry["componentId"]["version"]` when non-empty, or `"undefined"` otherwise.
 #[inline]
 fn entry_version(entry: Option<&serde_json::Value>) -> &str {
     entry

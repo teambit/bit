@@ -8,6 +8,7 @@ use std::{
     io,
     path::{Component, Path},
 };
+/// Tuple of `(version_json, source_files, versioned_id, raw_compressed_objects)` for a captured remote component.
 type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
 
 /// Reads a remote file-scope's `Component`, head `Version`, and `Source` blobs for `id`.
