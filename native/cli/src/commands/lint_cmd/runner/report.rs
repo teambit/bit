@@ -94,6 +94,7 @@ fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     ))
 }
 
+/// Formats the bottom summary table and total duration footer for `bit lint`.
 #[inline]
 fn summary(result: &Value, count: usize, elapsed: u64) -> String {
     let seconds = elapsed / 1000;

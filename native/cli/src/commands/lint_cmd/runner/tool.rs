@@ -64,6 +64,7 @@ impl Session {
         Ok(Self { child, input, output, errors })
     }
 
+    /// Triggers linting on the prepared `ESLint` worker and returns its JSON diagnostic response.
     #[inline]
     pub(super) fn run(&mut self) -> io::Result<Value> {
         self.input.write_all(b"true\n")?;

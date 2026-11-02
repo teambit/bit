@@ -73,7 +73,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .collect())
 }
 
-/// The ported subset of the glob grammar.
+/// Validates that `glob` uses only the natively ported glob grammar (`*`, `?`, `**`).
 #[inline]
 fn supported(glob: &str) -> io::Result<()> {
     if glob.is_empty()

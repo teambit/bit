@@ -60,6 +60,7 @@ fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a
     }
 }
 
+/// Parses `--global` (`-g`) flags and positional values from `tokens` for `bit remote`.
 fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)> {
     let mut global = false;
     let mut values = Vec::with_capacity(tokens.len());

@@ -85,6 +85,7 @@ fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     io::Error::new(error.kind(), format!("{code}: {message}, {operation} '{}'", path.display()))
 }
 
+/// Returns `true` when `error` indicates a directory may still contain children (`DirectoryNotEmpty`, `AlreadyExists`, or Windows `PermissionDenied`).
 #[inline]
 fn children_may_remain(error: &io::Error) -> bool {
     matches!(error.kind(), io::ErrorKind::DirectoryNotEmpty | io::ErrorKind::AlreadyExists)

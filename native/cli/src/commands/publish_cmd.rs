@@ -86,6 +86,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute_workspace_publish(&root, args, &options)
 }
 
+/// Prints the empty-candidates message or `[]` JSON when `bit publish` runs outside a workspace.
 #[inline]
 fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     let text = if options.json { "[]" } else { NO_CANDIDATES_MSG };

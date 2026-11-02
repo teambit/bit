@@ -86,6 +86,7 @@ fn run_in_workspace(
     })
 }
 
+/// Returns a deterministic error message when `alias` contains a `/` delimiter or equals `name`.
 #[inline]
 fn invalid_alias_error(name: &str, alias: &str) -> Option<&'static str> {
     let name = name.trim();

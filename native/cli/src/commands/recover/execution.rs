@@ -52,7 +52,7 @@ pub(super) fn execute(
     plan.commit(&workspace_command::file_id())?;
     report(options, &plan, args)
 }
-/// Imports any missing recovery component versions in `plan` and refreshes the `.bitmap` snapshot.
+/// Imports any missing recovery component versions in `plan` via [`recover_import`] and refreshes `.bitmap`.
 #[inline]
 fn import(
     root: &Path,

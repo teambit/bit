@@ -78,6 +78,7 @@ fn bootstrap(root: &std::path::Path) -> io::Result<Option<ProjectedLinker>> {
     Ok(Some(linker))
 }
 
+/// Imports `lane` objects into `root` while staying on the active non-`main` `current` lane.
 fn active(
     root: &std::path::Path,
     args: &[OsString],

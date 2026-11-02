@@ -76,6 +76,7 @@ fn legacy_links_json(items: &[ComponentLinkItem]) -> Vec<Value> {
         .collect()
 }
 
+/// Converts [`CodemodResult`] entries into the `legacyLinkCodemodResults` JSON array.
 #[inline]
 fn codemods_json(items: &[CodemodResult]) -> Vec<Value> {
     items

@@ -91,6 +91,7 @@ fn failure(
     }
 }
 
+/// Returns whether the `CI` environment variable is set to a truthy non-empty value.
 #[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")

@@ -21,7 +21,7 @@ pub struct Options {
     flags: Vec<String>,
 }
 
-/// Supported boolean CLI flags forwarded to the native lane merge planner.
+/// Supported boolean CLI flags forwarded to the native `bit lane merge` planner.
 const BOOLEANS: [&str; 11] = [
     "--skip-dependency-installation",
     "--manual",

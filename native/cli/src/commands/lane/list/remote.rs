@@ -80,6 +80,7 @@ fn text_report(
 /// Tuple of projected remote [`LaneData`] entries, active lane `(id, alias)`, and optional raw HTTP rows.
 type Prepared = (Vec<LaneData>, (Value, String), Option<Vec<Value>>);
 
+/// Resolves `scope` via `session` and loads remote lane metadata from a file or HTTP remote.
 fn prepare(
     root: &Path,
     bare: bool,

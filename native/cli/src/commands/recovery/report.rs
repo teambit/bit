@@ -53,6 +53,7 @@ pub(super) fn format_component(result: &Value, chalk: Chalk) -> io::Result<Repor
     Ok(Report { data: format.section("merge aborted", "", &items), code: 0, details: None })
 }
 
+/// Formats the lane-level merge-abort [`Report`] combining checkout output, restored items, and checkout errors.
 fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let map = object(result)?;
     let items = array(map.get("restoredItems"), "restored items")?;

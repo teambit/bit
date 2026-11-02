@@ -74,7 +74,7 @@ pub(in crate::commands::lane::list) fn lane(
     })
 }
 
-/// Parses the optional `updateDependents` array on a lane object into `{ id, head }` records.
+/// Parses the optional `updateDependents` array on a lane [`Value`] into `{ id, head }` records.
 pub(super) fn updates(value: &Value) -> io::Result<Option<Vec<Value>>> {
     let update_dependents = value
         .get("updateDependents")

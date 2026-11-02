@@ -80,6 +80,7 @@ fn emit_conflicting_domain_error(args: &[OsString], json: bool) -> io::Result<Ou
     )
 }
 
+/// Parses CLI arguments after `bit login` into [`Options`], returning `None` for unsupported syntax.
 #[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

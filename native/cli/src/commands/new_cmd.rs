@@ -76,6 +76,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("new requires workspace-starter runtime".into()))
 }
 
+/// Validates that `cwd` is not inside an existing workspace, the target path is free, and the template source is valid.
 #[inline]
 pub(super) fn validate_options(cwd: &Path, options: &Options) -> Result<(), String> {
     if workspace::root(cwd).is_some() {

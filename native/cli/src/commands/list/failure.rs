@@ -69,6 +69,7 @@ fn emit_error(
     workspace_command::execute_failure_scope(cwd, args, "list", json, "", io::Error::other(msg))
 }
 
+/// Renders a command-owned `bit list` failure inside a workspace or bare scope.
 #[inline]
 pub(super) fn owned(
     root: Option<&Path>,

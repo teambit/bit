@@ -84,6 +84,7 @@ pub(super) fn missing_scope_error(
     }
 }
 
+/// Returns `true` when neither `--scope-path`, a workspace root, nor an ancestor scope exists for `cwd`.
 #[inline]
 pub(super) fn is_missing_scope(cwd: &Path, options: &Options) -> bool {
     options.scope_path.is_none()

@@ -11,7 +11,7 @@ use bit_install::{HostInfo, output::Output};
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
-/// Runs package installation and compilation for a completed lane-history restoration partition.
+/// Runs package installation ([`Installer`]) and compilation for a completed lane-history restoration partition.
 pub(super) fn run(
     root: &Path,
     planned: &mut Planned,

@@ -50,6 +50,7 @@ impl Plan {
             Target::Http { .. } => None,
         }
     }
+    /// Executes remote action `name` with `payload` against the HTTP or file [`Target`].
     pub(super) async fn action(&self, name: &str, payload: &Value) -> io::Result<Value> {
         let name = name.trim();
         match &self.target {

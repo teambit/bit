@@ -19,7 +19,7 @@ use std::{ffi::OsString, io};
 /// Descriptor for the native `bit merge` command.
 pub const COMMAND: Command = Command { name: "merge", aliases: &[], run };
 
-/// Entry point for `bit merge`.
+/// Entry point for `bit merge` (`--resolve`, `--abort`, or component merge via [`lifecycle::run`]).
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));

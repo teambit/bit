@@ -87,6 +87,7 @@ fn current_json(name: &str, scope: &str, full: &str, alias: &str, is_main: bool)
     }
 }
 
+/// Reads and parses `scope.json` inside the workspace scope directory of `root`.
 #[inline]
 pub(super) fn scope(root: &Path) -> io::Result<Value> {
     scope_for(root, false)

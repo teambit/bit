@@ -27,7 +27,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-/// Descriptor for the `bit refactor` CLI command.
+/// Descriptor for the native `bit refactor` CLI command (`RefactorCmd`).
 pub const COMMAND: Command = Command { name: "refactor", aliases: &[], run };
 /// Subcommand action parsed from `bit refactor` CLI arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]

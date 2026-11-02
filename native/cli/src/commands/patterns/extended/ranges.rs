@@ -72,6 +72,7 @@ struct Sequence {
     letters: bool,
 }
 impl Sequence {
+    /// Parses a `..`-separated brace range slice into a bounded numeric or alphabetic [`Sequence`].
     fn parse(parts: &[&str]) -> io::Result<Option<Self>> {
         if !(2..=3).contains(&parts.len()) {
             return Ok(None);

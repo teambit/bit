@@ -70,6 +70,7 @@ fn parse_lane_target_args<'a>(args: &[&'a str]) -> Option<(&'a str, Option<&'a s
     Some((target?, lane_name))
 }
 
+/// Applies a single CLI token `arg` onto `target` or `lane_name` for `bit lane rename` / `bit lane change-scope`.
 #[inline]
 fn apply_lane_target_arg<'a>(
     arg: &'a str,

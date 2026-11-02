@@ -83,6 +83,7 @@ fn object(
     Ok(())
 }
 
+/// Encodes `value` as `string:<utf16_len>:<value>` onto `output`.
 #[inline]
 fn string(value: &str, output: &mut String) {
     let _ = write!(output, "string:{}:{value}", value.encode_utf16().count());

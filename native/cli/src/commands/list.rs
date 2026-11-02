@@ -25,7 +25,7 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 /// Descriptor for the `bit list` (`bit ls`) CLI command.
 pub const COMMAND: Command = Command { name: "list", aliases: &["ls"], run };
-/// Entry point for `bit list` (`bit ls`) across local workspace or remote scope inventories.
+/// Entry point for `bit list` (`bit ls`) across local workspace or remote scope inventories via [`Options`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));

@@ -82,6 +82,7 @@ fn consume_trailing_resolve(tail: &[&str], options: &mut Options) -> Option<()> 
 /// Supported CLI flags for `bit merge --resolve`.
 const FLAGS: [&str; 4] = ["--message", "--resolve", "--skip-dependency-installation", "--build"];
 
+/// Parses a single `bit merge --resolve` flag (and any value argument) into `options` and returns the extra token count consumed.
 fn apply_resolve_flag<'a>(
     options: &mut Options,
     flags: &mut Vec<&'a str>,

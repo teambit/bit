@@ -62,6 +62,7 @@ fn current_version(row: &WorkspaceRow) -> &str {
         .unwrap_or("N/A")
 }
 
+/// Returns `row.remote_version` or `"N/A"` when no remote version is known.
 #[inline]
 fn remote_version(row: &Row) -> &str {
     row.remote_version

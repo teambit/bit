@@ -74,6 +74,7 @@ fn file(raw: &Value) -> Value {
     })
 }
 
+/// Sums component lint `rows` and `errors` into the top-level `lintResults` JSON object.
 #[inline]
 pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
     let mut result = json!({});

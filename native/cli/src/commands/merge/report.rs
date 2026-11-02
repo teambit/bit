@@ -29,7 +29,7 @@ pub struct Mode {
     pub lane: bool,
 }
 
-/// Formats a merge or lane-merge engine `result` [`Value`] into a human-readable [`Report`].
+/// Formats a merge or lane-merge engine `result` [`Value`] into a human-readable [`Report`] using [`Mode`].
 pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
     let workspace = if mode.lane {

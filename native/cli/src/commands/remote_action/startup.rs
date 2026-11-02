@@ -59,6 +59,7 @@ fn supported_workspace(
     Ok(bitmap.lane.as_ref().is_none_or(|lane| is_main_lane(&lane.name)))
 }
 
+/// Returns `true` when `name` refers to the `main` lane (or is empty) after stripping scope and `@` version prefixes.
 #[inline]
 fn is_main_lane(name: &str) -> bool {
     let bare = name

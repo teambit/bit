@@ -48,7 +48,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .collect())
 }
 
-/// Returns whether `identity` matches a single `pattern` clause after accounting for leading `!` negations.
+/// Returns whether `identity` matches a single `pattern` clause via [`glob::matches`] after leading `!` negations.
 #[inline]
 fn matches(identity: &str, pattern: &str) -> bool {
     let pattern = pattern.trim();

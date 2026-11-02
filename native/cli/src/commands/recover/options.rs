@@ -53,6 +53,7 @@ fn consume_trailing_pattern<'a>(
     Some(())
 }
 
+/// Returns `true` when `token` is a non-empty, bounded positional component pattern without whitespace or leading `-`.
 #[inline]
 fn is_valid_pattern_token(token: &str) -> bool {
     !token.is_empty()

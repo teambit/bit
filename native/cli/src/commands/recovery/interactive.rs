@@ -42,7 +42,7 @@ pub(super) fn run(
     })
 }
 
-/// Formats the interactive confirmation prompt for `bit lane merge-abort` from `preview`.
+/// Formats the interactive confirmation prompt for `bit lane merge-abort` from `preview` with [`Chalk`].
 #[inline]
 fn prompt(preview: &Value, chalk: Chalk) -> io::Result<String> {
     let items = array(preview.get("restoredItems"), "recovery restoration items")?;

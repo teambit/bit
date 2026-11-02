@@ -61,6 +61,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     (positionals <= 1).then(|| check_merge_flags(&flags)).flatten()
 }
 
+/// Validates trailing positional tokens after `--` and returns their count.
 #[inline]
 fn count_trailing_positionals(tail: &[&str]) -> Option<usize> {
     tail.iter()

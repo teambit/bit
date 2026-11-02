@@ -63,6 +63,7 @@ impl Session {
         }
     }
 
+    /// Returns whether this [`Session`] has taken ownership of command execution via resolver callbacks or warnings.
     #[inline]
     pub(super) const fn owned(&self) -> bool {
         self.owned

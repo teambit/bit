@@ -84,6 +84,7 @@ fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Res
     Ok(Outcome::Declined("not inside a workspace".into()))
 }
 
+/// Returns whether the `CI` environment variable is set to a truthy non-empty value.
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

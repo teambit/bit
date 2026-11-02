@@ -43,6 +43,7 @@ impl std::error::Error for Restored {}
 pub(super) fn restored(result: Value) -> io::Error {
     io::Error::other(Restored(result))
 }
+/// Extracts the inner lane-abort [`Value`] payload from `error` when it wraps [`Restored`].
 #[inline]
 pub(super) fn result(error: &io::Error) -> Option<&Value> {
     error

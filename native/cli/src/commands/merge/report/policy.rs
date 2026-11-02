@@ -73,6 +73,7 @@ fn update_pair(value: &Value) -> io::Result<String> {
     Ok(format!("{} => {}", text(pair.first())?.trim(), text(pair.get(1))?.trim()))
 }
 
+/// Extracts component IDs from `result["configMergeResults"]` that report `hasConflicts == true` during lane merges.
 pub(super) fn conflicted(result: &Value, lane: bool) -> io::Result<Vec<String>> {
     if !lane {
         return Ok(Vec::new());

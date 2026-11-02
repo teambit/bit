@@ -78,6 +78,7 @@ pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &
     lines.join("\n")
 }
 
+/// Formats a single horizontal line `line` across multi-line `cells` padded to `widths`.
 #[inline]
 fn format_row_line(cells: &[Vec<&str>], widths: &[usize], line: usize, separator: &str) -> String {
     let mut output = String::with_capacity(widths.iter().sum::<usize>() + cells.len());

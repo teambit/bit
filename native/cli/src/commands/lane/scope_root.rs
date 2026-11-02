@@ -75,6 +75,7 @@ fn validate_bare_index(directory: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Diagnoses why `raw_id` (`bare_id`) could not be resolved in `scope_dir` and formats a user-facing error message.
 pub(in crate::commands) fn diagnose_component_lookup_error(
     scope_dir: &Path,
     raw_id: &str,

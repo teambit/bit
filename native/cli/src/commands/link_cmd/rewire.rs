@@ -10,6 +10,7 @@ use std::{
 
 /// File extensions scanned as script modules during `bit link --rewire`.
 const SCRIPT_EXTENSIONS: [&str; 8] = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
+/// Stylesheet file extensions scanned for `@import` specifiers during `bit link --rewire`.
 const STYLE_EXTENSIONS: [&str; 4] = ["css", "scss", "less", "sass"];
 const TYPESCRIPT_ORIGINS: [&str; 6] = ["ts", "tsx", "cts", "mts", "md", "mdx"];
 const TYPESCRIPT_LOOKUP_EXTS: [&str; 3] = ["ts", "tsx", "d.ts"];

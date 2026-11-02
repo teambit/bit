@@ -5,7 +5,7 @@
 
 use std::{env, ffi::OsString, io::IsTerminal};
 
-/// Evaluates `colors.supportsColor` (matching `colors` 1.0.3) from CLI `args` and terminal environment variables.
+/// Evaluates `colors.supportsColor` (matching `colors` 1.0.3) from CLI `args` and [`IsTerminal`] environment state.
 pub(crate) fn colors(args: &[OsString]) -> bool {
     let has = |flag: &str| args.iter().any(|arg| arg == flag);
     if has("--no-color") || has("--no-color=true") || has("--color=false") || has("--color=never") {

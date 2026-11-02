@@ -36,6 +36,7 @@ pub(super) struct ServeOptions {
     pub port: Option<u16>,
 }
 
+/// Entry point for `bit generate-preview` that validates workspace and pattern preconditions before delegating.
 fn run_generate(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("generate-preview arguments are not UTF-8".into()));

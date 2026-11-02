@@ -2,7 +2,7 @@
 //!
 //! Defines [`Options`] (`parse`) for `bit lane checkout` and `bit lane revert` invocations.
 
-/// Parsed CLI options for `bit lane checkout` and `bit lane revert`.
+/// Parsed CLI options for `bit lane checkout` and `bit lane revert` invocations.
 pub(super) struct Options {
     pub id: String,
     pub revert: bool,

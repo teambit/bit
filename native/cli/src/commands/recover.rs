@@ -15,7 +15,7 @@ use std::{ffi::OsString, io};
 
 /// Descriptor for the native `bit recover` command.
 pub const COMMAND: Command = Command { name: "recover", aliases: &[], run };
-/// Entry point for `bit recover`.
+/// Entry point for `bit recover` that prepares the recovery [`Batch`] and runs [`execution::execute`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));

@@ -77,6 +77,7 @@ impl Plan {
         }
         self.lint_components(output, fix)
     }
+    /// Executes `ESLint` across `self.components`, optionally applying fixes, and aggregates diagnostics.
     fn lint_components(
         &mut self,
         output: &bit_install::output::Output,

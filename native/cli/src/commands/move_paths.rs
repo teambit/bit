@@ -55,6 +55,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+/// Prepares and executes the [`Plan`] path relocation inside `root`, relinking via [`add::ProjectedLinker`].
 fn run_workspace(
     root: &std::path::Path,
     cwd: &std::path::Path,

@@ -78,7 +78,7 @@ fn resolve_from_bitmap(bitmap: &bitmap::Bitmap, id: &str) -> io::Result<Option<L
     }
 }
 
-/// Resolves `id` against the local scope's `index.json` when it is not present in `.bitmap`.
+/// Resolves `id` against the local scope's `index.json` when it is not present in `.bitmap` ([`bitmap::Bitmap`]).
 fn resolve_from_scope_index(root: &Path, id: &str) -> io::Result<Option<String>> {
     let index_path = workspace::scope_path(root).join("index.json");
     let Ok(bytes) = fs::read(index_path) else {
