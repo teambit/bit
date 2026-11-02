@@ -66,30 +66,28 @@ The hierarchy in a descending order:
 
 ### Select a package manager
 
-The Dependency resolver does not replace package managers - it uses them and directs them.
-To choose between 'Yarn' and 'pnpm', set the `packageManager` property to either of the following:
-
-- `teambit.dependencies/yarn`
-- `teambit.dependencies/pnpm`
+The Dependency resolver uses pnpm by default. Set the `packageManager` property to the ID of an aspect that registers
+a `PackageManager` implementation with the Dependency resolver. Use `teambit.dependencies/pnpm` to configure the
+built-in package manager explicitly.
 
 ```json
 // At the root-level of the workspace configuration JSON
 {
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/yarn"
+    "packageManager": "teambit.dependencies/pnpm"
   }
 }
 ```
 
 ### Select the type of node_modules
 
-By default, pnpm creates a symlinked `node_modules` whereas Yarn creates a "classic" hoisted one.
-This may be changed by setting the `nodeLinker` configuration option.
+By default, pnpm creates a symlinked `node_modules`. This may be changed by setting the `nodeLinker`
+configuration option.
 
 Allowed values of `nodeLinker`:
 
-- `"hoisted"` - create a hoisted (aka flat) `node_modules` directory without using symlinks. Similar to the one created by npm or Yarn classic.
-- `"isolated"` - create a `node_modules` directory using symlinks. All dependencies are symlinked from a flat storage at `node_modules/.pnpm` (when using pnpm) or `node_modules/.store` (when using Yarn).
+- `"hoisted"` - create a hoisted (aka flat) `node_modules` directory without using symlinks. Similar to the one created by npm.
+- `"isolated"` - create a `node_modules` directory using symlinks. All dependencies are symlinked from a flat storage at `node_modules/.pnpm`.
 
 ### Share the dependency directories between workspaces
 

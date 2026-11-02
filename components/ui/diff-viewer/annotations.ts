@@ -213,7 +213,8 @@ function selectedTextIn(range: Range, node: Node): string {
   if (!range.intersectsNode(node)) return '';
   const part = document.createRange();
   part.selectNodeContents(node);
-  if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
+  if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0)
+    part.setStart(range.startContainer, range.startOffset);
   if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
   return part.toString();
 }

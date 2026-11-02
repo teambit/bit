@@ -72,7 +72,6 @@ export default class Consumer {
   isolated = false; // Mark that the consumer instance is of isolated env and not real
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
-  packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
   packageJson: PackageJsonFile;
   public onCacheClear: Array<() => void | Promise<void>> = [];

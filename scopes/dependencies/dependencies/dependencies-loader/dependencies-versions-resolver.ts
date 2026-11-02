@@ -12,7 +12,7 @@ import { isPlusVersion } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import type OverridesDependencies from './overrides-dependencies';
 import type { DebugComponentsDependency } from './auto-detect-deps';
-import { getValidComponentVersion } from './auto-detect-deps';
+import { getValidComponentVersion, getVersionInRangeIfOutOfIt } from './auto-detect-deps';
 
 type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
@@ -112,9 +112,22 @@ export async function updateDependenciesVersions(
 
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
-    const { version: resolvedVersion, range, fromConfig } = resolveVersion(id, depType, packageName);
+    const resolved = resolveVersion(id, depType, packageName);
+    const { range, fromConfig } = resolved;
+    // the range that is recorded below. a range of a strategy (e.g. the workspace policy) replaces the one of the policy
+    const recordedRange = (supportComponentRange && range) || dependency.versionRange;
+    const resolvedVersion = fromConfig
+      ? resolved.version
+      : peerVersionInRange(dependency, depType, resolved.version, recordedRange);
     if (!resolvedVersion) {
       return;
+    }
+    if (resolvedVersion !== resolved.version) {
+      const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
+      if (debugDep) {
+        debugDep.versionResolvedFrom = `${debugDep.versionResolvedFrom} (out of the range ${recordedRange})`;
+        debugDep.version = resolvedVersion;
+      }
     }
     if (fromConfig) dependenciesWithVersionFromConfig.push(id.toStringWithoutVersion());
     dependency.id = dependency.id.changeVersion(resolvedVersion);
@@ -130,6 +143,21 @@ export async function updateDependenciesVersions(
     } else if (dependency.versionRange && depType !== 'peerDependencies' && !isPlusVersion(dependency.versionRange)) {
       dependency.versionRange = undefined;
     }
+  }
+  /**
+   * a policy (e.g. an env) sets the range of a component peer, and the package.json gets this range. the version found
+   * (e.g. the one of the last snap, or the installed one) can be out of this range, e.g. after the env raised it. then,
+   * take the version of the range, otherwise it's installed and recorded although the range doesn't allow it.
+   * a component of the workspace keeps its version.
+   */
+  function peerVersionInRange(
+    dependency: Dependency,
+    depType: DepType,
+    version?: string,
+    range?: string
+  ): string | undefined {
+    if (depType !== 'peerDependencies' || !version || !range || getIdFromBitMap(dependency.id)) return version;
+    return getVersionInRangeIfOutOfIt(version, range) || version;
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {
     dependencies.get().forEach((dep) => updateDependency(dep, depType));

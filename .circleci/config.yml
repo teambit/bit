@@ -232,7 +232,6 @@ commands:
       - run: '<<parameters.bin_name>> config set registry https://node-registry.bit.cloud'
       # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'
       - run: '<<parameters.bin_name>> config set hub_domain <<parameters.env>>.bit.dev'
-      - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
 
   # Optimize node_modules size for BVM distributions
   optimize_node_modules:
@@ -631,7 +630,6 @@ commands:
       # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
-      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       - run:
           name: set user agent for Bit processes in e2e tests
           command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
@@ -768,8 +766,6 @@ jobs:
             - version.txt
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/yarn.lock
 
   # ========== Quality Assurance Jobs ==========
   lint:
@@ -1551,7 +1547,6 @@ jobs:
       # # - checkout
       # - run: node -v
       # - run: npm -v
-      # - run: yarn -v
       # # - run: choco install nodejs --version 26.12.1
       # # - run: node -v
       # - run: cinst nodejs --version 26.12.1

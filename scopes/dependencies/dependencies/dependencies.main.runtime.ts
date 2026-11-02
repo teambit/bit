@@ -697,7 +697,7 @@ export class DependenciesMain {
 
   private async getPackageNameAndVerResolved(pkg: string): Promise<[string, string]> {
     const resolveLatest = async (pkgName: string) => {
-      const versionResolver = await this.dependencyResolver.getVersionResolver({});
+      const versionResolver = await this.dependencyResolver.getVersionResolver();
       const resolved = await versionResolver.resolveRemoteVersion(pkgName, { rootDir: '' });
       if (!resolved.version) throw new Error(`unable to resolve version for ${pkgName}`);
       return resolved.version;
