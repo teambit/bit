@@ -62,6 +62,7 @@ fn comma_separated_remote_ids_fork_only_the_requested_components() {
     );
     support::assert_origins(&helper, &["comp1", "comp3"]);
 }
+/// Verifies passing an explicit target name with a wildcard pattern fails with the released validation error ([`compare`]).
 #[test]
 fn pattern_with_an_explicit_target_preserves_the_released_validation_error() {
     let helper = support::remote_workspace(2);

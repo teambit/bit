@@ -66,6 +66,7 @@ fn local_refactor_updates_dependents_but_keeps_the_original_component() {
     assert!(!text.contains("/comp1"));
     assert!(bitmap(&helper).get("comp1").is_some());
 }
+/// Verifies `--preserve --refactor` on an unversioned local component preserves exact generated ID cache bytes ([`bitmap`]).
 #[test]
 fn unversioned_local_dependency_refactor_preserves_exact_generated_id_cache_bytes() {
     let helper = paired::workspace(1, false);

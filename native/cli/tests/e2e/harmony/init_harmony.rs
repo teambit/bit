@@ -24,6 +24,7 @@ fn init_reset_new_resets_bitmap_and_clears_objects() {
     assert_eq!(fs::read_dir(objects_dir).unwrap().count(), 0);
 }
 
+/// Verifies deleting `.git/bit/objects` causes `bit status` to fail until `bit init` recreates it ([`Helper`]).
 /// init command on Harmony › delete "objects" dir from the scope after initiating with git
 #[test]
 fn delete_objects_dir_after_initiating_with_git() {

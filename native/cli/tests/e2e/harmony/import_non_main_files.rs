@@ -39,6 +39,7 @@ fn importing_non_main_js_file_shows_issue_and_path() {
     );
 }
 
+/// Verifies that importing from a dependency's main file before compilation does not raise `ImportNonMainFiles` ([`issue_types`]).
 /// importing internal files flow › importing from a main file when the dependency was not compiled yet › should not show the import-non-main-file issue
 #[test]
 fn importing_from_main_file_when_dependency_not_compiled_yet() {

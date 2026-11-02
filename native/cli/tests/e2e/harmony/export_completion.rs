@@ -26,6 +26,7 @@ fn parity(helper: &Helper, command: &str) {
     compare(helper, command, true);
 }
 
+/// Runs `command` in `Node.js` and Rust, asserts `native` ownership, and verifies scope and package parity.
 fn compare(helper: &Helper, command: &str, native: bool) {
     let remote = helper.clone_remote_scope();
     let expected_root = helper.clone_workspace();

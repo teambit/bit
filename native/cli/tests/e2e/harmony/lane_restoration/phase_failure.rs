@@ -69,6 +69,7 @@ fn assert_existing_prefix(helper: &Helper, version: &Value, historical: &str) {
     );
 }
 
+/// Creates a workspace where `comp1` is deleted on `dev` and `lane-history-fail-load` triggers a phase-two `onLoad` failure ([`Helper`], [`Value`]).
 fn provider_deleted() -> (Helper, String, Value) {
     let helper = installation_fixture();
     support::setup(&helper, "switch dev -x");

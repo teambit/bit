@@ -37,6 +37,7 @@ fn remote_single_fork_runs_real_installation_after_native_materialization() {
     assert!(bitmap(&helper).get("comp1").is_some());
     support::assert_origins(&helper, &["comp1"]);
 }
+/// Projects startup frames and replaces recognized `(completed in ...)` durations with `<duration>` ([`project_startup_frame`]).
 fn durations(text: &str) -> String {
     project_startup_frame(text)
         .split_inclusive('\n')

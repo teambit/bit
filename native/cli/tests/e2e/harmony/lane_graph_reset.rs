@@ -8,6 +8,7 @@ mod boundaries;
 mod divergence;
 /// Shared workspace, snap, and scope object helpers for lane `bit reset` tests.
 mod fixture;
+/// Hidden `updateDependents` member cascade tests for `bit reset` on a lane.
 mod hidden;
 mod merged;
 mod selected;

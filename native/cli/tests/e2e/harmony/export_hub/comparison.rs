@@ -71,6 +71,7 @@ pub(in crate::harmony) fn remote_objects(root: &Path, oracle: &Path) {
     compare_inventory(root, &remote_inventory(root), &remote_inventory(oracle));
 }
 
+/// Asserts that `actual` and `expected` object inventories have identical sorted hashes and uncompressed payloads.
 fn compare_inventory(root: &Path, actual: &[(String, Vec<u8>)], expected: &[(String, Vec<u8>)]) {
     assert_eq!(
         actual

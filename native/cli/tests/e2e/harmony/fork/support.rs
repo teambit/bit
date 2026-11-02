@@ -27,6 +27,7 @@ pub(in crate::harmony) fn remote_workspace(count: usize) -> Helper {
     helper
 }
 
+/// Returns the workspace root directory path of `name` from `.bitmap` ([`Helper`]).
 pub(super) fn target(helper: &Helper, name: &str) -> std::path::PathBuf {
     let map = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     let row = map

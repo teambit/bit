@@ -62,6 +62,7 @@ fn stale_file_remote() -> fixture::Fixture {
     fixture::Fixture { history, ..fixture }
 }
 
+/// Removes history entry `id` from the local `LaneHistory` object for `dev` and rewrites the compressed object on disk ([`Sha1`]).
 fn remove_local_entry(helper: &crate::helper::Helper, id: &str) {
     let lane = lane_hash(helper);
     let mut value =

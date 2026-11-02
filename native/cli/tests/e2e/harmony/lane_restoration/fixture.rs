@@ -56,6 +56,7 @@ pub(super) fn deleted(modified: bool) -> Fixture {
     fixture
 }
 
+/// Returns the latest `LaneHistory` entry ID for `helper` from `bit lane history --json` ([`Helper`]).
 pub(super) fn latest(helper: &Helper) -> String {
     let history = history_json(helper);
     history

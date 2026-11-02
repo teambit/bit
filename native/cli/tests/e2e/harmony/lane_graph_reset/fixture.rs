@@ -44,6 +44,7 @@ pub(super) fn head(helper: &Helper, lane: &str, name: &str) -> String {
         .to_owned()
 }
 
+/// Returns the `cat-component <name>@<reference> --json` object as a [`Value`].
 pub(super) fn version(helper: &Helper, name: &str, reference: &str) -> Value {
     support::json(helper, &format!("cat-component {name}@{reference} --json"))
 }

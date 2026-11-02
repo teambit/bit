@@ -9,6 +9,7 @@ pub(super) use support::{assert_origins, delay_copies, exported, ids, remote_wor
 
 /// Provider `onLoad` and `onAdd` callback ordering tests during `bit fork`.
 mod callbacks;
+/// Missing and corrupt remote `Source` object failure tests during `bit fork`.
 mod corruption;
 mod http;
 mod options;

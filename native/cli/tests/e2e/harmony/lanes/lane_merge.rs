@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-merge.e2e.ts` for `bit lane merge` parity ([`setup_exported_lane_and_switch_to_main`], [`switch_between_main_and_dev_and_merge_ahead_lane`]).
+//! Port of `e2e/harmony/lanes/lane-merge.e2e.ts` for `bit lane merge` parity ([`setup_exported_lane_and_switch_to_main`], [`switch_between_main_and_dev_and_merge_ahead_lane`], [`merge_dev_lane_when_diverged_from_main`]).
 //!
 //! Covers switching between `main` and `dev`, fast-forward and diverged merges, and older checkouts.
 

@@ -76,6 +76,7 @@ fn configure_package(helper: &crate::helper::Helper) {
     config::write_json(&path, &bitmap, b"    ");
 }
 
+/// Verifies default `bit switch` installation reuses the configured provider session outside CI ([`default_switch_installation`]).
 #[test]
 fn default_switch_installation_reuses_the_real_provider_session() {
     default_switch_installation(false);

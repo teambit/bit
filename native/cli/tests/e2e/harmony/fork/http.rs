@@ -41,6 +41,7 @@ fn inventory(root: &Path) -> BTreeMap<String, Vec<u8>> {
     }
     files
 }
+/// Recursively inserts relative file paths and bytes under `directory` into `files` ([`BTreeMap`]).
 fn visit(root: &Path, directory: &Path, files: &mut BTreeMap<String, Vec<u8>>) {
     for entry in fs::read_dir(directory).unwrap() {
         let path = entry.unwrap().path();

@@ -40,6 +40,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Runs `bit export` under `mode` (`""`, `"package"`, `"post"`, `"lane"`, `"json"`) and asserts callback and object parity ([`workspace`]).
 fn parity(mode: &str) {
     let helper = workspace();
     if matches!(mode, "package" | "post") {

@@ -83,6 +83,7 @@ fn a_new_lane_merged_without_a_known_boundary_preserves_the_exact_fatal_error() 
     fixture::unchanged(&files);
 }
 
+/// Verifies CI `bit reset --silent` on an unknown inherited boundary delegates the canonical fatal error and stack ([`fixture`]).
 #[test]
 fn ci_unknown_inherited_boundary_delegates_the_exact_published_fatal_error_and_stack() {
     let helper = fixture::unknown_inherited();

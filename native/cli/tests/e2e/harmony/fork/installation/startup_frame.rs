@@ -39,6 +39,7 @@ pub(super) fn project(text: &str) -> String {
     }
     format!("{prefix}{START}{banner}")
 }
+/// Returns `true` if `frame` begins with [`BANNER`], valid store paths, and `counters`.
 fn repeats_counters(frame: &str, counters: &str) -> bool {
     let Some(paths) = frame.strip_prefix(BANNER) else { return false };
     let Some((store, rest)) = paths.split_once('\n') else { return false };

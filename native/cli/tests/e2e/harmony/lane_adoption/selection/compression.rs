@@ -57,6 +57,7 @@ fn object(scope: &Path, hash: &str) -> PathBuf {
         .join(&hash[2..])
 }
 
+/// Rewrites `path` as a level-0 `zlib` stream and returns the uncompressed raw object bytes ([`inflate`]).
 fn stored_stream(path: &Path) -> Vec<u8> {
     let original = fs::read(path).unwrap();
     let raw = inflate(&original);

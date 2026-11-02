@@ -26,6 +26,7 @@ fn read_ws_dep(helper: &Helper, pkg: &str) -> String {
         .to_owned()
 }
 
+/// Verifies `DuplicateComponentAndPackage` is reported when a workspace component is also in `workspace.jsonc` policy ([`Helper`]).
 /// Covers:
 /// - `e2e/harmony/install.e2e.ts:41`
 ///   install command › bit status should show it with `DuplicateComponentAndPackage` issue

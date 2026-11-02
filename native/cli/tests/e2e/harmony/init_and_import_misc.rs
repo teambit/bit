@@ -21,6 +21,7 @@ fn extract_metric(output: &str, prefix: &str) -> Option<u64> {
     digits.parse().ok()
 }
 
+/// Verifies corrupt `.bitmap` and `workspace.jsonc` files produce descriptive `bit status` parse errors ([`Helper`]).
 /// Covers:
 /// - `e2e/commands/init.e2e.ts:120`
 ///   run bit init › bit init --reset › when bitMap file is invalid › bit status should throw an exception `InvalidBitMap`

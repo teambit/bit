@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-basic-operations.e2e.ts` for basic `bit lane` subcommands ([`create_lane_without_component_and_lane_current`]).
+//! Port of `e2e/harmony/lanes/lane-basic-operations.e2e.ts` for basic `bit lane` subcommands ([`create_lane_without_component_and_lane_current`], [`main_to_lane_switch_and_on_lanes_only`]).
 //!
 //! Covers `bit lane current`, `lane create`, `lane show`, `lane change-scope`, and `forkedFrom` tracking.
 

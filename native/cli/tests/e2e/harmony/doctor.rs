@@ -46,6 +46,7 @@ fn diagnosis_listing_matches_node_text_json_and_colors() {
     }
     compare(&helper, &oracle, "doctor no-such-diagnosis --json", &[]);
 }
+/// Verifies `bit doctor "validate git exec"` matches `Node.js` across healthy and missing git executables ([`compare`]).
 #[test]
 fn git_diagnosis_matches_node_success_failure_and_treatment() {
     let helper = Helper::new();

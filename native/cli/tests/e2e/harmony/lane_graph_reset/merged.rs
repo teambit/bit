@@ -70,6 +70,7 @@ fn head_only_reset_keeps_the_released_multiple_parent_failure() {
     fixture::unchanged(&files);
 }
 
+/// Verifies CI `bit reset --silent` on a two-parent merge remains native and preserves merged sources and objects ([`diverged`]).
 #[test]
 fn ci_all_reset_of_a_two_parent_merge_remains_native_and_preserves_merged_sources_and_objects() {
     let (helper, exported, merged) = diverged(false);

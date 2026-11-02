@@ -46,6 +46,7 @@ fn revert_restores_deleted_components_without_changing_the_active_lane() {
     assert_eq!(after["lanes"]["current"], before["lanes"]["current"]);
 }
 
+/// Verifies `bit lane revert --restore-deleted-components --json` serializes restored components and `historyId` ([`fixture`]).
 #[test]
 fn real_revert_json_serializes_restored_components_and_history_id() {
     let fixture = fixture::deleted(true);

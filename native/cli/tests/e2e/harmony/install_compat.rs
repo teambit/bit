@@ -43,6 +43,7 @@ fn finish_configured(helper: Helper) -> Helper {
     helper
 }
 
+/// Creates a remote-connected workspace with `comp1` exported and `env/install-compat` configured for `bit fork` tests ([`configure_provider`]).
 fn remote_fork_configured() -> Helper {
     let helper = support::workspace(1, false);
     config::set_component_env(&helper.scopes.local_path, "comp1", "teambit.harmony/empty-env");

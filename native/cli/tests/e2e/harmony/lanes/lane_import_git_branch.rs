@@ -52,6 +52,7 @@ fn importing_an_exported_lane_into_a_git_repo_when_no_git_branch_exists() {
     assert_eq!(git_branch.trim(), lane_id);
 }
 
+/// Verifies `bit lane import --branch` warns when the matching Git branch already exists and still imports the lane ([`git`], [`init_new_git_repo`]).
 #[test]
 fn importing_an_exported_lane_into_a_git_repo_when_git_branch_already_exists() {
     let helper = Helper::new();

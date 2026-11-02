@@ -58,6 +58,7 @@ fn stale_index_is_repaired_by_the_canonical_loader_before_any_native_effect() {
     let oracle = helper.clone_workspace();
     compare_recovery(&helper, &oracle);
 }
+/// Verifies that rebuilding a deleted `.bit/index.json` preserves canonical state ([`fixture`], [`compare_recovery`]).
 #[test]
 fn rebuilding_a_lost_populated_index_preserves_canonical_state() {
     let helper = fixture();

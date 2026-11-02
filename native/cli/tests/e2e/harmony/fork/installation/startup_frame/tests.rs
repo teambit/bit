@@ -37,6 +37,7 @@ fn changed_counts_control_bytes_stage_or_intervening_lines_are_never_removed() {
         assert_eq!(project(&altered), altered);
     }
 }
+/// Verifies a duplicate progress transition after [`banner`] remains byte-exact under [`project`].
 #[test]
 fn a_later_duplicate_progress_transition_stays_byte_exact() {
     let text = format!("{START}{}{COUNTERS}{REDRAW}{COUNTERS}\n", banner());

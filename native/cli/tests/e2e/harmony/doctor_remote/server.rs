@@ -40,6 +40,7 @@ pub(super) struct Server {
     thread: Option<thread::JoinHandle<io::Result<()>>>,
 }
 impl Server {
+    /// Starts a local [`Server`] returning `response` for two `POST /graphql` requests.
     pub fn new(response: &Value) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());

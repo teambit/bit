@@ -8,7 +8,7 @@ use crate::{
 };
 use serde_json::json;
 use std::ffi::OsStr;
-/// Verifies `bit import --fetch-deps`, `workspace.jsonc` dependency policy cleanup, and dependent imports ([`Helper`]).
+/// Verifies `bit import --fetch-deps`, `workspace.jsonc` dependency policy cleanup, and dependent imports ([`Helper`], [`parse`]).
 #[test]
 fn workspace_with_ts_components_import_and_build_one_graph() -> KnownResult<()> {
     let helper = Helper::new();

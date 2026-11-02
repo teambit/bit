@@ -16,6 +16,7 @@ fn create_bit_env_plugin_env(helper: &Helper) {
     helper.compile();
 }
 
+/// Verifies `bit env set` followed by `bit tag` preserves explicit env selection over `variants` ([`parse`]).
 /// - `env command › bit env set › run bit env set and then tag when the variants points to another env › should not be modified`
 /// - `env command › bit env set › run bit env set and then tag when the variants points to another env › should not change the env to the variants one`
 /// - `env command › bit env set › run bit env set and then tag when the variants points to another env › ejecting the conf to component.json should not write internal fields`

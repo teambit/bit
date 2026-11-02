@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts` for remote lane divergence parity ([`local_is_diverged_from_the_remote`]).
+//! Port of `e2e/harmony/lanes/diverged-from-remote-lane.e2e.ts` for remote lane divergence parity ([`local_is_diverged_from_the_remote`], [`local_is_diverged_from_the_remote_and_another_lane_has_a_more_recent_snap`]).
 //!
 //! Validates `mergePendingComponents` detection when snapping before or after `bit import --objects`.
 

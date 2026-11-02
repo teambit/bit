@@ -49,6 +49,7 @@ fn http(command: &str, response: &Value) {
     compare_requests(server);
 }
 
+/// Verifies HTTP remote `bit doctor` preserves named and full results and exact `GraphQL` queries ([`http`], [`response`]).
 #[test]
 fn http_remote_doctor_preserves_named_and_complete_results_and_exact_queries() {
     for command in [

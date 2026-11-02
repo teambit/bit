@@ -48,6 +48,7 @@ fn checkout_json_remains_an_explicit_pre_effect_unsupported_option() {
     assert_eq!(support::bitmap(&fixture.helper), before);
 }
 
+/// Verifies that CI missing-history errors delegate for the published stack trace before mutating `.bitmap`.
 #[test]
 fn ci_missing_history_errors_preserve_the_published_stack_before_any_native_effect() {
     let fixture = fixture::initial();

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-forking.e2e.ts` for cross-scope lane forking ([`fork_lane_and_export_to_another_scope_then_import`]).
+//! Port of `e2e/harmony/lanes/lane-forking.e2e.ts` for cross-scope lane forking ([`fork_lane_and_export_to_another_scope_then_import`], [`fork_lane_then_original_lane_progresses_and_squashed_to_main`]).
 //!
 //! Covers `--fork-lane-new-scope`, squashing the original lane to `main`, and shared remote snaps.
 

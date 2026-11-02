@@ -27,6 +27,7 @@ impl Proxy {
     pub fn empty() -> Self {
         Self::catalog("[]")
     }
+    /// Starts a [`Proxy`] serving a custom BVM release catalog `body`.
     fn catalog(body: &str) -> Self {
         let journal = tempfile::tempdir().unwrap();
         fs::write(journal.path().join("requests"), []).unwrap();

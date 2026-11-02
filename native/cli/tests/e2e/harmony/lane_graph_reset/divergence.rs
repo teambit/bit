@@ -77,6 +77,7 @@ fn sparse_fork_history_reset_preserves_remote_ancestor_objects() {
     fixture::modified_only(&helper, 0);
 }
 
+/// Creates a `forked` lane merged with a multi-snap `dev` lane whose intermediate parent objects are missing locally ([`Helper`]).
 fn sparse_fork() -> (Helper, String, Vec<std::path::PathBuf>) {
     let helper = fixture::workspace(1, false);
     support::setup(&helper, "lane create dev");

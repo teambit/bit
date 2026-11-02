@@ -8,6 +8,7 @@ mod abort_merge_lane;
 mod bit_checkout_on_lanes;
 /// End-to-end tests for `bit import` on lanes.
 mod bit_import_on_lanes;
+/// End-to-end tests for `bit remove` and `bit delete` on lanes.
 mod bit_remove_on_lanes;
 mod diverged_from_forked;
 mod diverged_from_remote_lane;

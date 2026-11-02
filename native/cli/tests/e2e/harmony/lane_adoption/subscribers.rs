@@ -46,6 +46,7 @@ fn package_install_failure_resumes_original_lifecycle_without_replay() {
     assert!(!helper.scopes.local_path.join("lane-adoption-subscriber-receipts.jsonl").exists());
 }
 
+/// Runs `bit switch dev` with subscriber mutation and package-manager wrapping enabled (`ci` selects CI mode).
 fn install_subscribers(ci: bool) {
     let helper = installation_fixture();
     helper.output_file("lane-adoption-record-phases", "active");

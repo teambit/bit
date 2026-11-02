@@ -25,6 +25,7 @@ fn export_reinit_remote_scope_tag_and_export() {
     helper.native("export --all-versions");
 }
 
+/// Verifies sequential `export`, `tag`, `export`, and `reset` preserve remote `VersionHistory` ([`remote::publish`]).
 /// export functionality on Harmony › export, tag and export
 #[test]
 fn export_tag_and_export() {
