@@ -65,6 +65,7 @@ fn tracked(root: &Path) -> io::Result<Vec<String>> {
     tracked_for_separator(root, std::path::MAIN_SEPARATOR)
 }
 
+/// Scans `refs/remotes` for tracked remote lane IDs when `separator` is a POSIX forward slash.
 fn tracked_for_separator(root: &Path, separator: char) -> io::Result<Vec<String>> {
     // RemoteLanes.listLaneFiles passes path.join('*', '*') to glob 13. On
     // Windows, its backslash escapes the second star and no legal lane matches.

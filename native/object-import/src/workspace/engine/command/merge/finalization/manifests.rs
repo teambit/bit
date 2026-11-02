@@ -91,6 +91,7 @@ impl Prepared {
             .ok_or_else(|| invalid("snapshot package write absent"))
     }
 }
+/// Extracts the canonical `<scope>/<name>` component identity from a package `manifest` (`componentId` or `name`).
 fn identity(manifest: &Value) -> io::Result<String> {
     if let Some(raw) = manifest["componentId"].as_str() {
         let raw = raw.trim();

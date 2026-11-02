@@ -29,6 +29,7 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(flatten)]
     transport: super::inbound::Transport,
 }
+/// Boolean revert and deleted-component restoration flags for [`Prepare`].
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 struct Flags {

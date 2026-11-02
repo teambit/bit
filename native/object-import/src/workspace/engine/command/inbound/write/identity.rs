@@ -44,6 +44,7 @@ pub(super) fn has_unscoped_entry(rows: &Map<String, Value>, name: &str) -> bool 
         })
 }
 
+/// Returns `true` when `(key, row)` is a non-metadata `.bitmap` component object entry.
 #[inline]
 fn is_component_bitmap_entry(key: &str, row: &Value) -> bool {
     !key.starts_with('$') && !matches!(key, "_bit_lane" | "version") && row.is_object()

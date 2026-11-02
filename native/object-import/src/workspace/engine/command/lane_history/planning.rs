@@ -60,6 +60,7 @@ fn take_captured(
     captured[index].take()
 }
 
+/// Strips any trailing `@<version>` suffix from `raw` and returns the trimmed bare identity.
 #[inline]
 fn bare_id(raw: &str) -> &str {
     let raw = raw.trim();

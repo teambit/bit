@@ -95,7 +95,7 @@ fn duplicates(directories: &[String]) -> Vec<String> {
     duplicates
 }
 
-/// `<owner>/<directory>` for a scope with an owner, unless it is taken.
+/// Returns `<owner>/<directory>` for a scope with an owner, unless that directory is already in `all`.
 fn owner_directory(target: &Target, directory: &str, all: &[String]) -> Option<String> {
     let owner = target.scope
         .as_deref()

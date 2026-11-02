@@ -27,6 +27,7 @@ pub(in crate::workspace::engine) struct Complete {
     token: String,
     graph: Graph,
 }
+/// Deserialized workspace dependency graph rows and read-set proofs for dependent selection.
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Graph {

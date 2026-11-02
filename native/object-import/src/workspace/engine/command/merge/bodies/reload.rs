@@ -24,7 +24,7 @@ pub(super) fn files(
     retain(&input.root.join(input.current.target.directory.trim()), plan, files, removals)
 }
 
-/// Appends unmodified `currentFiles` from `plan` that were neither overwritten nor scheduled for removal.
+/// Appends unmodified `currentFiles` from `plan` that were neither overwritten nor scheduled in `removals`.
 fn retain(
     directory: &Path,
     plan: &Value,

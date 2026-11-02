@@ -43,6 +43,7 @@ pub(super) fn all_for_snapshot(
     all_with(root, inputs, snapshots, pool, true)
 }
 
+/// Captures component files and metadata for checkout, stripping `bitmapSource` markers from captured entries.
 pub(super) fn all_for_checkout(
     root: &Path,
     inputs: Vec<Value>,

@@ -43,7 +43,7 @@ pub(super) fn run(
     }));
     Ok((count, output))
 }
-/// Captures read-set [`proof::Proof`] entries for `.bitmap`, the `Lane` object, and the `LaneHistory` object.
+/// Captures read-set [`proof::Proof`] entries for `.bitmap`, the `Lane` object, and the `LaneHistory` object under `input.root`.
 #[inline]
 fn proofs(input: &Prepare, lane_hash: &str) -> io::Result<Vec<proof::Proof>> {
     let lane_hash = lane_hash.trim();

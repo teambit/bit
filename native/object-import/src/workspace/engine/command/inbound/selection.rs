@@ -81,6 +81,7 @@ fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
         && !raw_version.chars().any(char::is_control)
 }
 
+/// Normalizes `"head"` or `"latest"` (case-insensitively) to `"latest"`, preserving other version strings.
 #[inline]
 fn normalize_target_version(raw_version: &str) -> &str {
     let raw_version = raw_version.trim();

@@ -68,7 +68,7 @@ fn parse_scoped_identity<'a>(
         .ok_or_else(|| invalid(err_msg))
 }
 
-/// Appends a new `LaneHistory` entry for `lane` at `hash` onto `previous`.
+/// Appends a new `LaneHistory` entry for `lane` at `hash` onto `previous` using `receipt` and `message`.
 pub(super) fn history(
     lane: &Value,
     hash: &str,

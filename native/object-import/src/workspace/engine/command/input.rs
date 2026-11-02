@@ -42,6 +42,7 @@ pub(super) struct Options {
     #[serde(flatten)]
     flags: Flags,
 }
+/// Scope and lane-history options for [`Options`].
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct ScopeOptions {

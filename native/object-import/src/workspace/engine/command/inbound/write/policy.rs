@@ -57,6 +57,7 @@ impl super::Prepared {
             .finish(semver)
     }
 
+    /// Revalidates directory relocation observations and prepared workspace policy state before commit.
     pub(in super::super) fn validate_policy(&self) -> io::Result<()> {
         self.changes.relocation.validate()?;
         if let Some(policy) = &self.policy {

@@ -28,7 +28,7 @@ pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-/// Verifies that `path` consists of clean normal relative segments outside `.bitmap`, `.bit`, and `.git`.
+/// Verifies that `path` consists of clean normal relative segments outside `.bitmap`, `.bit`, and `.git` directories.
 #[inline]
 fn canonical_relative(path: &Path) -> io::Result<()> {
     let raw = path.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?;

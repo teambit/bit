@@ -74,6 +74,7 @@ fn prepare_http(
     finish(import, choice, id, input)
 }
 
+/// Selected lane-workspace [`Target`] entries, `main`-only identities, and count of changed components.
 #[derive(Debug, Clone)]
 struct Choice {
     selected: Vec<Target>,

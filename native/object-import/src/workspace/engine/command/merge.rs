@@ -45,6 +45,7 @@ impl State {
     pub(super) fn owner(&self) -> &Value {
         &self.journal["token"]
     }
+    /// Runs status selection for `input` and advances the merge transaction journal.
     #[inline]
     pub(super) fn select(&mut self, input: &status::Input<'_>) -> io::Result<Value> {
         let output = status::select(input, &self.journal["token"], &mut self.native)?;

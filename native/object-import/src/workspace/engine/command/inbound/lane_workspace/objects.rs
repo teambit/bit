@@ -73,6 +73,7 @@ fn unmatched_roots(roots: &[Target], entries: &[lane::Entry]) -> Vec<Target> {
         .collect()
 }
 
+/// Extracts the `(scope, name)` key tuple from a [`lane::Entry`] identity.
 #[inline]
 fn entry_key(entry: &lane::Entry) -> (Option<&str>, &str) {
     let raw = entry.identity.trim();

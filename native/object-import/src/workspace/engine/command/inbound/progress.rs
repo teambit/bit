@@ -96,6 +96,7 @@ fn adjust(
     row["objects"] = json!(if object_phase { scopes } else { 0 });
 }
 
+/// Formats `root` as `<scope>/<name>@<version>` (or unscoped `<name>@<version>`) for progress display.
 #[inline]
 fn format_target_id(root: &Target) -> String {
     let (name, version) = (root.name.trim(), root.version.trim());

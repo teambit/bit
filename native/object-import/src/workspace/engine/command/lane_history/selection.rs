@@ -96,6 +96,7 @@ pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io:
     Ok(())
 }
 
+/// Parses a `<scope>/<name>@<version>` `LaneHistory` component entry `row` into `(identity, version)`.
 fn target(row: &Value) -> io::Result<(String, String)> {
     let raw = row
         .as_str()

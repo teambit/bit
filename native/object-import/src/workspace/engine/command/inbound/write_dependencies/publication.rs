@@ -90,6 +90,7 @@ fn workspace(text: &str, dependencies: &Map<String, Value>) -> io::Result<String
     .map_err(io::Error::other)
 }
 
+/// Reads an existing ordinary file at `path` within the 32 MiB budget, returning `Ok(None)` if not found.
 fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {

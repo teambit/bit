@@ -43,6 +43,7 @@ impl Prepared {
         Ok(prepared)
     }
 
+    /// Finalizes the checkout policy update using `semver` resolution results and returns the optional update report.
     pub(super) fn finish(&mut self, semver: Value) -> io::Result<Option<Value>> {
         if self.ready {
             return Err(invalid("command checkout policy already complete"));

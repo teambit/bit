@@ -79,6 +79,7 @@ fn load_lanes(request: &Prepare, bitmap: &Value) -> io::Result<Lanes> {
     imported.lane_gap_source(&current_id, &other_id, other.as_ref(), should_squash)?;
     Ok(Lanes { imported, current_id, other_id, current, other, should_squash })
 }
+/// Refreshes `main` component objects referenced by `lanes.other` when `lanes.current_id` is `main`.
 fn refresh_current_main(lanes: &mut Lanes) -> io::Result<()> {
     if lanes.current_id.is_main()
         && let Some(other) = &lanes.other

@@ -76,6 +76,7 @@ impl Projection<'_> {
             )?;
         Ok(Some(value))
     }
+    /// Resolves the projected post-squash `Version` for `identity` from `self.snapshots` or `self.plan.materials` on `main`.
     fn projected(&self, identity: &str) -> Option<Value> {
         if let Some(version) = self.snapshots
             .iter()

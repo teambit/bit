@@ -92,6 +92,7 @@ fn component_rows(
     Ok(())
 }
 
+/// Deduplicates collected dependency `rows`, preferring root policy ranges and newer `minVersion` ranges.
 fn dedupe(rows: &[Value]) -> io::Result<Map<String, Value>> {
     if rows.len() > 65536 {
         return Err(invalid("inbound dependency policy limit"));

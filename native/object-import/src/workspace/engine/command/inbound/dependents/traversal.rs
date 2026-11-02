@@ -49,6 +49,7 @@ impl Queue {
         self.paths.push_back(next);
         Ok(())
     }
+    /// Dequeues and returns the next candidate path from the front of the breadth-first queue.
     #[inline]
     pub(super) fn pop(&mut self) -> Option<Vec<String>> {
         self.paths.pop_front()

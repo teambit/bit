@@ -18,7 +18,7 @@ struct Objects<'a> {
     local: &'a Path,
 }
 
-/// The requested `ids` whose Version has no dependency graph and whose flattened
+/// Returns the requested `ids` whose `Version` has no dependency graph and whose flattened
 /// dependencies are not all present and built. An object that cannot be read counts as
 /// missing, so the second request can only fetch more than needed.
 pub(super) fn requests(items: &[ObjectItem], ids: &[String], root: &Path) -> Vec<String> {

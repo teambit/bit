@@ -64,6 +64,7 @@ fn append(roots: &[Target], dependencies: Vec<Target>) -> io::Result<Vec<Target>
     Ok(targets)
 }
 
+/// Collects all flattened runtime and dev dependency [`Target`] entries from imported `roots`.
 fn all(input: &Prepare, roots: &[Target], imported: &PreparedImport) -> io::Result<Vec<Target>> {
     let mut result = Vec::new();
     for root in roots {

@@ -68,6 +68,7 @@ impl Recovery {
         }
         Ok(())
     }
+    /// Captures any non-empty `staged-config/<lane>.json` file into `self.files` as `"staged-config.json"`.
     fn staged_config(&mut self, root: &Path, lane: &Value) -> io::Result<()> {
         let current = &lane["current"];
         let config = if current.is_null() {

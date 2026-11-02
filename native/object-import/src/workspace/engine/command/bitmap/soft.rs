@@ -50,7 +50,7 @@ fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
     Ok(cloned)
 }
 
-/// Resolves the canonical `<scope>/<name>` component identity from a normalized `.bitmap` `entry`.
+/// Resolves the canonical `<scope>/<name>` component identity from a normalized `.bitmap` `entry` object.
 #[inline]
 pub(super) fn identity(entry: &Value) -> io::Result<String> {
     let name = entry["name"]

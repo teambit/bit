@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonically increasing sequence counter for unique `.bit-package-<pid>-<seq>` temporary filenames.
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Atomically replaces an ordinary file at `path` with `bytes`, preserving permissions and ownership.

@@ -37,7 +37,7 @@ pub(super) fn component_order(
     let workspace = super::super::config::configuration(root)?;
     ordered_ids(rows, workspace["defaultScope"].as_str().map_or("", str::trim))
 }
-/// Formats ordered `<scope>/<name>` (or unscoped `<name>`) component IDs from `.bitmap` `rows`.
+/// Formats ordered `<scope>/<name>` (or unscoped `<name>`) component IDs from `.bitmap` `rows` using `default_scope`.
 #[inline]
 fn ordered_ids(rows: &Map<String, Value>, default_scope: &str) -> io::Result<Vec<String>> {
     rows.iter()

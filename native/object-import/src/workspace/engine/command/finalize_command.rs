@@ -4,7 +4,7 @@
 use super::{Finalize, State, bitmap, invalid, proof, scratch};
 use serde_json::{Value, json};
 use std::io;
-/// Finalizes merge-snap results, `.bitmap` updates, and referenced lane objects for [`Finalize`] on [`State`].
+/// Finalizes merge-snap results, `.bitmap` updates, and referenced lane objects for `input` on `state`.
 #[inline]
 pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command finalize owner absent"))?;

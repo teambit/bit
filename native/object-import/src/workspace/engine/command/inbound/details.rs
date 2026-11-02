@@ -88,7 +88,7 @@ pub(super) fn details(
         .collect()
 }
 
-/// Computes the `importDetails` entry for a single imported `target` and its resolved `model`.
+/// Computes the `importDetails` entry for a single imported `target` and its resolved `model` value.
 fn detail(
     root: &Path,
     scope: &str,

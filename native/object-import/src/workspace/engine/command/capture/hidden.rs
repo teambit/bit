@@ -58,7 +58,7 @@ pub(in crate::workspace::engine::command) fn from_model(
     })
 }
 
-/// Retains hidden component `Source` blobs under `private_root/<version>` and records their snapshot proofs.
+/// Retains hidden component `Source` blobs under `private_root/<version>` and records their [`snapshots`] proofs.
 fn retain_files(
     private_root: &Path,
     version: &str,

@@ -73,6 +73,7 @@ fn group(
     )
 }
 
+/// Snapshots the set of existing version tags per component identity in `import.overlay`.
 fn snapshot(import: &command_import::PreparedImport) -> HashMap<String, HashSet<String>> {
     import.overlay
         .models()

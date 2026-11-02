@@ -97,6 +97,7 @@ fn prepare_import(
     }
 }
 
+/// Finalizes inbound preparation, builds the command receipt, and stores [`Retained`] in `state.inbound`.
 pub(super) fn finish(
     input: &Prepare,
     roots: &[Target],

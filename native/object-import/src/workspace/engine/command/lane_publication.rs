@@ -60,6 +60,7 @@ impl Prepared {
     pub(super) fn receipt(&self) -> Value {
         json!({"history":!self.current.is_null(),"importHistoryCount":self.context["importHistoryPlans"].as_array().map_or(0, Vec::len),"squashMessageHashes":self.squashes.iter().filter_map(squash::Prepared::message_hash).collect::<Vec<_>>()})
     }
+    /// Updates the staged `Lane` object in `self.current` with `head` (and `removed` status) for `identity`.
     pub(super) fn update(&mut self, identity: &str, head: &str, removed: bool) -> io::Result<()> {
         if self.current.is_null() {
             return Ok(());

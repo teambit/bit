@@ -80,7 +80,7 @@ fn selected(ids: &[String], excluded: &mut HashSet<String>) -> io::Result<Vec<Ta
     Ok(result)
 }
 
-/// Performs a bounded breadth-first search over `adjacency` from `sources` to `ends`, filtering by `via`.
+/// Performs a bounded breadth-first search over `adjacency` from `sources` to `ends`, filtering by `via` paths.
 fn paths(
     adjacency: &HashMap<String, Vec<Target>>,
     sources: &[String],

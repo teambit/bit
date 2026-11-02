@@ -69,7 +69,7 @@ pub(in crate::workspace::engine::command) fn targets(
     config::context_bitmap_targets(&Value::Object(visible), settings)
 }
 
-/// Returns `true` when `key` is a `.bitmap` metadata property (`$schema-version` or `version`).
+/// Returns `true` when `key` is a `.bitmap` schema/version metadata property (`$schema-version` or `version`).
 #[inline]
 fn is_metadata_bitmap_key(key: &str) -> bool {
     key.starts_with('$') || key == "version"

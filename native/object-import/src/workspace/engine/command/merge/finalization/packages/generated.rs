@@ -67,6 +67,7 @@ fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
         .ok_or_else(|| invalid("tag package identity"))
 }
 
+/// Copies `packageDependencies`, `devPackageDependencies`, and `peerPackageDependencies` from `version` into `fields`.
 #[inline]
 fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
     for (target, source) in [

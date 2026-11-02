@@ -72,6 +72,7 @@ fn validate_git_head(git_head: &str) -> io::Result<&str> {
     Ok(git_head)
 }
 
+/// Strips any trailing `@<version>` suffix from `id` and returns the trimmed bare identity.
 #[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();

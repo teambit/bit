@@ -85,6 +85,7 @@ fn bare_id(raw: &str) -> &str {
     raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim())
 }
 
+/// Extracts the bare `<scope>/<name>` identity from a target `row` (`identity` or `id`).
 #[inline]
 fn row_bare_id(row: &Value) -> Option<&str> {
     row["identity"]

@@ -45,6 +45,7 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates lane ID count constraints for `--lanes` and `laneImport` operations.
 #[inline]
 fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
     if input.options.lanes && input.ids.len() > 33 {

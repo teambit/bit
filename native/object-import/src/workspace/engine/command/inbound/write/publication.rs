@@ -74,6 +74,7 @@ impl Prepared {
         Ok(())
     }
 
+    /// Collects non-existent ancestor directories under `self.root` that will be created for `self.changes.additions`.
     fn missing_directories(&self) -> io::Result<HashSet<PathBuf>> {
         let mut dirs = HashSet::new();
         for (path, _) in &self.changes.additions {

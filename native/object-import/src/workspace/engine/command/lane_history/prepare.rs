@@ -94,6 +94,7 @@ fn read(root: &std::path::Path, hash: &str) -> io::Result<Value> {
         Err(error) => Err(error),
     }
 }
+/// Refreshes remote `Lane` and `LaneHistory` objects for `id` before selecting history phases.
 fn refresh(
     input: &Prepare,
     imported: &mut command_import::PreparedImport,

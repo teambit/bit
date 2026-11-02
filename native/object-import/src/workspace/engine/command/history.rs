@@ -68,6 +68,7 @@ impl State {
         self.values.insert(identity.to_owned(), value);
         Ok(())
     }
+    /// Updates cached `VersionHistory` rows with rebased parent hashes for each `(identity, hash, version)`.
     pub(super) fn rebase(&mut self, versions: &[(String, String, Value)]) -> io::Result<()> {
         for (identity, hash, version) in versions {
             let identity = identity.trim();

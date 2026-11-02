@@ -89,7 +89,7 @@ fn existing_target(
     check_sources(root, row, &version)
 }
 
-/// Searches local component candidate hashes for `(scope, name)` and returns the first stored `Component` object.
+/// Searches local component candidate hashes for `(scope, name)` under `root` and returns the first stored `Component` object.
 #[inline]
 fn find_existing_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
     for hash in

@@ -28,7 +28,7 @@ use std::{
 
 /// Maximum total component file bytes one import holds until [`Prepared`] publication.
 const MAX_WRITTEN_BYTES: usize = 512 * 1024 * 1024;
-/// Retained workspace file, `.bitmap`, history, and policy publication state for an inbound import.
+/// Retained workspace file, `.bitmap`, history, and policy publication state for an inbound import (`Prepared`).
 pub(super) struct Prepared {
     root: PathBuf,
     bitmap_before: Vec<u8>,

@@ -8,6 +8,7 @@ use super::{history, input::Prepare, invalid, repository::Repository};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Borrowed request, workspace context, and component status rows for lane filtering.
 struct Inputs<'a> {
     request: &'a Prepare,
     context: &'a Value,

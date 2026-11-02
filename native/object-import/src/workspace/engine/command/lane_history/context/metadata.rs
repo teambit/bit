@@ -47,6 +47,7 @@ fn bare_identity(raw: &str) -> Option<&str> {
     (!base.is_empty()).then_some(base)
 }
 
+/// Extracts the bare `<scope>/<name>` identity from a target `row` via [`bare_identity`].
 #[inline]
 fn row_bare_identity(row: &Value) -> Option<&str> {
     row["identity"]

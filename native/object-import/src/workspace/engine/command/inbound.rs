@@ -39,7 +39,7 @@ pub fn recovery_remote_connection(
     let transport = serde_json::from_value(transport.clone()).map_err(io::Error::other)?;
     remote::recovery_connection(root, home, &transport)
 }
-/// Deserialized inbound transfer preparation request (`root`, `home`, `operation`, `ids`, `options`, `transport`).
+/// Deserialized inbound transfer preparation request (`root`, `home`, `operation`, `ids`, `options`, and `transport`).
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {
