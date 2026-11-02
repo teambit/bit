@@ -32,6 +32,7 @@ struct Soft {
 struct Never {
     full_names: Vec<String>,
 }
+/// Validates that `values` stays within [`bound`] and every element passes [`text`].
 #[inline]
 fn validate(values: &[String]) -> io::Result<()> {
     bound(values.len())?;

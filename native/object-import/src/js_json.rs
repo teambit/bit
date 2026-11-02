@@ -96,6 +96,7 @@ pub fn stringify(value: &Value, pretty: bool) -> io::Result<Option<Vec<u8>>> {
     stringify_indented(value, if pretty { 2 } else { 0 }).map(Some)
 }
 
+/// Serializes [`Value`] using `ECMAScript` `JSON.stringify` rules with `spaces` indentation per level (`0..=10`).
 pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
     if spaces > 10 {
         return Err(invalid("JavaScript indent out of bounds"));

@@ -74,6 +74,7 @@ impl State {
         );
         Ok(response)
     }
+    /// Looks up the active [`Binding`] and `planToken` for `input` after verifying owner retention in `owners`.
     fn binding<'a>(
         &'a self,
         input: &Value,

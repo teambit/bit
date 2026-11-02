@@ -57,6 +57,7 @@ pub(crate) fn serve_extension(
     Ok(true)
 }
 
+/// Dispatches a workspace-only 4-byte `magic` frame (`BWM1` or `BWP1`), returning `Ok(false)` when unrecognized.
 #[inline]
 fn serve_workspace(
     magic: [u8; 4],

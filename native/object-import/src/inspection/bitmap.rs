@@ -70,6 +70,7 @@ fn scope(entry: &mut Map<String, Value>) {
         entry.insert("scope".into(), scope);
     }
 }
+/// Returns `true` when `value` is JavaScript-truthy (`non-null`, `true`, non-blank string, or non-zero/non-NaN number).
 #[inline]
 fn truthy(value: &Value) -> bool {
     match value {

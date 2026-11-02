@@ -81,6 +81,7 @@ fn output_budget(queries: &[String], incoming: &HashMap<&str, Vec<&str>>) -> io:
     Ok(())
 }
 
+/// Constructs a reverse dependency map from component IDs to their deduplicated incoming dependent IDs.
 fn incoming(rows: &[Row]) -> io::Result<HashMap<&str, Vec<&str>>> {
     let mut incoming: HashMap<&str, Vec<&str>> = HashMap::with_capacity(rows.len());
     let mut edges = 0;

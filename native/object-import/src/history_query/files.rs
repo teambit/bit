@@ -86,6 +86,7 @@ fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
         })
         .ok_or_else(|| invalid("history file missing Version"))
 }
+/// Normalizes a relative file `path` by stripping leading `./` or `.\` prefixes and converting `\` to `/`.
 #[inline]
 fn clean_path(path: &str) -> std::borrow::Cow<'_, str> {
     let mut trimmed = path.trim();

@@ -50,6 +50,7 @@ pub(crate) fn validate_version(value: &Value) -> io::Result<()> {
     crate::transfer::collection::shape::query(value)
 }
 
+/// Indexes `overlays` by trimmed and lowercase `hash` into their first matching slice position.
 fn overlay_indices(overlays: &[Value]) -> std::collections::HashMap<String, usize> {
     let mut indices = std::collections::HashMap::with_capacity(overlays.len() * 2);
     for (index, value) in overlays.iter().enumerate() {

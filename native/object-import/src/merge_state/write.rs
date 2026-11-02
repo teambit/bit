@@ -71,6 +71,7 @@ pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
     drop(open_existing(path, &fs::symlink_metadata(path)?)?);
     Ok(())
 }
+/// Opens or creates a regular destination file at `path` for truncation, verifying `existing` metadata.
 fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
     let Some(metadata) = existing else {
         fs::create_dir_all(path.parent().ok_or_else(|| invalid("missing merge state parent"))?)?;

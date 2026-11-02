@@ -61,6 +61,7 @@ fn validate_version_edges(version: &Version, current: &str, edges: &mut usize) -
     }
     Ok(())
 }
+/// Local `Version` object reader wrapper projecting ancestry graph nodes ([`Version`]).
 struct Reader<'a> {
     repository: crate::read_version::Reader<'a>,
 }

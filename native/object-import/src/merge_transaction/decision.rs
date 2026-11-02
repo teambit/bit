@@ -83,6 +83,7 @@ pub(super) fn boolean(input: &Value, key: &str) -> io::Result<bool> {
     Err(invalid("merge flag"))
 }
 
+/// Computes the `laneBucket` (`"skip"`, `"hidden"`, or `"visible"`) for a lane merge component entry.
 pub(super) fn bucket(input: &Value) -> io::Result<Value> {
     let visible = boolean(input, "currentOnLane")?;
     let hidden = boolean(input, "currentHidden")?;

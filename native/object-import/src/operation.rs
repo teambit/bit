@@ -35,6 +35,7 @@ struct ComponentPlan {
     heads: [Vec<String>; 2],
     deleted: [Vec<String>; 2],
 }
+/// Deserialized `index.json` merge input (`components`, `lanes`, and `objects` entries).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct IndexPlan {
     components: Vec<IndexEntry>,

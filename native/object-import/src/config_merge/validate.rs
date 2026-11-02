@@ -82,6 +82,7 @@ fn semver_comparator(input: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates a `SemVer` version object (`major`, `minor`, `patch`, and `prerelease` identifiers).
 fn semver_version(input: &Value) -> io::Result<()> {
     fields(input, &["major", "minor", "patch", "prerelease"])?;
     for field in ["major", "minor", "patch"] {

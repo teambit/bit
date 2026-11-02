@@ -60,6 +60,7 @@ pub(super) fn plan(input: &Plan) -> io::Result<Value> {
     }
     Ok(output)
 }
+/// Validates SHA-1 hashes and option compatibility on `input`, returning whether a visible head exists.
 fn validate(input: &Plan) -> io::Result<bool> {
     hash(input.version.trim())?;
     hash(input.version_hash.trim())?;

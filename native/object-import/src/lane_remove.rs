@@ -86,6 +86,7 @@ fn canonical_lane_parts(raw_id: &str) -> io::Result<(&str, &str)> {
     Ok((raw_scope.trim(), raw_name.trim()))
 }
 
+/// Validates and removes all requested lane `ids` from `rows`, returning their deduplicated object hashes.
 fn select_all(
     root: &Path,
     rows: &mut Vec<Value>,

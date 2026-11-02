@@ -52,6 +52,7 @@ impl<'a> Reader<'a> {
     pub(crate) fn metadata(&self) -> Option<&(String, usize, usize)> {
         self.metadata.as_ref()
     }
+    /// Returns the total `(records, raw_bytes)` read by this [`Reader`] so far.
     #[inline]
     pub(crate) fn stats(&self) -> (usize, usize) {
         (self.records, self.raw)

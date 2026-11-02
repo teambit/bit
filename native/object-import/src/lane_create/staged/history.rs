@@ -1,4 +1,4 @@
-//! Stage the `VersionHistory` population ([`prepare`], [`populate`], [`Moved`]) performed while finding local snaps for lane creation.
+//! Stage the `VersionHistory` population ([`prepare`], [`populate`], [`added_record`], [`Moved`]) performed while finding local snaps for lane creation.
 use super::{Moved, invalid};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

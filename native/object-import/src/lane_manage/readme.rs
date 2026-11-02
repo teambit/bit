@@ -71,6 +71,7 @@ impl ReadmePlan {
         Ok(Self::Remove(Box::new(ReadmeRemoval { root: root.into(), label, objects, bitmap })))
     }
 
+    /// Persists the updated `Lane`/`LaneHistory` objects and `.bitmap` when a readme component was removed.
     pub fn commit(&self) -> io::Result<()> {
         let Self::Remove(removal) = self else {
             return Ok(());

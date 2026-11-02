@@ -47,6 +47,7 @@ impl Moved {
         outbound::read_object(directory, hash, kind)
     }
 
+    /// Verifies that every file recorded during [`Self::read`] remains unchanged on disk before commit.
     pub(super) fn validate(&self) -> io::Result<()> {
         for (path, before) in &self.reads {
             let after = match fs::read(path) {

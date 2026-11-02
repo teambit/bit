@@ -40,6 +40,7 @@ struct Cursor {
     target_only: bool,
     result: Option<Value>,
 }
+/// Deserialized `mergeStatusReceipt` request payload delivering the observed `value` for step `observe`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Receipt {

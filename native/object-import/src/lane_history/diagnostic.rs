@@ -1,4 +1,4 @@
-//! CI diagnostic check ([`ci_requires_published_diagnostic`]) for `V8` stack preservation on unknown `LaneHistory` keys.
+//! CI diagnostic check ([`ci_requires_published_diagnostic`], [`local_contains`], [`file_remote`]) for `V8` stack preservation on unknown `LaneHistory` keys.
 #[cfg(test)]
 mod tests;
 use crate::command_import::{self, lane::Id};

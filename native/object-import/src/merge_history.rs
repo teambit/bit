@@ -71,6 +71,7 @@ impl Write for Output {
         Ok(())
     }
 }
+/// Reads a framed merge-history [`Request`] from `reader`, executes it on `pool`, and writes the [`Response`].
 pub(crate) fn serve(
     reader: &mut impl Read,
     writer: &mut impl Write,

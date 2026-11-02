@@ -36,6 +36,7 @@ pub use command_import::lane::resolve_lane_identity;
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;
+/// Reads and decodes scope objects directly from the local `objects` directory without `Node.js` adapters.
 pub use repository::{read_object_directory, read_raw_scope_object, read_scope_object};
 pub use scope::path as scope_path;
 pub use session::WorkspaceSession;

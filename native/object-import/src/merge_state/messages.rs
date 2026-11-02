@@ -1,4 +1,4 @@
-//! Ordered `Version` log message extraction ([`read`], [`version_log_message`], [`references_valid`]) for squashed lane merges.
+//! Ordered `Version` log message extraction ([`read`], [`version_log_message`], [`references_valid`]) for squashed lane merges via [`crate::read_version::Reader`].
 
 use super::squash::references_valid;
 use serde_json::{Value, json};

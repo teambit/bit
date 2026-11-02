@@ -70,6 +70,7 @@ fn valid_history_entry(id: &str, entry: &Value) -> bool {
             .is_none_or(|dependents| dependents.is_null() || is_non_empty_string_array(dependents))
 }
 
+/// Computes the deterministic SHA-1 object hash for `<lane_hash>:LaneHistory`.
 #[inline]
 pub(crate) fn hash(lane_hash: &str) -> String {
     let mut sha1 = Sha1::new();

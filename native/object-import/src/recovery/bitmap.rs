@@ -1,4 +1,4 @@
-//! `.bitmap` root-directory diffing ([`plan`], [`jsonc`]) and removal planning for workspace recovery.
+//! `.bitmap` root-directory diffing ([`plan`], [`roots`], [`root`], [`identity`], [`jsonc`]) and removal planning for workspace recovery.
 
 use super::{invalid, jsonc, path};
 use serde_json::{Value, json};

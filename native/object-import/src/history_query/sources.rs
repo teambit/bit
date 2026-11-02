@@ -20,6 +20,7 @@ pub(super) struct Cache {
     pub(super) limit: usize,
 }
 impl Cache {
+    /// Reads or reuses the inflated `Source` record for `canonical` (`digest`) within `self.limit`.
     fn read(
         &mut self,
         directory: &std::path::Path,

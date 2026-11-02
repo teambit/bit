@@ -85,6 +85,7 @@ fn assign_remaining(
         rows[index]["logIndex"] = json!(last_idx);
     }
 }
+/// Extracts a required non-empty trimmed `Source` hash string from `log[field]`.
 #[inline]
 fn reference<'a>(log: &'a Value, field: &str) -> io::Result<&'a str> {
     log.get(field)

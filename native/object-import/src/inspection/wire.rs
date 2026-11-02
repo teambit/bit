@@ -38,6 +38,7 @@ pub(super) struct Files {
     pub(super) token: String,
     pub(super) model_files: Vec<Model>,
 }
+/// Deserialized model file descriptor (`relativePath`, `hash`, optional `name` and `test` flags).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Model {

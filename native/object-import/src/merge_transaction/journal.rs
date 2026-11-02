@@ -84,6 +84,7 @@ const LANE: &[&str] = &[
     "destroy",
 ];
 impl Record {
+    /// Returns the ordered phase sequence ([`STATUS`], [`APPLY`], or [`LANE`]) for `self.mode`.
     fn phases(&self) -> &[&str] {
         match self.mode {
             "status" => STATUS,

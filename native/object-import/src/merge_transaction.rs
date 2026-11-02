@@ -72,6 +72,7 @@ fn parse_token<'a>(input: &'a Value, message: &'static str) -> io::Result<&'a st
         .filter(|val| !val.is_empty() && val.len() <= 256 && !val.contains('\0'))
         .ok_or_else(|| invalid(message))
 }
+/// Verifies that `input` carries a valid component `token` and `index` (`< 4096`) in `state`.
 #[inline]
 fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = parse_token(input, "merge owner token")?;

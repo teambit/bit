@@ -71,6 +71,7 @@ fn parse_string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
     Ok((scope, name))
 }
 
+/// Filters `input["results"]` indices to entries whose `(scope, name)` identity is not in `input["hidden"]`.
 fn visible(input: &Value) -> io::Result<Vec<usize>> {
     let results = array(input, "results")?;
     let hidden_rows = array(input, "hidden")?;

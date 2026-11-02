@@ -88,6 +88,7 @@ fn keys(value: &mut Js) -> io::Result<Vec<Vec<u16>>> {
         .map(|(key, _)| key.clone())
         .collect())
 }
+/// Sorts `packageDependencies`, `devPackageDependencies`, and `peerPackageDependencies` maps on `value`.
 fn maps(value: &mut Js) -> io::Result<Value> {
     let mut output = serde_json::Map::with_capacity(3);
     for field in ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"] {

@@ -1,4 +1,4 @@
-//! Workspace-versus-model file diff planning ([`plan`], [`Request`], [`validate_request`]) using retained file snapshots.
+//! Workspace-versus-model file diff planning ([`plan`], [`Request`], [`validate_request`]) using retained [`super::Plans`] snapshots.
 
 mod read;
 

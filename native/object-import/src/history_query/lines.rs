@@ -27,6 +27,7 @@ fn tokens(text: &str) -> Vec<&str> {
         .filter(|text| !text.is_empty())
         .collect()
 }
+/// Computes the line-level Myers diff between `old` and `new` within byte, line, and work limits.
 pub(super) fn diff(old: &str, new: &str) -> io::Result<Vec<Part>> {
     if old.len() > 32 * 1024 * 1024 || new.len() > 32 * 1024 * 1024 {
         return Err(invalid("history line byte limit"));

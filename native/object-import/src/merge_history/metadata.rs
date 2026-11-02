@@ -78,6 +78,7 @@ fn empty_array(value: &Value, field: &str) -> io::Result<()> {
         _ => Err(invalid("history unsupported dependency metadata")),
     }
 }
+/// Validates the `extensions` array on a `Version` JSON object for native merge eligibility.
 fn extensions(value: &Value) -> io::Result<()> {
     let Some(extensions) = value.get("extensions") else {
         return Ok(());

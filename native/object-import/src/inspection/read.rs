@@ -75,6 +75,7 @@ pub(super) fn capture(
         .collect()
 }
 
+/// Verifies that `directory` is an absolute, non-symlink, empty regular directory on disk.
 fn validate_snapshot_directory(directory: &PathBuf) -> io::Result<()> {
     if !directory.is_absolute() {
         return Err(invalid("inspection snapshot directory must be ordinary empty"));

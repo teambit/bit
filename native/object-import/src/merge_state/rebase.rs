@@ -1,4 +1,4 @@
-//! `VersionHistory` rebase intersection index calculation ([`plan`], [`validate_incoming`], [`Version`]) between existing and incoming versions.
+//! `VersionHistory` rebase intersection index calculation ([`plan`], [`validate_incoming`], [`Version`], [`references_valid`]) between existing and incoming versions.
 
 use super::{hash, squash::references_valid};
 use serde::Deserialize;

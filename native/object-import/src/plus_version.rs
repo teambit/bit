@@ -1,4 +1,4 @@
-//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification ([`is_plus`]) and `SemVer` release-tag resolution ([`resolve`]).
+//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification ([`is_plus`]) and `SemVer` release-tag resolution ([`resolve`]) for `0.0.0-` snap filtering.
 
 #[cfg(test)]
 mod tests;

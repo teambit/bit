@@ -59,6 +59,7 @@ struct Metadata {
     #[serde(default)]
     unrelated: bool,
 }
+/// Deserialized tag or orphaned-tag label and target `Version` hash pair for local reset selection.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Tag {

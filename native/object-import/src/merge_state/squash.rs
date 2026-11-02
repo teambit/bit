@@ -55,6 +55,7 @@ fn eligible(input: &Policy) -> bool {
         !input.target_only.is_empty() && input.detach_head
     }
 }
+/// Computes the `rewrite` parent choice (`common`, `main`, or `none`) and parent list for `input`.
 fn rewrite(input: &Policy, previous: &[String], common: Option<&str>) -> io::Result<Value> {
     let legacy = input.model.is_legacy.ok_or_else(|| invalid("missing Version schema policy"))?;
     let main_head = input.model.main_head

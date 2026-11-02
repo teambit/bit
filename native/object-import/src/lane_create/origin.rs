@@ -84,6 +84,7 @@ impl Origin {
         Self::from_lane_object(root, bitmap, parent, backup_lane, scope, false)
     }
 
+    /// Extracts component refs and `forkedFrom` metadata from a validated parent `lane` object.
     fn from_lane_object(
         root: &Path,
         bitmap: &Value,

@@ -80,6 +80,7 @@ impl Capsules {
             Ok(load)
         }
     }
+    /// Groups per-stage `Source` load descriptors (`currentUpdated`, `added`, `deletedConflict`, `modified`) across `rows`.
     fn groups(&mut self, input: &Value, rows: &[Value]) -> io::Result<Vec<Value>> {
         let mut groups = Vec::new();
         for (stage, kind) in [

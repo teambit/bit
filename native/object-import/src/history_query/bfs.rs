@@ -49,6 +49,7 @@ struct Request {
     stops: HashSet<String>,
     index: crate::tag_index::TagIndex,
 }
+/// Mutable BFS `Version` traversal state tracking visited hashes, queue, byte budget, and stop checkpoints.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Walk {
     rows: Vec<Value>,

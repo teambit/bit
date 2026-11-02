@@ -35,6 +35,7 @@ impl Scope {
             finished: false,
         }
     }
+    /// Restores the previous thread-local [`Trace`] and returns the finished [`Trace`] for this scope.
     pub(super) fn finish(mut self) -> Trace {
         let trace = ACTIVE
             .with(|active| active.replace(self.previous.take()))

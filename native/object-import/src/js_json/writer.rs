@@ -35,6 +35,7 @@ impl Writer {
         self.output
     }
 
+    /// Appends raw `bytes` to the output buffer after checking [`MAX_BYTES`].
     pub(super) fn bytes(&mut self, bytes: &[u8]) -> io::Result<()> {
         if bytes.len() > MAX_BYTES.saturating_sub(self.output.len()) {
             return Err(invalid("JSON output limit"));

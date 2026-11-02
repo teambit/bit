@@ -1,4 +1,4 @@
-//! Tracked file removal filtering ([`apply`]) and `.bitmap` preservation during merge materialization.
+//! Tracked file removal filtering ([`apply`], [`relative_path`], [`removed_entry`], [`status`]) and `.bitmap` preservation during merge materialization.
 
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! `UTF-16` code-unit ([`single`]) and surrogate-pair ([`unicode`]) JSON string escaping ([`write`], [`Writer`]) for `js_json` serialization.
+//! `UTF-16` code-unit ([`single`]) and surrogate-pair ([`unicode`]) JSON string escaping ([`write`]) into [`Writer`] for `js_json` serialization.
 
 use super::writer::Writer;
 use std::io;

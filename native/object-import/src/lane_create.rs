@@ -1,4 +1,4 @@
-//! Create a local lane ([`Plan`]) and publish its `Lane` object, `LaneHistory`, and workspace metadata.
+//! Create a local lane ([`Plan`], [`Options`]) and publish its `Lane` object, `LaneHistory`, and workspace metadata.
 
 mod origin;
 mod staged;

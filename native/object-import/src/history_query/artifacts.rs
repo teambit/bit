@@ -1,4 +1,4 @@
-//! `teambit.pipelines/builder` artifact inventory validation ([`validate`]) for repository history queries.
+//! `teambit.pipelines/builder` artifact inventory validation ([`validate`], [`validate_artifacts`], [`validate_file`]) for repository history queries.
 
 use super::invalid;
 use serde_json::Value;

@@ -68,6 +68,7 @@ fn hashes<'a>(input: &'a Value, field: &str) -> io::Result<HashSet<&'a str>> {
         })
         .collect()
 }
+/// Extracts the trimmed version string from `dependency["version"]` or the `@version` suffix of `dependency["id"]`.
 fn dependency_version(dependency: &Value) -> Option<&str> {
     if let Some(ver) = dependency.get("version").and_then(Value::as_str) {
         return Some(ver.trim());
