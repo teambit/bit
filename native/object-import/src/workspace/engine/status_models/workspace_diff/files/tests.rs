@@ -7,7 +7,7 @@ use crate::read_budget::Budget;
 use serde_json::json;
 use std::path::PathBuf;
 
-/// Verifies that [`read`] shares the output patch [`Budget`] across components and permits empty file batches.
+/// Verifies that [`read`] shares the [`Budgets`] output patch [`Budget`] across components and permits empty [`File`] batches.
 #[test]
 fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
     let request = Request {

@@ -65,6 +65,7 @@ fn a_preserved_consumer_log_cannot_be_overridden_by_allocation() {
     );
 }
 
+/// Verifies that [`prepare`] uses the [`Allocation`] log and empty `parents` when a new [`Component`] has no consumer log.
 #[test]
 fn new_component_without_consumer_log_uses_allocation_log_and_empty_parents() {
     let component = Component {

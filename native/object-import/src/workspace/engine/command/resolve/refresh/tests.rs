@@ -44,6 +44,7 @@ fn unowned_sources_wrong_hashes_and_duplicate_changes_are_rejected() {
     assert!(replace_owned_proofs(&mut proofs, &[before], &changes).is_err());
 }
 
+/// Verifies that [`replace_owned_proofs`] leaves unmodified [`proof`] entries intact when the [`SourceChange`] slice is empty.
 #[test]
 fn empty_change_list_leaves_unmodified_proofs_intact() {
     let directory = Directory::create().unwrap();

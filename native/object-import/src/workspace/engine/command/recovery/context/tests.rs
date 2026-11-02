@@ -17,6 +17,7 @@ fn abort_selection_preserves_unselected_pending_records() {
     assert_eq!(selected, vec![context["targets"][0].clone()]);
     assert_eq!(remaining, json!([pending[1].clone()]));
 }
+/// Verifies that [`select`] declines when the requested component is not pending or the pending list is empty.
 #[test]
 fn explicit_nonpending_and_empty_abort_decline() {
     let context = json!({"targets":[{"identity":"scope/first","directory":"first"}]});

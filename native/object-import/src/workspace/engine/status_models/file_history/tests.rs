@@ -25,6 +25,7 @@ fn duplicate_version_file_paths_decline() {
     assert!(file_hash(&version, "src/index.ts").is_err());
 }
 
+/// Verifies that [`file_hash`] returns `Some` for a unique `relativePath` match and `None` when the file is absent.
 #[test]
 fn missing_file_in_version_returns_none_while_unique_match_returns_hash() {
     let hash = "a".repeat(40);

@@ -5,7 +5,7 @@
 use super::{automatic, normalized, projection};
 use serde_json::json;
 
-/// Verifies that [`automatic`] and [`normalized`] separate automatic from forced [`projection::RESOLVER`] dependency policies without mutating merged config.
+/// Verifies that [`automatic`] and [`normalized`] separate automatic from forced [`projection::RESOLVER`] dependency policies without mutating merged JSON.
 #[test]
 fn separates_automatic_policy_without_mutating_persisted_merge_config() {
     let merged = json!({projection::RESOLVER:{"policy":{

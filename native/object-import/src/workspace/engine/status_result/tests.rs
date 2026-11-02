@@ -23,6 +23,7 @@ fn result(value: Value) -> Value {
     let request: Request = serde_json::from_value(value).unwrap();
     read(&request).unwrap().1
 }
+/// Verifies that [`read`] marks modified components and propagates pending auto-tag status to dependents.
 #[test]
 fn clean_main_and_modified_dependency_autotag() {
     let input = fixture();

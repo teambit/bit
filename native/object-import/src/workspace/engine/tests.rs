@@ -23,6 +23,7 @@ static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|
         .build()
         .unwrap()
 });
+/// Monotonic counter used by [`Directory`] to allocate isolated temporary workspace engine directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Directory(PathBuf);

@@ -20,6 +20,7 @@ fn finish(value: Value) -> Value {
     let request: Request = serde_json::from_value(value).unwrap();
     apply(&request).unwrap().1
 }
+/// Verifies that [`finish`] resolves automatic peer `+^` ranges against workspace upgrades and preserves exact snap versions.
 #[test]
 fn automatic_peers_follow_workspace_upgrades_and_keep_snap_versions_exact() {
     for (policy, installed, expected) in [

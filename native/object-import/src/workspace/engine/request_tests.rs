@@ -29,6 +29,7 @@ fn outbound_prepare() -> serde_json::Value {
     })
 }
 
+/// Verifies that valid `commandOutboundPrepare` [`Request`] payloads deserialize into `Request::CommandOutboundPrepare`.
 #[test]
 fn outbound_prepare_retains_flat_transport_and_resolution_protocol() {
     let request = serde_json::from_value::<Request>(outbound_prepare()).unwrap();

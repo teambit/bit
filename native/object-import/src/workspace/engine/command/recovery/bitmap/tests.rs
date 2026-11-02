@@ -4,7 +4,7 @@
 
 use super::{project, project_snapshot};
 use serde_json::json;
-/// Verifies that [`project`] extracts `.bitmap` aspect configuration overrides without mutating the structural target.
+/// Verifies that [`project`] extracts `.bitmap` aspect configuration overrides without mutating the structural target JSON.
 #[test]
 fn keeps_bitmap_policy_separate_from_structural_target() {
     let original = json!({"component":{"rootDir":"component","config":{"teambit.dependencies/dependency-resolver@1.0.0":{"policy":{"dependencies":{"pkg":"1.0.0"}}}}}});

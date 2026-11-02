@@ -57,6 +57,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Verifies that [`read`] reloads component dependency policy from `component.json` for both object and string `componentId`s.
 #[test]
 fn current_component_policy_is_reread_without_harmony() {
     let fixture = Fixture::new();

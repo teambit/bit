@@ -5,7 +5,7 @@
 use super::reports;
 use serde_json::json;
 
-/// Verifies that [`reports`] preserves candidate order across cyclic `dependencies` and `devDependencies` graphs while excluding explicitly selected IDs.
+/// Verifies that [`reports`] preserves candidate order across cyclic `dependencies` and `devDependencies` graphs while excluding selected IDs.
 #[test]
 fn transitive_cycle_preserves_candidate_order_and_excludes_selected() {
     let rows = vec![

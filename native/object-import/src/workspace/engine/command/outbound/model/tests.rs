@@ -24,6 +24,7 @@ fn resolves_scoped_and_unscoped_staged_ids() {
     assert!(requested(&["one@2.0.0".to_owned()], rows, false).is_err());
 }
 
+/// Verifies that [`requested`] rejects ambiguous unscoped component names when multiple scopes share the name.
 #[test]
 fn unscoped_identity_must_be_unambiguous() {
     let rows = vec![

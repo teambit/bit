@@ -40,6 +40,7 @@ fn legacy_and_historical_unscoped_aliases_do_not_enter_harmony_projection() {
     }
 }
 
+/// Verifies that semantic status hashes remain invariant across Harmony schema versions and storage defaults after [`project`].
 #[test]
 fn status_semantic_hash_is_independent_of_harmony_schema_and_storage_defaults() {
     let old = json!({"schema":"1.0.0","mainFile":"index.js","files":[{"relativePath":"index.js","file":"a".repeat(40),"name":"index.js","test":false}],

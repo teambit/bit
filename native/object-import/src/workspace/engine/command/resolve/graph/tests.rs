@@ -32,6 +32,7 @@ fn malformed_component_aspect_identity_is_not_silently_dropped() {
     assert!(edges(&root, &version).is_err());
 }
 
+/// Verifies that `traverse` uses saved graph leaves without requiring external `Component` or `Version` loose objects.
 #[test]
 fn saved_graph_leaf_does_not_require_external_model_or_version_objects() {
     let directory = crate::workspace::engine::command::scratch::Directory::create().unwrap();

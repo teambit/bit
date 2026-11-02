@@ -5,7 +5,7 @@
 use super::validate_target;
 use serde_json::json;
 
-/// Verifies that [`validate_target`] declines incoming application files before autosnap allocation.
+/// Verifies that [`validate_target`] declines incoming application files (`.bit-app.ts`, `.node-app.js`, `.react-app.mjs`) before autosnap allocation.
 #[test]
 fn incoming_fast_forward_application_files_decline_before_autosnap_allocation() {
     for path in ["apps/new.bit-app.ts", "server.node-app.js", "client.react-app.mjs"] {

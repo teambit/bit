@@ -42,6 +42,7 @@ impl Drop for Fixture {
         let _removed = fs::remove_dir_all(&self.0);
     }
 }
+/// Verifies that [`SourceOverlay`] insertions and removals update [`resolve_one`] and [`Budget`] reads without mutating disk files.
 #[test]
 fn added_and_deleted_candidates_change_resolution_without_touching_disk() {
     let fixture = Fixture::new();

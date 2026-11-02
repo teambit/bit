@@ -42,6 +42,7 @@ fn an_ignored_issue_does_not_block_the_snap() {
     assert!(output.is_empty());
 }
 
+/// Verifies that [`capture_issues`] records `MissingManuallyConfiguredPackages` receipts for non-fast-forward rows and declines unknown issues.
 #[test]
 fn snap_issue_receipt_preserves_visible_identity_and_serialized_packages() {
     let issues = json!([{"type":"MissingManuallyConfiguredPackages","data":r#"["@types/node","@types/jest"]"#}]);

@@ -6,7 +6,7 @@ use super::{Prepare, component_controls, proof};
 use crate::workspace::engine::command::{lane_context, scratch::Directory};
 use serde_json::json;
 use std::fs;
-/// Verifies that [`component_controls`] and [`lane_context`] addition proofs detect concurrent filesystem changes before commit.
+/// Verifies that [`component_controls`] and [`lane_context`] addition [`proof`]s detect concurrent filesystem changes before commit.
 #[test]
 fn inactive_metadata_and_new_directory_are_revalidated_before_publication() {
     let root = Directory::create().unwrap();

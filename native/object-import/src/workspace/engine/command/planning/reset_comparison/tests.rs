@@ -5,7 +5,7 @@
 use super::prove_changed;
 use serde_json::json;
 
-/// Verifies that [`prove_changed`] accepts only actual file content or inventory differences while ignoring `.bitmap` and duplicate rows.
+/// Verifies that [`prove_changed`] accepts only actual file content or inventory differences while ignoring `.bitmap` and duplicate file rows.
 #[test]
 fn only_different_content_or_inventory_proves_reset_without_dependencies() {
     let hash = "a".repeat(40);

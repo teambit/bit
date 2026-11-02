@@ -50,6 +50,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+/// Verifies that [`detect`] resolves package dependencies, `@types/*` dev dependencies, and file lifecycles with [`proof`] binding.
 #[test]
 fn detects_packages_types_and_original_file_lifecycles() {
     let fixture = Fixture::new();

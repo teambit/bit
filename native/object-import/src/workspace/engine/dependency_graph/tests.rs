@@ -51,6 +51,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+/// Verifies that [`apply`] traverses cyclic imports and opaque files in deterministic depth-first order.
 #[test]
 fn traverses_cycles_and_opaque_files_with_deterministic_order() {
     let fixture = Fixture::new();

@@ -32,6 +32,7 @@ fn skipped(to: &str, model: Option<&Value>, version: &str, semver: &Value) -> Va
     .unwrap()
 }
 
+/// Verifies that [`select`] emits canonical skip messages for unmodified `reset` and new `head` components.
 #[test]
 fn reset_clean_and_new_components_use_existing_selection_messages() {
     let model = json!({"head":"a".repeat(40),"versions":{"1.0.0":"a".repeat(40)}});

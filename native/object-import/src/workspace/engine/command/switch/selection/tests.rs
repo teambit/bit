@@ -18,6 +18,7 @@ fn switch_patterns_preserve_multimatch_order_exclusion_reinclusion_and_ignore_ve
     );
     assert_eq!(filter("!scope/alpha", &entries).unwrap(), ["scope/beta", "scope/nested/alpha"]);
 }
+/// Verifies that [`filter`] matches against full `scope/name` component IDs and returns the published error when nothing matches.
 #[test]
 fn switch_patterns_use_full_id_and_no_match_is_the_published_error() {
     let error = filter("alpha", &[entry("scope/alpha")]).err().unwrap();

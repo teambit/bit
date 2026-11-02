@@ -21,6 +21,7 @@ fn raw_with(value: &Value, snapshots: &mut crate::workspace::snapshots::State) -
     (serde_json::from_slice(&output[..newline]).unwrap(), output[newline + 1..].to_vec())
 }
 
+/// Verifies that retained binary reads via [`raw_with`] preserve the original BOM-stripped observation after disk deletion.
 #[test]
 fn explicitly_retained_reads_keep_the_original_observation_after_disk_deletion() {
     let directory = Directory::new();

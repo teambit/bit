@@ -53,6 +53,7 @@ fn serve(status: &str, body: Vec<u8>) -> (String, thread::JoinHandle<String>) {
 fn network() -> Network {
     Network::new(&GlobalConfig::new(), "2.2.94", Some("local.scope"), None).unwrap()
 }
+/// Verifies that [`fetch_http`] fetches a remote `Lane` object via `POST /api/scope/fetch` and retains `updateDependents`.
 #[test]
 fn fetches_remote_lane_and_retains_hidden_entries() {
     let hash = "a".repeat(40);

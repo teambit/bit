@@ -35,6 +35,7 @@ fn artifact_bytes_are_hashed_without_source_normalization_and_retained_as_read_p
     assert!(proof::verify(&proofs).is_err());
 }
 
+/// Verifies that [`artifacts`] rejects artifact paths outside `artifactRoot` or mismatched `relativePath` bindings.
 #[test]
 fn artifacts_must_be_confined_to_the_private_root_and_bound_to_the_declared_file() {
     let directory = Directory::create().unwrap();

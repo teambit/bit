@@ -37,6 +37,7 @@ fn resolved_versions_precede_appended_default_scope_without_changing_scoped_orde
     }
 }
 
+/// Verifies that [`serialize`] declines empty objects, unscoped strings, and non-string/object JSON values.
 #[test]
 fn malformed_component_id_inputs_decline_cleanly() {
     assert!(serialize(&json!({}), false).is_err());

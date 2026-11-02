@@ -43,6 +43,7 @@ fn older_snapshot_and_transitive_dependents_keep_lane_order_and_original_trigger
     );
 }
 
+/// Verifies that [`reports`] cascades peer and aspect dependencies while ignoring core aspect names and newly added edges.
 #[test]
 fn peer_and_aspect_dependencies_participate_but_core_names_and_changed_edges_do_not() {
     let candidates = [

@@ -38,6 +38,7 @@ fn selected_major_and_automatic_patch_keep_separate_semantic_allocations() {
     assert_eq!(materials[0].model["versions"], json!({"1.2.3":"a"}));
 }
 
+/// Verifies that [`plan`] declines before assigning any semantic versions when `exactVersion` already exists in `versions`.
 #[test]
 fn existing_exact_tag_declines_before_any_semantic_assignment() {
     let mut materials = [material("scope/selected", false, &json!({"1.2.3":"a"}))];

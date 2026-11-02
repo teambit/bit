@@ -31,6 +31,7 @@ fn unversioned_workspace_aspect_keeps_stored_version_for_merge_identity() {
     assert_eq!(selected[0]["data"], json!({"loaded":true}));
 }
 
+/// Verifies that [`extensions`] replaces dynamic slot data from [`Defaults`] while preserving extension order and unknown fields.
 #[test]
 fn default_load_replaces_dynamic_data_preserving_entry_order_and_unknown_data_fields() {
     let stored = json!([

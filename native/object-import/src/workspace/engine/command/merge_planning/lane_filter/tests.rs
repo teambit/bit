@@ -6,7 +6,7 @@ use super::prepare_hidden_metadata;
 use crate::workspace::engine::{command::capture::Captured, status_models::comparison::Target};
 use serde_json::json;
 
-/// Verifies that [`prepare_hidden_metadata`] preserves resolver extension data, hydrates dependency `packageName` fields, and retains updated policy config.
+/// Verifies that [`prepare_hidden_metadata`] preserves resolver extension data, hydrates dependency `packageName` fields, and retains updated policy config on [`Captured`].
 #[test]
 fn model_only_projection_preserves_resolver_data_and_hydrates_package_names() {
     let dependency = json!({"scope":"scope","name":"dep","version":"a".repeat(40)});

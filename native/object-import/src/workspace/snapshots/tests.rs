@@ -37,6 +37,7 @@ fn ownership_requires_the_exact_read_token_path_and_disk_identity() {
     assert!(State::default().get(token, &original.path, &original.raw_hash).is_none());
 }
 
+/// Verifies that [`State::retain`] evicts oldest [`Observation`]s when exceeding either [`MAX_BYTES`] or [`MAX_FILES`].
 #[test]
 fn snapshots_evict_oldest_observations_at_both_limits() {
     let original = snapshot(MAX_BYTES / 2 + 1);

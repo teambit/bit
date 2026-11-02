@@ -30,6 +30,7 @@ fn explicit_all_merge_preserves_bitmap_order_and_scoped_nested_names() {
     assert!(selected(&request("**"), &json!({"targets":[]})).is_err());
 }
 
+/// Verifies that [`selected`] rejects `**` selection when target `directory` roots overlap.
 #[test]
 fn explicit_all_still_rejects_overlapping_roots_before_selection() {
     let context = json!({"targets":[

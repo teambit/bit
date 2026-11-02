@@ -37,6 +37,7 @@ fn unavailable_lane_only_bitmap_rows_remain_tracked_for_later_switches() {
     assert!(ids.contains("scope/comp"));
 }
 
+/// Verifies that [`progress::import_count`] counts only selected uncached lane heads and newly added targets.
 #[test]
 fn checkout_import_counts_selected_cached_ids_and_additions_not_entire_lane() {
     let context = json!({"lane":{"switchFetched":true,"switchLaneHeads":{

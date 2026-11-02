@@ -28,6 +28,7 @@ fn environment_names_preserve_hyphens_and_jsonc_preserves_url_strings() {
     );
 }
 
+/// Verifies that [`super::render_scope_json`] formats `ScopeJson` objects with 4-space indentation and no trailing newline.
 #[test]
 fn scope_json_rendering_has_four_space_indentation_without_a_final_newline() {
     let scope = json!({"name":"local.scope","lanes":{"current":"main"}});

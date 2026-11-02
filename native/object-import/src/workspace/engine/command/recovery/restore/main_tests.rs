@@ -6,7 +6,7 @@ use super::Main;
 use serde_json::json;
 use std::fs;
 
-/// Verifies that [`Main`] backup preparation requires unique component models and matching `.bit/index.json` entries.
+/// Verifies that [`Main::prepare`] requires unique component models and matching `.bit/index.json` entries before publication.
 #[test]
 fn main_backups_require_unique_models_and_a_matching_index_before_publication() {
     let root = tempfile::tempdir().unwrap();

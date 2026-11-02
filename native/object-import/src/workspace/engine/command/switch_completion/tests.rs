@@ -32,6 +32,7 @@ fn prepare(root: &Path, publish_checkout: bool) -> (bitmap::Prepared, Retained) 
 fn read(root: &Path) -> Value {
     crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).unwrap()).unwrap()
 }
+/// Verifies that two-phase `.bitmap` checkout and [`Retained`] lane finalization record distinct preimages and history reasons.
 #[test]
 fn checkout_and_lane_finalization_have_distinct_preimages_and_reasons() {
     let directory = tempfile::tempdir().unwrap();

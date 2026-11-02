@@ -52,6 +52,7 @@ process.stdout.write(JSON.stringify(q.values.map(v=>JSON.stringify(revive(v),nul
     serde_json::from_slice(&output.stdout).unwrap()
 }
 
+/// Verifies that [`stringify`] matches the Node [`oracle`] across seeded binary64 floats, UTF-16 strings, and own property keys.
 #[test]
 fn seeded_binary64_utf16_and_own_keys_match_node_stringify() {
     let mut seed = 0xc019cafe1637_u64;

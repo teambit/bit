@@ -32,6 +32,7 @@ fn file_status_rejects_invalid_hashes_and_oversized_batches_without_a_prefix() {
     assert_eq!(empty["data"]["unchanged"], json!([]));
 }
 
+/// Verifies that `fileStatus` [`response`] marks a target entry unchanged when both `relativePath` and `hash` match.
 #[test]
 fn file_status_marks_target_unchanged_only_when_path_and_hash_match() {
     let item = json!({"relativePath":"index.ts","hash":"c".repeat(40)});

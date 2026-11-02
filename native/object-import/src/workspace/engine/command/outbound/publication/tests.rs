@@ -40,6 +40,7 @@ fn prepares_remote_refs_independently_per_scope() {
     assert_eq!(second, vec![json!({"id":{"scope":"scope.two","name":"two"},"head":"222"})]);
 }
 
+/// Verifies that [`validate_selected`] requires a configured remote host entry for every selected export scope.
 #[test]
 fn validates_host_for_every_selected_scope() {
     let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];

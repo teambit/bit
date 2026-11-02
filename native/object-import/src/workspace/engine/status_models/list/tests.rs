@@ -43,6 +43,7 @@ fn parse_lane_heads_supports_string_and_object_component_ids() {
     assert_eq!(heads.len(), 2);
 }
 
+/// Verifies that [`parse_lane_heads`] returns an empty map when the `Lane` `components` array is empty.
 #[test]
 fn empty_lane_components_array_produces_empty_head_map() {
     let heads = parse_lane_heads(&json!({"components": []}), "lane.scope").unwrap();

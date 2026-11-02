@@ -28,6 +28,7 @@ fn missing_and_duplicate_pending_selections_decline() {
     assert!(select(&targets, &[], None).is_err());
 }
 
+/// Verifies that [`select`] preserves workspace target order for explicit subsets and rejects unlisted pending rows.
 #[test]
 fn explicit_subset_preserves_target_order_and_rejects_unlisted_pending_rows() {
     let targets = vec![json!({"identity":"s/a"}), json!({"identity":"s/b"})];

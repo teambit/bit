@@ -52,6 +52,7 @@ fn large_single_file_can_use_the_shared_request_budget() {
         6 * 1024 * 1024,
     );
 }
+/// Verifies that parallel file batch reads via [`response`] enforce exact aggregate byte limits without returning partial data.
 #[test]
 fn parallel_reads_preserve_exact_aggregate_limit_and_return_no_partial_data() {
     let directory = Directory::new();

@@ -50,6 +50,7 @@ fn projected_workspace_activates_written_inactive_targets_without_excluded_or_ke
     );
 }
 
+/// Verifies that `scope::apply` matches a versioned stored aspect by its unversioned merged config identity.
 #[test]
 fn merged_scope_config_finds_versioned_aspect_by_unversioned_identity() {
     let current = json!([

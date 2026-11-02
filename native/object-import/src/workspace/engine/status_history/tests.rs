@@ -50,6 +50,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Verifies that [`validate`] and [`commit`] verify the entire [`Request`] readset before writing any history object.
 #[test]
 fn validates_whole_batch_before_writing_any_history() {
     let fixture = Fixture::new();

@@ -46,6 +46,7 @@ fn policy_update_keeps_entry_comments_and_sorts() {
     assert_eq!(document.to_string(), golden::POLICY_EDIT);
 }
 
+/// Verifies that removing and re-adding a [`Document`] property preserves its comments while appending new properties last.
 #[test]
 fn readded_property_keeps_comments_and_new_one_goes_last() {
     let (_, input, ..) = golden::CASES

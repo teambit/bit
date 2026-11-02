@@ -59,6 +59,7 @@ fn fast_forward_marks_hash_and_preserves_existing_local_metadata_and_tags() {
     assert_eq!(selection::versions::label(&updated, &head), "2.0.0");
 }
 
+/// Verifies that [`model`] replaces `state` without `versions` and preserves `orphanedVersions` tag precedence.
 #[test]
 fn fast_forward_replaces_state_without_versions_and_keeps_orphan_tag_precedence() {
     let head = "c".repeat(40);

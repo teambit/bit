@@ -48,6 +48,7 @@ fn overlay_manifest_rejects_unknown_and_duplicate_entries() {
     assert!(capture::validate(&target).is_err());
 }
 
+/// Verifies that [`capture::source_path`] rejects overlay paths that escape `sourceOverlayRoot`.
 #[test]
 fn overlay_sources_must_stay_inside_the_private_root() {
     let fixture = Fixture::new();

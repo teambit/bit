@@ -57,7 +57,7 @@ process.stdout.write(JSON.stringify(rows));
     }
 }
 
-/// Verifies that [`snapshot_projection::identity`] produces distinct deterministic 40-hex hashes for `Component` and `VersionHistory`.
+/// Verifies that [`snapshot_projection::identity`] produces distinct deterministic 40-hex hashes for `Component` and `VersionHistory` from [`js_json::Value`] fields.
 #[test]
 fn component_and_history_identities_are_deterministic_from_scope_and_name() {
     let fields = js_json::Value::Object(vec![

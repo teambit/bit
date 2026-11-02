@@ -25,7 +25,7 @@ fn distinct_components_cannot_share_a_snapshot_hash() {
     assert!(allocations(&materials, &receipt).is_err());
 }
 
-/// Verifies that [`allocations`] maps distinct snapshot hashes to their corresponding [`Material`] component identities.
+/// Verifies that [`allocations`] maps distinct snapshot hashes to their corresponding [`Material`] component identities in `receipt`.
 #[test]
 fn distinct_hashes_map_cleanly_to_each_component_identity() {
     let material = |identity: &str| Material {

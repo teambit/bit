@@ -33,6 +33,7 @@ impl Drop for Scratch {
     }
 }
 
+/// Verifies that [`Prepared::stage`] rejects stale control or object preimages before publishing [`HistoryBytes`].
 #[test]
 fn stale_discovery_prevents_history_publication_even_without_transfer_batches() {
     for relative in [

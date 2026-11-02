@@ -32,6 +32,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Verifies that [`document`] preserves `__specific` extension precedence and `propagate` settings in `component.json`.
 #[test]
 fn scope_projection_preserves_specific_precedence_and_propagation() {
     let stored = json!({"extensions":[

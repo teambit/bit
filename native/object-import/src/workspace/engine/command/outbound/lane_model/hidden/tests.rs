@@ -21,6 +21,7 @@ fn history(id: &str, old: &str, new: &str) -> model::HistoryBytes {
         hashes: vec![old.into(), new.into()],
     }
 }
+/// Verifies that [`merge`] reconciles advanced, diverged, remote-only, and promoted visible lane dependents.
 #[test]
 fn reconciles_advanced_diverged_missing_and_promoted_entries() {
     let old = "a".repeat(40);

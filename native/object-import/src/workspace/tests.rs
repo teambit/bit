@@ -35,6 +35,7 @@ impl Drop for Directory {
     }
 }
 
+/// Encodes a binary workspace materialization frame for `files` (`(path, overwrite, contents)`).
 fn request(files: &[(&Path, bool, &[u8])]) -> Vec<u8> {
     let mut bytes = 19_u32.to_be_bytes().to_vec();
     bytes.extend_from_slice(&(files.len() as u32).to_be_bytes());

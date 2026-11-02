@@ -21,6 +21,7 @@ fn begin(directory: &Directory, owner: &mut State) -> Value {
         owner,
     )
 }
+/// Finishes the inventory session identified by `token` using `owner` via [`request`].
 fn finish(token: u64, owner: &mut State) -> Value {
     request(
         &json!({"kind":"inventoryFinish","token":token,"combined":{"rules":[]},

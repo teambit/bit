@@ -36,6 +36,7 @@ fn newest_orphaned_tag_wins_when_no_normal_tag_exists() {
     );
 }
 
+/// Verifies that head `teambit.component/remove` metadata marks historical [`row`]s deleted without hiding normal [`tags`].
 #[test]
 fn removal_metadata_is_projected_from_head_over_historical_tags() {
     let hash = "a".repeat(40);

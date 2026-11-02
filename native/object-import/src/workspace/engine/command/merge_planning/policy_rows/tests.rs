@@ -5,7 +5,7 @@
 use super::sorted_files;
 use serde_json::json;
 
-/// Verifies that [`sorted_files`] sorts file paths by `UTF-16` code units without mutating the input slice.
+/// Verifies that [`sorted_files`] sorts relative file paths by `UTF-16` code units without mutating the input slice.
 #[test]
 fn dependency_roots_follow_bitmap_sort_without_reordering_materials() {
     let files = vec![

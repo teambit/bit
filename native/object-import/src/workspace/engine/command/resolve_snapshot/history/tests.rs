@@ -56,6 +56,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Builds a synthetic [`Material`] fixture for `scope/component` at `head` with `tagged_version` set to `"2.0.0"`.
 fn material(head: &str) -> Material {
     Material {
         identity: "scope/component".into(),
