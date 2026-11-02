@@ -38,6 +38,7 @@ fn cmd_with_globals_and_env(
     Helper::cmd_in_with(&helper.scopes.local_path, line, &env)
 }
 
+/// Runs `bit <line>` with `BIT_GLOBALS_DIR=globals` via [`cmd_with_globals`] and returns `stdout` on success.
 fn run_with_globals(helper: &Helper, globals: &Path, line: &str) -> String {
     let run = cmd_with_globals(helper, globals, line);
     assert!(

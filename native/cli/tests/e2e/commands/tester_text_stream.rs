@@ -46,6 +46,7 @@ fn text_single_explicit_test_streams_jest_report() {
     assert!(result.status.success());
 }
 
+/// Verifies `bit test` preserves inherited subprocess stdout and stderr output via [`without_duration`] and [`jest_times`].
 #[test]
 fn text_single_test_preserves_inherited_subprocess_output() {
     let helper = support::workspace(1, true);

@@ -49,6 +49,7 @@ fn detail_error_order(output: &str) -> String {
     data[0]["data"]["errors"] = serde_json::json!([{}]);
     serde_json::to_string_pretty(&data).unwrap()
 }
+/// Compares multi-component `bit test --junit` runs with suite-level error normalization via [`detail_error_order`] and [`project`].
 fn compare_error(helper: &Helper, command: &str) -> Run {
     let remote = move_paths::support::tree(&helper.scopes.remote_path);
     let result = support::compare_with_artifacts(helper, command, detail_error_order, &project);

@@ -38,6 +38,7 @@ pub fn setup_git_remote(helper: &Helper) -> PathBuf {
     bare_repo_path
 }
 
+/// Populates `comp1` and `comp2`, tags and exports them, commits `.gitignore` and sources, and pushes the default branch.
 pub fn setup_components_and_initial_commit(helper: &Helper) -> String {
     helper.output_file("comp1/index.js", &comp1_src("initial"));
     helper.output_file("comp2/index.js", &comp2_src("initial"));

@@ -60,6 +60,7 @@ fn soft_tag_then_persist_matches_node() {
     assert_eq!(native_status, parse(&node_status.stdout));
 }
 
+/// Verifies `bit tag --soft --increment preminor --prerelease-id beta` followed by `--persist` preserves `Node.js` rejection.
 #[test]
 fn soft_prerelease_persist_preserves_node_rejection() {
     let helper = Helper::new();

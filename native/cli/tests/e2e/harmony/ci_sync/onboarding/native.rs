@@ -67,6 +67,7 @@ fn onboarding_keeps_unrelated_staged_changes_and_force_adds_only_ignored_outputs
     assert!(result.stdout.contains("git add -f --"));
 }
 
+/// Reads the generated `.github/workflows/*.yml`, `AGENTS.md`, and `workspace.jsonc` files into a [`BTreeMap`].
 fn generated(helper: &Helper) -> BTreeMap<&'static str, Vec<u8>> {
     [
         ".github/workflows/bit-sync.yml",

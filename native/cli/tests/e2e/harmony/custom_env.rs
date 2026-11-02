@@ -10,7 +10,7 @@ use crate::{
 };
 use serde_json::json;
 
-/// Verifies custom environment resolution errors, `NonLoadedEnv` and `RemovedEnv` issues, and `bit env replace` ([`parse`]).
+/// Verifies custom environment resolution errors, `NonLoadedEnv` and `RemovedEnv` issues, and `bit env replace` ([`Helper`], [`parse`]).
 #[test]
 fn custom_env_issues_tag_untag_and_env_replacement() -> KnownResult<()> {
     let helper = Helper::new();

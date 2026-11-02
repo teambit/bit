@@ -56,6 +56,7 @@ fn junit_reports_pass_fail_skip_todo_and_suite_errors() {
     }
 }
 
+/// Verifies `--junit` preserves empty test suites and non-zero process exit codes via [`compare`].
 #[test]
 fn junit_empty_tests_and_exit_code_preserve_output() {
     let helper = move_paths::support::workspace(1, true);

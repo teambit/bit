@@ -8,6 +8,7 @@ mod lane;
 mod registry;
 /// End-to-end tests for `--root` workspace component version bump isolation during `bit tag`.
 mod root;
+/// End-to-end tests for `bit tag --soft` and `bit tag --persist` `.bitmap` staging.
 mod soft;
 mod states;
 mod unlinked;

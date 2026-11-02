@@ -17,7 +17,7 @@ fn setup_git_remote(helper: &Helper) -> PathBuf {
     helper.git(&format!("remote add origin {}", bare_repo_path.display()));
     bare_repo_path
 }
-/// Populates `count` chained components (`comp1` -> ... -> `compN`) and runs `bit link --rewire`.
+/// Populates `count` chained components (`comp1` -> ... -> `compN`) and runs `bit link --rewire` ([`Helper`]).
 fn populate_fast(helper: &Helper, count: usize) {
     for idx in 1..=count {
         let next_idx = idx + 1;

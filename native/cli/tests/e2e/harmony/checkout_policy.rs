@@ -51,6 +51,7 @@ fn set_policy(helper: &Helper, version: &str) {
     fs::write(&path, format!("// retain checkout policy comment\n{text}")).unwrap();
 }
 
+/// Normalizes `(completed in ...)` duration suffixes across `bit checkout` stdout lines.
 fn stable_output(output: &str) -> String {
     output
         .lines()

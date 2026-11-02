@@ -64,6 +64,7 @@ fn a_nested_new_component_can_take_files_previously_owned_by_the_root() {
     assert_eq!(bitmap["nested/member"]["rootDir"], "nested");
     assert!(fs::read(helper.scopes.local_path.join("nested/index.js")).is_ok());
 }
+/// Verifies that missing or reserved root component IDs and duplicate `--root` registrations match `Node.js` errors ([`compare`]).
 #[test]
 fn root_flag_id_and_existing_root_collisions_match_node() {
     for command in ["add . --root", "add comp1 -i root --root", "add . -i second-root --root"] {

@@ -38,6 +38,7 @@ fn empty_repository() -> Helper {
     helper
 }
 
+/// Verifies that `.gitignore`-matched workflow files are force-added without committing unrelated staged files ([`empty_repository`]).
 #[test]
 fn ignored_workflows_are_force_added_without_committing_unrelated_staged_files() {
     let helper = empty_repository();

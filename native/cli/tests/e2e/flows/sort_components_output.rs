@@ -32,6 +32,7 @@ fn after_adding_components_status_new() {
     assert!(output.contains("new components"), "{output}");
 }
 
+/// Asserts that `bit status` sorts newly added components alphabetically ([`assert_sorted_alphabetically`]).
 /// basic flow with dependencies › after adding components › bit status › should show new components sorted alphabetically
 #[test]
 fn after_adding_components_status_sorted() {

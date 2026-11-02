@@ -74,6 +74,7 @@ pub(super) fn stable_output(output: &str) -> String {
         .join("\n")
 }
 
+/// Verifies that a failing `onLoad` callback during checkout/revert aborts without mutating `.bitmap` or sources ([`failed_callback_command`]).
 #[test]
 fn failed_checkout_callback_is_not_replayed_and_keeps_the_workspace() {
     let helper = super::snapshot_environments::callback_workspace(false);

@@ -45,6 +45,7 @@ fn checkout_reset_after_local_delete() {
     assert!(!status_after.contains("deleted components"));
 }
 
+/// Verifies exporting a newly created component with the same name as a remotely deleted component warns the user ([`remote`]).
 /// bit delete command › deleting component then creating a new one with the same name
 #[test]
 fn deleting_component_then_creating_a_new_one_with_same_name() {

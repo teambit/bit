@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
-/// Verifies that used peer dependencies are saved only in `peerPackageDependencies` while unused ones are omitted.
+/// Verifies that used peer dependencies are saved only in `peerPackageDependencies` while unused ones are omitted ([`Helper`], [`parse`]).
 #[test]
 fn peer_dependencies_regular_and_unused_in_code() {
     let helper = Helper::new();

@@ -28,6 +28,7 @@ fn compare_with(helper: &Helper, command: &str, ci: bool) -> crate::helper::Run 
     compare_owned(helper, command, ci, true)
 }
 
+/// Runs `command` against both `Node.js` and Rust, asserts `expected_native` ownership, and verifies `.bitmap` and source parity.
 fn compare_owned(
     helper: &Helper,
     command: &str,

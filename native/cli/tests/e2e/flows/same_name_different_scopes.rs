@@ -33,7 +33,7 @@ fn add_remote(helper: &Helper, name: &str, path: &Path) {
     );
 }
 
-/// Reads `.bitmap` from `helper.scopes.local_path` without its leading comment header.
+/// Reads `.bitmap` from `helper.scopes.local_path` without its leading comment header via [`parse`].
 fn read_bitmap(helper: &Helper) -> Value {
     let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     parse(&text[text.find('{').unwrap()..])

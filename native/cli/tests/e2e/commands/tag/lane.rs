@@ -29,7 +29,7 @@ fn soft_tag_populates_missing_lane_history_once_with_released_full_state() {
     crate::commands::add::support::compare(&helper, "tag --soft bar/foo --minor --message revised");
 }
 
-/// Verifies `bit tag --soft` on a lane preserves the lane graph and `.bitmap` while `--persist` delegates.
+/// Verifies `bit tag --soft` on a lane preserves the lane graph and [`bitmap`] while `--persist` delegates.
 #[test]
 fn soft_tag_on_lane_keeps_lane_graph_and_matches_released_bitmap() {
     let helper = Helper::new();

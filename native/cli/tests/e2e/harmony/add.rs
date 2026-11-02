@@ -8,4 +8,5 @@ mod callbacks;
 mod inspection;
 /// End-to-end environment and variant policy tests for `bit add --root`.
 mod policy;
+/// End-to-end workspace-root ownership and collision tests for `bit add --root`.
 mod root;

@@ -8,6 +8,7 @@ mod add;
 mod add_harmony;
 /// End-to-end Harmony `bit aspect` command parity tests.
 mod aspect;
+/// End-to-end `.bitignore` and `.gitignore` tracking precedence tests.
 mod bit_ignore;
 mod bitmap_states;
 mod build_and_compilers_harmony;

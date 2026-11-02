@@ -35,6 +35,7 @@ fn tagging_the_component_should_not_throw_any_error() {
     assert!(tag_output.contains("1 component(s) tagged"), "{tag_output}");
 }
 
+/// Verifies exporting and importing a component with a CRLF big file via [`setup_big_file`] succeeds without errors.
 /// big text file › Windows format (\\r\\n) › exporting and importing the component › should work with no errors
 #[test]
 fn should_work_with_no_errors() {

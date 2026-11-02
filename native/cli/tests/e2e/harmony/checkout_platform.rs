@@ -61,6 +61,7 @@ fn compare(helper: &Helper, command: &str) -> PathBuf {
     baseline
 }
 
+/// Verifies that checking out a stored version preserves binary and CRLF bytes and removes obsolete files ([`versions`], [`compare`]).
 #[test]
 fn checkout_stored_sources_preserves_binary_and_platform_eol_and_removes_obsolete_files() {
     let helper = versions();

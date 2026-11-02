@@ -36,6 +36,7 @@ fn multi_test_files_select_only_requested_paths_and_deduplicate() {
     assert_effects(&helper);
 }
 
+/// Verifies explicit multi-component test files combine `--summary` and `--coverage` accurately via [`fixture`] and [`assert_effects`].
 #[test]
 fn multi_test_files_combine_summary_and_coverage() {
     let helper = fixture();

@@ -48,6 +48,7 @@ fn tag_unlinked_component_matches_node() {
     compare(&helper, &node_workspace, "tag bar/foo --message first");
 }
 
+/// Verifies `bit tag --persist=skip-build` on an unlinked soft-tagged component recreates its `node_modules` package via [`compare`].
 #[test]
 fn persist_unlinked_soft_tag_matches_node() {
     let helper = Helper::new();

@@ -44,6 +44,7 @@ fn builtin_test_coverage_collection_reports_metrics_and_removes_artifacts() {
     support::compare_with_stdout(&helper, "test comp1 --json", timings);
 }
 
+/// Verifies `bit test --update-snapshot` updates the snapshot file and reuses it on subsequent runs via [`timings`].
 #[test]
 fn builtin_test_snapshot_update_changes_the_exact_snapshot_then_reuses_it() {
     let helper = support::workspace(1, true);

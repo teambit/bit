@@ -12,6 +12,7 @@ const IS_TYPE_V2: &str = "module.exports = function isType() { return 'got is-ty
 /// Fixture source for `utils/is-type` version 3.
 const IS_TYPE_V3: &str = "module.exports = function isType() { return 'got is-type v3'; };";
 
+/// Verifies that re-exporting or importing a diverging existing version fails without unhandled rejections ([`remote`]).
 /// merge functionality › re-exporting/importing an existing version
 #[test]
 fn re_exporting_and_importing_an_existing_version() {

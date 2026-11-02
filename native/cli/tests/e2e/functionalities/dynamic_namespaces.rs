@@ -18,6 +18,7 @@ fn setup_multi_level() -> Helper {
     helper
 }
 
+/// Verifies that `cat-component` records [`VERY_LONG_NAME`] without legacy `box` metadata ([`setup_multi_level`]).
 /// dynamic namespaces › multi-level namespace. using name "${veryLongName}" › should save the component correctly on the model
 #[test]
 fn should_save_the_component_correctly_on_the_model() {

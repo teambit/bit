@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Verifies `tag`, `status`, and `export` resynchronize `.bitmap` when local scope objects are staged ahead of `.bitmap`.
+/// Verifies `tag`, `status`, and `export` resynchronize `.bitmap` when local scope objects are staged ahead of `.bitmap` via [`Helper`].
 #[test]
 fn consumer_with_a_new_component_and_scope_with_the_same_component_as_staged() {
     let helper = Helper::new();

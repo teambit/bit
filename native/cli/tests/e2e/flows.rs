@@ -8,6 +8,7 @@ mod big_file;
 mod bitmap_deleted;
 /// End-to-end circular dependency analysis (`bit deps circular`, `bit insights circular`) and tagging tests.
 mod cyclic_dependencies;
+/// End-to-end deleted component file handling tests in `bit status` and `bit tag`.
 mod delete_files;
 mod id_with_wildcard;
 mod import_package_json;

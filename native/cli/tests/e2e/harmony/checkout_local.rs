@@ -88,7 +88,7 @@ fn checkout_reset_keeps_the_mapped_remote_refresh() {
     assert_eq!(source, fs::read_to_string(node_workspace.join("bar/foo.js")).unwrap());
 }
 
-/// Clones `helper`, runs `line` in both `Node.js` and Rust with `CI=1`, and asserts `.bitmap` and output parity.
+/// Clones `helper`, runs `line` in both `Node.js` and Rust with `CI=1`, and asserts `.bitmap` and output parity ([`PathBuf`]).
 fn checkout_like_node(helper: &Helper, line: &str) -> PathBuf {
     let node_workspace = helper.clone_workspace();
     let node = Helper::cmd_in_with(

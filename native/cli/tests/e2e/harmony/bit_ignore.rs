@@ -58,6 +58,7 @@ fn adding_bitignore_in_a_comp_dir() {
     );
 }
 
+/// Verifies that a root-level `.bitignore` excludes matching files inside component directories ([`populate_comp1`], [`component_files`]).
 /// Bit Ignore functionality › adding .bitignore in the root dir › should respect the .bitignore file and ignore according to the pattern
 #[test]
 fn adding_bitignore_in_the_root_dir() {

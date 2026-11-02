@@ -9,7 +9,7 @@ mod extra;
 use crate::helper::Helper;
 use serde_json::Value;
 
-/// Verifies workspace-root component `.bitmap` convergence after `bit snap` and nested component removal behavior ([`Value`]).
+/// Verifies workspace-root component `.bitmap` convergence after `bit snap` and nested component removal behavior ([`Helper`], [`Value`]).
 #[test]
 fn workspace_root_component_bitmap_convergence_and_removing() {
     let helper = Helper::new();

@@ -30,6 +30,7 @@ fn text_parity(helper: &Helper) {
     assert_eq!(native.stdout, node.stdout);
 }
 
+/// Verifies that `bit local-only set` reports the component in both `localOnly` and `newComponents` ([`parity`], [`text_parity`]).
 #[test]
 fn local_only_component_is_reported_without_losing_its_other_status() {
     let helper = Helper::new();

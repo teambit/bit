@@ -59,6 +59,7 @@ fn serve(listener: &TcpListener, stop: &AtomicBool, always_taken: bool) {
     }
 }
 
+/// Reads an HTTP request from `connection` and replies with `200 OK` when the version is taken or `404 Not Found` otherwise.
 fn respond(connection: &mut TcpStream, always_taken: bool) -> io::Result<()> {
     // Windows accepted sockets inherit the listener's nonblocking mode.
     connection.set_nonblocking(false)?;

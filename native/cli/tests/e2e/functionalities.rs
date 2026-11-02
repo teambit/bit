@@ -8,6 +8,7 @@ mod auto_tagging;
 mod binary_files;
 /// End-to-end `.bit/index.json` maintenance and recovery tests.
 mod components_index;
+/// End-to-end dev-dependency resolution, deduplication, and tagging tests.
 mod dev_dependencies;
 mod dynamic_namespaces;
 mod env_peer_deps_install;

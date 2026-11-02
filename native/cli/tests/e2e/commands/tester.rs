@@ -40,6 +40,7 @@ fn duration(value: &mut Value) {
     assert!(value.as_u64().is_some(), "test duration: {value}");
     *value = 0.into();
 }
+/// Verifies built-in `bit test comp1 --json` matches `Node.js` across cold docs, passing, pending, and todo tests via [`timings`].
 #[test]
 fn builtin_test_json_cold_docs_passing_pending_and_todo_match_node() {
     let helper = support::workspace(1, true);

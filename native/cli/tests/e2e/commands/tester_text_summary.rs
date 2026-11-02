@@ -45,6 +45,7 @@ fn text_summary_no_tests_and_multiple_components_match_node() {
     assert_eq!(result.status.code(), Some(1));
 }
 
+/// Verifies `bit test --summary` preserves non-zero process exit codes and filesystem side effects via [`without_duration`].
 #[test]
 fn text_summary_preserves_nonzero_exit_and_test_effects() {
     let helper = support::workspace(1, true);

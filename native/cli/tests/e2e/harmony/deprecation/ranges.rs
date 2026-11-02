@@ -38,6 +38,7 @@ fn assert_log(helper: &Helper, tag: &str, deprecated: bool) {
         .unwrap();
     assert_eq!(version["deprecated"], deprecated);
 }
+/// Verifies that `bit undeprecate` clears a persisted `--range` even when `deprecate` is `false` ([`DEPRECATION`]).
 #[test]
 fn undeprecation_clears_a_range_even_when_deprecate_boolean_is_false() {
     let helper = support::workspace(1, true);

@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 /// Built-in React environment aspect ID assigned to `comp1` in `bit debug-load` tests.
 const REACT_ENV: &str = "teambit.react/react";
 
-/// Verifies human and `--json` output of `bit debug-load` with [`REACT_ENV`] as well as unknown-component error reporting.
+/// Verifies human and `--json` output of `bit debug-load` with [`REACT_ENV`] as well as unknown-component error reporting ([`Value`]).
 #[test]
 fn debug_load_command_human_json_and_unknown_component() {
     let helper = Helper::new();

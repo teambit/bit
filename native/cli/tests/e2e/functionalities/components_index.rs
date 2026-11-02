@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse, remote};
 use serde_json::json;
 
-/// Verifies `.bit/index.json` entries after tagging, exporting, removing, and re-importing a component.
+/// Verifies `.bit/index.json` entries after tagging, exporting, removing, and re-importing a component ([`config`], [`remote`]).
 #[test]
 fn after_tagging_exporting_removing_and_importing_component() {
     let helper = Helper::new();

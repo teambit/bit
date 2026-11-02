@@ -14,6 +14,7 @@ mod branch_ownership;
 mod convergence;
 /// End-to-end `bit ci sync` lane/branch reconciliation cycle tests.
 mod lane_cycle;
+/// End-to-end `bit ci sync --main` and `--dry-run` default-branch reconciliation tests.
 mod main_scope;
 mod onboarding;
 mod scopes;

@@ -52,6 +52,7 @@ fn wildcard_deprecation_and_undeprecation_change_every_matched_component() {
         assert_eq!(aspect(&helper, id, DEPRECATION).unwrap()["deprecate"], false);
     }
 }
+/// Verifies that wildcard `--new-id` and invalid `--range` arguments fail without mutating [`DEPRECATION`] config.
 #[test]
 fn wildcard_replacement_and_invalid_range_errors_do_not_publish_invalid_config() {
     for command in [r#"deprecate "**" --new-id comp1"#, "deprecate comp1 --range not-a-range"] {

@@ -43,6 +43,7 @@ pub(super) fn policy(show: &Value) -> Vec<String> {
         .collect()
 }
 
+/// Runs `bit status --json` natively and via `Node.js`, asserts parity, and returns the parsed JSON [`Value`].
 pub(super) fn status(helper: &Helper) -> Value {
     let expected = node(&helper.scopes.local_path, "status --json");
     let actual = helper.native_run("status --json");

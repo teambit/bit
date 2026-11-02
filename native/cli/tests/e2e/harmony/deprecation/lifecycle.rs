@@ -52,6 +52,7 @@ fn wildcard_import_excludes_deprecated_components_unless_requested() {
         assert_eq!(bitmap(&helper).get("comp2").is_some(), include);
     }
 }
+/// Verifies `DeprecatedDependencies` status issue reporting across dependent and dependency deprecation transitions ([`assert_dependency_issue`]).
 #[test]
 fn deprecated_dependency_issues_follow_the_dependent_and_dependency_status() {
     let helper = support::workspace(2, false);

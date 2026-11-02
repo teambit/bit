@@ -40,6 +40,7 @@ fn builtin_test_multi_summary_aggregates_passing_and_failing_components() {
     assert_eq!(result.status.code(), Some(1));
 }
 
+/// Verifies multi-component `bit test --summary` accounts for components without test files via [`summary_order`].
 #[test]
 fn builtin_test_multi_summary_accounts_for_a_component_without_tests() {
     let helper = support::workspace(2, true);

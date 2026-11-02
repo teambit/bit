@@ -9,7 +9,7 @@ use serde_json::json;
 use std::{ffi::OsStr, fs};
 /// Aspect ID for dependency-resolver policy configuration in `bit deps` tests.
 const DEP_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
-/// Verifies `bit deps blame` and `bit dependencies blame` match `Node.js` for present and absent packages ([`Helper`]).
+/// Verifies `bit deps blame` and `bit dependencies blame` match `Node.js` for present and absent packages ([`Helper`], [`KnownResult`]).
 #[test]
 fn bit_deps_blame_matches_node() -> KnownResult<()> {
     let helper = Helper::new();

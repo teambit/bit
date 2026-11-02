@@ -58,6 +58,7 @@ fn builtin_test_multi_details_collect_coverage_per_component() {
     assert!(!helper.scopes.local_path.join("coverage").exists());
 }
 
+/// Verifies multi-component `bit test` consumes stale `coverage/coverage-summary.json` files per component via [`detail_order`].
 #[test]
 fn builtin_test_multi_details_consume_stale_coverage_for_each_component() {
     let helper = support::workspace(2, true);
