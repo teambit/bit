@@ -20,6 +20,7 @@ use std::{
     path::Path,
 };
 
+/// Prepared tester execution plan holding [`Loaded`] component state, [`Session`] worker, and [`Coverage`] targets.
 pub(super) struct Plan {
     loaded: Loaded,
     tool: Option<Session>,

@@ -6,6 +6,7 @@ use crate::commands::workspace_command::format::Formatter;
 use bit_install::{model::WorkspaceComponent, workspace::BitmapEntry};
 use std::{collections::HashSet, fs};
 
+/// Standard `ECMAScript` and Node.js global identifiers excluded from undeclared-identifier lint checks.
 const KNOWN_GLOBALS: &[&str] = &[
     "Array",
     "BigInt",

@@ -25,11 +25,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Aspect ID for the built-in Node.js environment (`teambit.harmony/node`).
 const NODE_ENV: &str = "teambit.harmony/node";
 /// The Node environment's icon.
 const NODE_ENV_ICON: &str = "https://static.bit.dev/extensions-icons/nodejs.svg";
+/// Default test file glob patterns for the built-in Node environment.
 const TEST_PATTERNS: [&str; 2] = ["**/*.spec.+(js|ts|jsx|tsx)", "**/*.test.+(js|ts|jsx|tsx)"];
+/// Default documentation file glob patterns for the built-in Node environment.
 const DOCS_PATTERNS: [&str; 1] = ["**/*.docs.*"];
+/// Default composition file glob patterns for the built-in Node environment.
 const COMPOSITIONS_PATTERNS: [&str; 1] = ["**/*.composition?(s).*"];
 
 /// `VariantPolicy.mergePolices([EnvPolicy.fromConfigObject(getNodeDependencyPolicy()),

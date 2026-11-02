@@ -20,8 +20,10 @@ use std::{
     time::Duration,
 };
 
+/// Descriptor for the native `bit whoami` command.
 pub const COMMAND: Command = Command { name: "whoami", aliases: &[], run };
 
+/// Entry point for `bit whoami`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(cli_token) = parse_args(args) else {
         return Ok(Outcome::Declined("arguments outside the native `whoami` grammar".to_owned()));

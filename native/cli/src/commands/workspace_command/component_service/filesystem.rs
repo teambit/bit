@@ -4,6 +4,7 @@
 use super::{Value, invalid, json};
 use std::{io, path::Path};
 
+/// Serializes `error` at `path` for `syscall` into a Node.js-compatible `{ errno, code, syscall, path }` [`Value`].
 #[inline]
 pub(in crate::commands) fn error(
     error: io::Error,

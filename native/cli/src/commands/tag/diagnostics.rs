@@ -18,7 +18,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, ffi::OsString, fs, io, path::Path};
 
-/// Inspect a `plan_tag` error and produce a user-facing command error when the
+/// Inspects a `plan_tag` error and produces a user-facing command error when the
 /// decline is caused by a known validation failure.
 pub(super) fn diagnose(
     root: &Path,

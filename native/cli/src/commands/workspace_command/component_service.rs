@@ -9,6 +9,7 @@ mod selection;
 use serde_json::{Value, json};
 use std::io;
 
+/// Component selection options for a built-in environment service (`compile`, `lint`, `format`, `check-types`, `test`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Selection {
     pub pattern: Option<String>,
@@ -21,6 +22,7 @@ pub(in crate::commands) struct Selection {
     pub explicit_file_order: bool,
 }
 
+/// Loader progress metadata (environment ID, task name, component identities, and batch load counts).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Progress {
     pub environment: String,

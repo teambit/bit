@@ -16,6 +16,7 @@ use bit_install::policy::scope::read_proof;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Borrowed preparation state for deferred checkout/merge target capture.
 pub(super) struct Prepared<'a> {
     pub token: &'a str,
     pub context: &'a Value,
@@ -24,6 +25,7 @@ pub(super) struct Prepared<'a> {
     pub startup: Option<&'a mut Startup>,
 }
 
+/// Returns `true` when `request` uses a pattern or flag requiring deferred target selection after preparation.
 #[inline]
 pub(super) fn deferred(request: &Request<'_>) -> bool {
     matches!(request.operation, "checkout" | "merge")

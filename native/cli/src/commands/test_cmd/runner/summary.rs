@@ -3,6 +3,7 @@
 //! [`project`] normalizes component test [`Value`] results into versionless summary payloads.
 use serde_json::{Value, json};
 
+/// Projects single-component tester JSON `data` for `identity` and `environment` into a versionless summary [`Value`].
 fn project(data: &Value, identity: &str, environment: &str, message: Option<&str>) -> Value {
     let identity = identity
         .trim()

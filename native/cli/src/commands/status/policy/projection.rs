@@ -17,10 +17,13 @@ use bit_install::{
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Embedded JSON list of built-in core aspect IDs.
 const CORES: &str =
     include_str!("../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
+/// Aspect ID for the workspace variants extension (`teambit.workspace/variants`).
 const VARIANTS: &str = "teambit.workspace/variants";
 
+/// Merges stored model, variant, `component.json`, and `.bitmap` aspect configurations for `target`.
 pub(super) fn extensions(
     context: &Value,
     target: &Value,

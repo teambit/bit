@@ -26,11 +26,14 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit templates` command.
 pub const COMMAND: Command = Command { name: "templates", aliases: &[], run };
 
+/// Embedded JSON array of built-in core aspect IDs.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
+/// Parsed CLI options for `bit templates`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub show_all: bool,

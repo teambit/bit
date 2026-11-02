@@ -13,6 +13,7 @@ use std::{collections::HashSet, io};
 
 type Fields = [Map<String, Value>; 3];
 
+/// Merged manual, automatic, and environment-owned dependency policies for one component across [`FIELDS`].
 pub(super) struct Policy {
     pub(super) manual: Fields,
     pub(super) automatic: Fields,

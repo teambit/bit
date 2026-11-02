@@ -22,6 +22,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Applies `updates` to `workspace.jsonc`, `component.json`, and `.bitmap` in `root` and invalidates the deps cache.
 #[inline]
 pub(super) fn apply_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Result<()> {
     apply_workspace_jsonc_updates(root, updates)?;

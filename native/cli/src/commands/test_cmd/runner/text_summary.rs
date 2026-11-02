@@ -5,6 +5,7 @@ use crate::commands::color::Chalk;
 use serde_json::Value;
 use std::{ffi::OsString, fmt::Write};
 
+/// Borrowed view over aggregated tester totals and component test rows for text summary rendering.
 struct Summary<'a>(&'a Value);
 impl Summary<'_> {
     #[inline]

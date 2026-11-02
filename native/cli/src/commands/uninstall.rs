@@ -28,8 +28,10 @@ use std::{
     sync::Arc,
 };
 
+/// Descriptor for the native `bit uninstall` (`un`) command.
 pub const COMMAND: Command = Command { name: "uninstall", aliases: &["un"], run };
 
+/// Entry point for `bit uninstall`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Prepared { packages, cli, cwd, root } = match prepare(args)? {
         Ok(prepared) => prepared,

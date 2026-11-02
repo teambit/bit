@@ -11,8 +11,11 @@ use super::super::js::{array, decline, nullish, object};
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Aspect ID for the dependency resolver (`teambit.dependencies/dependency-resolver`).
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Aspect ID for the deprecation extension (`teambit.component/deprecation`).
 const DEPRECATION: &str = "teambit.component/deprecation";
+/// Aspect ID for the removal extension (`teambit.component/remove`).
 const REMOVAL: &str = "teambit.component/remove";
 const CORES: [&str; 13] = [
     "teambit.envs/envs",

@@ -5,6 +5,7 @@ use super::xml;
 use serde_json::Value;
 use std::{fmt::Write, io};
 
+/// Single `JUnit` `<testcase>` record extracted from a Jest assertion result.
 pub(super) struct Case {
     file: String,
     name: String,

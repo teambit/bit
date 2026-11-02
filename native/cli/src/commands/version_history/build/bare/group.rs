@@ -5,6 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Verifies that `object`'s parent directories under `root` satisfy safe group-ownership invariants.
 #[inline]
 pub(super) fn qualify_parents(
     root: &Path,

@@ -4,12 +4,14 @@
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
+/// Vertex in the `version-history` DAG holding a snap hash and outgoing parent edges.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Node {
     pub hash: String,
     pub edges: Vec<(usize, &'static str)>,
 }
 
+/// Directed acyclic version-history graph reproducing `cleargraph` insertion and topological order.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Graph {
     pub nodes: Vec<Node>,

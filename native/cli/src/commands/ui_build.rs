@@ -9,10 +9,13 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit ui-build` command.
 pub const COMMAND: Command = Command { name: "ui-build", aliases: &[], run };
 
+/// Error message emitted when `bit ui-build` is run outside a workspace and scope.
 const UNKNOWN_BUILD_ERR: &str = "unknown UI build error";
 
+/// Parsed command-line options for `bit ui-build [ui-root-name]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub ui_root_name: Option<String>,

@@ -4,6 +4,7 @@
 use crate::commands::workspace_command::filesystem_error::failure;
 use std::{fs, io, path::Path};
 
+/// Recursively removes a coverage artifact `path`, preserving the failing syscall and path on error.
 pub(super) fn directory(path: &Path) -> io::Result<()> {
     if path
         .to_str()

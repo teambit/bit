@@ -9,12 +9,16 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit watch` command.
 pub const COMMAND: Command = Command { name: "watch", aliases: &[], run };
 
+/// Error message emitted when `bit watch` is run outside a workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Deprecation warning emitted when `--import` is passed to `bit watch`.
 const DEPRECATED_IMPORT_WARN: &str =
     r#"the "--import" flag is deprecated and is now the default behavior"#;
 
+/// Parsed CLI options for `bit watch`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub verbose: bool,

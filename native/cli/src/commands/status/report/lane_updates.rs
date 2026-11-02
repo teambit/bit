@@ -6,9 +6,11 @@ use super::{Status, ids};
 use crate::commands::status::js::{array, text};
 use std::io;
 
+/// Hint line printed under the `pending updates from main` status section.
 pub(super) const UPDATES_FROM_MAIN: &str = r#"(use "bit lane merge main" to merge the changes)"#;
 
 impl Status<'_> {
+    /// Formats the `pendingUpdatesFromMain` entries for `bit status --lanes`.
     #[inline]
     pub(super) fn updates_from_main(&self) -> io::Result<Vec<String>> {
         self.updates("pendingUpdatesFromMain", "main")

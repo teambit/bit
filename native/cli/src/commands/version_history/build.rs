@@ -15,6 +15,7 @@ use std::{
     fs, io,
 };
 
+/// Evaluates the last occurrence of boolean CLI flag `bare` / `truthy` / `falsy` before `--` in `args`.
 #[must_use]
 #[inline]
 pub(super) fn has_bool_flag(args: &[OsString], bare: &str, truthy: &str, falsy: &str) -> bool {

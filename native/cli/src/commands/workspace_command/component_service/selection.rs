@@ -4,6 +4,7 @@
 use super::{Value, invalid};
 use std::io;
 
+/// Resolves `selectors` in order against `targets`, returning the deduplicated matching component [`Value`] rows.
 pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<Value>> {
     if selectors.is_empty() {
         return Ok(targets.to_vec());

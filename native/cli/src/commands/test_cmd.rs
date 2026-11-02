@@ -20,10 +20,13 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit test` (`at`) command.
 pub const COMMAND: Command = Command { name: "test", aliases: &["at"], run };
 
+/// Error message emitted when `bit test` is run outside a workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
+/// Parsed CLI options for `bit test`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub user_pattern: Vec<String>,

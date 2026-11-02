@@ -5,6 +5,7 @@
 use bit_install::output::Output;
 use std::io;
 
+/// Buffered stdout and imported object counts rendered around `StatusCmd.report` progress spinners.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Progress {
     pub(super) startup_stdout: String,
@@ -16,6 +17,7 @@ pub(super) struct Progress {
     pub(super) forked_id: Option<String>,
 }
 
+/// Emits `fetching status`, component load counts, and lane import progress messages onto `output`.
 pub(super) fn render(
     output: &Output,
     loaded: usize,

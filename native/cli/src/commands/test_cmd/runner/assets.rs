@@ -7,9 +7,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Content-addressed directory containing materialized Jest runner helper scripts.
 pub(super) struct Assets {
     pub root: PathBuf,
 }
+/// Embedded `(filename, source)` pairs written into the Jest asset cache directory.
 const FILES: [(&str, &str); 7] = [
     ("runner.cjs", include_str!("tool.cjs")),
     ("babel.cjs", include_str!("assets/babel.cjs")),

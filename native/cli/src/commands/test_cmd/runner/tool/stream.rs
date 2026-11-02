@@ -19,6 +19,7 @@ use std::{
     time::Duration,
 };
 
+/// Inherited-stdio Jest worker session controlled over a local loopback [`TcpStream`].
 pub(super) struct Stream {
     child: Child,
     input: Option<ChildStdin>,

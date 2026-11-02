@@ -16,8 +16,10 @@ use bit_workspace_config::jsonc::Document;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit use` command.
 pub const COMMAND: Command = Command { name: "use", aliases: &[], run };
 
+/// Error classification distinguishing declined fallback cases from user-facing errors.
 enum Failure {
     Declined(String),
     User(String),

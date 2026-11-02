@@ -10,9 +10,7 @@ use super::{
 use serde_json::{Map, Value, json};
 use std::io;
 
-/// `currentStatusMetadata(target, policy, output)`: what `statusCompare`
-/// compares with the stored version. Absent fields are left out, as
-/// `JSON.stringify` leaves out `undefined`.
+/// Builds `currentStatusMetadata(target, policy, output)` for comparison with the stored version (`undefined` fields omitted).
 pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::Result<Value> {
     let state = &output["state"];
     let entries = array(state.get("entries"), "dependency entries")?;

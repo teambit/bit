@@ -9,6 +9,7 @@ use crate::commands::{patterns, version_history::text};
 
 type Proofs = Vec<(PathBuf, Vec<u8>)>;
 
+/// Resolved component target metadata and object proofs for a bare-scope version-history rebuild.
 struct Target {
     scope: String,
     name: String,
@@ -17,6 +18,7 @@ struct Target {
     proofs: Proofs,
 }
 
+/// Prepares a bare-scope version-history rebuild [`Plan`] for `id` in `root`.
 pub(super) fn prepare(
     root: &ScopeRoot,
     id: &str,

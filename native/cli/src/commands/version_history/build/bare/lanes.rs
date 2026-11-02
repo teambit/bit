@@ -4,6 +4,7 @@
 use super::{Value, read};
 use std::path::{Path, PathBuf};
 
+/// Collects component head hashes across all indexed lanes in `root` for `scope`/`name`, recording object read proofs.
 pub(super) fn lane_heads(
     root: &Path,
     scope: &str,

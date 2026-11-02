@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Validated tester flags, component [`Selection`], explicit file list, and `JUnit` output path.
 pub(super) struct Settings {
     pub selection: Selection,
     pub summary: bool,

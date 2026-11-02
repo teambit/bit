@@ -4,6 +4,7 @@
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
+/// Parsed CLI options for `bit switch <lane>` or `bit lane import <lane>`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub lane: String,
@@ -14,6 +15,7 @@ pub struct Options {
     pub skip_install: bool,
     pub adoption: Adoption,
 }
+/// Lane adoption and merge-strategy options shared by `switch` and `lane import`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Adoption {
     pub alias: Option<String>,

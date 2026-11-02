@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::io;
 
 impl Status<'_> {
-    /// `pending merge`: the uncommon snaps on each side.
+    /// Formats the `pending merge` section lines showing source-only and target-only uncommon snap counts.
     pub(super) fn pending_merge(&self) -> io::Result<Vec<String>> {
         ids(self.result, "mergePendingComponents")?
             .iter()

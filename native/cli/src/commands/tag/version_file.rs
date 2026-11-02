@@ -10,11 +10,13 @@ use bit_install::policy::scope::read_proof;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Parsed `--versions-file` payload paired with its filesystem read proof.
 pub(super) struct Captured {
     pub(super) data: Value,
     pub(super) proof: Value,
 }
 
+/// Reads and validates the `--versions-file` at `entered` relative to `root` into a [`Captured`] receipt.
 pub(super) fn read(root: &Path, entered: &str) -> io::Result<Captured> {
     let entered = entered.trim();
     if entered.is_empty() {

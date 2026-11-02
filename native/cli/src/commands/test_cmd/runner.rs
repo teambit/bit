@@ -20,12 +20,14 @@ use crate::{commands::workspace_command, history::History, native::Outcome};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, time::Instant};
 
+/// Completed test execution outcome pairing the [`workspace_command::results::Report`] with termination and empty-run flags.
 struct Execution {
     report: workspace_command::results::Report,
     terminated: bool,
     empty: bool,
 }
 
+/// Prepares and runs the native `bit test` execution plan for `options` in `root`.
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, args, options) {

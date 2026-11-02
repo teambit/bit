@@ -25,11 +25,15 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit update` (`up`) command.
 pub const COMMAND: Command = Command { name: "update", aliases: &["up"], run };
 
+/// Message printed when no workspace dependencies match the user's filter patterns.
 const NO_DEPS_FOUND_MSG: &str = "No dependencies found that match the patterns";
+/// Message printed when all matched dependencies already satisfy their latest versions.
 const NO_OUTDATED_MSG: &str = "No outdated dependencies found";
 
+/// Parsed command-line options for `bit update [package-patterns...]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub patterns: Vec<String>,

@@ -24,8 +24,10 @@ use crate::native::Outcome;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 
+/// Descriptor for the native `bit version-history` (`vh`) command.
 pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"], run };
 
+/// Parsed subcommand for `bit version-history`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Subcommand {
     ShowJson(String),

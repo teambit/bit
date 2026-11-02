@@ -13,6 +13,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Sorts each component array in `result` using [`collate`] root collation or `Intl` host collation.
 pub(super) fn sort_rows(root: &Path, result: &mut Value) -> io::Result<()> {
     let mut host = None;
     let result = result.as_object_mut().ok_or_else(|| decline("status result"))?;

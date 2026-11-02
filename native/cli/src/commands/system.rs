@@ -16,8 +16,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit system` command.
 pub const COMMAND: Command = Command { name: "system", aliases: &[], run };
 
+/// Parsed subcommand for `bit system`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Parsed {
     Log,

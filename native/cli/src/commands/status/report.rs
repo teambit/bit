@@ -31,6 +31,7 @@ const TITLE_ONLY: [&str; 5] = [
 ];
 const AUTO_TAG: &str = "(these will be auto-tagged when their modified dependencies are tagged)";
 
+/// Parsed CLI presentation flags for `bit status`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Flags {
     pub lanes: bool,

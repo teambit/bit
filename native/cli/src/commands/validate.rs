@@ -19,11 +19,15 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::{component_remove::select_ids, parse_jsonc};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit validate` command.
 pub const COMMAND: Command = Command { name: "validate", aliases: &[], run };
 
+/// Error message emitted when `bit validate` is run outside a workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Ordered validation step names accepted by `--skip-tasks`.
 const VALID_TASKS: &[&str] = &["check-types", "lint", "test"];
 
+/// Parsed command-line options for `bit validate [component-pattern]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

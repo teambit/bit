@@ -1,7 +1,7 @@
 //! Native `bit tag [component-patterns...]` ([`COMMAND`]): the engine plans and writes the
 //! tags ([`resolve`]), with the tag [`options`] and [`Report`].
 //!
-//! Coordinates [`diagnostics`], [`version_file`], [`Planned`] execution, and [`versions`] output formatting.
+//! Coordinates [`diagnostics`], [`version_file`], [`Planned`] execution, [`MESSAGE_WARNING`], [`REMOTE_BUILD_WARNING`], and [`versions`] output formatting.
 
 mod diagnostics;
 mod options;

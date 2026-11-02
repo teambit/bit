@@ -9,11 +9,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Explicit test file paths and their owning component identities resolved from CLI patterns.
 pub(super) struct Selected {
     pub identities: Vec<String>,
     pub paths: Vec<PathBuf>,
 }
 
+/// Resolves explicit test file arguments in `values` against `.bitmap` component directories in `root`.
 pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Selected>> {
     if !any_existing_file(values) {
         return Ok(None);

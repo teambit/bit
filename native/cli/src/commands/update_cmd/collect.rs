@@ -19,8 +19,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Dependency lifecycle field keys inspected in policy objects.
 const POLICY_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 
+/// Configuration location where a dependency update [`Candidate`] was discovered.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Target {
     RootPolicy,

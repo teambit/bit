@@ -23,9 +23,11 @@ use bit_install::{
 use bit_object_import::{component_remove::select_ids, parse_jsonc};
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Embedded JSON array of built-in core aspect IDs.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
+/// Attempts to run `bit validate` natively in `root` for `options`, returning `Ok(None)` when delegation is needed.
 pub(super) fn try_run(
     root: &Path,
     args: &[OsString],

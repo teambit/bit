@@ -6,6 +6,7 @@ use crate::commands::{engine::Engine, status::cache::cache_root};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Lists remote scope candidates for `checkout --include-new-from-scope` via `engine`.
 #[inline]
 pub(super) fn candidates(
     engine: &mut Engine,

@@ -9,6 +9,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 
+/// Executes a remote `BuildVersionHistory` HTTP action on `remote` for `pattern` and formats the [`Outcome`].
 pub(super) fn run(
     root: &ScopeRoot,
     args: &[OsString],

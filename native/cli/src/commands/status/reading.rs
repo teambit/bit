@@ -24,6 +24,7 @@ impl From<io::Error> for ReadFailure {
     }
 }
 
+/// Reads, computes, prepares via `prepare`, and commits status caches and history for `root`.
 pub(super) fn read<Prepared>(
     root: &Path,
     home: &Path,

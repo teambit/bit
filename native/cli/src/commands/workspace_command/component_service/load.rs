@@ -10,6 +10,7 @@ use crate::commands::{
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
 use std::{fs, io, path::Path};
 
+/// Prepared workspace component service state retaining [`Engine`], [`capture::Capture`], and [`CatDocs`](crate::commands::add::docs::CatDocs) proofs.
 pub(in crate::commands) struct Loaded {
     engine: Engine,
     context: Value,

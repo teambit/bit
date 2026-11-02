@@ -12,6 +12,7 @@ use std::{collections::HashSet, io, path::Path};
 type Main = (Value, Value, usize, usize);
 type Forked = (Engine, Value, Value, usize);
 
+/// Prepared main-lane and forked-lane head refreshes for `bit status --lanes`.
 pub(super) struct Refreshes {
     main: Option<Main>,
     forked: Option<Forked>,
