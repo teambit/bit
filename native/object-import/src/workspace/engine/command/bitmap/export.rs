@@ -1,4 +1,4 @@
-//! `.bitmap` scope promotion and history staging for acknowledged exports.
+//! `.bitmap` scope promotion ([`prepare_export_scopes`], [`Prepared`]) and history staging for acknowledged exports.
 
 use super::Prepared;
 use crate::workspace::engine::invalid;

@@ -1,4 +1,4 @@
-//! Remote lane-history refresh fetches without publishing a `Lane` object locally.
+//! Remote lane-history refresh fetches ([`history_remote`], [`history_remote_at`]) without publishing a `Lane` object locally.
 
 use super::{
     FetchOptions, MAX_INBOUND_BYTES, Remote, VirtualRemote, collect, connection, invalid, lane,

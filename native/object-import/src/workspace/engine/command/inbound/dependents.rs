@@ -1,4 +1,4 @@
-//! `DependentsGetter`: ordered workspace-to-target paths, excluding direct edges.
+//! `DependentsGetter` ([`Complete`], [`Pending`], [`complete`], [`begin`]): ordered workspace-to-target paths, excluding direct edges.
 
 pub(in crate::workspace::engine) use stages::{Complete, complete};
 pub(super) use stages::{Pending, begin, needed};

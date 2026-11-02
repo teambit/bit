@@ -1,4 +1,4 @@
-//! Project historical versions without changing the active lane or its heads.
+//! Project historical versions ([`prepare`]) without changing the active lane or its heads.
 
 mod additions;
 mod metadata;

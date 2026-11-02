@@ -1,4 +1,4 @@
-//! Complete shared `ConfigMerger` policy planning before inbound publication.
+//! Complete shared `ConfigMerger` policy planning ([`Complete`], [`complete`]) before inbound publication.
 
 use super::{State, invalid};
 use serde::Deserialize;

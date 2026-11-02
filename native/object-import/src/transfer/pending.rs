@@ -1,4 +1,4 @@
-//! Pending object-directory materialization (`transferWritePending`) from frozen transfer plans.
+//! Pending object-directory materialization ([`write`], [`State`], `transferWritePending`) from frozen transfer plans.
 
 use serde::Deserialize;
 use serde_json::{Value, json};

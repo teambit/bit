@@ -1,4 +1,4 @@
-//! Shared `ConfigMerger` policy inputs for imported component versions.
+//! Shared `ConfigMerger` policy inputs ([`receipt`]) for imported component versions.
 
 use super::super::{config, invalid};
 use serde_json::Value;

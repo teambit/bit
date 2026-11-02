@@ -1,4 +1,4 @@
-//! Retained workspace writes for new and clean existing components during inbound imports.
+//! Retained workspace writes ([`preflight`], [`Target`], [`PreparedImport`]) for new and clean existing components during inbound imports.
 //! Source and destination is checked during Prepare; publication happens after
 //! the object transaction succeeds.
 pub(super) use preflight::check as preflight;

@@ -1,4 +1,4 @@
-//! Multi-scope export push, validation, persist, and cleanup phase state machine.
+//! Multi-scope export push, validation, persist, and cleanup phase state machine ([`Initialize`], [`Receipt`], [`Transaction`]).
 
 #[cfg(test)]
 mod tests;

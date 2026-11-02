@@ -1,4 +1,4 @@
-//! Session-scoped transfer collection, plan, spool-file, and transaction state management.
+//! Session-scoped transfer collection, plan, spool-file, and transaction state management ([`State`]).
 
 use std::{
     collections::{HashMap, HashSet},

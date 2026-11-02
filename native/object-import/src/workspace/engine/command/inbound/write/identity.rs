@@ -1,4 +1,4 @@
-//! Scope-aware identities and duplicate-name `.bitmap` keys for imports.
+//! Scope-aware identities ([`matches_target`], [`Target`]) and duplicate-name `.bitmap` keys for imports.
 
 use super::{Target, invalid};
 use serde_json::{Map, Value};

@@ -1,4 +1,4 @@
-//! `VersionHistory` graph distance and ancestor caching for workspace commands.
+//! `VersionHistory` graph distance and ancestor caching ([`State`], [`Repository`]) for workspace commands.
 
 use super::{
     super::{invalid, status_history},

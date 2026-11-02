@@ -1,4 +1,4 @@
-//! Write dependencies with the published `package.json` and JSONC serializers.
+//! Write dependencies ([`write`], [`RESOLVER`]) with the published `package.json` and `JSONC` serializers.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Prepared workspace command application, publication, and receipt recording.
+//! Prepared workspace command application ([`run`], [`Apply`], [`State`]), publication, and receipt recording.
 
 #[cfg(test)]
 mod tests;

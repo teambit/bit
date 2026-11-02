@@ -1,4 +1,4 @@
-//! 512-byte `USTAR` tar header encoding for object transfer archives.
+//! 512-byte `USTAR` tar header encoding ([`encode`]) for object transfer archives.
 
 use std::io;
 

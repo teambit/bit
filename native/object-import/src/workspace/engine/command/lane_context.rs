@@ -1,4 +1,4 @@
-//! Command lane metadata for native merge and local switch planning.
+//! Command lane metadata ([`prepare`], [`additions`], [`visibility`]) for native merge and local switch planning.
 
 pub(super) mod additions;
 pub(super) mod visibility;

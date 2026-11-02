@@ -1,4 +1,4 @@
-//! Retain the preimage when second-resolution `.bitmap` backup names collide.
+//! Retain the preimage ([`prepare`], [`History`]) when second-resolution `.bitmap` backup names collide.
 
 use super::{History, existing, invalid, safe_destination};
 use std::{fs, io, path::Path};

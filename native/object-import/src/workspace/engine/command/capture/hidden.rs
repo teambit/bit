@@ -1,4 +1,4 @@
-//! Object-backed capture for hidden lane dependents outside workspace directories.
+//! Object-backed capture ([`from_model`], [`Captured`], [`Repository`]) for hidden lane dependents outside workspace directories.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Deserialized request and option payloads for workspace command preparation.
+//! Deserialized request and option payloads ([`Prepare`], [`Operation`], [`Options`]) for workspace command preparation.
 
 use serde::Deserialize;
 use std::path::PathBuf;

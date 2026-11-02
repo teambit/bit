@@ -1,4 +1,4 @@
-//! Wire request validation and parsing for `transferCollect`, `transferPlan`, and `transferArchive`.
+//! Wire request validation and parsing ([`collect`]) for `transferCollect`, `transferPlan`, and `transferArchive`.
 
 use serde::Deserialize;
 use std::path::PathBuf;

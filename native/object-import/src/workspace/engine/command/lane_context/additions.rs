@@ -1,4 +1,4 @@
-//! Destination directory assignment and overlap checks for incoming lane additions.
+//! Destination directory assignment and overlap checks ([`prepare`], [`PreparedImport`]) for incoming lane additions.
 
 #[cfg(test)]
 mod tests;

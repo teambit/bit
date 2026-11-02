@@ -1,4 +1,4 @@
-//! `ComponentWriterMain.relocateOccupiedDirs`: filesystem-aware numbered targets.
+//! `ComponentWriterMain.relocateOccupiedDirs` ([`Retained`], [`Observed`]): filesystem-aware numbered targets.
 
 #[cfg(test)]
 mod tests;

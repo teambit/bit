@@ -1,4 +1,4 @@
-//! Retain dependency prefetch before the canonical workspace graph class loads.
+//! Retain dependency prefetch ([`Pending`], [`Complete`]) before the canonical workspace graph class loads.
 
 #[cfg(test)]
 mod tests;

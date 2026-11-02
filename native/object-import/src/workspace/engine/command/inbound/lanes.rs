@@ -1,4 +1,4 @@
-//! Multiple named lanes share one retained inbound publication.
+//! Multiple named lanes ([`Selection`], [`prepare`]) share one retained inbound publication.
 
 mod aggregate;
 mod selection;

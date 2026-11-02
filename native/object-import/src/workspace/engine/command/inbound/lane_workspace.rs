@@ -1,4 +1,4 @@
-//! Import visible current-lane heads and main-only selections in one retained transfer.
+//! Import visible current-lane heads and main-only selections ([`prepare`], [`Target`], [`PreparedImport`]) in one retained transfer.
 
 mod objects;
 

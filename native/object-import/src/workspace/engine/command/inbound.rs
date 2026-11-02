@@ -1,4 +1,4 @@
-//! Retained public inbound transfer: remote acquisition and validation run during
+//! Retained public inbound transfer ([`autosync`], [`dependents`], [`details`], [`policy`], [`remote`], [`write_dependencies`]): remote acquisition and validation run during
 //! preparation without touching the local repository, and application publishes.
 pub(in crate::workspace::engine) mod autosync;
 pub(in crate::workspace::engine) mod dependents;

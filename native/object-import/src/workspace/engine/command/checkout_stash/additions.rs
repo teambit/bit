@@ -1,4 +1,4 @@
-//! Stashed new components retain their authored root and have no `ModelComponent`.
+//! Stashed new components ([`context`], [`Prepare`]) retain their authored root and have no `ModelComponent`.
 
 use super::super::{Record, capture, input::Prepare, invalid, materialization, planning, scratch};
 use crate::workspace::snapshots;

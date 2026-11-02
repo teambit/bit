@@ -1,4 +1,4 @@
-//! Structural eligibility checks for `Version` dependency, edge, and extension fields.
+//! Structural eligibility checks ([`eligible`], [`history`], [`query`]) for `Version` dependency, edge, and extension fields.
 
 use serde_json::Value;
 use std::io;

@@ -1,4 +1,4 @@
-//! Bound all live queued and completed paths before allocating their clones.
+//! Bound all live queued and completed paths ([`Queue`]) before allocating their clones.
 
 use super::invalid;
 use std::{collections::VecDeque, io};

@@ -1,4 +1,4 @@
-//! Validate the bounded inbound command protocol before remote reads or writes.
+//! Validate the bounded inbound command protocol ([`validate`], [`local`], [`Prepare`]) before remote reads or writes.
 
 use super::{Prepare, invalid};
 use serde_json::Value;

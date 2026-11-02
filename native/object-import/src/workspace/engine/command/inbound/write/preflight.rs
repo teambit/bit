@@ -1,4 +1,4 @@
-//! Local-only eligibility before providers; authoritative preparation repeats these reads.
+//! Local-only eligibility ([`check`], [`Target`], [`Options`]) before providers; authoritative preparation repeats these reads.
 
 use super::{Options, Target, directories, existing, invalid, new_directory, target_directories};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Fetch main first, then lanes, retaining the published lane-first result order.
+//! Fetch `main` first, then lanes ([`prepare`], [`Prepare`], [`State`]), retaining the published lane-first result order.
 
 use super::{
     Prepare, Retained, State, Target, command_import, invalid, merge_remote, receipt, select,

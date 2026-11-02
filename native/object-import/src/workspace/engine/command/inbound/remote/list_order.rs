@@ -1,4 +1,4 @@
-//! Forking uses sorted model names for file scopes and preserves untouched HTTP response order.
+//! Forking ([`main`], [`Remote`], [`Listed`]) uses sorted model names for file scopes and preserves untouched HTTP response order.
 
 use super::file_list;
 use bit_client_transfer::{

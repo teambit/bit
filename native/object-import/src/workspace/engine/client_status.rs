@@ -1,4 +1,4 @@
-//! Incremental workspace client status planning, inventory hashing, and result assembly.
+//! Incremental workspace client status planning ([`State`], [`Target`], [`config`]), inventory hashing, and result assembly.
 
 pub(crate) mod config;
 mod models;

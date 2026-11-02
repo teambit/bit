@@ -1,4 +1,4 @@
-//! Scoped tar-entry naming, compressed object reading, and metadata decoding for transfers.
+//! Scoped tar-entry naming ([`name`]), compressed object reading ([`read`]), and metadata decoding for [`Descriptor`] transfers.
 
 use std::{
     fs::File,

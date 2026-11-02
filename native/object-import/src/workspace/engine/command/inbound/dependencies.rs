@@ -1,4 +1,4 @@
-//! `ImportComponents.getFlattenedDepsUnique`: select workspace dependencies
+//! `ImportComponents.getFlattenedDepsUnique` ([`expand`], [`Target`], [`PreparedImport`]): select workspace dependencies
 //! from the imported root `Version` objects before planning any `.bitmap` or file writes.
 
 use super::{Prepare, Target, details, invalid, write};

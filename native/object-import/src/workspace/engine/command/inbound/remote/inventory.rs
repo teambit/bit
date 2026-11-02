@@ -1,4 +1,4 @@
-//! Read-only public remote list and latest-version inventory. The request
+//! Read-only public remote list and latest-version inventory ([`Request`], [`Budget`]). The request
 //! carries component identities only; model and `Version` object bodies remain in Rust.
 
 mod latest;

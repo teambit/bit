@@ -1,4 +1,4 @@
-//! Acquire selected objects and prepare their retained workspace and `.bitmap` publication.
+//! Acquire selected objects ([`prepare_targets`]) and prepare their retained workspace and `.bitmap` publication.
 
 use super::{
     Prepare, ReceiptRoots, Retained, State, Target, command_import, dependencies, lane_workspace,

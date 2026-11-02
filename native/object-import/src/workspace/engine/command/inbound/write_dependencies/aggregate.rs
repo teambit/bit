@@ -1,4 +1,4 @@
-//! Resolver policy precedence and npm `minVersion` range deduplication.
+//! Resolver policy precedence ([`prepare`]) and npm `minVersion` range deduplication.
 
 #[cfg(test)]
 mod tests;

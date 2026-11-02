@@ -1,4 +1,4 @@
-//! Publish the independent `.bitmap` auto-sync startup lifecycle.
+//! Publish the independent `.bitmap` auto-sync startup lifecycle ([`Request`], [`finalize`]).
 
 use super::super::{State, bitmap, repository::Repository};
 use crate::workspace::engine::{hash, invalid};

@@ -1,4 +1,4 @@
-//! `bit reset --never-exported` clearing of versions on unscoped `.bitmap` entries.
+//! `bit reset --never-exported` ([`Plan`]) clearing of versions on unscoped `.bitmap` entries.
 
 #[cfg(test)]
 mod tests;

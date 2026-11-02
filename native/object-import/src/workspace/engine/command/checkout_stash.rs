@@ -1,4 +1,4 @@
-//! Retained stash checkout selection; snapshot refs need not appear in model tags/heads.
+//! Retained stash checkout selection ([`loading`], [`new_only`], [`version`], [`context`], [`materialize`]); snapshot refs need not appear in model tags/heads.
 
 pub(super) use additions::{context, materialize};
 mod additions;

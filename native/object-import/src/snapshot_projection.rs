@@ -1,4 +1,4 @@
-//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection.
+//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection ([`project`], [`Semantic`], [`semantic`]).
 
 pub use semantic::{Semantic, semantic};
 
@@ -17,7 +17,7 @@ use std::io;
 
 use crate::js_json::{Value, stringify};
 
-/// Project raw default-class fields without calling JavaScript serializers.
+/// Project raw default-class fields without calling `JavaScript` serializers.
 pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
     object(fields)?;
     match kind.trim() {

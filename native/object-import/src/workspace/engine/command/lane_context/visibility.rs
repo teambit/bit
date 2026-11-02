@@ -1,4 +1,4 @@
-//! Component scope visibility and `.bitmap` projection across workspace lanes.
+//! Component scope visibility and `.bitmap` projection ([`identity_bitmap`], [`PreparedImport`]) across workspace lanes.
 
 #[cfg(test)]
 mod tests;

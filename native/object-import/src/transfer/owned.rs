@@ -1,4 +1,4 @@
-//! Session-owned object collection, spooling, and tar archive assembly (`transferCollect`).
+//! Session-owned object collection ([`Entry`], [`Plan`]), spooling, and tar archive assembly (`transferCollect`).
 
 mod archive;
 mod freezer;

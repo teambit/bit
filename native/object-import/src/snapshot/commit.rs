@@ -1,4 +1,4 @@
-//! Zlib-compressed repository object serialization and atomic store writes for snapshot commits.
+//! Zlib-compressed repository object serialization ([`Object`], [`Kind`]) and atomic [`Store`] writes for snapshot commits.
 
 use super::{MAX_RAW, Response, count, hash, invalid, path};
 use crate::store::Store;

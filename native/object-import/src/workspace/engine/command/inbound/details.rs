@@ -1,4 +1,4 @@
-//! The `importDetails` of an inbound receipt (`_getImportDetails`).
+//! The `importDetails` ([`model`], [`Target`]) of an inbound receipt (`_getImportDetails`).
 
 use super::{Target, invalid, write};
 use crate::{command_import, workspace::engine::client_status::config::is_extension_aspect};

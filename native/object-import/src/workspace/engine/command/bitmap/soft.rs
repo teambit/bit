@@ -1,4 +1,4 @@
-//! Soft-tag and schema-normalized `.bitmap` row preparation for workspace commands.
+//! Soft-tag and schema-normalized `.bitmap` row preparation ([`rows`], [`Prepared`]) for workspace commands.
 
 use super::{Prepared, invalid, lane, render_rows};
 use serde_json::{Map, Value};

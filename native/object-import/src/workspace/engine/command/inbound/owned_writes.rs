@@ -1,4 +1,4 @@
-//! One exact first-preimage and final-written digest for each owned publication.
+//! One exact first-preimage and final-written digest ([`combine`]) for each owned publication.
 
 use super::invalid;
 use serde_json::Value;

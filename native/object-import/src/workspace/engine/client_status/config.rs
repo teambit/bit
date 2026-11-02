@@ -1,4 +1,4 @@
-//! Workspace configuration and aspect target extraction for client status queries.
+//! Workspace configuration and aspect target extraction ([`targets`], [`context_targets`], [`inactive_targets`]) for client status queries.
 
 pub(in crate::workspace::engine) use bitmap::{
     context_bitmap_targets, context_targets, inactive_targets, targets,

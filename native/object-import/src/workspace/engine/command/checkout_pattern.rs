@@ -1,4 +1,4 @@
-//! Bind CLI component predicates to the authoritative checkout owner before planning.
+//! Bind CLI component predicates ([`Request`], [`select`]) to the authoritative checkout owner ([`State`]) before planning.
 
 use super::{State, input::Operation, invalid, proof};
 use serde::Deserialize;

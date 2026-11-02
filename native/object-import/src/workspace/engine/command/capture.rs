@@ -1,4 +1,4 @@
-//! Workspace component file, metadata, and hidden dependent state capture.
+//! Workspace component file, metadata, and hidden dependent state capture ([`Captured`], [`all`], [`addition`], [`from_model`]).
 
 pub(super) use addition::capture as addition;
 pub(super) use hidden::from_model;

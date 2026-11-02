@@ -1,4 +1,4 @@
-//! Shared scope, workspace, and global transport precedence and resolver bootstrap.
+//! Shared scope, workspace, and global transport precedence and resolver bootstrap ([`connect`], [`with_home`]).
 
 use super::super::{Transport, invalid};
 use bit_client_transfer::{GlobalConfig, http::Network, remotes::Remotes, resolver::Resolver};

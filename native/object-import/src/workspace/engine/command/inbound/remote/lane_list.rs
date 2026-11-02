@@ -1,4 +1,4 @@
-//! Visible heads of the active remote `Lane`, before main-only wildcard matches.
+//! Visible heads ([`visible`], [`Listed`]) of the active remote `Lane`, before main-only wildcard matches.
 
 use super::{Listed, ObjectItem, VirtualRemote, invalid};
 use crate::command_import::lane;

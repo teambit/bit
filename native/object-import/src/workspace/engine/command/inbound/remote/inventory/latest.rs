@@ -1,4 +1,4 @@
-//! Ordered latest-version groups ([`Request`], [`file_latest`], [`remote_for`]) for remote inventory queries.
+//! Ordered latest-version groups ([`versions`], [`Request`], [`file_latest`], [`remote_for`]) for remote inventory queries.
 
 use super::{Request, file_latest, identity, invalid, remote_for};
 use bit_client_transfer::{

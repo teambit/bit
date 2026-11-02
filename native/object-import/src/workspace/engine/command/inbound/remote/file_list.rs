@@ -1,4 +1,4 @@
-//! `Fs.list` / `ComponentsList.listLocalScope` for a configured bare file scope.
+//! `Fs.list` / `ComponentsList.listLocalScope` ([`list`], [`index`], [`Listed`]) for a configured bare file scope.
 
 use super::{Listed, invalid, lane_list};
 use crate::{checkout::repository, command_import::lane, read_budget::Budget};

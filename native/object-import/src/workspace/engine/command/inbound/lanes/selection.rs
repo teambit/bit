@@ -1,4 +1,4 @@
-//! `ImporterMain.fetch` resolves tracked aliases and implicit remote lane references.
+//! `ImporterMain.fetch` ([`ids`], [`Prepare`]) resolves tracked aliases and implicit remote lane references.
 
 #[cfg(test)]
 mod tests;

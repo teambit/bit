@@ -1,4 +1,4 @@
-//! Import finalization after `.bitmap` publication and actual workspace class loads.
+//! Import finalization ([`Request`], [`complete`], [`State`]) after `.bitmap` publication and actual workspace class loads.
 
 mod aggregate;
 mod publication;

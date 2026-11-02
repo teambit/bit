@@ -1,4 +1,4 @@
-//! No-ID imports retain both lane heads and distinct tracked versions without workspace writes.
+//! No-ID imports ([`prepare`], [`Target`], [`PreparedImport`]) retain both lane heads and distinct tracked versions without workspace writes.
 
 use super::{Prepare, Target, invalid, lane, lanes, remote};
 use crate::command_import::{self, PreparedImport, VirtualRemote};

@@ -1,4 +1,4 @@
-//! Atomic temporary-file write, ownership preservation, and index-write validation for object stores.
+//! Atomic temporary-file write, ownership preservation, and index-write validation for object stores ([`Store`]).
 
 #[cfg(test)]
 mod tests;

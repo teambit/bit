@@ -1,4 +1,4 @@
-//! `ArtifactFiles` class projection for `teambit.pipelines/builder` extension data.
+//! `ArtifactFiles` class projection ([`convert`]) for `teambit.pipelines/builder` extension [`Value`] data.
 
 use super::{get, invalid, object};
 use crate::js_json::Value;

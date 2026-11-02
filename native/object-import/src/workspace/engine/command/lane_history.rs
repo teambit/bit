@@ -1,4 +1,4 @@
-//! Retain one refreshed history selection across complete checkout/install phases.
+//! Retain one refreshed history selection ([`Prepare`], [`run`], [`context`], [`planning`]) across complete checkout/install phases.
 
 pub(super) mod context;
 pub(super) mod heads;

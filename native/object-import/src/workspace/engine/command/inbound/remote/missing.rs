@@ -1,4 +1,4 @@
-//! `findMissingExternalsRecursively` with `preferDependencyGraph`, over what a fetch
+//! `findMissingExternalsRecursively` ([`requests`], [`ObjectItem`]) with `preferDependencyGraph`, over what a fetch
 //! without dependencies returned: the requested components to fetch again with their
 //! dependencies, as `importMany` does after `importWithoutDeps`.
 

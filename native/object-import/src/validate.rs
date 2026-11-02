@@ -1,4 +1,4 @@
-//! Streaming zlib decompression, header inspection, and `SHA-1` digest verification for repository objects.
+//! Streaming zlib decompression, header inspection, and `SHA-1` digest verification ([`Outcome`], [`hexadecimal`]) for repository objects.
 
 use flate2::{Decompress, FlushDecompress, Status};
 use serde::Serialize;

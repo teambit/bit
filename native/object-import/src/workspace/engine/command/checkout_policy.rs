@@ -1,4 +1,4 @@
-//! Inputs for `ConfigMergerMain.updateDepsInWorkspaceConfig` after checkout.
+//! Inputs ([`Prepared`], [`Complete`]) for `ConfigMergerMain.updateDepsInWorkspaceConfig` after checkout.
 
 mod publication;
 #[cfg(test)]

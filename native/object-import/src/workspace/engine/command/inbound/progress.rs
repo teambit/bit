@@ -1,4 +1,4 @@
-//! Shape the inbound import loader rows to the source CLI's prefetch phases.
+//! Shape the inbound import loader [`rows`] ([`PreparedImport`]) to the source CLI's prefetch phases.
 
 use super::Target;
 use crate::command_import::PreparedImport;

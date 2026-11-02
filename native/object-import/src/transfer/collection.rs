@@ -1,4 +1,4 @@
-//! Repository-backed object collection before archive materialization; [`Version`] snapshots
+//! Repository-backed object collection ([`References`], [`Mode`], [`shape`]) before archive materialization; [`Version`] snapshots
 //! remain local, while caller metadata guards the live cache's reference view.
 pub(crate) mod shape;
 

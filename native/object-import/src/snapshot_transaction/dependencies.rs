@@ -1,4 +1,4 @@
-//! Snapshot dependency version alignment across batch-tagged components (`snapshotDependencies`).
+//! Snapshot dependency version alignment ([`plan`]) across batch-tagged components (`snapshotDependencies`).
 
 use super::{autotag, invalid};
 use serde_json::{Value, json};

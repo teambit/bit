@@ -1,4 +1,4 @@
-//! Where imported components are written: the workspace's `defaultDirectory`,
+//! Where imported components are written ([`assign`], [`Target`]): the workspace's `defaultDirectory`,
 //! with the fixes `ComponentWriter` applies when directories collide.
 
 #[cfg(test)]

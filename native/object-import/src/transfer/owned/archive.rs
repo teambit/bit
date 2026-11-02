@@ -1,4 +1,4 @@
-//! Export and fetch tar archive writing from frozen owned transfer plans.
+//! Export and fetch tar archive writing ([`write`]) from frozen owned transfer [`Plan`]s.
 
 use serde_json::{Value, json};
 use sha1::Digest;

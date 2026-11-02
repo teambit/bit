@@ -1,4 +1,4 @@
-//! Retained workspace command transactions for checkout, merge, switch, snap, tag, stash, and export.
+//! Retained workspace command transactions ([`inbound`], [`outbound`], [`checkout_policy`], [`lane_history`]) for checkout, merge, switch, snap, tag, stash, and export.
 
 pub(super) mod checkout_pattern;
 pub(super) mod checkout_policy;

@@ -1,4 +1,4 @@
-//! Revalidate the prepared reset and publish its `Component`, `index.json`, and `.bitmap`.
+//! Revalidate the prepared reset ([`commit`], [`Plan`], [`ObjectChange`]) and publish its `Component`, `index.json`, and `.bitmap`.
 
 use super::{ObjectChange, Plan, invalid, repository::object_path};
 use std::{

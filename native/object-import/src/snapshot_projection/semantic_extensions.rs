@@ -1,4 +1,4 @@
-//! Extension configuration sorting and internal-field filtering for semantic `Version` hashing.
+//! Extension configuration sorting and internal-field filtering ([`configs`]) for semantic `Version` [`Value`] hashing.
 
 use std::io;
 

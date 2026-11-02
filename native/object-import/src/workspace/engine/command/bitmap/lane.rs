@@ -1,4 +1,4 @@
-//! Lane header, visibility, and tracked target reconciliation for `.bitmap` updates.
+//! Lane header, visibility, and tracked target reconciliation ([`on_lane`], [`tracked_checkout`]) for `.bitmap` updates.
 
 use super::{super::repository, Update, identity, invalid};
 use serde_json::{Value, json};
