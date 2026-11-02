@@ -1,4 +1,6 @@
 //! Released [`BuiltinEnv`] core-environment [`PackageDependencies`] policies for capsule manifests.
+//!
+//! Populates runtime, dev, and peer dependencies via [`package_dependencies`].
 
 use super::{BuiltinEnv, EntryPointMetadata, ManifestConfig, PackageDependencies};
 use serde_json::{Map, Value};

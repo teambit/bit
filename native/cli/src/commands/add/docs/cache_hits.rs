@@ -1,4 +1,6 @@
 //! `ComponentFsCache` cache keys and doc-parser's strict, fractional-millisecond [`Source`] staleness test.
+//!
+//! Partitions components into [`Plan`] hits, misses, and proven cache entries via [`prepare`].
 #[cfg(test)]
 mod tests;
 

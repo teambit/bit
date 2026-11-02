@@ -1,4 +1,6 @@
 //! Preserve `ScopeMain`'s ordinary-then-state union and ordered AND syntax via [`patterns`].
+//!
+//! Validates [`STATES`] criteria and `$env:` multi-parameter state selectors via [`validate`].
 #[cfg(test)]
 mod tests;
 

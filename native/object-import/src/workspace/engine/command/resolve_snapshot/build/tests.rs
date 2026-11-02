@@ -1,4 +1,6 @@
 //! Unit tests for builder [`artifacts`] and [`metadata`] hashing, confinement, and read [`proof`]s.
+//!
+//! Confirms that builder artifact files are hashed raw without EOL/BOM normalization and bound by read proofs.
 
 use super::{artifacts, metadata};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};

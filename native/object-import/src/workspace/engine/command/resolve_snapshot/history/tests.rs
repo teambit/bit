@@ -1,4 +1,6 @@
 //! Unit tests for `VersionHistory` object updates via [`tag_histories`] during tag snapshot resolution.
+//!
+//! Validates parent link appending and `VersionHistory` serialization across tagged components.
 
 use super::tag_histories;
 use crate::workspace::engine::{

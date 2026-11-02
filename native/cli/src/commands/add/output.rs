@@ -1,4 +1,6 @@
 //! Handler-specific [`Outcome`] error rendering without restarting a command after provider effects.
+//!
+//! Formats [`failure`] responses in text and `--json` modes with [`colors`] and [`Startup`] hooks.
 mod colors;
 
 use crate::{

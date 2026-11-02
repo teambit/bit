@@ -1,4 +1,6 @@
 //! Unit tests for status context component [`configuration`] and [`component_id_matches`] checks.
+//!
+//! Verifies environment extension validation and object/string component ID matching.
 
 use super::{component_id_matches, configuration};
 use serde_json::json;

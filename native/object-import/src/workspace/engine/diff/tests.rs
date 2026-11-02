@@ -1,4 +1,6 @@
 //! Unit tests for workspace file [`equivalent`] byte-equivalence and [`frozen`] unchanged diff batching.
+//!
+//! Ensures EOL/binary byte comparison and parallel unchanged diff filtering avoid unnecessary `git` spawns.
 
 use super::{equivalent, frozen};
 

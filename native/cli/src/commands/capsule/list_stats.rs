@@ -1,4 +1,6 @@
 //! Capsule directory size and count statistics ([`resolve_capsules_dir`]) for `bit capsule list`.
+//!
+//! Scans [`ORIGIN_FILE`] markers and aggregates [`RootEntry`] disk usage metrics.
 
 use super::{Chalk, resolve_capsules_dir};
 use crate::{commands::lane::scope_root::ScopeRoot, workspace};

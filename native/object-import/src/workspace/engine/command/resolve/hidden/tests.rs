@@ -1,4 +1,6 @@
 //! Unit tests for hidden lane [`Entry`] dependent package enrichment ([`enrich_packages`]) and trigger [`reports`].
+//!
+//! Confirms exact dependency-resolver package hydration and transitive dependent trigger ordering.
 
 use super::{enrich_packages, reports};
 use crate::command_import::lane::Entry;

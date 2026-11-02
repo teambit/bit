@@ -1,4 +1,6 @@
 //! Unit tests for workspace inventory directory prefix depth and count budgets via [`validate_prefixes`].
+//!
+//! Confirms that excessive path nesting or directory prefix counts decline before policy evaluation.
 
 use super::validate_prefixes;
 #[test]

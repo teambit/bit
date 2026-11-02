@@ -1,4 +1,6 @@
 //! Native `bit capsule create [component-ids...] [--seeders-only] [-j|--json]` ([`parse_create_flags`]).
+//!
+//! Materializes isolated component capsules using [`files`], [`metadata`], and [`root`].
 
 pub(super) use self::root::parse_create_flags;
 

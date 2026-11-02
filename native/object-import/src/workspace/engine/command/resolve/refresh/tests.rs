@@ -1,4 +1,6 @@
 //! Unit tests for callback-owned [`SourceChange`] source [`proof`] replacement via [`replace_owned_proofs`].
+//!
+//! Verifies that callbacks can update only their owned source proofs and cannot tamper with unowned files.
 
 use super::{SourceChange, replace_owned_proofs};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};

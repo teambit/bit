@@ -1,4 +1,6 @@
 //! Inner [`Chalk`] colors of the released tracking exceptions, before the CLI's outer red error.
+//!
+//! Exposes [`error`] and [`native_io`] to style invalid-input and filesystem diagnostics.
 #[cfg(test)]
 mod tests;
 

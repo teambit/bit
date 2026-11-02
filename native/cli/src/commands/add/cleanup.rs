@@ -1,4 +1,6 @@
 //! Consumer destruction cleans [`temporary`] files before publishing `.bitmap`.
+//!
+//! Removes `.bitTmp` when it exists as a live filesystem entry under the workspace root.
 use std::{fs, io, path::Path};
 
 #[inline]

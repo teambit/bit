@@ -1,4 +1,6 @@
 //! Unit tests for `package.json` [`detect_indent`] indentation and [`detect_newline`] newline detection.
+//!
+//! Confirms `detect-indent` and `detect-newline` tie-breaking parity on JSON documents.
 
 use super::{detect_indent, detect_newline};
 

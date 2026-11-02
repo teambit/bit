@@ -1,4 +1,6 @@
 //! Retain bounded [`Source`] bytes and exact modification times around documentation decisions.
+//!
+//! Enforces [`LIMIT`] across observed source files for `ComponentFsCache` staleness checks.
 use serde_json::Value;
 use std::{
     collections::BTreeMap,

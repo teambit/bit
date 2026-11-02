@@ -1,4 +1,6 @@
 //! Unit tests for `--versions-file` explicit entry and default release matching via [`tag_data`].
+//!
+//! Checks first-match explicit component version entries, prerelease ID extraction, and default fallback.
 
 use super::tag_data;
 use serde_json::{Value, json};

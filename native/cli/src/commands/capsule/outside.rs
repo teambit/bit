@@ -1,4 +1,6 @@
 //! Capsule [`Subcommand`] behavior ([`CreateArgs`], [`delete_and_report`], [`prune`]) outside a workspace or scope.
+//!
+//! Handles [`run_outside_scope`] for `capsule list`, `capsule delete`, `capsule create`, and `capsule prune`.
 
 use super::{Subcommand, create::CreateArgs, delete_and_report, prune};
 use crate::{

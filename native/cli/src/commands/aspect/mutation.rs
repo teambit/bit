@@ -1,4 +1,6 @@
 //! Aspect configuration mutations (`set`, `unset`, `update`) across `.bitmap` and `component.json`.
+//!
+//! Coordinates [`comp_json`] and [`update`] plans with atomic `.bitmap` history writes.
 pub(in crate::commands) use self::{
     comp_json::serialize_json_preserving_newline,
     update::{

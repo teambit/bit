@@ -1,5 +1,7 @@
 //! Expected output of comment-json 4.2.5 `stringify(parse(input), undefined, 2)` and of
 //! a second pass over that output, recorded with the version Bit ships. Do not edit by hand.
+//!
+//! Exposes [`CASES`] for comment-preserving `JSONC` round-trip verification.
 pub(super) const CASES: &[(&str, &str, &str, Option<&str>)] = &[
     (
         "quirks",

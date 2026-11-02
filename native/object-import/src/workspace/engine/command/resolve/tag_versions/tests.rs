@@ -1,4 +1,6 @@
 //! Unit tests for semantic version [`plan`]ning across [`Material`], [`Participation`], and [`VersionState`].
+//!
+//! Ensures selected components use the requested release bump while auto-tagged dependents bump patch.
 
 use super::{Material, plan};
 use crate::workspace::engine::command::resolve_snapshot::{Participation, VersionState};

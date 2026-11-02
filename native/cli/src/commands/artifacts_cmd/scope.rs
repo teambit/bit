@@ -1,4 +1,6 @@
 //! Bare-scope [`TargetComponent`] resolution ([`resolve_bare_scope_targets`]) and [`filter_artifacts`] for `bit artifacts`.
+//!
+//! Evaluates literal and glob patterns against bare scope component indexes.
 
 use super::{
     Options,

@@ -1,4 +1,6 @@
 //! Unit tests for reading [`deprecated`] flags, [`lane_readme_of`], and [`parse_lane_heads`] mappings.
+//!
+//! Checks deprecation and lane readme extraction from core extension configurations.
 
 use super::{deprecated, lane_readme_of, parse_lane_heads};
 use serde_json::json;

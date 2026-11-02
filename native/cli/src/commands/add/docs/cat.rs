@@ -1,4 +1,6 @@
 //! Cold `cat` documentation ([`CatDocs`], [`cat_prepare`]) uses the published parser without starting Harmony.
+//!
+//! Validates [`cache_hits`] and [`observe`]d sources before serving `cat-component` docs.
 use super::{cache_hits, observe, order, validate};
 use crate::commands::status::cache;
 use serde_json::Value;

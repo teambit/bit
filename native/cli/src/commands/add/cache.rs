@@ -1,4 +1,6 @@
 //! Link issues block dependency-cache saves; new [`WorkspaceComponent`] package manifests invalidate loader entries.
+//!
+//! Provides [`restrict`] and [`invalidate`] helpers for `bit add` and identity mutations.
 use crate::commands::status::capture::Capture;
 use bit_install::model::WorkspaceComponent;
 use std::{

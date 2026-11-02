@@ -1,4 +1,6 @@
 //! Unit tests for `switch --pattern` [`Entry`] multimatch [`filter`]ing and error messages.
+//!
+//! Confirms multimatch inclusion/exclusion ordering, version suffix stripping, and no-match errors.
 
 use super::{Entry, filter};
 

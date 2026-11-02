@@ -1,4 +1,6 @@
 //! Component-load caches, native [`linking`], then one `.bitmap` [`Projection`] publication.
+//!
+//! Executes [`run`] to link [`WorkspaceComponent`]s and commit the [`Plan`] atomically.
 use super::{
     Prepared, cache, cleanup, dependencies, linking, output, projection::Projection, remote, report,
 };

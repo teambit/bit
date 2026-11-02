@@ -1,4 +1,6 @@
 //! `CatCmd` ([`Options`], [`parse`]): inspect validated stored Sources without returning file bodies through Node.
+//!
+//! Coordinates [`options`] parsing, [`docs`] preparation, and [`report`] rendering for `bit cat`.
 
 mod options;
 mod report;

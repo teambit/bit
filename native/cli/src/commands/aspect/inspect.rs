@@ -1,4 +1,6 @@
 //! Native `bit aspect list [pattern]` ([`ListOpts`]) and `bit aspect get <component-name> [aspect-id]` inspection.
+//!
+//! Merges aspect provenance across workspace, `.bitmap`, `component.json`, and model layers.
 
 pub(super) mod debug;
 pub(super) mod get;

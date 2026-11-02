@@ -1,4 +1,6 @@
 //! File-only predicates use native [`Engine`] source hashing without class or dependency-cache loads.
+//!
+//! Exposes [`compare`] to evaluate `$codeModified` against stored [`FIELDS`].
 use super::super::{controls, load};
 use crate::commands::engine::Engine;
 use serde_json::{Map, Value, json};

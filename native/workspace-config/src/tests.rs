@@ -1,4 +1,6 @@
 //! Unit tests for layered workspace configuration [`merge_layers`], [`environment_key`], and [`parse_jsonc`].
+//!
+//! Checks global/scope/workspace config precedence, env var key mapping, and `ScopeJson` formatting.
 
 use super::{environment_key, merge_layers, parse_jsonc};
 use serde_json::{Value, json};

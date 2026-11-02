@@ -1,4 +1,6 @@
 //! Unit tests for snapshot hash [`allocations`] uniqueness across [`Material`] components.
+//!
+//! Ensures distinct components never share a snapshot hash and map cleanly by identity.
 
 use super::{Material, Participation, VersionState, allocations};
 use serde_json::json;

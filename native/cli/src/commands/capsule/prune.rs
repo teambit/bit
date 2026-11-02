@@ -1,4 +1,6 @@
 //! Native `capsule prune` ([`History`], [`Report`], [`emit_report`]) planning and removal.
+//!
+//! Parses [`PruneArgs`] and prunes stale or orphaned capsule roots.
 
 use super::{
     Chalk, History, Outcome, Report, ScopeRoot, emit_report, list_stats, resolve_capsules_dir,

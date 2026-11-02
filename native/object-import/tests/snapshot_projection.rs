@@ -1,4 +1,6 @@
 //! Differential tests for canonical `Version` [`snapshot_projection`] and hashing.
+//!
+//! Validates [`Value`] projection, pretty serialization, and semantic hash calculation against `@teambit/objects`.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

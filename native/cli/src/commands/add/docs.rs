@@ -1,4 +1,6 @@
 //! Native cache publication around the published semantic documentation parser ([`CatDocs`], [`cat_prepare`]).
+//!
+//! Exposes [`Prepared`] documentation staging and [`load`] execution for tracked components.
 pub(in crate::commands) use cat::{CatDocs, cat_prepare};
 
 mod cache_hits;

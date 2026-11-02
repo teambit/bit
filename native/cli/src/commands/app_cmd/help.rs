@@ -1,4 +1,6 @@
 //! Released `bit app` command [`GLOBAL_HELP`], subcommand help, and rejected-option output.
+//!
+//! Exposes [`app_help_output`], [`app_run_help_name`], and [`unsupported_flag_help`].
 
 mod json_color;
 

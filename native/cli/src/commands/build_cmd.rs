@@ -1,4 +1,6 @@
 //! Native `bit build [component-pattern]` (`scopes/pipelines/builder/build.cmd.ts`, `--list-tasks`, `--tasks`, `--skip-tests`).
+//!
+//! Parses [`CapsuleFlags`] and [`Options`] and dispatches `--list-tasks` and empty-build fast paths via [`runner`].
 
 mod runner;
 #[cfg(test)]

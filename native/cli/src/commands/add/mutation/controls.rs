@@ -1,4 +1,6 @@
 //! Retain current [`Capture`] control facts across callbacks and later authoritative [`Engine`] captures.
+//!
+//! Exposes [`validate`] and [`retain`] for `identityControlReadSet` verification.
 #[cfg(test)]
 mod tests;
 

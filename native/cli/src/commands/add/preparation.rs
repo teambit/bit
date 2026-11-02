@@ -1,4 +1,6 @@
 //! Pure [`Prepared`] eligibility precedes provider [`Startup`] and authoritative projected loading.
+//!
+//! Runs `trackingContext` and [`Plan`] preparation via [`prepare`] before invoking Node providers.
 use super::{Prepared, diagnostics, docs, options, projection};
 use crate::commands::{
     engine::Engine,

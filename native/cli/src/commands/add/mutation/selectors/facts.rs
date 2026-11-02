@@ -1,4 +1,6 @@
 //! Loaded-class [`Facts`] comparison inputs survive subsequent selector and mutation cache hits.
+//!
+//! Retains per-component comparison rows and environment mappings from [`Capture`].
 use crate::commands::{engine::Engine, status::capture::Capture};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};

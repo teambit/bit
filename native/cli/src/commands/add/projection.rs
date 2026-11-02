@@ -1,4 +1,6 @@
 //! Project the retained add `.bitmap` ([`Projection`]) into the existing native [`Workspace`] component loader.
+//!
+//! Exposes [`prepare`] to construct [`WorkspaceComponent`] rows from staged `.bitmap` updates.
 use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace::Workspace};
 use serde_json::{Value, json};
 use std::{io, path::Path};

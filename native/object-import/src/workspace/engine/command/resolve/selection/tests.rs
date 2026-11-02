@@ -1,4 +1,6 @@
 //! Unit tests for pending vs. explicit workspace component [`select`] order in `bit-object-import`.
+//!
+//! Confirms that implicit pending selection follows pending order whereas explicit subsets preserve target order.
 
 use super::select;
 use serde_json::json;

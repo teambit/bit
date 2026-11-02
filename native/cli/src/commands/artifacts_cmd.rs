@@ -1,4 +1,6 @@
 //! Native `bit artifacts <component-pattern>` (`scopes/pipelines/builder/artifact/artifacts.cmd.ts`, `--aspect`, `--task`, `--files`, `--out-dir`).
+//!
+//! Extracts and renders component build artifacts across workspaces and bare scopes via [`extractor`].
 
 mod extractor;
 mod render;

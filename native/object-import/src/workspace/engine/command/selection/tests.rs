@@ -1,4 +1,6 @@
 //! Unit tests for checkout [`Options`] and [`Selection`] version messages and observation flags via [`select`].
+//!
+//! Validates `head`, `reset`, and explicit version checkout status reasons and skip conditions.
 
 use super::{Options, Repository, Selection, select};
 use serde_json::{Value, json};

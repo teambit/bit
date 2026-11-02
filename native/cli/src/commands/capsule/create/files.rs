@@ -1,4 +1,4 @@
-//! Source and package files ([`BitmapEntry`], [`ScopeObjects`]) for an isolated workspace component.
+//! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`]).
 
 mod policy;
 

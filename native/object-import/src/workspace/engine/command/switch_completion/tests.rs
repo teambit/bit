@@ -1,4 +1,6 @@
 //! Unit tests for two-phase [`bitmap`] checkout and [`Retained`] lane switch finalization.
+//!
+//! Ensures `.bitmap` lane headers and component versions commit atomically across switch phases.
 
 use super::{Retained, bitmap};
 use serde_json::{Value, json};

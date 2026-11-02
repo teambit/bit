@@ -1,4 +1,6 @@
 //! Unit tests for [`read`]ing workspace status context [`Request`], models, and lanes.
+//!
+//! Exercises `.bitmap`, `workspace.jsonc`, and `.bit` object discovery for status context construction.
 
 use super::{Request, read};
 use serde_json::{Value, json};

@@ -1,4 +1,6 @@
 //! Legacy status loads on [`ProjectedLinker`] share component classes and comparisons with earlier selectors.
+//!
+//! Implements `capture_consumers` for component removal and deprecation status checks.
 use super::{ProjectedLinker, load};
 use crate::commands::{engine::Engine, workspace_command};
 use serde_json::{Value, json};

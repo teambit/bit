@@ -1,4 +1,6 @@
 //! Retain published [`ProjectedLinker`] providers while native identity operations materialize and link files.
+//!
+//! Coordinates [`cached`], [`controls`], [`fork`], [`inbound`], [`installation`], [`load`], [`removal`], and [`selectors`].
 mod cached;
 mod controls;
 mod fork;

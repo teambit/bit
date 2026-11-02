@@ -1,4 +1,6 @@
 //! Unit tests for [`Prepare`] resolve context lane model and version loading via [`load_models`].
+//!
+//! Ensures lane model loading succeeds without requiring unrelated main branch version objects.
 
 use super::{Prepare, load_models};
 use serde_json::{Value, json};

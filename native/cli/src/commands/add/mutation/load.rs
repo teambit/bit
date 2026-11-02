@@ -1,4 +1,6 @@
 //! Native [`Projection`] capture and [`cache`] publication shared by workspace identity operations.
+//!
+//! Provides [`Loaded`] and [`prepare`] to capture component metadata and documentation.
 use super::{
     super::{cache, docs, projection::Projection},
     controls, selection,

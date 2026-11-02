@@ -1,4 +1,6 @@
 //! Capsule root path selection ([`compute_capsules_root_dirs`], [`resolve_capsules_dir`]) and base-directory validation.
+//!
+//! Parses [`CreateArgs`] flags via [`parse_create_flags`] and resolves target capsule directories.
 
 use super::{
     super::{

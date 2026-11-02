@@ -1,4 +1,6 @@
 //! Workspace state patterns ([`Facts`]) execute each loading criterion lazily, in published order.
+//!
+//! Coordinates [`code`], [`facts`], and [`grammar`] evaluation on [`ProjectedLinker`].
 pub(super) use facts::Facts;
 
 mod code;

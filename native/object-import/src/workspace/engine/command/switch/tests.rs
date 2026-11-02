@@ -1,4 +1,6 @@
 //! Unit tests for lane switch [`Entry`] and [`Record`] eligibility, [`lane_only`] tracking, and progress.
+//!
+//! Checks forked lane provenance, unavailable lane-only `.bitmap` row tracking, and target load ordering.
 
 use super::{
     command_import::lane::{Entry, Id, Record},

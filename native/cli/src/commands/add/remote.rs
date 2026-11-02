@@ -1,4 +1,6 @@
 //! Best-effort remote [`Host`] collision facts after the tracked [`Projection`] `.bitmap` is persisted.
+//!
+//! Emits [`warn`] diagnostics when newly tracked components collide with remote scope IDs.
 use super::projection::Projection;
 use crate::{
     commands::{color::Chalk, workspace_command::format::Formatter},

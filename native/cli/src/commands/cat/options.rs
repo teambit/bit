@@ -1,4 +1,6 @@
 //! [`Options`] and [`parse`] option parsing for `bit cat`.
+//!
+//! Validates component ID positionals and `--file`, `--config`, `--all`, and `--json` flags.
 
 #[derive(Default)]
 pub(super) struct Options<'a> {

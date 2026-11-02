@@ -1,4 +1,6 @@
 //! Unit tests for finalizing component automatic peer and plus-range dependencies via [`Request`] and [`apply`].
+//!
+//! Confirms that automatic peer ranges follow workspace upgrades and keep snap versions exact.
 
 use super::{Request, apply};
 use serde_json::{Value, json};

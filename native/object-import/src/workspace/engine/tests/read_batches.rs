@@ -1,4 +1,6 @@
 //! Unit tests for parallel workspace file read batches ([`Directory`], [`response`]) and hash normalization.
+//!
+//! Verifies that parallel file reads match serial ordering, raw hashes, and normalized snapshot hashes.
 
 use super::{Directory, response};
 use serde_json::json;
