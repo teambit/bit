@@ -9,6 +9,7 @@ use node_semver::npm;
 use serde_json::Value;
 use std::{cmp::Ordering, io};
 
+/// Rewrites dependency `fieldsDiff` entries in `row` as cli-table 0.3.6 formatted tables when `--table` is set.
 pub(super) fn format(row: &mut Value) -> io::Result<()> {
     let Some(fields) = row.get_mut("fieldsDiff").and_then(Value::as_array_mut) else {
         return Ok(());

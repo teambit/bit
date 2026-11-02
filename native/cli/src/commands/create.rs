@@ -14,10 +14,12 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the `bit create` CLI command.
 pub const COMMAND: Command = Command { name: "create", aliases: &[], run };
 
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
+/// Parsed CLI options for `bit create`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub template_name: String,

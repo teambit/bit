@@ -1,4 +1,4 @@
-//! `bit deps usage <dependency-name>` ([`NodeId`], [`WorkspaceDepsContext`], [`ResolvedDep`]) implementation (`dependencies.main.runtime.ts`).
+//! `bit deps usage <dependency-name>` ([`prepare_usage`], [`NodeId`], [`TreeNode`], [`WorkspaceDepsContext`], [`ResolvedDep`]) implementation (`dependencies.main.runtime.ts`).
 
 use super::{
     parse::snap_to_semver,

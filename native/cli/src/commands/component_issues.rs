@@ -15,12 +15,14 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit component-issues` CLI command.
 pub const COMMAND: Command = Command { name: "component-issues", aliases: &[], run };
 
 const ISSUES_ASPECT_ID: &str = "teambit.component/issues";
 const DIVIDER_LINE: &str =
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
+/// Static metadata for a single component issue definition in [`ISSUES`].
 struct IssueDefinition {
     name: &'static str,
     description: &'static str,

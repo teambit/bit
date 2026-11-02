@@ -8,6 +8,7 @@ use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, io};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Package dependency field names extracted into [`Side::packages`].
 pub(super) const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 

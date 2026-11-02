@@ -5,6 +5,7 @@ use crate::commands::scope_set::Failure;
 use serde_json::{Map, Value};
 use std::collections::HashSet;
 
+/// Parses raw dependency-resolver policy `fields` into a normalized [`ManualPolicy`].
 pub(super) fn parse_manual_fields(fields: &Map<String, Value>) -> Result<ManualPolicy, Failure> {
     let mut manual = ManualPolicy::default();
     for (field, values) in fields {

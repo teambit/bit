@@ -1,6 +1,6 @@
-//! `DeleteCmd --hard` ([`Context`]): select remotes before an irreversible single-attempt delete.
+//! `DeleteCmd --hard` ([`Options`], [`Context`]): select remotes before an irreversible single-attempt delete.
 //!
-//! Coordinates [`select`], [`remote`], and [`report`] for remote component and lane deletion.
+//! Coordinates [`select`], [`remote`], and [`report`] for remote component ([`run`]) and lane ([`lanes`]) deletion.
 
 mod remote;
 mod report;

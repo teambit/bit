@@ -19,12 +19,14 @@ use std::{
     path::Path,
 };
 
+/// Left and right version labels paired with whether the comparison is historical.
 struct Versions<'a> {
     left: &'a str,
     right: &'a str,
     historical: bool,
 }
 
+/// Formats and emits the final terminal or `--json` [`Outcome`] for a computed diff `result`.
 pub(super) fn run_report(
     root: &Path,
     args: &[OsString],

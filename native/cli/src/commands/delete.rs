@@ -15,7 +15,9 @@ use super::{
 use crate::{commands::Command, native::Outcome};
 use preparation::Prepared;
 use std::{env, ffi::OsString, io, path::Path};
+/// Descriptor for the `bit delete` CLI command.
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
+/// Error message returned when `bit delete` requires confirmation in a non-interactive session.
 pub(super) const NON_INTERACTIVE_PROMPT_ERR: &str = "this command requires a confirmation, but this session is non-interactive (no TTY, CI, or an AI agent) so the confirmation prompt cannot be shown.\nre-run with --silent to skip the confirmation, or run the command in an interactive terminal";
 
 #[inline]

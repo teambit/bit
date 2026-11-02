@@ -1,4 +1,4 @@
-//! Dependency debug output ([`policy`], [`versioned`], [`WorkspaceDepsContext`]) for fresh components using a built-in environment.
+//! Dependency debug output ([`prepare_debug`], [`policy`], [`versioned`], [`WorkspaceDepsContext`]) for fresh and versioned built-in environment components.
 
 mod policy;
 mod versioned;

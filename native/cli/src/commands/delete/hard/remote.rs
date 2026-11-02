@@ -8,6 +8,7 @@ use bit_object_import::remote_delete::{Plan, ScopeGuard};
 use serde_json::Value;
 use std::{io, sync::Arc};
 
+/// Single grouped remote delete target (local file scope, file lane, direct HTTP scope, or hub).
 enum Group {
     File(Box<Plan>),
     FileLane { path: std::path::PathBuf, ids: Vec<String>, guard: ScopeGuard },
@@ -15,12 +16,14 @@ enum Group {
     Hub { url: String, ids: Vec<String> },
 }
 
+/// Prepared batch of remote delete [`Group`]s ready for single-attempt execution.
 pub(super) struct Prepared {
     pub(super) lanes: bool,
     force: bool,
     groups: Vec<Group>,
 }
 
+/// Groups `ids` by remote scope and resolves each target into a [`Prepared`] delete batch.
 pub(super) fn prepare(
     context: &Context,
     ids: &[String],

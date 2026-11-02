@@ -2,6 +2,7 @@
 use super::{catalog::Diagnosis, context::Context, store, vendors};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path, process::Command};
+/// Runs a single [`Diagnosis`] check against `context` and returns its JSON result object.
 pub(super) fn examine(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     match diagnosis.name {
         "validate git exec" | "validate npm exec" | "validate yarn exec" => {

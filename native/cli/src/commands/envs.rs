@@ -16,10 +16,12 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the `bit envs` (`bit env`) CLI command.
 pub const COMMAND: Command = Command { name: "envs", aliases: &["env"], run };
 
 const WORKSPACE_NOT_FOUND_ERR: &str = "error: workspace not found";
 
+/// Built-in core environment aspect IDs recognized without workspace or scope aspect resolution.
 pub(super) const CORE_ENVS: &[&str] = &[
     "teambit.harmony/aspect",
     "teambit.react/react",

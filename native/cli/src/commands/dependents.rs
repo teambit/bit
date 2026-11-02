@@ -23,8 +23,10 @@ use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::Value;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the `bit dependents` CLI command.
 pub const COMMAND: Command = Command { name: "dependents", aliases: &[], run };
 
+/// Parsed CLI options for `bit dependents`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: String,

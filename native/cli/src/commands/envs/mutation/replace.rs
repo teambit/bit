@@ -15,6 +15,7 @@ use bit_install::{
 use serde_json::{Map, Value};
 use std::{fs, path::Path};
 
+/// Resolves `new_env` and stages an [`EnvBatch`] replacing `old_env` across matching workspace components.
 pub(super) fn prepare_replace(
     ctx: BitmapContext,
     old_env: &str,

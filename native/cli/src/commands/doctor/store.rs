@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Reads and parses a content-addressed scope object by `hash` from `scope`.
 #[inline]
 pub(super) fn object(scope: &Path, hash: &str) -> io::Result<Option<(String, Value)>> {
     bit_object_import::read_scope_object(scope, hash)

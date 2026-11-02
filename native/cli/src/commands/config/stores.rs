@@ -13,6 +13,7 @@ use std::{
 
 const ASPECT: &str = "teambit.harmony/config-store";
 
+/// Single configuration store layer (`global`, `scope`, or `workspace`) with staged mutation state.
 pub(super) struct Store {
     pub(super) origin: &'static str,
     path: PathBuf,
@@ -23,11 +24,13 @@ pub(super) struct Store {
     missing: bool,
 }
 
+/// Ordered collection of `global`, `scope`, and `workspace` [`Store`] layers.
 pub(super) struct Stores {
     pub(super) entries: Vec<Store>,
 }
 
 impl Stores {
+    /// Loads all active [`Store`] layers from disk for the current working directory.
     pub(super) fn load() -> io::Result<Self> {
         let cwd = env::current_dir()?;
         let mut entries = Vec::with_capacity(3);

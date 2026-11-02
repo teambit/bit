@@ -11,6 +11,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+/// Collects `TypeScript` syntax diagnostics for `files` and merges them into `custom`.
 pub(in crate::commands) fn parse(
     root: &Path,
     target: &Value,

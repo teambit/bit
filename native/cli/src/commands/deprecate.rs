@@ -9,7 +9,9 @@ use super::{
 use crate::{native::Outcome, workspace};
 use bit_object_import::component_deprecation::Plan;
 use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit deprecate` (`bit d`) CLI command.
 pub const COMMAND: Command = Command { name: "deprecate", aliases: &["d"], run };
+/// Descriptor for the `bit undeprecate` CLI command.
 pub const UNDEPRECATE: Command = Command { name: "undeprecate", aliases: &[], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

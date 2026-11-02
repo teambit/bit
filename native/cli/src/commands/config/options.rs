@@ -3,6 +3,7 @@
 //! Parses subcommand arguments, `--origin`, `--detailed`, and `--json` flags.
 use std::ffi::OsString;
 
+/// Parsed CLI flags and positional values for `bit config`.
 pub(super) struct Options {
     pub(super) command: String,
     pub(super) values: Vec<String>,
@@ -12,6 +13,7 @@ pub(super) struct Options {
 }
 
 impl Options {
+    /// Parses `args` into [`Options`] when they fit the native `bit config` grammar.
     pub(super) fn parse(args: &[OsString]) -> Option<Self> {
         let mut values = args
             .iter()

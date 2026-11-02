@@ -1,10 +1,12 @@
 //! [`Options`] and [`parse`] CLI option parsing for `bit deprecate` and `bit undeprecate`.
 
+/// Parsed target pattern, optional `--new-id` replacement, and optional `--range` for deprecation commands.
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
     pub replacement: Option<&'a str>,
     pub range: Option<&'a str>,
 }
+/// Parses `args` into deprecation [`Options`] when they fit the native `bit deprecate` or `bit undeprecate` grammar.
 pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     let mut pattern = None;
     let mut replacement = None;

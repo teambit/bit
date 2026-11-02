@@ -6,6 +6,7 @@ use crate::commands::{color::Chalk, list::table::strip_sgr};
 use serde::Serialize;
 use std::collections::{HashSet, VecDeque};
 
+/// Single BFS-discovered dependent component row with depth, parent, and dependency lifecycle type.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(super) struct DependentInfo {
     pub id: String,
@@ -15,6 +16,7 @@ pub(super) struct DependentInfo {
     pub dependency_type: String,
 }
 
+/// Directed dependency graph used to traverse workspace and scope dependents.
 #[derive(Debug, Default, Clone)]
 pub(super) struct DepGraph {
     nodes: HashSet<String>,
@@ -22,6 +24,7 @@ pub(super) struct DepGraph {
 }
 
 impl DepGraph {
+    /// Inserts a component node `id` into the graph if non-empty and not already present.
     #[inline]
     pub(super) fn add_node(&mut self, id: &str) {
         let id = id.trim();

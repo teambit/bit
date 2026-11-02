@@ -11,11 +11,13 @@ use std::{io, thread};
 const MAX_REQUEST: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
+/// Stateful `BWS1` client wrapping a [`WorkspaceSession`] with monotonically increasing request IDs.
 pub(crate) struct Engine {
     session: WorkspaceSession,
     next_id: u32,
 }
 
+/// Decoded `BWS1` JSON response envelope returned by [`WorkspaceSession`].
 #[derive(Deserialize)]
 struct Response {
     version: u32,

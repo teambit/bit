@@ -16,16 +16,19 @@ use crate::{
 use pnpm_lockfile::Lockfile;
 use std::{env, ffi::OsString, fmt::Write as _, fs, io, path::Path};
 
+/// Summary of all installed pnpm virtual-store copies of a single `package_name`.
 struct PackageReport<'a> {
     package_name: &'a str,
     pnpm_dirs: Vec<PackageCopy>,
 }
 
+/// Single installed version and optional peer suffix inside `node_modules/.pnpm`.
 struct PackageCopy {
     version: String,
     peer_suffix: Option<String>,
 }
 
+/// Runs `bit deps diagnose --package <package>` and prints installed package copy details.
 pub(super) fn run_package(
     root: &Path,
     args: &[OsString],

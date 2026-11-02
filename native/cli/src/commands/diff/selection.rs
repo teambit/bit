@@ -1,4 +1,6 @@
 //! `idsByPattern` selection ([`select`], [`after_capture`], [`criterion`], [`select_capture`]) for workspace and historical diffs.
+//!
+//! Resolves literal directory/component names, glob patterns, and stateful predicates.
 
 pub(super) use states::after_capture;
 pub(in crate::commands) use states::{criterion, select_capture};

@@ -5,6 +5,7 @@ use crate::commands::{color::Chalk, remove::preparation as selection};
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Validates that each target in `ids` has an existing root directory and main file before soft deletion.
 pub(in crate::commands) fn validate(
     root: &Path,
     bitmap: &Value,

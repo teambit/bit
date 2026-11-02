@@ -12,6 +12,7 @@ use serde_json::Value;
 use std::{fs, path::Path};
 
 impl WorkspaceDepsContext {
+    /// Applies stored [`ModelData`] dependency-resolver policy and data entries onto `deps`.
     pub(super) fn apply_model(
         &self,
         model: &ModelData,

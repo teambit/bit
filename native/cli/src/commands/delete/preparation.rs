@@ -5,11 +5,13 @@ use super::{options::Options, policy};
 use crate::commands::remove::preparation as selection;
 use bit_object_import::component_delete::{Batch, DependencyComponent, Scope};
 use std::{io, path::Path};
+/// Validated soft-delete [`Batch`] plan paired with an optional `workspace.jsonc` [`policy::Policy`] edit.
 pub(super) struct Prepared {
     pub plan: Batch,
     pub policy: Option<policy::Policy>,
 }
 impl Prepared {
+    /// Resolves `options.pattern` against `.bitmap` and prepares the soft-delete [`Batch`].
     #[inline]
     pub(super) fn prepare(
         root: &Path,

@@ -1,5 +1,6 @@
 //! The workspace diff [`Options`], [`Output`], and [`Range`] arguments whose selection and output are owned here.
 
+/// Parsed CLI options for `bit diff`.
 #[derive(Default)]
 pub(super) struct Options {
     pub pattern: Option<String>,
@@ -7,6 +8,7 @@ pub(super) struct Options {
     pub output: Output,
 }
 
+/// Output formatting flags (`--json`, `--table`, `--verbose`, `--files-only`, `--configs-only`, `--name-only`, `--stat`).
 #[derive(Default)]
 pub(super) struct Output {
     pub json: bool,
@@ -19,6 +21,7 @@ pub(super) struct Output {
     pub files: Vec<String>,
 }
 
+/// Version range comparison parameters (`--parent`, `from`, `to`).
 #[derive(Default)]
 pub(super) struct Range {
     pub parent: bool,
@@ -26,6 +29,7 @@ pub(super) struct Range {
     pub to: Option<String>,
 }
 
+/// Parses `args` into [`Options`] when they fit the native `bit diff` grammar.
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut index = 0;

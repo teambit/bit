@@ -16,12 +16,14 @@ use std::{fs, io, path::Path};
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const REASON: &str = "delete (pin deleted-on-lane deps to main)";
 
+/// Staged `workspace.jsonc` [`Document`] edit that pins lane-deleted dependencies to their `main` version.
 pub(super) struct Policy {
     before: Vec<u8>,
     document: Document,
     items: Vec<String>,
 }
 impl Policy {
+    /// Prepares a [`Policy`] edit for all non-empty `pins`, or returns `Ok(None)` when `pins` is empty.
     pub(super) fn prepare_many(root: &Path, pins: &[&Pin]) -> io::Result<Option<Self>> {
         if pins.is_empty() {
             return Ok(None);

@@ -1,4 +1,4 @@
-//! Native `bit eject <component-pattern>` (`scopes/workspace/eject/eject-cmd.ts`, [`COMMAND`], [`Options`], [`eject_from_lane`]).
+//! Native `bit eject <component-pattern>` (`scopes/workspace/eject/eject-cmd.ts`, [`COMMAND`], [`Options`], [`lane`], [`eject_from_lane`]).
 
 pub(super) mod lane;
 

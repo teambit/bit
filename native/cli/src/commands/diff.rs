@@ -1,4 +1,4 @@
-//! Native workspace `bit diff` and `bit diff <component>` ([`options`], [`report`], [`selection`]): the shared
+//! Native workspace `bit diff` and `bit diff <component>` ([`COMMAND`], [`options`], [`report`], [`selection`]): the shared
 //! status capture, the workspace engine's `workspaceDiff`, and the file and
 //! metadata formatting of `@teambit/legacy.component-diff`.
 //!

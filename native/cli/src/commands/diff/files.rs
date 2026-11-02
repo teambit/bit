@@ -1,6 +1,8 @@
 //! The file diffs of `bit diff` ([`format`], [`diff`], `files.ts`): `formatFileDiff` of
 //! `@teambit/legacy.component-diff`, and `diffFiles`, which runs
 //! `git diff --no-index --color` on two files.
+//!
+//! Relabels unified diff headers and strips pre-header git metadata lines.
 
 #[cfg(test)]
 mod files_tests;

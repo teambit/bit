@@ -4,6 +4,7 @@ use super::{Capture, Chalk, Engine, array, comparison, decline, one, rows, text}
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Input context for resolving and comparing `--parent` version diffs via [`read`].
 pub(super) struct Request<'a> {
     pub engine: &'a mut Engine,
     pub root: &'a Path,
@@ -15,6 +16,7 @@ pub(super) struct Request<'a> {
     pub chalk: Chalk,
 }
 
+/// Computes parent-to-target diff payloads for all components selected by `request`.
 pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
     let engine = request.engine;
     let identities = selected_identities(

@@ -2,6 +2,7 @@
 //!
 //! Parses `--silent`, `--lane`, `--update-main`, and `--range` flags via [`parse`].
 use bit_object_import::component_delete::Scope;
+/// Parsed CLI flags and target pattern for a local `bit delete` invocation.
 pub(super) struct Options<'a> {
     pub pattern: &'a str,
     pub silent: bool,
@@ -9,6 +10,7 @@ pub(super) struct Options<'a> {
     pub update_main: bool,
     pub scope: Scope,
 }
+/// Parses `args` into local [`Options`] when they fit the native `bit delete` grammar.
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut pattern = None;
     let mut silent = false;

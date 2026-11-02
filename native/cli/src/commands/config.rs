@@ -17,6 +17,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit config` CLI command.
 pub const COMMAND: Command = Command { name: "config", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

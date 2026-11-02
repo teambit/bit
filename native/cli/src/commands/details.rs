@@ -14,6 +14,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit details` CLI command.
 pub const COMMAND: Command = Command { name: "details", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

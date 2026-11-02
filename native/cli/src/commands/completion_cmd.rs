@@ -14,8 +14,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit completion` CLI command.
 pub const COMMAND: Command = Command { name: "completion", aliases: &[], run };
 
+/// Static `yargs` shell completion script printed by `bit completion`.
 const BASH_COMPLETION_SCRIPT: &str = r#"###-begin-bit-completions-###
 #
 # yargs command completion script

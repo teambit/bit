@@ -6,6 +6,7 @@ use std::{
     env, fs, io,
     path::{Path, PathBuf},
 };
+/// Resolved workspace/scope paths, effective configuration, and [`NodeCli`] metadata for `bit doctor`.
 pub(super) struct Context {
     pub root: PathBuf,
     pub scope: Option<PathBuf>,
@@ -14,6 +15,7 @@ pub(super) struct Context {
     pub timestamp: i64,
 }
 impl Context {
+    /// Discovers workspace and scope paths and loads merged configuration for `bit doctor`.
     pub fn load() -> io::Result<Self> {
         let cwd = env::current_dir()?;
         let root = bit_workspace_config::workspace_root(&cwd).unwrap_or(cwd);

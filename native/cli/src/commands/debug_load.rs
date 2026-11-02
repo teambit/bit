@@ -13,8 +13,10 @@ use crate::{native::Outcome, workspace};
 use bit_install::workspace::Bitmap;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the `bit debug-load` CLI command.
 pub const COMMAND: Command = Command { name: "debug-load", aliases: &[], run };
 
+/// Parsed CLI options for `bit debug-load`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: String,

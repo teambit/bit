@@ -1,4 +1,6 @@
 //! `globby` breadth-first traversal ([`captured`], [`files`]), retaining Windows filesystem enumeration order.
+//!
+//! Ensures workspace file diff ordering matches Node.js `globby` output across platforms.
 
 use crate::commands::status::js::decline;
 use std::{

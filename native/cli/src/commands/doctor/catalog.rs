@@ -1,10 +1,12 @@
 //! Core [`Diagnosis`] entries ([`DIAGNOSES`]) in `DoctorRegistrarBuilder` registration order (`doctor.main.runtime.ts`).
 use serde_json::{Value, json};
+/// Static metadata for a single registered `bit doctor` check.
 pub(super) struct Diagnosis {
     pub name: &'static str,
     pub description: &'static str,
     pub category: &'static str,
 }
+/// Ordered table of built-in [`Diagnosis`] checks executed by `bit doctor`.
 pub(super) const DIAGNOSES: &[Diagnosis] = &[
     Diagnosis {
         name: "validate workspace's bit config",

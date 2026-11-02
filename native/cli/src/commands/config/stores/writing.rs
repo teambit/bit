@@ -8,6 +8,7 @@ use std::{
     path::Path,
 };
 
+/// Atomically writes a mutated [`Store`] back to its underlying `global`, `scope`, or `workspace` file.
 pub(super) fn write(store: &Store) -> io::Result<()> {
     if store.path
         .as_os_str()

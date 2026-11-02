@@ -22,6 +22,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Staged `.bitmap` and `component.json` version updates for `bit envs update`.
 pub(in crate::commands::envs) struct EnvUpdatePlan {
     pub root: PathBuf,
     pub raw_env_id: Option<String>,

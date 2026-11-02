@@ -10,6 +10,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
+/// Ensures every input source entry refers to a non-binary regular file on disk.
 pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
     for file in files {
         let path = file["absolutePath"]

@@ -15,12 +15,14 @@ use bit_workspace_config::global_config_dir;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Resolved [`Remote`] endpoint and [`Network`] transport for `bit doctor --remote <scope>`.
 pub(super) struct Plan {
     remote: Remote,
     network: Network,
     name: String,
 }
 
+/// Resolves `--remote` from `options` and `context` into a [`Plan`] when present.
 pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option<Plan>> {
     let Some(name) = options.remote
         .as_deref()

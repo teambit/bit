@@ -19,6 +19,7 @@ use context::Context;
 use options::Options;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit doctor` CLI command.
 pub const COMMAND: Command = Command { name: "doctor", aliases: &[], run };
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {

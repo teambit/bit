@@ -22,6 +22,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Destination file (`workspace.jsonc` or `package.json`) for `bit deps write`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(in crate::commands) enum WriteTarget {
     WorkspaceJsonc,

@@ -24,6 +24,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Staged `.bitmap` and `component.json` edits for `bit envs set`, `unset`, or `replace`.
 pub(super) struct EnvBatch {
     pub root: PathBuf,
     pub ids: Vec<String>,

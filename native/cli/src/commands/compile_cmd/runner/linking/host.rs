@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use bit_install::host::{AfterInstall, AfterInstallResult, Host};
 use serde_json::{Value, json};
 use std::io;
+/// Static [`Host`] implementation for built-in Node and React compilation environments.
 pub(super) struct Builtin;
 #[inline]
 fn unsupported() -> io::Error {

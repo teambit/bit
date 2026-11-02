@@ -1,4 +1,6 @@
 //! Format raw [`files`] comparison rows ([`files_diff`]) for the public diff result.
+//!
+//! Labels `left_version` and `right_version` headers and omits unchanged files.
 
 use super::files;
 use crate::commands::status::js::{array, text, truthy};

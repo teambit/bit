@@ -14,8 +14,10 @@ use crate::commands::{
 use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::{Value, json};
 
+/// Per-component list of removed or unset package names.
 pub(super) type RemovedByComp = Vec<(String, Vec<String>)>;
 
+/// Target component pattern, package list, and lifecycle flags for `bit deps remove` / `unset`.
 pub(super) struct RemoveSpec<'a> {
     pub pattern: &'a str,
     pub packages: &'a [String],
@@ -24,6 +26,7 @@ pub(super) struct RemoveSpec<'a> {
     pub remove_only_if_exists: bool,
 }
 
+/// Stages `.bitmap` and `component.json` edits for `bit deps remove` or `bit deps unset`.
 pub(super) fn prepare_remove(
     mut mutation: BitmapMutation,
     bitmap: &Bitmap,

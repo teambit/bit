@@ -6,6 +6,7 @@ use super::{Compiled, Options, emission, limits, linking::Links, report, write};
 use crate::commands::workspace_command::component_service::{Loaded, Selection};
 use std::{io, path::Path};
 
+/// Prepared compilation plan holding loaded components, link targets, and output directories.
 pub(super) struct Plan {
     loaded: Loaded,
     batch_size: usize,
@@ -14,6 +15,7 @@ pub(super) struct Plan {
     pub compiled: Vec<Compiled>,
 }
 impl Plan {
+    /// Validates [`Options`] and prepares [`Loaded`] components, [`Links`], and [`Compiled`] emission plans.
     pub(super) fn prepare(root: &Path, options: &Options) -> io::Result<Self> {
         if options.generate_types || (options.json && options.components.is_empty()) {
             return Err(io::Error::other("compiler options require another service"));

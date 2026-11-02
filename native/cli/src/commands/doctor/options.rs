@@ -4,6 +4,7 @@ mod tests;
 
 use std::path::PathBuf;
 
+/// Parsed CLI options for `bit doctor`.
 #[derive(Debug, Default)]
 pub(super) struct Options {
     pub name: Option<String>,
@@ -14,6 +15,7 @@ pub(super) struct Options {
     pub include: Includes,
     pub remote: Option<String>,
 }
+/// Archive inclusion/exclusion flags (`--include-node-modules`, `--include-public`, `--exclude-local-scope`).
 #[derive(Debug, Default)]
 pub(super) struct Includes {
     pub node_modules: bool,
@@ -21,6 +23,7 @@ pub(super) struct Includes {
     pub exclude_scope: bool,
 }
 impl Options {
+    /// Parses `args` into [`Options`] when they fit the native `bit doctor` grammar.
     pub fn parse(args: &[&str]) -> Option<Self> {
         let mut options = Self::default();
         let mut cursor = 0;

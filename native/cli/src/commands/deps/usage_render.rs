@@ -5,6 +5,7 @@ use crate::commands::color::Chalk;
 use pnpm_lockfile::{Lockfile, PkgNameVerPeer, ProjectSnapshot};
 use std::{collections::HashMap, fs, path::Path};
 
+/// Builds a leaf [`TreeNode`] for a workspace importer referencing `alias` in `lockfile`.
 pub(super) fn importer_tree_node(
     root: &Path,
     lockfile: &Lockfile,

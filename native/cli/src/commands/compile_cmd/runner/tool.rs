@@ -1,6 +1,6 @@
 //! Invoke the external `TypeScript` compiler ([`Target`]) without importing Bit runtime modules.
 //!
-//! Runs [`compile`] via `tool.cjs` using the bundled React/TypeScript `tsconfig.json`.
+//! Runs [`compile`] via `tool.cjs` using the bundled React/`TypeScript` `tsconfig.json`.
 use crate::discovery::{self, Target};
 use serde_json::{Value, json};
 use std::{
@@ -8,6 +8,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+/// Transpiles source `files` in a single batch using the discovered `TypeScript` compiler [`Target`].
 pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
     if files.is_empty() {
         return Ok(Vec::new());

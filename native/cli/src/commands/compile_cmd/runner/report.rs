@@ -9,6 +9,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, time::Duration};
 
+/// Builds the text or `--json` [`Report`] for a finished compilation run.
 pub(super) fn create(
     rows: &[Compiled],
     options: &Options,

@@ -17,6 +17,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Prepared workspace component and dependency state for `node_modules` linking around compilation.
 pub(super) struct Links {
     components: Vec<WorkspaceComponent>,
     dependencies: IndexMap<String, ComponentDependencies>,
@@ -24,6 +25,7 @@ pub(super) struct Links {
     has_roots: bool,
 }
 impl Links {
+    /// Loads [`Workspace`] components and prepares their [`ComponentDependencies`] for linking.
     pub(super) fn prepare(root: &Path, loaded: &Loaded) -> io::Result<Self> {
         let config = WorkspaceConfig::load(root).map_err(io::Error::other)?;
         let core: Vec<String> = serde_json::from_str(include_str!(

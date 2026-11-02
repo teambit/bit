@@ -1,7 +1,7 @@
-//! Native `cat-object`, `cat-component` (`cmp`), `cat-lane` (`cl`),
-//! `cat-version-history` (`cvh`), and `cat-lane-history` (`clh`) via [`lookup`].
+//! Native [`CAT_OBJECT`], [`CAT_COMPONENT`], [`CAT_LANE`],
+//! [`CAT_VERSION_HISTORY`], and [`CAT_LANE_HISTORY`] commands via [`lookup`].
 //!
-//! Reads and formats low-level scope objects across workspaces and bare scopes.
+//! Reads, resolves, and formats low-level scope objects across workspaces and bare scopes.
 
 pub(in crate::commands) mod lookup;
 #[cfg(test)]

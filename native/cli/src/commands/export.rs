@@ -1,4 +1,4 @@
-//! Native `bit export` ([`cloud`], [`lifecycle`], [`options`], [`report`], [`selection`]) retains transfer ownership through remote persistence and local callbacks.
+//! Native `bit export` ([`COMMAND`], [`cloud`], [`interrupt`], [`lifecycle`], [`options`], [`packages`], [`progress`], [`report`], [`selection`]) retains transfer ownership through remote persistence and local callbacks.
 
 mod cloud;
 #[cfg(test)]
