@@ -37,7 +37,7 @@ fn new_component_cleanup_preserves_dev_dependencies_and_unrelated_staged_config(
     assert_eq!(package_json["devDependencies"][&package], "*");
 }
 
-/// Adds and links a new `fresh/aspect` component in `helper` and returns its full scoped ID.
+/// Adds and links a new `fresh/aspect` component in `helper` and returns its full scoped ID ([`Helper`]).
 fn new_aspect(helper: &Helper) -> String {
     let source = "class Aspect {static dependencies=[];static async provider(){return {};}};module.exports={default:Aspect};";
     helper.output_file("fresh-aspect/index.js", source);

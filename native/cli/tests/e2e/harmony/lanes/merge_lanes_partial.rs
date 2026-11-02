@@ -23,7 +23,7 @@ fn head_of_lane(helper: &Helper, lane: &str, name: &str) -> String {
         .to_owned()
 }
 
-/// Returns the latest hash in `bit log <id> --json` for `id`.
+/// Returns the latest hash in `bit log <id> --json` for `id` ([`Helper`], [`parse`]).
 fn model_head(helper: &Helper, id: &str) -> String {
     let log = parse(&helper.native(&format!("log {id} --json")));
     log.as_array().unwrap().last().unwrap()["hash"]

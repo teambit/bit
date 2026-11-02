@@ -57,7 +57,7 @@ fn setup_bar_and_precision_range(helper: &Helper, pm: &str) {
     );
 }
 
-/// Asserts that `node_modules/<pkg>/package.json` under `base` has `"version": expected`.
+/// Asserts that `node_modules/<pkg>/package.json` under `base` has `"version": expected` ([`Path`], [`Value`]).
 fn assert_node_module_version(base: &Path, pkg: &str, expected: &str) {
     let pkg_json = base
         .join("node_modules")

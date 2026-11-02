@@ -61,6 +61,7 @@ fn main_reset_globs_and_head_batches_match_node() {
     }
 }
 
+/// Verifies that `bit reset --soft` with glob patterns and scoped component names matches Node ([`workspace`], [`compare`]).
 #[test]
 fn soft_reset_patterns_and_scoped_names_match_node() {
     let helper = workspace();

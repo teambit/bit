@@ -7,7 +7,7 @@ use crate::helper::{Helper, parse};
 /// Component moved to a separate origin scope before testing cross-scope hidden `updateDependents` merge.
 const CROSS_SCOPE_COMP: &str = "comp2";
 
-/// Verifies that merging a lane with cross-scope hidden `updateDependents` fetches origin `main` history first ([`CROSS_SCOPE_COMP`]).
+/// Verifies that merging a lane with cross-scope hidden `updateDependents` fetches origin `main` history first ([`CROSS_SCOPE_COMP`], [`Helper`], [`parse`]).
 #[test]
 fn merging_cross_scope_hidden_updates_into_main_fetches_origin_history() {
     let helper = Helper::new();

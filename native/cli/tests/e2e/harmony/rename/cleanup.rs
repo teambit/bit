@@ -6,7 +6,7 @@ use std::fs;
 /// Relative path of the gitignored file inside `comp1` used to test directory cleanup on `bit rename`.
 const IGNORED_SECRET_PATH: &str = "comp1/private/secret.txt";
 
-/// Verifies that relocating a new component removes ignored files and empty directories unless `--preserve` is passed ([`IGNORED_SECRET_PATH`]).
+/// Verifies that relocating a new component removes ignored files and empty directories unless `--preserve` is passed ([`IGNORED_SECRET_PATH`], [`bitmap`], [`successful`]).
 #[test]
 fn relocated_new_component_removes_ignored_files_and_nested_empty_directories() {
     for flag in ["", "--preserve"] {

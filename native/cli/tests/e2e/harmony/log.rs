@@ -7,7 +7,7 @@ use crate::helper::Helper;
 /// Command invocation used to verify the global `--log` startup trace.
 const STATUS_LOG_CMD: &str = "status --log";
 
-/// Verifies that passing the global `--log` flag prints command startup log entries to stdout ([`STATUS_LOG_CMD`]).
+/// Verifies that passing the global `--log` flag prints command startup log entries to stdout ([`STATUS_LOG_CMD`], [`Helper`]).
 #[test]
 fn the_global_log_flag_logs() {
     let helper = Helper::new();

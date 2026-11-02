@@ -84,6 +84,7 @@ fn target_onload_failure_keeps_renamed_bitmap_but_original_sources_unwritten() {
     );
 }
 
+/// Verifies that `bit rename --refactor` preserves in-memory `onLoad` source mutations on refactored dependents.
 #[test]
 fn refactoring_preserves_the_loaded_dependents_in_memory_source_changes() {
     let helper = configured(false);

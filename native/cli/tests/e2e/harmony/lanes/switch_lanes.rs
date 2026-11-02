@@ -59,7 +59,7 @@ fn switch_to_remote_lane_diff_snap_alias_and_local_lane() {
     assert!(helper.native("lane current").contains("int"));
 }
 
-/// bit lane command › switching lanes with deleted files
+/// bit lane command › switching lanes with deleted files ([`parse`], [`len`])
 /// bit lane command › switching lanes and importing in a new scope from remote scope
 #[test]
 fn switch_lanes_with_deleted_files_and_importing_in_new_scope() {

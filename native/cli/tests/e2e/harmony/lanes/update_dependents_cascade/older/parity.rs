@@ -56,7 +56,7 @@ fn state(helper: &Helper) -> (Value, Vec<String>) {
     (parse(&normalize(&value.to_string(), &hashes)), hashes)
 }
 
-/// Normalizes volatile batch ID, log date, and graph references on `cat-component <id> --json`.
+/// Normalizes volatile batch ID, log date, and graph references on `cat-component <id> --json` ([`Helper`], [`Value`]).
 fn version(helper: &Helper, id: &str) -> Value {
     let mut value = parse(&helper.native(&format!("cat-component {id} --json")));
     if let Some(batch) = value.get_mut("batchId") {

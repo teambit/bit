@@ -8,7 +8,7 @@ use serde_json::json;
 /// Shared lane name hosting two identically named components from different scopes.
 const LANE_A: &str = "lane-a";
 
-/// Verifies that two components with the same name from different scopes coexist on a lane with distinct root directories ([`LANE_A`]).
+/// Verifies that two components with the same name from different scopes coexist on a lane with distinct root directories ([`LANE_A`], [`Helper`], [`parse`]).
 #[test]
 fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
     let helper = Helper::new();

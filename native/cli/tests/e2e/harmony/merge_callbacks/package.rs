@@ -34,7 +34,7 @@ fn failed_package_callback_preserves_the_published_objects_and_cleared_pending_p
     published(&oracle);
 }
 
-/// Asserts that `staged-snaps` objects exist on disk and `unmerged.json` is empty in `root` ([`Helper`]).
+/// Asserts that `staged-snaps` objects exist on disk and `unmerged.json` is empty in `root` ([`Helper`], [`Path`]).
 fn published(root: &Path) {
     let scope = bit_object_import::scope_path(root);
     let staged = fs::read_to_string(scope.join("staged-snaps")).unwrap();

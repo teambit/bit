@@ -95,6 +95,7 @@ fn staged_component_failure_retains_the_earlier_default_scope_write() {
     assert_eq!(workspace["teambit.workspace/workspace"]["defaultScope"], "replacement.scope");
     assert_eq!(bitmap(&helper)["comp1"]["defaultScope"], old);
 }
+/// Verifies that `bit scope rename --deprecate` on exported components creates replacements and deprecates originals.
 #[test]
 fn exported_scope_rename_creates_replacements_and_deprecates_the_original_batch() {
     let helper = support::workspace(2, true);

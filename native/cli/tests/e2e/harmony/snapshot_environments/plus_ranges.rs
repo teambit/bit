@@ -40,7 +40,7 @@ fn plus_ranges_require_the_feature_before_snapshot_publication() {
     }
 }
 
-/// Replaces the 40-char `.bitmap` version hash of `bar/foo` in `output` with `SNAP_HASH`.
+/// Replaces the 40-char `.bitmap` version hash of `bar/foo` in `output` with `SNAP_HASH` ([`config::read_jsonc`]).
 fn normalize_hash(root: &std::path::Path, output: &str) -> String {
     let bitmap = config::read_jsonc(&root.join(".bitmap"));
     let version = bitmap["bar/foo"]["version"].as_str().unwrap_or_default();

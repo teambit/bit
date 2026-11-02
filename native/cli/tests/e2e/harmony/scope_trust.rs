@@ -7,7 +7,7 @@ use serde_json::json;
 /// `workspace.jsonc` key listing external scopes trusted to execute environment/aspect code.
 const TRUSTED_SCOPES_KEY: &str = "trustedScopes";
 
-/// Verifies [`TRUSTED_SCOPES_KEY`] enforcement and `bit scope trust` / `bit scope untrust` CLI commands.
+/// Verifies [`TRUSTED_SCOPES_KEY`] enforcement and `bit scope trust` / `bit scope untrust` CLI commands ([`Helper`]).
 #[test]
 fn workspace_scope_trust_gate_and_cli_commands() {
     let helper = Helper::new();

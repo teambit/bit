@@ -8,7 +8,7 @@ use crate::{
 /// Scoped component ID of the delay environment aspect used to separate second-resolution backups.
 const SCOPE_DELAY_ENV: &str = "fixture.tools/env/scope-delay";
 
-/// Registers and assigns the [`SCOPE_DELAY_ENV`] environment aspect to `names`.
+/// Registers and assigns the [`SCOPE_DELAY_ENV`] environment aspect to `names` ([`Helper`]).
 pub(super) fn delay(helper: &Helper, names: &[&str]) {
     let source = include_str!("fixture.cjs");
     helper.output_file("scope-delay/index.js", source);

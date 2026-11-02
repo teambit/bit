@@ -17,7 +17,7 @@ fn sha1_hex(input: &str) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-/// - `local head Version object is missing from scope › head ref points to a missing snap while bitmap is pinned to a valid older version › bit status should surface LocalHeadNotFound with actionable "bit import --objects" instead of the raw graph error`
+/// - `local head Version object is missing from scope › head ref points to a missing snap while bitmap is pinned to a valid older version › bit status should surface LocalHeadNotFound with actionable "bit import --objects" instead of the raw graph error` ([`object_rel_path`], [`sha1_hex`])
 /// - `local head Version object is missing from scope › head ref points to a missing snap while bitmap is pinned to a valid older version › bit checkout head should fail early with LocalHeadNotFound (not a later ComponentNotFound) and suggest "bit import --objects"`
 /// - `local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should fetch the missing Version object rather than fail`
 /// - `local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should write the fetched Version object to the local scope`

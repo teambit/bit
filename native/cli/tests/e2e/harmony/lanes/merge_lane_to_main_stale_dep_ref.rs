@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Verifies that merging a lane to `main` refreshes stale cross-scope dependency references.
+/// Verifies that merging a lane to `main` refreshes stale cross-scope dependency references ([`Helper`]).
 #[test]
 fn stale_pinned_dependency_lives_in_another_scope_cross_scope_pin() {
     let helper = Helper::new();

@@ -7,7 +7,7 @@ use serde_json::json;
 /// Fixture extension directory defining custom scripts (`test-script`, `another-script`, `async-script`).
 const SCRIPTS_ENV_NAME: &str = "env-with-scripts";
 
-/// Verifies `bit script --list`, script execution, `bit env get` script display, and env version mismatch guards ([`SCRIPTS_ENV_NAME`]).
+/// Verifies `bit script --list`, script execution, `bit env get` script display, and env version mismatch guards ([`SCRIPTS_ENV_NAME`], [`Helper`]).
 #[test]
 fn script_command_list_execute_env_get_and_version_mismatch() {
     let helper = Helper::new();

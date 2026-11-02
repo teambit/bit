@@ -62,6 +62,7 @@ fn stash_parent_remains_the_merge_base_after_a_new_tag() {
 fn independent_local_edits_merge_using_the_saved_parent() {
     shared_base(false);
 }
+/// Runs a stash save/load cycle on `comp1` with optional intermediate `tag comp1` before loading.
 fn shared_base(tag: bool) {
     let helper = workspace();
     let oracle = helper.clone_workspace();

@@ -60,6 +60,7 @@ fn files(root: &Path) -> BTreeMap<String, Vec<u8>> {
     files
 }
 
+/// Compares native and Node execution of `command` across output, `.bitmap`, files, model, and `unmerged.json` ([`Helper`]).
 fn compare(helper: &Helper, command: &str) {
     let oracle = helper.clone_workspace();
     let node = Helper::cmd_in_with(&oracle, command, &[("BIT_NATIVE", OsStr::new("off"))]);

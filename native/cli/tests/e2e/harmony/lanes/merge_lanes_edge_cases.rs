@@ -3,7 +3,7 @@
 //! Covers `--tag` merges, failed auto-snap rollback, and empty lane merges.
 
 use crate::helper::{Helper, parse};
-/// Verifies that `bit lane merge --no-squash --tag` creates a two-parent tag on `main` ([`Helper`]).
+/// Verifies that `bit lane merge --no-squash --tag` creates a two-parent tag on `main` ([`Helper`], [`parse`]).
 #[test]
 fn merge_a_diverged_lane_into_main_with_tag() {
     let helper = Helper::new();

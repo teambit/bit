@@ -6,7 +6,7 @@ use crate::helper::Helper;
 /// Warning substring emitted by `bit add` when a component ID already exists on the remote scope.
 const REMOTE_COLLISION_WARNING: &str = "already exist on the remote scope";
 
-/// Verifies that `bit add` warns non-blockingly when a new component's ID already exists on the remote scope ([`REMOTE_COLLISION_WARNING`]).
+/// Verifies that `bit add` warns non-blockingly when a new component's ID already exists on the remote scope ([`REMOTE_COLLISION_WARNING`], [`Helper`]).
 #[test]
 fn new_component_id_exists_on_remote_warning_and_non_collision() {
     let helper = Helper::new();

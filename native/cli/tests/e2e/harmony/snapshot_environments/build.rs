@@ -67,6 +67,7 @@ fn build_workspace_options(fail: bool, package_fail: bool, override_version: boo
     helper
 }
 
+/// Verifies that a custom build pipeline in [`BUILD_ENV`] persists artifact `Source` objects during `bit snap --build`.
 #[test]
 fn custom_build_pipeline_publishes_native_artifacts() {
     let helper = build_workspace(false);

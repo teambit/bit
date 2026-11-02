@@ -8,7 +8,7 @@ use std::{
     io::{Read, Write},
     path::Path,
 };
-/// Marks all `Version` objects under `objects_dir` as `buildStatus: "succeed"`.
+/// Marks all `Version` objects under `objects_dir` as `buildStatus: "succeed"` ([`Path`], [`mark_version_object_built`]).
 fn mark_versions_built(objects_dir: &Path) {
     let Ok(buckets) = fs::read_dir(objects_dir) else { return };
     for bucket in buckets.flatten() {

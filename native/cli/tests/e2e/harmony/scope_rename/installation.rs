@@ -66,6 +66,7 @@ fn completion_duration(body: &str) -> Option<&str> {
     }
     None
 }
+/// Asserts that `duration` is a well-formed numeric value followed by a canonical time unit.
 fn validate_duration(duration: &str) {
     let numeric = duration
         .bytes()

@@ -87,6 +87,7 @@ fn version(root: &std::path::Path) -> serde_json::Value {
     value
 }
 
+/// Creates a workspace where local and remote snaps of `bar/foo` on `main` have diverged ([`Helper`]).
 fn divergent_component() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

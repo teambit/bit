@@ -84,6 +84,7 @@ fn embedded_git_scope_status_and_diff_match_node() {
     assert!(!root.join(".bit").exists());
 }
 
+/// Verifies that dependencies removed from `.bitmap` still resolve via the saved dependency graph in `bit status`.
 #[test]
 fn dependencies_outside_the_bitmap_use_the_saved_graph() {
     let helper = Helper::new();

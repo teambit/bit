@@ -79,6 +79,7 @@ fn double_digit_stash_names_keep_the_published_lexical_latest_selection() {
     assert_eq!(restored, expected.as_bytes());
     assert!(helper.scopes.local_path.join(".bit/stash/stash-10.json").exists());
 }
+/// Verifies that a following flag (`--include-new` or `--force-ours`) is not consumed as a `-m` or `-r` argument.
 #[test]
 fn a_following_flag_is_not_consumed_as_a_message_or_strategy() {
     let helper = workspace();

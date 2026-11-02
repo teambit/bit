@@ -8,7 +8,7 @@ use std::fs;
 /// Component ID deleted on `lane-b` before merging `lane-a` with `--resolve-unrelated`.
 const COMP1: &str = "comp1";
 
-/// Verifies that `bit lane merge --resolve-unrelated` adopts the incoming component when deleted on the current lane ([`COMP1`]).
+/// Verifies that `bit lane merge --resolve-unrelated` adopts the incoming component when deleted on the current lane ([`COMP1`], [`Helper`], [`parse`]).
 #[test]
 fn removed_on_current_lane_merge_unrelated_takes_theirs_and_populates_unrelated() {
     let helper = Helper::new();

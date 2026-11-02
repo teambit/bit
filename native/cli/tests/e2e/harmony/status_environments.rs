@@ -54,6 +54,7 @@ fn parity(helper: &Helper, command: &str) -> Value {
     result
 }
 
+/// Splits `output` into the leading callback stdout prefix and trailing JSON payload slice.
 fn json_output(output: &str) -> (&str, &str) {
     let offset = output.find(['[', '{']).unwrap();
     output.split_at(offset)

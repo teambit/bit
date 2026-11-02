@@ -93,6 +93,7 @@ fn automatic_merge_resolves_changed_dependencies_in_one_snapshot() {
     }
 }
 
+/// Returns the current `.bitmap` version strings for `comp1` and `comp2` under `root` ([`Path`]).
 fn hashes(root: &Path) -> Vec<String> {
     let bitmap = config::read_jsonc(&root.join(".bitmap"));
     ["comp1", "comp2"]

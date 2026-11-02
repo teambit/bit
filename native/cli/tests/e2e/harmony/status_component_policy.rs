@@ -5,7 +5,7 @@ use crate::helper::{FOO_FIXTURE, Helper, config::set_workspace_key, parse};
 use serde_json::{Value, json};
 use std::ffi::OsStr;
 
-/// Creates a workspace with `bar/foo` tagged and `bar/component.json` configured with `policy`.
+/// Creates a workspace with `bar/foo` tagged and `bar/component.json` configured with `policy` ([`Helper`], [`Value`]).
 fn workspace(policy: &Value) -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

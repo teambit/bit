@@ -63,6 +63,7 @@ fn expect_bitmap_version(helper: &Helper, name: &str, version: &str) {
     assert_eq!(actual, Some(version), "bitmap mismatch for {name}: {bitmap}");
 }
 
+/// Verifies `bit import --objects`, full `bit import`, and export merge errors when local and remote heads diverge ([`DivergedSetup`]).
 #[test]
 fn local_behind_remote_and_diverged_import() {
     let state = setup_diverged();

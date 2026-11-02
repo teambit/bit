@@ -68,6 +68,7 @@ fn assert_untag_head_snap(helper: &Helper) {
     );
 }
 
+/// Verifies snapping and tagging components with dependencies (`--snapped` and full workspace tags).
 #[test]
 fn components_with_dependencies() {
     let helper = Helper::new();

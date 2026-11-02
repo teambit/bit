@@ -49,6 +49,7 @@ fn collect_cache_contents(
     }
 }
 
+/// Compares native and Node execution of `line` with `BIT_FEATURES=no-fs-cache` enabled ([`run`], [`cache`]).
 fn compare(helper: &Helper, line: &str, json: bool) {
     let node_root = helper.clone_workspace();
     let rust_root = &helper.scopes.local_path;

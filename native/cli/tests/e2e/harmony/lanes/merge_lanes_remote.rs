@@ -17,7 +17,7 @@ fn setup_exported_dev_lane() -> (Helper, PathBuf) {
     (helper, author_scope)
 }
 
-/// merge lanes - remote lane operations › export a local lane into a remote scope › merging remote lane into main
+/// merge lanes - remote lane operations › export a local lane into a remote scope › merging remote lane into main ([`setup_exported_dev_lane`], [`parse`])
 #[test]
 fn merging_remote_lane_into_main_and_exporting() {
     let (helper, _) = setup_exported_dev_lane();

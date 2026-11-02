@@ -52,6 +52,7 @@ fn stable(output: &str) -> String {
         .join("\n")
 }
 
+/// Compares native and Node execution of `command` in `CI=1` mode and returns the baseline workspace [`PathBuf`].
 fn compare(helper: &Helper, command: &str) -> PathBuf {
     let baseline = helper.clone_workspace();
     let expected = Helper::cmd_in_with(
