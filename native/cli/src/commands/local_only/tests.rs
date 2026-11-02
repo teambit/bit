@@ -13,6 +13,7 @@ fn args(items: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies `bit local-only` subcommand parsing for `set`, `unset`, `list`, and unrecognized subcommands.
 #[test]
 fn parses_set_unset_list_and_unrecognized_subcommands() {
     assert_eq!(

@@ -53,6 +53,7 @@ fn parses_aspect_subcommands() {
     assert_eq!(parse_subcommand(&["bogus"]), Some(Subcommand::Unrecognized("bogus".into())));
 }
 
+/// Verifies that [`deep_merge`] recursively merges nested JSON objects while preserving sibling keys.
 #[test]
 fn deep_merges_nested_objects() {
     let mut target = json!({"a": {"x": 1, "y": 2}, "b": 3});

@@ -15,6 +15,7 @@ fn parses_generate_and_serve_preview_options() {
     assert_eq!(parse_serve_options(&["--port=abc"]), None);
 }
 
+/// Verifies that empty argument slices parse to [`GenerateOptions::default`] and [`ServeOptions::default`].
 #[test]
 fn empty_preview_args_parse_to_defaults() {
     assert_eq!(parse_generate_options(&[]), Some(GenerateOptions::default()));

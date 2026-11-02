@@ -22,6 +22,7 @@ fn accepts_workspace_diff_output_modes() {
     assert!(inline.output.stat);
 }
 
+/// Verifies [`output_error`] detects mutually exclusive diff flags and [`parse`] rejects invalid argument counts.
 #[test]
 fn detects_mutually_exclusive_flags_and_rejects_unimplemented_inputs() {
     for args in [

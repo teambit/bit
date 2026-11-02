@@ -16,6 +16,7 @@ fn receipt(components: &[&str], remote: &[&str]) -> serde_json::Value {
     })
 }
 
+/// Verifies [`prepared`] extracts per-scope object counts and validates `nothingToExport` invariants.
 #[test]
 fn reads_the_prepared_transfers() {
     let value = json!({

@@ -23,6 +23,7 @@ fn parses_login_options() {
     assert_eq!(parse_options(&["unexpected-positional"]), None);
 }
 
+/// Verifies that an empty argument slice parses to [`Options::default`].
 #[test]
 fn empty_login_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options::default()));

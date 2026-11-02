@@ -14,6 +14,7 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies that [`valid_args`] accepts `logout` with optional `--no-color` spellings.
 #[test]
 fn parses_valid_args() {
     assert!(valid_args(&os_args(&["logout"])));

@@ -21,6 +21,7 @@ fn a_stale_receipt_in_the_last_frame_is_still_rejected() {
     assert!(error.to_string().contains("dependency capture changed"), "{error}");
 }
 
+/// Verifies that conflicting observations of the same path are not deduplicated before verification.
 #[test]
 fn different_observations_of_one_path_are_not_deduplicated() {
     let directory = tempfile::tempdir().unwrap();

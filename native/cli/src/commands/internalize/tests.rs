@@ -29,6 +29,7 @@ fn parses_internalize_flags_and_pattern() {
     assert_eq!(parse_options(&["comp1", "comp2"]), None);
 }
 
+/// Verifies that [`is_entry_internal`] reads the `teambit.component/internalize` extension from `component.json`.
 #[test]
 fn detects_internalize_from_component_json() {
     let temp = tempfile::tempdir().unwrap();

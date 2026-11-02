@@ -43,6 +43,7 @@ fn write_scope_obj(scope_dir: &Path, kind: &str, hash: &str, body: &[u8]) {
         .expect("set mtime");
 }
 
+/// Serializes `val` as JSON and writes it into `scope_dir/objects` via [`write_scope_obj`].
 fn write_json_obj(scope_dir: &Path, kind: &str, hash: &str, val: &Value) {
     let bytes = serde_json::to_vec(val).expect("serialize json");
     write_scope_obj(scope_dir, kind, hash, &bytes);

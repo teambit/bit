@@ -31,6 +31,7 @@ fn parses_cat_object_flags_and_hash() {
     assert_eq!(parse_object_options(&["not-a-hash"]), None);
 }
 
+/// Verifies [`parse_id_json_options`] and [`parse_single_id`] for `cat-component`, `cat-version-history`, and `cat-lane`.
 #[test]
 fn parses_cat_component_and_version_history_flags() {
     assert_eq!(

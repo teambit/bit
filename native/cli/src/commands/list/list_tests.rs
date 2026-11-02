@@ -36,6 +36,7 @@ fn parses_the_native_flags() {
     }
 }
 
+/// Verifies that [`namespace_pattern`] and [`Wildcard`] match scoped component namespaces.
 #[test]
 fn matches_namespaces_like_the_wildcard_regex() {
     let pattern = |namespace: &str| Wildcard::new(&namespace_pattern(namespace)).unwrap();

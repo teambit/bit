@@ -21,6 +21,7 @@ fn join_linux_matches_node() {
     }
 }
 
+/// Verifies [`pattern`] against `rebaseIgnorePattern` outputs from Bit 2.2.94.
 #[test]
 fn rebase_matches_node() {
     let cases = [

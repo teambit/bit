@@ -40,6 +40,7 @@ fn parses_cat_scope_flags_including_full() {
     );
 }
 
+/// Verifies [`build_component_entry`] populates `ModelComponent`, `bindingPrefix`, `versions`, and `head` fields.
 #[test]
 fn builds_component_json_entry_with_extra_fields() {
     let raw = json!({

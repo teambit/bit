@@ -14,6 +14,7 @@ fn published_windows_absolute_path_never_becomes_version_relative_path() {
     assert_ne!(key, "index.js");
 }
 
+/// Verifies [`published_source_key`] strips a matching POSIX component root prefix from a file path.
 #[test]
 fn published_posix_absolute_path_becomes_version_relative_path() {
     assert_eq!(published_source_key("/workspace/comp1", "/workspace/comp1/index.js"), "index.js");

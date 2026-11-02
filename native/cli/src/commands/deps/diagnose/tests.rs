@@ -13,6 +13,7 @@ fn parses_peer_suffix() {
     assert_eq!(copy.peer_suffix.as_deref(), Some("@scope/peer@4.0.0 + react@18.0.0"));
 }
 
+/// Verifies that [`render`] groups multiple [`PackageCopy`] entries under a single package version heading.
 #[test]
 fn groups_copies_by_version() {
     let report = PackageReport {

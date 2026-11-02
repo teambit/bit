@@ -22,6 +22,7 @@ fn parses_clone_options() {
     assert_eq!(parse_options(&["a", "b", "c"]), None);
 }
 
+/// Verifies [`parse_component_name`] extracts the trailing component name from scoped IDs.
 #[test]
 fn parses_component_name_from_scoped_id() {
     assert_eq!(parse_component_name("my-scope/workspace"), Some("workspace".into()));

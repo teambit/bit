@@ -20,6 +20,7 @@ fn parses_check_types_options() {
     );
 }
 
+/// Verifies [`is_empty_workspace`] detects an empty `.bitmap` for `bit check-types`.
 #[test]
 fn detects_empty_workspace_for_check_types() {
     let temp = tempfile::tempdir().unwrap();

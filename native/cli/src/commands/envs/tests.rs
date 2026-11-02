@@ -60,6 +60,7 @@ fn parses_envs_subcommands() {
     assert_eq!(parse_subcommand(&["get", "comp1", "--services=-bad"]), None);
 }
 
+/// Verifies [`remove_env_from_map`] removes both `teambit.envs/envs` and the versioned environment key.
 #[test]
 fn removes_existing_env_and_versioned_entry_from_config_map() {
     let mut cfg = json!({

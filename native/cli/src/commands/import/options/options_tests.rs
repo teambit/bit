@@ -23,6 +23,7 @@ fn imports_without_installing_and_fetches() {
     assert_eq!(parse(&["fetch", "s/feature", "s/other", "--lanes"]).unwrap().ids.len(), 2);
 }
 
+/// Verifies [`parse`] for `bit import` invocations that install packages and match wildcard patterns.
 #[test]
 fn imports_that_install_and_wildcard_patterns() {
     let import = parse(&["import", "s/a"]).unwrap();

@@ -39,6 +39,7 @@ fn parses_create_arguments_and_options() {
     assert_eq!(parse_options(&["react", "comp1", "--no-force"]), None);
 }
 
+/// Verifies [`validate_options`] rejects invalid scope names and component names matching the template name.
 #[test]
 fn rejects_invalid_scope_and_same_name_as_template() {
     let dir = tempdir().expect("tempdir");

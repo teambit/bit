@@ -29,6 +29,7 @@ fn reports_one_switched_component() {
     assert!(report.details.is_none());
 }
 
+/// Verifies that [`format`] renders reverted file summaries and `Checkout Summary` lines for `bit revert`.
 #[test]
 fn reports_reverted_files_with_original_checkout_summary() {
     let options = parse_revert(&["my.scope/one", "0.0.1", "-x"]).unwrap();

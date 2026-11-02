@@ -7,6 +7,7 @@ fn matching<'a>(ids: &[&'a str], pattern: &str) -> Vec<&'a str> {
     super::matching(ids, &crate::commands::patterns::split(pattern)).unwrap()
 }
 
+/// Verifies character classes, `+(...)` extglobs, and comma-splitting quirks in [`matching`].
 #[test]
 fn extended_patterns_keep_bits_split_and_version_quirks() {
     let ids = ["scope/ui/button", "scope/ui/card", "scope/ui/button2", "scope/ui/label"];

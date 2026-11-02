@@ -50,6 +50,7 @@ fn parses_git_subcommands_and_flags() {
     assert_eq!(parse_args(&[OsString::from("git"), OsString::from("--help")]), None);
 }
 
+/// Verifies [`merge_bitmap_contents`] across `manual`, `ours`, and `theirs` merge strategies.
 #[test]
 fn merges_bitmap_contents_across_strategies_and_detects_conflicts() {
     let current = r#"{

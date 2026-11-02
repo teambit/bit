@@ -22,6 +22,7 @@ fn parses_compile_options() {
     );
 }
 
+/// Verifies [`validate_compile_selectors`] rejects unscoped missing IDs and invalid scope or component names.
 #[test]
 fn validates_compile_selectors_for_unscoped_and_invalid_ids() {
     let dir = tempdir().unwrap();

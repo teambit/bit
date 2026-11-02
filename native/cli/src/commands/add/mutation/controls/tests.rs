@@ -39,6 +39,7 @@ fn a_control_symlink_cannot_replace_a_regular_preimage() {
     assert!(refresh(&path).is_err());
 }
 
+/// Verifies that an empty control file hashes identically to [`bit_install::policy::scope::read_proof`].
 #[test]
 fn empty_control_file_hashes_consistently_with_scope_read_proof() {
     let directory = tempfile::tempdir().unwrap();

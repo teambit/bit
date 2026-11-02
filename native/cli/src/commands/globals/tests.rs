@@ -20,6 +20,7 @@ fn parses_globals_json_flags() {
     assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("extra")]), None);
 }
 
+/// Verifies [`known_global_dirs`], [`render_report`], and [`render_json`] output formatting.
 #[test]
 fn renders_globals_text_and_json_formats() {
     let dirs = known_global_dirs(

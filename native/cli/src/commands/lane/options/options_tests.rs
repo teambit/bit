@@ -38,6 +38,7 @@ fn lane_merges_with_their_options() {
     );
 }
 
+/// Verifies that unsupported `bit lane merge` flag combinations return `None`.
 #[test]
 fn other_lane_merges_are_left_to_node() {
     for args in [

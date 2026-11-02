@@ -10,6 +10,7 @@ fn branch_validation_and_trimming_preserve_the_released_unicode_distinction() {
     assert_eq!(super::super::trim("\u{0085}main\u{0085}"), "\u{0085}main\u{0085}");
 }
 
+/// Verifies that empty and whitespace-only branch names are rejected while valid branch names pass.
 #[test]
 fn empty_and_whitespace_only_branch_names_are_rejected() {
     assert!(!super::valid_branch(""));

@@ -32,6 +32,7 @@ fn parses_dependents_options_and_checks_bitmap_scope() {
     assert!(!is_unscoped_bitmap_row(&json!({ "scope": "my-scope", "version": "0.0.1" })));
 }
 
+/// Verifies [`DepGraph::dependents_of`] and [`render_dependents_report`] for transitive dependents.
 #[test]
 fn computes_transitive_dependents_and_formats_report() {
     let mut graph = DepGraph::default();

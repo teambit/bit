@@ -26,6 +26,7 @@ fn restored_partition_only_concatenates_changed_and_added_components() {
     );
 }
 
+/// Verifies that [`project`] retains absent fields and sets `mergeSnapResults` to explicit `null`.
 #[test]
 fn json_keeps_absent_fields_absent_and_explicit_null_snapshot_result() {
     let result = project(

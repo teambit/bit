@@ -22,6 +22,7 @@ fn validates_completion_options_and_renders_scripts() {
     assert!(zsh.ends_with("###-end-bit-completions-###\n"));
 }
 
+/// Verifies [`valid_options`] accepts explicit `--no-color=true` and `--no-color=false` flags and rejects positionals.
 #[test]
 fn valid_options_accepts_explicit_no_color_boolean_values() {
     assert!(valid_options(&["--no-color=true"]));

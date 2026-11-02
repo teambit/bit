@@ -37,6 +37,7 @@ fn parses_publish_options_and_detects_empty_workspace() {
     assert_eq!(collect_untagged_ids(temp.path(), &entries), vec!["my-scope/comp1".to_owned()]);
 }
 
+/// Verifies that [`parse_options`] rejects multiple positional patterns or unknown flags.
 #[test]
 fn rejects_multiple_patterns_or_unknown_publish_flags() {
     assert_eq!(parse_options(&["comp1", "comp2"]), None);

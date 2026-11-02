@@ -25,6 +25,7 @@ fn parses_app_options_and_detects_empty_workspace() {
     assert!(is_empty_app_workspace(temp.path()).unwrap());
 }
 
+/// Verifies [`discover_workspace_apps`] and [`extract_app_name`] across tracked workspace components.
 #[test]
 fn discovers_app_components_in_workspace() {
     assert_eq!(

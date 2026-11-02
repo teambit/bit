@@ -15,6 +15,7 @@ fn list_precedes_archive_validation() {
             .is_err(),
     );
 }
+/// Verifies that [`Options::validate`] reports `--remote` incompatibilities in canonical flag order.
 #[test]
 fn remote_incompatibilities_keep_published_order() {
     let options = Options::parse(&["--archive", "--include-public", "--remote", "origin"]).unwrap();

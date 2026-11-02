@@ -13,6 +13,7 @@ fn wildcard_matches_nested_namespaces_without_matching_other_prefixes() {
     assert!(!wildcard("ui/button", "ui/buttons"));
 }
 
+/// Verifies that an exact component ID and `**` match in [`wildcard`].
 #[test]
 fn exact_component_id_matches_itself_in_wildcard_helper() {
     assert!(wildcard("ui/button", "ui/button"));

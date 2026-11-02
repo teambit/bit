@@ -27,6 +27,7 @@ fn expands_dollar_patterns() {
     );
 }
 
+/// Verifies that [`format`] preserves multiple unified diff hunks after rewriting file headers.
 #[test]
 fn preserves_multiple_hunks_after_rewriting_file_headers() {
     let diff = "diff --git a/f.js b/f.js\n--- a/f.js\n+++ b/f.js\n@@ -1 +1 @@\n-old1\n+new1\n@@ -10 +10 @@\n-old2\n+new2";

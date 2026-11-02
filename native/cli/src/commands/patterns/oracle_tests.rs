@@ -21,6 +21,7 @@ const IDS: [&str; 10] = [
 /// Results `multimatch` 5 with `minimatch` 3.1.5 gave for these patterns.
 const ORACLE: &str = include_str!("oracle.txt");
 
+/// Verifies that [`matching`] and [`split`] agree with every `multimatch` case in [`ORACLE`].
 #[test]
 fn matches_agree_with_multimatch() {
     for line in ORACLE.lines() {

@@ -28,6 +28,7 @@ fn equal_remote_matches_repeat_in_local_phase_before_reversed_remote_phase() {
         ],
     );
 }
+/// Verifies that [`classify`] treats differing component versions as distinct IDs.
 #[test]
 fn different_versions_are_not_equal_component_ids() {
     let local = vec!["old.scope/comp1".into()];

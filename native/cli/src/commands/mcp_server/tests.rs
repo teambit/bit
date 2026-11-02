@@ -53,6 +53,7 @@ fn parses_setup_and_rules_subcommands() {
     assert_eq!(parse_subcommand(&[]), None);
 }
 
+/// Verifies that [`execute_setup`] writes `.cursor/mcp.json` and returns a workspace confirmation message.
 #[test]
 fn writes_workspace_setup_and_rules_files() {
     let dir = tempdir().expect("tempdir");

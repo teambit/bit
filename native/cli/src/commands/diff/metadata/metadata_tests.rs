@@ -13,6 +13,7 @@ fn prettifies_field_names() {
     assert_eq!(prettify("files"), "Files");
 }
 
+/// Verifies [`Id::parse`], [`Id::from_object`], and [`Id::same`] versioned and unversioned comparisons.
 #[test]
 fn parses_ids_like_bit_id() {
     let id = Id::parse("my.scope/ui/button@1.0.0").unwrap();

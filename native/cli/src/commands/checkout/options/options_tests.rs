@@ -25,6 +25,7 @@ fn revert_accepts_only_its_positional_order_and_options() {
     }
 }
 
+/// Verifies that [`parse`] accepts the supported native `bit checkout` target and flag subset.
 #[test]
 fn accepts_the_native_subset() {
     let options = parse(&["0.0.1", "one", "-x"]).unwrap();

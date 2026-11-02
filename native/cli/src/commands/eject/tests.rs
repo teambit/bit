@@ -37,6 +37,7 @@ fn parses_eject_options() {
     assert_eq!(parse_options(&[]), None);
 }
 
+/// Verifies [`validate_workspace`] rejects `bit eject` when `.bitmap` is checked out on a lane.
 #[test]
 fn rejects_eject_when_workspace_on_lane() {
     let temp = tempfile::tempdir().unwrap();

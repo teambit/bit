@@ -12,6 +12,7 @@ fn existing_windows_files_only_qualify_for_mkdir_translation_on_windows() {
     assert!(!mkdir_not_directory(&io::Error::other("callback failure")));
 }
 
+/// Verifies that [`error`] preserves the original OS error when no blocked parent path exists.
 #[test]
 fn without_a_proven_blocker_original_error_is_preserved() {
     let actual = error(Path::new("."), &[], io::Error::from_raw_os_error(183));

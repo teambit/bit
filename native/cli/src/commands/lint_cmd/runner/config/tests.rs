@@ -23,6 +23,7 @@ fn generated_configuration_name_matches_released_object_hash() {
     assert!(config.bytes.ends_with(b"\n"));
 }
 
+/// Verifies that [`hash::hash`] preserves plain-object prototypes and UTF-16 code unit lengths.
 #[test]
 fn plain_object_hash_preserves_prototypes_and_unicode_string_lengths() {
     assert_eq!(hash::hash(&json!({})).unwrap(), "323217f643c3e3f1fe7532e72ac01bb0748c97be");

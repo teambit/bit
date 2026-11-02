@@ -28,6 +28,7 @@ fn ignored_files_keep_separate_yellow_sections_and_bold_names_inside_red() {
     );
 }
 
+/// Verifies that an empty-directory warning preserves yellow styling inside the outer red [`Chalk`] wrapper.
 #[test]
 fn empty_directory_keeps_yellow_inside_the_outer_red() {
     let chalk = Chalk::new(true);

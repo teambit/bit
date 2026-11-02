@@ -29,6 +29,7 @@ fn parses_debug_load_options() {
     assert_eq!(parse_options(&[]), None);
 }
 
+/// Verifies [`check_missing_workspace_component`] reports missing components and accepts tracked `.bitmap` entries.
 #[test]
 fn detects_unknown_workspace_component() {
     let temp = tempfile::tempdir().unwrap();

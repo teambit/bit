@@ -36,6 +36,7 @@ fn parses_new_arguments_and_options() {
     assert_eq!(parse_options(&["react", "my-workspace", "--no-current-dir"]), None);
 }
 
+/// Verifies [`validate_options`] error reporting for existing destination paths, `--load-from`, and nested workspaces.
 #[test]
 fn validates_existing_workspace_existing_path_and_load_from() {
     let dir = tempdir().expect("tempdir");

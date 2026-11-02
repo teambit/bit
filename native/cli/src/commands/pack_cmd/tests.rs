@@ -28,6 +28,7 @@ fn parses_pack_options_and_detects_missing_scope() {
     assert!(is_missing_scope(temp.path(), &opts));
 }
 
+/// Verifies that [`build_tgz_bytes`] produces a gzipped tar archive with `package/package.json` and component files.
 #[test]
 fn builds_valid_tgz_archive() {
     let pkg = json!({

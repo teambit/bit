@@ -49,6 +49,7 @@ fn parses_build_options_and_validates_capsule_flags() {
     );
 }
 
+/// Verifies [`is_empty_build_workspace`] on an empty `.bitmap` with and without `--list-tasks`.
 #[test]
 fn detects_empty_build_workspace() {
     let temp = tempfile::tempdir().unwrap();

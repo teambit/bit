@@ -20,6 +20,7 @@ fn parses_local_and_remote_history_views() {
     assert!(parse(&["alpha", "beta"]).is_none());
 }
 
+/// Verifies [`resolve_local_target`] for root directories, `.bit/index.json` entries, and missing components.
 #[test]
 fn resolves_local_target_from_root_dir_index_or_user_error() {
     let dir = tempdir().unwrap();

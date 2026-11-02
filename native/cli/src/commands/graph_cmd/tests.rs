@@ -41,6 +41,7 @@ fn parses_graph_options_and_validates_remote_or_host() {
     assert!(jr.json);
 }
 
+/// Verifies [`CompGraph::filter_cycles`] leaves an empty graph unchanged.
 #[test]
 fn empty_graph_filter_cycles_preserves_empty_nodes_and_edges() {
     let mut graph = CompGraph::default();

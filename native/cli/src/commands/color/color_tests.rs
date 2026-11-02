@@ -32,6 +32,7 @@ fn chains_and_nests_like_chalk() {
     );
 }
 
+/// Verifies that a disabled [`Chalk`] instance returns input strings verbatim without ANSI escapes.
 #[test]
 fn disabled_chalk_returns_inputs_verbatim_across_all_helpers() {
     let chalk = Chalk::new(false);

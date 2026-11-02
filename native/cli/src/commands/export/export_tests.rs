@@ -55,6 +55,7 @@ fn parses_the_native_flags() {
     }
 }
 
+/// Verifies [`persist_failure`] formats failed remote scope persistence errors like `ExportPersist`.
 #[test]
 fn reports_a_failed_persist_like_persist_failed() {
     let scopes = ["a".to_string(), "b".to_string()];

@@ -28,6 +28,7 @@ fn parses_cli_generate_docs_and_renders_frontmatter() {
     );
 }
 
+/// Verifies that empty argument slices are rejected by [`is_generate_docs`] and return `None` from [`parse_unknown_skill`].
 #[test]
 fn empty_args_are_not_generate_docs_and_have_no_unknown_skill() {
     assert!(!is_generate_docs(&[]));

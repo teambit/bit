@@ -24,6 +24,7 @@ fn parses_lint_options_and_detects_missing_host() {
     assert!(is_missing_host(temp.path()));
 }
 
+/// Verifies [`validate_lint_pattern`] diagnostic messages for missing glob and component-ID patterns.
 #[test]
 fn validates_lint_pattern_against_workspace_bitmap() {
     let temp = tempfile::tempdir().unwrap();

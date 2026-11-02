@@ -12,6 +12,7 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies that [`parse_subcommand`] extracts the positional subcommand and ignores `--no-color`.
 #[test]
 fn parses_subcommand() {
     assert_eq!(parse_subcommand(&os_args(&["npmrc", "foo"])), Some("foo".to_owned()));

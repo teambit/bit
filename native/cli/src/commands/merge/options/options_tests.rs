@@ -28,6 +28,7 @@ fn accepts_the_native_subset() {
     assert!(!parse(&[]).unwrap().skip_install);
 }
 
+/// Verifies that [`parse`] rejects incompatible or unsupported `bit merge` flags.
 #[test]
 fn rejects_everything_else() {
     assert!(parse(&["-x", "--no-snap", "-m", "msg"]).is_none());

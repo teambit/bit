@@ -17,6 +17,7 @@ fn archive_extensions_and_dotted_directories_match_published_names() {
         assert_eq!(filename(Path::new(input), 123), Path::new(expected));
     }
 }
+/// Verifies that [`excluded`] retains `.bit/scope.json` and command history while excluding internal objects and caches.
 #[test]
 fn exclusion_keeps_scope_metadata_and_hides_only_internal_payloads() {
     let options = Options::parse(&["--archive", "--exclude-local-scope"]).unwrap();

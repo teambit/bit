@@ -8,6 +8,8 @@ use super::{
 };
 
 /// Verifies `bit ci` subcommand parsing across `verify`, `pr`, `merge`, and `sync`.
+///
+/// Also checks [`validate_sync_options`] rejection of incompatible `--init`, `--all`, and `--main` combinations.
 #[test]
 fn parses_ci_subcommands_and_validates_sync_flags() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::Bare));

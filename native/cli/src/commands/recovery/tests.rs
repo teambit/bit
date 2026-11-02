@@ -19,6 +19,7 @@ fn abort_grammars_select_only_explicit_noninteractive_operations() {
     assert!(parse_lane(&["--silent", "component"]).is_none());
 }
 
+/// Verifies that [`format_component`] strips `@version` suffixes from aborted component IDs.
 #[test]
 fn component_abort_reports_unversioned_ids() {
     let report = format_component(

@@ -17,6 +17,7 @@ fn seed(cache: &Path, path: &Path, docs: &str) -> f64 {
         .unwrap()
 }
 
+/// Verifies that [`hit`] accepts exact or older source timestamps and rejects fractionally newer timestamps.
 #[test]
 fn hit_accepts_arbitrary_metadata_and_exact_timestamp_but_not_fractionally_newer_source() {
     let directory = tempfile::tempdir().unwrap();
