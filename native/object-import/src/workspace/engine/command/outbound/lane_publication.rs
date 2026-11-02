@@ -20,6 +20,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained lane publication state including workspace paths, acknowledgements, models, and control diffs.
 pub(super) struct Prepared {
     workspace: Workspace,
     lane: Lane,

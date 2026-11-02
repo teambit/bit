@@ -57,6 +57,7 @@ pub(super) fn select(
     Ok(selected)
 }
 
+/// Looks up the current lane head hash for `identity` inside `context["lane"]["current"]`.
 #[inline]
 fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     let (scope, name) = identity

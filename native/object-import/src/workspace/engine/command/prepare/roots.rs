@@ -40,6 +40,7 @@ pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     Ok(())
 }
 
+/// Selects workspace `targets` matching a directory path or simple component identity `pattern`.
 pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     let normalized = pattern.trim().replace('\\', "/");
     let directory = normalized

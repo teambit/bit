@@ -48,6 +48,7 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     Ok((count, output))
 }
 
+/// Updates the recovery repository and context models with restored `main` objects and `staged-snaps`.
 #[inline]
 fn accept_restored_objects(retained: &mut super::Retained) -> io::Result<()> {
     retained.record.repository.accept_recovery_objects(

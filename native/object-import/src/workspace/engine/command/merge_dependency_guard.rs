@@ -20,6 +20,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Maximum cumulative source bytes (`64 MiB`) inspected across a single dependency guard verification.
 const MAX_BYTES: usize = 64 * 1024 * 1024;
 const MAX_FILE: usize = 1024 * 1024;
 

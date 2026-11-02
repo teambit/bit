@@ -45,6 +45,7 @@ lines.on('line', line => {
 lines.on('close', () => queue.then(() => process.exit(0)));
 ";
 
+/// Persistent Node.js child process executing `@teambit/legacy.scope-api` server actions over stdio.
 pub(super) struct FileBridge {
     child: Child,
     input: ChildStdin,

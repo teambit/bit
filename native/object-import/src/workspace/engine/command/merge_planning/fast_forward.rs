@@ -39,6 +39,7 @@ pub(super) fn prepare(
     persist_models(planned, prepared, models)
 }
 
+/// Validates that `selected.remote` is a valid object hash and rejects unsupported hidden fast-forwards.
 #[inline]
 fn validate_target(
     record: &Record,

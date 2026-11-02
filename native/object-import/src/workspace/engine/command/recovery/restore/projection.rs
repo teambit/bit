@@ -11,6 +11,7 @@ pub(in super::super) struct Controls {
     removals: Vec<PathBuf>,
 }
 impl Prepared {
+    /// Rejects any dependency read proof in `rows` that references `last-merged` or a removed directory.
     #[inline]
     pub(in super::super) fn validate_dependencies(&self, rows: &[proof::Proof]) -> io::Result<()> {
         let backup = crate::scope_path(&self.root).join("last-merged");

@@ -18,6 +18,7 @@ pub(super) struct Main {
     pub(super) objects: Vec<(String, Vec<u8>)>,
 }
 impl Main {
+    /// Loads and validates `last-merged/main-components` object backups when the directory exists.
     pub(super) fn prepare(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<Option<Self>> {
         let directory = crate::scope_path(root).join("last-merged/main-components");
         proof::probe(&directory, proofs)?;

@@ -23,6 +23,7 @@ pub(in super::super) struct Resolved {
     pub hub: bool,
 }
 
+/// Remote scope host resolution settings and in-memory host cache for an outbound export.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in super::super) struct Resolution {

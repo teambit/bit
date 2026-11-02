@@ -40,6 +40,7 @@ pub(super) fn replay(
     Ok(())
 }
 
+/// Maps a selection observation `stage` name to the `[head, remote]` pair that requires distance replay.
 #[inline]
 fn stage_heads<'a>(
     stage: Option<&str>,

@@ -36,6 +36,7 @@ pub(super) fn load_selected(
     })
 }
 
+/// Resolves the incoming remote head and current head hashes for `identity` from lane targets or `model`.
 fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(String, String)> {
     let identity = identity.trim();
     let lane_target = record.context

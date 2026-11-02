@@ -18,6 +18,7 @@ impl Publication {
         }
     }
 
+    /// Returns the slice of exported component IDs that no longer exist in `.bitmap`.
     #[inline]
     pub(super) fn non_existing_ids(&self) -> &[String] {
         match self {

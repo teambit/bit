@@ -13,6 +13,7 @@ pub(super) struct Lane {
     _directory: scratch::Directory,
     pub(super) id: String,
 }
+/// Prepares a `last-merged/lane` backup restoration when `current` is on a lane.
 #[inline]
 pub(super) fn prepare(
     root: &Path,

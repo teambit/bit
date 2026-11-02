@@ -15,6 +15,7 @@ pub(super) fn matching(
     matching_for_separator(directory, prefix, overlay, std::path::MAIN_SEPARATOR)
 }
 
+/// Collects 40-hex object hashes matching `prefix` using `separator` for Windows parity checks.
 #[inline]
 fn matching_for_separator(
     directory: &Path,

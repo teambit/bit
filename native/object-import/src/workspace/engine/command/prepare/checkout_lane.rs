@@ -18,6 +18,7 @@ struct Additions {
     prospective: Vec<Value>,
 }
 
+/// Candidate selection parameters for filtering incoming lane additions against workspace targets.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidates<'a> {
     root: &'a Path,

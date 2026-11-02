@@ -5,6 +5,7 @@ use super::{Prepared, Record, invalid, projection};
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Alias for the prepared workspace checkout policy publication state.
 type Publication = super::super::checkout_policy::Prepared;
 
 /// Prepares workspace dependency resolver policy updates from merged component rows.

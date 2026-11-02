@@ -18,6 +18,7 @@ pub(super) struct Reconciled {
     pub local: Value,
 }
 
+/// Reconciles hidden dependent heads and appends compressed `LaneHistory` and `Lane` objects to `selected`.
 pub(super) fn append(
     input: &Prepare,
     loaded: &Loaded,

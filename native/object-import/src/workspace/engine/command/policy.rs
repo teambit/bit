@@ -15,7 +15,7 @@ use super::{Record, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
-
+/// Baseline component directory, version, consumer projection, and 3-way `Version` triple for `ConfigMerger`.
 pub(super) struct Baseline {
     pub(super) directory: String,
     pub(super) version: String,

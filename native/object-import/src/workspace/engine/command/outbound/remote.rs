@@ -19,6 +19,7 @@ pub(super) struct Actions {
 }
 
 impl Actions {
+    /// Creates an empty remote [`Actions`] dispatcher with no active file-bridge child process.
     #[inline]
     pub(super) fn new(_retained: &Retained) -> io::Result<Self> {
         Ok(Self { file: None })

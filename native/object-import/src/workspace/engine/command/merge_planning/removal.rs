@@ -11,6 +11,7 @@ pub(super) struct Removed {
     pub(super) directory: String,
 }
 
+/// Validates that every component directory in `removed` is a safe relative ordinary directory under `root`.
 #[inline]
 pub(super) fn validate(root: &Path, removed: &[Removed]) -> io::Result<()> {
     for row in removed {

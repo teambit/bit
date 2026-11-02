@@ -30,6 +30,7 @@ pub(super) fn validate_captures(record: &Record, planned: &planning::Planned) ->
     Ok(())
 }
 
+/// Filters and reorders `selected` and `planned.captured` according to lane selection rules and `pattern`.
 pub(super) fn apply(
     record: &mut Record,
     planned: &mut planning::Planned,

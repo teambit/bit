@@ -1,5 +1,4 @@
 //! Publish [`Selected`] original-scope export batches ([`Component`]) via [`reconcile`] and [`removed`].
-
 pub(super) use self::reconcile::present as reconcile_present;
 mod reconcile;
 mod removed;
@@ -15,6 +14,7 @@ use std::{
     io::{self, Write},
     path::{Path, PathBuf},
 };
+/// Per-component model and `VersionHistory` preimages/postimages for main-lane publication.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Component {
     unchanged: bool,

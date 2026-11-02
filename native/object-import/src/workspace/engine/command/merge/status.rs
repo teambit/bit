@@ -17,6 +17,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub(in crate::workspace::engine::command) lane: Option<&'a Value>,
     pub(in crate::workspace::engine::command) distance: &'a Value,
 }
+/// Options governing modified-status, unrelated-history strategy, and target-as-diverged classification.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct SelectionOptions {
     pub(in crate::workspace::engine::command) modified: bool,

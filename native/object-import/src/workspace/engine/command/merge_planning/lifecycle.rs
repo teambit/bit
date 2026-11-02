@@ -1,11 +1,11 @@
 //! Lifecycle transitions ([`Prepared`], [`Finalized`], [`Record`]) for merge plans and lane finalization.
-
 #[cfg(test)]
 mod tests;
 use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 impl Prepared {
+    /// Returns the slice of finalized `Version` objects produced by the merge snapshot, if any.
     #[inline]
     pub(in crate::workspace::engine::command) fn snapshot_versions(&self) -> &[Value] {
         self.finalized

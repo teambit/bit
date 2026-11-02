@@ -48,6 +48,7 @@ pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
     Ok(Staged { head: head.to_owned(), hashes, labels })
 }
 
+/// Maps each `Version` hash in `hashes` to its tag name from `tags` or `orphaned`, falling back to the hash.
 #[inline]
 fn resolve_version_labels(
     hashes: &[String],

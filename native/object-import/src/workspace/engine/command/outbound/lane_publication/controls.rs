@@ -44,6 +44,7 @@ pub(super) fn export_bitmap(
     if changed { crate::inspection::render_bitmap(&bitmap) } else { Ok(before.to_vec()) }
 }
 
+/// Locates a mutable `.bitmap` component entry matching `scope/name` that has not yet been assigned a scope.
 #[inline]
 fn unexported_lane_row<'a>(
     rows: &'a mut serde_json::Map<String, Value>,

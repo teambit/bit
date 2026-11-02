@@ -18,6 +18,7 @@ pub(super) fn extensions(context: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Extracts the normalized `scope/name` or bare identity from an extension `row`.
 #[inline]
 fn extension_identity(row: &Value) -> Option<String> {
     [row.get("name"), row.get("legacyId"), row.get("extensionId"), row.get("id")]

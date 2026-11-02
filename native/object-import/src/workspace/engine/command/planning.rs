@@ -1,5 +1,4 @@
 //! Workspace [`checkout`], switch, and merge [`Planned`] orchestration ([`checkout_lane`], [`checkout_scope`], [`checkout_select`]) on [`Record`].
-
 mod checkout_lane;
 mod checkout_scope;
 mod checkout_select;
@@ -14,6 +13,7 @@ use crate::{checkout_transition, command_import, workspace::snapshots};
 use serde_json::{Value, json};
 use std::io;
 
+/// Planned workspace command state holding captured components, transitions, materials, and merge state.
 pub(super) struct Planned {
     pub(super) captured: Vec<capture::Captured>,
     pub(super) transitions: checkout_transition::State,

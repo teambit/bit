@@ -49,6 +49,7 @@ pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
     Ok(histories)
 }
 
+/// Extracts and validates the non-empty `(scope, name)` pair from an index component `row`.
 #[inline]
 fn candidate_scope_and_name(row: &Value) -> io::Result<(&str, &str)> {
     let (scope_opt, name) =

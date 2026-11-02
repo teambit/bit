@@ -33,6 +33,7 @@ pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     Err(invalid(&format!("outbound lane {name} unsnapped readme requires canonical stack")))
 }
 
+/// Extracts the trimmed non-empty `head` or `version` string from a lane component `entry`.
 #[inline]
 fn entry_head(entry: &Value) -> Option<&str> {
     entry["head"]

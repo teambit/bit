@@ -18,6 +18,7 @@ pub(super) struct Prepared {
     writes: Vec<(PathBuf, Vec<u8>)>,
 }
 
+/// Validates `.bitmap` and `component.json` configuration fields on `target` before a non-checkout reset.
 #[inline]
 pub(super) fn validate_target(target: &Value) -> io::Result<()> {
     if let Some(bitmap) = target.get("bitmapConfig") {

@@ -57,6 +57,7 @@ pub(super) fn validate(
     validate_finalization(record, prepared, &versions)
 }
 
+/// Rejects autosnap when any workspace component in `record.context` depends on a component in `identities`.
 #[inline]
 fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Result<()> {
     for row in

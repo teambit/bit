@@ -39,6 +39,7 @@ pub(super) fn prepare(
     edges(root, input, hash, version, objects, proofs)
 }
 
+/// Captures and compresses `files` into `Source` objects in parallel when file count and thread count permit.
 #[inline]
 fn capture(version: &Value, files: &[Value], budget: &Budget) -> io::Result<Vec<(Value, Value)>> {
     if files.len() >= 32 && rayon::current_num_threads() > 1 {

@@ -26,6 +26,7 @@ pub(super) fn entry(
     unmerged
 }
 
+/// Resolves the `{ scope, name }` lane identifier for an unmerged entry, defaulting to `main`.
 #[inline]
 fn lane_id(model: &Value, lane: Option<&Value>) -> Value {
     lane.and_then(|value| other_lane(&value["otherId"]))

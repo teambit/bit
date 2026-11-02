@@ -16,6 +16,7 @@ pub(super) fn incomplete(current: &Value) -> bool {
         .is_some_and(|fields| fields.len() == 1 && fields.contains_key("mainFile"))
 }
 
+/// Verifies that the working `Source` hashes in `current` differ from the stored hashes in `version`.
 #[inline]
 pub(super) fn prove_changed(current: &Value, version: &Value) -> io::Result<()> {
     if files(current, false)? == files(&version["files"], true)? {

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Aspect ID for the component deprecation core aspect (`teambit.component/deprecation`).
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
 pub(super) const REMOVAL: &str = "teambit.component/remove";
 const BUILDER: &str = "teambit.pipelines/builder";

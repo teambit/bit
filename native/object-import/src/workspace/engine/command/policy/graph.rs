@@ -54,6 +54,7 @@ pub(super) fn project(row: &mut super::Row, repository: &mut Repository) -> io::
     Ok(())
 }
 
+/// Extracts direct production, development, and extension dependency edges from `version` for `source`.
 #[inline]
 fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     let mut edges = Vec::<Value>::new();

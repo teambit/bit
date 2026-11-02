@@ -13,6 +13,7 @@ use std::{collections::HashSet, io, path::Path};
 pub(in crate::workspace::engine::command) const PENDING_GRAPH_VERSION: &str =
     "__bit_pending_snapshot__";
 
+/// Component snapshot input binding (`identity`, `model`, `material`, `remote`, and optional `lane`).
 pub(in crate::workspace::engine::command) struct Input<'a> {
     pub identity: &'a str,
     pub model: &'a Value,

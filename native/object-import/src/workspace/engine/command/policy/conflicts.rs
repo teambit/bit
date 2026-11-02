@@ -29,6 +29,7 @@ impl File {
     }
 }
 
+/// Horizontal divider line separating component sections in the `merge-conflict` file.
 const DIVIDER: &str =
     "--------------------------------------------------------------------------------";
 

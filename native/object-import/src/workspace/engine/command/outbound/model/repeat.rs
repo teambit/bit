@@ -13,6 +13,7 @@ pub(super) fn select(model: &Value) -> io::Result<Staged> {
     Ok(Staged { head, hashes: Vec::new(), labels: Vec::new() })
 }
 
+/// Extracts a trimmed non-empty string or `ref`/`hash` field from `val`.
 #[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()

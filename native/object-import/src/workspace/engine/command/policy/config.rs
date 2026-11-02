@@ -37,6 +37,7 @@ pub(super) fn merge(
     Ok((merged, json!({"input":input,"result":result})))
 }
 
+/// Extracts the merged aspect configuration map from `result["configRows"]` against `input`.
 fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     let mut merged = serde_json::Map::new();
     for row in projection::array(&result["configRows"])? {

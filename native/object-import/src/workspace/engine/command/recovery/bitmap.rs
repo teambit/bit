@@ -15,6 +15,7 @@ pub(in crate::workspace::engine::command) fn project(
     project_with(bitmap, validate)
 }
 
+/// Extracts and validates per-component `.bitmap` `config` maps for snapshot preparation.
 #[inline]
 pub(in crate::workspace::engine::command) fn project_snapshot(
     bitmap: &Value,

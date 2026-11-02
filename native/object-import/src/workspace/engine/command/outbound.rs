@@ -28,6 +28,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Request payload for listing exportable workspace component candidates (`root` and `all`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Candidates {

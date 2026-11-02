@@ -23,6 +23,7 @@ pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
     }
 }
 
+/// Extracts and validates the optional `groupName` string from `config`.
 #[inline]
 fn name(config: &Value) -> io::Result<Option<&str>> {
     if !config.is_object() {

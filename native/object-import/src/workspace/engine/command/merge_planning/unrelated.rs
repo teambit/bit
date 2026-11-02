@@ -44,6 +44,7 @@ pub(super) fn distance(
     Ok(())
 }
 
+/// Prepares merge state for all components in `selected` whose action is `Action::Unrelated`.
 #[inline]
 pub(super) fn prepare(
     record: &Record,
