@@ -1,4 +1,6 @@
 //! Unit tests for `bit doctor` local scope [`object`] decompression and missing-head ([`heads`]) integrity checks.
+//!
+//! Verifies [`DIAGNOSES`] catalog entries, zlib-compressed object reading, and missing head reporting.
 
 use super::{heads, object};
 use crate::commands::doctor::catalog::DIAGNOSES;

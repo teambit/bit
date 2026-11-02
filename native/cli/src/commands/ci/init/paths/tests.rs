@@ -1,5 +1,6 @@
-//! Compare ordinary names, relative links, and lexical parent resolution with `Node.js` filesystem APIs
-//! and symlink targets.
+//! Compare ordinary names, relative links, and lexical parent resolution with `Node.js` filesystem APIs.
+//!
+//! Verifies symlink target resolution and dangling or cyclic link handling across platforms.
 use std::{
     fs,
     path::{Path, PathBuf},

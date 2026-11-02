@@ -1,4 +1,6 @@
 //! Unit tests for `check-types` [`parse_options`] and `TypeScript` [`check_ts_content`] checking.
+//!
+//! Verifies [`Options`] flag parsing and [`is_empty_workspace`] detection on empty workspaces.
 
 use super::{Options, checker::check_ts_content, is_empty_workspace, parse_options};
 use std::fs;

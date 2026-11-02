@@ -1,4 +1,6 @@
 //! Unit tests for `bit server` [`Options`] port and compile CLI option parsing ([`parse_options`]).
+//!
+//! Verifies `-p` / `--port` numeric validation and `--compile` boolean flag handling.
 
 use super::{Options, parse_options};
 

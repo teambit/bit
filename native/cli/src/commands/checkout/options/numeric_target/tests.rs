@@ -1,4 +1,6 @@
 //! Unit tests for yargs-compatible numeric target string [`normalize`] behavior.
+//!
+//! Verifies scientific, hexadecimal, and decimal coercion rules alongside non-numeric target preservation.
 
 use super::normalize;
 #[test]

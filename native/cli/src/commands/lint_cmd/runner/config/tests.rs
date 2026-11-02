@@ -1,4 +1,6 @@
 //! Unit tests for `bit lint` `ESLint` [`Config`] `tsconfig` filename hashing and plain-object hashing ([`hash::hash`]).
+//!
+//! Verifies generated `bit.tsconfig.eslint.<hash>.json` filenames and UTF-16 object hashing.
 
 use super::{Config, hash};
 use serde_json::json;

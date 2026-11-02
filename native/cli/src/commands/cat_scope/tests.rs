@@ -1,4 +1,6 @@
 //! Unit tests for `cat-scope` [`parse_options`] and [`build_component_entry`] / [`build_lane_entry`] formatting.
+//!
+//! Verifies [`Options`] flag combinations (`--full`, `--json`, `--json-extra`) and scope table entry construction.
 
 use super::{Options, build_component_entry, build_lane_entry, parse_options};
 use serde_json::json;

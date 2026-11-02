@@ -1,4 +1,6 @@
 //! Unit tests for extended component pattern [`matching`], sequence braces, and `minimatch` extglobs.
+//!
+//! Verifies character classes, `+(...)` / `!(...)` extglobs, and numeric `{start..end}` braces.
 
 fn matching<'a>(ids: &[&'a str], pattern: &str) -> Vec<&'a str> {
     super::matching(ids, &crate::commands::patterns::split(pattern)).unwrap()

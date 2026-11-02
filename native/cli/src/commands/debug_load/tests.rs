@@ -1,4 +1,6 @@
 //! Unit tests for `bit show --legacy` / debug load [`parse_options`] and [`check_missing_workspace_component`].
+//!
+//! Verifies [`Options`] flag parsing and missing `.bitmap` component diagnostic rendering.
 
 use super::{Options, check_missing_workspace_component, parse_options};
 use std::fs;

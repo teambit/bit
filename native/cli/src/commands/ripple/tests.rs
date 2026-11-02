@@ -1,4 +1,6 @@
 //! Unit tests for `bit ripple` [`Subcommand`] CLI parsing ([`parse_subcommand`]) and positive integer limit validation ([`parse_positive_int`]).
+//!
+//! Verifies `list`, `simulate`, and `retry` subcommands and invalid `--limit` detection.
 
 use super::{Subcommand, parse_positive_int, parse_subcommand};
 

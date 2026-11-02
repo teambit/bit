@@ -1,4 +1,6 @@
 //! Unit tests for `bit diff` file filtering ([`filtered`]) and `--stat` summary rendering ([`format`]).
+//!
+//! Verifies [`parse`]d `--file` filtering, line addition/deletion counts, and [`Chalk`] output.
 
 use super::{filtered, format};
 use crate::commands::{color::Chalk, diff::options::parse};

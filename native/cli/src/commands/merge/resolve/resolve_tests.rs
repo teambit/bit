@@ -1,4 +1,6 @@
 //! Unit tests for `bit merge --resolve` CLI option parsing ([`parse`]) and resolved-component report formatting ([`format`]).
+//!
+//! Verifies `--resolve` option constraints and unversioned component ID formatting via [`Chalk`].
 
 use super::{format, parse};
 use crate::commands::color::Chalk;

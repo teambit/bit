@@ -1,4 +1,6 @@
 //! Unit tests for `bit switch` and `bit lane import` CLI option parsing ([`parse`]) and pattern validation.
+//!
+//! Verifies `--skip-fetch`, `--force-ours`, `--force-theirs`, and `--pattern` flag combinations.
 
 use super::parse;
 

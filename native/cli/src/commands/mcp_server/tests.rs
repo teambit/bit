@@ -1,4 +1,6 @@
 //! Unit tests for `bit mcp-server` [`Subcommand`] CLI parsing ([`parse_subcommand`]) and editor configuration file generation ([`execute_setup`], [`execute_rules`]).
+//!
+//! Verifies [`SetupOptions`], [`RulesOptions`], and [`Chalk`]-formatted editor configuration output.
 
 use super::{
     SetupOptions, Subcommand, execute_setup, parse_subcommand,

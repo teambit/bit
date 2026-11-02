@@ -1,4 +1,6 @@
 //! Unit tests for `bit doctor` [`table`] and [`list`] terminal rendering and ANSI escape stripping.
+//!
+//! Verifies double-line box drawing borders and [`Chalk`] ANSI sequence stripping width alignment.
 
 use super::{list, table};
 use crate::commands::color::Chalk;

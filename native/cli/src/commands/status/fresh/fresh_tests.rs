@@ -1,4 +1,6 @@
 //! Unit tests for default dev-file pattern matching ([`is_dev_file`]) and core aspect package naming ([`core_package_name`]) against [`MINIMATCH`].
+//!
+//! Verifies `minimatch` 3.0.5 fixture parity and `@teambit/` package name derivation.
 
 use super::{core_package_name, dev_files::is_dev_file};
 

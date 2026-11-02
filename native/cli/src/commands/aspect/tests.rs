@@ -1,4 +1,6 @@
 //! Unit tests for `aspect` [`parse_subcommand`], inspection tables, and [`deep_merge`] config updates.
+//!
+//! Verifies [`Subcommand`], [`ListOpts`], and [`GetOpts`] parsing alongside [`collect_list_results`] and [`render_list_table`].
 
 use super::{
     GetOpts, ListOpts, Subcommand,

@@ -1,4 +1,6 @@
 //! Unit tests for hard-delete [`wildcard`] selector matching across nested namespaces.
+//!
+//! Verifies single-segment `*`, recursive `**`, and exact component ID matching.
 
 use super::wildcard;
 

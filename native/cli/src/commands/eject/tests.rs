@@ -1,4 +1,6 @@
 //! Unit tests for `bit eject` [`Options`] CLI parsing ([`parse_options`]) and active-lane rejection ([`validate_workspace`]).
+//!
+//! Verifies `--force`, `--keep-files`, and `--skip-dependency-installation` flags and lane preflight guards.
 
 use super::{Options, parse_options, validate_workspace};
 use std::fs;

@@ -1,4 +1,6 @@
 //! Unit tests for `bit start` CLI option parsing ([`parse_options`]) and missing workspace/scope detection ([`is_outside_workspace_and_scope`]).
+//!
+//! Verifies `--dev`, `--port`, `--rebuild`, `--skip-ui-build`, and `--skip-compilation` flags.
 
 use super::{is_outside_workspace_and_scope, parse_options};
 

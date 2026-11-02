@@ -1,4 +1,6 @@
 //! Unit tests for `bit log` [`Options`] CLI parsing ([`parse`]), [`LocalTarget`] resolution ([`resolve_local_target`]), [`ordered_parents`], and [`render`] formatting.
+//!
+//! Verifies [`bitmap`] root-dir lookup, [`normalize`]d entries, and [`paint`] / [`Chalk`] output.
 
 use super::{
     Chalk, LocalTarget, Options, bitmap, normalize, ordered_parents, paint, parse, render,

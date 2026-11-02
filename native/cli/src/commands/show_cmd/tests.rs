@@ -1,4 +1,6 @@
 //! Unit tests for `bit show` [`Options`] CLI parsing ([`parse_options`]), [`missing_host_error`], and legacy/Harmony/text report rendering ([`legacy_json`], [`harmony_json`], [`text_report`]).
+//!
+//! Verifies [`TargetOutcome`] and [`load_target_outcome`] workspace and scope inspection.
 
 use super::{
     Options, missing_host_error, parse_options,

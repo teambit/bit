@@ -1,4 +1,6 @@
 //! Unit tests for `bit publish` [`Options`] CLI parsing ([`parse_options`]), [`is_empty_workspace`], and unexported/untagged checks ([`collect_unexported_ids`], [`collect_untagged_ids`]).
+//!
+//! Verifies `--dry-run`, `--allow-staged`, and `--json` flags alongside [`Bitmap`] inspection.
 
 use super::{
     Options, collect_unexported_ids, collect_untagged_ids, is_empty_workspace, parse_options,

@@ -1,4 +1,6 @@
 //! Unit tests for `bit set-peer` ([`parse_set_args`]) and `bit unset-peer` ([`parse_unset_args`]) [`PeerAction`] CLI parsing and [`prepare`] config mutations.
+//!
+//! Verifies [`DEP_RESOLVER_ID`] peer dependency policy updates and [`Chalk`] output formatting.
 
 use super::{DEP_RESOLVER_ID, PeerAction, parse_set_args, parse_unset_args, prepare};
 use crate::commands::color::Chalk;

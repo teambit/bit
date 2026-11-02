@@ -1,4 +1,6 @@
 //! Unit tests for ANSI terminal styling and nested color wrapping in [`Chalk`].
+//!
+//! Verifies line-by-line escape wrapping and nested style restoration matching `chalk` 4.1.2 level 1.
 
 use super::Chalk;
 

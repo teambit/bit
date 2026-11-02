@@ -1,4 +1,6 @@
 //! Unit tests for `bit run-action` [`Options`] JSON payload CLI parsing ([`parse_options`]) and command-runner result formatting ([`report`]).
+//!
+//! Verifies `ExportPersist` JSON payload parsing and falsy/truthy action result formatting.
 
 use super::{Options, parse_options, report};
 use serde_json::json;

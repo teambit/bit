@@ -1,4 +1,6 @@
 //! Unit tests for `bit completion` [`valid_options`] validation and [`render_completion_script`] rendering.
+//!
+//! Verifies `bash` and `zsh` completion script markers and `--no-color` boolean flag handling.
 
 use super::{render_completion_script, valid_options};
 

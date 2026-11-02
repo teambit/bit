@@ -1,4 +1,6 @@
 //! Unit tests for `bit lane list` and `bit lane show` [`LaneData`] model parsing ([`lane`]) and terminal formatting ([`report`], [`show_report`]).
+//!
+//! Verifies [`Tracking`] correlation, deleted-component filtering, and [`Chalk`] output.
 
 use super::{LaneData, Tracking, lane, report};
 use crate::commands::{color::Chalk, lane::show::show_report};

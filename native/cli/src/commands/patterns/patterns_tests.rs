@@ -1,4 +1,6 @@
 //! Unit tests for component glob [`matching`], comma-separated pattern lists ([`split`]), and negated patterns.
+//!
+//! Verifies [`matched`] results across [`IDS`] for `*`, `**`, `?`, version suffixes, and `!` negations.
 
 use super::{matching, split};
 

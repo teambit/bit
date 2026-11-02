@@ -1,4 +1,6 @@
 //! Unit tests for selector state grammar [`validate`], [`ordinary`], and [`union`] ordering.
+//!
+//! Verifies [`applied`] `$env` parameter normalization and [`identities`] deduplication order.
 
 use super::{applied, identities, ordinary, union, validate};
 use serde_json::json;

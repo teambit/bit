@@ -1,4 +1,6 @@
 //! Unit tests for `bit git` [`Parsed`] subcommand CLI parsing ([`parse_args`]) and `.bitmap` conflict merge strategies ([`merge_bitmap_contents`]).
+//!
+//! Verifies `merge-bitmaps`, `set-merge-driver`, and [`format_unrecognized`] [`Chalk`] error formatting.
 
 use super::{Chalk, Parsed, format_unrecognized, merge_bitmap_contents, parse_args};
 use std::ffi::OsString;

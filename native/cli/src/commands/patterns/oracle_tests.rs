@@ -1,4 +1,6 @@
 //! Oracle tests ([`ORACLE`]) comparing component pattern [`matching`] and [`split`] against released `multimatch` / `minimatch` behavior.
+//!
+//! Verifies every pattern in `oracle.txt` against [`IDS`] for exact `multimatch` 5 / `minimatch` 3.1.5 parity.
 
 use super::{matching, split};
 

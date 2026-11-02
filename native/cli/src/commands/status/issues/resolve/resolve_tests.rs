@@ -1,4 +1,6 @@
 //! Unit tests for [`Component`] head proof validation ([`ordinary_heads_for`]), [`versioned`] lookups, and [`external_vertices`] dependency checks.
+//!
+//! Verifies [`HEAD`] proof matching and [`ordinary_heads`] validation across workspace status contexts.
 
 use super::{Component, external_vertices, ordinary_heads_for, versioned};
 use serde_json::{Value, json};

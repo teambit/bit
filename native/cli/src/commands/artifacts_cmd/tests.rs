@@ -1,4 +1,6 @@
 //! Unit tests for `artifacts` command [`parse_options`], [`filter_artifacts`], and [`render_artifacts_report`].
+//!
+//! Verifies [`Options`] parsing, [`is_empty_workspace`] checks, and [`parse_builder_artifacts`] extraction.
 
 use super::{
     Options,

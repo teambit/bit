@@ -1,4 +1,6 @@
 //! Unit tests for `bit ci` [`parse_subcommand`] parsing and [`validate_sync_options`] validation.
+//!
+//! Verifies [`Subcommand`], [`PrOptions`], [`MergeOptions`], and [`SyncOptions`] CLI flag handling.
 
 use super::{
     Subcommand, SyncOptions, merge::MergeOptions, parse_subcommand, pr::PrOptions,

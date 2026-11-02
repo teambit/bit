@@ -1,4 +1,6 @@
 //! Unit tests for `bit preview` [`GenerateOptions`] ([`parse_generate_options`]) and [`ServeOptions`] ([`parse_serve_options`]) CLI parsing.
+//!
+//! Verifies `--name` and `--port` flag parsing and default option initialization.
 
 use super::{GenerateOptions, ServeOptions, parse_generate_options, parse_serve_options};
 

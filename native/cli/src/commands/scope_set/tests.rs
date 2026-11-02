@@ -1,4 +1,6 @@
 //! Unit tests for `bit scope set` [`Options`] CLI argument parsing ([`parse_options`]) and unsupported-selector rejection.
+//!
+//! Verifies workspace-wide and component-pattern scope assignment argument parsing.
 
 use super::{Options, parse_options};
 use std::ffi::OsString;

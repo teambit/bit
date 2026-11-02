@@ -1,4 +1,6 @@
 //! Unit tests for `bit schema` [`Options`] / [`ParsedCommand`] CLI parsing ([`parse_options`], [`parse_command`]), stored schema extraction ([`extract_stored_schema`]), and bare-scope pattern resolution ([`resolve_scope_schema_json`]).
+//!
+//! Verifies [`DiffOptions`], [`is_missing_host`], [`is_entry_modified_on_disk`], and [`Bitmap`] inspection.
 
 use super::{
     DiffOptions, Options, ParsedCommand,

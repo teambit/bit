@@ -1,4 +1,6 @@
 //! Unit tests for `bit globals` CLI flag parsing ([`parse_json_flag`]) and text/JSON directory reporting ([`known_global_dirs`], [`render_report`], [`render_json`]).
+//!
+//! Verifies `-j` / `--json` flag handling and [`Chalk`]-formatted global directory output.
 
 use super::{Chalk, known_global_dirs, parse_json_flag, render_json, render_report};
 use std::{ffi::OsString, path::Path};

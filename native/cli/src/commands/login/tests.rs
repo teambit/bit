@@ -1,4 +1,6 @@
 //! Unit tests for `bit login` [`Options`] CLI parsing ([`parse_options`]).
+//!
+//! Verifies `--cloud-domain`, `--default-cloud-domain`, `--no-browser`, and default [`Options`].
 
 use super::{Options, parse_options};
 

@@ -1,4 +1,6 @@
 //! Unit tests for `bit script` [`Options`] CLI parsing ([`parse_options`]), `.bit-env.ts` [`ParsedScript`] extraction ([`parse_scripts_from_source`]), and [`execute`] execution.
+//!
+//! Verifies [`fast_workspace_message`], [`ScriptHandler`], [`eval_function_logs`], and [`is_env_allowed`] with [`Chalk`].
 
 use super::{
     Options, fast_workspace_message, parse_options,

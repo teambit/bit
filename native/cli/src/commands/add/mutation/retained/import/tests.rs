@@ -1,4 +1,6 @@
 //! Unit tests for acknowledging imported object and file publications in [`Retained`] readsets.
+//!
+//! Verifies [`write`] receipt transitions and preservation of unrelated [`Retained`] readset entries.
 
 use super::{Retained, json};
 use std::fs;

@@ -1,4 +1,6 @@
 //! Unit tests for `cat-component` documentation cache [`cat_prepare`] preparation and reuse.
+//!
+//! Verifies that empty `cat-component` documentation entries are persisted once and reused on subsequent lookups.
 
 use super::cat_prepare;
 use serde_json::json;

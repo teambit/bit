@@ -1,4 +1,6 @@
 //! Unit tests for `bit switch` empty-workspace and fetched-head [`Options`] terminal report formatting ([`format`]).
+//!
+//! Verifies [`expected_success_symbols`] and [`Chalk`] styling for empty and populated switch reports.
 
 use super::{Chalk, Options, format};
 use crate::commands::test_support::expected_success_symbols;

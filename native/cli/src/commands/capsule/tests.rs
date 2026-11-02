@@ -1,4 +1,6 @@
 //! Unit tests for `capsule` [`parse_subcommand`] parsing and [`object_hash_short`] SHA-1 hashing.
+//!
+//! Verifies [`Subcommand`] and [`CreateArgs`] flag parsing for `list`, `create`, and `delete`.
 
 use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand};
 
