@@ -11,6 +11,7 @@ const FIRST: &str = "2026-10-18-12-0-0";
 const SECOND: &str = "2026-10-18-12-0-1";
 /// Third backup timestamp fixture (`2026-10-18-12-0-2`).
 const THIRD: &str = "2026-10-18-12-0-2";
+/// Fourth backup timestamp fixture (`2026-10-18-12-0-3`).
 const FOURTH: &str = "2026-10-18-12-0-3";
 
 fn fixture(root: &Path, ids: &[&str], bodies: &[&str], creation: &[usize]) {

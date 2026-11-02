@@ -10,7 +10,7 @@ fn variants() -> [String; 2] {
     [body.into(), format!("remote actual.remote responded with the following error:\n{body}")]
 }
 
-/// Verifies that [`assert_errors`] accepts any pairing of the two complete error [`variants`].
+/// Verifies that [`assert_errors`] accepts any pairing of the two complete independent stream error [`variants`].
 #[test]
 fn only_the_two_complete_independent_stream_errors_are_accepted() {
     let variants = variants();

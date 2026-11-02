@@ -38,6 +38,7 @@ fn historic_snap_selection_only_marks_config_and_keeps_current_sources() {
     assert!(helper.scopes.local_path.join("comp1/index.js").is_file());
     assert_eq!(bitmap(&helper)["comp1"]["config"]["teambit.component/remove"]["removed"], false);
 }
+/// Verifies `bit delete --update-main` on a lane preserves other [`bitmap`] configuration and sources policy.
 #[test]
 fn update_main_on_a_lane_preserves_other_configuration_and_sources_policy() {
     let helper = support::workspace(1, true);

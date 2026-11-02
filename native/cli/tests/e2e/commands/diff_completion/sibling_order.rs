@@ -7,7 +7,7 @@ use serde_json::Value;
 /// Expected root-level file paths before nested directory batches in `filesDiff`.
 const ROOT_PATHS: [&str; 3] = ["foo.js", "a.js", "z.js"];
 
-/// Validates [`ROOT_PATHS`] root-first ancestor ordering and sorts sibling `filesDiff` entries for JSON comparison.
+/// Validates [`ROOT_PATHS`] root-first ancestor ordering and sorts sibling `filesDiff` entries into a [`Value`] for JSON comparison.
 pub(super) fn normalize(output: &str) -> Value {
     let mut result: Value = serde_json::from_str(output).unwrap();
     let rows = result[0]["filesDiff"].as_array_mut().unwrap();

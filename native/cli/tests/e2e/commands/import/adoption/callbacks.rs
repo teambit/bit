@@ -82,6 +82,7 @@ fn first_graph_seeder_onload_failure_precedes_second_seeders_dependency_cache_pu
     assert!(!helper.scopes.local_path.join("adoption-second-seeder-observed").exists());
     assert!(support::bitmap(&helper).get("comp4").is_none());
 }
+/// Appends a comment to `comp1` and `comp2` sources to invalidate dependency cache entries before `onLoad`.
 fn stale_seeder_sources(helper: &Helper) {
     let bitmap = support::bitmap(helper);
     for name in ["comp1", "comp2"] {

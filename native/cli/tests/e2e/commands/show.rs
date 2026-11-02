@@ -8,7 +8,7 @@ use std::{ffi::OsStr, fs};
 /// Relative directory name used for outside-workspace `bit show` help and argument error tests.
 const OUTSIDE_DIR: &str = "outside-show-help";
 
-/// Verifies `bit show` help and missing-ID argument errors match `Node.js` across [`OUTSIDE_DIR`], bare scopes, and workspaces.
+/// Verifies `bit show` help and missing-ID argument errors match `Node.js` across [`OUTSIDE_DIR`], bare scopes, and workspaces via [`Helper::cmd_in_with`].
 #[test]
 fn show_help_and_argument_errors_match_released_node() {
     let helper = Helper::new();

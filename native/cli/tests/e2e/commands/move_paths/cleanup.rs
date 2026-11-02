@@ -5,7 +5,7 @@
 use super::support::{compare, successful, workspace};
 use std::fs;
 
-/// Verifies [`successful`] `bit move` retains existing `.bitTmp` consumer temporary files.
+/// Verifies [`successful`] `bit move` retains existing `.bitTmp` consumer temporary files in [`workspace`].
 #[test]
 fn successful_move_retains_existing_consumer_temporary_files() {
     let helper = workspace(1, false);

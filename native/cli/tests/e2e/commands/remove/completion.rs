@@ -40,6 +40,7 @@ fn modified_members_are_reported_while_clean_batch_members_are_removed() {
     assert!(map.get("comp1").is_some());
     assert!(map.get("comp2").is_none());
 }
+/// Verifies a versioned batch with a missing main file can still be removed via [`successful`].
 #[test]
 fn versioned_batch_with_missing_main_can_still_be_removed() {
     let helper = support::workspace(2, true);

@@ -77,6 +77,7 @@ fn export_recovery_retries_persistence_only_and_retains_pending_on_failure() {
     }
 }
 
+/// Verifies `bit resume-export --delete` probes `PendingDirStatus` before `RemovePendingDir` and preserves reports.
 #[test]
 fn pending_export_deletion_probes_before_removing_and_preserves_reports() {
     for (probe, removed, force, count) in [

@@ -68,6 +68,7 @@ fn active_lane_fetch_deps_preserves_lane_and_main_dependency_heads() {
     assert!(native.status.success(), "{} {}", native.stdout, native.stderr);
 }
 
+/// Verifies `bit fetch <ids> --lanes` matches `Node.js` canonical lane and `main` groups on [`fixture`].
 #[test]
 fn fetch_main_and_tracked_lanes_matches_canonical_groups() {
     let helper = fixture();

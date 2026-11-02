@@ -45,6 +45,7 @@ fn destination_sharing_the_source_prefix_is_not_a_nested_directory() {
     assert!(successful(&helper, "move bar bar2").stdout.contains("moved component"));
     assert_eq!(bitmap(&helper)["bar/foo"]["rootDir"], "bar2");
 }
+/// Verifies a manually moved tagged directory updates [`bitmap`] metadata without repeating the filesystem move.
 #[test]
 fn manually_moved_tagged_directory_updates_metadata_without_repeating_the_move() {
     let helper = workspace();

@@ -6,7 +6,7 @@ use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs, path::Path};
 
-/// Verifies `bit run-action` dispatches HTTP actions in workspaces and bare scopes without `Node.js`.
+/// Verifies `bit run-action` dispatches HTTP actions in workspaces and bare scopes via [`Server`] without `Node.js`.
 #[test]
 fn run_action_dispatches_http_actions_in_workspaces_and_bare_scopes_without_node() {
     for bare in [false, true] {

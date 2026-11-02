@@ -11,7 +11,7 @@ use std::{
 /// Relative symlink target pointing from `objects/<bucket>/<leaf>` to `source-payload` at the scope root.
 const SYMLINK_PAYLOAD_TARGET: &str = "../../source-payload";
 
-/// Verifies bare-scope `bit gc` moves files and [`SYMLINK_PAYLOAD_TARGET`] links across `/dev/shm` (`EXDEV`) device boundaries.
+/// Verifies bare-scope `bit gc` moves files and [`SYMLINK_PAYLOAD_TARGET`] links across `/dev/shm` (`EXDEV`) device boundaries via [`compare_with_snapshot`].
 #[test]
 fn bare_collection_moves_files_and_links_across_devices_without_node() {
     for linked in [false, true] {

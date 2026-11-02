@@ -6,7 +6,7 @@ mod suite;
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
-/// Verifies `bit remove` on a new component matches `Node.js` with and without `--keep-files` (`.bitmap` + `node_modules`).
+/// Verifies `bit remove` on a new component matches `Node.js` with and without `--keep-files` (`.bitmap` + `node_modules`) via [`Helper`].
 #[test]
 fn new_component_removal_matches_node_with_and_without_files() {
     let helper = Helper::new();

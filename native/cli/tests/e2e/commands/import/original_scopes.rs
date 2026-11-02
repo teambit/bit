@@ -91,6 +91,7 @@ fn serve(scope: &Path) -> (ScopeServer, String) {
     (server, format!("http://127.0.0.1:{port}"))
 }
 
+/// Compares `bit fetch --components --from-original-scopes` between `Node.js` and native CLIs on `dependent` and `original`.
 fn compare(dependent: &Helper, original: &Helper) {
     let node_root = dependent.clone_workspace();
     let dependent_before = dependent.clone_remote_scope();

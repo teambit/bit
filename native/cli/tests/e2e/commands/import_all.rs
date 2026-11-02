@@ -53,7 +53,7 @@ fn modified_locally() -> (Helper, PathBuf) {
     (helper, clone)
 }
 
-/// Verifies `bit import` without IDs imports missing objects when components are modified locally.
+/// Verifies `bit import` without IDs imports missing objects when components are modified locally in [`modified_locally`].
 #[test]
 fn import_without_ids_imports_objects() {
     let (helper, _) = modified_locally();

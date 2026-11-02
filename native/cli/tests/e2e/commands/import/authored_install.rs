@@ -83,6 +83,7 @@ pub(super) fn assert_same_tree(actual: &Path, expected: &Path) {
     assert_tree_maps(&actual, &expected);
 }
 
+/// Asserts that every key and byte value in `actual` and `expected` [`BTreeMap`] workspace snapshots match.
 pub(super) fn assert_tree_maps(
     actual: &BTreeMap<String, Vec<u8>>,
     expected: &BTreeMap<String, Vec<u8>>,

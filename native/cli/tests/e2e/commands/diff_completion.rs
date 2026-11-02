@@ -35,6 +35,7 @@ fn parity(helper: &Helper, command: &str) {
     assert_eq!(actual.stderr, expected.stderr);
 }
 
+/// Verifies `bit diff ** --json` selects multiple modified workspace components via [`parity`] and [`workspace`].
 #[test]
 fn glob_diff_selects_multiple_components() {
     parity(&workspace(), "diff ** --json");

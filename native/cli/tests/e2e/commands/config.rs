@@ -45,6 +45,7 @@ fn set_get_and_delete_configs() {
     assert!(!conf_val.stdout.contains("conf.value"));
 }
 
+/// Verifies `bit config set --local-track` saves and deletes entries in the local workspace configuration via [`run_config`] and [`list_config_locally`].
 #[test]
 fn saving_config_in_the_local_workspace() {
     let helper = Helper::new();

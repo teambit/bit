@@ -9,7 +9,7 @@ use std::{fs, path::PathBuf};
 /// `fixtures.isStringHarmony`.
 const IS_STRING: &str = "const isType = require('../is-type/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 
-/// Parses `bit cat-component <id> --json` output into a [`Value`].
+/// Parses `bit cat-component <id> --json` output into a [`Value`] via [`parse`].
 fn cat_component(helper: &Helper, id: &str) -> Value {
     parse(&helper.native(&format!("cat-component {id} --json")))
 }

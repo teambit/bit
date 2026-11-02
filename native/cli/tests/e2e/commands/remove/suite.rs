@@ -59,6 +59,7 @@ fn with_remote_scope_without_dependencies() {
     assert!(!ls_remote.contains("found 0 components"));
 }
 
+/// Verifies `bit remove` on an imported component without dependencies removes it from `.bitmap`.
 /// bit remove command › with imported components, no dependencies
 #[test]
 fn with_imported_components_no_dependencies() {

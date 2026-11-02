@@ -67,6 +67,7 @@ fn alias_fixture(boxed: bool, requested_scope: &str) -> Helper {
     age_objects(&scope, &aged);
     helper
 }
+/// Copies all sharded object files from `source/objects` into `target/objects`.
 fn copy_objects(source: &Path, target: &Path) {
     for bucket in fs::read_dir(source.join("objects")).unwrap() {
         let bucket = bucket.unwrap();

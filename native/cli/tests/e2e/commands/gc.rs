@@ -74,6 +74,7 @@ fn bare_collection_preserves_live_lane_history_in_color() {
     assert!(run.status.success(), "{run:?}");
 }
 
+/// Verifies bare-scope `bit gc` retains foreign hidden lane heads and trashed lane roots via [`compare`].
 #[test]
 fn bare_collection_retains_foreign_hidden_lane_heads_and_trashed_lane_roots() {
     let helper = Helper::new();

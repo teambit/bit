@@ -50,6 +50,7 @@ fn restore_rejects_identical_files_before_skipping_or_overwriting_them() {
     }
 }
 
+/// Compares [`capture`] snapshots of a failing `bit gc --restore` run between `Node.js` and native CLIs.
 fn compare_failure(helper: &Helper, overwrite: bool, prepare: impl Fn(&Path)) {
     let baseline = helper.clone_remote_scope();
     let expected = capture(helper, overwrite, false, &prepare);

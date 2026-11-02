@@ -64,6 +64,7 @@ fn http_dependents_all_with_silent_uses_the_same_complete_graph_paths() {
     );
     assert_components(&helper, &["comp1", "comp2", "comp3", "comp4", "comp-a", "comp-a2"]);
 }
+/// Asserts that `helper`'s `.bitmap` tracks the exact sorted set of component names in `expected`.
 pub(super) fn assert_components(helper: &Helper, expected: &[&str]) {
     let bitmap = support::bitmap(helper);
     let mut actual = bitmap

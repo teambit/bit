@@ -57,6 +57,7 @@ fn deprecation_rereads_provider_configuration_without_overwriting_it() {
     );
     assert!(helper.scopes.local_path.join("comp1/provider-created.js").is_file());
 }
+/// Verifies `bit rename` re-reads [`configured`] provider configuration and moves newly created source files.
 #[test]
 fn rename_rereads_provider_configuration_and_moves_newly_created_sources() {
     let helper = configured(false);

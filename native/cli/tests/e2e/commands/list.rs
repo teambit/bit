@@ -17,7 +17,7 @@ fn a_new_component_is_not_listed() {
     assert!(output.contains("found 0 components"), "{output}");
 }
 
-/// when a component is created and tagged › should display "found 1 components"
+/// when a component is created and tagged ([`FOO_FIXTURE`]) › should display "found 1 components"
 #[test]
 fn a_tagged_component_is_listed() {
     let helper = Helper::new();

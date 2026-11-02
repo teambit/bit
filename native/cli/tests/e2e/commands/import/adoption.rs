@@ -40,6 +40,7 @@ fn untrack(helper: &Helper, name: &str) -> Value {
     config::write_json(&helper.scopes.local_path.join(".bitmap"), &bitmap, b"    ");
     entry
 }
+/// Resolves the path to `name` inside the component `rootDir` recorded in `entry`.
 fn file(helper: &Helper, entry: &Value, name: &str) -> std::path::PathBuf {
     helper.scopes.local_path
         .join(entry["rootDir"].as_str().unwrap())

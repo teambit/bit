@@ -25,6 +25,7 @@ impl Snapshot {
         snapshot
     }
 
+    /// Restores recorded file modification times and directory permissions under `root`.
     pub(super) fn restore(&self, root: &Path) {
         for (relative, entry) in &self.0 {
             let path = root.join(relative);

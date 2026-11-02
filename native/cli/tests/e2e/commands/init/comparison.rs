@@ -77,6 +77,7 @@ fn visit(
         }
     }
 }
+/// Normalizes generated `*-local-<hex>` scope names in `scope.json` to `LOCAL_SCOPE`.
 fn normalize(path: &str, mut bytes: Vec<u8>) -> Vec<u8> {
     if path.ends_with("scope.json") {
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();

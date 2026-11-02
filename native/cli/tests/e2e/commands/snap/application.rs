@@ -9,7 +9,7 @@ use std::ffi::OsStr;
 const NODE_APP_PLUGIN: &str =
     "module.exports.default = { name: 'foo-app', entry: require.resolve('./foo.js') };\n";
 
-/// Verifies [`NODE_APP_PLUGIN`] `.node-app.js` application registration metadata matches `Node.js` after `bit snap`.
+/// Verifies [`NODE_APP_PLUGIN`] `.node-app.js` application registration metadata matches `Node.js` after `bit snap` via [`parse`].
 #[test]
 fn node_application_registration_matches_node_snapshot() {
     let helper = Helper::new();

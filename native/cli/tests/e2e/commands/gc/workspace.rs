@@ -85,6 +85,7 @@ fn old(path: &Path) {
         .unwrap();
 }
 
+/// Verifies workspace `bit gc` removes unreachable `Source` objects and their empty two-character hash buckets.
 #[test]
 fn workspace_collection_removes_unreachable_sources_and_their_empty_buckets() {
     for command in ["gc", "gc --json"] {

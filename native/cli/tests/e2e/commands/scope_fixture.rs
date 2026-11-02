@@ -31,6 +31,7 @@ fn compare_with_cleanup(
 ) -> Run {
     compare_with_snapshot(helper, command, color, prepare, cleanup, tree)
 }
+/// Compares `command` in `helper`'s bare remote scope using `observe` to snapshot scope state before and after `cleanup`.
 pub(super) fn compare_with_snapshot(
     helper: &Helper,
     command: &str,

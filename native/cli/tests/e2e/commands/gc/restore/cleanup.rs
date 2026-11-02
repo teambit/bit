@@ -71,6 +71,7 @@ fn capture(
         state,
     )
 }
+/// Runs `bit gc --restore` in `helper`'s remote scope under native or `Node.js` mode with `color` and `ci` settings.
 fn run(helper: &Helper, native: bool, color: bool, ci: bool) -> Run {
     let unavailable = helper.scopes.e2e_dir.join("unavailable-runtime");
     let mut environment = vec![("FORCE_COLOR", OsStr::new(if color { "1" } else { "0" }))];

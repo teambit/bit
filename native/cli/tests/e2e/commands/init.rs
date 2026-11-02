@@ -35,6 +35,7 @@ fn parity_options(helper: &Helper, command: &str, success: bool, rebuilt_index: 
     comparison::tree(root, &expected, command, rebuilt_index);
 }
 
+/// Verifies normal and `--bare` workspace provisioning match `Node.js` via [`parity`].
 #[test]
 fn normal_and_bare_provisioning_match_node() {
     for command in [

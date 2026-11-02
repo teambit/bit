@@ -79,6 +79,7 @@ fn normalized_clock(left: &mut Value, right: &mut Value, node: (u128, u128), rus
     }
 }
 
+/// Validates and replaces diverging `date` timestamps in `node_row` and `rust_row` with `<export-clock>`.
 fn normalize_row_dates(
     node_row: &mut Value,
     rust_row: &mut Value,

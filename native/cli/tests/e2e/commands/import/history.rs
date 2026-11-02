@@ -95,6 +95,7 @@ fn fetch_all_history_retains_parent_versions_and_sources() {
     compare_versions(&helper.scopes.local_path, &oracle, &hashes);
 }
 
+/// Compares `cat-component` output and object existence for `hashes` between `actual_root` and `oracle`.
 pub(super) fn compare_versions(
     actual_root: &std::path::Path,
     oracle: &std::path::Path,

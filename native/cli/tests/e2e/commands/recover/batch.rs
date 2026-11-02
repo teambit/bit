@@ -52,6 +52,7 @@ fn recovery_overwrites_selected_sources_and_keeps_untracked_companions() {
     );
 }
 
+/// Verifies `bit recover` on a clean non-deleted component reports no match without mutating workspace state.
 #[test]
 fn recovery_of_a_clean_component_reports_no_match_without_mutation() {
     let helper = workspace(1, true);

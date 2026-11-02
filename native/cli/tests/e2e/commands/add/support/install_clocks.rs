@@ -65,6 +65,7 @@ fn replace(bytes: &mut Vec<u8>, key: &str, value: &Value, replacement: &str) {
     bytes.splice(start..end, replacement.bytes());
 }
 
+/// Validates and projects `recordedAtNs`, `mtimeNs`, and `ctimeNs` in `validation` within `started..=ended`.
 fn validation_clocks(bytes: &mut Vec<u8>, validation: &Value, started: i64, ended: i64) {
     let timestamp = validation["recordedAtNs"].as_i64().expect("validation nanoseconds");
     window(timestamp / 1_000_000, started, ended);

@@ -72,6 +72,7 @@ fn file_pending_deletion_declines_persistence_before_any_write() {
     assert_eq!(tree(&helper.scopes.remote_path), before);
 }
 
+/// Verifies malformed `scope.json` on a file remote causes `bit resume-export --delete --force` to decline before any removal.
 #[test]
 fn malformed_file_remote_declines_before_any_removal() {
     let helper = fixture(true);

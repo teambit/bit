@@ -78,6 +78,7 @@ fn exported_component_hard_delete_matches_released_node() {
     compare_file_remote(&helper, &command);
 }
 
+/// Creates a two-component workspace where `comp1` depends on `comp2` in `0.0.1` and drops the dependency in `0.0.2`.
 fn historical_dependency_fixture() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

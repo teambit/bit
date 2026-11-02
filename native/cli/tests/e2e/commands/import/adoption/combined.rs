@@ -31,6 +31,7 @@ fn stale_target() -> Helper {
 fn override_dependents_then_package_dependency_writes_keep_the_exact_owned_source_transition() {
     combined("package.json");
 }
+/// Verifies `--override --dependents --write-deps workspace.jsonc` updates `comp4` to [`UPDATED`].
 #[test]
 fn override_dependents_then_workspace_dependency_writes_keep_the_exact_owned_source_transition() {
     combined("workspace.jsonc");

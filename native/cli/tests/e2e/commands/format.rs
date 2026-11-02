@@ -29,6 +29,7 @@ fn standard_format_checks_clean_and_new_components_and_selection_match_node() {
     support::compare_with_stdout(&helper, "format '**/comp*' --check --json", two_component_order);
 }
 
+/// Verifies `bit format --check` text output and `CI=1` JSON output match `Node.js` via [`support`] and [`duration`].
 #[test]
 fn standard_format_check_text_and_ci_match_node() {
     let helper = support::workspace(1, true);

@@ -22,6 +22,7 @@ impl Histories {
     pub(super) fn wait_past_setup(root: &Path) {
         clock::wait(&Self::read(root));
     }
+    /// Reads all `.bitmap` and workspace-config backup histories under `root`.
     pub(super) fn read(root: &Path) -> Self {
         let mut histories = BTreeMap::new();
         for scope in [".bit/", ".git/bit/", ""] {

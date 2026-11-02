@@ -39,6 +39,7 @@ fn empty_dependency_set_still_persists_workspace_configuration_without_creating_
     assert!(workspace.get(RESOLVER).is_some());
     assert!(!helper.scopes.local_path.join("package.json").exists());
 }
+/// Creates an [`empty_environment`] workspace with `comp2` imported and configured with `devDependencies` and `peerDependencies` policy ranges.
 fn lifecycle_policy() -> Helper {
     let helper = empty_environment();
     support::setup(&helper, &command(&helper, "comp2", ""));

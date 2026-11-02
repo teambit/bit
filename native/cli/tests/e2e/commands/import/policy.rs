@@ -79,6 +79,7 @@ fn imported_automatic_dependency_writes_workspace_conflict() {
     parity("1.0.0", "");
 }
 
+/// Replaces `(completed in ...)` elapsed time tokens in `text` with `(completed in <duration>)`.
 pub(super) fn stable(text: &str) -> String {
     text.split_inclusive('\n')
         .fold(String::new(), |mut output, line| {

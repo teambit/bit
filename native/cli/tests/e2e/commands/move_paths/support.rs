@@ -56,6 +56,7 @@ pub(crate) fn compare_with_stdout(
     assert!(tree(&helper.scopes.remote_path) == remote, "{command} mutated the remote");
     actual
 }
+/// Compares `command` with custom `stdout` and `stderr` projections while asserting the remote scope remains untouched.
 pub(crate) fn compare_with_streams(
     helper: &Helper,
     command: &str,

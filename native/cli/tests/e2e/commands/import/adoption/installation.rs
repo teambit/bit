@@ -61,6 +61,7 @@ fn assert_linked(helper: &Helper, names: &[&str]) {
         assert!(package.join("index.js").is_file());
     }
 }
+/// Verifies `bit import comp1 --track-only --json` performs default installation via [`install`] without replacing existing files.
 #[test]
 fn track_only_json_performs_real_default_installation_without_replacing_existing_files() {
     let helper = fixture(1);

@@ -12,7 +12,7 @@ use std::fs;
 /// Expected source contents written by `providers.cjs` into `comp1/provider.js`.
 const PROVIDER_SOURCE: &str = "module.exports=42;\n";
 
-/// Verifies `bit recover` preserves aspect provider `.bitmap` configuration and [`PROVIDER_SOURCE`] files.
+/// Verifies `bit recover` preserves aspect provider `.bitmap` configuration ([`bitmap`]) and [`PROVIDER_SOURCE`] files.
 #[test]
 fn recovery_preserves_provider_configuration_and_new_source_files() {
     let helper = workspace(1, true);

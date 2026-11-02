@@ -61,6 +61,7 @@ fn http_write_to_empty_directory_skips_multiple_occupied_candidates() {
         b"second occupied candidate\n",
     );
 }
+/// Runs `bit import comp1 --write-to-empty-dir` and asserts `rootDir` increments by `increment` while preserving [`occupied`] files.
 fn relocate(helper: &Helper, original: &serde_json::Value, increment: usize) {
     let bytes = fs::read(file(helper, original, "index.js")).unwrap();
     super::successful(helper, &command(helper, "comp1", "--write-to-empty-dir"));

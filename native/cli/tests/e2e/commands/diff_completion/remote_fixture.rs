@@ -40,7 +40,7 @@ fn seed_remote_fixture(helper: &Helper) {
     std::fs::copy(scope.join("index.json"), helper.scopes.remote_path.join("index.json")).unwrap();
 }
 
-/// Verifies [`remote_parity_with`] on a remote scope populated via [`seed_remote_fixture`].
+/// Verifies [`remote_parity_with`] on a remote scope populated via [`seed_remote_fixture`] and [`remote_versions`].
 #[test]
 fn canonically_seeded_remote_versions_diff_matches_node() {
     remote_parity_with(&remote_versions(seed_remote_fixture), "diff bar/foo 0.0.1 0.0.2 --json");

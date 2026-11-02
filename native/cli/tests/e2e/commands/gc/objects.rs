@@ -32,6 +32,7 @@ pub(super) fn write(scope: &Path, kind: &str, hash: &str, body: &[u8]) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, encoder.finish().unwrap()).unwrap();
 }
+/// Serializes `body` as JSON and writes a `zlib`-compressed scope object of `kind` and `hash` via [`write`].
 fn write_json(scope: &Path, kind: &str, hash: &str, body: &Value) {
     write(scope, kind, hash, &serde_json::to_vec(body).unwrap());
 }

@@ -12,6 +12,7 @@ fn duration(output: &str) -> String {
     format!("{before}{marker}<elapsed>){after}")
 }
 
+/// Verifies built-in `bit compile` emitted bytes, loader caches, and repeated runs match `Node.js` via [`support`] and [`duration`].
 #[test]
 fn builtin_compile_emitted_bytes_loader_caches_and_repeated_runs_match_node() {
     let helper = support::workspace(1, true);

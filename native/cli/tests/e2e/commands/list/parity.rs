@@ -93,6 +93,7 @@ fn two_components(helper: &Helper) {
     crate::helper::remote::publish(helper);
 }
 
+/// Verifies remote and local `bit list --include-deleted` match `Node.js` across `--json`, `--ids`, and table output via [`compare`] and [`two_components`].
 #[test]
 fn remote_and_local_include_deleted_match_released_node_in_json_ids_and_table() {
     let helper = Helper::new();

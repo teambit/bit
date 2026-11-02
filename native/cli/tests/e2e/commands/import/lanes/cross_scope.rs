@@ -80,6 +80,7 @@ fn compare(helper: &Helper, origin: &str, origin_path: &Path, head: &str) {
     assert_eq!(state(helper, origin, head), expected);
 }
 
+/// Captures the component `model`, `version` at `head`, `.bit/refs`, and `.bitmap` state for `origin/comp1`.
 fn state(helper: &Helper, origin: &str, head: &str) -> Value {
     let scope = helper.scopes.local_path.join(".bit");
     let model = parse(&helper.native(&format!("cat-component {origin}/comp1 --json")));

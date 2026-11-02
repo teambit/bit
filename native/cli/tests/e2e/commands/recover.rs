@@ -92,6 +92,7 @@ fn imported_component_recovery_matches_node() {
     compare_result(&helper, &baseline, &command, &files, None);
 }
 
+/// Verifies `bit recover` on a range-deleted component (`--range ^0.0.1`) matches `Node.js` via [`compare_result`].
 #[test]
 fn ranged_component_recovery_matches_node() {
     let helper = Helper::new();

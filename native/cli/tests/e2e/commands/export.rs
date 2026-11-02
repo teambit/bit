@@ -9,7 +9,7 @@ use crate::{
 };
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
-/// Verifies `bit export --head-only` on `main` matches `Node.js` remote index and object store state via [`assert_head_only_main_export`].
+/// Verifies `bit export --head-only` on `main` matches `Node.js` remote index and object store state via [`assert_head_only_main_export`] and [`Helper`].
 #[test]
 fn head_only_main_export_matches_node() {
     let helper = Helper::new();

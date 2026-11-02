@@ -36,6 +36,7 @@ fn ordered_env_intersections_and_repeated_unions_preserve_cache_hits() {
     assert!(bitmap(&helper).get("comp1").is_none());
     assert!(bitmap(&helper).get("comp2").is_none());
 }
+/// Verifies `$localOnly` and `$softTagged` selectors remove only the matching component while preserving other [`bitmap`] rows.
 #[test]
 fn local_only_and_soft_tagged_selection_preserve_other_rows() {
     for state in ["$localOnly", "$softTagged"] {

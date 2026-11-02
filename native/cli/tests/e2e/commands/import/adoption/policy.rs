@@ -47,6 +47,7 @@ fn write_deps_package_json_selects_the_highest_component_range_and_preserves_oth
     assert_eq!(package["dependencies"]["adoption-package"], "^1.4.0");
     assert_eq!(package["adoptionSentinel"], json!({"preserved":true}));
 }
+/// Verifies `--write-deps workspace.jsonc` selects the highest policy range for [`RESOLVER`] and preserves comments.
 #[test]
 fn write_deps_workspace_jsonc_selects_the_highest_range_and_preserves_comments() {
     let helper = fixture();
