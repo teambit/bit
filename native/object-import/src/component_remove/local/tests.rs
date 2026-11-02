@@ -1,4 +1,4 @@
-//! Unit tests for local component batch removal ([`LocalBatch`]) and dependency cleanup in
+//! Unit tests for local component batch removal ([`LocalBatch`], [`fixture`]) and dependency cleanup in
 //! `bit-object-import` workspace removals.
 
 use super::LocalBatch;

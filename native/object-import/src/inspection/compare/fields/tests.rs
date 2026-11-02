@@ -1,4 +1,4 @@
-//! Unit tests for UTF-16 [`align_files`] and duplicate path handling during
+//! Unit tests for UTF-16 [`align_files`] ([`Js`], [`row`], [`files`]) and duplicate path handling during
 //! version comparison in `bit-object-import` component status checks.
 
 use super::{Js, align_files, array, get, text};

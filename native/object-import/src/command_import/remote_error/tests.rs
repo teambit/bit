@@ -1,5 +1,5 @@
 //! Unit tests for remote zlib inflation error classification ([`mark`]) and guidance
-//! messages ([`message`]) in `bit-object-import` import diagnostics.
+//! messages ([`message`]) in `bit-object-import` import diagnostics ([`remote_inflate_keeps_legacy_display_but_exposes_real_scoped_zlib_failure`]).
 
 use super::{mark, message};
 #[test]

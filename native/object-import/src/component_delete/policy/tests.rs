@@ -1,5 +1,5 @@
 //! Unit tests for active `main` tag selection ([`latest`]) and dependency graph coverage
-//! validation ([`validate_graph`], [`DependencyComponent`]) in `bit-object-import` component deletion.
+//! validation ([`validate_graph`], [`DependencyComponent`]) in `bit-object-import` component deletion ([`only_active_main_tags_participate_in_pinning`]).
 
 use super::{DependencyComponent, latest, validate_graph};
 use serde_json::json;

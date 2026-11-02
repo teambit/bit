@@ -1,4 +1,4 @@
-//! Unit tests for vendored trusted build scripts ([`trusted_package_names`]) and `allowScripts` policy ([`resolve`], [`allowed_scripts`])
+//! Unit tests for vendored trusted build scripts ([`trusted_package_names`], [`allow`]) and `allowScripts` policy ([`resolve`], [`allowed_scripts`])
 //! overrides in `bit-install` lifecycle script filtering.
 
 use super::{allowed_scripts, resolve, trusted_package_names};

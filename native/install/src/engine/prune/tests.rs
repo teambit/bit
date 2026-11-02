@@ -1,4 +1,4 @@
-//! Unit tests for pruning unreferenced virtual-store packages ([`prune_modules`]) under
+//! Unit tests for pruning unreferenced virtual-store packages ([`prune_modules`], [`CURRENT_LOCKFILE`]) under
 //! `node_modules/.pnpm` in `bit-install` after lockfile updates.
 
 use super::prune_modules;

@@ -1,4 +1,4 @@
-//! Unit tests for [`ProxySettings`] ([`proxy`]), CA certificate ([`read_ca_file`]), and [`RetrySettings`] ([`network`]) in
+//! Unit tests for [`ProxySettings`] ([`proxy`]), CA certificate ([`read_ca_file`]), and [`RetrySettings`] ([`network`], [`NetworkSettings`]) in
 //! `bit-install` HTTP transport configuration.
 
 use super::{NetworkSettings, ProxySettings, RetrySettings, network, proxy, read_ca_file};

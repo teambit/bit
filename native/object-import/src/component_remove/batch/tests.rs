@@ -1,4 +1,4 @@
-//! Unit tests for new component batch removal ([`NewBatch`]) and `.bitmap` history backups in
+//! Unit tests for new component batch removal ([`NewBatch`], [`fixture`]) and `.bitmap` history backups in
 //! `bit-object-import` stash and remove operations.
 
 use super::NewBatch;

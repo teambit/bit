@@ -1,4 +1,4 @@
-//! Unit tests for [`outbound`] staged lane creation [`Plan`] and [`Options`]
+//! Unit tests for [`outbound`] staged lane creation [`Plan`] and [`Options`] ([`fixture`])
 //! in `bit-object-import` lane creation workflows.
 
 use crate::lane_create::{Options, Plan, outbound};

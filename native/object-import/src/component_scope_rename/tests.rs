@@ -1,5 +1,5 @@
 //! Unit tests for component scope and owner rename [`selection`] and
-//! [`Options`] validation in `bit-object-import` scope rename operations.
+//! [`Options`] validation in `bit-object-import` scope rename operations ([`owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes`]).
 
 use super::{Options, selection};
 #[test]

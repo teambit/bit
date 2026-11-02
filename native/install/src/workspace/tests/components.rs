@@ -1,4 +1,4 @@
-//! Unit tests for [`Workspace::load`] and [`Bitmap`] component aspect merging and environment
+//! Unit tests for [`Workspace::load`] and [`Bitmap`] component aspect merging ([`CORE`]) and environment
 //! resolution in `bit-install` workspace initialization.
 
 use super::write;

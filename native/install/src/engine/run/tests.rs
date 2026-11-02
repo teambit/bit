@@ -1,4 +1,4 @@
-//! End-to-end engine [`install`] tests of local projects without network registry access
+//! End-to-end engine [`install`] tests ([`workspace_settings`], [`EngineInstallOptions`]) of local projects without network registry access
 //! in `bit-install` workspace linking.
 
 use super::install;

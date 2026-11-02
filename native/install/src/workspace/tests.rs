@@ -1,4 +1,4 @@
-//! Unit tests ([`write`]) for workspace component loading, file scanning, and variant
+//! Unit tests ([`write`], [`components`], [`files`], [`matching`]) for workspace component loading, file scanning, and variant
 //! pattern matching in `bit-install`.
 
 mod components;

@@ -1,4 +1,4 @@
-//! Unit tests for workspace component `package.json` synthesis ([`PackageJsonContext`], [`finish`], [`snap_to_semver`]) and transformers ([`transformed`])
+//! Unit tests for workspace component `package.json` synthesis ([`PackageJsonContext`], [`finish`], [`snap_to_semver`], [`component`]) and transformers ([`transformed`])
 //! in `bit-install` component manifest generation.
 
 use super::{PackageJsonContext, finish, snap_to_semver, transformed};

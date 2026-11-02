@@ -1,4 +1,4 @@
-//! Unit tests for [`RemoteLane`] merging ([`merge_and_save`]) and `LaneHistory` recording during import
+//! Unit tests for [`RemoteLane`] merging ([`merge_and_save`], [`component`], [`write`]) and `LaneHistory` recording during import
 //! in `bit-install` lane synchronization.
 
 use super::merge_and_save;

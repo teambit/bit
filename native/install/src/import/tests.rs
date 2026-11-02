@@ -1,4 +1,4 @@
-//! Unit tests for scope object importing ([`import_current_objects`]), merging ([`merge_component`], [`merge_version_history`]), and remote fetching in
+//! Unit tests for scope object importing ([`import_current_objects`]), merging ([`merge_component`], [`merge_version_history`], [`keep_existing_version`]), and remote fetching in
 //! `bit-install` pre-install object synchronization.
 
 use super::{

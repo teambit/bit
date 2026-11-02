@@ -1,4 +1,4 @@
-//! Unit tests for detecting aspect environment descriptors ([`aspect_env_ids`], `isUsingAspectEnv`)
+//! Unit tests for detecting aspect environment descriptors ([`aspect_env_ids`], [`write_object`], `isUsingAspectEnv`)
 //! in `bit-install` workspace loading.
 
 use super::aspect_env_ids;

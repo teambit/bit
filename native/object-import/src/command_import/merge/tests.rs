@@ -1,5 +1,5 @@
 //! Unit tests for `ModelComponent` schema defaults and orphaned version merging ([`model_from`])
-//! in `bit-object-import` component imports.
+//! in `bit-object-import` component imports ([`omitted_schema_with_head_matches_canonical_harmony_parse_default`]).
 
 use super::{json, model_from};
 #[test]

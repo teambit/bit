@@ -1,4 +1,4 @@
-//! Unit tests for component load group ordering ([`load_order`], `buildLoadGroups`) in
+//! Unit tests for component load group ordering ([`load_order`], [`NODE`], `buildLoadGroups`) in
 //! `bit-install` manifest generation.
 
 use super::load_order;

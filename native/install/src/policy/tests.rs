@@ -1,4 +1,4 @@
-//! Unit tests for workspace ([`workspace_policy`], [`workspace_manifest`]), environment, and variant ([`component_policy`], [`VariantOptions`]) dependency policy
+//! Unit tests for workspace ([`workspace_policy`], [`workspace_manifest`]), environment ([`load_env_policies`]), and variant ([`component_policy`], [`VariantOptions`]) dependency policy
 //! resolution in `bit-install` manifest planning.
 
 use super::{

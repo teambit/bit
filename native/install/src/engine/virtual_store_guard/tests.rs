@@ -1,5 +1,5 @@
 //! Unit tests for `.modules.yaml` virtual store directory transition guards ([`assert_safe_transition`], [`recorded_virtual_store_dir`]) in
-//! `bit-install` self-hosted workspace protection.
+//! `bit-install` self-hosted workspace protection ([`reads_the_recorded_virtual_store_dir`]).
 
 use super::{assert_safe_transition, recorded_virtual_store_dir};
 use std::fs;

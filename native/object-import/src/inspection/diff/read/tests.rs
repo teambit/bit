@@ -1,4 +1,4 @@
-//! Unit tests for parallel model source [`load`] reading and budget retry
+//! Unit tests for parallel model source [`load`] reading ([`store`], [`Fixture`]) and budget retry
 //! behavior during diffing in `bit-object-import` `bit diff` execution.
 
 use super::load;

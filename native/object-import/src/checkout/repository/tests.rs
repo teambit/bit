@@ -1,4 +1,4 @@
-//! Unit tests for bounded loose object inflation ([`compress`]) and header validation in
+//! Unit tests for bounded loose object inflation ([`compress`], [`shared_inflation_charges_exact_body_bytes_across_chunks_and_records`]) and header validation in
 //! `bit-object-import` repository reads.
 
 use flate2::{Compression, write::ZlibEncoder};

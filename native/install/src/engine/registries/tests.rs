@@ -1,4 +1,4 @@
-//! Unit tests for [`Registries`] URL and authentication header resolution ([`resolve`], [`bit_cloud_registry`]) in
+//! Unit tests for [`Registries`] and [`Registry`] URL and authentication header resolution ([`resolve`], [`bit_cloud_registry`]) in
 //! `bit-install` scoped registry configuration.
 
 use super::{Registries, Registry, bit_cloud_registry, resolve};

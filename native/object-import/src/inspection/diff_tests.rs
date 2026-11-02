@@ -1,4 +1,4 @@
-//! Unit tests for `inspectionDiff` [`apply`] against captured workspace bytes
+//! Unit tests for `inspectionDiff` [`apply`] and [`State`] against captured workspace bytes ([`hash`])
 //! and verified scope sources in `bit-object-import` diff inspection.
 
 use super::{State, apply, hash};

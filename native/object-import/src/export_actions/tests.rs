@@ -1,5 +1,5 @@
 //! Unit tests for thread-local export action [`Handler`], [`current`], and
-//! [`scope`] unwind recovery in `bit-object-import` export adapters.
+//! [`scope`] unwind recovery in `bit-object-import` export adapters ([`nested_and_unwound_adapters_restore_their_operation_owner`]).
 
 use super::{Handler, current, scope};
 use serde_json::json;

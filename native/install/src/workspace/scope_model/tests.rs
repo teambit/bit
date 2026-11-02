@@ -1,4 +1,4 @@
-//! Unit tests for reading component model and `Version` metadata from local
+//! Unit tests for reading component model and `Version` metadata ([`write_object`], [`id`]) from local
 //! [`ScopeObjects`] in `bit-install` workspace loading.
 
 use super::{ScopeObjects, sha1_hex};

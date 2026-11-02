@@ -1,4 +1,4 @@
-//! Unit tests for `resolveFromEnv` dependency linking ([`EnvLinks`], [`resolved_from_env_links`]) from environment packages
+//! Unit tests for `resolveFromEnv` dependency linking ([`EnvLinks`], [`resolved_from_env_links`], [`component`]) from environment packages
 //! in `bit-install` workspace linking.
 
 use super::{EnvLinks, resolved_from_env_links};

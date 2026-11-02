@@ -1,4 +1,4 @@
-//! Unit tests for component main file [`choose`] and [`resolve`] extension
+//! Unit tests for component main file [`choose`], [`resolve`], and [`find`] extension
 //! precedence in `bit-object-import` tracking discovery.
 
 use super::{

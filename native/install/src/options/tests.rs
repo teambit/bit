@@ -1,4 +1,4 @@
-//! Unit tests for `bit install` CLI option parsing ([`parse`], [`InstallOptions`], [`Parsed`]) and camel-case flag
+//! Unit tests for `bit install` CLI option parsing ([`parse`], [`InstallOptions`], [`Parsed`], [`options`]) and camel-case flag
 //! expansion in `bit-install` command invocation.
 
 use super::{ExistingEntries, InstallOptions, Parsed, parse};

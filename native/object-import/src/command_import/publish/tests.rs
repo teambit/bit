@@ -1,5 +1,5 @@
-//! Unit tests verifying object publishing preserves the validated Node stream ([`GOLDEN`]); compressors may emit different
-//! valid encodings when reusing captured objects.
+//! Unit tests verifying object publishing preserves the validated Node stream ([`GOLDEN`], [`HASH`], [`BODY`]); compressors may emit different
+//! valid encodings when reusing captured objects ([`compression`]).
 
 mod compression;
 use serde_json::Value;

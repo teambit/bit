@@ -1,4 +1,4 @@
-//! Unit tests for `WorkspaceManifestFactory.buildComponentDependenciesMap` ([`dependency_list`], [`to_deps_object`], [`missing`]) in
+//! Unit tests for `WorkspaceManifestFactory.buildComponentDependenciesMap` ([`dependency_list`], [`to_deps_object`], [`missing`], [`update_version`]) in
 //! `bit-install` manifest construction.
 
 use super::{Dep, dependency_list, missing, to_deps_object, update_version};

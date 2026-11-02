@@ -1,4 +1,4 @@
-//! Unit tests for resolving external environment package names ([`external_env_packages`]) from [`ScopeObjects`]
+//! Unit tests for resolving external environment package names ([`external_env_packages`], [`scope`]) from [`ScopeObjects`]
 //! in `bit-install` workspace loading.
 
 use super::external_env_packages;

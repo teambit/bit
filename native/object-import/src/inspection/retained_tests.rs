@@ -1,4 +1,4 @@
-//! Unit tests for retained workspace read [`Observation`] and [`State`]
+//! Unit tests for retained workspace read [`Observation`] ([`observe`], [`begin`]) and [`State`]
 //! sessions during inspection in `bit-object-import` status pipelines.
 
 use super::{State, begin, hash, tests::Fixture};

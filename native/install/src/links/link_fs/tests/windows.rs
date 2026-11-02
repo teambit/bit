@@ -1,4 +1,4 @@
-//! Windows linking tests ([`create_link_or_symlink`], [`symlink_dir`], [`LinkKind`]): symlinks where permitted, otherwise hard links for files and junctions
+//! Windows linking tests ([`create_link_or_symlink`], [`symlink_dir`], [`LinkKind`], [`is_link`]): symlinks where permitted, otherwise hard links for files and junctions
 //! for directories in `bit-install` filesystem links.
 
 use super::super::{

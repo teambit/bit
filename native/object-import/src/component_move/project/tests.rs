@@ -1,5 +1,5 @@
 //! Unit tests for platform-specific component move path prefix matching ([`super::matches_from`]) in
-//! `bit-object-import` path projections.
+//! `bit-object-import` path projections ([`native_join_and_linux_from_keep_the_published_windows_mismatch`]).
 
 #[test]
 fn native_join_and_linux_from_keep_the_published_windows_mismatch() {

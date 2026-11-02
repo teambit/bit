@@ -1,4 +1,4 @@
-//! Unit tests for missing peer dependency range intersections ([`intersections`], [`safe_intersect`]) in `bit-install`.
+//! Unit tests for missing peer dependency range intersections ([`intersections`], [`safe_intersect`], [`missing`]) in `bit-install`.
 //! Covers single-range pass-through and semver range intersection.
 
 use super::{intersections, safe_intersect};

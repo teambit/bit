@@ -1,5 +1,5 @@
 //! Unit tests for [`Engine`] and [`other_id`] versioned workspace aspect
-//! identity resolution during config merge in `bit-object-import` merge planning.
+//! identity resolution during config merge in `bit-object-import` merge planning ([`added_versioned_other_aspect_uses_versioned_workspace_identity`]).
 
 use super::{Engine, other_id};
 use serde_json::json;

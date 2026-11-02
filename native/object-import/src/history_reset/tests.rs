@@ -1,4 +1,4 @@
-//! Unit tests for `historyReset` [`State`] candidate selection and [`apply`]
+//! Unit tests for `historyReset` [`State`] candidate selection and [`apply`] ([`call`])
 //! local version retention in `bit-object-import` reset operations.
 
 use super::{State, apply};

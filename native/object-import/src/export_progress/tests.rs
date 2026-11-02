@@ -1,5 +1,5 @@
 //! Unit tests for thread-local export progress [`Event`] observers, [`emit`],
-//! and [`scope`] unwind isolation in `bit-object-import` export reporting.
+//! and [`scope`] unwind isolation in `bit-object-import` export reporting ([`nested_observer_unwind_restores_the_outer_operation`]).
 
 use super::{Event, emit, scope};
 use std::sync::{Arc, Barrier, mpsc::sync_channel};

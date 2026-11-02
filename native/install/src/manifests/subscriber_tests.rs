@@ -1,4 +1,4 @@
-//! Unit tests for `linkedDependencies` subscriber manifest merging ([`subscriber_links`]) in
+//! Unit tests for `linkedDependencies` subscriber manifest merging ([`subscriber_links`], [`InstallPlan`]) in
 //! `bit-install` install plans.
 
 use super::subscriber_links;

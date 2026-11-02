@@ -1,4 +1,4 @@
-//! Unit tests for workspace root component tracking [`Plan`] intent and
+//! Unit tests for workspace root component tracking [`Plan`] and [`Options`] intent ([`identity`]) and
 //! [`main_file`] selection in `bit-object-import` `--root` tracking.
 
 use super::{Plan, facts, fixture, options, source};

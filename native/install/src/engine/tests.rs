@@ -1,5 +1,5 @@
 //! Unit tests for [`EngineError`] formatting and engine constants ([`READ_PACKAGE_HOOKS_CHECKSUM`], [`VIRTUAL_STORE_DIR_MAX_LENGTH`]) in
-//! `bit-install` pnpm error reporting.
+//! `bit-install` pnpm error reporting ([`engine_errors_render_like_bit_renders_pnpm_errors`]).
 
 use super::{EngineError, READ_PACKAGE_HOOKS_CHECKSUM, VIRTUAL_STORE_DIR_MAX_LENGTH};
 use pretty_assertions::assert_eq;

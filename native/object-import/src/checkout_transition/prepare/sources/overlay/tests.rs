@@ -1,4 +1,4 @@
-//! Unit tests for reading version and source objects ([`body`], [`MAX_BYTES`]) through an import [`Overlay`]
+//! Unit tests for reading version and source objects ([`body`], [`MAX_BYTES`], [`compressed`], [`fixture`]) through an import [`Overlay`]
 //! in `bit-object-import` checkout transitions.
 
 use super::{MAX_BYTES, Overlay, body, wire};
