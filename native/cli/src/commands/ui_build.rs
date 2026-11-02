@@ -21,6 +21,7 @@ pub(super) struct Options {
     pub ui_root_name: Option<String>,
 }
 
+/// Entry point for `bit ui-build`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("ui-build arguments are not UTF-8".into()));

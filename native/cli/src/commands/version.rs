@@ -45,6 +45,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Parses `-j` / `--json` and color flags from `args`, returning `None` on unrecognized arguments.
 #[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;

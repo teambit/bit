@@ -43,6 +43,7 @@ pub(super) struct Flags {
     pub ignore_circular: bool,
 }
 
+/// Parses `bit status` presentation flags (`--lanes`, `--verbose`, `--warnings`, `--strict`, `--fail-on-error`, `--expand`, `--ignore-circular`).
 pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut seen: Vec<&str> = Vec::with_capacity(args.len());

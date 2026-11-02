@@ -19,6 +19,7 @@ pub(super) struct Graph {
 }
 
 impl Graph {
+    /// Builds a [`Graph`] from a `VersionHistory` [`Value`], validating unique 9-char prefixes when `short` is set.
     #[must_use]
     pub fn build(history: &Value, short: bool) -> Option<Self> {
         let rows = history["versions"].as_array()?;

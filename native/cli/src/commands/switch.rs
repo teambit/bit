@@ -23,8 +23,9 @@ use bit_install::output::Output;
 use serde_json::Value;
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit switch` command.
 pub const COMMAND: Command = Command { name: "switch", aliases: &[], run };
-
+/// Entry point for `bit switch`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

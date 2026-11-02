@@ -7,6 +7,7 @@ use super::{
 };
 use crate::commands::{patterns, version_history::text};
 
+/// Object path and raw byte proofs collected before publishing a bare-scope `VersionHistory`.
 type Proofs = Vec<(PathBuf, Vec<u8>)>;
 
 /// Resolved component target metadata and object proofs for a bare-scope version-history rebuild.

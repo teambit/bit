@@ -9,7 +9,9 @@ use super::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Token, update payload, component count, and object count for a main-lane status refresh.
 type Main = (Value, Value, usize, usize);
+/// Engine, token, update payload, and component count for a forked-lane status refresh.
 type Forked = (Engine, Value, Value, usize);
 
 /// Prepared main-lane and forked-lane head refreshes for `bit status --lanes`.

@@ -43,6 +43,7 @@ pub(super) fn sort_rows(root: &Path, result: &mut Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Computes the sorted index permutation for `ids` via [`collate`] or the `collationOrder` host RPC.
 fn order(root: &Path, ids: &[String], host: &mut Option<Host>) -> io::Result<Vec<usize>> {
     let mut order = (0..ids.len()).collect::<Vec<_>>();
     if ids.len() < 2 {

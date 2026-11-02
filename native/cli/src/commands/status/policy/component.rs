@@ -20,6 +20,7 @@ pub(super) struct Policy {
     pub(super) env_own: Map<String, Value>,
 }
 
+/// Returns `true` when `entry` matches aspect `id` ignoring version suffixes.
 #[inline]
 pub(super) fn matches_aspect(entry: &Value, id: &str) -> bool {
     crate::commands::update_cmd::matches_aspect(entry, id)

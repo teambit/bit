@@ -59,6 +59,7 @@ pub(super) fn run(
     Ok(reports)
 }
 
+/// Extracts a non-empty compiler error message from a `switchCompile` error [`serde_json::Value`].
 fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
     if value.is_null() {
         return Ok(None);

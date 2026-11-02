@@ -22,6 +22,7 @@ enum Inner {
     Stream(stream::Stream),
 }
 impl Session {
+    /// Spawns and initializes a [`Session`] worker in streaming or quiet mode for `request`.
     #[inline]
     pub(super) fn prepare(
         request: &Value,

@@ -32,6 +32,7 @@ impl From<io::Error> for Failure {
     }
 }
 
+/// Entry point for `bit unuse`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(target) = parse_target(args) else {
         return Ok(Outcome::Declined("arguments outside the native `unuse` grammar".to_owned()));

@@ -46,6 +46,7 @@ pub(super) fn config_error(root: &Path) -> Option<String> {
     invalid_top_level_key(obj).or_else(|| unknown_variant_harmony_aspect(obj))
 }
 
+/// Finds the first top-level `workspace.jsonc` key that is neither `$schema` nor `<scope>/<name>`.
 #[inline]
 fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let key = obj

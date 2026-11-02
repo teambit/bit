@@ -17,6 +17,7 @@ use std::{
     process::Command,
 };
 
+/// Dependency update resolved to its target `latest_range` at a specific configuration [`Target`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ResolvedUpdate {
     pub name: String,

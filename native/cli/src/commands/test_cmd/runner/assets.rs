@@ -22,6 +22,7 @@ const FILES: [(&str, &str); 7] = [
     ("svg.cjs", include_str!("assets/svg.cjs")),
 ];
 impl Assets {
+    /// Materializes and verifies the content-addressed Jest helper asset directory for `package`.
     pub(super) fn prepare(package: &Path) -> io::Result<Self> {
         let package_text = package.to_string_lossy();
         if package.as_os_str().is_empty() || package_text.trim().is_empty() {

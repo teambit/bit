@@ -30,6 +30,7 @@ pub(super) fn request(
     }
     Ok(combined.filter(|_| has_tests))
 }
+/// Validates that every `testMatch` pattern in `request` stays confined within `component.directory`.
 fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io::Result<()> {
     let prefix = super::paths::normalized(&root.join(component.directory.trim()))
         .to_string_lossy()

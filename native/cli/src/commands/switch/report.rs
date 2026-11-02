@@ -52,6 +52,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     Ok(Report { data, code: 0, details })
 }
 
+/// Formats the component switch summary and active-lane confirmation line for `results`.
 #[inline]
 fn success_section(results: &Results, options: &Options, formatter: &Formatter) -> String {
     let lane_name = options.lane.trim();

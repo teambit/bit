@@ -53,6 +53,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Parses `--token` and color flags from `args` for `bit whoami`.
 #[inline]
 fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     let mut token = None;

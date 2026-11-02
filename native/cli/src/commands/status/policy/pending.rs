@@ -41,6 +41,7 @@ pub(in crate::commands::status) fn context(root: &Path, context: &Value) -> io::
     Ok(output)
 }
 
+/// Parsed `merge-conflict` and `unmerged.json` files paired with their filesystem read proofs.
 struct Inputs {
     merge: MergeConfig,
     unmerged: Value,

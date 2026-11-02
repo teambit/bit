@@ -27,6 +27,7 @@ pub(super) fn render(data: &str, raw: &Value) -> io::Result<String> {
     result.push_str("</testsuites>");
     Ok(result)
 }
+/// Returns a trimmed non-empty string slice when `val` is a non-blank JSON string.
 #[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()

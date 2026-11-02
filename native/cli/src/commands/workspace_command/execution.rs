@@ -77,6 +77,7 @@ pub fn execute_failure_scope(
     })
 }
 
+/// Returns `true` when the `CI` environment variable indicates a CI environment.
 #[inline]
 fn ci_active() -> bool {
     crate::commands::scope_rename::ci_active()

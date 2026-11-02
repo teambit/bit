@@ -20,6 +20,7 @@ pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(St
     Some(lanes)
 }
 
+/// Verifies that no two remotes share the same lane head hash in `lanes`.
 #[inline]
 fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
     let mut remotes = std::collections::HashMap::with_capacity(lanes.len());

@@ -8,6 +8,7 @@ use std::{ffi::OsString, fmt::Write};
 /// Borrowed view over aggregated tester totals and component test rows for text summary rendering.
 struct Summary<'a>(&'a Value);
 impl Summary<'_> {
+    /// Reads a numeric counter `key` from `self.0["totals"]`, defaulting to `0`.
     #[inline]
     fn number(&self, key: &str) -> u64 {
         self.0["totals"][key].as_u64().unwrap_or(0)

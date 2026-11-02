@@ -16,6 +16,7 @@ impl Status<'_> {
         self.updates("pendingUpdatesFromMain", "main")
     }
 
+    /// Formats the `updatesFromForked` entries for `bit status --lanes`.
     pub(super) fn updates_from_forked(&self) -> io::Result<Vec<String>> {
         let name = if let Some(name) = self.result["forkedLaneId"]["name"]
             .as_str()

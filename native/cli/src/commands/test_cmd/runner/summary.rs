@@ -32,6 +32,7 @@ fn project(data: &Value, identity: &str, environment: &str, message: Option<&str
         "componentsAffectedByEnvError":affected,"envErrors":errors})
 }
 
+/// Builds the `envErrors` summary array when `environment_error` is `true`.
 #[inline]
 fn env_errors(environment_error: bool, environment: &str, message: Option<&str>) -> Vec<Value> {
     if !environment_error {

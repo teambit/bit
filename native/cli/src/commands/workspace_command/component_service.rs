@@ -31,6 +31,7 @@ pub(in crate::commands) struct Progress {
     pub loads: Vec<usize>,
 }
 
+/// Component identity, workspace directory, and file list prepared for an environment service.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Component {
     pub id: Value,

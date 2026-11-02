@@ -17,6 +17,7 @@ const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const DEPRECATION: &str = "teambit.component/deprecation";
 /// Aspect ID for the removal extension (`teambit.component/remove`).
 const REMOVAL: &str = "teambit.component/remove";
+/// Built-in core aspect IDs accepted by `statusExtensions` without custom host hydration.
 const CORES: [&str; 13] = [
     "teambit.envs/envs",
     RESOLVER,

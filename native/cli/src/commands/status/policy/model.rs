@@ -6,7 +6,7 @@ use crate::commands::status::js::{array, decline, nullish, truthy};
 use serde_json::Value;
 use std::io;
 
-/// Finds the stored model [`Value`] in `context["models"]` matching `identity`.
+/// Finds the stored model [`Value`] in `context["models"]` matching `identity` (used by [`stored_version`]).
 pub(in crate::commands::status) fn model_of<'c>(
     context: &'c Value,
     identity: &str,

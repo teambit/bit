@@ -43,7 +43,7 @@ fn index_like(key: &str) -> bool {
         || (!key.starts_with('0') && !key.is_empty() && key.bytes().all(|b| b.is_ascii_digit()))
 }
 
-/// An object whose keys keep their insertion order in JavaScript too.
+/// An object whose keys keep their insertion order in `JavaScript` too ([`string_map`], [`assign`]).
 #[inline]
 pub fn object(value: &Value) -> io::Result<&Map<String, Value>> {
     let map = value.as_object().ok_or_else(|| decline("status expected an object"))?;

@@ -33,6 +33,7 @@ pub(super) enum Target {
     ModelBitmap(String),
 }
 
+/// Dependency update candidate pairing a package name and current range with its policy [`Target`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Candidate {
     pub name: String,

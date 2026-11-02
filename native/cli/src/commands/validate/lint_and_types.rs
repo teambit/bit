@@ -65,6 +65,7 @@ const KNOWN_GLOBALS: &[&str] = &[
     "window",
 ];
 
+/// Exit code and rendered diagnostic message for a single `bit validate` step.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct StepResult {
     pub code: i32,

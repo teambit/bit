@@ -26,6 +26,7 @@ pub(super) fn candidates(
     Ok(list(engine, root, scope).unwrap_or_default())
 }
 
+/// Extracts the non-empty `defaultScope` string from a `workspace.jsonc` [`Value`].
 #[inline]
 fn default_workspace_scope(workspace: &Value) -> Option<&str> {
     crate::commands::update_cmd::aspect_entry(workspace, "teambit.workspace/workspace")

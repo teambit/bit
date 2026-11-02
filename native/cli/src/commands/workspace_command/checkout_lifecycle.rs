@@ -34,6 +34,7 @@ pub(super) fn bootstrap(
     Ok(Some(environments.for_checkout()))
 }
 
+/// Returns the trimmed checkout pattern from `request` when it is non-empty and not a stateful selector.
 #[inline]
 fn non_stateful_pattern<'a>(request: &'a super::Request<'_>) -> Option<&'a str> {
     request.options["pattern"]

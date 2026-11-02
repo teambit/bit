@@ -35,6 +35,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+/// Fast-path outcome when `bit test` resolves to an empty selection or immediate validation error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum FastOutcome {
     Empty { stdout: String },

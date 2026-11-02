@@ -30,6 +30,7 @@ pub(super) struct Options {
     pub trigger: Option<String>,
 }
 
+/// Entry point for `bit watch`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("watch arguments are not UTF-8".into()));

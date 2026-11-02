@@ -29,6 +29,7 @@ impl<'r> Status<'r> {
         Ok(sections)
     }
 
+    /// Formats the version-state sections (outdated, pending merge, lane updates, local-only, new, modified, snapped, staged).
     fn version_sections(&self) -> io::Result<Vec<String>> {
         let format = &self.format;
         let new = self.new_components()?;

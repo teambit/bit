@@ -27,6 +27,7 @@ pub struct Adoption {
     pub get_all: bool,
 }
 
+/// Parses `bit switch <lane>` CLI arguments into [`Options`].
 #[must_use]
 #[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {

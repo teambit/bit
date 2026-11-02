@@ -40,6 +40,7 @@ pub(super) fn read(root: &Path, entered: &str) -> io::Result<Captured> {
     Ok(Captured { data, proof })
 }
 
+/// Parses `<identity>: <version>` and `DEFAULT: <version>` lines from `--versions-file` `content`.
 fn parse(content: &str) -> io::Result<Value> {
     let mut entries = Vec::new();
     let mut default = None;

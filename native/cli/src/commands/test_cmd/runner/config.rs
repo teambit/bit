@@ -22,6 +22,7 @@ pub(super) fn request(
     Ok(has_tests.then_some(request))
 }
 
+/// Builds the Jest worker request [`Value`] and returns whether any matching test files exist.
 pub(super) fn request_with_empty(
     root: &Path,
     selected: &Component,

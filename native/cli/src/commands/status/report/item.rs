@@ -16,6 +16,7 @@ impl Status<'_> {
             .map(|identity| self.item((identity, None), false, None, true))
             .collect())
     }
+    /// Formats a component status line with a trailing yellow `... <message>` suffix.
     #[inline]
     pub(super) fn item_with_message(
         &self,

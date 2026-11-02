@@ -4,7 +4,7 @@
 
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;
-
+/// Built-in workspace or component starter template entry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct TemplateDescriptor {

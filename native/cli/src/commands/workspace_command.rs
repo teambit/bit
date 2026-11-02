@@ -55,7 +55,7 @@ use results::Report;
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 
-/// Everything decided before the first write.
+/// Everything decided before the first write in a workspace command (`checkout`, `merge`, `lane merge`).
 pub struct Planned {
     engine: Engine,
     token: String,

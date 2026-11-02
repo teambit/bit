@@ -46,6 +46,7 @@ pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Select
     }
     Ok(Some(Selected { identities, paths }))
 }
+/// Resolves the unique `.bitmap` component identity whose `rootDir` owns `path`.
 fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
     let mut owners = bitmap.entries
         .iter()

@@ -41,6 +41,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+/// Entry point for `bit templates`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("templates arguments are not UTF-8".into()));

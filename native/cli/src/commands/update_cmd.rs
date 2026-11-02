@@ -44,6 +44,7 @@ pub(super) struct Options {
     pub semver: bool,
 }
 
+/// Entry point for `bit update`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("update arguments are not UTF-8".into()));

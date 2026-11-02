@@ -2,7 +2,7 @@
 //!
 //! [`expected_success_symbols`] normalizes `\r\n` line endings and Windows checkmarks in test expectations.
 
-/// Normalizes CRLF line endings and converts heavy checkmarks to Windows checkmarks when `cfg!(windows)`.
+/// Normalizes CRLF line endings and converts heavy checkmarks (`✔`) to Windows checkmarks (`✓`) when `cfg!(windows)`.
 #[must_use]
 #[inline]
 pub fn expected_success_symbols(expected: &str) -> String {

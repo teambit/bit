@@ -29,6 +29,7 @@ pub(super) struct Plan {
     runnable: usize,
 }
 impl Plan {
+    /// Parses [`Settings`], loads components, and prepares the Jest worker [`Session`] and [`Coverage`] targets.
     pub(super) fn prepare(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
         let settings = Settings::parse(root, args, options)?;
         let loaded = Loaded::prepare(root, &settings.selection)?;
