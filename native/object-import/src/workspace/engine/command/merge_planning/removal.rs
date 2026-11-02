@@ -1,4 +1,4 @@
-//! Removed component directory validation and cleanup planning during merges.
+//! [`Removed`] component directory [`validate`] and cleanup [`planning`] during merges.
 
 use super::{Prepared, Selected, invalid, planning};
 use serde_json::json;

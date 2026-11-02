@@ -1,4 +1,4 @@
-//! Recovery restoration and pending write publication for merge-abort transactions.
+//! Recovery [`restore`] execution and pending write publication for merge-abort transactions.
 
 use super::{Operation, Restore, State, invalid, proof, reset, write_pending};
 use serde_json::{Value, json};

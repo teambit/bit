@@ -1,4 +1,4 @@
-//! Retain acknowledged transfer phases and publish local state around extension callbacks.
+//! Retain acknowledged transfer phases via [`apply`] and publish [`Publication`] around callbacks.
 
 use super::{Apply, Finalize, Pending, Publication, Retained, State, hub, invalid, remote};
 use crate::export_progress::{self, Event};

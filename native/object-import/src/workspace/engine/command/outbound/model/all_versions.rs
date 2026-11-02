@@ -1,4 +1,4 @@
-//! Select the complete local `Version` ancestry for `ExportCmd --all-versions`.
+//! [`select`] the complete local `Version` ancestry into [`Staged`] for `ExportCmd --all-versions`.
 
 use super::{Staged, history::parents, invalid};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Pending main-lane identity metadata for export wildcard selection.
+//! Pending main-lane identity metadata via [`read`] and [`histories`] for export wildcard selection.
 
 use super::{all_rows, invalid, staged_rows};
 use serde_json::{Value, json};

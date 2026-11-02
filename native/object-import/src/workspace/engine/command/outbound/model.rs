@@ -1,5 +1,5 @@
-//! Select already-scoped main-lane components and freeze their compressed
-//! object closure, or a zero-object repeat export, before remote side effects.
+//! Select [`Selected`] main-lane components and freeze their [`ObjectItem`] closure,
+//! or a zero-object [`repeat`] export, via [`selection`], [`candidates`], and [`history`].
 pub(super) mod prefilter;
 
 mod all_versions;

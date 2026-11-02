@@ -1,4 +1,4 @@
-//! Three-way merge body planning, conflict detection, and destination validation.
+//! Three-way merge [`BodyInput`] planning, [`unrelated`] handling, and [`paths`] validation.
 mod paths;
 mod reload;
 mod unrelated;

@@ -1,4 +1,4 @@
-//! Replay `VersionHistory` distance stages recorded during checkout selection.
+//! [`replay`] `VersionHistory` distance stages recorded during checkout selection on [`Record`].
 
 use super::{Record, history, invalid};
 use serde_json::Value;

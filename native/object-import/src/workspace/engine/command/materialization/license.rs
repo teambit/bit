@@ -1,4 +1,4 @@
-//! Scope licenses are separate Vinyl writes, never tracked `Version` `Source` bodies.
+//! Scope [`Prepared`] licenses via [`prepare`] are separate writes, never `Version` `Source` bodies.
 
 use super::{Input, invalid, validate_path};
 use std::{

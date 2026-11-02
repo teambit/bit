@@ -1,4 +1,4 @@
-//! Component file, license, and root safety preparation for workspace materialization.
+//! [`Prepared`] component file, [`license`], and [`root`] safety preparation from [`Input`].
 
 mod license;
 mod root;

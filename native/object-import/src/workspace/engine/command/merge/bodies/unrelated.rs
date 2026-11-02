@@ -1,4 +1,4 @@
-//! Construct merge body results for components with unrelated version histories.
+//! Construct [`Prepared`] merge body results for [`Captured`] components with [`Conflict::Unrelated`].
 
 use super::{Captured, Conflict, Destinations, Prepared};
 use serde_json::{Value, json};

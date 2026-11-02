@@ -1,4 +1,4 @@
-//! Retain the published `lane history` remote refresh until report validation.
+//! Retain the published [`lane_history`] remote refresh across [`Prepare`] and [`Apply`].
 
 use super::super::{State, inbound, invalid, lane_context};
 use crate::{

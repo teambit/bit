@@ -1,4 +1,4 @@
-//! Workspace checkout, switch, and merge planning orchestration.
+//! Workspace [`checkout`], switch, and merge [`Planned`] orchestration on [`Record`].
 
 mod checkout_lane;
 mod checkout_scope;

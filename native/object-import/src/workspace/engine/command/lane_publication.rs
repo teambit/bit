@@ -1,4 +1,4 @@
-//! Lane object, history, squash, and `last-merged` recovery publication for lane commands.
+//! [`Prepared`] lane [`objects`], [`squash`], and [`recovery`] publication for lane commands.
 
 pub(super) use recovery::encode_model;
 mod objects;

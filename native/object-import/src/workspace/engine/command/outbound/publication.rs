@@ -1,4 +1,4 @@
-//! Publish all original-scope export batches locally after remote `ExportPersist`.
+//! Publish [`Selected`] original-scope export batches via [`reconcile`] and [`removed`].
 
 pub(super) use self::reconcile::present as reconcile_present;
 mod reconcile;

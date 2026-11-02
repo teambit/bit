@@ -1,4 +1,4 @@
-//! `Source` object hashing and compression for auto-snapped merge files.
+//! `Source` object hashing and compression via [`prepare`] for [`Input`] under [`Budget`].
 
 #[cfg(test)]
 mod tests;

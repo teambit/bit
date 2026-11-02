@@ -1,4 +1,4 @@
-//! `NodeModuleLinker` metadata adapters transform native package plans before publication.
+//! `NodeModuleLinker` metadata adapters transform [`Prepared`] package plans before publication.
 
 #[cfg(test)]
 mod tests;

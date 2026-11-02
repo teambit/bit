@@ -1,4 +1,4 @@
-//! `Version` parent squashing and replacement tracking during lane merges onto `main`.
+//! `Version` parent [`Prepared`] squashing via [`prepare`] during lane merges onto `main`.
 
 #[cfg(test)]
 #[path = "squash_tests.rs"]

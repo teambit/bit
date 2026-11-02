@@ -1,4 +1,4 @@
-//! Pre-snap merge conflict and dependency cache validation for merge planning.
+//! Pre-snap merge conflict and [`cache_guard`] validation on [`Prepared`] via [`validate`].
 
 mod cache_guard;
 #[cfg(test)]

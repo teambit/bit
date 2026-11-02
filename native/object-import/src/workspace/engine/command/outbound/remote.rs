@@ -1,4 +1,4 @@
-//! Direct client-side pending transfer and canonical remote server actions.
+//! Direct client-side [`Pending`] transfer and canonical remote server [`Actions`] via [`file_bridge`].
 
 mod file_bridge;
 mod group;

@@ -1,4 +1,4 @@
-//! Construct `ConfigMerger` policy rows for fast-forward and divergent merges.
+//! Construct `ConfigMerger` policy rows on [`Prepared`] via [`fast_forward`] and divergent helpers.
 
 #[cfg(test)]
 mod tests;

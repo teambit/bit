@@ -1,4 +1,4 @@
-//! `Repository.getChownOptions`: configured Unix group ownership for pending objects.
+//! `Repository.getChownOptions`: configured Unix group [`id`] for pending objects.
 
 #[cfg(all(test, unix))]
 mod tests;

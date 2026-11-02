@@ -1,4 +1,4 @@
-//! Reconcile hidden lane heads with the current remote before exporting.
+//! Reconcile hidden [`Loaded`] lane heads into [`Reconciled`] via [`append`] before exporting.
 
 #[cfg(test)]
 mod http_tests;

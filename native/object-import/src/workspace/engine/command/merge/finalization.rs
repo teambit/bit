@@ -1,4 +1,4 @@
-//! Post-merge manifest, package, metadata, and staged-snap finalization.
+//! Post-merge [`manifests`], [`packages`], [`metadata`], and [`staged`] finalization into [`Prepared`].
 
 #[cfg(test)]
 mod snapshot_tests;

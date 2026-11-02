@@ -1,4 +1,4 @@
-//! Per-component target version selection and transition planning for checkout.
+//! Per-component target version [`select`] and [`checkout_transition`] planning on [`Record`].
 
 use super::{
     Record, capture, history, history_replay, input, invalid, repository, reset_comparison,

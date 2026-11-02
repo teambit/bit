@@ -1,4 +1,4 @@
-//! Package name projection for hidden lane dependents during merge planning.
+//! Package name projection via [`prepare_hidden_metadata`] for hidden [`Captured`] lane dependents.
 
 use super::{Value, invalid, json};
 use crate::workspace::engine::command::capture::Captured;

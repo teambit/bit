@@ -1,4 +1,4 @@
-//! Coordinate native merge status selection, body preparation, and materialization.
+//! Coordinate native merge [`status`] selection, [`bodies`], [`snapshot`], and [`finalization`].
 
 pub(super) mod finalization;
 pub(super) mod snapshot;

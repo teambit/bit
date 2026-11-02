@@ -1,4 +1,4 @@
-//! Flattened dependency graph and edge projection for merged component versions.
+//! Flattened dependency graph and edge [`project`] helpers with [`previous`] graph validation.
 
 mod previous;
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! Fast-forward metadata and dependency cache guard verification.
+//! Fast-forward metadata and [`merge_dependency_guard`] [`Proof`] verification via [`verify`].
 
 #[cfg(test)]
 mod tests;

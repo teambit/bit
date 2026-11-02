@@ -1,4 +1,4 @@
-//! `staged-snaps` and `unmerged.json` preparation for finalized merge snapshots.
+//! `staged-snaps` and `unmerged.json` [`prepare`] helpers for finalized [`Prepared`] snapshots.
 
 use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Value, json as value};

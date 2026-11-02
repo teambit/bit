@@ -1,4 +1,4 @@
-//! Prepare a lane-history checkout or revert command for phase-by-phase execution.
+//! Prepare a lane-history [`Prepare`] command via [`run`] and [`retain`] for phased execution.
 
 mod retain;
 use super::{Prepare, State, invalid, selection};

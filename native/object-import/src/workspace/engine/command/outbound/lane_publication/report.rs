@@ -1,4 +1,4 @@
-//! Classify acknowledged lane exports for the command receipt.
+//! Classify acknowledged [`LaneSelected`] exports into [`Reported`] for the command receipt.
 
 use super::super::{invalid, lane_model::LaneSelected};
 use serde_json::Value;

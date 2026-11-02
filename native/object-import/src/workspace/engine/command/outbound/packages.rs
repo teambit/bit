@@ -1,4 +1,4 @@
-//! Retain native linker inputs before transfer; staging selects only acknowledged `.bitmap` promotions.
+//! Retain [`Prepared`] native linker inputs via [`prepare`] before transfer.
 
 use super::{Plan, Prepare, invalid, model};
 use crate::workspace::engine::{client_status::config, dependency_graph::proof};

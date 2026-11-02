@@ -1,4 +1,4 @@
-//! Native destination paths and Bit's slash-separated file identities use different separators.
+//! [`validate`] native destination paths against Bit's slash-separated file identities.
 
 #[cfg(test)]
 mod tests;

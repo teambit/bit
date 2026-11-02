@@ -1,4 +1,4 @@
-//! Implicit component merges select diverged local and remote heads.
+//! Implicit component merges select diverged local and remote heads via [`select_targets`].
 
 use super::{
     super::input::{Operation, Prepare},

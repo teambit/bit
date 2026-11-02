@@ -1,4 +1,4 @@
-//! Prove that merged bodies preserve the captured dependency graph before autosnap.
+//! [`verify`] that merged bodies preserve the [`Captured`] dependency graph before autosnap.
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
-//! Public outbound export owner: preparation captures and validates local objects;
-//! application transfers compressed objects and owns remote validation/persistence;
-//! finalization publishes local bookkeeping from the retained acknowledgements.
+//! Outbound export owner: [`stage`] captures [`model`] and [`lane_model`] closures;
+//! [`apply`] transfers [`ObjectItem`] payloads via [`remote`] and [`hub`];
+//! [`finalize`] publishes [`publication`] and [`lane_publication`] from [`receipt`].
 
 pub(in crate::workspace::engine) use lifecycle::{apply, finalize, stage};
 pub(crate) use model::{encode as encode_object, read_object};

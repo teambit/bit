@@ -1,4 +1,4 @@
-//! Lane target capture validation and hidden dependent metadata filtering for merge planning.
+//! Lane target capture validation via [`validate_captures`] and [`hidden`] dependent filtering.
 
 pub(super) use hidden::prepare_hidden_metadata;
 mod hidden;

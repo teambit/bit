@@ -1,4 +1,4 @@
-//! Reconcile acknowledgements with component-level `.bitmap` promotions.
+//! Reconcile acknowledgements with [`Selected`] `.bitmap` promotions via [`prepare_staged_config`].
 
 use super::{Prepared, Selected, invalid};
 use crate::store::Store;

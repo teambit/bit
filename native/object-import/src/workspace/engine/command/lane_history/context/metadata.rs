@@ -1,4 +1,4 @@
-//! Workspace status context projection for historical lane checkout targets.
+//! Workspace [`status_context`] projection for historical [`Phase`] checkout targets via [`read`].
 
 use super::{invalid, status_context};
 use crate::workspace::engine::{

@@ -1,4 +1,4 @@
-//! `last-merged` backup inspection and restoration planning for recovery transactions.
+//! `last-merged` [`Prepared`] backup inspection via [`main`], [`paths`], and [`projection`].
 
 mod main;
 mod paths;

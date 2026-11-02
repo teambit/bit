@@ -1,4 +1,4 @@
-//! Extension identity uniqueness guards for recovered component `Version` objects.
+//! Extension identity uniqueness guards via [`extensions`] for recovered `Version` objects.
 
 use super::{Value, invalid, io};
 #[inline]

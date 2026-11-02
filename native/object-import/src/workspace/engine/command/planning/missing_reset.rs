@@ -1,6 +1,6 @@
 //! Node reports a missing tracked directory or main file restored by
-//! `checkout reset` as an unchanged component and an addition, even though
-//! files are written.
+//! `checkout reset` as an unchanged component and an addition via [`report_if_applicable`],
+//! even though files are written.
 
 use super::{Planned, Record, input, invalid};
 use serde_json::{Value, json};

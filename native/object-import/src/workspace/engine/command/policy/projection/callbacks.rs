@@ -1,4 +1,4 @@
-//! Validate JSON aspect facts returned by published callbacks without native object serialization.
+//! Validate JSON aspect facts returned by published callbacks via [`extensions`].
 
 use super::{array, invalid};
 use serde_json::Value;

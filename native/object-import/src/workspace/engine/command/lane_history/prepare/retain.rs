@@ -1,4 +1,4 @@
-//! Retain prepared lane-history checkout phases and their object proofs.
+//! Retain prepared lane-history [`Phase`] entries and [`proof`] records in [`Retained`] via [`run`].
 
 use crate::{
     command_import,

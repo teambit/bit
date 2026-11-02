@@ -1,4 +1,4 @@
-//! Select the `Version` refs sent by staged, repeat, and head-only exports.
+//! Select the `Version` refs via [`select_versions`] for staged, [`repeat`], and [`all_versions`] exports.
 
 use super::{Prepare, all_versions, invalid, repeat};
 use serde_json::Value;

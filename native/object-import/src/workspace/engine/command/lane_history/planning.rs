@@ -1,4 +1,4 @@
-//! Insert absent historical components at their original position before selection.
+//! Insert absent historical components into [`Planned`] via [`attach`] before selection.
 
 use super::{invalid, phase};
 use crate::workspace::engine::command::{Record, capture, planning::Planned};

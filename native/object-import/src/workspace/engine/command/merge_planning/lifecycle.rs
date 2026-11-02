@@ -1,4 +1,4 @@
-//! Lifecycle transitions for prepared merge plans, snapshots, and publications.
+//! Lifecycle transitions for [`Prepared`] and [`Finalized`] merge plans on [`Record`].
 
 #[cfg(test)]
 mod tests;

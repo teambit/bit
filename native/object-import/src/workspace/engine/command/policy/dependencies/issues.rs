@@ -1,4 +1,4 @@
-//! Tag-blocking component issue filtering for merged dependency policies.
+//! Tag-blocking component issue [`capture`] filtering for merged [`Row`] dependency policies.
 
 use super::{super::Row, invalid, projection};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Partition lane-history components into existing and restored-deleted checkout phases.
+//! Partition lane-history components into existing and restored-deleted [`Phase`] entries via [`phases`].
 
 use super::{Phase, invalid, proof};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Cached object repository reader, proof tracker, and short-hash resolver for commands.
+//! Cached object [`Repository`] reader, [`proof`] tracker, [`recovery`], and [`short_refs`] resolver.
 
 mod recovery;
 mod short_refs;

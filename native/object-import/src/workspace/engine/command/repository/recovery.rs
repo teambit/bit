@@ -1,4 +1,4 @@
-//! Project retained model proofs after the recovery owner restores `main`'s component objects.
+//! Project retained model [`proof`] records on [`Repository`] after restoring `main`'s objects.
 
 use super::{Repository, proof};
 use std::{io, path::Path};

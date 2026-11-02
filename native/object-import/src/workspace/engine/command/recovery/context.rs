@@ -1,4 +1,4 @@
-//! Workspace context, model, and proof assembly for merge-abort recovery commands.
+//! Workspace context, model, and [`proof`] assembly into [`Retained`] via [`prepare`] and [`guards`].
 
 mod guards;
 #[cfg(test)]

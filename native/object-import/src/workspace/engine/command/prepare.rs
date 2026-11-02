@@ -1,4 +1,4 @@
-//! Workspace command context, remote object import, and target selection preparation.
+//! Workspace command [`context`], [`checkout_import`], [`checkout_lane`], and [`roots`] preparation.
 mod checkout_import;
 mod checkout_lane;
 mod checkout_scope;

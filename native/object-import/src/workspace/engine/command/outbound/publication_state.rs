@@ -1,4 +1,4 @@
-//! The local publication that accompanies a component or lane export.
+//! The local [`Publication`] that accompanies a [`publication`] or [`lane_publication`] export.
 
 use super::{lane_publication, publication};
 

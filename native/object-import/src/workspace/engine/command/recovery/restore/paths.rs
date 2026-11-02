@@ -1,4 +1,4 @@
-//! Directory removal and control file preimage capture for recovery restoration.
+//! Directory [`removals`] and control file preimage capture for recovery restoration.
 
 use super::{invalid, proof};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Native merge status calculation and strategy resolution for workspace commands.
+//! Native merge status [`select`] and [`unrelated`] resolution from [`Input`] and [`SelectionOptions`].
 
 mod unrelated;
 use super::invalid;

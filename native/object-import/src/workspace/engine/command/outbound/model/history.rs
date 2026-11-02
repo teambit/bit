@@ -1,4 +1,4 @@
-//! Canonical local `VersionHistory` updates for component and lane exports.
+//! Canonical local `VersionHistory` [`HistoryBytes`] updates via [`prepare_history`] for exports.
 
 use super::{HistoryBytes, encode, invalid, read_object};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! `Lane` and `LaneHistory` object mutation and serialization for lane commands.
+//! `Lane` and `LaneHistory` object [`update`] and [`snapshot`] serialization for lane commands.
 
 use super::super::{invalid, merge::snapshot};
 use serde_json::{Value, json};

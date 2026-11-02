@@ -1,4 +1,4 @@
-//! `RemoveMain.getRemovedStagedFromMain` reads all pending removal configuration.
+//! `RemoveMain.getRemovedStagedFromMain` [`read`] helper for pending removal configuration.
 
 use super::invalid;
 use serde_json::Value;

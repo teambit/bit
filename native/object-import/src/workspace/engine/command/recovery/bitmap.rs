@@ -1,4 +1,4 @@
-//! `.bitmap` component configuration projection and validation for recovery commands.
+//! `.bitmap` component configuration [`project`] and [`project_snapshot`] helpers for recovery.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Preserve an actual started import when validation fails before its success receipt.
+//! Preserve an actual started [`import`] on [`Record`] when validation fails before its receipt.
 
 #[cfg(test)]
 mod tests;

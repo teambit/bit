@@ -1,4 +1,4 @@
-//! Resolve configured and hub scopes once, then retain the central export acknowledgement.
+//! [`resolve`] configured and hub scopes via [`resolution`], then retain the [`Plan`] via [`plan`].
 
 pub(super) use resolution::{Resolution, global as configuration, resolve};
 

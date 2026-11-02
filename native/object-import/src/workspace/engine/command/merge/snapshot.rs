@@ -1,4 +1,4 @@
-//! Auto-snap `Version` and `Source` object synthesis during workspace merges.
+//! Auto-snap [`Snapshot`] `Version` and [`sources`] synthesis with [`metadata`] from [`Input`].
 
 mod metadata;
 mod sources;

@@ -1,4 +1,4 @@
-//! Plan fast-forward materializations and model updates during a merge command.
+//! Plan fast-forward [`materialization`] and model updates on [`Prepared`] via [`prepare`].
 
 #[cfg(test)]
 mod tests;

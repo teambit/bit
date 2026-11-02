@@ -1,4 +1,4 @@
-//! Retain wildcard discovery history writes and validate every mutable input before publication.
+//! Retain [`Prepared`] wildcard discovery [`HistoryBytes`] via [`prepare`] before publication.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Publish a persisted lane locally only after the remote acknowledges its heads.
+//! Publish a [`Prepared`] lane via [`controls`], [`report`], and [`state`] after acknowledgement.
 
 mod controls;
 mod report;

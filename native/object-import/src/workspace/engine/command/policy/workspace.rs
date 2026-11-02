@@ -1,4 +1,4 @@
-//! Workspace dependency updates use the same aggregation as `ConfigMergerMain`.
+//! Workspace dependency updates via [`prepare`] use the same aggregation as `ConfigMergerMain`.
 
 use super::{Prepared, Record, invalid, projection};
 use serde_json::{Map, Value, json};

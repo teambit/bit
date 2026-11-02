@@ -1,4 +1,4 @@
-//! Post-restore control file expectation projection and dependency path validation.
+//! Post-restore [`Controls`] expectation projection and dependency path validation on [`Prepared`].
 
 use super::{Prepared, invalid, proof};
 use std::{collections::BTreeMap, io, path::PathBuf};

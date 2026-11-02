@@ -1,4 +1,4 @@
-//! Canonical post-export `.bitmap`, lane marker, and staged configuration edits.
+//! Canonical post-export [`export_bitmap`], lane marker, and staged configuration edits.
 
 use super::invalid;
 use serde_json::Value;

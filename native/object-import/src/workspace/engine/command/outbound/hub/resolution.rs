@@ -1,4 +1,4 @@
-//! Remote scope host resolution and hub endpoint discovery for outbound exports.
+//! [`Remote`] scope host [`Resolution`] and [`Resolved`] hub endpoint discovery via [`Resolver`].
 
 use super::{Prepare, invalid};
 use bit_client_transfer::{

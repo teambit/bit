@@ -1,4 +1,4 @@
-//! Generated package `JsonVinyl` uses write-file-atomic, breaking hardlink aliases.
+//! Generated package `JsonVinyl` [`replace`] uses atomic replacement, breaking hardlink aliases.
 
 #[cfg(test)]
 mod tests;

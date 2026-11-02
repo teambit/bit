@@ -1,4 +1,4 @@
-//! Prepare generated component `package.json` manifests and `node_modules` links.
+//! [`prepare`] [`generated`] component `package.json` manifests and `node_modules` links.
 mod generated;
 use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Map, Value, json as value};

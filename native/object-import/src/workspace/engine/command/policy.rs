@@ -1,4 +1,4 @@
-//! Component and workspace `ConfigMerger` policy planning, conflicts, and dependency overlays.
+//! Component and [`workspace`] `ConfigMerger` [`config`], [`conflicts`], [`graph`], and [`dependencies`].
 
 pub(in crate::workspace::engine) mod dependencies;
 pub(super) mod graph;

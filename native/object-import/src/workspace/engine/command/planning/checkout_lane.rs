@@ -1,4 +1,4 @@
-//! Incoming lane component addition planning during workspace checkout or switch.
+//! Incoming lane component addition planning into [`Planned`] via [`prepare`] during checkout or switch.
 
 use super::{Planned, Record, capture, invalid, prepare_one};
 use crate::workspace::snapshots;

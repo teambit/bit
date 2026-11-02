@@ -1,4 +1,4 @@
-//! Construct unmerged component entries for pending merge state persistence.
+//! Construct unmerged component entries via [`entry`] for pending [`merge`] state persistence.
 
 #[cfg(test)]
 mod tests;

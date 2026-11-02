@@ -1,4 +1,4 @@
-//! Persist the published per-component configuration conflict document.
+//! Persist the published per-component configuration conflict [`File`] for [`Prepared`].
 
 use super::{Prepared, config, invalid};
 use serde_json::{Value, json};

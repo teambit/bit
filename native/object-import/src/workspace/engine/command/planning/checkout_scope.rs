@@ -1,4 +1,4 @@
-//! Materialize newly discovered default-scope components within checkout's transaction.
+//! Materialize newly discovered default-scope components into [`Planned`] via [`prepare`].
 
 use super::{Planned, Record, capture, invalid, prepare_one};
 use crate::workspace::snapshots;

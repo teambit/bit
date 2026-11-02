@@ -1,4 +1,4 @@
-//! A narrow persistent bridge to the installed file-scope server actions.
+//! A narrow persistent [`Child`] bridge to the installed file-scope server actions.
 //! Rust owns ordering and retry policy; the canonical server still merges.
 
 #[cfg(test)]

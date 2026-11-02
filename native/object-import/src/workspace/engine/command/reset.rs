@@ -1,4 +1,4 @@
-//! Reset planning against a retained, potentially restored workspace context.
+//! Reset [`plan`] execution against a retained, potentially restored [`Record`] context.
 //! Recovery validates the live controls before restoring metadata; `.bitmap` commit
 //! subsequently requires the exact projected bytes, never the old live `.bitmap`.
 

@@ -1,4 +1,4 @@
-//! Unrelated merge history observation and failure reporting.
+//! Unrelated merge history [`observation`] and [`failure`] reporting for [`Input`].
 
 use super::{Input, invalid, removed};
 use serde_json::{Value, json};
