@@ -88,7 +88,7 @@ fn component(
     }
 }
 
-/// Collect configured non-core aspect extensions on `subject.component` as dev [`ComponentDependency`] entries.
+/// Collect configured non-core aspect extensions on [`Subject`] `subject.component` as dev [`ComponentDependency`] entries.
 fn extensions(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,

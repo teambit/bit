@@ -2,7 +2,7 @@
 //!
 //! [`match_patterns`] and [`matches`] delegate non-empty glob pattern checks to `bit_workspace_config::glob`.
 
-/// Return `true` when `path` matches at least one non-empty glob pattern in `patterns`.
+/// Return `true` when `path` matches at least one non-empty glob pattern in `patterns` (see [`matches`]).
 #[inline]
 #[must_use]
 pub fn match_patterns(path: &str, patterns: &[String]) -> bool {

@@ -63,7 +63,7 @@ const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 
 impl Detected {
-    /// `DependenciesData.deserialize` of a dependency cache entry.
+    /// `DependenciesData.deserialize` of a dependency cache [`Value`] entry.
     #[must_use]
     pub fn from_cache(data: &Value) -> Self {
         let issues = &data["issues"];

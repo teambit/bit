@@ -69,7 +69,7 @@ impl<'a> Progress<'a> {
     }
 }
 
-/// Persist every remote's objects, then merge and write the components.
+/// Persist every remote's [`PerRemote`] objects into [`Repo`], then merge and write the components into [`Written`].
 pub fn persist(
     repo: &Repo,
     fetched: &PerRemote,

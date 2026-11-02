@@ -40,7 +40,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Everything the manifest calculation reads.
+/// Everything the manifest calculation reads ([`WorkspaceComponent`], [`ComponentDependencies`], [`Policies`], [`DependencyResolverConfig`], [`ManifestOptions`], and [`ManifestContext`]).
 #[derive(Debug, Clone, Copy)]
 pub struct ManifestInput<'a> {
     /// The workspace root (the root project's dir).

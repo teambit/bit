@@ -77,7 +77,7 @@ pub struct LinkResult {
     pub package_json_changed: bool,
 }
 
-/// Link every component except the workspace-root one (`rootDir: "."`) into `node_modules`.
+/// Link every [`WorkspaceComponent`] except the workspace-root one (`rootDir: "."`) into `node_modules`.
 #[inline]
 pub async fn link_components(
     root: &Path,

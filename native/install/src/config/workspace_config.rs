@@ -62,7 +62,7 @@ pub struct WorkspaceSettings {
     pub rest: IndexMap<String, Value>,
 }
 
-/// `workspace.jsonc`, parsed.
+/// `workspace.jsonc`, parsed into [`WorkspaceSettings`], [`DependencyResolverConfig`], and aspect maps.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct WorkspaceConfig {
     pub path: PathBuf,

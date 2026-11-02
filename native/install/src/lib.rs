@@ -24,5 +24,5 @@ pub use bit_object_import::jsonc;
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
 /// Re-exported `JavaScript` host trait and process metadata types.
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};
-/// Re-exported `bit install` CLI option flags and existing-entry policies.
+/// Re-exported `bit install` CLI option flags ([`InstallOptions`]) and existing-entry policies ([`ExistingEntries`]).
 pub use options::{ExistingEntries, InstallOptions};

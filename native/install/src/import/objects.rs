@@ -32,7 +32,7 @@ impl Parsed {
     }
 }
 
-/// Inflate and split an object.
+/// Inflate and split a zlib-compressed loose Bit object into [`Parsed`].
 pub fn parse(compressed: &[u8]) -> io::Result<Parsed> {
     let mut inflated = Vec::new();
     ZlibDecoder::new(compressed).read_to_end(&mut inflated)?;

@@ -1,7 +1,7 @@
 //! The `JavaScript` host. Only behavior that components or aspects implement in
 //! `JavaScript` goes through it; everything else is computed natively.
 //!
-//! Defines [`HostInfo`], [`CoreAspect`], [`AfterInstall`], and the async [`Host`] trait.
+//! Defines [`HostInfo`], [`CoreAspect`], [`AfterInstall`], [`AfterInstallResult`], [`DetectRequest`], and the async [`Host`] trait.
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};

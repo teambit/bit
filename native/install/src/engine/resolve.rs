@@ -33,7 +33,7 @@ pub struct ResolvedVersion {
     pub manifest: Option<Value>,
 }
 
-/// Resolve `spec` (`name`, `name@range`, a git URL or a path) from `settings.root`.
+/// Resolve `spec` (`name`, `name@range`, a git URL, or a path) from `settings.root` into [`ResolvedVersion`].
 pub async fn resolve_remote_version(
     spec: &str,
     settings: &EngineSettings,

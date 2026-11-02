@@ -25,7 +25,7 @@ use std::{
 /// Default `LaneHistory` log message (`"import (merge from remote)"`) recorded when merging a remote lane.
 const HISTORY_MESSAGE: &str = "import (merge from remote)";
 
-/// Merge the remote lane into the local scope and save it (plus its [`history`] entry) when it changed.
+/// Merge the [`RemoteLane`] `remote` into the local [`Repo`] and save it (plus its [`history`] entry) when it changed.
 #[inline]
 pub fn merge_and_save(repo: &Repo, remote: &RemoteLane, identity: &Identity) -> io::Result<()> {
     let incoming = LaneObject::parse(&remote.object, &remote.hash);

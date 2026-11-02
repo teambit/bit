@@ -80,7 +80,7 @@ pub struct DependencyOptions {
     pub workspace_aspects: Vec<String>,
 }
 
-/// Workspace-wide inputs shared by every component.
+/// Workspace-wide inputs ([`WorkspaceComponent`] slice, root [`Manifest`], and [`DependencyOptions`]) shared by every component.
 pub struct Workspace<'a> {
     pub components: &'a [WorkspaceComponent],
     /// The workspace policy `toManifest()`: `[dependencies, peerDependencies]`.

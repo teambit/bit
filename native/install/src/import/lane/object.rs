@@ -30,7 +30,7 @@ impl LaneComponent {
     }
 }
 
-/// A parsed Lane object with the in-memory `hasChanged` flag.
+/// A parsed `Lane` object ([`LaneComponent`] entries and [`Id`] dependents) with the in-memory `hasChanged` flag.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(
     dylint_lib = "perfectionist",

@@ -25,7 +25,7 @@ pub(super) fn engine_call_lock() -> &'static Mutex<()> {
     LOCK.get_or_init(|| Mutex::new(()))
 }
 
-/// Execute the package installation for `plan` with `settings` and `options`.
+/// Execute the package installation for [`InstallPlan`] `plan` with [`EngineSettings`] `settings` and [`EngineInstallOptions`] `options`.
 pub async fn install(
     plan: &InstallPlan,
     settings: &EngineSettings,

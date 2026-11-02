@@ -79,7 +79,7 @@ impl Session {
     }
 }
 
-/// The manifest of the project at `root`.
+/// The [`PackageManifest`] of the [`Project`] at `root`.
 #[inline]
 fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifest> {
     if projects.is_empty() {

@@ -37,7 +37,7 @@ fn resolver_key(document: &Document) -> String {
         .unwrap_or_else(|| DEPENDENCY_RESOLVER_ASPECT.to_owned())
 }
 
-/// Add runtime entries to a comment-preserving document using `WorkspacePolicy.add` semantics.
+/// Add runtime entries to a comment-preserving [`Document`] using `WorkspacePolicy.add` ([`ExistingEntries`]) semantics.
 pub fn update_document(
     document: &mut Document,
     entries: &[(String, String)],

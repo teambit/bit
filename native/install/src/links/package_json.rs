@@ -28,7 +28,7 @@ pub(super) struct PackageJsonContext<'a> {
     /// The component's env is of type `aspect`.
     pub is_aspect: bool,
 }
-/// The manifest after `createFromComponent` and the dependency-resolver and pkg transformers.
+/// The [`Manifest`] after `createFromComponent` and the dependency-resolver and pkg transformers.
 #[inline]
 pub(super) fn transformed(
     component: &WorkspaceComponent,

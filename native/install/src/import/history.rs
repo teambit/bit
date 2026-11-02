@@ -27,7 +27,7 @@ pub fn refetch_requested() -> bool {
         })
 }
 
-/// Versioned ids whose component exists locally and whose `VersionHistory` is
+/// Versioned [`Id`] entries whose component exists locally in [`Repo`] and whose `VersionHistory` is
 /// not complete since that version. Histories that are complete but did not
 /// say so yet are rewritten with the version added to `graphCompleteRefs`.
 pub fn incomplete(repo: &Repo, ids: &[Id]) -> io::Result<Vec<Id>> {

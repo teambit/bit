@@ -37,7 +37,7 @@ impl EnvVars {
     }
 }
 
-/// Resolve the engine settings of the workspace at `root`.
+/// Resolve the [`EngineSettings`] of the workspace at `root` from [`DependencyResolverConfig`], [`GlobalConfig`], [`HostInfo`], and [`EnvVars`].
 #[inline]
 pub fn settings(
     root: &Path,

@@ -40,7 +40,7 @@ pub(super) fn trusted_package_names() -> &'static [String] {
     NAMES.get_or_init(|| serde_json::from_str(TRUSTED_DEPS_JSON).unwrap_or_default())
 }
 
-/// `getAllowedScripts`: the configured `allowScripts`, with the JSON object in
+/// `getAllowedScripts`: the configured `allowScripts` on [`DependencyResolverConfig`], with the JSON object in
 /// `BIT_ALLOW_SCRIPTS` (not persisted) layered on top.
 pub(super) fn allowed_scripts(
     config: &DependencyResolverConfig,

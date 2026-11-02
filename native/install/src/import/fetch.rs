@@ -65,7 +65,7 @@ impl Fetcher<'_> {
         Err(failed_scopes(&failed))
     }
 
-    /// Fetch `ids` from a single remote `scope` via HTTP or `file://` transport.
+    /// Fetch `ids` from a single remote `scope` via HTTP ([`Network`]) or `file://` ([`fs_remote::fetch`]) transport.
     async fn fetch_one(
         &self,
         scope: &str,

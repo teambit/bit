@@ -46,7 +46,7 @@ pub struct Importer<'a> {
 }
 
 impl Importer<'_> {
-    /// Import `ids` and return the [`Written`] object and component counts.
+    /// Import [`Id`] `ids` and return the [`Written`] object and component counts.
     pub async fn import(&self, ids: &[Id]) -> io::Result<Written> {
         if ids.is_empty() {
             return Ok(Written::default());

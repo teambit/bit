@@ -28,7 +28,7 @@ pub(super) fn import(
     Ok(Import { component: is_component, path: relative(&component.dir, path), id })
 }
 
-/// Sort `imports` by component flag and UTF-16 relative path and return deduplicated aspect IDs.
+/// Sort [`Import`] `imports` by component flag and UTF-16 relative path and return deduplicated aspect IDs.
 pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
     imports.sort_by(|left, right| {
         left.component

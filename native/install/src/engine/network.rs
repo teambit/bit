@@ -53,7 +53,7 @@ impl ProxySettings {
     }
 }
 
-/// The merged `PackageManagerNetworkConfig`; later sources win field by field.
+/// The merged `PackageManagerNetworkConfig` ([`RetrySettings`] and [`TlsSettings`]); later sources win field by field.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct NetworkSettings {
     pub retry: RetrySettings,

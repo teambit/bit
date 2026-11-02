@@ -57,8 +57,8 @@ impl Identity {
     }
 }
 
-/// `Lanes.updateLaneHistory` + `writeObjectsToTheFS`: add one entry for `lane`
-/// to its history object (created when missing) and write it.
+/// `Lanes.updateLaneHistory` + `writeObjectsToTheFS`: add one entry for [`LaneObject`] `lane`
+/// to its history object in [`Repo`] (created when missing) and write it.
 pub fn record(
     repo: &Repo,
     lane: &LaneObject,

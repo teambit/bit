@@ -60,7 +60,7 @@ pub struct ImportSummary {
 }
 
 /// Import the objects `.bitmap` needs into the scope at `scope_dir` (`.bit`
-/// or `.git/bit`) of the workspace at `root`.
+/// or `.git/bit`) of the workspace at `root`, returning [`ImportSummary`].
 pub async fn import_current_objects(
     root: &Path,
     scope_dir: &Path,

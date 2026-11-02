@@ -78,7 +78,7 @@ pub(super) fn parse(dep_path: &str) -> DependencyPath {
     parsed
 }
 
-/// Strip the peer and patch suffix from `dep_path` (`removeSuffix`).
+/// Strip the peer and patch suffix from `dep_path` (`removeSuffix`, see [`parse`]).
 #[inline]
 pub(super) fn remove_suffix(dep_path: &str) -> &str {
     pnpm_deps_path::remove_suffix(dep_path.trim())

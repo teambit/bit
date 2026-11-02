@@ -33,7 +33,7 @@ pub(super) struct CallOverlay<'a> {
     pub update_all: bool,
 }
 
-/// The interned engine config of an install.
+/// The interned engine [`Config`] of an install for [`EngineSettings`] and [`CallOverlay`].
 pub(super) fn install_config(
     settings: &EngineSettings,
     call: &CallOverlay<'_>,

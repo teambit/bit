@@ -54,7 +54,7 @@ pub(super) fn merge(
     Some(attrs)
 }
 
-/// Merge `attrs` over the lockfile's `bit:` block, writing only on change
+/// Merge `attrs` over the lockfile's [`BIT_KEY`] (`bit:`) block, writing only on change
 /// (`addBitAttributesToLockfile`).
 pub(super) fn write(root: &Path, attrs: Map<String, Value>) -> io::Result<()> {
     let path = root.join(Lockfile::FILE_NAME);

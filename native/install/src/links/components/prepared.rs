@@ -10,7 +10,7 @@ use super::{
 };
 use std::{io, path::Path};
 
-/// Render default package metadata with the ordinary native package transformers.
+/// Render default [`Manifest`] package metadata for [`WorkspaceComponent`] with the ordinary native package transformers.
 #[must_use]
 #[inline]
 pub fn prepared_package_manifest(

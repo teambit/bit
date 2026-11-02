@@ -39,6 +39,7 @@ fn importer_version(dep: &Value) -> Option<&str> {
         .filter(|version| !version.is_empty())
 }
 
+/// Returns `true` when `version` starts with `"link:"` or `"file:"`.
 #[inline]
 fn is_local(version: &str) -> bool {
     let trimmed = version.trim();

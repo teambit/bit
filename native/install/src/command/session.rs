@@ -86,7 +86,7 @@ pub fn find_root(cwd: &Path) -> io::Result<PathBuf> {
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, OUTSIDE_WORKSPACE))
 }
 
-/// The workspace state the command acts on.
+/// The workspace state ([`WorkspaceConfig`], [`GlobalConfig`], [`EffectiveConfig`], [`Workspace`], and [`EngineSettings`]) the command acts on.
 pub struct Loaded {
     pub config: WorkspaceConfig,
     /// The layered `bit config` (environment, workspace, scope, global).

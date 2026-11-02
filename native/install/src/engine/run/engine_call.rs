@@ -29,7 +29,7 @@ pub(super) struct Outcome {
     pub store_dir: PathBuf,
 }
 
-/// The owned inputs of one engine call, moved onto its thread.
+/// The owned inputs ([`InstallPlan`], [`EngineSettings`], and [`EngineInstallOptions`]) of one engine call, moved onto its thread.
 pub(super) struct EngineCall {
     plan: InstallPlan,
     settings: EngineSettings,

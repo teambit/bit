@@ -35,6 +35,7 @@ pub struct LinkOptions {
 }
 
 impl Default for LinkOptions {
+    /// Returns the default [`LinkOptions`] with all root and nested linking enabled.
     fn default() -> Self {
         Self { link_teambit_bit: true, link_core_aspects: true, link_nested_deps_in_nm: true }
     }

@@ -80,7 +80,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// `<dir>/config.json`, Bit's global config (`GlobalConfig.load`). A missing
+/// `<dir>/config.json`, Bit's [`GlobalConfig`] (`GlobalConfig.load`). A missing
 /// file is an empty config; Bit would create it, install does not need to.
 pub fn load_global_config(dir: &Path) -> io::Result<GlobalConfig> {
     let value = bit_workspace_config::read_global_config_with(dir, |path, error| {

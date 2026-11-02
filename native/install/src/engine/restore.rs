@@ -46,7 +46,7 @@ struct PackageToResolve {
     version: String,
 }
 
-/// Write the lockfile. Only workspaces with root components restore.
+/// Write the [`Lockfile`] from [`RestoreInput`] `input`. Only workspaces with root components restore.
 pub(super) async fn write_lockfile(
     input: &RestoreInput,
     plan: &InstallPlan,

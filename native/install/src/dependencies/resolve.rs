@@ -41,7 +41,7 @@ const DEFAULT_LOOKUPS: [&str; 14] = [
 /// (`getCoreAspectsPackagesAndIds`), though the install never links it.
 const BIT_ASPECT: (&str, &str) = ("teambit.harmony/bit", "@teambit/bit");
 
-/// The classification of one specifier.
+/// The classification of one specifier resolved by [`Resolver`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Resolved {
     /// A Node built-in or a specifier that never names a dependency.

@@ -89,7 +89,7 @@ pub fn bit_cloud_registry(global: &GlobalConfig) -> String {
     format!("https://node-registry.{domain}/")
 }
 
-/// The registries an install uses.
+/// The [`Registries`] an install uses, resolved from `config`, `dependency_resolver`, and `global`.
 pub(super) fn resolve(
     config: &pnpm_config::Config,
     dependency_resolver: &DependencyResolverConfig,

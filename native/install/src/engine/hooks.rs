@@ -26,7 +26,7 @@ use std::{
 /// Root components directory name (`.bit_roots`).
 const BIT_ROOTS_DIR: &str = ".bit_roots";
 
-/// Bit's hook chain plus what it needs to transform dependency manifests.
+/// Bit's [`PnpmfileHooks`] chain plus what it needs to transform dependency manifests.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(super) struct BitHooks {
     /// Workspace root directory path.

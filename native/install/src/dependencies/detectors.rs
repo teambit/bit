@@ -34,7 +34,7 @@ pub struct CustomDetection {
     pub lookups: IndexMap<String, Option<PathBuf>>,
 }
 
-/// Asks the host once per component, skipping envs known to have no detectors.
+/// Asks the [`Host`] once per component, skipping envs known to have no detectors.
 pub struct Detectors<'a> {
     host: &'a dyn Host,
     core_aspects: &'a [CoreAspect],

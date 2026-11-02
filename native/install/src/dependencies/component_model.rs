@@ -15,7 +15,7 @@ pub struct ComponentModel {
 }
 
 impl ComponentModel {
-    /// Construct a [`ComponentModel`] from an optional serialized `Version` JSON object.
+    /// Construct a [`ComponentModel`] from an optional serialized `Version` JSON [`Value`] object.
     #[inline]
     #[must_use]
     pub const fn new(version: Option<Value>) -> Self {

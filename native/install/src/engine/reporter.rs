@@ -86,7 +86,7 @@ pub(super) struct InstallStats {
     pub removed: u64,
 }
 
-/// One call's renderer: the folded reporter state, the frame differ and the
+/// One call's renderer: the folded [`ReporterState`], the frame [`Diff`], and the
 /// progress throttle (`NativeRenderer` in `@pnpm/napi`).
 pub(super) struct Renderer {
     state: ReporterState,

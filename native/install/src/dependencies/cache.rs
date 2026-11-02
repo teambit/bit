@@ -88,8 +88,8 @@ pub fn disabled() -> bool {
         })
 }
 
-/// Store the detection of `component` the way `saveDependenciesDataInCache` does,
-/// so the TypeScript loader reads it back.
+/// Store the [`Detected`] dependency data of `component` the way `saveDependenciesDataInCache` does,
+/// so the `TypeScript` loader reads it back.
 #[inline]
 pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected) -> io::Result<()> {
     put(&scope.dependency_cache(), &key(component), &format::serialize(detected).to_string())

@@ -62,6 +62,7 @@ pub(crate) fn identity(component: &WorkspaceComponent) -> String {
     id
 }
 
+/// Reorders and updates [`WorkspaceComponent`] entries against the host `receipt` under `root`.
 fn ordered(
     root: &Path,
     components: Vec<WorkspaceComponent>,

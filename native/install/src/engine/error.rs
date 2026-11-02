@@ -81,7 +81,7 @@ impl fmt::Display for EngineError {
 
 impl Error for EngineError {}
 
-/// Convert a pacquet diagnostic into an [`io::Error`].
+/// Convert a `pacquet` [`Diagnostic`] into an [`io::Error`] via [`EngineError`].
 #[inline]
 pub(super) fn diagnostic<Diag: Diagnostic + ?Sized>(error: &Diag) -> io::Error {
     EngineError::from_diagnostic(error).into_io()

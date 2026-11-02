@@ -92,7 +92,7 @@ impl EngineSettings {
     }
 }
 
-/// Where packages come from and how to reach them.
+/// Where packages come from ([`Registries`], [`ProxySettings`], and [`NetworkSettings`]) and how to reach them.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct RegistrySettings {
     /// Default and scoped package registries.

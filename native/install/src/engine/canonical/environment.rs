@@ -89,6 +89,7 @@ impl Captured {
     }
 }
 
+/// RAII guard restoring the previous thread-local [`CAPTURED`] snapshot on drop.
 struct Restore(Option<Captured>);
 
 impl Drop for Restore {

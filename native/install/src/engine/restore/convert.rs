@@ -64,7 +64,7 @@ impl Graph {
         Ok(graph)
     }
 
-    /// Whether the package is a workspace component.
+    /// Whether `pkg_id` in `self.packages` is a workspace component.
     #[inline]
     pub(super) fn is_component(&self, pkg_id: &str) -> bool {
         self.packages

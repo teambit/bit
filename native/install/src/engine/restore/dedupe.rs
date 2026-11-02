@@ -77,7 +77,7 @@ fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
         .collect()
 }
 
-/// Returns `true` when the workspace `root` version supersedes snapshot `reference` for `name`.
+/// Returns `true` when the workspace `root` [`Value`] version supersedes snapshot `reference` for `name`.
 #[inline]
 fn wins(name: &str, reference: &Value, root: Option<&Value>, peer: bool) -> bool {
     let Some((reference, root)) = reference

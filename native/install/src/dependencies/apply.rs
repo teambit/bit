@@ -66,6 +66,7 @@ fn is_ignored_name(ignore: &[String], name: &str) -> bool {
         .any(|ignored| ignored.trim() == target)
 }
 
+/// Removes runtime and dev package dependencies from `detected` that are marked as [`ignored`] in `deps`.
 fn remove_ignored_packages(deps: &FieldMaps, detected: &mut Detected) {
     for lifecycle in [Lifecycle::Runtime, Lifecycle::Dev] {
         let ignore = ignored(deps, lifecycle);

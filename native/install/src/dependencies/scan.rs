@@ -15,7 +15,7 @@ const STYLE: [&str; 4] = ["scss", "sass", "less", "css"];
 /// Maximum file size in bytes (`1 MiB`) read by the dependency specifier scanner.
 const MAX_SOURCE: u64 = 1024 * 1024;
 
-/// The import specifiers of `path`, in encounter order and without duplicates.
+/// The import specifiers of `path`, in encounter order and without duplicates, within [`MAX_SOURCE`].
 pub fn specifiers(path: &Path) -> io::Result<Vec<String>> {
     let extension = path
         .extension()

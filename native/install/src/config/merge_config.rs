@@ -39,7 +39,7 @@ pub struct MergeConfigComponent {
 }
 
 impl MergeConfig {
-    /// Load `merge-conflict` and `<scope>/unmerged.json` from `root` when present.
+    /// Load `merge-conflict` ([`FILE_NAME`]) and `<scope>/unmerged.json` from `root` when present.
     pub fn load(root: &Path) -> io::Result<Self> {
         let mut config = match fs::read_to_string(root.join(FILE_NAME)) {
             Ok(text) => Self::parse(&text),

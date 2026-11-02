@@ -69,6 +69,7 @@ fn find(detected: &Detected, field: usize, name: &str) -> Option<LegacyDependenc
         .cloned()
 }
 
+/// Applies a single auto-detect override `(name, version)` at lifecycle index `field` onto `detected`.
 fn apply_one(detected: &mut Detected, field: usize, name: &str, version: &str) {
     if field == PEER && peer_override(detected, name) {
         return;

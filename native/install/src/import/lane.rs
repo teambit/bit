@@ -34,7 +34,7 @@ pub struct RemoteLane {
 }
 
 impl RemoteLane {
-    /// Visible lane components at their lane heads.
+    /// Visible lane components at their lane heads as [`Id`] items.
     #[must_use]
     #[inline]
     pub fn components(&self) -> Vec<Id> {

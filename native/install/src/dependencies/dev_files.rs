@@ -75,7 +75,7 @@ pub struct EnvDevPatterns {
     pub compositions: Option<Vec<String>>,
 }
 
-/// Loads each env's dev patterns once.
+/// Loads each env's [`EnvDevPatterns`] once using [`EnvJsoncReader`] and [`Host`].
 pub struct EnvPatterns<'a> {
     /// The workspace configuration of the registrars.
     pub config: &'a DevPatternConfig,

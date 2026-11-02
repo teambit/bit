@@ -46,7 +46,7 @@ pub fn merge(graph: &mut Value, incoming: &Value) {
     }
 }
 
-/// Merge the direct [`ROOT`] edge neighbors from `incoming` into `graph`.
+/// Merge the direct [`ROOT`] edge neighbors from `incoming` into `graph` via [`merge_direct`].
 fn merge_root(graph: &mut Value, incoming: &Value) {
     let Some(incoming_root) = edges(incoming)
         .iter()
