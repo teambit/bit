@@ -21,6 +21,7 @@ fn workspace() -> Helper {
     setup(&helper, "add bar -i bar/foo -m bar/foo1.js");
     helper
 }
+/// Verifies `bit move bar utils` relocates physical source files and updates `.bitmap` `rootDir`.
 #[test]
 fn directory_move_changes_physical_sources_and_bitmap_root() {
     let helper = workspace();

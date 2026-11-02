@@ -16,6 +16,7 @@ use std::{
 pub(super) fn digest(value: &str) -> String {
     format!("{:x}", Sha1::digest(value.as_bytes()))
 }
+/// Returns the two-character sharded object path `<scope>/<directory>/<hash[..2]>/<hash[2..]>`.
 pub(super) fn path(scope: &Path, directory: &str, hash: &str) -> PathBuf {
     scope
         .join(directory)

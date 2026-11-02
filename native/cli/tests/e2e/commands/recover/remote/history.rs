@@ -7,11 +7,14 @@ use crate::{
     helper::{Helper, Run},
 };
 
-/// Compares `command` against `Node.js` while asserting `["import", "recover"]` `.bitmap` history transitions.
+/// Expected `.bitmap` history receipt sequence produced by remote component recovery.
+const RECOVERY_RECEIPTS: [&str; 2] = ["import", "recover"];
+
+/// Compares `command` against `Node.js` while asserting [`RECOVERY_RECEIPTS`] `.bitmap` history transitions.
 pub(in crate::commands::recover) fn compare(
     helper: &Helper,
     command: &str,
     stdout: fn(&str) -> String,
 ) -> Run {
-    history_oracle::compare(helper, command, stdout, ["import", "recover"], false)
+    history_oracle::compare(helper, command, stdout, RECOVERY_RECEIPTS, false)
 }

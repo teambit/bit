@@ -32,6 +32,7 @@ fn fixture() -> Helper {
     helper
 }
 
+/// Compares native and `Node.js` `bit import` workspace policy updates for initial policy `version` and `flags`.
 fn parity(version: &str, flags: &str) {
     let helper = fixture();
     set_workspace_key(

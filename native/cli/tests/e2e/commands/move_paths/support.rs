@@ -25,6 +25,7 @@ pub(crate) fn workspace(count: usize, tagged: bool) -> Helper {
     }
     helper
 }
+/// Runs `command` via the `Node.js` CLI in `helper`'s workspace and returns `stdout` on success.
 pub(crate) fn setup(helper: &Helper, command: &str) -> String {
     let output = support::node(&helper.scopes.local_path, command);
     assert!(output.status.success(), "{command}: {} {}", output.stdout, output.stderr);

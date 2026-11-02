@@ -20,6 +20,7 @@ fn cross_scope_lane_fetch_matches_released_models_refs_and_reports() {
     }
 }
 
+/// Sets up a cross-scope lane fixture where `comp1` originates in `origin` and is snapped on lane `dev`.
 fn fixture(advanced: bool) -> (Helper, String, PathBuf, String) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

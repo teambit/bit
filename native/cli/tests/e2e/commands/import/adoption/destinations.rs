@@ -16,6 +16,7 @@ fn occupied() -> (Helper, serde_json::Value) {
     fs::write(file(&helper, &entry, "sentinel.txt"), "occupied directory remains\n").unwrap();
     (helper, entry)
 }
+/// Verifies an untracked non-empty destination directory is rejected without `--write-to-empty-dir`.
 #[test]
 fn an_untracked_nonempty_destination_is_rejected_without_the_relocation_flag() {
     let (helper, _) = occupied();

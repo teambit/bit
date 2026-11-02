@@ -69,6 +69,7 @@ fn authored_paths_and_installation_match_released_node_after_reinitialization() 
     assert!(!actual.join("node_modules/undefined").exists());
 }
 
+/// Recursively collects all file and symlink bytes under `root` into a deterministic [`BTreeMap`].
 pub(super) fn tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
     let mut entries = BTreeMap::new();
     visit(root, root, &mut entries);

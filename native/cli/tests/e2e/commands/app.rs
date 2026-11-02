@@ -2,7 +2,7 @@
 
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
-
+/// Verifies `bit app --help` and `bit app list --help` match `Node.js` across workspaces and scopes.
 #[test]
 fn app_and_list_help_match_node() -> KnownResult<()> {
     let helper = Helper::new();

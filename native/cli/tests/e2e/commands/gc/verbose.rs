@@ -44,6 +44,7 @@ fn verbose_bare_collection_counts_shared_lane_versions_and_reports_deleted_sourc
     }
 }
 
+/// Reads and returns the first `Lane` object stored in `scope/objects`.
 fn lane_object(scope: &std::path::Path) -> serde_json::Value {
     for bucket in std::fs::read_dir(scope.join("objects")).unwrap() {
         let bucket = bucket.unwrap();

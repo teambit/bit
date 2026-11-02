@@ -5,6 +5,10 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
+/// Node application plugin source registered alongside `bar/foo.js`.
+const NODE_APP_PLUGIN: &str =
+    "module.exports.default = { name: 'foo-app', entry: require.resolve('./foo.js') };\n";
+
 /// Verifies `.node-app.js` application registration metadata matches `Node.js` after `bit snap`.
 #[test]
 fn node_application_registration_matches_node_snapshot() {
@@ -12,10 +16,7 @@ fn node_application_registration_matches_node_snapshot() {
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
-    helper.output_file(
-        "bar/foo.node-app.js",
-        "module.exports.default = { name: 'foo-app', entry: require.resolve('./foo.js') };\n",
-    );
+    helper.output_file("bar/foo.node-app.js", NODE_APP_PLUGIN);
     helper.run("link");
     helper.run("compile");
     config::set_workspace_key(&helper.scopes.local_path, "my-scope/bar/foo", serde_json::json!({}));

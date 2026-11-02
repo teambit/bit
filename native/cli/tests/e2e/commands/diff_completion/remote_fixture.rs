@@ -16,6 +16,7 @@ pub(super) fn publish_remote_fixture(helper: &Helper) {
     }
 }
 
+/// Seeds the remote scope directly from `.bit/objects` and `.bit/index.json`.
 fn seed_remote_fixture(helper: &Helper) {
     let bitmap_path = helper.scopes.local_path.join(".bitmap");
     let mut bitmap = crate::helper::config::read_jsonc(&bitmap_path);

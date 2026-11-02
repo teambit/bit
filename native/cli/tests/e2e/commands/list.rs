@@ -38,6 +38,7 @@ mod outdated {
     /// `listLocalScopeParsed('-o')`.
     const OUTDATED: &str = "list --local-scope --json -o";
 
+    /// Asserts that `run` succeeded and parses its JSON array output.
     fn listed(run: &Run) -> Vec<Value> {
         assert!(run.status.success(), "{}", run.stderr);
         parse(&run.stdout)

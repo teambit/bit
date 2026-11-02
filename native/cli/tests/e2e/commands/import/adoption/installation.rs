@@ -33,6 +33,7 @@ fn fixture(count: usize) -> Helper {
     helper.add_remote_scope();
     helper
 }
+/// Runs `bit import <remote>/<name> <flags> --json` and asserts `count` imported components and `pnpm` lockfiles.
 fn install(helper: &Helper, name: &str, flags: &str, count: usize) {
     let command = format!("import {}/{name} {flags} --json", helper.scopes.remote);
     let output = support::compare_install(helper, &command, str::to_owned);

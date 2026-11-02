@@ -26,6 +26,7 @@ pub(super) fn wait(histories: &Histories) {
         std::thread::sleep(Duration::from_millis(10));
     }
 }
+/// Parses a `YYYY-M-D-H-M-S` backup timestamp ID into a [`NaiveDateTime`].
 fn date(id: &str) -> NaiveDateTime {
     validate_id(id);
     let fields = id

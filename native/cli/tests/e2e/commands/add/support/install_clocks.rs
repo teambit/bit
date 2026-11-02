@@ -44,6 +44,7 @@ pub(super) fn project(
     replace(state, "lastValidatedTimestamp", &value["lastValidatedTimestamp"], "0");
     validation_clocks(state, &value["validation"], started, ended);
 }
+/// Asserts that `timestamp` falls within the inclusive `[started, ended]` command window.
 fn window(timestamp: i64, started: i64, ended: i64) {
     assert!(
         started <= timestamp && timestamp <= ended,

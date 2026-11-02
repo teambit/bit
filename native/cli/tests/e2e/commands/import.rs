@@ -22,7 +22,7 @@ use std::{
     thread,
     time::Duration,
 };
-
+/// Guard holding the child process of an ephemeral bare-scope `bit start` HTTP server.
 struct ScopeServer(Child);
 
 impl Drop for ScopeServer {

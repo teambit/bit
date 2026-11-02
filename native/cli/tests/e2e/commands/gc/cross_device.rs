@@ -8,6 +8,9 @@ use std::{
     os::unix::fs::{MetadataExt, symlink},
 };
 
+/// Relative symlink target pointing from `objects/<bucket>/<leaf>` to `source-payload` at the scope root.
+const SYMLINK_PAYLOAD_TARGET: &str = "../../source-payload";
+
 /// Verifies bare-scope `bit gc` moves files and symlinks across `/dev/shm` (`EXDEV`) device boundaries.
 #[test]
 fn bare_collection_moves_files_and_links_across_devices_without_node() {
@@ -18,7 +21,7 @@ fn bare_collection_moves_files_and_links_across_devices_without_node() {
         let source = objects::path(scope, "objects", &hash);
         if linked {
             fs::rename(&source, scope.join("source-payload")).unwrap();
-            symlink("../../source-payload", &source).unwrap();
+            symlink(SYMLINK_PAYLOAD_TARGET, &source).unwrap();
         }
         let backup = tempfile::Builder::new()
             .prefix("bit-gc-")

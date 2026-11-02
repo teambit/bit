@@ -25,6 +25,7 @@ fn exported(count: usize) -> Helper {
     helper.add_remote_scope();
     helper
 }
+/// Formats a `bit import <remote>/<id> -x <flags>` command string for `helper`.
 fn command(helper: &Helper, id: &str, flags: &str) -> String {
     format!("import {}/{id} -x {flags}", helper.scopes.remote)
 }

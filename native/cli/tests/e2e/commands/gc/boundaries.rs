@@ -35,6 +35,7 @@ fn malformed_version_files_decline_before_any_collection_effect() {
     assert!(!scope.join("deleted-objects").exists());
 }
 
+/// Verifies early `deleted-objects` layout errors delegate to `Node.js` before moving any sibling objects.
 #[test]
 fn early_move_layout_errors_delegate_without_starting_sibling_moves() {
     for directory in [false, true] {

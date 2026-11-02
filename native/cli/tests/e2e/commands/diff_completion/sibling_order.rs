@@ -4,6 +4,9 @@
 
 use serde_json::Value;
 
+/// Expected root-level file paths before nested directory batches in `filesDiff`.
+const ROOT_PATHS: [&str; 3] = ["foo.js", "a.js", "z.js"];
+
 /// Validates root-first ancestor ordering and sorts sibling `filesDiff` entries for JSON comparison.
 pub(super) fn normalize(output: &str) -> Value {
     let mut result: Value = serde_json::from_str(output).unwrap();
@@ -18,7 +21,7 @@ pub(super) fn normalize(output: &str) -> Value {
         })
         .collect::<Vec<_>>();
     assert_eq!(paths.len(), 6);
-    assert_eq!(&paths[..3], ["foo.js", "a.js", "z.js"]);
+    assert_eq!(&paths[..3], ROOT_PATHS);
     let tail = &paths[3..];
     let ancestor = tail
         .iter()

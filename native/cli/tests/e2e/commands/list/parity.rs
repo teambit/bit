@@ -72,6 +72,7 @@ fn compare_with_ownership(helper: &Helper, command: &str, native_owned: bool) ->
     native
 }
 
+/// Runs `command` natively and against `Node.js`, asserting read-only workspace and remote state.
 pub(super) fn compare(helper: &Helper, command: &str) -> Run {
     compare_with_ownership(helper, command, true)
 }

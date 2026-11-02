@@ -27,6 +27,7 @@ fn configured(tagged: bool) -> Helper {
     helper.output_file("identity-provider-active", "active");
     helper
 }
+/// Verifies `bit move` re-reads provider `.bitmap` and source file mutations before publication.
 #[test]
 fn move_rereads_provider_bitmap_and_sources_before_publication() {
     let helper = configured(false);

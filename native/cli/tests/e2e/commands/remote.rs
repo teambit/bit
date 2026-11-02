@@ -21,6 +21,7 @@ fn case_globals(helper: &Helper) -> PathBuf {
     globals
 }
 
+/// Runs `bit <line>` natively with `BIT_GLOBALS_DIR=globals` and returns `stdout` on success.
 fn native_with_globals(helper: &Helper, globals: &Path, line: &str) -> String {
     let run = native_run_with_globals(helper, globals, line);
     assert!(

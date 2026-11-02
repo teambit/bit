@@ -4,7 +4,7 @@ use crate::{
     helper::{Helper, Run, known, len, parse, strip_ansi},
     known_failure::{KnownResult, Native},
 };
-
+/// Initial `bar/foo.js` implementation fixture (`v1`).
 const BAR_FOO_V1: &str = "module.exports = function foo() { return 'got foo'; };\n";
 
 const BAR_FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; };\n";

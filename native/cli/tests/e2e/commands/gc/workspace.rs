@@ -43,6 +43,7 @@ fn workspace_collection_and_restore_match_in_text_json_and_ci_modes() {
     }
 }
 
+/// Verifies workspace `bit gc --backup` failure after stray file cleanup is owned in JSON and CI modes.
 #[test]
 fn workspace_backup_failure_after_stray_cleanup_is_owned_in_json_and_ci() {
     for (command, ci) in [

@@ -29,6 +29,7 @@ fn fixture() -> Helper {
     helper
 }
 
+/// Builds a workspace fixture on lane `dev` where `comp1` snapped on the lane and `comp2` advanced on `main`.
 fn dependency_fixture() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

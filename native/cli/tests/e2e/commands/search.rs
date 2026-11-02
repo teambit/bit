@@ -15,7 +15,7 @@ fn setup_workspace(helper: &Helper) {
     helper.run("tag utils/is-type");
 }
 
-/// bit search command › local search with components in workspace › should find a component by matching keyword
+/// Verifies `bit search foo --local-only` finds `bar/foo` by matching keyword.
 #[test]
 fn should_find_a_component_by_matching_keyword() {
     let helper = Helper::new();

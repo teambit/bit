@@ -20,6 +20,7 @@ fn configure(helper: &Helper) {
     config::set_workspace_key(&helper.scopes.local_path, "fixture.tools/env/adoption", json!({}));
     helper.output_file("adoption-provider-active", "active");
 }
+/// Verifies configured provider source edits feed the authoritative dependent graph during `bit import --dependents`.
 #[test]
 fn configured_provider_source_changes_feed_the_authoritative_dependent_graph() {
     let helper = dependents::graph();

@@ -16,6 +16,7 @@ fn populate_three_components(helper: &Helper) {
     }
 }
 
+/// Verifies `bit pattern` wildcard (`**`), single-component, comma-separated, and `--json` matching.
 /// general pattern matching › should match all components with **
 /// general pattern matching › should match specific component by name
 /// general pattern matching › should match components with comma-separated patterns

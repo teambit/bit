@@ -24,7 +24,7 @@ fn workspace() -> Helper {
     helper.output_file("baz/qux.js", "module.exports = 'changed two';");
     helper
 }
-
+/// Asserts that `command` produces identical exit status, stdout, and stderr on `Node.js` and native CLIs.
 fn parity(helper: &Helper, command: &str) {
     let baseline = helper.clone_workspace();
     let expected = Helper::cmd_in_with(&baseline, command, &[("BIT_NATIVE", OsStr::new("off"))]);

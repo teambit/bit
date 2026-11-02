@@ -5,17 +5,20 @@
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::ffi::OsStr;
 
+/// CLI commands exercised for `bit cli generate --docs` metadata and skill parity.
+const DOCS_COMMANDS: [&str; 4] = [
+    "cli generate --docs --metadata",
+    "cli generate --docs --metadata.id=cli",
+    "cli generate --docs --skill commands",
+    "cli generate --docs --skill=reference",
+];
+
 /// Verifies `bit cli generate --docs` metadata and skill options match the pinned `Node.js` CLI.
 #[test]
 fn cli_generate_docs_options_match_pinned_node() -> KnownResult<()> {
     let helper = Helper::new();
     helper.re_init_workspace();
-    for command in [
-        "cli generate --docs --metadata",
-        "cli generate --docs --metadata.id=cli",
-        "cli generate --docs --skill commands",
-        "cli generate --docs --skill=reference",
-    ] {
+    for command in DOCS_COMMANDS {
         let node = Helper::cmd_in_with(
             &helper.scopes.local_path,
             command,

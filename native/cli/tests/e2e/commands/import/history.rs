@@ -45,6 +45,7 @@ fn historical_checkout_refreshes_an_advanced_remote_lane() {
     assert_eq!(native_lane.stdout, node_lane.stdout);
 }
 
+/// Creates a workspace with three tagged versions of `comp1` published to its remote scope.
 fn history_fixture() -> (Helper, Vec<String>) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

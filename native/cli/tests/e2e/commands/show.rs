@@ -5,11 +5,14 @@
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
+/// Relative directory name used for outside-workspace `bit show` help and argument error tests.
+const OUTSIDE_DIR: &str = "outside-show-help";
+
 /// Verifies `bit show` help and missing-ID argument errors match `Node.js` before component loading.
 #[test]
 fn show_help_and_argument_errors_match_released_node() {
     let helper = Helper::new();
-    let outside = helper.scopes.e2e_dir.join("outside-show-help");
+    let outside = helper.scopes.e2e_dir.join(OUTSIDE_DIR);
     fs::create_dir_all(&outside).unwrap();
     let (_, bare_scope) = helper.new_bare_scope();
     helper.re_init_workspace();

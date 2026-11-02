@@ -4,14 +4,17 @@
 
 use std::io::Read;
 
-/// Decompresses up to 4096 bytes of a `zlib`-compressed scope object into a UTF-8 diagnostic string.
+/// Maximum uncompressed payload byte count decoded for scope object diagnostics.
+const MAX_DIAGNOSTIC_BYTES: usize = 4096;
+
+/// Decompresses up to [`MAX_DIAGNOSTIC_BYTES`] bytes of a `zlib`-compressed scope object into a UTF-8 diagnostic string.
 pub(super) fn decode(bytes: &[u8]) -> Option<String> {
     let mut decoded = Vec::new();
     flate2::read::ZlibDecoder::new(bytes)
         .take(4097)
         .read_to_end(&mut decoded)
         .ok()?;
-    if decoded.len() > 4096 {
+    if decoded.len() > MAX_DIAGNOSTIC_BYTES {
         return None;
     }
     Some(std::str::from_utf8(&decoded).ok()?.replace('\0', r"\0"))

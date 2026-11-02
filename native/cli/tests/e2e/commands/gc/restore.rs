@@ -24,6 +24,7 @@ fn bare_restore_preserves_readonly_existing_objects_unless_overwriting() {
     }
 }
 
+/// Verifies `bit gc --restore` preserves symbolic links backed up in `deleted-objects`.
 #[test]
 fn bare_restore_preserves_backed_up_symbolic_links() {
     let helper = fixture();

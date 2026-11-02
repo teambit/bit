@@ -11,7 +11,7 @@ use std::{fs, path::PathBuf};
 /// `fixtures.fooFixture` v2, as the e2e file writes it.
 const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; };";
 
-/// A new workspace holding the `.bitmap` of a tagged `bar/foo`, exported when `export`.
+/// A new workspace holding the `.bitmap` of a tagged `bar/foo`, exported when `export` is `true`.
 fn bitmap_without_objects(export: bool) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

@@ -32,6 +32,7 @@ fn run_help_matches_node() -> KnownResult<()> {
     Ok(())
 }
 
+/// Verifies unsupported `bit run` flags (`--no-color`, `--json`, `--ssr`) match `Node.js` error output.
 #[test]
 fn run_unsupported_help_matches_node() -> KnownResult<()> {
     let helper = Helper::new();

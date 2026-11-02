@@ -16,6 +16,7 @@ fn modified_and_code_modified_delete_only_the_selected_component() {
         assert!(map["comp2"]["config"]["teambit.component/remove"].is_null());
     }
 }
+/// Verifies `$env` intersection and union patterns soft-delete each matching component once.
 #[test]
 fn env_intersection_and_union_delete_each_member_once() {
     let helper = support::workspace(2, true);

@@ -19,6 +19,7 @@ fn patterned_new_batch_removes_once_and_preserves_excluded_components() {
     assert!(map.get("comp2").is_none());
     assert!(map.get("comp3").is_some());
 }
+/// Verifies `bit remove --track` retains `.bitmap` tracking and package links with and without `--keep-files`.
 #[test]
 fn track_keeps_tracking_and_packages_with_and_without_source_files() {
     for keep in ["", "--keep-files"] {

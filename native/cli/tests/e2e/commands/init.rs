@@ -11,6 +11,7 @@ fn parity(helper: &Helper, command: &str) {
     parity_status(helper, command, true);
 }
 
+/// Asserts that `command` exits with `success` on both native and `Node.js` CLIs with identical workspace state.
 fn parity_status(helper: &Helper, command: &str, success: bool) {
     parity_options(helper, command, success, false);
 }

@@ -14,6 +14,7 @@ struct Entry {
     modified: SystemTime,
     permissions: Option<fs::Permissions>,
 }
+/// Map of relative workspace paths to their captured [`Entry`] timestamps and permissions.
 pub(super) struct Snapshot(BTreeMap<PathBuf, Entry>);
 
 impl Snapshot {

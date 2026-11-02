@@ -35,6 +35,7 @@ fn orphan(scope: &Path) -> String {
     fs::write(path, encoder.finish().unwrap()).unwrap();
     hash
 }
+/// Verifies bare-scope `bit gc` preserves exported ancestry and moves unreachable objects to `deleted-objects`.
 #[test]
 fn bare_collection_keeps_exported_ancestry_and_moves_unreachable_objects_without_node() {
     let helper = fixture();

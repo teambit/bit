@@ -9,6 +9,9 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
+/// Expected source contents written by `providers.cjs` into `comp1/provider.js`.
+const PROVIDER_SOURCE: &str = "module.exports=42;\n";
+
 /// Verifies `bit recover` preserves aspect provider `.bitmap` configuration and new source files.
 #[test]
 fn recovery_preserves_provider_configuration_and_new_source_files() {
@@ -35,6 +38,6 @@ fn recovery_preserves_provider_configuration_and_new_source_files() {
     );
     assert_eq!(
         fs::read_to_string(helper.scopes.local_path.join("comp1/provider.js")).unwrap(),
-        "module.exports=42;\n",
+        PROVIDER_SOURCE,
     );
 }

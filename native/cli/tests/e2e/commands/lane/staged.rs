@@ -50,6 +50,7 @@ fn staged_main_snaps_move_to_the_new_lane_with_and_without_a_remote_head() {
     }
 }
 
+/// Compares `.bitmap`, `.bit/scope.json`, `.bit/index.json`, and `Component`/`Version` objects after `lane create`.
 fn compare(native: &Path, oracle: &Path, versions: &[String]) {
     for path in [".bitmap", ".bit/scope.json"] {
         assert_eq!(

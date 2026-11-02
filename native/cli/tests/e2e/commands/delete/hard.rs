@@ -38,6 +38,7 @@ fn compare_file_remote(helper: &Helper, command: &str) {
 
 // Published Scope.filterFoundAndMissingComponents pushes IDs from concurrent loads.
 // Validate and order only its success-item suffix; retain every other output byte.
+/// Normalizes the order of concurrently loaded removed component IDs in `bit delete --hard` output.
 fn removal_order(output: &str) -> String {
     let Some((prefix, items)) =
         output.split_once("✔ successfully removed components from the remote scope\n")
