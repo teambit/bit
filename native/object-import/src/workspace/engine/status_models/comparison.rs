@@ -15,6 +15,7 @@ pub(crate) struct Request {
     root: PathBuf,
     targets: Vec<Target>,
 }
+/// Single workspace component target with source files, current model, and optional source overlays.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Target {

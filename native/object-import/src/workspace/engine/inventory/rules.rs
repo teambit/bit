@@ -13,6 +13,7 @@ pub(super) struct Rule {
     source: String,
     negative: bool,
 }
+/// Compiled `node-ignore` policy rules and cached directory match results.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Policy {

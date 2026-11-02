@@ -11,6 +11,7 @@ use std::io;
 /// Keys of a variant entry in `workspace.jsonc` that are not aspect configurations.
 const INTERNAL_FIELDS: [&str; 3] = ["propagate", "exclude", "defaultScope"];
 
+/// Outcome of matching a single variant pattern item against a root directory and component name.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct ItemMatch {
     matched: bool,

@@ -39,6 +39,7 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     )?;
     selected(&reply, &ordered)
 }
+/// Maps auto-tag `reply` indices back to deduplicated component identities from `ordered`.
 #[inline]
 fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
     let results = reply["results"].as_array().ok_or_else(|| invalid("status autotag result"))?;

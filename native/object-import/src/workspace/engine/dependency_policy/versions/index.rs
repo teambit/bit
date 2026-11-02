@@ -43,6 +43,7 @@ impl<'a> Index<'a> {
         }
     }
 }
+/// Builds a first-seen unversioned-identity to pinned-version map from `ids`.
 #[inline]
 fn first(ids: &[String]) -> HashMap<&str, &str> {
     let mut index = HashMap::with_capacity(ids.len());

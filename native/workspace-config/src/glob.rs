@@ -43,6 +43,7 @@ pub fn matches(pattern: &str, path: &str) -> bool {
         })
 }
 
+/// Matches `/`-split pattern `parts` against path `segments` with `**` recursion.
 fn match_parts(parts: &[&str], segments: &[&str]) -> bool {
     match parts.split_first() {
         None => segments.is_empty(),

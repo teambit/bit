@@ -21,6 +21,7 @@ pub(in crate::workspace::engine) struct Request {
     target_version: String,
 }
 
+/// Reads the first-parent chain for `request` without an import overlay.
 #[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,

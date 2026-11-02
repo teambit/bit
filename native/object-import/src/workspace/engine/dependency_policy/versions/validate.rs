@@ -42,6 +42,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     }
     identities(request, &sources)
 }
+/// Validates component identities and package names across `request` and `sources`.
 #[inline]
 fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> {
     if sources

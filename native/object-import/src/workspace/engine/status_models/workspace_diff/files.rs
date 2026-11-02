@@ -42,6 +42,7 @@ pub(super) fn read(
         .collect()
 }
 
+/// Ordered relative paths and raw byte contents for current workspace files.
 type Sources = (Vec<String>, HashMap<String, Vec<u8>>);
 #[inline]
 fn current_sources(current: Vec<File>) -> io::Result<Sources> {

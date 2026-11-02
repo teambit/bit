@@ -20,6 +20,8 @@ use serde_json::{Map, Value};
 use std::io;
 
 /// Preserve `JavaScript` object insertion order while later stores (`global`, `scope`, `workspace`) replace earlier values.
+///
+/// Non-object layers are ignored.
 #[must_use]
 #[inline]
 pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<String, Value> {

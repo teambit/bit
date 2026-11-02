@@ -16,6 +16,7 @@ pub(super) struct Nested {
     directory: String,
     patterns: Vec<String>,
 }
+/// Reads nested `.gitignore` and `.bitignore` pattern files across `paths` under `root`.
 pub(super) fn nested(
     root: &Path,
     paths: &[String],

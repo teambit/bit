@@ -14,6 +14,7 @@ use std::{
 /// Maximum byte size permitted for a `cacache` index bucket or content blob.
 const LIMIT: usize = 8 * 1024 * 1024;
 
+/// Reads and verifies the latest `cacache` entry for `key` under `cache`.
 pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {
     let hashed = format!("{:x}", Sha256::digest(key.as_bytes()));
     let bucket = segmented(cache.join("index-v5"), &hashed);

@@ -27,6 +27,7 @@ pub(in crate::workspace::engine) struct Request {
     deprecation: Option<Value>,
 }
 
+/// Scope and lane name pair identifying a lane for component log traversal.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LaneId {

@@ -31,6 +31,7 @@ pub(super) fn execute(
     assemble_ordered(files.len(), batches)
 }
 
+/// Executes a single worker loop pulling file indices from `next` until `files` is exhausted.
 #[inline]
 fn worker_batch(
     files: &[Prepared],

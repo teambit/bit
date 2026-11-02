@@ -32,6 +32,7 @@ pub(super) fn prepare(
     Ok((history["versions"].clone(), pending))
 }
 
+/// Loads an existing `VersionHistory` object at `hash` or initializes an empty one when `stage` is set.
 fn load_or_init_history(
     reader: &Reader<'_>,
     model: &Value,

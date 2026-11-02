@@ -37,6 +37,7 @@ pub struct Document {
 }
 
 impl Document {
+    /// Parses `text` into a comment-preserving `JSONC` [`Document`].
     #[inline]
     pub fn parse(text: &str) -> io::Result<Self> {
         let parsed = parser::parse(text)?;

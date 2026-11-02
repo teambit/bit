@@ -20,6 +20,7 @@ use std::{
 pub(super) struct SourceOverlay {
     data: Arc<Data>,
 }
+/// Shared backing storage for a [`SourceOverlay`], including spooled entries and seal proofs.
 #[derive(Clone)]
 struct Data {
     root: PathBuf,

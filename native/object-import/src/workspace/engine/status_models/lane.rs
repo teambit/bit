@@ -22,6 +22,7 @@ pub(super) struct Lane {
     pub(super) remotes: HashMap<String, String>,
 }
 
+/// Reads the active [`Lane`] object and remote head mappings for `id` when not on `main`.
 pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Option<Lane>> {
     let (scope, name) = parse_id(id)?;
     if name == "main" {

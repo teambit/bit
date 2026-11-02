@@ -26,6 +26,7 @@ pub(crate) struct State {
     records: HashMap<u64, Observation>,
 }
 
+/// Operation-local file observation retaining path, raw/snapshot hashes, and shared byte contents.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Observation {
     pub(crate) path: PathBuf,

@@ -46,6 +46,7 @@ pub(super) struct Request {
     #[serde(default)]
     current_lane_id: Option<String>,
 }
+/// Workspace component identity and version pair requested for status model loading.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Target {

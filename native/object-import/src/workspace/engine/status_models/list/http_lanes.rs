@@ -27,6 +27,7 @@ pub(in crate::workspace::engine) struct Request {
     remote_host: Option<String>,
 }
 
+/// Queries lane descriptors from a remote HTTP scope for `request`.
 pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize, Value)> {
     super::super::super::path(&request.root)?;
     super::super::super::path(&request.global_remotes_file)?;

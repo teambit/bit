@@ -16,6 +16,7 @@ pub(super) enum Kind {
     Block(String),
 }
 
+/// Single lexical token with its 1-based start and end line numbers.
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct Token {
     pub(super) kind: Kind,

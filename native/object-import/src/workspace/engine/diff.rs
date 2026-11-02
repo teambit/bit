@@ -22,6 +22,7 @@ pub(crate) struct InputFile {
     left: Option<Input>,
     right: Option<Input>,
 }
+/// Source object or workspace file side of a diff comparison.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",

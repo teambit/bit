@@ -17,6 +17,7 @@ pub(super) struct Request {
     root: PathBuf,
     plans: Vec<Plan>,
 }
+/// Single staged `VersionHistory` object update plan with its read-set [`proof::Proof`] entries.
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Plan {

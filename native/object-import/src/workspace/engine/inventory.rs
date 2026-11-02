@@ -22,6 +22,7 @@ pub(crate) struct State {
     next: u64,
     plans: HashMap<u64, Plan>,
 }
+/// Retained intermediate file-list plan from the first phase of a workspace inventory scan.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Plan {
     paths: Vec<String>,

@@ -17,6 +17,7 @@ pub(super) struct FileRecord {
     metadata: Metadata,
     contents: String,
 }
+/// Canonical file path and SHA-1 / Git-blob digest metadata for a workspace file read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Metadata {

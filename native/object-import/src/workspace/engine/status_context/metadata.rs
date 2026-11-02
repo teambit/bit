@@ -27,6 +27,7 @@ pub(super) fn optional(path: &Path, budget: &Budget) -> io::Result<Value> {
     Ok(value)
 }
 
+/// Loads `component.json` and `package.json` metadata for `target` under `root`.
 pub(super) fn component(
     root: &Path,
     mut target: Value,

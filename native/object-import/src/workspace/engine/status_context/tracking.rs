@@ -19,6 +19,7 @@ pub(in crate::workspace::engine) struct Request {
     bitmap: Value,
 }
 
+/// Reads workspace status context and model metadata for `request` without a `.bitmap` file on disk.
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,

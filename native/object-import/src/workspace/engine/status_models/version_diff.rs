@@ -31,6 +31,7 @@ pub(in crate::workspace::engine) struct Request {
     no_parent: bool,
 }
 
+/// Compares two local `Version` objects for `request` without an import overlay.
 #[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,

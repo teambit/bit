@@ -46,6 +46,7 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     }
     Ok(references)
 }
+/// Resolves a tag, hash, `latest`, or `head` `version` specifier on `model` to a lowercase hex SHA-1.
 #[inline]
 pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();

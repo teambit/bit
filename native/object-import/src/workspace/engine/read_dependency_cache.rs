@@ -15,6 +15,7 @@ pub(super) struct Read {
     cache: PathBuf,
     key: String,
 }
+/// Wire request for checking whether any directory or file under `root` is newer than `timestamp`.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Freshness {

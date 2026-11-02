@@ -27,6 +27,7 @@ pub(super) fn dispatch(
     }
 }
 
+/// Dispatches snapshot package, build, validation, and tag callback `request` phases.
 #[inline]
 fn dispatch_resolve(
     request: Request,

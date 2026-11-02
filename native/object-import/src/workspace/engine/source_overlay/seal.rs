@@ -30,6 +30,7 @@ pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
         .collect::<io::Result<Vec<_>>>()?;
     Ok(proof::unique(proofs.into_iter().flatten().collect()))
 }
+/// Captures ancestor lookup and spooled range proofs for a single overlay `entry` at `destination`.
 fn capture_one(
     data: &Data,
     destination: &Path,

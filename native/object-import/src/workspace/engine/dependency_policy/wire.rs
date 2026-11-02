@@ -6,6 +6,7 @@ use serde_json::{Map, Value};
 
 /// Map of package names to version range JSON values.
 type Packages = Map<String, Value>;
+/// Component dependency entry carrying identity, optional package name, and version range.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Entry {

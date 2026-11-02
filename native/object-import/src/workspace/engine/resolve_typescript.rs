@@ -38,6 +38,7 @@ pub(super) fn lookup(
     }
     Ok(None)
 }
+/// Probes `file` as a direct file, package directory, or `index` module under `budget`.
 fn node_candidate(
     file: &Path,
     directory_only: bool,

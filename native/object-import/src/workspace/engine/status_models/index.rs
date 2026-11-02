@@ -15,6 +15,7 @@ pub(super) struct Item {
     is_symlink: bool,
     hash: String,
 }
+/// Optional scope and component name pair inside an `index.json` [`Item`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Id {

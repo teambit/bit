@@ -38,6 +38,7 @@ fn expand_braces(pattern: &str) -> Vec<String> {
         .collect()
 }
 
+/// Finds the innermost `{...}` brace pair in `pattern` that contains at least one comma.
 #[inline]
 fn find_comma_brace_pair(pattern: &str) -> Option<(usize, usize)> {
     let mut opens = Vec::new();

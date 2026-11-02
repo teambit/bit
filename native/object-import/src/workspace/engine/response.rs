@@ -19,6 +19,7 @@ impl std::fmt::Display for CanonicalError {
 }
 impl std::error::Error for CanonicalError {}
 
+/// Constructs an [`io::Error`] wrapping a trimmed [`CanonicalError`] `message`.
 pub(super) fn canonical(mut message: String) -> io::Error {
     message.truncate(message.trim_end().len());
     let start = message.len() - message.trim_start().len();

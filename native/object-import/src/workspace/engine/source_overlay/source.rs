@@ -17,6 +17,7 @@ pub(super) struct Spool {
     hash: String,
 }
 impl Spool {
+    /// Parses and validates a [`Spool`] descriptor from `value`.
     pub(super) fn parse(value: &Value) -> io::Result<Self> {
         let path = value["spoolPath"]
             .as_str()

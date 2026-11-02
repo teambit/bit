@@ -36,6 +36,7 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
     }
     Ok(())
 }
+/// Appends the component identity to either `pendingUpdateDependents` or `stagedComponents` in `output`.
 #[inline]
 fn append_staged(
     output: &mut Value,

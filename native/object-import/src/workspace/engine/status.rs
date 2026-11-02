@@ -6,6 +6,8 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 
 /// Relative path and SHA-1 hash pair for workspace status file comparisons.
+///
+/// Both fields are trimmed and validated before hash comparison.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct File {

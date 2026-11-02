@@ -7,6 +7,8 @@ use std::io;
 const SCOPE_INDENT: &[u8] = b"    ";
 
 /// Serialize a prepared scope document without changing its fields or insertion order.
+///
+/// Null values serialize as `b"{}"` and non-object values return `InvalidData`.
 #[inline]
 pub fn render_scope_json(scope: &Value) -> io::Result<Vec<u8>> {
     if scope.is_null() {

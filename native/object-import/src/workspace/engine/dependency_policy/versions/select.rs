@@ -8,6 +8,7 @@ use std::io;
 
 /// Candidate `(version, range)` choice produced by a single version source.
 type Choice = Option<(String, Option<String>)>;
+/// Selected `(version, range, from_config)` tuple for a dependency entry.
 type Selected = Option<(String, Option<String>, bool)>;
 pub(super) fn select(
     index: &super::index::Index<'_>,

@@ -26,6 +26,7 @@ pub(super) struct Request {
     #[serde(default)]
     during_merge: Vec<String>,
 }
+/// Tracked workspace component status input with modified flag, issues, dependencies, and `.bitmap` state.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Target {

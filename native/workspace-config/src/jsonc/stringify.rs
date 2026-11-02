@@ -12,6 +12,7 @@ fn is_js_whitespace(character: char) -> bool {
     (character.is_whitespace() && character != '\u{0085}') || character == '\u{feff}'
 }
 
+/// Trims trailing `JavaScript` whitespace characters from `value` via [`is_js_whitespace`].
 #[inline]
 fn trim_end(value: &str) -> &str {
     value.trim_end_matches(is_js_whitespace)
