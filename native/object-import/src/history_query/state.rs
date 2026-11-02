@@ -28,6 +28,7 @@ struct Token {
     token: String,
 }
 impl State {
+    /// Executes a `historyQueryBegin` BFS traversal and registers the resulting plan under a new token.
     pub(super) fn begin(&mut self, input: Value) -> io::Result<Value> {
         let directory = directory(&input)?;
         self.insert(bfs::begin(input)?, directory)

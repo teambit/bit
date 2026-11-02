@@ -52,6 +52,7 @@ pub(super) fn git(
     }
     interpret(status, stdout, &stderr)
 }
+/// Spawns `git merge-file` with `labels` and `paths` and collects bounded `stdout`/`stderr`.
 fn execute(
     labels: [&str; 2],
     paths: [PathBuf; 3],

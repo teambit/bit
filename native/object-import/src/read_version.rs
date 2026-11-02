@@ -47,6 +47,7 @@ impl<'a> Reader<'a> {
         reader.history_artifacts = true;
         Ok(reader)
     }
+    /// Returns the raw `Version` JSON string, inflated byte length, and compressed byte length from the last [`Self::read`].
     #[inline]
     pub(crate) fn metadata(&self) -> Option<&(String, usize, usize)> {
         self.metadata.as_ref()

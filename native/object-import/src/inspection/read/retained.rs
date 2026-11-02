@@ -63,6 +63,7 @@ fn observed<'a>(
         .ok_or_else(|| invalid("inspection retained workspace observation"))
 }
 
+/// Trims `value` and validates that it is a non-empty hexadecimal SHA-1 hash string.
 #[inline]
 fn verified_hash<'a>(value: Option<&'a str>, message: &'static str) -> io::Result<&'a str> {
     let trimmed = value

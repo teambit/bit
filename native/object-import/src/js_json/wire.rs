@@ -80,6 +80,7 @@ impl<'de> Deserialize<'de> for Value {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 struct Utf16(Vec<u16>);
+/// `serde` visitor that deserializes a `UTF-8` string or `u16` sequence into [`Utf16`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct TextVisitor;
 impl<'de> Visitor<'de> for TextVisitor {

@@ -77,6 +77,7 @@ fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     )
 }
 
+/// Splits a canonical `<scope>/<name>` lane identifier into trimmed `(scope, name)` slices.
 #[inline]
 fn canonical_lane_parts(raw_id: &str) -> io::Result<(&str, &str)> {
     let Some((raw_scope, raw_name)) = raw_id.trim().split_once('/') else {

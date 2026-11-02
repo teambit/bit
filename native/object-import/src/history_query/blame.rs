@@ -72,6 +72,7 @@ fn initial_rows(text: &str) -> Vec<Value> {
         })
         .collect()
 }
+/// Assigns the oldest log entry `last_log` (`last_idx`) to all remaining unattributed line indices in `pending`.
 #[inline]
 fn assign_remaining(
     rows: &mut [Value],

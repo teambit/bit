@@ -32,6 +32,7 @@ pub use bit_workspace_config::jsonc;
 pub use bit_workspace_config::parse_jsonc;
 /// Resolves local or remote lane identity from `.bitmap` and `index.json` without a `Node.js` round trip.
 pub use command_import::lane::resolve_lane_identity;
+/// Serializes JSON with `JavaScript` property ordering and `binary64` number formatting.
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;

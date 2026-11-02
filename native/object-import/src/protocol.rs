@@ -27,6 +27,7 @@ pub(crate) fn respond(writer: &mut impl Write, response: &impl Serialize) -> io:
     writer.flush()
 }
 
+/// Dispatches a 4-byte `magic` protocol frame to the matching workspace, checkout, merge, or snapshot service.
 pub(crate) fn serve_extension(
     magic: [u8; 4],
     reader: &mut impl Read,

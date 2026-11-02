@@ -33,6 +33,7 @@ impl State {
     ) -> io::Result<Value> {
         self.prepare_overlay(input, owners, snapshots, None)
     }
+    /// Prepares a merge file-body plan with optional workspace `snapshots` and an in-memory object `overlay`.
     pub(super) fn prepare_overlay(
         &mut self,
         mut input: Value,

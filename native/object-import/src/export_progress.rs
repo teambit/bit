@@ -35,6 +35,7 @@ pub fn scope<Output>(sender: &SyncSender<Event>, work: impl FnOnce() -> Output) 
     with_sender(Some(sender.clone()), work)
 }
 
+/// Clones the thread-local export progress [`Event`] sender bound to the active thread, if any.
 #[must_use]
 #[inline]
 pub(crate) fn current() -> Option<SyncSender<Event>> {

@@ -82,6 +82,7 @@ fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
         }
     }
 }
+/// Appends `+^` and `+~` version/range usages from an environment `policy` `field` (`entries`).
 fn environment_usages(usages: &mut Vec<String>, field: &str, entries: &Value) {
     if let Some(entries) = entries.as_array() {
         for entry in entries {

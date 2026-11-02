@@ -1,4 +1,4 @@
-//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification ([`is_plus`]) and `SemVer` tag resolution ([`resolve`]).
+//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification ([`is_plus`]) and `SemVer` release-tag resolution ([`resolve`]).
 
 #[cfg(test)]
 mod tests;

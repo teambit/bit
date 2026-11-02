@@ -32,6 +32,7 @@ struct Begin {
     parent_token: Option<String>,
     import_main: Option<bool>,
 }
+/// Deserialized `mergeTransactionReceipt` request payload acknowledging a completed phase step.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Receipt {

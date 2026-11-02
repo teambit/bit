@@ -1,4 +1,4 @@
-//! Header validation and zlib compression ([`persist_serialized`]) for writing mutable serialized objects into [`Store`].
+//! Header validation ([`check_header`]) and zlib compression ([`persist_serialized`]) for writing mutable serialized objects into [`Store`].
 
 use crate::store::Store;
 use flate2::{Compression, write::ZlibEncoder};

@@ -1,4 +1,4 @@
-//! Bounded serial and parallel [`SourceRecord`] object body loading ([`load`]) for inspection diffs.
+//! Bounded serial ([`serial`]) and parallel ([`parallel`]) [`SourceRecord`] object body loading ([`load`]) for inspection diffs.
 
 #[cfg(test)]
 mod tests;

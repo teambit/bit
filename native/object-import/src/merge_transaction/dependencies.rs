@@ -54,6 +54,7 @@ fn string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
     }
     Ok((scope, name))
 }
+/// Extracts a set of validated SHA-1 version hash strings from `input[field]`.
 fn hashes<'a>(input: &'a Value, field: &str) -> io::Result<HashSet<&'a str>> {
     rows(input, field)?
         .iter()

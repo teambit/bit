@@ -55,6 +55,7 @@ fn validate_path(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Copies access/modification timestamps and file permissions from `metadata` onto `file`.
 fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
     file.set_times(
         fs::FileTimes::new()

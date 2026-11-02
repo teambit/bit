@@ -73,6 +73,7 @@ fn result(log: Value, index: usize, rows: &[Value], relative: &str) -> io::Resul
     row["parentHashes"] = json!(parents);
     Ok(Some(row))
 }
+/// Finds the non-missing `Version` row matching `hash` (case-insensitively) in `rows`.
 #[inline]
 fn version<'a>(rows: &'a [Value], hash: &str) -> io::Result<&'a Value> {
     let target = hash.trim();

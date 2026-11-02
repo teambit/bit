@@ -73,6 +73,7 @@ fn record(hash: &str, value: &Value) -> io::Result<Value> {
     }
     Ok(row)
 }
+/// Copies normalized `unrelated` and `squashed` ancestry fields from `value` onto `row`.
 fn history_fields(row: &mut Value, value: &Value) {
     if let Some(value) = value
         .get("unrelated")

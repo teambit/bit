@@ -28,6 +28,7 @@ pub(super) struct Scope {
     finished: bool,
 }
 impl Scope {
+    /// Installs a fresh thread-local [`Trace`] and returns a guard that restores the prior trace.
     pub(super) fn begin() -> Self {
         Self {
             previous: ACTIVE.with(|active| active.replace(Some(Trace::default()))),

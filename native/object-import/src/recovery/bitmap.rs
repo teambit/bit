@@ -80,6 +80,7 @@ fn root(component: &Value) -> io::Result<&str> {
     Ok(root)
 }
 
+/// Validates the `scope` and `name` fields of a `.bitmap` `component` entry under `key`.
 fn identity(key: &str, component: &Value) -> io::Result<()> {
     let object = component.as_object().ok_or_else(|| invalid("bitmap component"))?;
     let scope = object.get("scope").ok_or_else(|| invalid("bitmap missing scope"))?;

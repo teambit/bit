@@ -53,6 +53,7 @@ fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
         .ok_or_else(|| invalid("merge identity name"))?;
     Ok((scope, name))
 }
+/// Parses a `[scope/]name[@version]` string into a validated `(scope, name)` identity tuple.
 fn parse_string_identity(raw: &str) -> io::Result<(Option<&str>, &str)> {
     let raw = raw.trim();
     let bare = raw.rsplit_once('@').map_or(raw, |(prefix, _)| prefix.trim());

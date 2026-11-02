@@ -82,6 +82,7 @@ fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
         .is_some_and(|path| !path.trim().is_empty()))
 }
 
+/// Reads and parses a regular non-symlink JSONC file at `path` (up to 1 MiB).
 fn document(path: &Path) -> io::Result<Value> {
     let metadata = fs::symlink_metadata(path)?;
     if metadata.file_type().is_symlink() || !metadata.is_file() || metadata.len() > 1024 * 1024 {

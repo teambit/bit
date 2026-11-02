@@ -74,6 +74,7 @@ fn linux_hash(bytes: &[u8]) -> String {
     };
     crate::validate::hexadecimal(&digest)
 }
+/// Computes `leftLinuxHash`/`rightLinuxHash` and runs frozen Git diffing when `left` and `right` differ.
 fn finish(request: Request, left: Option<Vec<u8>>, right: Option<Vec<u8>>) -> io::Result<Value> {
     let left_hash = left.as_deref().map(linux_hash);
     let right_hash = right.as_deref().map(linux_hash);

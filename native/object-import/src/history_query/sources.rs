@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter used to disambiguate temporary snapshot filenames within a process.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Bounded in-memory cache of inflated `Source` object records for a history query session.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

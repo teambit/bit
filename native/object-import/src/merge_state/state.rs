@@ -36,6 +36,7 @@ pub(super) enum Action {
     Remove { ids: Vec<Identity> },
     RemoveAll,
 }
+/// Component `(scope, name)` selector used by `Action::Remove` to prune `unmerged.json` entries.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Identity {

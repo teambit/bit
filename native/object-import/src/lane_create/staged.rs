@@ -35,6 +35,7 @@ impl Moved {
         Ok(bytes)
     }
 
+    /// Reads and validates a scope object of `kind` at `hash` in `directory`, recording its raw bytes.
     fn object(&mut self, directory: &Path, hash: &str, kind: &str) -> io::Result<Value> {
         crate::merge_history::hash(hash)?;
         self.read(

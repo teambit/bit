@@ -32,6 +32,7 @@ struct Objects {
     history: Value,
 }
 
+/// Prepared `index.json`, `scope.json`, and `.bitmap` JSON documents for a new lane.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Documents {
     index: Value,

@@ -57,6 +57,7 @@ fn removed(entry: &Map<String, Value>) -> bool {
                     && remove.get("removed").is_some_and(truthy)
             })
 }
+/// Normalizes `.bitmap` `scope` / `defaultScope` fields on `entry` into a single `scope` property.
 fn scope(entry: &mut Map<String, Value>) {
     let default_scope = entry.shift_remove("defaultScope");
     if entry.contains_key("scope") || default_scope.is_some() {

@@ -37,6 +37,7 @@ fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
+/// Formats `Version`, `Source`, and overlay read counters into the wire `reads` JSON summary.
 #[inline]
 fn reads(versions: (usize, usize), sources: (usize, usize), overlays: usize) -> Value {
     serde_json::json!({"versionObjects":versions.0,"versionInflatedBytes":versions.1,"sourceObjects":sources.0,"sourceBodyBytes":sources.1,"overlayVersions":overlays})

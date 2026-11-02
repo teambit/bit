@@ -1,4 +1,4 @@
-//! `JavaScript` `JSON.stringify` formatting ([`stringify_json`]) for JSON values captured by the native workspace engine.
+//! `JavaScript` `JSON.stringify` formatting ([`stringify_json`], [`convert`]) for JSON values captured by the native workspace engine.
 
 use crate::js_json::{Value, stringify};
 use std::io;

@@ -33,6 +33,7 @@ use std::{
     io,
     sync::{Arc, Weak},
 };
+/// Map from active inspection session tokens to their shared workspace [`read::File`] snapshot slices.
 type Plans = HashMap<String, Arc<[read::File]>>;
 
 const MAX_FILES: usize = 4096;

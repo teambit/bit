@@ -63,6 +63,7 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     state.bodies.prepare(input, &state.journal, Some(snapshots))
 }
+/// Extracts and validates a non-empty `token` string (up to 256 bytes, no NULs) from `input`.
 #[inline]
 fn parse_token<'a>(input: &'a Value, message: &'static str) -> io::Result<&'a str> {
     input["token"]

@@ -38,6 +38,7 @@ struct Options {
     override_head: bool,
 }
 
+/// Computes the lane head `bucket` (`hidden` or `visible`), `overrideUpdateDependents`, `updateReadme`, and `parent`.
 pub(super) fn plan(input: &Plan) -> io::Result<Value> {
     let has_visible_head = validate(input)?;
     let hidden =

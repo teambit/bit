@@ -1,4 +1,4 @@
-//! `Rayon` thread-pool installation routing ([`run`], [`is_parallel`]) for parallel-eligible [`Request`] dispatch on [`State`].
+//! `Rayon` thread-pool installation routing ([`run`], [`is_parallel`], [`apply`]) for parallel-eligible [`Request`] dispatch on [`State`].
 
 use super::{Request, State, apply};
 use serde_json::Value;

@@ -57,6 +57,7 @@ impl Capsules {
         self.seen.insert(hash.to_owned(), index);
         Ok(index)
     }
+    /// Builds a `Source` load descriptor for `row` (`index`) in merge `stage` (`modified` or direct `other`).
     fn load(&mut self, input: &Value, stage: &str, index: usize, row: &Value) -> io::Result<Value> {
         if stage == "modified" {
             let mut load = json!({"row":index});

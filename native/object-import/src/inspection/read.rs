@@ -44,6 +44,7 @@ impl File {
         Ok(())
     }
 }
+/// Captures workspace files in `request` within `maximum` bytes (in parallel when >= 8 files).
 pub(super) fn capture(
     request: &wire::Begin,
     maximum: usize,

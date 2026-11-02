@@ -69,6 +69,7 @@ fn truthy(value: &Value) -> bool {
             .as_str()
             .is_none_or(|text| !text.trim().is_empty())
 }
+/// Validates that `field` on `value` is either absent or an empty JSON array.
 #[inline]
 fn empty_array(value: &Value, field: &str) -> io::Result<()> {
     match value.get(field) {

@@ -56,6 +56,7 @@ struct Response {
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<Value>,
 }
+/// Bounded byte writer enforcing the [`MAX_RAW`] response size ceiling for merge-history wire output.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Output(Vec<u8>);
 impl Write for Output {

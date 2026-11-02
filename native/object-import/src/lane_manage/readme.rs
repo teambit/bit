@@ -34,6 +34,7 @@ impl ReadmeRemoval {
 }
 
 impl ReadmePlan {
+    /// Prepares a `bit lane remove-readme` plan for `lane_name` (or the current lane) at `root`.
     pub fn prepare(
         root: &Path,
         lane_name: Option<&str>,

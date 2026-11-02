@@ -1,4 +1,4 @@
-//! Per-file modification status classification ([`plan`], [`validated_models`]: `new`, `unchanged`, `modified`, `deleted`) against model files.
+//! Per-file modification status classification ([`plan`], [`validated_models`]: `new`, `unchanged`, `modified`, `deleted`) against [`wire::Model`] files.
 
 use super::{invalid, read, wire};
 use serde_json::{Value, json};

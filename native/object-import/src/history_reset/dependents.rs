@@ -57,6 +57,7 @@ pub(super) fn index(input: Value) -> io::Result<Value> {
         .collect();
     Ok(json!({"dependents":dependents,"outside":outside}))
 }
+/// Verifies that the serialized dependent list response for `queries` stays within the 4 MiB budget.
 fn output_budget(queries: &[String], incoming: &HashMap<&str, Vec<&str>>) -> io::Result<()> {
     let mut total = 256_usize.saturating_add(queries.len().saturating_mul(8));
     for query in queries {

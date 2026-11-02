@@ -31,6 +31,7 @@ enum Unrelated {
     Legacy(bool),
     Current(Relation),
 }
+/// Unrelated-history descriptor (`unrelatedHead`, `unrelatedLane`, `headOnCurrentLane`) from `unmerged.json`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Relation {

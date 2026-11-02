@@ -1,4 +1,4 @@
-//! Bounded zlib stream inflation ([`inflate`], [`MAX_BYTES`]) for repository object metadata headers and bodies.
+//! Bounded zlib stream inflation ([`inflate`], [`inflate_step`], [`MAX_BYTES`]) for repository object metadata headers and bodies.
 
 #[cfg(test)]
 mod tests;

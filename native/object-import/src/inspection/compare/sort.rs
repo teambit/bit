@@ -58,6 +58,7 @@ fn extension_id(row: &Js) -> io::Result<Vec<u16>> {
     }
     Ok(Vec::new())
 }
+/// Sorts the `UTF-16` property keys of `Js::Object` `value` lexicographically and returns the sorted key list.
 fn keys(value: &mut Js) -> io::Result<Vec<Vec<u16>>> {
     let Js::Object(entries) = value else {
         return Err(invalid("inspection sortable map required"));

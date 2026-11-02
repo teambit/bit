@@ -45,6 +45,7 @@ fn head_policy(
     }
     Ok(())
 }
+/// Parses an optional merge strategy string (`"ours"`, `"theirs"`, or `"manual"`).
 fn parse_strategy(value: Option<&Value>) -> io::Result<Option<&'static str>> {
     match value {
         None | Some(Value::Null) => Ok(None),

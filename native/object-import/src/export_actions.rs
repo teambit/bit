@@ -5,6 +5,7 @@ mod tests;
 use serde_json::Value;
 use std::{cell::RefCell, io, path::Path, sync::Arc};
 
+/// Thread-safe callback signature for invoking a file-remote server action (`path`, `name`, `options`).
 type Callback = dyn Fn(&Path, &str, &Value) -> io::Result<Value> + Send + Sync;
 
 /// An operation's metadata-only file-remote server actions.

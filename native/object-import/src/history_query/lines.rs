@@ -20,6 +20,7 @@ pub(super) struct Part {
     pub(super) kind: u8,
     pub(super) value: String,
 }
+/// Splits `text` into newline-terminated line slices (`jsdiff` default line tokenization).
 #[inline]
 fn tokens(text: &str) -> Vec<&str> {
     text.split_inclusive('\n')

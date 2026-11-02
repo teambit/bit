@@ -44,6 +44,7 @@ pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     Ok(json!({"filesStatus":statuses,"removals":removed}))
 }
 
+/// Looks up or appends the `"removed"` status for `path` in `statuses`, rejecting prototype property names.
 fn status<'a>(statuses: &'a mut Vec<Value>, path: &str) -> io::Result<&'a str> {
     let found = statuses
         .iter()

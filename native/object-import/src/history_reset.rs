@@ -49,6 +49,7 @@ fn bound(count: usize) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates that `value` is a non-empty, non-control string within the `32768`-byte reset limit.
 #[inline]
 fn text(value: &str) -> io::Result<()> {
     let has_control = if value.is_ascii() {

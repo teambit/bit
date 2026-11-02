@@ -26,6 +26,7 @@ struct Soft {
     versions: Vec<Option<String>>,
     aliases: Option<Vec<usize>>,
 }
+/// Deserialized `historyResetNeverExported` request payload containing candidate `fullNames`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Never {

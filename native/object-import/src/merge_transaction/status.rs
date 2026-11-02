@@ -29,6 +29,7 @@ struct Removed {
     other_lane: bool,
     on_main: bool,
 }
+/// Active per-component merge status cursor tracking current `observe` step, `revision`, and terminal `result`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Cursor {
     identity: Identity,

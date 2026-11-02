@@ -6,6 +6,7 @@ use std::{
     io,
 };
 
+/// Ordered list of `[tag, hash]` string pairs in `Component` import merge plans.
 type Tags = Vec<[String; 2]>;
 
 /// Deserialized import merge operation variant (`Version`, `VersionHistory`, or `Component`).

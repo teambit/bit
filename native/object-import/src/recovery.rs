@@ -31,6 +31,7 @@ pub(crate) fn bitmap(path: &Path, current: &[String]) -> io::Result<Value> {
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+/// Validates that `path` is a non-empty, absolute `UTF-8` path without `.` or `..` segments or NUL bytes.
 #[inline]
 pub(crate) fn path(path: &Path) -> io::Result<()> {
     let Some(name) = path.to_str() else {
