@@ -13,7 +13,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{fmt::Write, io};
 
-/// Section header (`AUTO_SNAPPED_MSG`) for auto-snapped dependent components.
+/// Section header (`AUTO_SNAPPED_MSG`) for auto-snapped dependent components in [`Snaps`].
 const AUTO_SNAPPED: &str = "auto-snapped dependents";
 /// `ISSUE_FORMAT_SPACE`.
 const ISSUE_SPACE: &str = "          ";

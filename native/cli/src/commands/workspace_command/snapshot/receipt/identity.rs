@@ -8,7 +8,7 @@ mod tests;
 use super::User;
 use std::{io, sync::OnceLock};
 
-/// Process-wide cache of the resolved [`User`] identity or initialization [`Failure`].
+/// Process-wide [`Cache`] of the resolved [`User`] identity or initialization [`Failure`].
 static IDENTITY: Cache = Cache::new();
 
 /// Loads the cached [`User`] identity, initializing [`IDENTITY`] with `factory` on first call.

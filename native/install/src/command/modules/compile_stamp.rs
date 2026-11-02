@@ -18,7 +18,7 @@ use std::{
     time::UNIX_EPOCH,
 };
 
-/// Schema version of the persisted `afterInstall` compile stamp; bumped when fingerprint shape changes.
+/// Schema version of the persisted `afterInstall` [`Stamp`]; bumped when fingerprint shape changes.
 const VERSION: u32 = 1;
 /// The manifest fields whose `link:`/`file:` values are checked.
 const DEPENDENCY_FIELDS: [&str; 4] =

@@ -4,7 +4,7 @@
 
 use crate::commands::color::Chalk;
 
-/// Output formatter mirroring `@teambit/cli` section and status symbol helpers.
+/// Output formatter mirroring `@teambit/cli` section and status symbol helpers over [`Chalk`].
 #[derive(Debug, Clone)]
 pub struct Formatter {
     /// [`Chalk`] styling handle used by this [`Formatter`].

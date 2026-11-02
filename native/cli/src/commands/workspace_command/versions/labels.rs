@@ -2,7 +2,7 @@
 //!
 //! Defines [`Labels`] and [`SNAP`] static presets for snap, tag, soft-tag, and persist-tag reports.
 
-/// Report key and message configuration differentiating snap and tag result reports.
+/// Report key and message configuration differentiating [`SNAP`] and [`TAG`] result reports.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Labels {
     /// `snappedComponents` or `taggedComponents`.

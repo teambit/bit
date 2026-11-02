@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::io;
 
 impl Progress {
-    /// Renders pending historical checkout import progress from `value` into `output`.
+    /// Renders pending historical checkout import progress from `value` ([`Value`]) into `output` ([`Output`]).
     #[inline]
     pub(in crate::commands) fn render_history_pending(
         output: &Output,

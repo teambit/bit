@@ -21,7 +21,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-/// Global config key (`CFG_USER_TOKEN_KEY`) supplying the auth token to custom remote resolvers.
+/// Global config key (`CFG_USER_TOKEN_KEY`) supplying the auth token to [`Resolver`].
 const CFG_USER_TOKEN: &str = "user.token";
 
 /// `remote-resolver.js` relative to the main module of `@teambit/scope.remotes`.

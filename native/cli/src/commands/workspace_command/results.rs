@@ -46,7 +46,7 @@ pub struct Report {
     pub details: Option<String>,
 }
 
-/// One switched component and the status of each of its files.
+/// One switched component ([`Id`]) and the [`Status`] of each of its files.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Changed {
     pub id: Id,

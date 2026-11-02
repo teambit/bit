@@ -8,7 +8,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{Visit, walk};
 
-/// Return `true` when `program` contains no module exports within bounded [`Proof`] AST depth and node limits.
+/// Return `true` when [`Program`] `program` contains no module exports within bounded [`Proof`] AST depth and node limits.
 #[inline]
 pub(super) fn proven(program: &Program<'_>) -> bool {
     if program.body.is_empty() {

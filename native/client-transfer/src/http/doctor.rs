@@ -7,7 +7,7 @@ use futures_util::StreamExt;
 use serde_json::{Value, json};
 use std::io;
 
-/// Embedded `GraphQL` query (`doctor.graphql`) for remote scope diagnostic checks.
+/// Embedded `GraphQL` query (`doctor.graphql`) for remote scope diagnostic checks via [`Network::doctor`].
 const QUERY: &str = concat!(include_str!("doctor.graphql"), "    ");
 /// Maximum buffered response size (`32 MiB`) for remote `doctor` `GraphQL` queries.
 const MAX_BYTES: usize = 32 * 1024 * 1024;

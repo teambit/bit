@@ -24,7 +24,7 @@ use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
 impl Steps<'_> {
-    /// Prepares the plan's snapshot step: captures fresh workspace state and finalizes `plan` unless `snapFailed` or `preview` is set.
+    /// Prepares the plan's snapshot step: captures fresh [`Capture`] state and finalizes `plan` unless `snapFailed` or `preview` is set.
     pub(super) fn prepare_snapshot(
         &mut self,
         plan: &mut Value,

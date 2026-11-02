@@ -49,7 +49,7 @@ const USER_AGENT: &str = "node-fetch";
 /// The query `listBackwardCompatible` sends.
 const LIST_QUERY: &str = "query list($namespaces: [String!]) { scope { components(namespaces: $namespaces) { id { scope version name } deprecation { isDeprecate } } } }";
 
-/// One component of a remote `list`.
+/// One component of a remote `list` (`GraphQL` [`LIST_QUERY`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Listed {
     /// Remote scope name owning the component.

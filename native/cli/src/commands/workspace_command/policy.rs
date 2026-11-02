@@ -15,7 +15,7 @@ use crate::commands::status::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Policy preparation output holding the updated plan [`Value`] and [`Pending`] caches.
+/// Policy preparation output holding the updated plan [`Value`] and [`Pending`] caches for [`Steps::prepare_policy`].
 pub struct Prepared {
     /// Updated merge plan [`Value`] incorporating policy and dependency resolutions.
     pub plan: Value,

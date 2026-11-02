@@ -5,7 +5,7 @@ use super::{Planned, commit_receipt, file_id};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Commit workspace checkout files for a lane switch and verify the switch publication receipt.
+/// Commit workspace checkout files on [`Planned`] for a lane switch and verify the switch publication receipt.
 #[inline]
 pub(in crate::commands) fn apply(planned: &mut Planned, root: &Path) -> io::Result<Value> {
     let receipt = commit_receipt(planned, root)?;

@@ -39,7 +39,7 @@ impl Progress {
         self.render_inbound_rows(output, true, on_lane);
     }
 
-    /// Renders inbound import progress rows (`self.imports`) into `output`.
+    /// Renders inbound import progress rows (`self.imports`) into `output` ([`Output`]).
     #[inline]
     fn render_inbound_rows(&self, output: &Output, wildcard: bool, on_lane: bool) {
         // `importMany` is called with the ids the latest-heads import requested.

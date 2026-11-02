@@ -5,7 +5,7 @@ use super::{Calculated, Loaded, Session};
 use serde_json::{Value, json};
 use std::io;
 
-/// Invoke the host's package-manager subscriber callback for `phase` (`"pre"` or `"post"`) on [`Calculated`].
+/// Invoke the host's package-manager subscriber callback for `phase` (`"pre"` or `"post"`) on [`Calculated`] and [`Session`].
 pub(super) async fn run(
     session: &Session<'_>,
     loaded: &Loaded,

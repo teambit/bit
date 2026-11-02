@@ -7,7 +7,7 @@ use std::{
     io::{self, Write},
 };
 
-/// Error wrapper pairing an [`io::Error`] with uncolored diagnostic detail lines.
+/// Error wrapper pairing an [`io::Error`] with uncolored diagnostic detail lines for [`print`].
 #[derive(Debug)]
 struct WithDetails {
     error: io::Error,

@@ -36,7 +36,7 @@ pub fn validate(
     Ok(())
 }
 
-/// `commandLanePatternIds`: the lane targets matched by `options["pattern"]`, or `None` outside a filtered lane merge on `context`.
+/// `commandLanePatternIds`: the lane targets matched by `options["pattern"]`, or `None` outside a filtered lane merge on `context` ([`Value`]).
 pub fn pattern_ids(options: &Value, context: &Value) -> io::Result<Option<Vec<String>>> {
     let Some(pattern) = options
         .get("pattern")

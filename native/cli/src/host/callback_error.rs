@@ -3,7 +3,7 @@
 //! [`CallbackError`] and [`CallbackError::wrap`] retain an [`io::Error`] cause alongside buffered startup and callback stdout.
 use std::{error::Error, fmt, io};
 
-/// Adapter failure wrapper preserving buffered startup and callback stdout alongside the [`io::Error`] cause.
+/// Adapter failure wrapper preserving buffered startup and callback stdout alongside the [`io::Error`] cause via [`CallbackError::wrap`].
 #[derive(Debug)]
 pub(crate) struct CallbackError {
     /// Buffered startup output emitted before the callback failure.

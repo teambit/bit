@@ -21,7 +21,7 @@ const CFG_SYMPHONY_URL: &str = "symphony_url";
 
 /// The remotes this process resolved, by [`Remotes::cache_key`].
 static RESOLVED: LazyLock<Mutex<HashMap<String, Remote>>> = LazyLock::new(Mutex::default);
-/// Default Bit Cloud hub domain (`bit.cloud`) used when `cloud_domain` is unconfigured.
+/// Default Bit Cloud hub domain (`bit.cloud`) used when [`CFG_CLOUD_DOMAIN`] is unconfigured.
 const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";
 
 /// Where a remote scope lives.

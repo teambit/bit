@@ -9,7 +9,7 @@ use crate::{
 };
 use std::io;
 
-/// Phase identifier (`"linking"`) passed when loading [`Session`] components for initial codemod linking.
+/// Phase identifier (`"linking"`) passed when loading [`Session`] components for [`calculate_linked`].
 const LINKING_PHASE: &str = "linking";
 
 /// Performs initial codemod linking (`calculateLinks`) via [`resolve`] before calculating workspace manifests via [`calculate`].

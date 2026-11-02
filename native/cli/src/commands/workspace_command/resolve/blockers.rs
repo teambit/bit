@@ -12,7 +12,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Evaluate and report component issue blocker callbacks on `resolved` for a snapshot or merge resolve.
+/// Evaluate and report component issue blocker callbacks on `resolved` for a snapshot or merge resolve via [`callback_batch`].
 pub(super) fn callbacks(
     resolved: &super::Resolved<'_>,
     rows: &[Value],

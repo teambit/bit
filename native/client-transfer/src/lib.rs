@@ -13,7 +13,7 @@ pub mod tar;
 
 pub use cancellation::Cancellation;
 
-/// Global Bit configuration map preserving key insertion order.
+/// Global Bit configuration map preserving key insertion order across [`config`] layers.
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 
 /// Constructs an [`std::io::ErrorKind::InvalidData`] error with `message` (or `"invalid transport data"` when blank).

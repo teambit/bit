@@ -7,7 +7,7 @@ mod tests;
 use crate::GlobalConfig;
 use serde_json::Value;
 
-/// Configuration keys normalized from `BIT_CONFIG_*` environment variables for transport and auth.
+/// Configuration keys normalized from `BIT_CONFIG_*` environment variables for transport and auth in [`effective`].
 const TRANSPORT_KEYS: &[&str] = &[
     "cloud_domain",
     "symphony_url",

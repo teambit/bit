@@ -36,7 +36,7 @@ pub(super) fn planned(
     params
 }
 
-/// Builds the base `SnappingMain` hook parameter [`Value`] object for `request` and `workflow`.
+/// Builds the base `SnappingMain` hook parameter [`Value`] object for [`ResolveRequest`] `request` and [`Workflow`] `workflow`.
 pub(super) fn snapshot(root: &Path, request: &ResolveRequest<'_>, workflow: &Workflow) -> Value {
     let mut params = workflow.parameters(request.kind);
     params["message"] = json!(request.options["message"].as_str().unwrap_or_default());

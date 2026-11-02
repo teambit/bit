@@ -10,7 +10,7 @@ use crate::commands::status::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Validate that post-merge component issues match the engine's predicted snap blockers.
+/// Validate that post-merge [`Component`] issues match the engine's predicted snap blockers.
 pub fn validate(
     root: &Path,
     context: &Value,

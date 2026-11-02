@@ -7,7 +7,7 @@ use rayon::{ThreadPool, prelude::*};
 use serde_json::{Value, json};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Parse and execute an embedded batch dependency scan request across `pool` with bounded output.
+/// Parse and execute an embedded batch dependency scan [`Request`] across [`ThreadPool`] `pool` with bounded output.
 pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_json::Error> {
     let cleaned = input.trim_start_matches('\u{feff}').trim();
     if cleaned.is_empty() {

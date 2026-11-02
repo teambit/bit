@@ -29,7 +29,7 @@ use std::io;
 /// `getWorkspaceManifest`'s status line around the manifest creation.
 const DEDUPING: &str = "deduping dependencies for installation";
 
-/// Calculated workspace installation plan, component manifests, and dependency policies.
+/// Calculated workspace installation plan, [`WorkspaceComponent`] manifests, and [`EnvPolicy`] policies.
 pub struct Calculated {
     pub components: Vec<WorkspaceComponent>,
     pub engine_components: Vec<WorkspaceComponent>,

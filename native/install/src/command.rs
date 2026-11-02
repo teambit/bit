@@ -30,7 +30,7 @@ use std::{fs, io, path::Path, sync::OnceLock, time::Instant};
 /// Deprecation warning emitted when `--update-existing` is passed to `bit install`.
 const UPDATE_EXISTING: &str = r#"--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default"#;
 
-/// Summary of a completed `bit install` run (`components` count and legacy non-loaded environments).
+/// Summary of a completed `bit install` [`run`] (`components` count and legacy non-loaded environments).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstallSummary {
     pub components: usize,

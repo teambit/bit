@@ -48,7 +48,7 @@ pub fn proves_empty_docs(source: &[u8], relative_path: &str) -> bool {
     proof.accepted || unexported::proven(&parsed.program)
 }
 
-/// Resolves the Oxc [`SourceType`] for `path` (`.js.snap` or supported `JS`/`TS` extensions).
+/// Resolves the Oxc [`SourceType`] for `path` (`.js.snap` or supported `JS`/`TS` extensions) in [`proves_empty_docs`].
 #[inline]
 fn source_type(path: &str) -> Option<SourceType> {
     let file_name = path

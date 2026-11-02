@@ -7,7 +7,7 @@ use crate::commands::status::{capture, policy};
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-/// Query published npm package versions and attach registry version notices to `plan`.
+/// Query published npm package versions on [`Session`] and attach registry version notices to `plan` ([`Value`]).
 pub(super) fn resolve(
     session: &mut Session<'_>,
     request: &ResolveRequest<'_>,

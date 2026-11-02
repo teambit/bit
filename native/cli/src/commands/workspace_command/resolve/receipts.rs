@@ -23,7 +23,7 @@ use std::{
     io,
     path::Path,
 };
-/// Verifies that `receipt["token"]` matches the active resolve session `token`.
+/// Verifies that `receipt["token"]` ([`Value`]) matches the active resolve session `token`.
 #[inline]
 pub(super) fn check_token(receipt: &Value, token: &str) -> io::Result<()> {
     if receipt

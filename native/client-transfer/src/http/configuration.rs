@@ -35,7 +35,7 @@ pub(super) fn sockets(
     Ok(builder)
 }
 
-/// Applies `Http.getProxyConfig()` (`proxy`, `https_proxy`, `proxy.no_proxy`) to `builder`.
+/// Applies `Http.getProxyConfig()` (`proxy`, `https_proxy`, `proxy.no_proxy`) from [`GlobalConfig`] to `builder`.
 #[inline]
 pub(super) fn proxy(
     builder: reqwest::ClientBuilder,

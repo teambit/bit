@@ -9,7 +9,7 @@ use crate::commands::status::{
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Return `true` when `identity` is a hidden lane-only target excluded from workspace lockfile roots.
+/// Return `true` when `identity` is a hidden lane-only target in `context` ([`Value`]) excluded from workspace lockfile roots.
 #[must_use]
 #[inline]
 pub(in crate::commands::workspace_command) fn hidden_target(

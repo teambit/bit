@@ -24,7 +24,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Resolved Node.js Bit CLI launch target (`node <entry>` or wrapper executable).
+/// Resolved Node.js Bit CLI launch target (`node <entry>` via [`NodeCli`] or wrapper executable).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Target {
     /// `node <entry> <args>`.

@@ -1,7 +1,7 @@
 //! Published `is-binary-path` uses binary-extensions 2.3.0, not source-byte heuristics.
 //!
 //! [`note`] checks [`EXTENSIONS`] to return a binary-conflict guidance message for unmerged file paths.
-/// Embedded list of binary file extensions from `binary-extensions` 2.3.0 (`binary_extensions.txt`).
+/// Embedded list of binary file extensions from `binary-extensions` 2.3.0 (`binary_extensions.txt`) checked by [`note`].
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
 /// Returns the binary-conflict guidance message for `file` based on whether its extension appears in [`EXTENSIONS`].

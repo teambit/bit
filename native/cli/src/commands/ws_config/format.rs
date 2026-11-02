@@ -7,7 +7,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;
 use std::path::Path;
 
-/// Serialized result of `bit ws-config write` including cleaned paths and writer summaries.
+/// Serialized result of `bit ws-config write` including cleaned paths and [`WriteResults`] summaries.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct WriteConfigFilesResult {

@@ -66,7 +66,7 @@ pub enum Selection<'r> {
     Resolve { pattern: Option<&'r str> },
 }
 
-/// What a resolve command asks for.
+/// What a resolve command asks for ([`Kind`], options [`Value`], and [`Selection`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolveRequest<'r> {
     pub kind: Kind,

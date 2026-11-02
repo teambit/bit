@@ -8,7 +8,7 @@ mod tests;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
-/// Parsed snapshot policy flags (`--ignore-issues`, `--ignore-newest-version`, etc.).
+/// Parsed snapshot policy flags (`--ignore-issues`, `--ignore-newest-version`, etc.) produced by [`parse`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Policy {
     ignore_issues: Option<String>,

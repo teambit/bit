@@ -26,7 +26,7 @@ pub struct WorkspaceComponent<'c> {
     pub version: Option<&'c str>,
 }
 
-/// Regex and lookup tables replacing `@file:<dir>` lockfile specifiers with workspace component versions.
+/// Regex and lookup tables replacing `@file:<dir>` lockfile specifiers with [`WorkspaceComponent`] versions.
 #[derive(Debug, Default, Clone)]
 pub struct Replacer {
     /// `(name1|name2)@file:[^'"(]+`, global.

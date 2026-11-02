@@ -14,7 +14,7 @@ use oxc_parser::{ParseOptions, Parser};
 use oxc_span::SourceType;
 use std::io;
 
-/// Parse and scan a single source [`File`] for module dependencies and exports.
+/// Parse and scan a single source [`File`] for module dependencies and exports into [`Outcome`].
 pub(crate) fn scan(file: &File, unsupported_options: bool) -> Outcome {
     if unsupported_options
         || file.source

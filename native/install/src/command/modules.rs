@@ -21,7 +21,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path, time::Instant};
 
-/// Maximum number of manifest recalculation and installation convergence cycles.
+/// Maximum number of [`Calculated`] manifest recalculation and installation convergence cycles.
 const MAX_CYCLES: usize = 5;
 
 /// Summary of a completed module installation run (`components` count and legacy non-loaded environments).

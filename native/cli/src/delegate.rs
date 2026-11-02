@@ -21,7 +21,7 @@ use std::{
     process::{Command, ExitCode},
 };
 
-/// Execute the resolved Node.js CLI [`Target`] with `args`, replacing the process on Unix.
+/// Execute the resolved Node.js CLI [`Target`] with `args`, replacing the process on Unix via [`exec`].
 #[inline]
 pub fn run(target: &Target, args: &[OsString]) -> io::Result<ExitCode> {
     let command = command(target, args);
