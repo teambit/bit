@@ -1,4 +1,4 @@
-//! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs in `bit-object-import`.
+//! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs.
 //!
 //! Checks [`external`] dependent adjacency calculation in [`scratch`] workspaces and [`Repository`] absent model proof validation.
 

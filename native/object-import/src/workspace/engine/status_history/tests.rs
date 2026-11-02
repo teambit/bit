@@ -1,4 +1,4 @@
-//! Unit tests for status `VersionHistory` [`Request`] readset [`validate`] and [`commit`] phases.
+//! Unit tests for status `VersionHistory` [`Request`] readset [`validate`] and [`commit`] phases in `bit-object-import`.
 //!
 //! Confirms that [`identity`] history plans validate [`proof`]s before writing `.bit/objects` in `bit-object-import`.
 

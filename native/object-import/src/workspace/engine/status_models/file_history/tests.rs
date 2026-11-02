@@ -1,4 +1,4 @@
-//! Unit tests for file history [`validate_file`] path traversal guards and [`file_hash`] duplicate rejection.
+//! Unit tests for file history [`validate_file`] path traversal guards and [`file_hash`] duplicate rejection in `bit-object-import`.
 //!
 //! Confirms that relative component paths via [`validate_file`] cannot escape the component root or duplicate [`file_hash`] entries in `bit-object-import`.
 

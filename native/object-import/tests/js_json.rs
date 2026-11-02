@@ -1,4 +1,4 @@
-//! Differential tests for `JavaScript`-compatible [`js_json`] JSON serialization against Node.
+//! Differential tests for `JavaScript`-compatible [`js_json`] JSON serialization against Node in `bit-object-import`.
 //!
 //! Verifies [`Value`] property key ordering and [`stringify`] formatting parity in `bit-object-import`.
 

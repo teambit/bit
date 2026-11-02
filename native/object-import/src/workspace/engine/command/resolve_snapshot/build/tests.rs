@@ -106,6 +106,7 @@ fn unbuilt_tasks_replace_old_builder_data_and_create_missing_builder_entry() {
         assert_eq!(version["buildStatus"], "pending");
     }
 }
+/// Verifies that [`metadata`] replaces `plannedTasks` with `buildData` pipeline entries and updates `buildStatus` to `"succeed"` after a completed build.
 #[test]
 fn completed_build_replaces_planned_tasks() {
     let mut version = json!({"buildStatus": "pending", "extensions": []});
@@ -117,6 +118,7 @@ fn completed_build_replaces_planned_tasks() {
     assert_eq!(version["extensions"][0]["data"], data);
 }
 
+/// Verifies that [`artifacts`] leaves `objects` and `proofs` empty when the receipt contains no artifacts.
 #[test]
 fn empty_artifact_receipt_leaves_objects_and_proofs_unchanged() {
     let directory = Directory::create().unwrap();

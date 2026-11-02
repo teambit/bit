@@ -1,4 +1,4 @@
-//! Unit tests for layered workspace configuration [`merge_layers`], [`environment_key`], and [`parse_jsonc`].
+//! Unit tests for layered workspace configuration [`merge_layers`], [`environment_key`], and [`parse_jsonc`] in `bit-workspace-config`.
 //!
 //! Checks global/scope/workspace config precedence, env var key mapping, and `ScopeJson` formatting in `bit-workspace-config`.
 

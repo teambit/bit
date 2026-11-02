@@ -1,4 +1,4 @@
-//! Unit tests for callback-owned [`SourceChange`] source [`proof`] replacement via [`replace_owned_proofs`].
+//! Unit tests for callback-owned [`SourceChange`] source [`proof`] replacement via [`replace_owned_proofs`] in `bit-object-import`.
 //!
 //! Verifies that callbacks in [`Directory`] workspaces can update only their owned [`SourceChange`] [`proof`]s via [`replace_owned_proofs`].
 

@@ -108,6 +108,7 @@ fn keep_ours_updates_only_the_final_bitmap_without_a_component_writer_stage() {
     );
 }
 
+/// Verifies that `complete` rejects an unknown continuation token even when `owned_workspace_writes` is empty.
 #[test]
 fn completion_with_unknown_token_and_no_installer_writes_rejects_cleanly() {
     let input = super::Complete {

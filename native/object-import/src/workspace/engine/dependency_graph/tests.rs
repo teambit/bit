@@ -102,6 +102,7 @@ fn separate_root_caches_preserve_distinct_path_map_objects() {
         .unwrap();
     assert_eq!(shared["pathMapOrigins"], json!([0, 1, 2, 1]));
 }
+/// Verifies that [`Fixture::run`] records missing relative files and packages and preserves them when replaying from `visited` cache.
 #[test]
 fn captures_missing_files_and_packages_without_losing_replay_metadata() {
     let fixture = Fixture::new();
@@ -124,6 +125,7 @@ fn captures_missing_files_and_packages_without_losing_replay_metadata() {
     assert_eq!(replayed["missing"][&file], first["missing"][&file]);
     assert_eq!(replayed["missingPackages"][&file], first["missingPackages"][&file]);
 }
+/// Verifies that [`Fixture::run`] resolves an unbuilt `_bit_local` component package to its `source` file and rejects `source` paths escaping the package directory.
 #[test]
 fn resolves_unbuilt_local_component_package_from_its_source() {
     let fixture = Fixture::new();
@@ -150,6 +152,7 @@ fn resolves_unbuilt_local_component_package_from_its_source() {
             .is_err(),
     );
 }
+/// Verifies that [`Fixture::run`] declines syntax errors in `TypeScript` sources and unsupported CSS detectives.
 #[test]
 fn declines_parse_errors_and_unsupported_detectives() {
     let fixture = Fixture::new();
@@ -162,6 +165,7 @@ fn declines_parse_errors_and_unsupported_detectives() {
         );
     }
 }
+/// Verifies that [`Fixture::run`] includes `node_modules` package entry points in `tree` without traversing into them.
 #[test]
 fn includes_npm_without_traversal_and_preserves_cached_replay_duplicates() {
     let fixture = Fixture::new();
@@ -185,6 +189,7 @@ fn includes_npm_without_traversal_and_preserves_cached_replay_duplicates() {
     let dependencies = &output["tree"][fixture.0.join("a.js").to_str().unwrap()];
     assert_eq!(dependencies.as_array().unwrap().len(), 3);
 }
+/// Verifies that [`Fixture::run`] reuses cached `visited` `pathMap` and `missing` entries without rescanning the file on disk.
 #[test]
 fn cached_missing_and_specifier_metadata_survive_without_rescanning() {
     let fixture = Fixture::new();
@@ -214,6 +219,7 @@ fn cached_missing_and_specifier_metadata_survive_without_rescanning() {
         1,
     );
 }
+/// Verifies that [`Fixture::run`] resolves `.js` relative imports in `TypeScript` files to `.ts` sources on disk.
 #[test]
 fn typescript_relative_resolution_keeps_javascript_sideeffect_distinction() {
     let fixture = Fixture::new();
@@ -230,6 +236,7 @@ fn typescript_relative_resolution_keeps_javascript_sideeffect_distinction() {
     assert_eq!(output["registeredPaths"], json!([fixture.0.join("a.ts")]));
 }
 
+/// Verifies that [`Fixture::run`] excludes `@bit-no-check` files from `scannedPaths` and skips their imports.
 #[test]
 fn detector_receipts_exclude_no_check_early_returns() {
     let fixture = Fixture::new();
@@ -242,6 +249,7 @@ fn detector_receipts_exclude_no_check_early_returns() {
     assert_eq!(output["scannedPaths"], json!([fixture.0.join("a.js")]));
 }
 
+/// Verifies that [`apply`] uses `custom` detector results when `sourceHash` matches and rejects stale custom detector sources.
 #[test]
 fn custom_detectors_override_builtin_scanning_with_source_receipts() {
     use sha1::{Digest, Sha1};
@@ -279,6 +287,7 @@ fn custom_detectors_override_builtin_scanning_with_source_receipts() {
     );
 }
 
+/// Verifies that [`Fixture::run`] retains both `./`-prefixed and normalized path keys in `tree` across cyclic imports.
 #[test]
 fn path_aliases_retain_every_string_key_required_by_cycle_replay() {
     let fixture = Fixture::new();
@@ -306,6 +315,7 @@ fn path_aliases_retain_every_string_key_required_by_cycle_replay() {
     );
 }
 
+/// Verifies that [`Fixture::run`] returns empty `pathMap`, `tree`, and `scannedPaths` structures when `files` is empty.
 #[test]
 fn empty_file_list_returns_empty_graph_and_tree_structures() {
     let fixture = Fixture::new();

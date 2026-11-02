@@ -1,4 +1,4 @@
-//! Unit tests for tag [`pattern_order`] matching order and wildcard eligibility checks in `bit-object-import`.
+//! Unit tests for tag [`pattern_order`] matching order and wildcard eligibility checks.
 //!
 //! Verifies that overlapping patterns preserve outer pattern order and every wildcard matches an eligible component without duplicates.
 

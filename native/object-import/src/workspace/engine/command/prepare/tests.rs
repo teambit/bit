@@ -105,6 +105,7 @@ fn lane_addition_selection_counts_only_ids_absent_from_entire_bitmap() {
     assert!(!ids.contains("scope/new"));
 }
 
+/// Verifies that [`validate`] accepts `workspaceOnly: true` exclusively for `checkout head` and rejects it for `checkout latest` or `merge`.
 #[test]
 fn workspace_only_is_exclusive_to_checkout_head() {
     let root = std::env::temp_dir().join("bit-checkout-workspace-only-test");

@@ -1,4 +1,4 @@
-//! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]) in `bit-object-import`.
+//! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]).
 //!
 //! Validates scoped and unscoped staged component matching and rejects ambiguous unscoped names or missing versions.
 

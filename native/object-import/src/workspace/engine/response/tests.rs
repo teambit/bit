@@ -1,4 +1,4 @@
-//! Unit tests for [`canonical`] error progress retention ([`with_progress`], [`failure_data`]) in workspace responses.
+//! Unit tests for [`canonical`] error progress retention ([`with_progress`], [`failure_data`]) in workspace responses in `bit-object-import`.
 //!
 //! Ensures [`is_canonical`] errors preserve attached progress metadata via [`with_progress`] and [`failure_data`] without altering error messages or classes.
 

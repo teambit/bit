@@ -1,4 +1,4 @@
-//! Unit tests for parallel workspace file read batches ([`Directory`], [`response`]) and hash normalization.
+//! Unit tests for parallel workspace file read batches ([`Directory`], [`response`]) and hash normalization in `bit-object-import`.
 //!
 //! Verifies that parallel file reads match serial ordering, raw hashes, and normalized snapshot hashes in `bit-object-import`.
 

@@ -1,4 +1,4 @@
-//! Unit tests for fast-forward merge [`model`] and [`selection`] staging and deferred publication.
+//! Unit tests for fast-forward merge [`model`] and [`selection`] staging and deferred publication in `bit-object-import`.
 //!
 //! Ensures fast-forward merges stage updated component models without premature object writes in `bit-object-import`.
 

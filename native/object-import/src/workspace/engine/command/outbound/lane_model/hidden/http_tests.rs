@@ -1,4 +1,4 @@
-//! Unit tests for HTTP fetching ([`fetch_http`], [`model`]) of hidden lane model update-dependent objects.
+//! Unit tests for HTTP fetching ([`fetch_http`], [`model`]) of hidden lane model update-dependent objects in `bit-object-import`.
 //!
 //! Verifies [`tar`] [`ObjectItem`] stream extraction and [`GlobalConfig`] [`Network`] HTTP status handling for remote hidden lane models.
 

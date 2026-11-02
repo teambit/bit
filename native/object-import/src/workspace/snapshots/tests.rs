@@ -1,4 +1,4 @@
-//! Unit tests for retained workspace snapshot [`Observation`] and [`State`] ownership and LRU eviction.
+//! Unit tests for retained workspace snapshot [`Observation`] and [`State`] ownership and LRU eviction in `bit-object-import`.
 //!
 //! Validates [`MAX_BYTES`], [`MAX_FILES`], and [`MAX_TOKEN`] bounds for retained file observations in `bit-object-import`.
 

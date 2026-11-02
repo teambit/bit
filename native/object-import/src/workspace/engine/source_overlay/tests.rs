@@ -103,6 +103,7 @@ fn retained_ranges_validate_without_reading_unrelated_large_spool_prefix() {
     fs::write(path, bytes).unwrap();
     assert!(proof::verify(&overlay.proofs().unwrap()).is_err());
 }
+/// Verifies that [`Budget::overlay`] shares staged `package.json` manifest reads with [`resolve_one`] without writing `node_modules` to disk.
 #[test]
 fn staged_manifest_reads_share_the_retained_view() {
     let fixture = Fixture::new();
@@ -140,6 +141,7 @@ fn staged_manifest_reads_share_the_retained_view() {
     );
     assert!(!linked.exists());
 }
+/// Verifies that `dependency_graph::capture_overlay` traverses spooled [`SourceOverlay`] bodies at their logical paths without mutating disk files.
 #[test]
 fn graph_traverses_retained_bodies_at_original_paths() {
     let fixture = Fixture::new();
@@ -173,6 +175,7 @@ fn graph_traverses_retained_bodies_at_original_paths() {
     let proofs: Vec<proof::Proof> = serde_json::from_value(graph["readSet"].clone()).unwrap();
     proof::verify(&proofs).unwrap();
 }
+/// Verifies that [`resolve_one`] prefers a virtual `.ts` candidate in [`SourceOverlay`] over an on-disk `.js` file under `TypeScript` resolution.
 #[test]
 fn typescript_candidate_priority_includes_virtual_files() {
     let fixture = Fixture::new();
@@ -194,6 +197,7 @@ fn typescript_candidate_priority_includes_virtual_files() {
         ),
     );
 }
+/// Verifies that [`Budget::overlay`] resolves staged content through existing symlinks and invalidates [`proof`]s when the symlink is retargeted.
 #[test]
 #[cfg(unix)]
 fn existing_link_aliases_see_staged_content_and_retargeting_invalidates_proofs() {
@@ -222,6 +226,7 @@ fn existing_link_aliases_see_staged_content_and_retargeting_invalidates_proofs()
     assert!(proof::verify(&proofs).is_err());
 }
 
+/// Verifies that an empty sealed [`SourceOverlay`] produces an empty, verifiable [`proof`] slice.
 #[test]
 fn empty_sealed_overlay_produces_verifiable_empty_proofs() {
     let fixture = Fixture::new();

@@ -104,6 +104,7 @@ fn overlay_capture_hashes_native_contents_and_enforces_the_shared_byte_budget() 
     assert!(capture::all(&request, &pool).is_err());
 }
 
+/// Verifies that modifying a spooled callback overlay file invalidates the captured dependency freshness `readSet` receipt.
 #[test]
 fn overlay_spool_changes_invalidate_the_dependency_freshness_receipt() {
     use crate::workspace::engine::dependency_graph::proof;
@@ -118,6 +119,7 @@ fn overlay_spool_changes_invalidate_the_dependency_freshness_receipt() {
     assert!(!fixture.0.join("virtual.js").exists());
 }
 
+/// Verifies that [`capture::all`] normalizes a spooled `.bitmap` overlay using its logical `.bitmap` relative path.
 #[test]
 fn bitmap_overlay_normalizes_by_logical_path() {
     let fixture = Fixture::new();
@@ -139,6 +141,7 @@ fn bitmap_overlay_normalizes_by_logical_path() {
     assert_eq!(capture::all(&request, &pool).unwrap(), expected);
 }
 
+/// Verifies that [`capture::validate`] succeeds when a [`Target`] has an empty `source_overlays` map.
 #[test]
 fn target_without_source_overlays_passes_overlay_validation() {
     let fixture = Fixture::new();

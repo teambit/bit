@@ -1,4 +1,4 @@
-//! Unit tests for stash cross-component flattened dependency graph [`traverse`], [`key`], and [`Repository`] lookup.
+//! Unit tests for stash cross-component flattened dependency graph [`traverse`], [`key`], and [`Repository`] lookup in `bit-object-import`.
 //!
 //! Ensures stashed dependency graphs in [`HashMap`] inputs via [`traverse`], [`key`], and [`Repository`] reference existing component versions rather than new snapshot markers.
 

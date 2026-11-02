@@ -1,4 +1,4 @@
-//! Unit tests for workspace file [`equivalent`] byte-equivalence and [`frozen`] unchanged diff batching.
+//! Unit tests for workspace file [`equivalent`] byte-equivalence and [`frozen`] unchanged diff batching in `bit-object-import`.
 //!
 //! Ensures EOL/binary byte comparison via [`equivalent`] and parallel unchanged diff filtering via [`frozen`] avoid unnecessary `git` spawns in `bit-object-import`.
 

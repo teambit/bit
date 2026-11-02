@@ -1,4 +1,4 @@
-//! Unit tests for hidden lane [`Entry`] dependent package enrichment ([`enrich_packages`]) and trigger [`reports`].
+//! Unit tests for hidden lane [`Entry`] dependent package enrichment ([`enrich_packages`]) and trigger [`reports`] in `bit-object-import`.
 //!
 //! Confirms exact dependency-resolver package hydration and transitive dependent trigger ordering in `bit-object-import`.
 

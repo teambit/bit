@@ -1,4 +1,4 @@
-//! Unit tests for separating [`automatic`], [`normalized`], and [`projection`] forced merge dependency policies.
+//! Unit tests for separating [`automatic`], [`normalized`], and [`projection`] forced merge dependency policies in `bit-object-import`.
 //!
 //! Verifies that automatic dependency entries are extracted via [`automatic`] and [`normalized`] without mutating persisted merge config in `bit-object-import`.
 

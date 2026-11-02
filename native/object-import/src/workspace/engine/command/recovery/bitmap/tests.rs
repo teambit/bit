@@ -1,4 +1,4 @@
-//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`] in `bit-object-import`.
+//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`].
 //!
 //! Confirms that `.bitmap` config overrides are extracted cleanly via [`project`] and custom providers are rejected outside [`project_snapshot`].
 

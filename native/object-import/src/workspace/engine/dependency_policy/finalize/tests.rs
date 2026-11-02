@@ -1,4 +1,4 @@
-//! Unit tests for finalizing component automatic peer and plus-range dependencies via [`Request`] and [`apply`].
+//! Unit tests for finalizing component automatic peer and plus-range dependencies via [`Request`] and [`apply`] in `bit-object-import`.
 //!
 //! Confirms that automatic peer ranges follow workspace upgrades and keep snap versions exact in `bit-object-import`.
 

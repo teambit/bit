@@ -1,4 +1,4 @@
-//! Unit tests for binary raw workspace file reads ([`serve`], [`frame`]) and retained observations.
+//! Unit tests for binary raw workspace file reads ([`serve`], [`frame`]) and retained observations in `bit-object-import`.
 //!
 //! Ensures retained binary reads in [`Directory`] and [`POOL`] preserve BOM-stripped observations across subsequent disk deletions.
 

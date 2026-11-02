@@ -1,4 +1,4 @@
-//! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior in `bit-object-import`.
+//! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior.
 //!
 //! Verifies short hash prefix resolution via [`matching_for_separator`] and [`unique`] in [`Directory`] fixtures, retained object deduplication, and ambiguity errors.
 

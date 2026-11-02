@@ -141,6 +141,7 @@ fn divergent_head_resolves_remote_before_rejecting_merge_pending() {
             .contains(&json!("mergePending")),
     );
 }
+/// Writes a zlib-compressed `Version` object with `hash` and JSON `value` into `root/.bit/objects`.
 fn store_version(root: &Path, hash: &str, value: &Value) {
     use std::io::Write;
     let body = serde_json::to_vec(value).unwrap();
@@ -157,6 +158,7 @@ fn store_version(root: &Path, hash: &str, value: &Value) {
     std::fs::write(path, encoder.finish().unwrap()).unwrap();
 }
 
+/// Verifies that [`select`] marks `legitimate: false` and reports a not-found message when an explicit target version is absent from the component model.
 #[test]
 fn explicit_version_missing_from_model_reports_not_found_message() {
     let hash = "a".repeat(40);

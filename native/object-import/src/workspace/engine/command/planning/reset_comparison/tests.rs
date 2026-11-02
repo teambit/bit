@@ -1,4 +1,4 @@
-//! Unit tests for proving file content or inventory changes during checkout reset via [`prove_changed`] in `bit-object-import`.
+//! Unit tests for proving file content or inventory changes during checkout reset via [`prove_changed`].
 //!
 //! Ensures checkout reset proceeds via [`prove_changed`] only when actual file contents or relative paths differ, ignoring `.bitmap` and duplicate rows.
 

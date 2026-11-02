@@ -1,4 +1,4 @@
-//! Unit tests for post-restore [`State`] stale source [`proof`] rejection and [`apply`] error receipts.
+//! Unit tests for post-restore [`State`] stale source [`proof`] rejection and [`apply`] error receipts in `bit-object-import`.
 //!
 //! Confirms that concurrent edits after [`restore`] [`Record`] and [`Retained`] [`PreparedPlan`] preparation fail closed with an [`Apply`] [`Operation`] error receipt.
 

@@ -1,4 +1,4 @@
-//! Differential tests for canonical `Version` [`snapshot_projection`] and hashing in `bit-object-import`.
+//! Differential tests for canonical `Version` [`snapshot_projection`] and hashing.
 //!
 //! Validates [`js_json`] [`Value`] projection, pretty serialization, and semantic hash calculation against `@teambit/objects` via [`Command`].
 

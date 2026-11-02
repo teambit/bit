@@ -114,6 +114,7 @@ fn incomplete_frames_never_write_a_prefix() {
     }
 }
 
+/// Verifies that [`serve`] rejects relative file paths and invalid `overwrite` flag values before writing any files.
 #[test]
 fn rejects_relative_paths_and_invalid_flags_before_writes() {
     let directory = Directory::new();
@@ -129,6 +130,7 @@ fn rejects_relative_paths_and_invalid_flags_before_writes() {
     assert!(!first.exists());
 }
 
+/// Verifies that [`serve`] preserves file inodes, permissions, hard links, and symlink targets when overwriting on Unix.
 #[cfg(unix)]
 #[test]
 fn preserves_inode_mode_hard_links_and_symbolic_link_targets() {
@@ -152,6 +154,7 @@ fn preserves_inode_mode_hard_links_and_symbolic_link_targets() {
     assert!(fs::symlink_metadata(link).unwrap().is_symlink());
 }
 
+/// Verifies that [`serve`] rejects excessive file counts, path lengths, and payload sizes before allocating or writing.
 #[test]
 fn rejects_excessive_counts_paths_and_payloads_before_allocating_or_writing() {
     let directory = Directory::new();
@@ -171,6 +174,7 @@ fn rejects_excessive_counts_paths_and_payloads_before_allocating_or_writing() {
     assert!(!file.exists());
 }
 
+/// Verifies that [`serve`] replaces existing file contents when `overwrite` is `true`.
 #[test]
 fn overwrites_existing_file_when_overwrite_flag_is_true() {
     let directory = Directory::new();

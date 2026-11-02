@@ -1,4 +1,4 @@
-//! Unit tests for component log [`tags`] precedence and [`row`] removal metadata projection.
+//! Unit tests for component log [`tags`] precedence and [`row`] removal metadata projection in `bit-object-import`.
 //!
 //! Ensures normal tags override `orphanedVersions` labels and newest tags win ties in `bit-object-import`.
 

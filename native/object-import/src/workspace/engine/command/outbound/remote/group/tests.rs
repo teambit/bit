@@ -1,4 +1,4 @@
-//! Unit tests for `/etc/group` [`parse`] resolution and scope `groupName` [`name`] configuration in `bit-object-import`.
+//! Unit tests for `/etc/group` [`parse`] resolution and scope `groupName` [`name`] configuration.
 //!
 //! Checks exact group name matching via [`parse`], `root` group GID handling, and invalid `/etc/group` [`name`] configuration rejection.
 

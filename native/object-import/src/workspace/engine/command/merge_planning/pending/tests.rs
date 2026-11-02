@@ -1,4 +1,4 @@
-//! Unit tests for pending merge [`lane_id`] scope resolution in `bit-object-import`.
+//! Unit tests for pending merge [`lane_id`] scope resolution.
 //!
 //! Checks that `main` resolves against the component scope via [`lane_id`] while named lanes preserve their lane scope across string and object inputs.
 

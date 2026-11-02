@@ -1,4 +1,4 @@
-//! Unit tests for the persistent Node [`FileBridge`] remote action bridge process in `bit-object-import`.
+//! Unit tests for the persistent Node [`FileBridge`] remote action bridge process.
 //!
 //! Verifies request/response framing and [`FileBridge`] process reuse across multiple file-remote actions and error states.
 

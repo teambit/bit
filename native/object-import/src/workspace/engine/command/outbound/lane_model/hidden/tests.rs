@@ -1,4 +1,4 @@
-//! Unit tests for reconciling outbound lane `updateDependents` entries via [`merge`] and [`model`].
+//! Unit tests for reconciling outbound lane `updateDependents` entries via [`merge`] and [`model`] in `bit-object-import`.
 //!
 //! Checks reconciliation of advanced, diverged, remote-only, and promoted visible lane dependents in `bit-object-import`.
 

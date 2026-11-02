@@ -1,4 +1,4 @@
-//! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves in `bit-object-import`.
+//! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves.
 //!
 //! Verifies that aspect extensions upgrade edge types to `ext` while preserving dependency order and leaf nodes.
 

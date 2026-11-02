@@ -1,4 +1,4 @@
-//! Unit tests for local model [`object`] tag version and orphaned [`VersionState`] updates.
+//! Unit tests for local model [`object`] tag version and orphaned [`VersionState`] updates in `bit-object-import`.
 //!
 //! Verifies that newly tagged [`Material`], [`Participation`], and [`VersionState`] versions clear matching `orphanedVersions` entries and update `head` via [`object`].
 

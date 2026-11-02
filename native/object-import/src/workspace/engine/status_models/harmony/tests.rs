@@ -1,4 +1,4 @@
-//! Unit tests for Harmony `Version` schema [`project`]ion, [`validate`] checks, and semantic hashing.
+//! Unit tests for Harmony `Version` schema [`project`]ion, [`validate`] checks, and semantic hashing in `bit-object-import`.
 //!
 //! Verifies legacy flattened dependency normalization and unsupported schema rejection in `bit-object-import`.
 

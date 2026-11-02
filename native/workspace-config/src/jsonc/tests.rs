@@ -110,6 +110,7 @@ fn rejects_what_json_parse_rejects() {
     }
 }
 
+/// Verifies that [`Document::remove`] returns `false` for a nonexistent top-level key and leaves the document unchanged.
 #[test]
 fn removing_nonexistent_top_level_key_returns_false_and_preserves_document() {
     let mut document = Document::parse("{\n  \"a\": 1\n}").unwrap();

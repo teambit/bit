@@ -108,6 +108,7 @@ fn tag_stages_only_preexisting_head_missing_from_existing_history() {
     repository.validate().unwrap();
 }
 
+/// Verifies that [`tag_histories`] neither creates a missing `VersionHistory` object nor rewrites a history that already includes `current_head`.
 #[test]
 fn tag_does_not_create_missing_history_or_touch_complete_history() {
     let fixture = Fixture::new();
@@ -129,6 +130,7 @@ fn tag_does_not_create_missing_history_or_touch_complete_history() {
     assert!(objects.is_empty());
 }
 
+/// Verifies that [`tag_histories`] skips [`Material`] entries whose `current_head` is empty.
 #[test]
 fn tag_ignores_materials_with_empty_current_head() {
     let fixture = Fixture::new();

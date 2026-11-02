@@ -113,6 +113,7 @@ fn current_lane_stages_only_lane_heads_and_keeps_main_components_clean() {
     assert_eq!(result(input)["stagedComponents"], json!([]));
 }
 
+/// Verifies that [`result`] partitions `ComponentsPendingImport` into `importPendingComponents` while keeping other errors in `invalidComponents`.
 #[test]
 fn pending_import_is_partitioned_from_other_invalid_components_in_input_order() {
     let mut input = fixture();
@@ -136,6 +137,7 @@ fn pending_import_is_partitioned_from_other_invalid_components_in_input_order() 
     assert_eq!(output["modifiedComponents"], json!([]));
 }
 
+/// Verifies that [`result`] returns empty `modifiedComponents`, `stagedComponents`, and `invalidComponents` arrays when `targets` is empty.
 #[test]
 fn empty_targets_produce_clean_empty_status_sections() {
     let mut input = fixture();

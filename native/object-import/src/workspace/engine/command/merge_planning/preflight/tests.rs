@@ -1,4 +1,4 @@
-//! Unit tests for merge preflight [`validate_target`] file validation and dependent rejection in `bit-object-import`.
+//! Unit tests for merge preflight [`validate_target`] file validation and dependent rejection.
 //!
 //! Confirms that application files via [`validate_target`] and dependencies awaiting future snapshot replacement decline during preflight before autosnap allocation.
 

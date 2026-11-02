@@ -1,4 +1,4 @@
-//! Unit tests for [`Prepare`] resolve context lane model and version loading via [`load_models`].
+//! Unit tests for [`Prepare`] resolve context lane model and version loading via [`load_models`] in `bit-object-import`.
 //!
 //! Ensures lane model loading succeeds without requiring unrelated main branch version objects in `bit-object-import`.
 

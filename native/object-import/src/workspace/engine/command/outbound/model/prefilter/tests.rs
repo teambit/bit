@@ -1,4 +1,4 @@
-//! Unit tests for outbound [`Prepared`] and [`HistoryBytes`] export prefilter stale discovery rejection.
+//! Unit tests for outbound [`Prepared`] and [`HistoryBytes`] export prefilter stale discovery rejection in `bit-object-import`.
 //!
 //! Confirms that concurrent object store modifications between prefilter and preparation are rejected in `bit-object-import`.
 

@@ -1,4 +1,4 @@
-//! Unit tests for status context component [`configuration`] and [`component_id_matches`] checks.
+//! Unit tests for status context component [`configuration`] and [`component_id_matches`] checks in `bit-object-import`.
 //!
 //! Verifies environment extension validation via [`configuration`] and object/string component ID matching via [`component_id_matches`] in `bit-object-import`.
 

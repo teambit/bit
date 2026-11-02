@@ -1,4 +1,4 @@
-//! Unit tests for transitive dependent cascade cycle [`reports`] in `bit-object-import`.
+//! Unit tests for transitive dependent cascade cycle [`reports`].
 //!
 //! Ensures cyclic dependent graphs preserve candidate order via [`reports`], record triggering versions, and exclude explicitly selected components.
 

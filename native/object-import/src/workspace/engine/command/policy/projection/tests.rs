@@ -106,6 +106,7 @@ fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot()
     assert!(extensions(&stored, &stored, &state, &invalid_defaults, "@scope/component").is_err());
 }
 
+/// Verifies that `teambit.component/remove` removal and recovery configurations remain accepted passive merge inputs in `entries`.
 #[test]
 fn removal_and_recovery_configuration_remain_passive_merge_inputs() {
     let removed = json!([{"name":"teambit.component/remove","config":{"removed":true},"data":{}}]);
@@ -115,6 +116,7 @@ fn removal_and_recovery_configuration_remain_passive_merge_inputs() {
     assert_eq!(super::entries(&recovered).unwrap()[0]["config"], recovered[0]["config"]);
 }
 
+/// Verifies that `callbacks::extensions` accepts both string and object `extensionId` representations while rejecting duplicate base extension IDs.
 #[test]
 fn callback_extensions_accepts_string_and_object_extension_ids_and_rejects_duplicates() {
     let valid = json!([
@@ -129,6 +131,7 @@ fn callback_extensions_accepts_string_and_object_extension_ids_and_rejects_dupli
     assert!(super::callbacks::extensions(&duplicate).is_err());
 }
 
+/// Verifies that stored `teambit.pipelines/builder` artifact data is preserved as passive metadata by [`extensions`] and rejected as a load callback slot.
 #[test]
 fn stored_builder_artifacts_are_passive_metadata_not_a_load_callback() {
     let stored = json!([{"name":"teambit.pipelines/builder","config":{},"data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"a".repeat(40)}]}]}}]);

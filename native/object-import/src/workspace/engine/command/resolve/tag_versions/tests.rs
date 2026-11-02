@@ -1,4 +1,4 @@
-//! Unit tests for semantic version [`plan`]ning across [`Material`], [`Participation`], and [`VersionState`].
+//! Unit tests for semantic version [`plan`]ning across [`Material`], [`Participation`], and [`VersionState`] in `bit-object-import`.
 //!
 //! Ensures selected components use the requested release bump while auto-tagged dependents bump patch in `bit-object-import`.
 

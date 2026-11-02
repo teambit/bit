@@ -104,6 +104,7 @@ fn metadata_write_validates_proofs_before_publishing_on_supported_platforms() {
     assert!(prepared.validate().is_err());
 }
 
+/// Verifies that [`validate_destination`] rejects a directory at the `component.json` destination path without modifying its contents.
 #[test]
 fn metadata_write_rejects_nonregular_destination_without_changes() {
     let fixture = Fixture::new();
@@ -114,6 +115,7 @@ fn metadata_write_rejects_nonregular_destination_without_changes() {
     assert_eq!(fs::read(path.join("keep")).unwrap(), b"untouched");
 }
 
+/// Verifies that [`Prepared::commit`] preserves ownership and file mode on Linux while [`validate_destination`] rejects files with extended attributes.
 #[cfg(target_os = "linux")]
 #[test]
 fn config_commit_preserves_mode_and_rejects_stale_contents_and_attributes() {
@@ -140,6 +142,7 @@ fn config_commit_preserves_mode_and_rejects_stale_contents_and_attributes() {
     assert_eq!(fs::read(&path).unwrap(), b"replacement\n");
 }
 
+/// Verifies that `paths::capture` and [`proof::verify`] reject symlinked parent directories when capturing or validating `component.json` paths.
 #[cfg(unix)]
 #[test]
 fn config_parent_aliases_are_rejected_and_ancestor_replacement_invalidates_plan() {
@@ -161,6 +164,7 @@ fn config_parent_aliases_are_rejected_and_ancestor_replacement_invalidates_plan(
     assert!(!replacement.join("component.json").exists());
 }
 
+/// Verifies that [`document`] deduplicates repeated extension entries before partitioning `__specific` and propagated configurations.
 #[test]
 fn historical_duplicate_is_removed_before_specific_partitioning() {
     let stored = json!({"extensions":[

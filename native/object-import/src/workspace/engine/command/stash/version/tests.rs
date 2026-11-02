@@ -1,4 +1,4 @@
-//! Unit tests for detached stash `Version` [`Allocation`] and [`Component`] object [`prepare`] and log retention.
+//! Unit tests for detached stash `Version` [`Allocation`] and [`Component`] object [`prepare`] and log retention in `bit-object-import`.
 //!
 //! Verifies that detached stash versions in [`snapshots`] preserve [`Component`] and [`Allocation`] consumer log metadata, builder data, and graph edges via [`prepare`].
 

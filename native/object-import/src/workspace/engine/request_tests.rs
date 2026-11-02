@@ -1,4 +1,4 @@
-//! Unit tests for workspace engine [`Request`] deserialization and strict field checks in `bit-object-import`.
+//! Unit tests for workspace engine [`Request`] deserialization and strict field checks.
 //!
 //! Verifies `componentLog` and `commandOutboundPrepare` request wire payloads and unknown-field rejection.
 

@@ -1,4 +1,4 @@
-//! Unit tests for snap [`Options`] pattern filtering and negation guard rules via [`filter_pattern`].
+//! Unit tests for snap [`Options`] pattern filtering and negation guard rules via [`filter_pattern`] in `bit-object-import`.
 //!
 //! Checks new-before-modified candidate ordering, negation-only pattern rejection, and exact [`Options`] matches via [`filter_pattern`] in `bit-object-import`.
 

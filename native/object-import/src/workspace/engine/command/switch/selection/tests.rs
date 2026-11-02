@@ -1,4 +1,4 @@
-//! Unit tests for `switch --pattern` [`Entry`] multimatch [`filter`]ing and error messages.
+//! Unit tests for `switch --pattern` [`Entry`] multimatch [`filter`]ing and error messages in `bit-object-import`.
 //!
 //! Confirms multimatch inclusion/exclusion ordering, version suffix stripping, and no-match errors in `bit-object-import`.
 

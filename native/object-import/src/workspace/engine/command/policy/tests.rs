@@ -1,4 +1,4 @@
-//! Unit tests for activating written inactive targets via [`activate_inactive`] and [`workspace_id`] in [`Prepared`] workspace policy context.
+//! Unit tests for activating written inactive targets via [`activate_inactive`] and [`workspace_id`] in [`Prepared`] workspace policy context in `bit-object-import`.
 //!
 //! Ensures written inactive lane [`Row`] and [`Baseline`] targets become active while excluded or keep-ours rows stay untouched.
 

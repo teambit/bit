@@ -1,4 +1,4 @@
-//! Unit tests for shared [`Budgets`] output patch budgets across workspace diff [`Request`] and [`read`].
+//! Unit tests for shared [`Budgets`] output patch budgets across workspace diff [`Request`] and [`read`] in `bit-object-import`.
 //!
 //! Confirms that [`File`] diff generation via [`read`] and [`Request`] enforces shared raw, packed, and output [`Budgets`] [`Budget`] limits in `bit-object-import`.
 

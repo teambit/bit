@@ -1,4 +1,4 @@
-//! Unit tests for pending vs. explicit workspace component [`select`] order in `bit-object-import`.
+//! Unit tests for pending vs. explicit workspace component [`select`] order.
 //!
 //! Confirms that implicit pending selection via [`select`] follows pending order whereas explicit subsets preserve target order and reject duplicates.
 

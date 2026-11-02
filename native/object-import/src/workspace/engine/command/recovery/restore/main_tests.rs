@@ -1,4 +1,4 @@
-//! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged` in `bit-object-import`.
+//! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged`.
 //!
 //! Validates unique [`Main`] model backups and matching `.bit/index.json` entries prior to restoration and publication.
 

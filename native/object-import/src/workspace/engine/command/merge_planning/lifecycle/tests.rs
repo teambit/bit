@@ -1,4 +1,4 @@
-//! Unit tests for [`Prepared`] [`merge`] lifecycle persistence notifications on empty merges.
+//! Unit tests for [`Prepared`] [`merge`] lifecycle persistence notifications on empty merges in `bit-object-import`.
 //!
 //! Verifies that empty [`Prepared`] [`merge`] executions in [`scratch`] workspaces still trigger `onPostObjectsPersist` without writing `unmerged.json`.
 

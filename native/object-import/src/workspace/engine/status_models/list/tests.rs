@@ -1,4 +1,4 @@
-//! Unit tests for reading [`deprecated`] flags, [`lane_readme_of`], and [`parse_lane_heads`] mappings.
+//! Unit tests for reading [`deprecated`] flags, [`lane_readme_of`], and [`parse_lane_heads`] mappings in `bit-object-import`.
 //!
 //! Checks [`deprecated`], [`lane_readme_of`], and [`parse_lane_heads`] extraction from core extension configurations in `bit-object-import`.
 

@@ -1,4 +1,4 @@
-//! Unit tests for snapshot hash [`allocations`] uniqueness across [`Material`] components.
+//! Unit tests for snapshot hash [`allocations`] uniqueness across [`Material`] components in `bit-object-import`.
 //!
 //! Ensures distinct [`Material`] components with [`Participation`] and [`VersionState`] never share a snapshot hash via [`allocations`] and map cleanly by identity.
 

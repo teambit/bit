@@ -1,4 +1,4 @@
-//! Unit tests for workspace inventory directory prefix depth and count budgets via [`validate_prefixes`].
+//! Unit tests for workspace inventory directory prefix depth and count budgets via [`validate_prefixes`] in `bit-object-import`.
 //!
 //! Confirms that excessive path nesting or directory prefix counts decline via [`validate_prefixes`] before policy evaluation while root-level files pass.
 

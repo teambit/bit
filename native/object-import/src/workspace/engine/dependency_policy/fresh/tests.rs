@@ -118,6 +118,7 @@ fn type_packages_follow_workspace_merge_and_model_precedence() {
     );
 }
 
+/// Verifies that [`Fixture::run`] returns `grammarInputs` and `componentVersions` for linked workspace component packages and binds `component.json` in `readSet`.
 #[test]
 fn linked_component_versions_are_returned_for_semver_receipts() {
     let fixture = Fixture::new();
@@ -135,6 +136,7 @@ fn linked_component_versions_are_returned_for_semver_receipts() {
     fixture.write("comp/component.json", "{}");
     assert!(proof::verify(&read_set).is_err());
 }
+/// Verifies that [`Fixture::run`] records `UntrackedDependencies` issues for untracked relative files and declines incomplete `corePackages` mappings.
 #[test]
 fn detects_untracked_sources_and_rejects_incomplete_core_package_mapping() {
     let fixture = Fixture::new();
@@ -150,6 +152,7 @@ fn detects_untracked_sources_and_rejects_incomplete_core_package_mapping() {
     fixture.write("node_modules/@teambit/example/index.js", "module.exports = 1;");
     assert!(Fixture::run(fixture.request(&["index.js"])).is_err());
 }
+/// Verifies that [`proof::verify`] invalidates the captured `readSet` when a higher-priority nested `node_modules` package is added after [`Fixture::run`].
 #[test]
 fn resolution_proof_rejects_new_higher_priority_package() {
     let fixture = Fixture::new();
@@ -163,6 +166,7 @@ fn resolution_proof_rejects_new_higher_priority_package() {
     fixture.write("comp/node_modules/pkg/index.js", "module.exports = 2;");
     assert!(proof::verify(&read_set).is_err());
 }
+/// Verifies that [`proof::verify`] rejects a retargeted `node_modules` package symlink even when the replacement `package.json` manifest is identical.
 #[cfg(unix)]
 #[test]
 fn resolution_proof_rejects_retargeted_link_with_identical_manifest() {
@@ -182,6 +186,7 @@ fn resolution_proof_rejects_retargeted_link_with_identical_manifest() {
     std::os::unix::fs::symlink(fixture.0.join("second"), &link).unwrap();
     assert!(proof::verify(&read_set).is_err());
 }
+/// Verifies that `detect_overlay` projects identical `detected`, `componentVersions`, and `grammarInputs` results as the post-write workspace.
 #[test]
 fn retained_sources_project_the_same_raw_data_as_the_post_write_workspace() {
     let fixture = Fixture::new();
@@ -224,6 +229,7 @@ fn retained_sources_project_the_same_raw_data_as_the_post_write_workspace() {
     assert!(proof::verify(&proofs).is_err());
 }
 
+/// Verifies that [`Fixture::run`] preserves external component `packageName` and `peerVersionRange` metadata and binds external `package.json` manifests in `readSet`.
 #[test]
 fn installed_external_component_retains_package_identity_and_freshness() {
     let fixture = Fixture::new();
@@ -248,6 +254,7 @@ fn installed_external_component_retains_package_identity_and_freshness() {
     assert_eq!(peer["detected"]["allDependencies"]["peerDependencies"][0]["peerVersionRange"], "*");
 }
 
+/// Verifies that [`Fixture::run`] skips source graph and custom detector evaluation when `componentRoot` equals the workspace `root`.
 #[test]
 fn workspace_root_skips_source_graph_and_custom_detector_facts() {
     let fixture = Fixture::new();
@@ -279,6 +286,7 @@ fn workspace_root_skips_source_graph_and_custom_detector_facts() {
     assert!(proof::verify(&read_set).is_err());
 }
 
+/// Verifies that [`Fixture::run`] deduplicates `coreAspects` within each source file while retaining repeated entries across distinct source files.
 #[test]
 fn core_aspects_are_unique_per_source_file_but_repeated_across_files() {
     let fixture = Fixture::new();
@@ -304,6 +312,7 @@ fn core_aspects_are_unique_per_source_file_but_repeated_across_files() {
     assert_eq!(output["detected"]["allPackagesDependencies"]["packageDependencies"], json!({}));
 }
 
+/// Verifies that [`Fixture::run`] orders package-resolved `coreAspects` ahead of component-resolved `coreAspects` per source origin.
 #[test]
 fn core_aspects_keep_package_groups_before_component_groups_per_origin() {
     for component_id in [
@@ -344,6 +353,7 @@ fn core_aspects_keep_package_groups_before_component_groups_per_origin() {
     }
 }
 
+/// Verifies that [`Fixture::run`] returns empty `allDependencies` and `grammarInputs` when the component `files` slice is empty.
 #[test]
 fn empty_component_file_list_returns_empty_dependencies_and_valid_read_set() {
     let fixture = Fixture::new();

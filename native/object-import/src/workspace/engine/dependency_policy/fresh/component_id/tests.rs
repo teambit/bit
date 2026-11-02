@@ -1,4 +1,4 @@
-//! Unit tests for fresh dependency component ID [`serialize`] and [`set_version`] property order.
+//! Unit tests for fresh dependency component ID [`serialize`] and [`set_version`] property order in `bit-object-import`.
 //!
 //! Verifies that scoped and default-scope component IDs serialize keys in constructor order via [`serialize`] and [`set_version`] in `bit-object-import`.
 

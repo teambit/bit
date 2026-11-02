@@ -1,4 +1,4 @@
-//! Differential tests for `ModelComponent`, `Lane`, and `VersionHistory` [`snapshot_projection`] serialization.
+//! Differential tests for `ModelComponent`, `Lane`, and `VersionHistory` [`snapshot_projection`] serialization in `bit-object-import`.
 //!
 //! Compares native [`js_json`] and [`snapshot_projection`] object bodies and hashes against `@teambit/objects` via [`Command`] in `bit-object-import`.
 

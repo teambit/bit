@@ -1,4 +1,4 @@
-//! Unit tests for outbound lane snap selection up to the remote head via [`lane_versions`] and [`model`].
+//! Unit tests for outbound lane snap selection up to the remote head via [`lane_versions`] and [`model`] in `bit-object-import`.
 //!
 //! Ensures all unexported lane snaps are collected via [`lane_versions`] and [`model`] and traversal stops at the remote head in `bit-object-import`.
 

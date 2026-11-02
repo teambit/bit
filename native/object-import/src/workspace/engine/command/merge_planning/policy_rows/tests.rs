@@ -1,4 +1,4 @@
-//! Unit tests for merge policy [`sorted_files`] ordering and added component binding prefixes in `bit-object-import`.
+//! Unit tests for merge policy [`sorted_files`] ordering and added component binding prefixes.
 //!
 //! Validates `UTF-16` code-unit file sorting via [`sorted_files`] and model `bindingPrefix` inheritance for added components without fabricating metadata.
 

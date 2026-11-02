@@ -99,6 +99,7 @@ fn projected_controls_preserve_proof_forms_and_require_exact_bytes() {
     }
 }
 
+/// Verifies that `paths::staged` rejects a symlinked `.bit/staged-config` parent directory before removing an absent staged backup file.
 #[test]
 #[cfg(unix)]
 fn absent_staged_backup_rejects_symlink_parent_before_removal() {

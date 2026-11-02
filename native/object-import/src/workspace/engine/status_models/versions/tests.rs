@@ -1,4 +1,4 @@
-//! Unit tests for deduplicating and validating dependency model head references via [`include_heads`].
+//! Unit tests for deduplicating and validating dependency model head references via [`include_heads`] in `bit-object-import`.
 //!
 //! Ensures dependency model heads are appended once via [`include_heads`] and malformed hashes decline in `bit-object-import`.
 

@@ -1,4 +1,4 @@
-//! Differential qualification of published dependency placeholder resolution in `bit-object-import`.
+//! Differential qualification of published dependency placeholder resolution.
 //! Verifies [`is_plus`] and [`resolve`] against `@teambit/dependency-resolver`.
 //!
 //! Compares `+`, `+^`, `+~`, and `+>` range expansion via [`is_plus`] and [`resolve`] across valid, prerelease, and malformed version inputs using [`Command`].

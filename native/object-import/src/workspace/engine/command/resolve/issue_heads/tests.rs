@@ -1,4 +1,4 @@
-//! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs in `bit-object-import`.
+//! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs.
 //!
 //! Ensures missing issue head objects are proven absent via [`capture`] and [`Repository`] while corrupt existing objects fail closed on validation.
 

@@ -1,4 +1,4 @@
-//! Unit tests for hidden lane component metadata projection and package hydration via [`prepare_hidden_metadata`] in `bit-object-import`.
+//! Unit tests for hidden lane component metadata projection and package hydration via [`prepare_hidden_metadata`].
 //!
 //! Confirms that model-only hidden [`Captured`] [`Target`] components retain resolver data and hydrate `packageName` entries via [`prepare_hidden_metadata`].
 

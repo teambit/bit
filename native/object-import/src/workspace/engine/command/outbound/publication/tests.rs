@@ -1,4 +1,4 @@
-//! Unit tests for per-scope remote ref preparation ([`prepare_refs`]) and [`Selected`] host validation ([`validate_selected`]).
+//! Unit tests for per-scope remote ref preparation ([`prepare_refs`]) and [`Selected`] host validation ([`validate_selected`]) in `bit-object-import`.
 //!
 //! Ensures remote ref updates with [`HistoryBytes`] and [`ModelBytes`] are grouped per scope via [`prepare_refs`] and validated against [`Selected`] export targets via [`validate_selected`].
 

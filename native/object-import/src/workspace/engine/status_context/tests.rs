@@ -100,6 +100,7 @@ fn temporary_output_is_not_source_and_invalid_component_configuration_declines()
     assert!(fixture.context().is_ok());
 }
 
+/// Verifies that [`Fixture::context`] declines `package.json` files containing JSONC comments or exceeding the 1 MiB metadata budget.
 #[test]
 fn metadata_budget_and_non_json_packages_decline() {
     let fixture = Fixture::new();
@@ -109,6 +110,7 @@ fn metadata_budget_and_non_json_packages_decline() {
     assert!(fixture.context().is_err());
 }
 
+/// Verifies that `metadata` sets `currentLaneId` from `_bit_lane` without treating `_bit_lane` as a component target.
 #[test]
 fn lane_header_sets_current_lane_without_becoming_component_target() {
     let fixture = Fixture::new();
@@ -133,6 +135,7 @@ fn lane_header_sets_current_lane_without_becoming_component_target() {
     assert_eq!(value["targets"][0]["identity"], "test.scope/alpha");
 }
 
+/// Verifies that `controlReadSet` proofs in [`Fixture::context`] detect concurrent edits to `workspace.jsonc`, `.bitmap`, and `component.json`.
 #[test]
 fn control_proofs_cover_changed_and_new_component_configuration() {
     for file in ["workspace.jsonc", ".bitmap", "alpha/component.json"] {
@@ -146,6 +149,7 @@ fn control_proofs_cover_changed_and_new_component_configuration() {
     }
 }
 
+/// Verifies that [`Fixture::context`] declines when `workspace.jsonc` is absent from the workspace root.
 #[test]
 fn missing_workspace_configuration_declines_status_context_read() {
     let fixture = Fixture::new();

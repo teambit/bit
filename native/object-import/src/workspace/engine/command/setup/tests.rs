@@ -1,4 +1,4 @@
-//! Unit tests for command [`Prepare`] setup inactive metadata, [`component_controls`], and addition destination [`proof`]s.
+//! Unit tests for command [`Prepare`] setup inactive metadata, [`component_controls`], and addition destination [`proof`]s in `bit-object-import`.
 //!
 //! Confirms that inactive target control files in [`Directory`] workspaces via [`component_controls`] and [`lane_context`] addition [`proof`]s are revalidated before commit.
 

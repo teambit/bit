@@ -104,6 +104,7 @@ fn changed_lifecycles_and_deleted_imports_rebuild_depth_first_edges_with_reposit
     assert!(repository.validate().is_err());
 }
 
+/// Verifies that `previous::validate` requires `flattenedEdges` across diamond dependency graphs to match canonical depth-first adjacency order and edge lifecycle types.
 #[test]
 fn saved_diamond_graph_requires_exact_canonical_adjacency_order_and_lifecycle() {
     let directory = scratch::Directory::create().unwrap();

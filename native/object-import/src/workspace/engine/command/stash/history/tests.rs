@@ -1,4 +1,4 @@
-//! Unit tests for verifying published `VersionHistory` payloads via [`verify_published`] during stash.
+//! Unit tests for verifying published `VersionHistory` payloads via [`verify_published`] during stash in `bit-object-import`.
 //!
 //! Checks that replaced or corrupted [`ZlibEncoder`] payloads fail [`verify_published`] history verification under [`Budget`] bounds.
 

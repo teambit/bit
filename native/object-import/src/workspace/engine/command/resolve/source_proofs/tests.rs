@@ -1,4 +1,4 @@
-//! Unit tests for retaining BOM-stripped source observation [`proof`]s via [`retain`] until publication.
+//! Unit tests for retaining BOM-stripped source observation [`proof`]s via [`retain`] until publication in `bit-object-import`.
 //!
 //! Ensures captured BOM-prefixed sources in [`snapshots`] remain bound to their raw on-disk hash via [`retain`] and [`proof`] until commit.
 
