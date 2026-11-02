@@ -26,6 +26,7 @@ pub(crate) async fn initial(
     load_with_status(session, loaded, "initial", !classes_loaded).await
 }
 
+/// Query the host for live component directories in `phase` and optionally announce component loading.
 async fn load_with_status(
     session: &Session<'_>,
     loaded: &Loaded,

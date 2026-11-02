@@ -40,6 +40,7 @@ impl Id {
         }
     }
 
+    /// Return a copy of `self` with `version` set (treating `"latest"`, `"head"`, and empty strings as `None`).
     #[must_use]
     #[inline]
     pub fn with_version(&self, version: Option<String>) -> Self {

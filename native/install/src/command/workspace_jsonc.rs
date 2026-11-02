@@ -64,7 +64,7 @@ fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Re
     writeln!(metadata, "{file_id} {reason}")
 }
 
-// JsonVinyl persists through AbstractVinyl's eol.auto, after backing up the original bytes.
+/// Normalize line endings to platform `eol.auto` (`JsonVinyl` via `AbstractVinyl`).
 #[inline]
 fn platform_eol(text: String) -> String {
     if !cfg!(windows) && !text.contains('\r') {

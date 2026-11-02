@@ -12,6 +12,7 @@ const IMPORTER_DEP_TYPES: [&str; 3] = ["dependencies", "devDependencies", "optio
 /// Snapshot dependency fields (`dependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
 const SNAPSHOT_DEP_TYPES: [&str; 2] = ["dependencies", "optionalDependencies"];
 
+/// Borrow the mutable JSON object under `key` in `lockfile`, if present.
 #[inline]
 fn object_mut<'a>(
     lockfile: &'a mut Map<String, Value>,

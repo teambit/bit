@@ -40,6 +40,7 @@ struct Rewriter<'a> {
 }
 
 impl Rewriter<'_> {
+    /// Look up the `peerDependencies` object map for `package` in `self.packages`.
     #[inline]
     fn peer_dependencies(&self, package: &str) -> Option<&Map<String, Value>> {
         self.packages

@@ -78,7 +78,7 @@ pub(super) fn allowed_scripts(
     Ok(Some(merged))
 }
 
-/// `resolveScriptPolicies`.
+/// Resolve the effective [`ScriptPolicy`] (`resolveScriptPolicies`) from `allow_scripts`, `dangerously_allow_all_scripts`, and `never_built`.
 pub(super) fn resolve(
     allow_scripts: Option<&IndexMap<String, Value>>,
     dangerously_allow_all_scripts: bool,

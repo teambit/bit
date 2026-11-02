@@ -51,6 +51,7 @@ pub fn auto_detect(
     }
 }
 
+/// Return `true` when any lifecycle slot in `detected.components` references package `name`.
 #[inline]
 fn uses_component(detected: &Detected, name: &str) -> bool {
     detected.components

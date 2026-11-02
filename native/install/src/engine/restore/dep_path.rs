@@ -7,6 +7,7 @@ use pnpm_deps_path::{DepPathSuffixIndex, index_of_dep_path_suffix};
 /// Parsed lockfile dependency path (`name@version(patch_hash=…)(peers)`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct DependencyPath {
+    /// Package name extracted from the dependency path.
     pub name: Option<String>,
     /// A valid semver version.
     pub version: Option<String>,

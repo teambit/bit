@@ -81,7 +81,7 @@ fn peer_issues(
     Ok(issues.remove("."))
 }
 
-/// A full fresh resolve, never frozen, never short-circuited, that writes nothing.
+/// Configure `install` for a full, non-frozen, dry-run peer dependency resolution pass.
 #[inline]
 fn configure<'a>(
     install: Install<'a, Vec<DependencyGroup>>,

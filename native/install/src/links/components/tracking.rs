@@ -60,6 +60,7 @@ pub(super) fn persist(
     Ok(changed)
 }
 
+/// Normalize `version` and `componentId.version` on a tracked component `manifest`.
 #[inline]
 pub(super) fn version(
     manifest: &mut Manifest,

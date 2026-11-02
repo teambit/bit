@@ -15,6 +15,7 @@ pub use components::{
     ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, component_package_copies,
     link_components, link_prepared_component, link_tracking_components, prepared_package_manifest,
 };
+/// Re-exported `resolveFromEnv` package link resolver and types.
 pub use env_links::{EnvLinks, resolved_from_env_links};
 pub use root::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,

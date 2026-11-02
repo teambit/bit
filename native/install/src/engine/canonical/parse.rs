@@ -25,6 +25,7 @@ pub(super) struct Paths {
     pub(super) bit: PathBuf,
 }
 
+/// Borrowed registry, auth, proxy, and network JSON maps from a canonical install request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Network<'a> {
     pub(super) registry_map: &'a Map<String, Value>,

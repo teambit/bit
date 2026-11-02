@@ -71,9 +71,7 @@ pub fn resolved_from_env_links(
     result
 }
 
-/// The env's `aspectPath`: a core env's directory in the running bit, otherwise its
-/// package in the workspace `node_modules` (`getComponentPackagePath`), named as the
-/// workspace component or the env's package is.
+/// Resolve the environment package directory (`aspectPath`) for `env_id` from core aspects, workspace components, or `node_modules`.
 fn env_dir(
     root: &Path,
     info: &HostInfo,

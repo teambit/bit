@@ -30,6 +30,7 @@ pub struct Registry {
 /// The default registry plus one registry per scope (scope names without `@`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Registries {
+    /// Default package registry used for unscoped or unmapped packages.
     pub default: Registry,
     pub scopes: IndexMap<String, Registry>,
 }

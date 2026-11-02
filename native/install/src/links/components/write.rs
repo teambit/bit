@@ -14,6 +14,7 @@ pub(super) fn package(path: &Path, manifest: &Manifest) -> io::Result<bool> {
 pub(super) fn tracking(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, true)
 }
+/// Serialize and atomically replace `path` with `manifest`, returning whether its compact JSON changed.
 fn write(path: &Path, manifest: &Manifest, tracking: bool) -> io::Result<bool> {
     if is_symlink(path) {
         return Err(io::Error::new(

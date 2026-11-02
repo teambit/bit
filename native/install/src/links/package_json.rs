@@ -23,11 +23,11 @@ pub(super) struct PackageJsonContext<'a> {
     pub cloud_domain: &'a str,
     /// Props from the env and aspect transformers (`Object.assign`ed over the manifest).
     pub props: Value,
+    /// Whether to apply the Windows `_src` layout to `types`.
     pub windows: bool,
     /// The component's env is of type `aspect`.
     pub is_aspect: bool,
 }
-
 /// The manifest after `createFromComponent` and the dependency-resolver and pkg transformers.
 #[inline]
 pub(super) fn transformed(

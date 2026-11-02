@@ -40,6 +40,7 @@ pub struct DependencyResolverConfig {
     pub policy: Value,
     /// Configured package manager aspect ID (`teambit.dependencies/pnpm` or `teambit.dependencies/yarn`).
     pub package_manager: Option<String>,
+    /// Outbound HTTP proxy URL configured in `dependency-resolver`.
     pub proxy: Option<String>,
     pub https_proxy: Option<String>,
     pub ca: Option<String>,

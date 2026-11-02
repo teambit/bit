@@ -23,6 +23,7 @@ use std::{
 pub(super) struct Session {
     /// Interned static engine configuration for this invocation.
     config: &'static Config,
+    /// Shared throttled HTTP client for registry requests.
     client: Arc<ThrottledClient>,
     lockfile: LazyLockfile,
     pub lockfile_path: PathBuf,

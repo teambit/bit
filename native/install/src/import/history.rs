@@ -93,7 +93,7 @@ pub fn check(history: &Value, reference: &str) -> Completeness {
     if missing_from(history, reference) { Completeness::Incomplete } else { Completeness::Complete }
 }
 
-/// `getAllHashesFrom(start).missing` is not empty.
+/// Return `true` when `getAllHashesFrom(start).missing` is non-empty for `history`.
 fn missing_from(history: &Value, start: &str) -> bool {
     let start = start.trim();
     let by_hash = versions_by_hash(history);

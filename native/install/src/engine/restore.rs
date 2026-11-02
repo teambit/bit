@@ -31,6 +31,7 @@ use std::{collections::HashSet, io};
 /// Merged, serialized `DependenciesGraph` input used to restore `pnpm-lock.yaml` before installation.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct RestoreInput {
+    /// Merged `DependenciesGraph` JSON object.
     pub graph: Value,
     /// `--restore` fails the install on a graph it cannot convert; a restore
     /// Bit attempts on its own is best-effort.

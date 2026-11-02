@@ -72,7 +72,7 @@ fn explicit(options: &InstallOptions) -> Option<RestoreInput> {
     Some(RestoreInput { graph, fail_on_error: options.restore })
 }
 
-/// `formatWarningSummary`.
+/// Emit a yellow warning summary line (`formatWarningSummary`) to the install console.
 #[inline]
 fn warn(session: &Session<'_>, message: &str) {
     let output = &session.output;

@@ -54,6 +54,7 @@ impl Captured {
             .then_some(Self { vars, cwd })
     }
 
+    /// Run `read` with `self` installed as the thread-local [`CAPTURED`] environment snapshot.
     #[inline]
     pub(super) fn with<ReadValue>(&self, read: impl FnOnce() -> ReadValue) -> ReadValue {
         let previous = CAPTURED.with(|slot| slot.replace(Some(self.clone())));

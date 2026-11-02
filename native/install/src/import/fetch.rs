@@ -17,6 +17,7 @@ use std::io;
 /// Concurrent remote scope object fetcher dispatching across HTTP and `file://` transports.
 #[derive(Debug, Clone, Copy)]
 pub struct Fetcher<'a> {
+    /// Configured remote scopes and hub resolver.
     pub remotes: &'a Remotes,
     pub network: &'a Network,
     /// How many remotes are fetched at the same time (`concurrentFetchLimit`).

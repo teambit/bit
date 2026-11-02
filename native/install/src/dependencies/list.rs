@@ -88,7 +88,7 @@ fn component(
     }
 }
 
-/// Configured aspects that are components (not core aspects) are dev dependencies.
+/// Collect configured non-core aspect extensions on `subject.component` as dev [`ComponentDependency`] entries.
 fn extensions(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,

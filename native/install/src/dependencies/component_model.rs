@@ -81,6 +81,7 @@ impl ComponentModel {
     }
 }
 
+/// Return `true` when `extension` is the `teambit.dependencies/dependency-resolver` extension entry.
 #[inline]
 fn is_dependency_resolver_extension(extension: &Value) -> bool {
     crate::workspace::extension_name(extension)

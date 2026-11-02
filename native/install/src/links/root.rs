@@ -75,7 +75,7 @@ pub fn linked_root_deps(
     Ok(links)
 }
 
-/// `linkNonExistingCoreAspects`: the core aspects the workspace does not author.
+/// Populate `links` with `link:<dir>` entries for core aspects not authored in the workspace (`linkNonExistingCoreAspects`).
 fn core_aspect_links(
     root: &Path,
     info: &HostInfo,

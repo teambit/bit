@@ -59,6 +59,7 @@ fn root_dependencies(
         .collect()
 }
 
+/// Parse the target package names from the `overrides` map of `lockfile`.
 #[inline]
 fn overridden(lockfile: &Map<String, Value>) -> io::Result<HashSet<String>> {
     lockfile

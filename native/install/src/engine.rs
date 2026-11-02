@@ -94,6 +94,7 @@ impl EngineSettings {
 /// Where packages come from and how to reach them.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct RegistrySettings {
+    /// Default and scoped package registries.
     pub registries: Registries,
     /// `Authorization` header values keyed by nerf-darted registry URI, plus
     /// `""` for the default registry (`buildAuthHeaderByUri`).

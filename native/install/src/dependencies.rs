@@ -85,10 +85,10 @@ pub struct Workspace<'a> {
     pub components: &'a [WorkspaceComponent],
     /// The workspace policy `toManifest()`: `[dependencies, peerDependencies]`.
     pub manifest: [IndexMap<String, String>; 2],
+    /// Optional parsed workspace root `package.json` manifest.
     pub root_package_json: Option<&'a Manifest>,
     pub options: &'a DependencyOptions,
 }
-
 impl Workspace<'_> {
     /// The `.bitmap` id matching `id` without version (`getIdFromBitMap`).
     #[must_use]

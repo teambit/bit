@@ -36,6 +36,7 @@ pub struct Importer<'a> {
     pub fetcher: &'a Fetcher<'a>,
     /// The workspace scope name: ids of this scope are local, never fetched.
     pub local_scope: &'a str,
+    /// Optional remote lane object when the workspace is checked out on a remote lane.
     pub lane: Option<&'a RemoteLane>,
     /// Where the `ObjectFetcher` loader messages go; `None` keeps the import silent.
     pub output: Option<&'a Output>,

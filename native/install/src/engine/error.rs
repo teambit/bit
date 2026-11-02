@@ -11,6 +11,7 @@ use std::{error::Error, fmt, io};
 /// version found") downcast with [`EngineError::from_io`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EngineError {
+    /// Optional `ERR_PNPM_*` diagnostic code.
     pub code: Option<String>,
     pub message: String,
     pub hint: Option<String>,

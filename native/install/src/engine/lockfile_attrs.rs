@@ -92,7 +92,7 @@ pub(super) fn remove_for_update(root: &Path, update_all: bool) -> io::Result<Opt
     Ok(Some(contents))
 }
 
-/// Put back a lockfile [`remove_for_update`] removed.
+/// Restore a `pnpm-lock.yaml` file that [`remove_for_update`] removed before a failed install.
 #[inline]
 pub(super) fn restore_after_failure(root: &Path, contents: Option<Vec<u8>>) -> io::Result<()> {
     if let Some(contents) = contents {

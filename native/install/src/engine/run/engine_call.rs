@@ -60,6 +60,7 @@ impl EngineCall {
         receiver.await.map_err(|_| io::Error::other("the install engine thread panicked"))?
     }
 
+    /// Execute the package installation on the dedicated engine thread and collect its [`Outcome`].
     fn run(self) -> io::Result<Outcome> {
         let raw_projects = self.projects();
         let hooks = self.hooks(&raw_projects);

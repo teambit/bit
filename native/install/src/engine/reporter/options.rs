@@ -6,7 +6,7 @@ mod tests;
 use serde_json::Value;
 use std::{io, time::Duration};
 
-/// Convert an optional `throttleProgress` JSON [`Value`] into a reporter throttle [`Duration`].
+/// Convert an optional `throttleProgress` JSON [`Value`] into a reporter throttle [`Duration`] using N-API `ToUint32` semantics.
 #[inline]
 pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     let Some(value) = value else { return Ok(None) };

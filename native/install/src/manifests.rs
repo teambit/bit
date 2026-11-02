@@ -51,6 +51,7 @@ pub struct ManifestInput<'a> {
     pub dependencies: &'a IndexMap<String, ComponentDependencies>,
     /// Merged workspace and environment dependency policies.
     pub policies: Policies<'a>,
+    /// Workspace `teambit.dependencies/dependency-resolver` configuration.
     pub config: &'a DependencyResolverConfig,
     pub options: &'a ManifestOptions,
     pub context: ManifestContext<'a>,

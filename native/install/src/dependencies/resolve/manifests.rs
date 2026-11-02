@@ -93,6 +93,7 @@ pub(super) fn bit_aspect(resolved: Resolved) -> Resolved {
     }
 }
 
+/// Classify a found `package.json` `manifest` (`resolvePackageData`) as a component, package, or missing dependency.
 #[inline]
 pub(super) fn from_manifest(manifest: &Value, name: &str) -> Resolved {
     let Some(package_name) = manifest["name"]

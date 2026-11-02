@@ -56,7 +56,7 @@ impl<'a> Detectors<'a> {
         Self { host, core_aspects, workspace_aspects, asked: false, without: HashSet::new() }
     }
 
-    /// The files of `component` a custom detector supports, by component-relative path.
+    /// Return the files of `component` supported by a custom detector, keyed by component-relative path.
     pub async fn get(
         &mut self,
         component: &WorkspaceComponent,

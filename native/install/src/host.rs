@@ -87,6 +87,7 @@ impl HostInfo {
     }
 }
 
+/// Metadata describing a Bit core aspect or core package (`[id, package_name, dir]`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CoreAspect {

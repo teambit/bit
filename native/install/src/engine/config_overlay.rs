@@ -26,6 +26,7 @@ use std::{
 pub(super) struct CallOverlay<'a> {
     /// Package version overrides for the install call.
     pub overrides: &'a DependencyMap,
+    /// Optional forced `@teambit/harmony` version to preserve in dependency manifests.
     pub forced_harmony_version: Option<&'a str>,
     pub external_dependencies: &'a [String],
     pub update_all: bool,

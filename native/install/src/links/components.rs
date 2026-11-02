@@ -59,10 +59,10 @@ pub struct FileLink {
     /// A symlink was already there and was kept.
     pub existed_before: bool,
 }
-
 /// The links of one component.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ComponentLinks {
+    /// Component identifier without version (`scope/name`).
     pub id: String,
     pub links: Vec<FileLink>,
 }

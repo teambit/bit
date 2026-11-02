@@ -55,6 +55,7 @@ impl<'a> Progress<'a> {
         Some(Self { output, message: message.to_string(), added: Cell::new(0) })
     }
 
+    /// Increment the downloaded object counter and emit a status line every 100 objects.
     #[inline]
     fn added(&self) {
         let added = self.added.get() + 1;

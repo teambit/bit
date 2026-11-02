@@ -20,8 +20,7 @@ const GET_CURRENT_USER: &str = "\n    query GET_ME {\n      me {\n        id\n  
 /// How long one lookup may take before the install goes on as `anonymous`.
 pub const LOOKUP_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// The username of the logged-in cloud user, when `global` holds a token and
-/// the cloud answers within `timeout`.
+/// Resolve the username of the logged-in Bit Cloud user when `global` holds a token and the cloud answers within `timeout`.
 pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<String> {
     let token = global_string(global, "user.token")?;
     if token.contains(['\r', '\n', '\0']) {

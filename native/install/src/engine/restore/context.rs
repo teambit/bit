@@ -45,6 +45,7 @@ pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
     context
 }
 
+/// Merge shared resolution context keys ([`KEYS`]) from `existing` and `graph` into `merged`.
 #[inline]
 pub(super) fn merge(
     existing: &Map<String, Value>,

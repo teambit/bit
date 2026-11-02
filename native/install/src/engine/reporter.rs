@@ -65,6 +65,7 @@ impl ReporterSettings {
             color: info.color,
         }
     }
+    /// Apply an optional `throttleProgress` JSON value to `self.throttle_progress`.
     #[inline]
     pub(crate) fn apply_throttle_progress(
         &mut self,

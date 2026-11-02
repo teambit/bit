@@ -42,6 +42,7 @@ pub fn specifiers(path: &Path) -> io::Result<Vec<String>> {
     Ok(dedupe(found))
 }
 
+/// Read `path` as UTF-8 (stripping any UTF-8 BOM) when it is a regular file of at most [`MAX_SOURCE`] bytes.
 fn read(path: &Path) -> io::Result<Option<String>> {
     match fs::metadata(path) {
         Ok(metadata) if metadata.len() > MAX_SOURCE || !metadata.is_file() => return Ok(None),

@@ -56,7 +56,7 @@ pub fn is_valid_package_name(name: &str) -> bool {
     scoped_parts(name).is_some_and(|(user, package)| is_url_safe(user) && is_url_safe(package))
 }
 
-/// `/^(?:@([^/]+?)\/)?([^/]+?)$/` for a scoped name.
+/// Split a scoped `@<user>/<package>` name into `(user, package)` (`/^(?:@([^/]+?)\/)?([^/]+?)$/`).
 #[inline]
 fn scoped_parts(name: &str) -> Option<(&str, &str)> {
     let (user, package) = name.strip_prefix('@')?.split_once('/')?;

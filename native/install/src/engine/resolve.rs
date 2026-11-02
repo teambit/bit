@@ -21,6 +21,7 @@ use std::io;
 /// Resolved package version metadata (`ResolvedPackageVersion` in `lynx.ts`).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ResolvedVersion {
+    /// Resolved package name from the manifest or specifier.
     pub package_name: String,
     /// The resolved version, or the normalized spec of a non-registry
     /// dependency (git URL, path).

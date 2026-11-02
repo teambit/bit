@@ -64,7 +64,7 @@ pub fn needs_invalidation(root: &Path, cache: &Path) -> io::Result<bool> {
     Ok(last_modified > first_entered)
 }
 
-/// `Math.min`: `NaN` wins.
+/// Compute `Math.min(left, right)` with JavaScript `NaN`-propagation semantics.
 #[inline]
 fn js_min(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() { f64::NAN } else { left.min(right) }

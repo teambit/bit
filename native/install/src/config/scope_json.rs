@@ -95,6 +95,7 @@ impl ScopeJson {
     }
 }
 
+/// Parse `scope.json` as strict JSON, falling back to `JSONC` when comments or trailing commas are present.
 #[inline]
 fn parse_scope_json(text: &str) -> io::Result<ScopeJson> {
     if let Ok(parsed) = serde_json::from_str(text) {

@@ -12,7 +12,7 @@ use std::time::Duration;
 /// Documentation link appended when a legacy environment requires a second `bit install` pass.
 const DOCS: &str = "Read more about how to fix this issue in: https://bit.dev/blog/using-a-static-dependency-policy-in-a-legacy-env-lihfbt9b";
 
-/// The final report.
+/// Format the final `bit install` summary line and any legacy-environment warning banner.
 pub fn format(
     output: &Output,
     components: usize,

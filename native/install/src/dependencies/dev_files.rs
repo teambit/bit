@@ -84,6 +84,7 @@ pub struct EnvPatterns<'a> {
 }
 
 impl<'a> EnvPatterns<'a> {
+    /// Construct a cached [`EnvPatterns`] loader backed by `reader`, `host`, and workspace `config`.
     #[inline]
     pub fn new(
         reader: &'a EnvJsoncReader<'a>,

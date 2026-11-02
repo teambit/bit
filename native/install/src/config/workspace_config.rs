@@ -93,6 +93,7 @@ pub fn aspect_id_without_version(id: &str) -> &str {
 }
 
 impl WorkspaceConfig {
+    /// Read and parse `<root>/workspace.jsonc` into a typed [`WorkspaceConfig`].
     pub fn load(root: &Path) -> io::Result<Self> {
         let path = root.join("workspace.jsonc");
         let text = fs::read_to_string(&path)?;

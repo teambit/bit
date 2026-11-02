@@ -8,6 +8,7 @@ pub mod keys {
     pub const CLOUD_DOMAIN: &str = "cloud_domain";
     /// Global config key (`registry`) overriding the default package registry URL.
     pub const REGISTRY_URL: &str = "registry";
+    /// Global config key (`user.token`) storing the Bit Cloud authentication token.
     pub const USER_TOKEN: &str = "user.token";
     pub const USER_NAME: &str = "user.name";
     pub const USER_EMAIL: &str = "user.email";

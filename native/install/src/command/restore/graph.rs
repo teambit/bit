@@ -67,6 +67,7 @@ fn merge_root(graph: &mut Value, incoming: &Value) {
     }
 }
 
+/// Merge a single direct neighbor edge `direct` into `root`'s `neighbours` list.
 fn merge_direct(root: &mut Value, direct: &Value) {
     let Some(neighbours) = root["neighbours"].as_array_mut() else { return };
     let Some(existing) = neighbours.iter_mut().find(|existing| same_direct(existing, direct))

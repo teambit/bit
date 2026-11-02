@@ -25,6 +25,7 @@ pub fn history_hash(lane_hash: &str) -> String {
 /// The cloud username lookup needs the network; the config name is its fallback.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Identity {
+    /// Configured `user.name` from Bit's global config.
     pub username: Option<String>,
     pub email: Option<String>,
 }

@@ -85,6 +85,7 @@ fn source_links(
     Ok(())
 }
 
+/// Return `true` when `root_dir` points to the workspace root (`""` or `"."`).
 #[inline]
 fn is_workspace_root_dir(root_dir: &str) -> bool {
     let trimmed = root_dir

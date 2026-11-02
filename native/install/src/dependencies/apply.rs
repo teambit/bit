@@ -39,6 +39,7 @@ pub fn early(
     origin
 }
 
+/// Remove runtime and dev component dependencies and missing-package entries marked as ignored in `deps`.
 fn remove_ignored_components(deps: &FieldMaps, detected: &mut Detected) {
     let runtime = ignored(deps, Lifecycle::Runtime);
     let dev = ignored(deps, Lifecycle::Dev);

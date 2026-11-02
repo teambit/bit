@@ -20,6 +20,7 @@ use std::{fs, io, path::Path};
 pub struct ProxySettings {
     /// Outgoing HTTP proxy URL, if configured.
     pub http_proxy: Option<String>,
+    /// Outgoing HTTPS proxy URL, if configured.
     pub https_proxy: Option<String>,
     pub no_proxy: Option<Value>,
 }

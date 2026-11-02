@@ -82,7 +82,7 @@ fn file_tree(
     }
     Ok(tree)
 }
-
+/// Record a single [`Resolved`] import result into the appropriate bucket of `tree`.
 fn classify(tree: &mut FileTree, resolved: Resolved) {
     match resolved {
         Resolved::Ignored | Resolved::Internal | Resolved::CoreAspect(_) => {}

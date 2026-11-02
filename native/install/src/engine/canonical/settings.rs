@@ -49,7 +49,7 @@ pub(super) fn prepare(request: &Request<'_>, info: &HostInfo) -> Option<Prepared
     super::super::config_overlay::install_config(&settings, &overlay).ok()?;
     Some((settings, install_options, plan))
 }
-
+/// Populate store, cache, import method, and `pnpmHomeDir` settings on `settings` from `request`.
 fn apply_store(settings: &mut EngineSettings, request: &Request<'_>) -> Option<()> {
     settings.store.store_dir.clone_from(&request.paths.store);
     settings.store.cache_dir.clone_from(&request.paths.cache);

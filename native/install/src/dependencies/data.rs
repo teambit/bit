@@ -52,6 +52,7 @@ pub struct Detected {
     pub missing_files: IndexMap<String, Vec<String>>,
     /// `UntrackedDependencies`: importing file → files no component tracks.
     pub untracked: IndexMap<String, Untracked>,
+    /// Core Bit aspect IDs imported by the component's files.
     pub core_aspects: Vec<String>,
 }
 

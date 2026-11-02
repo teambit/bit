@@ -81,6 +81,7 @@ pub(super) fn settings_with_base(
     })
 }
 
+/// Build [`RegistrySettings`] from the base pnpm `Config`, `dependency-resolver` config, and global config.
 fn registry_settings(
     base: &Config,
     config: &DependencyResolverConfig,

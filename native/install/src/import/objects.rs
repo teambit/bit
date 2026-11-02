@@ -22,8 +22,8 @@ pub struct Parsed {
     pub kind: String,
     pub content: Vec<u8>,
 }
-
 impl Parsed {
+    /// Parse `self.content` as JSON (or `JSONC`) into a [`Value`].
     #[inline]
     pub fn json(&self) -> io::Result<Value> {
         serde_json::from_slice(&self.content)
