@@ -94,6 +94,7 @@ fn matches_object_hash_short_sha1() {
     assert_eq!(object_hash_short("/tmp/test-ws"), "4d90daa1e");
 }
 
+/// Verifies that [`parse_subcommand`] returns `None` for an unrecognized `capsule` subcommand.
 #[test]
 fn unrecognized_capsule_subcommand_returns_none() {
     assert_eq!(parse_subcommand(&["unknown-subcommand"]), None);

@@ -94,6 +94,7 @@ fn merges_bitmap_contents_across_strategies_and_detects_conflicts() {
 }
 
 /// Verifies that [`merge_bitmap_contents`] returns an error when given malformed JSON input.
+/// Confirms invalid JSON strings fail before any merge strategy is applied.
 #[test]
 fn merge_bitmap_contents_with_invalid_json_returns_error() {
     assert!(merge_bitmap_contents("not-json", "{}", "ours").is_err());

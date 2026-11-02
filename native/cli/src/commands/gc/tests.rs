@@ -74,6 +74,7 @@ fn parses_gc_options_and_keep_versions() {
     assert_eq!(format_bytes(1536), "1.5 KB");
 }
 
+/// Verifies that [`format_bytes`] formats megabyte quantities with one decimal place (`"1.0 MB"`).
 #[test]
 fn formats_megabyte_quantities_with_one_decimal_place() {
     assert_eq!(format_bytes(1_048_576), "1.0 MB");

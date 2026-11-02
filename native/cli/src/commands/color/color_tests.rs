@@ -5,6 +5,7 @@
 use super::Chalk;
 
 /// Verifies `chalk.red(...)` and single-style wrapping with level 1 in `chalk` 4.1.2.
+/// Covers empty strings, spaces, LF/CRLF line breaks, and nested bold resets.
 #[test]
 fn wraps_like_chalk() {
     let chalk = Chalk::new(true);

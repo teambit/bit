@@ -51,6 +51,7 @@ fn mixed_type_reports_decline_before_stray_cleanup_or_collection() {
 }
 
 /// Verifies that an empty [`Plan`] passes [`Plan::validate`] and [`Plan::execute`] without mutating the scope.
+/// Confirms zero-deletion plans succeed even when `objects/` does not yet exist.
 #[test]
 fn empty_plan_validates_and_executes_without_touching_scope() {
     let scope = tempfile::tempdir().unwrap();

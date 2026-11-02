@@ -77,6 +77,8 @@ fn validates_existing_workspace_existing_path_and_load_from() {
 }
 
 /// Verifies that [`parse_options`] returns `None` when given no template or workspace arguments.
+///
+/// Ensures `bit new` without required positionals declines native execution.
 #[test]
 fn empty_new_args_return_none() {
     assert_eq!(parse_options(&[]), None);

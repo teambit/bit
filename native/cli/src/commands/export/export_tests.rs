@@ -83,6 +83,7 @@ fn reports_failed_validation_without_repeating_remote_actions() {
     assert!(validation_failure("outbound persist failed: a: busy", &scopes).is_none());
 }
 
+/// Verifies that [`parse`] accepts positional component IDs after a `--` separator.
 #[test]
 fn double_dash_separator_accepts_positional_export_ids() {
     let parsed = parse(&["--all", "--", "s/a", "s/b"]).unwrap();

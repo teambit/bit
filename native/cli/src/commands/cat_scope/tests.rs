@@ -86,6 +86,7 @@ fn builds_lane_json_entry_with_extra_fields() {
     assert_eq!(obj["components"][0]["head"]["hash"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 }
 
+/// Verifies that [`parse_options`] returns `None` when given an unknown `cat-scope` flag.
 #[test]
 fn unknown_cat_scope_flag_returns_none() {
     assert_eq!(parse_options(&["--unknown-flag"]), None);

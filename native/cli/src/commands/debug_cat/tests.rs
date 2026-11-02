@@ -47,6 +47,7 @@ fn parses_cat_component_and_version_history_flags() {
 }
 
 /// Verifies [`diagnose_lane_lookup_error`] and [`diagnose_component_lookup_error`] against scope `index.json` fixtures.
+/// Covers missing lanes, ambiguous multi-scope lanes, and unscoped/missing components.
 #[test]
 fn diagnoses_missing_lane_and_component_lookup_errors() {
     let temp = tempfile::tempdir().unwrap();

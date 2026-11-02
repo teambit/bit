@@ -66,6 +66,7 @@ fn row(identity: &str, version: Option<&str>, used: Option<&str>) -> Row {
     }
 }
 
+/// Verifies that [`report`] renders ASCII box-drawing borders, `<new>` / `N/A` placeholders, and `--ids` JSON arrays.
 #[test]
 fn renders_the_table_like_cli_table() {
     let rows = [row("remote/one", Some("0.0.1"), Some("0.0.1")), row("remote/two", None, None)];

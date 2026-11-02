@@ -51,6 +51,7 @@ fn empty_graph_filter_cycles_preserves_empty_nodes_and_edges() {
 }
 
 /// Verifies deterministic node/edge sorting and [`CompGraph::filter_cycles`] subgraph extraction.
+/// Ensures non-cyclic leaf nodes (`scope/c@0.0.1`) are pruned by `filter_cycles`.
 #[test]
 fn filters_graph_seeders_local_only_and_cycles() {
     let mut graph = CompGraph::default();

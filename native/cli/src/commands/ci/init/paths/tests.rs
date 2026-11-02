@@ -87,6 +87,7 @@ fn relative_paths_preserve_alias_distinctions_but_ignore_windows_case() {
     assert_eq!(actual, expected);
 }
 
+/// Verifies that `real` returns a nonexistent path unchanged instead of failing.
 #[test]
 fn real_returns_nonexistent_path_unchanged() {
     let directory = tempfile::tempdir().unwrap();

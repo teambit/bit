@@ -48,6 +48,7 @@ fn read_only_patterns_match_released_node_oracle() {
     }
 }
 
+/// Verifies that [`matching`] returns an empty vector when given an empty component ID slice.
 #[test]
 fn empty_id_slice_returns_empty_matches_for_extended_glob() {
     assert!(matching(&[], "**/[a-z]*").is_empty());

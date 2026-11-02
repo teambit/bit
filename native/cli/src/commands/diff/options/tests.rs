@@ -41,6 +41,7 @@ fn detects_mutually_exclusive_flags_and_rejects_unimplemented_inputs() {
 }
 
 /// Verifies that [`parse`] produces default workspace diff options when given no CLI arguments.
+/// Confirms `pattern` is `None` and all output mode flags default to `false`.
 #[test]
 fn empty_args_parse_to_default_workspace_diff_options() {
     let options = parse(&[]).unwrap();

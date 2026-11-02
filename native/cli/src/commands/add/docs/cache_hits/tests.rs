@@ -39,6 +39,7 @@ fn disabled_cache_does_not_even_open_the_cache_path() {
     assert!(hit(&cache, &directory.path().join("file.js"), 0.0, false).unwrap().is_none());
 }
 
+/// Verifies that malformed cached JSON defers the entire component batch to the published reader.
 #[test]
 fn malformed_cached_json_defers_the_entire_batch_to_the_published_reader() {
     let directory = tempfile::tempdir().unwrap();

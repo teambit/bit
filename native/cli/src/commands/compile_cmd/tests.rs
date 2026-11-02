@@ -59,6 +59,7 @@ fn validates_compile_selectors_for_unscoped_and_invalid_ids() {
 }
 
 /// Verifies that [`parse_options`] returns `None` when given an unrecognized flag.
+/// Ensures unsupported `bit compile` flags decline cleanly.
 #[test]
 fn unknown_compile_flag_returns_none() {
     assert_eq!(parse_options(&["--unknown-flag"]), None);

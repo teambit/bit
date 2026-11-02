@@ -55,6 +55,7 @@ const FILE_STATUSES: [(&str, &str, &str); 10] = [
     ("deletedConflict", "CONFLICT-deleted-and-modified", "31"),
 ];
 
+/// Builds a synthetic `filesStatus` JSON map from [`FILE_STATUSES`] in raw or projected form.
 fn file_statuses(projected: bool, colored: bool) -> serde_json::Value {
     let rows = FILE_STATUSES
         .into_iter()

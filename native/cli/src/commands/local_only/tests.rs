@@ -37,6 +37,8 @@ fn parses_set_unset_list_and_unrecognized_subcommands() {
 }
 
 /// Verifies that [`parse_subcommand`] returns `None` when given an empty slice or bare `local-only`.
+///
+/// Ensures missing subcommands decline so the CLI help/usage path handles them.
 #[test]
 fn empty_args_or_missing_subcommand_returns_none_for_local_only() {
     assert_eq!(parse_subcommand(&[]), None);

@@ -34,6 +34,7 @@ fn lists_all_25_component_issues_in_order() {
 }
 
 /// Verifies [`parse`] accepts explicit `--json=true` and `--json=false` boolean assignments.
+/// Ensures inline boolean values map to `Some(true)` and `Some(false)`.
 #[test]
 fn parses_explicit_json_boolean_assignment_for_component_issues() {
     assert_eq!(parse(&["--json=true"]), Some(true));

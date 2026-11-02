@@ -5,6 +5,7 @@
 use super::wildcard;
 
 /// Verifies that [`wildcard`] matches nested namespaces while rejecting unrelated prefixes.
+/// Covers `ui/*`, `ui/**`, `other/button`, and prefix-substring false positives.
 #[test]
 fn wildcard_matches_nested_namespaces_without_matching_other_prefixes() {
     assert!(wildcard("ui/*", "ui/button"));

@@ -9,6 +9,8 @@ use bit_install::workspace::Bitmap;
 use std::fs;
 
 /// Verifies `bit publish` option parsing, empty workspace detection, and unexported ID collection.
+///
+/// Ensures [`collect_unexported_ids`] and [`collect_untagged_ids`] report unversioned `.bitmap` entries.
 #[test]
 fn parses_publish_options_and_detects_empty_workspace() {
     assert_eq!(parse_options(&[]), None);

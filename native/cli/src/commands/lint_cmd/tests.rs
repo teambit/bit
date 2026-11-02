@@ -47,6 +47,8 @@ fn validates_lint_pattern_against_workspace_bitmap() {
 }
 
 /// Verifies that [`validate_lint_pattern`] returns `None` when no pattern filter is provided.
+///
+/// Ensures workspace-wide linting does not require a `.bitmap` pattern match.
 #[test]
 fn none_lint_pattern_passes_workspace_validation() {
     let temp = tempfile::tempdir().unwrap();

@@ -29,6 +29,7 @@ fn published_prefix_removal_preserves_repeated_prefix_in_nested_file() {
     );
 }
 
+/// Verifies [`parse_args`] with `--no-color` / `--include-message` and [`classify_target`] against `.bitmap`.
 #[test]
 fn parses_blame_args_with_no_color_and_classifies_targets() {
     assert_eq!(

@@ -32,6 +32,8 @@ fn matches_agree_with_multimatch() {
 }
 
 /// Verifies that [`split`] trims leading and trailing whitespace around comma-separated pattern segments.
+///
+/// Ensures whitespace-padded pattern lists normalize identically to `multimatch` inputs.
 #[test]
 fn split_trims_comma_separated_segments() {
     assert_eq!(split(" a/b , c/d "), ["a/b", "c/d"]);

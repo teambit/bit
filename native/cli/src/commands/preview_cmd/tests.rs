@@ -5,6 +5,8 @@
 use super::{GenerateOptions, ServeOptions, parse_generate_options, parse_serve_options};
 
 /// Verifies `bit preview` generate and serve option parsing for `-n` and `-p`.
+///
+/// Also confirms that non-numeric `--port` values return `None`.
 #[test]
 fn parses_generate_and_serve_preview_options() {
     assert_eq!(

@@ -57,6 +57,7 @@ fn detects_unknown_workspace_component() {
 }
 
 /// Verifies [`check_missing_workspace_component`] accepts a scoped ID matching the workspace default scope.
+/// Ensures `my-scope/comp1` resolves to the unscoped `comp1` entry in `.bitmap`.
 #[test]
 fn scoped_matching_workspace_component_passes_missing_check() {
     let temp = tempfile::tempdir().unwrap();

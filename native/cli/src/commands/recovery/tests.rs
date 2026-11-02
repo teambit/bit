@@ -33,6 +33,8 @@ fn component_abort_reports_unversioned_ids() {
 }
 
 /// Verifies that [`format_component`] declines when an unexpected top-level JSON key is present.
+///
+/// Ensures unknown response fields are not silently dropped by the native formatter.
 #[test]
 fn component_abort_with_unexpected_key_declines_formatting() {
     let extra = json!({"abortedComponents": [], "extra": 1});

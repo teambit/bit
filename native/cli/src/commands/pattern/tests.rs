@@ -41,6 +41,7 @@ fn declines_stateful_or_invalid_arguments() {
     assert_eq!(parse(&["pattern", "**", "--help"]), None);
 }
 
+/// Verifies that [`parse_options`] accepts a pattern argument following `--`.
 #[test]
 fn accepts_double_dash_before_pattern_argument() {
     assert_eq!(

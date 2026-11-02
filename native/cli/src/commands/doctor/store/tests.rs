@@ -60,6 +60,7 @@ fn invalid_compressed_objects_fail_instead_of_reporting_a_missing_head() {
     assert!(object(directory.path(), hash).is_err());
 }
 
+/// Verifies that [`heads`] accepts `JSONC` comments and trailing commas in `scope.json` and `index.json`.
 #[test]
 fn integrity_accepts_jsonc_index_and_string_component_ids() {
     let directory = tempfile::tempdir().unwrap();

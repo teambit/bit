@@ -29,6 +29,7 @@ fn rejects_flags_or_missing_subcommand() {
     assert_eq!(parse_subcommand(&os_args(&["npmrc", "a", "b"])), None);
 }
 
+/// Verifies that [`parse_subcommand`] returns `None` when given an empty argument slice.
 #[test]
 fn empty_slice_returns_none_for_npmrc() {
     assert_eq!(parse_subcommand(&[]), None);

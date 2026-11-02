@@ -95,6 +95,7 @@ fn validates_non_empty_dir_and_unscoped_lane() {
     assert!(invalid_name.contains("component names can only contain"), "{invalid_name}");
 }
 
+/// Verifies that valid scoped `bit clone` options targeting a new directory pass [`validate_outside_workspace`].
 #[test]
 fn valid_scoped_clone_options_into_new_directory_pass_validation() {
     let temp = tempfile::tempdir().unwrap();

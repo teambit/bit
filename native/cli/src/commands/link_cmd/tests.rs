@@ -66,6 +66,8 @@ fn replaces_package_names_in_imports_and_requires() {
 }
 
 /// Verifies [`render_report`] and [`render_json`] formatting on a populated [`LinkSummary`].
+///
+/// Ensures component links, rewired files, and target directory links appear in both text and JSON reports.
 #[test]
 fn renders_report_and_json() {
     let summary = LinkSummary {

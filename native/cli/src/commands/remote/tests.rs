@@ -48,6 +48,7 @@ fn parses_add_and_del_subcommands() {
     );
 }
 
+/// Verifies that [`Options::parse`] declines `--help`, HTTP URLs, missing arguments, and unknown subcommands.
 #[test]
 fn declines_unsupported_remote_arguments() {
     assert_eq!(parse(&["remote", "--help"]), None);

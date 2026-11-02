@@ -52,6 +52,7 @@ fn validates_the_published_ids() {
     assert!(published(&missing, "outbound-1").is_err());
 }
 
+/// Verifies [`format_with`] renders exported component lists and `"nothing to export"` when empty.
 #[test]
 fn reports_the_exported_components() {
     let chalk = Chalk::new(false);

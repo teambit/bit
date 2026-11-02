@@ -65,6 +65,7 @@ fn callback_errors_retain_their_type_and_both_output_phases() {
     assert_eq!(colored.to_string(), "warning: no files to add");
 }
 
+/// Verifies that [`native_io`] preserves the double-red ANSI styling used by released filesystem errors.
 #[test]
 fn native_filesystem_errors_keep_the_released_double_red_style() {
     let chalk = Chalk::new(true);

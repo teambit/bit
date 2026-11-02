@@ -80,6 +80,7 @@ fn warns_for_deprecated_explicit_all_on_head_and_latest() {
     assert!(!format(&result, &options, Chalk::new(false)).unwrap().data.contains("deprecated"));
 }
 
+/// Verifies that [`format`] reports binary merge conflicts and declines non-legitimate failures.
 #[test]
 fn reports_binary_conflicts_and_declines_illegitimate_failures() {
     let options = parse(&["head", "-x"]).unwrap();

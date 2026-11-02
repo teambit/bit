@@ -52,6 +52,7 @@ fn detects_empty_workspace_for_artifacts() {
 }
 
 /// Verifies [`parse_builder_artifacts`], [`filter_artifacts`], and [`render_artifacts_report`] on builder extension data.
+/// Checks both unfiltered extraction and aspect/task/glob filtering.
 #[test]
 fn extracts_filters_and_renders_builder_artifacts() {
     let ver_val = json!({

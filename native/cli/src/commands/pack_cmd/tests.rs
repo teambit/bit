@@ -59,6 +59,8 @@ fn builds_valid_tgz_archive() {
 }
 
 /// Verifies [`parse_options`] accepts an optional second `scope_path` positional and rejects a third.
+///
+/// Also confirms that unrecognized flags return `None`.
 #[test]
 fn parses_optional_scope_path_and_rejects_third_positional_argument() {
     let with_scope = parse_options(&["comp1", "my-scope-dir"]).unwrap();

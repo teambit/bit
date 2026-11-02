@@ -41,6 +41,7 @@ fn a_control_symlink_cannot_replace_a_regular_preimage() {
 }
 
 /// Verifies that an empty control file hashes identically to [`bit_install::policy::scope::read_proof`].
+/// Ensures zero-byte control files produce a non-null SHA-256 preimage digest.
 #[test]
 fn empty_control_file_hashes_consistently_with_scope_read_proof() {
     let directory = tempfile::tempdir().unwrap();

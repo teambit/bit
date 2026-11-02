@@ -78,6 +78,7 @@ fn removes_existing_env_and_versioned_entry_from_config_map() {
 }
 
 /// Verifies [`format_envs_list`] and [`render_env_get`] formatting including custom env scripts.
+/// Checks both the workspace envs summary table and `env.bit-env.ts` script extraction.
 #[test]
 fn renders_envs_list_and_get_with_scripts() {
     let pairs = vec![

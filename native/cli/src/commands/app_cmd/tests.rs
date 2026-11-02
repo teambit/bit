@@ -66,6 +66,7 @@ fn discovers_app_components_in_workspace() {
 }
 
 /// Verifies that [`extract_app_name`] parses double-quoted app names and returns `None` when absent.
+/// Confirms non-app module exports do not produce false-positive app names.
 #[test]
 fn extract_app_name_handles_double_quotes_and_returns_none_when_absent() {
     assert_eq!(

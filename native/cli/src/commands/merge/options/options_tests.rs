@@ -41,6 +41,8 @@ fn rejects_everything_else() {
 }
 
 /// Verifies that [`parse`] accepts a single positional merge pattern following `--`.
+///
+/// Ensures `--` terminates flag parsing while still capturing the component pattern.
 #[test]
 fn double_dash_accepts_single_merge_pattern() {
     let options = parse(&["-x", "--", "remote/one"]).unwrap();

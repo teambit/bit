@@ -46,6 +46,7 @@ fn optional_paths_and_diagnosis_names_are_distinct() {
     );
 }
 
+/// Verifies that `--archive` path precedence wins over `--save` regardless of CLI flag order.
 #[test]
 fn archive_path_wins_over_save_regardless_of_argument_order() {
     for args in [

@@ -62,6 +62,7 @@ fn deep_merges_nested_objects() {
 }
 
 /// Verifies [`collect_list_results`], [`render_list_table`], [`collect_get_entries`], and [`render_get_text`] on a workspace fixture.
+/// Covers both variant-inherited and `.bitmap`-configured component aspects.
 #[test]
 fn lists_and_gets_component_aspects() {
     let temp = tempfile::tempdir().unwrap();

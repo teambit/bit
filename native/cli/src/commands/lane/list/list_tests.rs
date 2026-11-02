@@ -60,6 +60,7 @@ fn reports_the_current_lane_and_the_others() {
     );
 }
 
+/// Verifies that [`report`] with `--details` preserves the extra blank line after an empty current lane.
 #[test]
 fn detailed_list_preserves_the_blank_line_after_an_empty_current_lane() {
     let main = LaneData {

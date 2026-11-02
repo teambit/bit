@@ -31,6 +31,7 @@ fn rejects_invalid_args() {
     assert!(!valid_args(&os_args(&["logout", "-h"])));
 }
 
+/// Verifies that [`clear_auth_config`] removes `user.token` and `user.name` while preserving unrelated config keys.
 #[test]
 fn clears_user_credentials_from_global_config() {
     let dir = tempdir().unwrap();

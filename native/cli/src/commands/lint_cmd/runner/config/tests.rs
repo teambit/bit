@@ -37,6 +37,8 @@ fn plain_object_hash_preserves_prototypes_and_unicode_string_lengths() {
 }
 
 /// Verifies that [`hash::hash`] produces identical SHA-1 digests regardless of JSON object key insertion order.
+///
+/// Ensures object key sorting is deterministic across equivalent JSON payloads.
 #[test]
 fn plain_object_hash_sorts_keys_deterministically() {
     let first = hash::hash(&json!({"b": "1", "a": "2"})).unwrap();

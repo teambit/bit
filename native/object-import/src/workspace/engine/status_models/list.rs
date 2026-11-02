@@ -71,7 +71,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((rows.len(), json!({ "components": rows, "laneComponents": lane_components })))
 }
 
-/// Looks up the lane head hash for `model` in `lane_heads` by scoped or bare component name.
+/// Looks up the lane head hash for `model` in the [`lane_heads`] map by scoped or bare component name.
 fn lookup_lane_head<'a>(lane_heads: &'a HashMap<String, String>, model: &Value) -> Option<&'a str> {
     let scope = model["scope"].as_str().map_or("", str::trim);
     let name = model["name"].as_str().map_or("", str::trim);

@@ -67,6 +67,8 @@ fn detects_internalize_from_component_json() {
 }
 
 /// Verifies that [`parse_options`] returns `None` for unrecognized `bit internalize` flags.
+///
+/// Ensures unsupported CLI flags decline native execution cleanly.
 #[test]
 fn rejects_unknown_internalize_flags() {
     assert_eq!(parse_options(&["--unknown"]), None);

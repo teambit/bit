@@ -44,6 +44,7 @@ fn checks_ts_content_for_type_mismatches() {
     assert!(check_ts_content(permissive).is_empty());
 }
 
+/// Verifies that [`parse_options`] returns `None` when given an unrecognized `check-types` flag.
 #[test]
 fn unknown_check_types_option_returns_none() {
     assert_eq!(parse_options(&["--unknown-flag"]), None);

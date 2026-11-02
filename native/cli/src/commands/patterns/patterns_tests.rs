@@ -29,6 +29,7 @@ fn globs_match_like_minimatch() {
     assert!(matched("button").is_empty(), "no basename matching");
 }
 
+/// Verifies comma-separated union lists and `!`-prefixed negative patterns in [`matched`].
 #[test]
 fn lists_and_negations() {
     assert_eq!(matched("other/utils, org.scope/utils"), ["org.scope/utils", "other/utils"]);

@@ -89,6 +89,8 @@ fn formats_duplicate_version_nodes_in_graph() {
 }
 
 /// Verifies [`find_cycles`] discovers closed dependency cycles while ignoring acyclic leaf edges.
+///
+/// Ensures edges leading only to leaf nodes are excluded from the returned cycle components.
 #[test]
 fn finds_closed_cycles_without_acyclic_dependencies() {
     let mut graph = CompGraph::default();

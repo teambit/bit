@@ -44,6 +44,7 @@ fn formats_remote_report_for_truthy_and_falsy_responses() {
     assert!(failed.contains(r#"failed cleaning the cache of "my-scope""#));
 }
 
+/// Verifies [`clear_caches`] and [`format_report`] remove both `.bit/cache/components` and `.bit/index.json`.
 #[test]
 fn clears_workspace_fs_cache_and_scope_index() {
     let dir = tempfile::tempdir().unwrap();

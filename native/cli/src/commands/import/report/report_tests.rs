@@ -57,6 +57,7 @@ fn up_to_date_components_are_counted() {
     );
 }
 
+/// Verifies that [`validate`] rejects receipts with `missingDeps` or unrequested component IDs.
 #[test]
 fn unexpected_receipts_decline() {
     let missing = receipt(

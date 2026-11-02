@@ -51,6 +51,7 @@ fn extracts_package_name_from_version_extensions() {
     assert_eq!(extract_version_package_name(&ver).as_deref(), Some("@org/my-scope.comp1"));
 }
 
+/// Verifies [`replace_package_name`] across single, double, tilde, and subpath imports, and [`prepare_bare_scope_dependency_name`].
 #[test]
 fn replaces_single_double_tilde_and_subpath_package_imports() {
     let source = r#"

@@ -49,6 +49,7 @@ fn override_requires_a_component_write() {
     assert!(parse(&["import", "s/**", "--override", "-x"]).is_some());
 }
 
+/// Verifies that `--path` (`-p`) requires exactly one explicit non-wildcard component ID.
 #[test]
 fn path_requires_one_explicit_component_write() {
     let options = parse(&["import", "s/a", "-p", "my-custom-location", "-x"]).unwrap();

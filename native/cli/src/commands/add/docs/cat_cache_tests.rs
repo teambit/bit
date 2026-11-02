@@ -69,6 +69,7 @@ fn rich_uncached_cat_source_requires_published_parser() {
     );
 }
 
+/// Verifies that a published-parser receipt leaves `cacache` writes owned by the host.
 #[test]
 fn published_parser_receipt_keeps_cache_writes_host_owned() {
     let root = tempfile::tempdir().unwrap();

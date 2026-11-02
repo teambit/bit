@@ -59,6 +59,7 @@ fn a_conflicting_preimage_does_not_partially_advance_an_earlier_receipt() {
     );
     assert_eq!(retained.read_set, original);
 }
+/// Verifies that changed published bytes are rejected and absent receipts are not invented.
 #[test]
 fn changed_published_bytes_are_rejected_and_absent_receipts_are_not_invented() {
     let directory = tempfile::tempdir().unwrap();

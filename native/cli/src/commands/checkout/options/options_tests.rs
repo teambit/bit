@@ -82,6 +82,7 @@ fn rejects_everything_else() {
     assert!(parse(&["head", "-e", "--workspace-only"]).is_none());
 }
 
+/// Verifies that `head` and `latest` without a component pattern report as `--all`.
 #[test]
 fn head_and_latest_without_a_pattern_report_as_all() {
     assert!(parse(&["head", "-x"]).unwrap().report_all());

@@ -50,6 +50,7 @@ fn parses_eject_conf_flags_and_boolean_values() {
 }
 
 /// Verifies [`prepare`] generates `component.json` and updates `.bitmap` for a versioned component from scope objects.
+/// Confirms `__specific` extension config is merged with `.bitmap` overrides.
 #[test]
 fn prepares_ejected_config_for_versioned_component_from_scope_objects() {
     let temp = tempdir().unwrap();

@@ -70,6 +70,7 @@ fn computes_transitive_dependents_and_formats_report() {
 }
 
 /// Verifies [`DepGraph::dependents_of`] returns an empty vector on an empty [`DepGraph`].
+/// Ensures querying an unknown component ID does not panic or fabricate edges.
 #[test]
 fn empty_dependency_graph_returns_no_dependents_for_any_id() {
     let graph = DepGraph::default();

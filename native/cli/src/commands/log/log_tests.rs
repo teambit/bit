@@ -85,6 +85,7 @@ fn remote_rows_keep_full_hash_and_message_in_one_line_output() {
     );
 }
 
+/// Verifies [`normalize`], [`paint`], and [`render`] for a tagged version log entry.
 #[test]
 fn normalizes_a_version_log_and_renders_the_default_report() {
     let row = json!({

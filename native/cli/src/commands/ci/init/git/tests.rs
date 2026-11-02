@@ -2,6 +2,7 @@
 //!
 //! Verifies empty-string trimming and Unicode whitespace distinctions in branch names.
 /// Verifies that branch validation and trimming preserve the released `ECMAScript` whitespace distinction.
+/// Specifically contrasts BOM (`\u{feff}`) with NEL (`\u{0085}`).
 #[test]
 fn branch_validation_and_trimming_preserve_the_released_unicode_distinction() {
     assert!(!super::valid_branch("release\u{feff}next"));

@@ -5,6 +5,7 @@
 use super::format;
 
 /// Verifies that [`format`] rewrites `git diff` headers into `formatFileDiff` unified headers.
+/// Also checks that empty or header-only diffs normalize to `""`.
 #[test]
 fn formats_like_format_file_diff() {
     let diff = "diff --git a/x b/x\nindex 1..2\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b";

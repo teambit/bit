@@ -31,6 +31,7 @@ fn leading_zero_unsafe_and_non_numeric_targets_keep_their_spelling() {
 }
 
 /// Verifies that [`normalize`] preserves empty strings and plain decimal integers unchanged.
+/// Covers `""`, `"0"`, and `"42"`.
 #[test]
 fn empty_and_plain_integer_targets_normalize_cleanly() {
     assert_eq!(normalize(""), "");

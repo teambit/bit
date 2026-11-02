@@ -54,6 +54,8 @@ fn parses_setup_and_rules_subcommands() {
 }
 
 /// Verifies that [`execute_setup`] writes `.cursor/mcp.json` and [`execute_rules`] writes `.cursor/rules/bit.rules.mdc`.
+///
+/// Ensures both Cursor configuration files include the expected `--consumer-project` and frontmatter headers.
 #[test]
 fn writes_workspace_setup_and_rules_files() {
     let dir = tempdir().expect("tempdir");
