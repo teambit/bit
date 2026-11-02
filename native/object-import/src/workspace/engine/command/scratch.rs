@@ -11,6 +11,7 @@ static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {
+    /// Allocates a new private `0700` temporary directory under the system temp directory.
     pub(super) fn create() -> io::Result<Self> {
         let parent = fs::canonicalize(std::env::temp_dir())?;
         let meta = fs::symlink_metadata(&parent)?;

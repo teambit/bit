@@ -43,6 +43,7 @@ fn untracked(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates a `RelativeComponentsAuthored` issue entry `value`.
 #[inline]
 fn authored(value: &Value) -> io::Result<()> {
     let records = value.as_array().ok_or_else(|| invalid("relative authored issue records"))?;

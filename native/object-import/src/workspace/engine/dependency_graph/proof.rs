@@ -33,6 +33,7 @@ struct Range {
     offset: u64,
     length: u64,
 }
+/// Expected file kind and canonicalized target path for a metadata [`Proof`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Metadata {

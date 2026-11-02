@@ -51,6 +51,7 @@ struct Projection<'a> {
     grammar: Vec<String>,
     metadata: Metadata,
 }
+/// Issue, core-aspect, and relative-import metadata accumulated during [`Projection`].
 #[derive(Default)]
 struct Metadata {
     issues: IssueData,

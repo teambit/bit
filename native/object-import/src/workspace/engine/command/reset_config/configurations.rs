@@ -61,6 +61,7 @@ fn validate_single(
     Ok(())
 }
 
+/// Validates that `value` is a dependency-resolver `policy` object with non-empty version strings.
 #[inline]
 fn validate_policy(value: &Value) -> io::Result<()> {
     let policy = value.as_object().ok_or_else(|| invalid("reset dependency policy"))?;

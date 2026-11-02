@@ -75,6 +75,7 @@ pub(super) fn select(
     candidate_selection(retained, captured)
 }
 
+/// Returns the candidate component identities eligible for tagging in `captured`.
 #[inline]
 pub(super) fn candidate_ids(
     retained: &mut Retained,

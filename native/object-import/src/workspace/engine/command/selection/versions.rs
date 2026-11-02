@@ -73,6 +73,7 @@ fn target_version(options: &Options, selection: &Selection<'_>) -> io::Result<Op
         .map(str::to_owned))
 }
 
+/// Resolves an explicit target version or expands a short snap hash prefix against `repository`.
 #[inline]
 fn explicit(
     selection: &Selection<'_>,

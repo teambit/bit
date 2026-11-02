@@ -42,6 +42,7 @@ fn remove_existing(request: &Request, output: &mut Output) {
         }
     }
 }
+/// Resolves the concrete fallback version for `name` from `request` resolved packages, workspace, or model.
 fn resolve(request: &Request, name: &str) -> io::Result<String> {
     let name = name.trim();
     if let Some(value) = request.resolved

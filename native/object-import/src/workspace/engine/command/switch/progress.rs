@@ -29,6 +29,7 @@ pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
     json!({"requested":count,"components":count,"objects":0,"performed":count > 0})
 }
 
+/// Appends `context["lane"]["addedTargets"]` as [`crate::command_import::Target`] entries into `targets`.
 #[inline]
 pub(in crate::workspace::engine::command) fn additions(
     context: &Value,

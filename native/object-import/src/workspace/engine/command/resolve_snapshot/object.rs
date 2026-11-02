@@ -63,6 +63,7 @@ pub(super) fn prepare(
         "componentVersion":context.versions[material.identity.as_str()],"selected":material.participation.selected,"hidden":material.hidden}))
 }
 
+/// Projects base `Version` metadata, rewrites batch references, and sets `parents`, `log`, and `buildStatus`.
 fn metadata(
     material: &Material,
     receipt: &Value,

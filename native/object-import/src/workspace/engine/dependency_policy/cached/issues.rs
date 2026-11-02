@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Component issue class name for missing filesystem packages (`MissingPackagesDependenciesOnFs`).
 const MISSING: &str = "MissingPackagesDependenciesOnFs";
 const MANUAL: &str = "MissingManuallyConfiguredPackages";
 

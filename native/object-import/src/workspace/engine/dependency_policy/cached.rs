@@ -57,6 +57,7 @@ pub(in crate::workspace::engine) struct Complete {
     finish: Value,
     resolution: Value,
 }
+/// Completes dependency policy evaluation for `request` against the workspace filesystem.
 #[inline]
 pub(in crate::workspace::engine) fn complete(
     request: &Complete,

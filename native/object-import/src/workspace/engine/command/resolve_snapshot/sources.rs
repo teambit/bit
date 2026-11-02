@@ -76,6 +76,7 @@ pub(in crate::workspace::engine::command) fn capture_file(
     Ok((row, source))
 }
 
+/// Looks up and verifies the retained [`snapshots::Observation`] for `file` in `snapshots`.
 #[inline]
 fn observation<'a>(
     file: &Value,

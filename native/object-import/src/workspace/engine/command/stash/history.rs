@@ -54,6 +54,7 @@ pub(super) fn prepare(
     Ok(count)
 }
 
+/// Commits prepared `VersionHistory` plans onto disk and updates `retained` read proofs.
 pub(super) fn commit(
     retained: &mut Retained,
     selected: Option<&[String]>,

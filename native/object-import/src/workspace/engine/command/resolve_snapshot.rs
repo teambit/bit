@@ -53,6 +53,7 @@ pub(super) fn is_removed(version: &Value) -> bool {
         })
 }
 
+/// Extracts the set of pinned dependency identities (`pinnedDependencies`) from `version`.
 #[inline]
 pub(super) fn pinned_dependencies(version: &Value) -> HashSet<String> {
     version["pinnedDependencies"]

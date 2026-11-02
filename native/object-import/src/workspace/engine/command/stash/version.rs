@@ -72,6 +72,7 @@ pub(super) fn prepare(
     objects.extend(sources);
     Ok(version)
 }
+/// Validates and collects the single-parent hash list from `previous` for a stashed `Version`.
 #[inline]
 fn validated_parents(previous: Option<&str>) -> io::Result<Vec<&str>> {
     let mut parents = Vec::new();

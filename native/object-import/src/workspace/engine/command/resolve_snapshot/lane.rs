@@ -54,6 +54,7 @@ fn apply_allocations(value: &mut Value, materials: &[Material], receipt: &Value)
     Ok(())
 }
 
+/// Updates `lane["components"]` or `lane["updateDependents"]` for `identity` at `head`.
 fn update(
     lane: &mut Value,
     identity: &str,

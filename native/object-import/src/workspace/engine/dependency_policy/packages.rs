@@ -34,6 +34,7 @@ fn model_peers(request: &Request, plan: &mut Plan) {
     }
     plan.packages[2] = peers;
 }
+/// Applies `policy` (`dependencies` and `peerDependencies`) across all package buckets on `plan`.
 fn policy(policy: &Policy, plan: &mut Plan) {
     for field in 0..3 {
         let names: Vec<_> = plan.packages[field]

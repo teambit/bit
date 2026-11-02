@@ -66,6 +66,7 @@ fn add_config(
     Ok(())
 }
 
+/// Normalizes and inserts a single aspect configuration entry (`id`, `value`) into `extensions`.
 fn insert(
     extensions: &mut Map<String, Value>,
     seen: &mut HashSet<String>,

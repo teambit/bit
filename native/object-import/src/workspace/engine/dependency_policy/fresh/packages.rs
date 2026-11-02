@@ -28,6 +28,7 @@ pub(super) struct Reader {
     overlay: Option<SourceOverlay>,
 }
 impl Reader {
+    /// Constructs a [`Reader`] rooted at `root` and resolves the enclosing `dependent` version.
     pub(super) fn new(
         root: &Path,
         proofs: Vec<proof::Proof>,

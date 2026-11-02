@@ -59,6 +59,7 @@ pub(super) fn select(
     Err(invalid("command checkout selection limit"))
 }
 
+/// Builds the initial `checkoutSelectBegin` payload for `selection` and `options`.
 fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     let to = options.to
         .as_deref()

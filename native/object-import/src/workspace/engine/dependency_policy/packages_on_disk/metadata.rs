@@ -68,6 +68,7 @@ fn identity(value: &Value) -> io::Result<(String, Option<&str>)> {
     };
     Ok((formatted, version))
 }
+/// Returns `true` when `version` is a non-empty concrete version string (neither `"latest"` nor `"head"`).
 #[inline]
 fn concrete_version(version: &str) -> bool {
     let version = version.trim();

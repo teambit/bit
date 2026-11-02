@@ -10,6 +10,7 @@ use std::io;
 
 /// Aspect ID for the workspace-root marker aspect (`teambit.workspace/workspace-root`).
 const ASPECT: &str = "teambit.workspace/workspace-root";
+/// Context field key storing the auto-added workspace-root component identity (`snapshotAutoAddedWorkspaceRoot`).
 const AUTO: &str = "snapshotAutoAddedWorkspaceRoot";
 
 /// Appends the workspace-root component to the selected snap set when members change.

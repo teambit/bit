@@ -54,6 +54,7 @@ fn has_tracked(rows: &serde_json::Map<String, Value>) -> bool {
         .any(|trimmed| !trimmed.starts_with('$') && !matches!(trimmed, "_bit_lane" | "version"))
 }
 
+/// Matches `entries` against comma-separated glob `pattern` tokens, supporting `!` exclusions.
 fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
     let mut patterns = pattern
         .split(',')

@@ -17,6 +17,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Maximum number of source files permitted in a single dependency graph request (`4096`).
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: u64 = 64 * 1024 * 1024;
 

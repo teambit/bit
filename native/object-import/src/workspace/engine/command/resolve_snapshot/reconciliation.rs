@@ -64,6 +64,7 @@ fn unrelated(
     Ok(())
 }
 
+/// Populates `version["squashed"]` and `version["modified"]` for a squashed lane merge resolution.
 #[inline]
 fn squash(
     version: &mut Value,

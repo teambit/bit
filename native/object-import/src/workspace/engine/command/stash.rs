@@ -39,6 +39,7 @@ pub(in crate::workspace::engine) struct Plan {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+/// Deserialized request to finalize detached `Version` objects and metadata for a `stash save` transaction.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Finalize {

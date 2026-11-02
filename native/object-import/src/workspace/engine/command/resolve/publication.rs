@@ -30,6 +30,7 @@ pub(super) struct Prepared {
     notifications: usize,
 }
 
+/// Finalizes a retained `snap` or `tag` resolution transaction and stages objects or soft-tag `.bitmap` updates.
 pub(super) fn finalize(
     input: Finalize,
     retained: &mut Retained,

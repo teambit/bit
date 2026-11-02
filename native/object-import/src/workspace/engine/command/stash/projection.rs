@@ -50,6 +50,7 @@ fn clean_dependencies(version: &mut Value) {
     }
 }
 
+/// Strips empty version suffixes from `teambit.dependencies/dependency-resolver` aspect entries.
 #[inline]
 fn clean_extensions(version: &mut Value) {
     for extension in version["extensions"]

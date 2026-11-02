@@ -70,6 +70,7 @@ pub(super) fn scan(
     Ok(row)
 }
 
+/// Extracts import specifiers and `TypeScript` mode from `bytes` or `custom` detector overrides.
 fn detected(
     request: &Request,
     custom: Option<&super::CustomDetection>,

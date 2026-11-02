@@ -37,6 +37,7 @@ fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<&str>) ->
             .flatten()
             .any(|missing| missing.trim() == name)
 }
+/// Updates `plan` for a single automatic dependency policy entry `(name, value)` in bucket `field`.
 fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &Value) {
     let name = name.trim();
     let existing: [Option<usize>; 3] = std::array::from_fn(|field| {

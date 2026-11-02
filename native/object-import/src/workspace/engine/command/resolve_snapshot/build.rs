@@ -40,6 +40,7 @@ pub(super) fn metadata(version: &mut Value, allocation: &Value) -> io::Result<()
     Ok(())
 }
 
+/// Deserialized builder-generated artifact file entry from `receipt["artifacts"]`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct GeneratedFile {

@@ -36,6 +36,7 @@ pub(in crate::workspace::engine) struct Refresh {
     #[serde(default)]
     source_changes: Vec<SourceChange>,
 }
+/// Pre- and post-callback content [`proof::Proof`] pair for a single callback-modified source file.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SourceChange {

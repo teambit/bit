@@ -44,6 +44,7 @@ fn validate_issues(value: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates the type and serialized JSON payload of a single detection `issue` record.
 fn validate_issue(issue: &Value) -> io::Result<()> {
     if !matches!(
         issue["type"].as_str(),

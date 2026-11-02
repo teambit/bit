@@ -65,6 +65,7 @@ pub(super) fn candidates(
     Ok(candidates)
 }
 
+/// Appends non-local-only pending unmerged component identities to `candidates`.
 #[inline]
 fn append_pending(
     retained: &Retained,

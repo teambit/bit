@@ -17,6 +17,7 @@ pub(in crate::workspace::engine) struct Detect {
     pub(super) files: Vec<PathBuf>,
     pub(super) detection: Detection,
 }
+/// Graph, dev-file, package, and aspect configuration inputs for [`Detect`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Detection {

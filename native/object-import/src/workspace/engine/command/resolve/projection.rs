@@ -19,6 +19,7 @@ pub(in crate::workspace::engine::command) struct Component {
 }
 
 impl Component {
+    /// Iterates over dependency state entries for `self` that have `versionFromConfig == true`.
     #[inline]
     fn config_pinned_entries(&self) -> impl Iterator<Item = &Value> {
         let entries = self.dependency_state["entries"].as_array();

@@ -36,6 +36,7 @@ pub(super) fn validate(path: &Path) -> io::Result<()> {
     result.and(removed)
 }
 
+/// Returns `true` when `path` carries any extended attribute other than `security.selinux`.
 #[inline]
 fn has_non_selinux_xattr(path: &Path) -> io::Result<bool> {
     Ok(xattr::list(path)?.any(|name| name != "security.selinux"))

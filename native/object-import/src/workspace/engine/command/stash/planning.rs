@@ -74,6 +74,7 @@ fn select(
     Ok(components)
 }
 
+/// Checks whether `current` is modified (or eligible as new when `include_new` is `true`) for stashing.
 fn eligible(
     retained: &mut Retained,
     current: &capture::Captured,

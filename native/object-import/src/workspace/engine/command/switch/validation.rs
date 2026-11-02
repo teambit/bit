@@ -53,6 +53,7 @@ fn validate_alias(alias: &str) -> io::Result<()> {
     }
     Ok(())
 }
+/// Wraps `message` in a canonical user-facing `io::Error` via [`crate::workspace::engine::response::canonical`].
 #[inline]
 pub(super) fn canonical(message: String) -> io::Error {
     crate::workspace::engine::response::canonical(message)

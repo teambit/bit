@@ -23,6 +23,7 @@ pub(super) fn rebuild(materials: &mut [Material], repository: &mut Repository) -
     project_with_saved(materials, repository, false)
 }
 
+/// Projects flattened dependency graphs onto `materials`, optionally reusing saved edges when `reuse` is `true`.
 #[inline]
 fn project_with_saved(
     materials: &mut [Material],

@@ -47,6 +47,7 @@ fn update_object(
     Ok(())
 }
 
+/// Rewrites `fields["version"]` when `fields` carries a `{scope, name, version}` object in `hashes`.
 fn update_scoped_id(
     fields: &mut Map<String, Value>,
     hashes: &HashMap<&str, &str>,

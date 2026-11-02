@@ -51,6 +51,7 @@ impl Projection<'_> {
         Ok(issues)
     }
 }
+/// Serializes `data` into a `{type, data}` wire issue object for `kind` within the 4,096-entry budget.
 #[inline]
 fn serialized_issue(kind: &str, data: &Map<String, Value>) -> io::Result<Value> {
     if data.len() > 4096 {

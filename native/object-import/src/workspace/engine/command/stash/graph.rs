@@ -67,6 +67,7 @@ fn identities(context: &Value) -> io::Result<HashMap<String, Value>> {
     }
     Ok(identities)
 }
+/// Loads and merges saved flattened dependency edges from each component's `previous` `Version` head.
 fn saved(
     components: &[Component],
     repository: &mut Repository,

@@ -1,4 +1,4 @@
-//! The dependency loader's `package.json` `bit.peer` component policy [`range`] for [`Package`].
+//! The dependency loader's `package.json` `bit.peer` component policy [`range`] and [`truthy`] for [`Package`].
 
 use super::Package;
 use serde_json::{Value, json};

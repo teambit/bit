@@ -61,6 +61,7 @@ fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<Stri
     Ok(replacements)
 }
 
+/// Recursively replaces old `scope/name@version` strings in `value` according to `replacements`.
 fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
     match value {
         Value::String(text) => {

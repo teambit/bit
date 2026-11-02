@@ -26,6 +26,7 @@ pub(super) struct Owner {
 }
 
 impl State {
+    /// Resolves the deepest tracked workspace component [`Owner`] whose directory contains `file`.
     pub(super) fn owner(&mut self, request: &Detect, file: &str) -> io::Result<Option<Owner>> {
         if self.owners.is_none() {
             self.owners = Some(owners(request)?);

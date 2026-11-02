@@ -60,6 +60,7 @@ fn dependencies(components: &[Component]) -> io::Result<Vec<String>> {
     Ok(output)
 }
 
+/// Appends direct component dependency IDs from a single component's `state` into `output`.
 fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result<()> {
     let rows = state["components"].as_array().ok_or_else(|| invalid("issue component indices"))?;
     if rows.len() > 3 {

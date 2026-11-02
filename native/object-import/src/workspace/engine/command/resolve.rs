@@ -66,6 +66,7 @@ struct Options {
     policy: Policy,
 }
 
+/// Deserialized dependency and version-resolution policy flags for `snap` and `tag`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Policy {
