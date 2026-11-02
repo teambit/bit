@@ -15,7 +15,7 @@ pub(super) struct Options<'a> {
     pub imported_index: Option<&'a Value>,
     pub snapshot: bool,
 }
-/// Prepared `.bitmap`, workspace finalization, and control-file publication plans for `snap` or `tag`.
+/// Prepared `.bitmap`, workspace [`finalization`], and control-file publication plans for `snap` or `tag`.
 pub(super) struct Prepared {
     bitmap: bitmap::Prepared,
     finalization: finalization::Prepared,

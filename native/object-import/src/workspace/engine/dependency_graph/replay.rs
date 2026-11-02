@@ -24,6 +24,7 @@ struct Replay {
     scanned: Vec<String>,
     receipts: Receipts,
 }
+/// Missing file, missing package, and parser error maps collected during [`Replay`].
 #[derive(Default)]
 struct Diagnostics {
     missing: Map<String, Value>,

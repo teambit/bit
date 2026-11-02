@@ -26,6 +26,7 @@ pub(super) struct State {
     pub(super) components: [Vec<usize>; 3],
     pub(super) entries: Vec<Entry>,
 }
+/// Installed `node_modules` package resolution entry carrying optional component identity and version.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Resolved {

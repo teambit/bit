@@ -19,6 +19,7 @@ use std::{
 
 /// Maximum number of source files permitted in a single dependency graph request (`4096`).
 const MAX_FILES: usize = 4096;
+/// Maximum total source byte budget permitted across a single dependency graph request (`64 MiB`).
 const MAX_BYTES: u64 = 64 * 1024 * 1024;
 
 /// Executes a parallel AST dependency scan request via [`bit_dependency_scanner::scan_request`].

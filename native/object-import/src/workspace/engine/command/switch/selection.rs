@@ -91,6 +91,7 @@ fn filter(pattern: &str, entries: &[Entry]) -> io::Result<Vec<String>> {
     Ok(selected)
 }
 
+/// Adds or removes `entries` matching `pattern` in `selected` depending on `exclude`.
 #[inline]
 fn update_selection(selected: &mut Vec<String>, entries: &[Entry], pattern: &str, exclude: bool) {
     for entry in entries

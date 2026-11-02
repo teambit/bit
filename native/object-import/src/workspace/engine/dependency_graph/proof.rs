@@ -41,6 +41,7 @@ struct Metadata {
     real_path: Option<PathBuf>,
 }
 impl Proof {
+    /// Returns `true` when `self` is a full-file content hash proof rather than existence, metadata, or range.
     #[inline]
     pub(in crate::workspace::engine) fn is_content(&self) -> bool {
         self.exists.is_none() && self.metadata.is_none() && self.range.is_none()

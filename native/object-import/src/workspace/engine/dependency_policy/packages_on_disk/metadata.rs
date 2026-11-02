@@ -76,6 +76,7 @@ fn concrete_version(version: &str) -> bool {
         && !version.eq_ignore_ascii_case("latest")
         && !version.eq_ignore_ascii_case("head")
 }
+/// Extracts an optional trimmed string from `value`, rejecting non-string non-null JSON values.
 #[inline]
 fn optional_string(value: Option<&Value>) -> io::Result<Option<&str>> {
     match value {

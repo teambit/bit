@@ -72,6 +72,7 @@ fn detect_view(
     captured["readSet"] = serde_json::to_value(controls).map_err(io::Error::other)?;
     project::project(request, &captured, overlay).map(|value| (request.files.len(), value))
 }
+/// Completes fresh dependency detection and applies policies for `request` against the filesystem.
 #[inline]
 pub(in crate::workspace::engine) fn apply(
     request: &Complete,

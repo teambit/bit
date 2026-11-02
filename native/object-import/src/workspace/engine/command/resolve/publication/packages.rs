@@ -53,6 +53,7 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     Ok((retained.materials.len(), json!({"token":retained.record.token,"result":retained.result})))
 }
 
+/// Deserialized request payload to persist snapshot objects before generating `package.json` manifests.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct StagePackages {

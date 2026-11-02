@@ -82,6 +82,7 @@ pub(super) struct Policy {
     pub skip_published_versions: bool,
 }
 
+/// Deduplicated component `identities` and `load_count` selected for a `snap` or `tag` batch.
 struct Selection {
     identities: Vec<String>,
     load_count: usize,

@@ -46,6 +46,7 @@ fn policy(policy: &Policy, plan: &mut Plan) {
         }
     }
 }
+/// Applies `policy` peer or runtime version overrides for `name` onto `plan.packages`.
 #[inline]
 fn apply_package_policy(policy: &Policy, plan: &mut Plan, field: usize, name: &str) {
     let trimmed = name.trim();

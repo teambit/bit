@@ -74,6 +74,7 @@ pub(super) struct VersionState {
     pub tagged_version: Option<String>,
 }
 
+/// Explicit selection and auto-snap participation flags for a resolved [`Material`] component.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Participation {
     pub selected: bool,

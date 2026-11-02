@@ -59,6 +59,7 @@ struct Metadata {
     file_core_aspects: [Vec<String>; 2],
     relative: relative::State,
 }
+/// Per-category component issue maps and lists accumulated during [`Projection`].
 #[derive(Default)]
 struct IssueData {
     missing_files: Map<String, Value>,

@@ -45,6 +45,7 @@ pub(in crate::workspace::engine::command) fn additions(
     Ok(())
 }
 
+/// Converts a single `addedTargets` entry into a [`crate::command_import::Target`] for object import.
 #[inline]
 fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> {
     let version = target["version"]

@@ -97,6 +97,7 @@ fn reports(
     cascade::reports(&rows, &[], selected, semver)
 }
 
+/// Constructs a hidden scope-only [`Material`] entry from `entry` and `version`, capturing its source files.
 fn material(
     retained: &mut Retained,
     entry: &crate::command_import::lane::Entry,

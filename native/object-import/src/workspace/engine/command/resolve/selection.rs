@@ -80,6 +80,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     Ok(format!("{scope}/{name}"))
 }
 
+/// Returns `true` when `targets` contains a component entry with `identity` equal to `id`.
 #[inline]
 fn has_target_identity(targets: &[Value], id: &str) -> bool {
     targets

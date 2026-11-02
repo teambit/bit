@@ -52,6 +52,7 @@ impl Drop for Directory {
     }
 }
 
+/// Constructs a [`fs::DirBuilder`] configured with `0o700` permissions on Unix platforms.
 #[inline]
 fn private_builder() -> fs::DirBuilder {
     let builder = fs::DirBuilder::new();

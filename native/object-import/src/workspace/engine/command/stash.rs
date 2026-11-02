@@ -48,6 +48,7 @@ pub(in crate::workspace::engine) struct Finalize {
     bit_version: String,
     message: Option<String>,
 }
+/// Deserialized request to stage or commit `VersionHistory` objects during a `stash save` transaction.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct StageHistory {

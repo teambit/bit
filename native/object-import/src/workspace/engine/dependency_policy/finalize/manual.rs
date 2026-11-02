@@ -68,6 +68,7 @@ fn add(
     }
 }
 
+/// Attempts to resolve and record `name` as a workspace/component dependency in `field`, returning `true` when matched.
 fn component(
     request: &Request,
     output: &mut Output,

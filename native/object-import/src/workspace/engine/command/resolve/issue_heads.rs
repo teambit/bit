@@ -88,6 +88,7 @@ fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
     super::selection::identity(model)
 }
 
+/// Looks up `currentHead` for `identity` in `context["lane"]["targets"]`, if present.
 #[inline]
 fn find_lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     context["lane"]["targets"]

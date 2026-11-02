@@ -6,6 +6,7 @@ use std::{collections::HashSet, io};
 
 /// Component issue class name for missing filesystem packages (`MissingPackagesDependenciesOnFs`).
 const MISSING: &str = "MissingPackagesDependenciesOnFs";
+/// Component issue class name for missing manually configured packages (`MissingManuallyConfiguredPackages`).
 const MANUAL: &str = "MissingManuallyConfiguredPackages";
 
 /// Extracts missing filesystem package records from cached `issues`.

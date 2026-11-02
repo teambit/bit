@@ -77,6 +77,7 @@ pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result
     Ok(())
 }
 
+/// Extracts the bare `scope/name` component identity from `target["identity"]` or `target["id"]`.
 #[inline]
 fn target_identity(target: &Value) -> Option<&str> {
     target["identity"]

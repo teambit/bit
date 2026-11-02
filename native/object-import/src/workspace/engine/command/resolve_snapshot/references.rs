@@ -83,6 +83,7 @@ fn update_scoped_id(
     }
 }
 
+/// Resolves `(identity, hash)` when `fields[key]` references a non-pinned component in `hashes`.
 #[inline]
 fn resolve_string_target<'a>(
     fields: &Map<String, Value>,

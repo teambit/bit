@@ -51,6 +51,7 @@ fn metadata(
         &json!({"metadata":metadata,"stashCompsData":rows}),
     )
 }
+/// Builds detached `Version` objects, `stashCompsData` rows, and version summaries for `retained.components`.
 fn batch(
     retained: &Retained,
     input: &Finalize,

@@ -83,7 +83,7 @@ impl Projection<'_> {
     }
 }
 
-/// Returns `true` when `dependency` matches either component identity `base` or `package_name`.
+/// Returns `true` when `dependency` matches either bare component [`identity`] `base` or `package_name`.
 #[inline]
 fn matches_component_or_package(dependency: &Value, base: &str, package_name: &str) -> bool {
     let package_name = package_name.trim();

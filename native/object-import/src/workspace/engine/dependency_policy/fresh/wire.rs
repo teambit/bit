@@ -35,6 +35,7 @@ pub(super) struct Detection {
     #[serde(default)]
     pub(super) workspace_components: Vec<String>,
 }
+/// Wire request for completing fresh dependency policy evaluation from a captured [`Capture`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

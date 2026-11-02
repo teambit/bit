@@ -56,6 +56,7 @@ fn project_with_saved(
     Ok(())
 }
 
+/// Captures the saved flattened dependency graph from prior head `Version` objects for `materials`.
 #[inline]
 pub(super) fn previous_graph(
     materials: &[Material],

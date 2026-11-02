@@ -86,6 +86,7 @@ fn validate_policy(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Returns `true` when `value` is a `teambit.harmony/node` environment ID with a non-empty version.
 #[inline]
 fn is_harmony_node_env(value: &Value) -> bool {
     value

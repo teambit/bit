@@ -41,6 +41,7 @@ impl Prepared {
         Ok(())
     }
 }
+/// Prepares `unmerged.json` and `merge-conflict` cleanup plans for resolved `identities` under `root`.
 pub(super) fn prepare(
     root: &Path,
     pending: &[Value],

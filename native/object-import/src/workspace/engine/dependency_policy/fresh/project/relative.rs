@@ -40,6 +40,7 @@ impl State {
             .cloned())
     }
 
+    /// Records an untracked relative file import `file` from `origin` into `self.untracked`.
     pub(super) fn untracked(&mut self, origin: &str, file: &str, nested: bool) -> io::Result<()> {
         let mut existing = false;
         for value in self.untracked.values_mut() {

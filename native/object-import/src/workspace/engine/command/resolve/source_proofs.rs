@@ -59,7 +59,7 @@ fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof
     Ok(proof::content(path, bytes))
 }
 
-/// Collects absolute filesystem paths of all source files owned by components in `materials`.
+/// Collects absolute filesystem paths of all source files owned by components in `materials` under `root`.
 #[inline]
 pub(super) fn owned_paths(
     root: &Path,

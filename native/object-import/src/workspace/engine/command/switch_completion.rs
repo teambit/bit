@@ -43,6 +43,7 @@ pub(super) fn prepare(
     Ok(Some(Retained { root: record.request.root.clone(), bitmap, tracking, applied: false }))
 }
 impl Retained {
+    /// Verifies that deferred switch completion has not yet been applied and that `tracking` remains valid.
     #[inline]
     pub(super) fn pending(&self) -> io::Result<()> {
         if self.applied {

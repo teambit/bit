@@ -78,6 +78,7 @@ fn component_dependencies(state: &Value, output: &mut Vec<String>) -> io::Result
     Ok(())
 }
 
+/// Resolves the normalized component identity for entry `index` in `state["entries"]`.
 #[inline]
 fn dependency_id(state: &Value, index: &Value) -> io::Result<String> {
     let index = index.as_u64().ok_or_else(|| invalid("issue dependency index"))? as usize;

@@ -74,6 +74,7 @@ fn clean_extensions(version: &mut Value) {
     }
 }
 
+/// Strips empty version fields and trailing `@` markers from a single dependency-resolver entry.
 #[inline]
 fn clean_resolver_dependency(dependency: &mut Value) {
     remove_empty_version(dependency);

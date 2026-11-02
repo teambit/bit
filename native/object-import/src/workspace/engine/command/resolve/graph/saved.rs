@@ -60,6 +60,7 @@ pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates and inserts a single flattened dependency `edge` into `graph` within the node budget.
 fn insert_edge(graph: &mut Graph, edge: &Value) -> io::Result<()> {
     let source = key(&edge["source"])?;
     let target = key(&edge["target"])?;

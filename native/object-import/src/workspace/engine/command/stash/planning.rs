@@ -94,6 +94,7 @@ fn eligible(
     Ok(Some((stored, Some(hash))))
 }
 
+/// Validates that `input` target counts and selected IDs match the workspace targets in `retained`.
 fn validate(retained: &Retained, input: &Plan) -> io::Result<()> {
     let targets = retained.context["targets"].as_array().ok_or_else(|| invalid("stash targets"))?;
     if input.current.len() != targets.len() || input.components.len() != targets.len() {

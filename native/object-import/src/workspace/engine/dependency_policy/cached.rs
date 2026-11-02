@@ -65,6 +65,7 @@ pub(in crate::workspace::engine) fn complete(
 ) -> io::Result<(usize, Value)> {
     complete_view(request, pool, None)
 }
+/// Completes dependency policy evaluation for `request` against an in-memory [`SourceOverlay`].
 #[inline]
 pub(in crate::workspace::engine) fn complete_overlay(
     request: &Complete,

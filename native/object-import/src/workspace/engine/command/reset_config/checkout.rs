@@ -104,6 +104,7 @@ fn insert(
     Ok(())
 }
 
+/// Resolves the canonical aspect identifier string from an extension `row` in a `Version` object.
 fn identifier(row: &Value) -> io::Result<String> {
     if let Some(id) = row
         .get("extensionId")

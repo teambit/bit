@@ -50,7 +50,7 @@ pub(in super::super) fn append_skipped(
     Ok(())
 }
 
-/// Appends an `unchangedLegitimately` entry for `identity@head` to `failed` if not already present.
+/// Appends an `unchangedLegitimately` skipped-component entry for `identity@head` to `failed` if absent.
 #[inline]
 fn push_skipped(failed: &mut Vec<Value>, identity: &str, head: &str) {
     let id = format!("{identity}@{head}");

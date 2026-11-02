@@ -51,6 +51,7 @@ impl Component {
             .collect()
     }
 
+    /// Formats `<packageName>@<version>` strings for config-pinned dependencies matching `filter_ids`.
     pub(in crate::workspace::engine::command) fn pinned_packages_for(
         &self,
         filter_ids: &HashSet<&str>,

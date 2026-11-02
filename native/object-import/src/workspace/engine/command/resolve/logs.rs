@@ -76,6 +76,7 @@ fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
         .unwrap_or(&Value::Null)
 }
 
+/// Merges non-empty `message`, `username`, and `email` strings from `values` into `log`.
 #[inline]
 fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {

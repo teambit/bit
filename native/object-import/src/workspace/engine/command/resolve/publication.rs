@@ -65,6 +65,7 @@ pub(super) fn finalize(
     Ok(output)
 }
 
+/// Prepares soft-tag `.bitmap` updates on `retained` without persisting new `Version` objects.
 #[inline]
 fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> {
     let versions = retained.materials

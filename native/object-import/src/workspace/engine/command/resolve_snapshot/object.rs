@@ -96,6 +96,7 @@ fn metadata(
     Ok(version)
 }
 
+/// Populates or suffixes `"bump dependencies versions"` on `version["log"]["message"]` for auto-snapped components.
 #[inline]
 fn auto_message(version: &mut Value) {
     let message = version["log"]["message"].as_str().map_or("", str::trim);

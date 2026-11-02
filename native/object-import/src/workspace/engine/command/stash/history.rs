@@ -71,6 +71,7 @@ pub(super) fn commit(
     Ok(plans.len())
 }
 
+/// Filters `context["targets"]` to the optional `selected` component IDs for `VersionHistory` staging.
 fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("stash history targets"))?;
     Ok(targets

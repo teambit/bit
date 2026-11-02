@@ -84,6 +84,7 @@ fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Serializes `rows` as a `Source` object into `objects` and replaces `flattenedEdges` with `flattenedEdgesRef`.
 #[inline]
 fn store(version: &mut Value, rows: &Value, objects: &mut Vec<Value>) -> io::Result<()> {
     let body = serde_json::to_vec(rows).map_err(io::Error::other)?;

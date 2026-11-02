@@ -87,6 +87,7 @@ fn warnings(
     Ok(output)
 }
 
+/// Finds the highest existing semantic version tag in `material.model` using `semver` comparisons.
 fn latest_tag<'a>(material: &'a Material, semver: &'a Value) -> io::Result<Option<&'a str>> {
     let tags =
         material.model["versions"].as_object().ok_or_else(|| invalid("tag warning versions"))?;

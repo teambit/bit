@@ -52,6 +52,7 @@ struct GeneratedFile {
     url: Option<String>,
 }
 
+/// Captures builder-generated artifact `Source` objects from `receipt` into `objects` and records read `proofs`.
 pub(super) fn artifacts(
     receipt: &mut Value,
     objects: &mut Vec<Value>,

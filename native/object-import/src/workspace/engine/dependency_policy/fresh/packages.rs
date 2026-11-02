@@ -49,6 +49,7 @@ impl Reader {
         }
         Ok(reader)
     }
+    /// Reads and parses a `package.json` `file` under the 32 MiB byte budget while recording read proofs.
     fn json(&mut self, file: &Path) -> io::Result<Option<Value>> {
         let bytes = match &self.overlay {
             Some(view) => view.read(file, &mut self.proofs)?,

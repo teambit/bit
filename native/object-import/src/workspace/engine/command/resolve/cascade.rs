@@ -93,6 +93,7 @@ fn ordered<'a>(
     Ok(ordered)
 }
 
+/// Projects a single candidate component `row` and its `pinned` dependency set for `snapshotAutoTag`.
 fn component(row: &Value, pinned: &HashSet<String>) -> io::Result<Value> {
     let mut dependencies = Vec::new();
     for field in ["dependencies", "devDependencies", "peerDependencies"] {

@@ -45,6 +45,7 @@ pub(in crate::workspace::engine) fn apply_overlay(
 ) -> io::Result<(usize, Value)> {
     apply_view(request, pool, Some(overlay))
 }
+/// Runs the end-to-end dependency policy pipeline using an optional [`SourceOverlay`].
 fn apply_view(
     request: &Request,
     pool: &rayon::ThreadPool,

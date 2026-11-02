@@ -55,6 +55,7 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     result.map(|output| (count, output))
 }
 
+/// Rebuilds staged snapshot and publication plans on `retained` with builder extensions and artifacts from `input`.
 fn rebuild(
     input: BuildFinalize,
     retained: &mut super::super::Retained,

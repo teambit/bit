@@ -44,6 +44,7 @@ struct SourceChange {
     after: proof::Proof,
 }
 
+/// Verifies retained and dependency read proofs before callback execution and records `validated_sources`.
 pub(super) fn validate(input: &Validate, state: &mut State) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot owner absent"))?;
     pending(retained, &input.token)?;

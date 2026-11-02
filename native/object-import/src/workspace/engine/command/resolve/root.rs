@@ -53,6 +53,7 @@ pub(super) fn include(
     Ok(true)
 }
 
+/// Returns the workspace-root component identity auto-added to the current snap batch, if any.
 #[inline]
 pub(super) fn added(retained: &Retained) -> Option<&str> {
     retained.record.context[AUTO]
