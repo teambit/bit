@@ -21,6 +21,7 @@ use std::{
 pub(super) const MAX_BYTES: usize = 1024 * 1024 * 1024;
 const MAX_RECORDS: usize = 131_072;
 
+/// Captured loose scope object with its kind, raw bytes, parsed JSON [`Value`], or raw `Source` body.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Object {
     pub(super) kind: String,

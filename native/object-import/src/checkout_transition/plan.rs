@@ -9,6 +9,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
+/// Active checkout plans keyed by token alongside a monotonic sequence counter.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     pub(super) plans: HashMap<String, Plan>,

@@ -17,7 +17,7 @@ use crate::model::{
 };
 use indexmap::IndexMap;
 
-/// One entry of a `DependencyList`, package or component.
+/// Single `DependencyList` entry representing either a package or a workspace component dependency.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Dep<'a> {
     pub(super) package_name: &'a str,

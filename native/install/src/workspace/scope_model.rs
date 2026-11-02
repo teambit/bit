@@ -19,7 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Objects larger than this are not read (no Version or model gets close).
+/// Maximum inflated byte size (`64 MiB`) allowed when reading a component or `Version` object.
 const MAX_OBJECT_BYTES: u64 = 64 * 1024 * 1024;
 
 const ENVS_ASPECT: &str = "teambit.envs/envs";

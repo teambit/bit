@@ -6,6 +6,7 @@ use std::{
     io::{self, BufWriter, Write},
     path::Path,
 };
+/// Assign packed `.checkout-pack` file paths and byte offsets to `bodies`.
 #[inline]
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
     if bodies.is_empty() {

@@ -7,6 +7,7 @@ use super::{invalid, plan, prepare, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
+/// Deserialized `checkoutRetarget` request payload.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

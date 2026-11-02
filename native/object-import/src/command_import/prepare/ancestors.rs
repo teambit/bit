@@ -6,6 +6,7 @@ use crate::command_import::lane::Id;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
+/// Collect and stage all parent `Version` and `Source` objects reachable from `target`'s head.
 #[inline]
 pub(super) fn collect(
     plan: &mut PreparedImport,

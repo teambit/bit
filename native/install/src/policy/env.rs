@@ -7,7 +7,7 @@ use crate::model::{EnvPolicy, Lifecycle, PolicyEntry};
 use serde_json::{Map, Value, json};
 use std::io;
 
-/// Options of `entriesFromKey` in `env-policy.ts`.
+/// Options controlling version key, lifecycle, source, and `force` flag in `entriesFromKey`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct KeyOptions {
     version_key: &'static str,

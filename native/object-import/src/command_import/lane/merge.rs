@@ -8,6 +8,7 @@ use crate::command_import::{history, publish};
 use serde_json::{Value, json};
 use std::io;
 
+/// Merge an `incoming` remote [`Record`] into `old` and stage updated `Lane` and `LaneHistory` objects.
 pub(super) fn merge(
     plan: &mut PreparedImport,
     old: Option<&Record>,

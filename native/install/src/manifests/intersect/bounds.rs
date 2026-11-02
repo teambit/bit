@@ -6,6 +6,7 @@
 use super::super::semver::{Comparator, SemVer};
 use std::{cmp::Ordering, io};
 
+/// Format the [`SemVer`] version of `comparator`, or `""` when `None`.
 #[inline]
 fn version_text(comparator: &Comparator) -> String {
     comparator.semver

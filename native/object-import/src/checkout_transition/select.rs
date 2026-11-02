@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
 
+/// Active component version selection records keyed by selection token.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Record>,

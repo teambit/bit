@@ -8,6 +8,7 @@ use crate::command_import::Progress;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
+/// Refresh `main` heads and optional ancestor history for `scoped` targets across `remotes`.
 pub(super) fn refresh_all<'a>(
     plan: &mut PreparedImport,
     scoped: &[&'a Target],

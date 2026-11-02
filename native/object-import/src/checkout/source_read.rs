@@ -7,6 +7,7 @@ use rayon::{ThreadPool, prelude::*};
 use serde::Serialize;
 use std::io::{self, Read, Write};
 
+/// Verified `Source` object payload along with its compressed and inflated byte sizes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     body: Vec<u8>,

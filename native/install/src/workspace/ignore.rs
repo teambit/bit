@@ -9,6 +9,7 @@ mod tests;
 use regress::{Match, Regex};
 use std::{collections::HashMap, io, sync::OnceLock};
 
+/// Single compiled `node-ignore` regular expression rule and its negation flag.
 #[derive(Debug, Clone)]
 struct Rule {
     regex: Regex,

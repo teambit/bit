@@ -14,6 +14,7 @@ mod wire;
 
 use serde_json::{Value, json};
 use std::io;
+/// Per-helper checkout transition state owning active selection records and prepared plans.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     select: select::State,

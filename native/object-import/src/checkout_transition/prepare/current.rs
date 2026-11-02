@@ -12,6 +12,7 @@ use std::{
     fs,
     io::{self, Read},
 };
+/// Raw and LF-normalized byte buffers of a current workspace file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,

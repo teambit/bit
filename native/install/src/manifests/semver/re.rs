@@ -23,6 +23,7 @@ pub(super) enum Token {
     Coerce,
 }
 
+/// Regex pattern matching strict non-leading-zero numeric semver identifiers.
 const NUMERIC: &str = r"0|[1-9]\d*";
 const NUMERIC_LOOSE: &str = r"\d+";
 const NON_NUMERIC: &str = r"\d*[a-zA-Z-][a-zA-Z0-9-]*";

@@ -18,7 +18,7 @@ struct PeerVersions {
     r#override: bool,
 }
 
-/// The merge result.
+/// Merged root environment peers, overrides, per-env conflicts, and console messages.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct EnvRoot {
     /// Env peers for the root manifest (`envSelfPeers.toVersionManifest()`).

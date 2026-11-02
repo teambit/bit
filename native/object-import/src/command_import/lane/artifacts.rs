@@ -5,8 +5,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
-    /// Called after status/pattern/squash preparation, before any publication.
-    /// Canonical artifact import covers every status ID, including exclusions.
+    /// Stage artifact `Source` objects for `versions` on the fetched lane before publication.
     pub(crate) fn prepare_lane_artifacts(&mut self, versions: &[String]) -> io::Result<()> {
         let Some(lane) = &self.cache.fetched_lane else {
             return Ok(());

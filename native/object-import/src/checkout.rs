@@ -23,6 +23,7 @@ use serde::Serialize;
 
 use crate::protocol;
 
+/// Maximum number of files (`64`) accepted in a single checkout write batch.
 const MAX_FILES: u32 = 64;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PATH: usize = 32_768;

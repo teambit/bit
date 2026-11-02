@@ -18,6 +18,7 @@ pub(crate) struct Range {
     pub(crate) set: Vec<Vec<Comparator>>,
 }
 
+/// Unsatisfiable comparator sentinel (`<0.0.0-0`) emitted for empty range parts.
 const NULL_SET: &str = "<0.0.0-0";
 
 /// The comparator strings of one `||` part (`Range.parseRange`).

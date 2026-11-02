@@ -22,7 +22,7 @@ pub type Registration = (String, Value);
 /// The aspects Bit treats as core besides the manifest's core aspects.
 const RESERVED: [&str; 2] = ["teambit.harmony/bit", "teambit.harmony/config"];
 
-/// The env of env plugins (`*.bit-env.*`), which are not loaded through a provider.
+/// Aspect ID (`teambit.envs/env`) of environment plugins (`*.bit-env.*`).
 const ENV_OF_ENVS: &str = "teambit.envs/env";
 
 /// The registrations of the aspects the components configure. Core aspects never

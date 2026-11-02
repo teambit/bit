@@ -19,7 +19,7 @@ pub(crate) struct Comparator {
 }
 
 impl Comparator {
-    /// `new Comparator(comp)`: throws (`Err`) on an invalid comparator.
+    /// Parse a single `<op><version>` comparator string (`new Comparator(comp)`).
     pub(crate) fn parse(comp: &str) -> io::Result<Self> {
         let comp = collapse_whitespace(comp);
         let found = re(Token::Comparator)

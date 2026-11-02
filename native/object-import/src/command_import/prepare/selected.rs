@@ -7,8 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 impl PreparedImport {
-    /// Checkout head's includeUnexported/cache=false synchronization. Locally
-    /// owned scopes are a genuine no-op; explicit file remotes are fetched anew.
+    /// Synchronize unexported external targets against `global_remotes_file` before checkout.
     pub(crate) fn sync_unexported(
         &mut self,
         global_remotes_file: &Path,

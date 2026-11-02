@@ -8,6 +8,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
+/// Materialize prepared checkout files from `state` onto the workspace filesystem.
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Materialize = serde_json::from_value(input).map_err(io::Error::other)?;
     let plan = state.plans

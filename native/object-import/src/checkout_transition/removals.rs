@@ -4,6 +4,7 @@ use super::{invalid, plan};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
+/// Deserialized `checkoutRemovals` request payload.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

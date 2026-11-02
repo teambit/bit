@@ -20,7 +20,7 @@ mod range;
 mod re;
 mod version;
 
-/// The `semver` major whose behavior to reproduce.
+/// Major `semver` flavor (`V6` vs. `V7`) controlling desugared exclusive upper-bound suffixes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum Flavor {
     V6,

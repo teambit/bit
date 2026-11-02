@@ -9,6 +9,7 @@ use crate::command_import::{Progress, lane::validate_value};
 use std::{collections::HashSet, io};
 
 impl PreparedImport {
+    /// Read the raw remote `Lane` object at `hash` from `scope` when `scope` is a known remote.
     pub(in crate::command_import) fn lane_wire_object(
         &mut self,
         scope: &str,

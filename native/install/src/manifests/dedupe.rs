@@ -10,7 +10,7 @@ use super::deps::{DepsObject, Field};
 use crate::model::{DependencyMap, PolicyEntry};
 use indexmap::IndexMap;
 
-/// One component's requirement of a package (`PackageNameIndexComponentItem`).
+/// Single component's version requirement for a package (`PackageNameIndexComponentItem`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Item {
     pub(super) range: String,

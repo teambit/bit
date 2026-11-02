@@ -1,4 +1,4 @@
-//! Remote lane object preparation on [`PreparedImport`], missing-object staging, and component closure capture.
+//! Remote lane object preparation on [`PreparedImport`] ([`Id`], [`Record`]), missing-object staging, and component closure capture.
 mod fetch;
 mod history;
 

@@ -9,6 +9,7 @@ use super::{
 };
 use std::{cmp::Ordering, fmt, io};
 
+/// Normalized single comparator interval (`SingleVer` or `SingleRange`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Single {
     /// One exact version.

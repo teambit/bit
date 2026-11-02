@@ -7,6 +7,7 @@ use super::{MAX_BYTES, invalid, wire};
 use crate::command_import::Overlay;
 use std::{io, path::Path};
 
+/// Verify `version` against `directory` or `overlay` and validate its file manifest.
 pub(super) fn verify(
     directory: &Path,
     version: &wire::Version,

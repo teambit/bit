@@ -16,6 +16,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// Braille `dots` spinner frames matching `ora` 5 on stdout.
 const FRAMES: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const FRAME_INTERVAL: Duration = Duration::from_millis(80);
 

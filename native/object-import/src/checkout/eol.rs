@@ -16,6 +16,7 @@ pub(crate) fn binary(bytes: &[u8]) -> bool {
     suspicious_prefix(&bytes[..bytes.len().min(512)])
 }
 
+/// Return `true` when the leading bytes of `bytes` exceed `isbinaryfile`'s NUL or non-UTF-8 suspicion threshold.
 #[inline]
 fn suspicious_prefix(bytes: &[u8]) -> bool {
     let total = bytes.len();

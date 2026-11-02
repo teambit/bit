@@ -5,8 +5,7 @@ use super::{PreparedImport, Target, invalid, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
 impl PreparedImport {
-    /// `importCurrentObjects` seeds both remote lane versions and distinct bitmap versions.
-    /// Resolving the remote Lane itself is a metadata read, not a component import row.
+    /// Seed remote lane head versions and off-lane `.bitmap` versions for a lane checkout.
     pub(crate) fn prepare_checkout_lane(
         &mut self,
         root: &Path,

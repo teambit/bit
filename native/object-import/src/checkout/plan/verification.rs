@@ -5,6 +5,7 @@ use super::{
 };
 use serde_json::Value;
 use std::{io, path::Path};
+/// Verify that the stored `Version` object at `expected_hash` in `directory` matches `expected` files.
 #[inline]
 pub(crate) fn verify_manifest(
     directory: &Path,

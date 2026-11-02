@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Ignored everywhere, even with `trackAllFiles`.
+/// Glob patterns ignored across all component directories, even when `trackAllFiles` is enabled.
 pub const ALWAYS_IGNORE_LIST: [&str; 6] = [
     "**/.DS_Store",
     "**/.env",

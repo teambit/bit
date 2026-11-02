@@ -5,6 +5,7 @@
 use crate::model::ComponentId;
 use serde_json::{Map, Value};
 
+/// Aspect ID (`teambit.pkg/pkg`) of the package configuration aspect.
 const PKG_ASPECT: &str = "teambit.pkg/pkg";
 
 /// `getBindingPrefixByDefaultScope`: `@<owner>`, the part of the scope before the first dot.

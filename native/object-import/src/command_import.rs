@@ -29,6 +29,7 @@ use capture::{Capture, Object};
 use serde_json::Value;
 use std::{collections::HashMap, io, path::PathBuf};
 
+/// Component import target specifying optional scope, default scope, name, and requested version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Target {
     /// Bitmap scope, before defaultScope is substituted for unexported IDs.

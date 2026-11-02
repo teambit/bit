@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Workspace `.bitmap` filename.
 pub const BITMAP: &str = ".bitmap";
 const OLD_BITMAP: &str = ".bit.map.json";
 const SCHEMA_FIELD: &str = "$schema-version";

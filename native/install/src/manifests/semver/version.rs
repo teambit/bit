@@ -5,6 +5,7 @@
 use super::re::{Token, groups, re};
 use std::{cmp::Ordering, io};
 
+/// Maximum allowed byte length (`256`) of a semver version string.
 const MAX_LENGTH: usize = 256;
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 

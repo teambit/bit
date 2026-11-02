@@ -9,6 +9,7 @@ use super::{
     re::{Token, replace_first, split_whitespace},
 };
 
+/// Return `true` when `id` is empty, `"x"`, `"X"`, or `"*"`.
 #[inline]
 fn is_x(id: Option<&str>) -> bool {
     id.is_none_or(|id| {

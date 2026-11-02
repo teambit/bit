@@ -12,7 +12,7 @@ use super::semver::{Flavor, Range};
 use single::{Single, create_single, normalize};
 use std::io;
 
-/// A union of single ranges (`MultiRange`); empty is the library's invalid range.
+/// Union of [`Single`] comparator ranges (`MultiRange`); an empty vector represents an invalid range.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Multi(Vec<Single>);
 

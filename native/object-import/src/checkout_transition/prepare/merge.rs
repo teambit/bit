@@ -7,6 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
+/// Load required base `Source` blobs and compute three-way merge rows for `request`.
 pub(super) fn rows(
     request: &wire::Prepare,
     target: &[Vec<u8>],

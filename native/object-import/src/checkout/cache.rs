@@ -19,6 +19,7 @@ pub(crate) struct State {
     bytes: usize,
     key_bytes: usize,
 }
+/// Maximum total key byte budget (`4 MiB`) for cached `Source` object entries.
 const MAX_KEY_BYTES: usize = 4 * 1024 * 1024;
 const MAX_ENTRIES: usize = 4096;
 

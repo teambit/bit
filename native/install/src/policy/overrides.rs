@@ -15,7 +15,7 @@ pub const REMOVE: &str = "-";
 /// `+`: take the version from the workspace (`MANUALLY_ADD_DEPENDENCY`).
 pub const ADD: &str = "+";
 
-/// Index of a lifecycle in [`FieldMaps`].
+/// Return the [`FieldMaps`] array index (`0..=2`) corresponding to `lifecycle`.
 #[must_use]
 #[inline]
 pub const fn field_index(lifecycle: Lifecycle) -> usize {

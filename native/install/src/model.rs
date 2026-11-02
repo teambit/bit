@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
-/// A `package.json`-shaped object, keyed in insertion order.
+/// Ordered `package.json`-shaped JSON object map.
 pub type Manifest = Map<String, Value>;
 
 /// `{ name: range }` of one dependency field.

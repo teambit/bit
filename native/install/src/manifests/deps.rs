@@ -26,6 +26,7 @@ impl Field {
         Field::PeerDependencies,
     ];
 
+    /// Return the `package.json` dependency field name for `self`.
     #[inline]
     pub(super) const fn key(self) -> &'static str {
         match self {

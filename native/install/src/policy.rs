@@ -20,7 +20,7 @@ use crate::{
 };
 use serde_json::Value;
 
-/// The `dependency-resolver` aspect id.
+/// Aspect ID of `teambit.dependencies/dependency-resolver`.
 pub const DEPENDENCY_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 /// The workspace policy (`getWorkspacePolicy`): `workspace.jsonc`, overridden by the

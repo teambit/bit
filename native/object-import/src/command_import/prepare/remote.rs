@@ -3,6 +3,7 @@
 use super::{PreparedImport, invalid, object_hash};
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
+/// Validate a `scope.json` [`Value`] assuming the scope is on `main`.
 #[inline]
 pub(super) fn settings(value: &Value) -> io::Result<()> {
     settings_for_lane(value, false)

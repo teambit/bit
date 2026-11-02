@@ -4,6 +4,7 @@ use super::invalid;
 use serde::Deserialize;
 use serde_json::Value;
 use std::io;
+/// Initial checkout selection request payload containing [`Component`], [`Model`], and [`Options`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {

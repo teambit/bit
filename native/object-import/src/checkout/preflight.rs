@@ -5,6 +5,7 @@ use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};
 use std::io;
 
+/// Preflight-load and verify all checkout `Source` blobs for `request` in parallel or sequentially.
 #[inline]
 pub(super) fn load(
     request: &Request,

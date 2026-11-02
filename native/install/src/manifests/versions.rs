@@ -24,6 +24,7 @@ pub(super) fn snap_to_semver(version: &str) -> String {
     if is_hash(trimmed) { format!("0.0.0-{trimmed}") } else { trimmed.to_string() }
 }
 
+/// Compiled [`Regex`] matching a trailing `M.m.p(-pre)` semver suffix.
 #[inline]
 fn trailing_version() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();

@@ -17,6 +17,7 @@ use sha1::{Digest, Sha1};
 use super::{MAX_BYTES, invalid};
 use crate::read_budget::Budget;
 
+/// Inflate and SHA-1-verify the loose `Source` object at `hash` under `directory`.
 #[inline]
 pub(crate) fn source(
     directory: &Path,

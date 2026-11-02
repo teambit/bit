@@ -6,6 +6,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
+    /// Resolve and validate the `Version` object for `target` from the overlay or local scope.
     #[inline]
     pub(crate) fn policy_version(&mut self, target: &Target) -> io::Result<Value> {
         let local = self.environment.local_directory.clone();

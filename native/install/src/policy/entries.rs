@@ -13,7 +13,7 @@ pub const FIELDS: [(&str, Lifecycle); 3] = [
     ("peerDependencies", Lifecycle::Peer),
 ];
 
-/// Options of `VariantPolicy.fromConfigObject`.
+/// Options controlling source label, `force`, and `hidden` defaults in `VariantPolicy.fromConfigObject`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct VariantOptions {
     pub source: Option<&'static str>,

@@ -7,6 +7,7 @@ mod tests;
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
 use std::io;
+/// Resolved checkout file entry mapping a relative path to its prepared body and alias indices.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) kind: &'static str,

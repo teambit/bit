@@ -12,6 +12,7 @@ use serde_json::{Map, Value};
 
 const ENVS_ASPECT: &str = "teambit.envs/envs";
 const SPECIFIC_FIELD: &str = "__specific";
+/// Default built-in environment ID (`teambit.harmony/node`) when no env aspect is configured.
 pub const DEFAULT_ENV: &str = "teambit.harmony/node";
 
 /// One aspect of a component (`ExtensionDataEntry`).

@@ -8,6 +8,7 @@ use crate::read_budget::Budget;
 use rayon::prelude::*;
 use std::io;
 
+/// Maximum total byte budget (`32 MiB`) for parallel workspace file loading.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
 #[inline]

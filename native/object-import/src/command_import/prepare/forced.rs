@@ -4,6 +4,7 @@
 use super::{PreparedImport, Target, dependencies::dependency_target, identity, invalid};
 use std::{collections::HashSet, io};
 
+/// Stage missing flattened dependencies for `roots` when `fetchAllDependencies` is forced.
 pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result<()> {
     let identities = roots
         .iter()
