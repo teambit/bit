@@ -10,7 +10,7 @@ pub fn is_plus(version: &str) -> bool {
     matches!(version.trim(), "+" | "+^" | "+~")
 }
 
-/// `resolvePlusVersion`: prefix only release tags, retaining snaps and existing ranges.
+/// `resolvePlusVersion`: prefix only release tags, retaining snaps and existing ranges (see [`is_plus`]).
 #[inline]
 #[must_use]
 pub fn resolve(version: &str, resolved: Option<&str>, fallback: &str) -> String {

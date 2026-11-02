@@ -31,6 +31,7 @@ enum TaggedValue {
     Object(#[serde(deserialize_with = "entries")] Vec<(Vec<u16>, Value)>),
 }
 
+/// `serde` visitor accepting either a tagged [`TaggedValue`] map or compact primitive/array forms.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct ValueVisitor;
 impl<'de> Visitor<'de> for ValueVisitor {

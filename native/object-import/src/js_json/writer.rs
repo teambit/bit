@@ -17,6 +17,7 @@ pub(super) struct Writer {
 }
 
 impl Writer {
+    /// Creates a new [`Writer`] configured for compact (`false`) or pretty-printed (`true`) JSON output.
     #[inline]
     pub(super) fn new(pretty: bool) -> Self {
         Self { output: Vec::with_capacity(256), nodes: 0, pretty, spaces: 2 }

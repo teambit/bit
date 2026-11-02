@@ -12,6 +12,7 @@ struct Request {
     fields: js_json::Value,
     keys: Vec<String>,
 }
+/// Projects and validates the `UTF-16` `history` map entries from a `LaneHistory` object.
 fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json::Value)>> {
     let projected = crate::snapshot_projection::project("LaneHistory", fields)?;
     let js_json::Value::Object(fields) = projected else {

@@ -64,6 +64,7 @@ fn parse_strategy(value: Option<&Value>) -> io::Result<Option<&'static str>> {
         _ => Err(invalid("unsupported merge strategy")),
     }
 }
+/// Reads a required boolean or `"true"`/`"false"` string flag at `key` from `input`.
 pub(super) fn boolean(input: &Value, key: &str) -> io::Result<bool> {
     if let Some(flag) = input[key].as_bool() {
         return Ok(flag);

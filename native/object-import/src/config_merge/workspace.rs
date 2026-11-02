@@ -16,6 +16,7 @@ struct Plan {
     remove_packages: Vec<String>,
     debug: Vec<String>,
 }
+/// Plans `workspace.jsonc` dependency policy updates and conflict resolutions for `input`.
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     let records = array(input, "records")?;
     let ordinary = aggregate(records, "mergedPolicy")?;

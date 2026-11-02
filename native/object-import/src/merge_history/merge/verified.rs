@@ -36,6 +36,7 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
     execute(&request, prepared, false)
 }
 
+/// Validates `base` and `other` model file arrays and counts against `prepared` byte slices.
 fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()> {
     for (models, bodies) in
         [(&request.base, prepared.base.len()), (&request.other, prepared.other.len())]

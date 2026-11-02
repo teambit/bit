@@ -28,6 +28,7 @@ impl Drop for Process {
         let _wait = self.0.wait();
     }
 }
+/// Writes `bytes` to `directory`, runs `git merge-file`, and interprets the exit status and merged output.
 pub(super) fn git(
     index: usize,
     bytes: MergeBytes<'_>,

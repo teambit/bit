@@ -25,8 +25,8 @@ use std::{
     io::{self, Read, Write},
     path::PathBuf,
 };
-
 const MAX_JSON: usize = 4 * 1024 * 1024;
+/// Deserialized session-scoped merge, history, inspection, snapshot, or transfer wire request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",

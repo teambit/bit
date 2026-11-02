@@ -10,6 +10,7 @@ impl State {
         self.memory_snapshots = true;
     }
 }
+/// Computes the remaining snapshot byte budget in `state` after accounting for `incoming` files.
 pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize> {
     if incoming > MAX_FILES {
         return Err(invalid("inspection retained file/byte limit"));

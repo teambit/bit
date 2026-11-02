@@ -12,6 +12,7 @@ struct Request {
     versions: Vec<Version>,
     short_hash: bool,
 }
+/// Deserialized `Version` graph node entry with parent, squashed, and unrelated links.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Version {

@@ -26,6 +26,7 @@ pub(super) fn capture(
         })
 }
 
+/// Captures `files` serially within `remaining` bytes after parallel [`Budget`] contention.
 // Skewed file sizes retry serially before any spool or public plan is published.
 #[inline]
 fn smaller(

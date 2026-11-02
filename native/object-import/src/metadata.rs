@@ -8,6 +8,7 @@ use flate2::{Decompress, FlushDecompress, Status};
 /// Maximum inflated byte size (256 KiB) allowed for inline metadata object streams.
 pub(crate) const MAX_BYTES: usize = 256 * 1024;
 
+/// Inflates a complete zlib `compressed` stream into a `UTF-8` string within [`MAX_BYTES`].
 // Only losslessly decoded, completely terminated streams can bypass Node inflation.
 pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
     if compressed.is_empty() || compressed.len() > MAX_BYTES * 2 {

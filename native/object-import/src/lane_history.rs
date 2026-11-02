@@ -12,6 +12,7 @@ pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
     read_at(&crate::scope_path(root), lane_hash)
 }
 
+/// Reads and validates the `LaneHistory` object for `lane_hash` in scope `directory`.
 pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
     let lane_hash = lane_hash.trim();
     if lane_hash.len() != 40

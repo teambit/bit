@@ -23,6 +23,7 @@ struct Fields {
     #[serde(default)]
     overlays: Vec<Value>,
 }
+/// Deserialized tag and orphaned-tag label mappings for BFS `Version` traversal.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Labels {

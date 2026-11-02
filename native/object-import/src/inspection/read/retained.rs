@@ -23,6 +23,7 @@ pub(super) fn load(
     Ok((snapshot.contents.to_vec(), snapshot.raw_bytes, snapshot.raw_hash.clone()))
 }
 
+/// Loads raw file bytes, size, and SHA-1 digest using a shared parallel [`Budget`].
 pub(super) fn load_shared(
     file: &wire::Input,
     budget: &Budget,

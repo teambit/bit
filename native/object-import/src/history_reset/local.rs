@@ -12,6 +12,7 @@ struct Append {
     #[serde(default)]
     main_only: Vec<String>,
 }
+/// Appends `mainOnly` refs not already present in `sourceOnly` and returns the combined list.
 pub(super) fn append(input: Value) -> io::Result<Value> {
     let request: Append = serde_json::from_value(input).map_err(io::Error::other)?;
     refs(&request.source_only)?;

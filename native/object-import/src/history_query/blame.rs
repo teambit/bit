@@ -21,6 +21,7 @@ pub(super) struct Request {
     snapshot_directory: Option<PathBuf>,
     logs: Vec<Value>,
 }
+/// Computes line-by-line historical blame attribution across `request.logs` using `cache`.
 pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
     if request.logs.len() > 4096 {
         return Err(invalid("history blame record limit"));

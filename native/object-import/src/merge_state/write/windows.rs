@@ -35,6 +35,7 @@ pub(super) fn open(path: &Path) -> io::Result<fs::File> {
     Ok(file)
 }
 
+/// Returns `true` when `before` and `after` refer to the same Windows volume and file index.
 #[inline]
 fn same_file_identity(
     before: &winapi_util::file::Information,

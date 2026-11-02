@@ -50,6 +50,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
+/// Recursively populates `history["versions"]` starting from `head` in `directory`.
 fn populate(
     moved: &mut Moved,
     directory: &Path,

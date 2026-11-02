@@ -45,6 +45,7 @@ pub fn ci_requires_published_diagnostic(
     Ok(missing)
 }
 
+/// Returns `true` when the local `LaneHistory` for `lane_hash` at `root` already contains `history_id`.
 #[inline]
 fn local_contains(root: &Path, lane_hash: &str, history_id: &str) -> io::Result<bool> {
     match super::read(root, lane_hash) {

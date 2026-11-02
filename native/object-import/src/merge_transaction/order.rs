@@ -20,6 +20,7 @@ pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::
     Ok(permutation)
 }
 
+/// Validates the observed completion order for a single merge stage and writes it into `permutation`.
 fn apply_stage(
     actual: &Value,
     expected: &Value,

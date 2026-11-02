@@ -13,6 +13,7 @@ struct Path {
     old: isize,
     runs: Vec<Run>,
 }
+/// Single emitted line-diff segment (`kind` and concatenated line `value`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Part {
     pub(super) kind: u8,

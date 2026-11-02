@@ -12,6 +12,7 @@ struct Candidates {
     components: Vec<String>,
     removed: Vec<String>,
 }
+/// Deserialized `historyResetPattern` request (`components` and pattern `matches`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Pattern {

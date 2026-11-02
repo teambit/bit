@@ -50,6 +50,7 @@ impl Cache {
         Ok((self.records.entry(canonical.to_owned()).or_insert(record), true))
     }
 }
+/// Per-query `Source` object reader and optional snapshot file materializer backed by [`Cache`].
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Sources<'a> {
     directory: PathBuf,

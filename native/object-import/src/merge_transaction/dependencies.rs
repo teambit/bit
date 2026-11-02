@@ -11,6 +11,7 @@ fn rows<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .filter(|rows| rows.len() <= 4096)
         .ok_or_else(|| invalid("merge dependency count"))?)
 }
+/// Extracts the `(scope, name)` tuple from a dependency object or string identifier.
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     let target = value.get("id").unwrap_or(value);
     if let Some(raw) = target.as_str() {

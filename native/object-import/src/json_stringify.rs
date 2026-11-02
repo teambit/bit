@@ -11,6 +11,7 @@ pub fn stringify_json(value: &serde_json::Value, pretty: bool) -> io::Result<Str
     String::from_utf8(bytes).map_err(io::Error::other)
 }
 
+/// Converts a `serde_json::Value` tree into an accessor-free [`Value`] with `UTF-16` strings and `binary64` hex numbers.
 fn convert(value: &serde_json::Value) -> io::Result<Value> {
     Ok(match value {
         serde_json::Value::Null => Value::Null,

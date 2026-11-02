@@ -40,6 +40,7 @@ pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &
     Ok(ordered)
 }
 
+/// Validates `UTF-16` property `key` length and uniqueness within `seen`.
 #[inline]
 fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result<()> {
     if key.len() > 32768 {

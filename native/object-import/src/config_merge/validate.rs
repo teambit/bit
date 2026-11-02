@@ -16,6 +16,7 @@ pub(super) fn fields(input: &Value, fields: &[&str]) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates a map of `SemVer` range descriptor objects (at most `4096` entries).
 #[inline]
 pub(super) fn semver(input: &Value) -> io::Result<()> {
     let entries = input

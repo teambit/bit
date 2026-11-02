@@ -19,6 +19,7 @@ pub(super) struct Origin {
 }
 
 impl Origin {
+    /// Resolves parent lane or `main` origin state from `documents` at workspace `root`.
     pub(super) fn read(
         root: &Path,
         documents: &Documents,

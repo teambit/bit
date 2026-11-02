@@ -25,6 +25,7 @@ pub(super) fn get<'a>(value: &'a Js, key: &str) -> &'a Js {
     }
     &MISSING
 }
+/// Sets or inserts property `key` with value `new` on a `UTF-16` [`Js`] object.
 pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
     let Js::Object(fields) = value else {
         return Err(invalid("inspection expected object"));

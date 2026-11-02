@@ -16,6 +16,7 @@ struct Request {
     #[serde(default)]
     exclude: Vec<String>,
 }
+/// Single component row with its outgoing `dependencies` for reverse-index construction.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Row {

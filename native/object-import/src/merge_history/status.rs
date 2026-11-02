@@ -4,7 +4,7 @@ use super::{graph, hash, invalid};
 use serde_json::{Value, json};
 use std::io;
 
-/// Computes read-only ahead/behind divergence counts between `source` and `target` in `records`.
+/// Computes read-only ahead/behind divergence counts between `source` and `target` in [`graph::Version`] `records`.
 /// Cached command histories are read-only here. An absent head requires the
 /// canonical population/write checkpoint before a cold command can proceed.
 #[inline]

@@ -45,6 +45,7 @@ impl Value {
         Self::Number(format!("{:016x}", value.to_bits()))
     }
 
+    /// Returns `true` when `self` is truthy under `ECMAScript` `ToBoolean` rules.
     pub fn truthy(&self) -> io::Result<bool> {
         Ok(match self {
             Self::Undefined | Self::Null => false,

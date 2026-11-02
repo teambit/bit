@@ -67,6 +67,7 @@ impl Moved {
     }
 }
 
+/// Stages unexported `main` snaps at `root` into the newly created lane (`scope`/`name`).
 pub(super) fn prepare(
     root: &Path,
     documents: &Documents,

@@ -30,6 +30,7 @@ pub mod stash_store;
 pub use bit_workspace_config::jsonc;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap` and `workspace.jsonc`.
 pub use bit_workspace_config::parse_jsonc;
+/// Resolves local or remote lane identity from `.bitmap` and `index.json` without a `Node.js` round trip.
 pub use command_import::lane::resolve_lane_identity;
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).

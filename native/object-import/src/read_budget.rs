@@ -18,6 +18,7 @@ impl Budget {
         Self(AtomicUsize::new(bytes))
     }
 
+    /// Atomically subtracts `bytes` from the remaining parallel read allowance.
     #[inline]
     pub(crate) fn reserve(&self, bytes: usize) -> io::Result<()> {
         if bytes == 0 {

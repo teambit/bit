@@ -38,6 +38,7 @@ struct Documents {
     bitmap: Value,
 }
 
+/// Caller options (`alias` and `fork_lane_new_scope`) for [`Plan::prepare`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Options<'a> {
     pub alias: &'a str,

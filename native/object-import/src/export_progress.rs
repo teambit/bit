@@ -7,10 +7,15 @@ use std::{cell::RefCell, sync::mpsc::SyncSender};
 /// Metadata-only progress event emitted during native export phases.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
+    /// Exporting `objects` to remote `scope`.
     Transfer { scope: String, objects: usize },
+    /// Starting remote verification phase.
     Verify,
+    /// Completed remote verification phase.
     Verified,
+    /// Persisting exported refs in remote `scope`.
     Persist { scope: String },
+    /// Progress message emitted by the remote hub.
     HubMessage(String),
 }
 thread_local! {

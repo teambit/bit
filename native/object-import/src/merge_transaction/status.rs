@@ -11,6 +11,7 @@ pub(super) struct State {
     records: HashMap<String, Cursor>,
     sequence: u64,
 }
+/// Deserialized component identity and workspace presence flags for `mergeStatusBegin`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Identity {

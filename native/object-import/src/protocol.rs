@@ -7,6 +7,7 @@ use std::io::{self, Read, Write};
 /// Maximum serialized byte size (128 MiB) permitted for a single session protocol frame.
 pub(crate) const MAX_BATCH_BYTES: usize = 128 * 1024 * 1024;
 
+/// Reads a big-endian `u32` frame word from `reader`.
 #[inline]
 pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
     let mut bytes = [0; 4];

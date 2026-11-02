@@ -26,6 +26,7 @@ pub(super) struct File {
     pub(super) snapshot_path: PathBuf,
 }
 impl File {
+    /// Serializes a JSON metadata summary (`relativePath`, hashes, `snapshotPath`, `bytes`) for this file.
     #[inline]
     pub(super) fn summary(&self) -> Value {
         json!({"relativePath":self.relative_path,"rawHash":self.raw_hash,"linuxHash":self.linux_hash,"snapshotHash":self.snapshot_hash,"snapshotPath":self.snapshot_path,"bytes":self.contents.len()})

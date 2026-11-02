@@ -12,6 +12,7 @@ pub(super) struct State {
     records: HashMap<String, Record>,
     sequence: u64,
 }
+/// Active merge transaction journal record tracking phase `cursor`, batch `index`, and `revision`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     mode: &'static str,

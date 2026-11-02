@@ -15,6 +15,7 @@ pub(super) struct Begin {
     #[serde(default)]
     pub(super) snapshot_directory: PathBuf,
 }
+/// Single workspace file descriptor (`relativePath`, `path`, optional retained observation hashes/token).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Input {

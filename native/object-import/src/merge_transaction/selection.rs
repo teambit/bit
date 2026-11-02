@@ -12,6 +12,7 @@ fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
         .ok_or_else(|| invalid("merge selection count"))?;
     Ok(values)
 }
+/// Partitions component merge `statuses` into `failed`, `remove`, `succeeded`, and `visible` index lists.
 pub(super) fn results(input: &Value) -> io::Result<Value> {
     let mut failed = Vec::new();
     let mut removed = Vec::new();

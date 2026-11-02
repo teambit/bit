@@ -27,6 +27,7 @@ pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> 
     .map_err(io::Error::other)?;
     graph::load(&request).map(|mut value| value["versions"].take())
 }
+/// Deserialized merge-history wire request (`Graph`, `Diverge`, or `MergeFiles`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",

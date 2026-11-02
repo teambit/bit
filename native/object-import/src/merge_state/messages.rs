@@ -20,6 +20,7 @@ pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value>
     Ok(json!({"messages":messages}))
 }
 
+/// Extracts `log.message` (or an empty string when absent) from a `Version` JSON object.
 #[inline]
 fn version_log_message(mut version: Value) -> Value {
     match version

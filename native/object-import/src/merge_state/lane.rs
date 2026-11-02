@@ -18,6 +18,7 @@ pub(super) struct Plan {
     #[serde(flatten)]
     options: Options,
 }
+/// Existing lane head, visibility, and readme metadata for [`Plan`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Lane {

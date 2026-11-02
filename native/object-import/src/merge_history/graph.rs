@@ -19,6 +19,7 @@ pub(super) struct Version {
     #[serde(skip_serializing_if = "Option::is_none")]
     squashed: Option<Vec<String>>,
 }
+/// Deserialized `Version` ancestry graph load request (`objectsDirectory`, `heads`, `cached`, `overlay`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Load {

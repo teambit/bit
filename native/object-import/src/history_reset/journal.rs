@@ -11,6 +11,7 @@ pub(crate) struct State {
     records: HashMap<String, Record>,
     sequence: u64,
 }
+/// Single active `bit reset` phase-journal record tracking cursor, revision, and fork state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     phases: Vec<&'static str>,

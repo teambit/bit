@@ -22,6 +22,7 @@ pub(super) struct Request {
     color: bool,
     snapshot_directory: Option<PathBuf>,
 }
+/// Generates a single-file unified diff for `request` using `cache` and optional snapshots.
 pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value> {
     crate::merge_history::path(&request.objects_directory)?;
     let trimmed_path = request.relative_path.trim();

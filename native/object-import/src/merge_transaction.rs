@@ -24,6 +24,7 @@ pub(crate) struct State {
     status: status::State,
     bodies: bodies::State,
 }
+/// Dispatches a merge transaction operation (`kind`) against session `state`.
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     let kind = kind.trim();
     match kind {

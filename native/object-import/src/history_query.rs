@@ -41,6 +41,7 @@ fn reads(versions: (usize, usize), sources: (usize, usize), overlays: usize) -> 
     serde_json::json!({"versionObjects":versions.0,"versionInflatedBytes":versions.1,"sourceObjects":sources.0,"sourceBodyBytes":sources.1,"overlayVersions":overlays})
 }
 
+/// Validates a `Version` JSON `value` (`teambit.pipelines/builder` artifacts and collection shape).
 #[inline]
 pub(crate) fn validate_version(value: &Value) -> io::Result<()> {
     artifacts::validate(value)?;

@@ -21,6 +21,7 @@ pub(crate) fn reset(input: &Value) -> io::Result<Value> {
     reset::plan(input)
 }
 
+/// Plans `.bitmap` root-directory diffing against `current` component directories.
 #[inline]
 pub(crate) fn bitmap(path: &Path, current: &[String]) -> io::Result<Value> {
     bitmap::plan(path, current)

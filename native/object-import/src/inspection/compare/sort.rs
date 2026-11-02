@@ -28,6 +28,7 @@ pub(super) fn rows(
     fields::set(value, field, Js::Array(sorted))?;
     Ok(indices)
 }
+/// Sorts files, dependencies, extensions, package maps, and overrides on `value` for comparison.
 pub(super) fn all(value: &mut Js) -> io::Result<Value> {
     let files = rows(value, "files", |row| fields::text(fields::get(row, "relativePath")))?;
     let dependencies = rows(value, "dependencies", |row| fields::id(fields::get(row, "id"), true))?;

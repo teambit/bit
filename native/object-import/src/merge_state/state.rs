@@ -18,6 +18,7 @@ pub(crate) struct State {
     token: Option<String>,
     revision: u32,
 }
+/// Sub-operation state registries (`workspace_reads`, `merge_transaction`, `history_query`, `history_reset`, `checkout_transition`, `transfer`).
 #[derive(Default)]
 pub(crate) struct Operations {
     pub(crate) workspace_reads: crate::workspace::snapshots::State,

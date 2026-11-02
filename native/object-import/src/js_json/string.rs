@@ -26,6 +26,7 @@ pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
     writer.bytes(b"\"")
 }
 
+/// Writes a single `UTF-16` code `unit` (escaping control characters, quotes, and lone surrogates) into `writer`.
 fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     if (0x20..0x80).contains(&unit) && unit != 34 && unit != 92 {

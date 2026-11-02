@@ -13,6 +13,7 @@ pub(crate) struct State {
     sequence: u64,
     bytes: usize,
 }
+/// Active history query plan entry with its objects directory, byte size, and [`Cache`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Plan {
     value: Value,

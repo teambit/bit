@@ -41,6 +41,7 @@ impl Plan {
         Ok(Self { root: root.to_owned(), before, before_bitmap, index, hashes })
     }
 
+    /// Moves selected `Lane` objects to scope trash and persists the updated `index.json`.
     pub fn commit(&self) -> io::Result<()> {
         let scope_dir = crate::scope_path(&self.root);
         if fs::read(scope_dir.join("index.json"))? != self.before

@@ -16,6 +16,7 @@ enum Operation {
     VersionHistory(HistoryPlan),
     Component(ComponentPlan),
 }
+/// Deserialized `VersionHistory` merge input (`existing`, `incoming`, and `stored` hashes).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct HistoryPlan {
     existing: Vec<String>,

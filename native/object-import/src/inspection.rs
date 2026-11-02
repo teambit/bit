@@ -37,6 +37,7 @@ type Plans = HashMap<String, Arc<[read::File]>>;
 
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
+/// Session-scoped registry of retained workspace file inspection plans and snapshot weak refs.
 #[derive(Debug, Default, Clone)]
 pub(crate) struct State {
     plans: Plans,

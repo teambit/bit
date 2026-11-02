@@ -62,7 +62,7 @@ fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
     )?;
     file.set_permissions(metadata.permissions())
 }
-/// Check the same held-file identity rules as `commit` before a larger plan
+/// Check the same held-file identity rules as [`commit`] before a larger plan
 /// starts publishing unrelated files. Opening here never truncates the file.
 pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
     validate_path(path)?;

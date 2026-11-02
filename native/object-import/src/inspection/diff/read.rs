@@ -43,6 +43,7 @@ pub(super) fn load(
     }
     Ok(output)
 }
+/// Reads `Source` records for `files` in parallel using shared atomic byte budgets.
 #[inline]
 fn parallel(
     directory: &Path,
