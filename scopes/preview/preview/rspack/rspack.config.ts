@@ -41,9 +41,6 @@ export function createRspackConfig(outputDir: string, entryFile: string): Config
     mode,
 
     devtool: shouldUseSourceMap ? 'source-map' : false,
-    experiments: {
-      css: true,
-    },
 
     entry: {
       main: entryFile,

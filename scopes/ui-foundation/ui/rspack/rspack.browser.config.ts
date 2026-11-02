@@ -15,6 +15,7 @@ import {
   mjsRule,
   swcRule,
   sourceMapRule,
+  sourceMapIgnoreWarnings,
   fontRule,
   styleRules,
   processFallback,
@@ -47,9 +48,6 @@ export default function createRspackBrowserConfig(
     mode: 'production',
 
     devtool: shouldUseSourceMap ? 'source-map' : false,
-    experiments: {
-      css: true,
-    },
 
     entry: Object.fromEntries(
       (() => {
@@ -94,6 +92,8 @@ export default function createRspackBrowserConfig(
       alias: resolveAlias({ profile: isEnvProductionProfile }),
       fallback: resolveFallback,
     },
+
+    ignoreWarnings: sourceMapIgnoreWarnings,
 
     module: {
       parser: cssParser,
