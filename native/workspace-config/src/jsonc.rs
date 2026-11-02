@@ -21,8 +21,8 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{fmt, io};
 
-/// Parse JSONC (comments and trailing commas) into plain JSON, keeping the
-/// key order JavaScript would.
+/// Parse `JSONC` (comments and trailing commas) via [`Document::parse`] into plain JSON, keeping the
+/// key order `JavaScript` would.
 #[inline]
 pub fn parse(text: &str) -> io::Result<Value> {
     Ok(Document::parse(text)?.value())

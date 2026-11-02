@@ -6,6 +6,7 @@ mod tests;
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;
+/// Validates that `value` is a well-formed Harmony 1 (`1.0.0`) or Harmony 2 (`2.0.0`) `Version` object.
 /// Harmony 1 predates always-scoped IDs, but imported scoped objects use the
 /// same file layout as Harmony 2. Never infer scopes for historical aliases.
 pub(in crate::workspace::engine) fn validate(value: &Value) -> io::Result<()> {

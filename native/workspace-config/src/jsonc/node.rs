@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use serde_json::{Map, Number, Value};
 use std::collections::HashMap;
 
-/// A comment as comment-json records it: `value` is the text between the
+/// A comment as `comment-json` records it: `value` is the text between the
 /// delimiters, `inline` whether it starts on the line the previous token ended on.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Comment {

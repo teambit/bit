@@ -4,6 +4,7 @@ use super::config;
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Aspect identifier for the workspace dependency resolver configuration entry.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 /// Effective aspect settings using the released global and workspace precedence.

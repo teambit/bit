@@ -4,6 +4,7 @@ use super::super::wire::Entry;
 use serde::Deserialize;
 use std::collections::HashMap;
 
+/// Map of component or package identities to version strings.
 type Versions = HashMap<String, String>;
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

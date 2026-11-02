@@ -4,6 +4,7 @@ use super::{Request, invalid};
 use crate::workspace::engine::dependency_policy::wire::name;
 use std::io;
 
+/// Validates collection budgets and policy key spellings in `request`.
 pub(super) fn validate(request: &Request) -> io::Result<()> {
     let sources = [&request.sources.bitmap, &request.sources.lane, &request.sources.model];
     let maps = request.policy.manual

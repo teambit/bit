@@ -2,7 +2,7 @@
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
-/// Read `<directory>/config.json`, retaining ordinary JSON parsing diagnostics.
+/// Read `<directory>/config.json` via [`read_global_config_with`], retaining ordinary JSON parsing diagnostics.
 #[inline]
 pub fn read_global_config(directory: &Path) -> io::Result<Value> {
     read_global_config_with(directory, |_, error| io::Error::other(error))

@@ -4,6 +4,7 @@ use super::{invalid, io};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
+/// Map of package names to version range JSON values.
 type Packages = Map<String, Value>;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

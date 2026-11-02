@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained two-phase workspace inventory plans keyed by token.
 #[derive(Debug, Default)]
 pub(crate) struct State {
     next: u64,

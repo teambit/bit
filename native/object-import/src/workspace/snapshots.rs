@@ -9,6 +9,7 @@ use std::{
     sync::Arc,
 };
 
+/// Maximum total byte budget retained across operation-local file observations.
 pub(crate) const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
 const MAX_TOKEN: u64 = (1 << 53) - 1;

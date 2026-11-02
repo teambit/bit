@@ -15,6 +15,7 @@ pub(super) struct Index<'a> {
     pub(super) env: HashSet<&'a str>,
 }
 impl<'a> Index<'a> {
+    /// Builds an [`Index`] over bitmap, lane, model, and env-own version sources in `request`.
     pub(super) fn new(request: &'a Request) -> Self {
         let mut bitmap = HashMap::with_capacity(request.sources.bitmap.len());
         for id in &request.sources.bitmap {

@@ -10,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Wire request for assembling the final workspace status result payload from `targets` and `models`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

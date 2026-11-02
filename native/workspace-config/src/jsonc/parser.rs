@@ -7,7 +7,7 @@ use super::{
 };
 use std::io;
 
-/// The parsed root plus the comments before and after it.
+/// The parsed [`Node`] root plus the [`Comment`] lists before and after it.
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct Parsed {
     pub(super) root: Node,

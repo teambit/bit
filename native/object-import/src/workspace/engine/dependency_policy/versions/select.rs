@@ -6,6 +6,7 @@ use super::{
 };
 use std::io;
 
+/// Candidate `(version, range)` choice produced by a single version source.
 type Choice = Option<(String, Option<String>)>;
 type Selected = Option<(String, Option<String>, bool)>;
 pub(super) fn select(

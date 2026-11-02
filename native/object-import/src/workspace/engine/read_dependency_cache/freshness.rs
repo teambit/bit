@@ -9,6 +9,7 @@ use std::{
     time::{Duration, UNIX_EPOCH},
 };
 
+/// Returns `true` when any tracked directory or source file under `root` is newer than `timestamp`.
 pub(super) fn stale(
     root: &Path,
     files: &[PathBuf],

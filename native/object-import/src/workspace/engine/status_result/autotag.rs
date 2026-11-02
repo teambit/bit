@@ -3,6 +3,7 @@ use super::{Request, Target, invalid};
 use serde_json::{Value, json};
 use std::io;
 
+/// Computes pending auto-tag candidates and dependency cycles for modified components in `request`.
 pub(super) fn pending(request: &Request) -> io::Result<Value> {
     let changed: Vec<_> = request.targets
         .iter()

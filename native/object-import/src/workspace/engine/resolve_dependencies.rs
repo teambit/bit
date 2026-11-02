@@ -1,4 +1,4 @@
-//! Bounded `CommonJS` and `TypeScript` module dependency path resolution for [`Request`].
+//! Bounded `CommonJS` and `TypeScript` module dependency path resolution via [`resolve`] for [`Request`].
 
 use super::{
     dependency_graph::proof,

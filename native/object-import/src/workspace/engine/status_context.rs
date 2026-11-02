@@ -14,6 +14,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
 
+/// Wire request for reading workspace configuration, tracking, and status model context.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

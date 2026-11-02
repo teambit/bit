@@ -3,6 +3,7 @@
 use super::node::{Comment, Comments, Node, Object};
 use std::fmt::Write as _;
 
+/// Two-space indentation unit used by `comment-json` `stringify(value, undefined, 2)`.
 const INDENT: &str = "  ";
 
 /// Whitespace as JavaScript's `String.prototype.trim` sees it.

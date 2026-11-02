@@ -11,6 +11,7 @@ use std::{
     io,
 };
 
+/// Resolves unique `Version` object hashes referenced by `targets` across `models`.
 pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec<String>> {
     let index: HashMap<_, _> = models
         .iter()

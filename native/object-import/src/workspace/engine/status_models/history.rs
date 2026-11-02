@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs::File, io, path::Path};
 
+/// Computes status and merge version-history distances and staged history plans for `models`.
 pub(super) fn read(
     reader: &Reader<'_>,
     models: &[Value],

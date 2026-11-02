@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Wire request for reading local `bit log` component history and [`control::Control`] metadata.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

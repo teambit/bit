@@ -29,6 +29,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Wire request for loading scope index, version, lane, and history models for workspace status.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

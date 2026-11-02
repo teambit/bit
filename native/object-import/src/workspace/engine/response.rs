@@ -5,6 +5,7 @@ mod tests;
 use super::{MAX_OUTPUT, invalid};
 use std::io::{self, Write};
 
+/// Error wrapper carrying a canonical user-facing `message` and optional partial `progress` payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CanonicalError {
     message: String,

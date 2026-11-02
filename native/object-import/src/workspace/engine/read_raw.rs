@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Framed raw workspace file record with binary body offset, byte length, and optional snapshot token.
 #[derive(Serialize)]
 struct Record {
     #[serde(flatten)]

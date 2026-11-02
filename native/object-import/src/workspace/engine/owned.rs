@@ -6,6 +6,7 @@ use super::{
 use serde_json::Value;
 use std::io;
 
+/// Dispatches `request` against `snapshots` and `pool` for command and inventory operations.
 pub(super) fn owned_command(
     request: Request,
     snapshots: &mut snapshots::State,

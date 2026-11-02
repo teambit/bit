@@ -8,6 +8,7 @@ use std::{
     fs, io,
     path::{Component, Path, PathBuf},
 };
+/// Validates that `target` source overlays reside inside an ordinary absolute temporary directory.
 #[inline]
 pub(super) fn validate(target: &Target) -> io::Result<()> {
     if !target.source_overlays.is_empty() && target.source_overlay_root.is_none() {

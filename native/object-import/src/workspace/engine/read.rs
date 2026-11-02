@@ -9,6 +9,7 @@ use std::{
     io::{self, Read},
     path::{Path, PathBuf},
 };
+/// Workspace file record combining [`Metadata`] hashes with UTF-8 `contents`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct FileRecord {

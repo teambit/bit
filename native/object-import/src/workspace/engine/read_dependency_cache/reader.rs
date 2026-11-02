@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Maximum byte size permitted for a `cacache` index bucket or content blob.
 const LIMIT: usize = 8 * 1024 * 1024;
 
 pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {

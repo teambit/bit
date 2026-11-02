@@ -1,7 +1,7 @@
 //! Global config [`global_config_dir`] and [`cache_root`] locations from `legacy.constants`.
 use std::{env, path::PathBuf};
 
-/// `GLOBAL_CONFIG` contains config.json below `CACHE_ROOT`.
+/// `GLOBAL_CONFIG` contains `config.json` below [`cache_root`].
 #[must_use]
 #[inline]
 pub fn global_config_dir() -> PathBuf {

@@ -15,6 +15,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Wire request for comparing two local `Version` objects (`from_version` and `to_version`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

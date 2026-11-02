@@ -3,6 +3,7 @@
 
 use std::{io, iter::Peekable, str::CharIndices};
 
+/// Token kind emitted by the `JSONC` [`Lexer`].
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum Kind {
     Punct(char),

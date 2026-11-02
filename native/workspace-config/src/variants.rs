@@ -8,7 +8,7 @@ mod glob;
 use serde_json::{Map, Value};
 use std::io;
 
-/// Keys of a variant that are not aspects.
+/// Keys of a variant entry in `workspace.jsonc` that are not aspect configurations.
 const INTERNAL_FIELDS: [&str; 3] = ["propagate", "exclude", "defaultScope"];
 
 #[derive(Debug, Clone, Copy, PartialEq)]

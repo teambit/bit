@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::PathBuf};
 
+/// Wire request for validating or persisting staged `VersionHistory` [`Plan`] entries.
 #[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Request {

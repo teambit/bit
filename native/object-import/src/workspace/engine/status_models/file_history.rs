@@ -16,6 +16,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Wire request for reading per-file `Version` and `Source` history for `log-file` and `blame`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

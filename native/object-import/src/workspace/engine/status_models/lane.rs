@@ -10,6 +10,7 @@ use std::{
     path::Path,
 };
 
+/// Active local lane metadata, component heads, and remote lane ref mappings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Lane {
     pub(super) scope: String,

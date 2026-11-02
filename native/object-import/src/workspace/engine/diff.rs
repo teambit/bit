@@ -14,6 +14,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Wire descriptor for a single file diff input pair.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct InputFile {

@@ -8,6 +8,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Executes `git diff` across `files` using a bounded worker pool and preserves input order.
 pub(super) fn execute(
     files: &[Prepared],
     directory: Option<&Path>,

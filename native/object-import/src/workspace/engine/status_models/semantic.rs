@@ -5,6 +5,7 @@ use crate::js_json::Value as Js;
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Computes the canonical semantic SHA-1 hash of a projected `Version` `model`.
 #[inline]
 pub(super) fn hash(model: &Value) -> io::Result<String> {
     Ok(crate::snapshot_projection::semantic(&project(model)?)?.hash)

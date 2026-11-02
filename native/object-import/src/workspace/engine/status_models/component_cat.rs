@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
+/// Wire request for inspecting a stored `ModelComponent`, `Version`, or `Source` object via `cat-component`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

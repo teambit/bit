@@ -4,6 +4,7 @@ use super::MAX_FILES;
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
+/// Constructs an `InvalidData` [`io::Error`] with `message`.
 #[inline]
 pub(super) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

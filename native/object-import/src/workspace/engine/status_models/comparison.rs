@@ -8,6 +8,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
 
+/// Wire request for comparing workspace [`Target`] entries against stored scope versions.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

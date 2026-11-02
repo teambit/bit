@@ -10,6 +10,7 @@ use std::{
     path::Path,
 };
 
+/// Reads and validates remote `main` head references under `refs/remotes` for `models`.
 pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, String>> {
     let scopes = models
         .iter()

@@ -19,7 +19,7 @@ mod tests;
 use serde_json::{Map, Value};
 use std::io;
 
-/// Preserve JavaScript object insertion order while later stores replace earlier values.
+/// Preserve `JavaScript` object insertion order while later stores (`global`, `scope`, `workspace`) replace earlier values.
 #[must_use]
 #[inline]
 pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<String, Value> {

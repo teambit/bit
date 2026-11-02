@@ -10,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
 
+/// Wire request for diffing workspace component files against stored local `Version` models.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

@@ -11,6 +11,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Wire request for listing pending `main` updates on a lane over a retained import [`Overlay`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

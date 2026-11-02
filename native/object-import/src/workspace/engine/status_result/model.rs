@@ -3,6 +3,7 @@ use super::{Request, invalid, push};
 use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};
 
+/// Appends staged, tracked, merge-pending, and outdated status entries for `model` into `output`.
 pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io::Result<()> {
     let identity = identity(model, request)?;
     let history = request.histories

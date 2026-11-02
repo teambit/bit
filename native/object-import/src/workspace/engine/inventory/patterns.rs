@@ -10,6 +10,7 @@ use std::{
     path::Path,
 };
 
+/// Nested `.gitignore` or `.bitignore` pattern list discovered under `directory`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(super) struct Nested {
     directory: String,

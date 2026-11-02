@@ -4,6 +4,7 @@ use super::{super::snapshots, Request, command, owned_command};
 use serde_json::Value;
 use std::io;
 
+/// Dispatches stash and resolve snapshot callback `request` phases against `snapshots`.
 #[inline]
 pub(super) fn dispatch(
     request: Request,

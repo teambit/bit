@@ -12,6 +12,7 @@ use std::{
     io,
 };
 
+/// Diffs `current` workspace files against stored `model` sources under `budgets`.
 pub(super) fn read(
     request: &Request,
     current: Vec<File>,

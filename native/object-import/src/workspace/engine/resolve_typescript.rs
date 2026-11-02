@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Resolves a relative `TypeScript` 5.9 `Node10` module specifier from `parent` under `budget`.
 // Node10 resolution with the canonical lookup's fixed { module: CommonJS } options.
 // Missing results retain canonical lookup, including its CommonJS fallback.
 pub(super) fn lookup(

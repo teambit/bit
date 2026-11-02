@@ -9,6 +9,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Wire request for building the status dependency graph from saved `versions` and `components`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

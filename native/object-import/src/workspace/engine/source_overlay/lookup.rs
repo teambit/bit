@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Outcome of resolving a path through a sealed [`SourceOverlay`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Found<'a> {
     Entry(&'a Entry),

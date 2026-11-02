@@ -3,7 +3,7 @@
 //! Like minimatch's defaults, wildcards never match a leading `.`.
 
 /// `matchPatterns(file, splitPatterns(patterns))` of `@teambit/toolbox.path.match-patterns`:
-/// matches an include pattern and no `!`-prefixed exclude pattern.
+/// matches an include pattern via [`matches`] and no `!`-prefixed exclude pattern.
 #[must_use]
 #[inline]
 pub fn match_patterns(file: &str, patterns: &[String]) -> bool {

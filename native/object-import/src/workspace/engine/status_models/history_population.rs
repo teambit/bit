@@ -5,6 +5,7 @@ use crate::workspace::engine::{dependency_graph::proof, status_history};
 use serde_json::{Value, json};
 use std::io;
 
+/// Populates `VersionHistory` edges for `heads` and stages a proof-backed update plan when changed.
 pub(super) fn prepare(
     reader: &Reader<'_>,
     model: &Value,
