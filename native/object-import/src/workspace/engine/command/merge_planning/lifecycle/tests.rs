@@ -1,6 +1,6 @@
 //! Unit tests for [`Prepared`] [`merge`] lifecycle persistence notifications on empty merges.
 //!
-//! Verifies that empty merge executions in [`scratch`] workspaces still trigger `onPostObjectsPersist` without writing `unmerged.json`.
+//! Verifies that empty [`Prepared`] [`merge`] executions in [`scratch`] workspaces still trigger `onPostObjectsPersist` without writing `unmerged.json`.
 
 use super::{Prepared, merge};
 use crate::workspace::engine::command::scratch;

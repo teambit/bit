@@ -1,6 +1,6 @@
 //! Unit tests for retaining BOM-stripped source observation [`proof`]s via [`retain`] until publication.
 //!
-//! Ensures captured BOM-prefixed sources in [`snapshots`] remain bound to their raw on-disk hash until commit.
+//! Ensures captured BOM-prefixed sources in [`snapshots`] remain bound to their raw on-disk hash via [`retain`] and [`proof`] until commit.
 
 use super::{proof, retain, snapshots};
 use serde_json::json;

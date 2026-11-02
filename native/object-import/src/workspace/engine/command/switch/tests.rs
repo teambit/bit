@@ -48,6 +48,7 @@ fn checkout_import_counts_selected_cached_ids_and_additions_not_entire_lane() {
     assert_eq!(progress::receipt(0)["performed"], false);
 }
 
+/// Verifies that [`status_load_order`] orders `main`-only workspace targets ahead of stored lane [`Entry`] order.
 #[test]
 fn checkout_callback_loads_main_only_then_stored_lane_order() {
     let context = json!({"targets":[
@@ -66,6 +67,7 @@ fn checkout_callback_loads_main_only_then_stored_lane_order() {
     );
 }
 
+/// Verifies that [`order_targets`] reorders `context["targets"]` to match `order` and rejects mismatched identity lists.
 #[test]
 fn checkout_target_records_follow_the_published_status_order() {
     let mut context = json!({"targets":[
@@ -81,6 +83,7 @@ fn checkout_target_records_follow_the_published_status_order() {
     );
 }
 
+/// Verifies that [`validate_lane`] accepts `None` when switching to the `main` [`Id`].
 #[test]
 fn validate_lane_accepts_absent_lane_when_switching_to_main() {
     let main = Id { scope: String::new(), name: "main".into() };

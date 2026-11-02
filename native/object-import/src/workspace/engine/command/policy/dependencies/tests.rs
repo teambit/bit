@@ -66,6 +66,7 @@ fn snap_issue_receipt_preserves_visible_identity_and_serialized_packages() {
     );
 }
 
+/// Verifies that `issues::target` projects dependency IDs in runtime-then-dev lifecycle order alongside captured [`Row`] issues.
 #[test]
 fn issue_projection_uses_final_native_state_in_lifecycle_order() {
     let state = json!({"components":[[1],[0],[]],"entries":[{"identity":"scope/dev@2.0.0"},{"id":"scope/runtime@1.0.0"}]});
@@ -82,6 +83,7 @@ fn issue_projection_uses_final_native_state_in_lifecycle_order() {
     );
 }
 
+/// Verifies that `snapshot_identities` excludes fast-forward rows so fixed fast-forward dependencies do not trigger pending snapshot cascades.
 #[test]
 fn fixed_fast_forward_dependency_is_not_a_pending_snapshot_cascade() {
     let rows = [cascade_row("scope/ff", true), cascade_row("scope/snapshot", false)];
@@ -91,6 +93,7 @@ fn fixed_fast_forward_dependency_is_not_a_pending_snapshot_cascade() {
     assert!(super::component(&json!({"identity":"scope/snapshot@1.0.0"}), &pending).is_err());
 }
 
+/// Builds a minimal [`Row`] with `identity` and `fast_forward` for pending snapshot cascade tests.
 fn cascade_row(identity: &str, fast_forward: bool) -> super::super::Row {
     super::super::Row {
         identity: identity.into(),

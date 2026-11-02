@@ -58,6 +58,7 @@ fn status_semantic_hash_is_independent_of_harmony_schema_and_storage_defaults() 
     );
 }
 
+/// Verifies that [`validate`] and [`project`] reject mixed string and object entries within `flattenedDependencies` or `flattenedDevDependencies`.
 #[test]
 fn flattened_id_representation_is_uniform_within_each_historical_field() {
     let object = json!({"scope":"scope","name":"dep","version":"1.0.0"});
@@ -68,6 +69,7 @@ fn flattened_id_representation_is_uniform_within_each_historical_field() {
     }
 }
 
+/// Verifies that [`validate`] accepts scoped string and object dependency IDs while rejecting unscoped string IDs.
 #[test]
 fn validate_accepts_scoped_string_dependency_ids_and_rejects_unscoped() {
     let valid = json!({
@@ -83,6 +85,7 @@ fn validate_accepts_scoped_string_dependency_ids_and_rejects_unscoped() {
     assert!(validate(&unscoped).is_err());
 }
 
+/// Verifies that [`validate`] and [`project`] decline non-object `Version` JSON values.
 #[test]
 fn non_object_version_value_is_rejected_by_validate_and_project() {
     assert!(validate(&json!("not-an-object")).is_err());

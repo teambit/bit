@@ -1,6 +1,6 @@
 //! Unit tests for local model [`object`] tag version and orphaned [`VersionState`] updates.
 //!
-//! Verifies that newly tagged [`Material`] and [`Participation`] versions clear matching `orphanedVersions` entries and update `head`.
+//! Verifies that newly tagged [`Material`], [`Participation`], and [`VersionState`] versions clear matching `orphanedVersions` entries and update `head` via [`object`].
 
 use super::{Material, Participation, VersionState, object};
 use serde_json::json;

@@ -102,6 +102,7 @@ fn seeded_binary64_utf16_and_own_keys_match_node_stringify() {
     }
 }
 
+/// Verifies that [`Value::truthy`] and [`Value::empty`] distinguish objects with `Undefined` own properties and IEEE-754 special floats.
 #[test]
 fn truthiness_and_lodash_empty_distinguish_undefined_own_properties() {
     let object = Value::Object(vec![(vec![97], Value::Undefined)]);
@@ -113,6 +114,7 @@ fn truthiness_and_lodash_empty_distinguish_undefined_own_properties() {
     assert!(Value::number(f64::INFINITY).truthy().unwrap());
 }
 
+/// Verifies that [`stringify`] declines invalid number bit strings, duplicate object keys, and deeply nested arrays.
 #[test]
 fn invalid_bits_duplicate_keys_and_deep_metadata_decline() {
     assert!(stringify(&Value::Number("wrong".to_owned()), false).is_err());
@@ -125,6 +127,7 @@ fn invalid_bits_duplicate_keys_and_deep_metadata_decline() {
     assert!(stringify(&deep, false).is_err());
 }
 
+/// Verifies that [`stringify`] returns `Ok(None)` for top-level [`Value::Undefined`] and `Ok(Some(b"null"))` for [`Value::Null`].
 #[test]
 fn top_level_undefined_stringifies_to_none_while_null_stringifies_to_literal() {
     assert_eq!(stringify(&Value::Undefined, false).unwrap(), None);

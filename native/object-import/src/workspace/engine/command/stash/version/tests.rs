@@ -1,6 +1,6 @@
 //! Unit tests for detached stash `Version` [`Allocation`] and [`Component`] object [`prepare`] and log retention.
 //!
-//! Verifies that detached stash versions in [`snapshots`] preserve consumer log metadata, builder data, and graph edges.
+//! Verifies that detached stash versions in [`snapshots`] preserve [`Component`] and [`Allocation`] consumer log metadata, builder data, and graph edges via [`prepare`].
 
 use super::{Allocation, Component, prepare, snapshots};
 use serde_json::json;

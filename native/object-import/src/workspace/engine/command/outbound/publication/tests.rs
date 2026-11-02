@@ -1,6 +1,6 @@
 //! Unit tests for per-scope remote ref preparation ([`prepare_refs`]) and [`Selected`] host validation ([`validate_selected`]).
 //!
-//! Ensures remote ref updates with [`HistoryBytes`] and [`ModelBytes`] are grouped per scope and validated against selected export targets.
+//! Ensures remote ref updates with [`HistoryBytes`] and [`ModelBytes`] are grouped per scope via [`prepare_refs`] and validated against [`Selected`] export targets via [`validate_selected`].
 
 use super::{Selected, prepare_refs, validate_selected};
 use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelBytes};

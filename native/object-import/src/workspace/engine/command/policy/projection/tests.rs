@@ -52,6 +52,7 @@ fn default_load_replaces_dynamic_data_preserving_entry_order_and_unknown_data_fi
     assert_eq!(actual.as_array().unwrap().len(), 8);
 }
 
+/// Verifies that [`dependencies`] deduplicates component entries ahead of packages and preserves canonical field order.
 #[test]
 fn dependency_serialization_preserves_component_first_deduplication_and_canonical_field_order() {
     let state = json!({"entries":[{"identity":"scope/dep@1.0.0","packageName":"@scope/dep","versionRange":"^1.0.0"}],
@@ -85,6 +86,7 @@ fn dependency_serialization_preserves_component_first_deduplication_and_canonica
     assert!(dependencies(&unsupported, &[]).is_err());
 }
 
+/// Verifies that [`extensions`] preserves passive `teambit.component/deprecation` configuration without adding a default callback slot.
 #[test]
 fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot() {
     let stored =

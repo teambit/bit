@@ -72,6 +72,7 @@ fn parallel_reads_preserve_exact_aggregate_limit_and_return_no_partial_data() {
     assert!(output.get("data").is_none());
 }
 
+/// Verifies that `read_with` keeps mixed-size file batch reads on the Rayon worker pool even when one file exceeds a worker share.
 #[test]
 fn mixed_file_sizes_keep_successful_reads_on_the_worker_pool() {
     let directory = Directory::new();
@@ -89,6 +90,7 @@ fn mixed_file_sizes_keep_successful_reads_on_the_worker_pool() {
     }
 }
 
+/// Verifies that [`response`] returns `completed: 0` and an empty `files` array for an empty `read` request.
 #[test]
 fn empty_file_batch_returns_empty_files_array_with_zero_completed() {
     let output = response(&json!({"kind":"read", "files":[]}));

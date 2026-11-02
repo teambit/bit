@@ -60,6 +60,7 @@ fn readded_property_keeps_comments_and_new_one_goes_last() {
     assert_eq!(document.to_string(), golden::READD_EDIT);
 }
 
+/// Verifies that [`parse`] strips comments and trailing commas while ordering numeric index keys before string keys.
 #[test]
 fn parse_returns_plain_json_in_javascript_key_order() {
     let value =
@@ -74,6 +75,7 @@ fn parse_returns_plain_json_in_javascript_key_order() {
     assert_eq!(keys, ["2", "10", "b", "a"]);
 }
 
+/// Verifies [`Document::get`], [`Document::set`], [`Document::assign`], and [`Document::remove`] on nested `JSONC` properties.
 #[test]
 fn get_set_and_assign() {
     let mut document = Document::parse("{\n  // keep\n  \"a\": { \"b\": 1 }\n}").unwrap();
@@ -89,6 +91,7 @@ fn get_set_and_assign() {
     assert_eq!(document.get(&["a", "c"]), None);
 }
 
+/// Verifies that [`Document::parse`] and [`parse`] reject invalid `JSONC` syntax that `comment-json` rejects.
 #[test]
 fn rejects_what_json_parse_rejects() {
     for input in [

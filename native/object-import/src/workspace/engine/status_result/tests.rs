@@ -34,6 +34,7 @@ fn clean_main_and_modified_dependency_autotag() {
     assert_eq!(output["modifiedComponents"], json!(["scope/alpha"]));
     assert_eq!(output["autoTagPendingComponents"], json!(["scope/beta"]));
 }
+/// Verifies that [`result`] reports `ComponentNotFoundInPath` in `invalidComponents` without adding the component to `autoTagPendingComponents`.
 #[test]
 fn invalid_component_is_reported_without_entering_the_autotag_graph() {
     let mut input = fixture();
@@ -49,6 +50,7 @@ fn invalid_component_is_reported_without_entering_the_autotag_graph() {
     ]);
     assert_eq!(output["invalidComponents"], expected);
 }
+/// Verifies that [`result`] unions `detachedHeads` with `main` branch lineage in canonical staged version order.
 #[test]
 fn detached_staged_labels_union_main_lineage_in_canonical_order() {
     let mut input = fixture();
@@ -61,6 +63,7 @@ fn detached_staged_labels_union_main_lineage_in_canonical_order() {
         json!([{"id":"scope/alpha","versions":["ccc","1.0.0"]}]),
     );
 }
+/// Verifies that [`result`] keeps `outdatedComponents` (remote ahead) and `mergePendingComponents` (diverged) mutually exclusive.
 #[test]
 fn remote_ahead_and_diverged_sections_are_exclusive() {
     let mut input = fixture();
@@ -76,6 +79,7 @@ fn remote_ahead_and_diverged_sections_are_exclusive() {
     assert_eq!(output["outdatedComponents"], json!([]));
     assert_eq!(output["mergePendingComponents"], json!(["scope/alpha"]));
 }
+/// Verifies that [`read`] declines when `semver` grammar entries are missing or `noCommon` is true.
 #[test]
 fn missing_grammar_and_unrelated_histories_decline() {
     let mut input = fixture();
@@ -86,6 +90,7 @@ fn missing_grammar_and_unrelated_histories_decline() {
     assert!(read(&serde_json::from_value(input).unwrap()).is_err());
 }
 
+/// Verifies that [`result`] on a non-`main` lane stages only lane-head components while keeping `main`-only components clean.
 #[test]
 fn current_lane_stages_only_lane_heads_and_keeps_main_components_clean() {
     let mut input = fixture();

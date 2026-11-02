@@ -1,6 +1,6 @@
 //! Differential tests for `ModelComponent`, `Lane`, and `VersionHistory` [`snapshot_projection`] serialization.
 //!
-//! Compares native [`js_json`] and [`snapshot_projection`] object bodies and hashes against `@teambit/objects` in `bit-object-import`.
+//! Compares native [`js_json`] and [`snapshot_projection`] object bodies and hashes against `@teambit/objects` via [`Command`] in `bit-object-import`.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

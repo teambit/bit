@@ -1,6 +1,6 @@
 //! Unit tests for transitive dependent cascade cycle [`reports`] in `bit-object-import`.
 //!
-//! Ensures cyclic dependent graphs preserve candidate order, record triggering versions, and exclude explicitly selected components.
+//! Ensures cyclic dependent graphs preserve candidate order via [`reports`], record triggering versions, and exclude explicitly selected components.
 
 use super::reports;
 use serde_json::json;

@@ -55,6 +55,7 @@ fn snapshots_evict_oldest_observations_at_both_limits() {
     assert_eq!(state.records.len(), MAX_FILES);
 }
 
+/// Verifies that [`State::retain`] declines once [`MAX_TOKEN`] is reached without wrapping or reusing observation tokens.
 #[test]
 fn token_exhaustion_declines_without_reusing_an_observation_identity() {
     let mut state = State { next: MAX_TOKEN - 1, ..State::default() };
@@ -63,6 +64,7 @@ fn token_exhaustion_declines_without_reusing_an_observation_identity() {
     assert_eq!(state.records.len(), 1);
 }
 
+/// Verifies that [`State::retain`] rejects a single [`Observation`] whose size exceeds [`MAX_BYTES`].
 #[test]
 fn oversized_single_snapshot_beyond_byte_limit_is_rejected() {
     let mut state = State::default();

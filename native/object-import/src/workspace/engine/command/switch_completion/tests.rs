@@ -58,6 +58,7 @@ fn checkout_and_lane_finalization_have_distinct_preimages_and_reasons() {
     );
     assert!(!root.join(".bitTmp").exists());
 }
+/// Verifies that [`Retained::commit`] rejects an unacknowledged `.bitmap` modification after the first checkout phase without writing history.
 #[test]
 fn changed_intermediate_bitmap_cannot_be_rebased_or_finalize_the_lane() {
     let directory = tempfile::tempdir().unwrap();
@@ -75,6 +76,7 @@ fn changed_intermediate_bitmap_cannot_be_rebased_or_finalize_the_lane() {
     assert!(!root.join(".bit/bitmap-history/.bitmap-2026-10-18-1-2-4").exists());
 }
 
+/// Verifies that `complete` rejects unowned installer workspace write receipts before any `.bitmap` publication.
 #[test]
 fn completion_rejects_unowned_installer_write_receipts_before_any_publication() {
     let input = super::Complete {
@@ -86,6 +88,7 @@ fn completion_rejects_unowned_installer_write_receipts_before_any_publication() 
     assert_eq!(error.to_string(), "switch completion has no acknowledged installer bitmap writes");
 }
 
+/// Verifies that `publish_checkout: false` skips the intermediate checkout `.bitmap` write and updates `.bitmap` only in [`Retained::commit`].
 #[test]
 fn keep_ours_updates_only_the_final_bitmap_without_a_component_writer_stage() {
     let directory = tempfile::tempdir().unwrap();

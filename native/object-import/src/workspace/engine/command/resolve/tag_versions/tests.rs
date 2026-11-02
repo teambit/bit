@@ -51,6 +51,7 @@ fn existing_exact_tag_declines_before_any_semantic_assignment() {
     assert!(materials[0].version_state.tagged_version.is_none());
 }
 
+/// Verifies that [`plan`] applies `releaseType` (rather than `autoTagReleaseType`) when a [`Material`] has both `selected` and `automatic` set.
 #[test]
 fn selected_automatic_report_overlap_keeps_selected_increment() {
     let mut linked = material("scope/new", true, &json!({}));
@@ -61,6 +62,7 @@ fn selected_automatic_report_overlap_keeps_selected_increment() {
     assert_eq!(materials[1].version_state.tagged_version.as_deref(), Some("0.1.0"));
 }
 
+/// Verifies that [`plan`] rewrites `versionRange` only on direct dependencies tagged in the same batch and rejects invalid `componentRangePrefix` values.
 #[test]
 fn tag_ranges_rewrite_only_same_batch_direct_dependencies() {
     let mut parent = material("scope/parent", true, &json!({}));
@@ -79,6 +81,7 @@ fn tag_ranges_rewrite_only_same_batch_direct_dependencies() {
     assert!(super::ranges::update(&mut materials).is_err());
 }
 
+/// Verifies that [`plan`] assigns `"0.0.1-<preReleaseId>.0"` when tagging a new component with `releaseType: "prerelease"`.
 #[test]
 fn prerelease_tag_planning_assigns_initial_prerelease_version_for_new_component() {
     let mut materials = [material("scope/new", false, &json!({}))];

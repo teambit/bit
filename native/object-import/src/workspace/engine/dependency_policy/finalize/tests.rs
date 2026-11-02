@@ -38,6 +38,7 @@ fn automatic_peers_follow_workspace_upgrades_and_keep_snap_versions_exact() {
         assert_eq!(output["state"]["packages"][2]["sample-peer"], expected);
     }
 }
+/// Verifies that [`finish`] resolves manual `+~` and `+^` ranges from `packageJson` and reports unresolved packages in `missing`.
 #[test]
 fn manual_plus_ranges_take_package_manifest_versions_and_missing_stays_missing() {
     let mut value = input();
@@ -53,6 +54,7 @@ fn manual_plus_ranges_take_package_manifest_versions_and_missing_stays_missing()
             .contains(&json!("missing-peer")),
     );
 }
+/// Verifies that [`finish`] resolves environment self-policy `+~` ranges against the installed `concreteVersion` ahead of workspace ranges.
 #[test]
 fn environment_self_policy_prefers_installed_version_over_workspace_range() {
     let mut value = input();
@@ -63,6 +65,7 @@ fn environment_self_policy_prefers_installed_version_over_workspace_range() {
     assert_eq!(output["state"]["packages"][0]["sample-peer"], "~1.2.3");
 }
 
+/// Verifies that [`finish`] returns empty `added` and `missing` arrays when given a default [`input`].
 #[test]
 fn empty_finalize_input_produces_no_added_or_missing_packages() {
     let output = finish(input());

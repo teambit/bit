@@ -29,6 +29,7 @@ fn finish(token: u64, owner: &mut State) -> Value {
         owner,
     )
 }
+/// Verifies that [`begin`] and [`finish`] enforce single-use [`State`] token ownership and reject reused or canceled tokens.
 #[test]
 fn inventory_is_owned_bounded_and_tokens_cannot_be_reused() {
     let directory = Directory::new();
@@ -49,6 +50,7 @@ fn inventory_is_owned_bounded_and_tokens_cannot_be_reused() {
     );
     assert_eq!(finish(next, &mut owner)["failed"], true);
 }
+/// Verifies that `inventoryBegin` returns an empty file list for a missing component directory while requiring the workspace root to exist.
 #[test]
 fn a_missing_component_directory_is_empty_but_the_workspace_root_must_exist() {
     let directory = Directory::new();
@@ -68,6 +70,7 @@ fn a_missing_component_directory_is_empty_but_the_workspace_root_must_exist() {
     );
     assert_eq!(absent_workspace["failed"], true);
 }
+/// Verifies that `inventoryFinish` releases retained paths on failure and `inventoryBegin` declines non-ASCII case-folding paths.
 #[test]
 fn inventory_failure_releases_retained_paths_and_unicode_declines_before_publication() {
     let directory = Directory::new();
@@ -93,6 +96,7 @@ fn inventory_failure_releases_retained_paths_and_unicode_declines_before_publica
     assert_eq!(begin(&directory, &mut owner)["failed"], false);
 }
 
+/// Verifies that [`State`] caps concurrent pending inventories and `inventoryCancel` frees capacity for subsequent [`begin`] calls.
 #[test]
 fn pending_inventory_count_is_bounded_and_cancellation_frees_capacity() {
     let directory = Directory::new();

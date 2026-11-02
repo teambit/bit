@@ -69,6 +69,7 @@ fn overlapping_matches_count_loads_before_unique_publication() {
     assert_eq!(selected.identities, candidates);
 }
 
+/// Verifies that [`pattern_order`] returns an empty selection with `load_count == 0` when `patterns` is empty.
 #[test]
 fn empty_patterns_return_empty_selection_with_zero_loads() {
     let candidates = vec!["scope/first".into(), "scope/second".into()];

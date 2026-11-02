@@ -40,6 +40,7 @@ fn explicit_all_still_rejects_overlapping_roots_before_selection() {
     assert!(selected(&request("**"), &context).is_err());
 }
 
+/// Verifies that [`selected`] captures lane-selected `inactiveTargets` without mutating the active `context` targets or allowing overlapping directories.
 #[test]
 fn lane_selected_inactive_capture_does_not_expand_active_context() {
     let mut input = request("**");
@@ -56,6 +57,7 @@ fn lane_selected_inactive_capture_does_not_expand_active_context() {
     assert!(selected(&input, &overlapping).is_err());
 }
 
+/// Verifies that [`selected`] for `checkout head --all` selects only current lane components whereas `checkout latest --all` selects all workspace targets.
 #[test]
 fn checkout_head_without_a_pattern_selects_only_current_lane_components() {
     let context = json!({"targets":[
@@ -82,6 +84,7 @@ fn checkout_head_without_a_pattern_selects_only_current_lane_components() {
     );
 }
 
+/// Verifies that [`bitmap_identities`] includes tracked, removed, inactive, and default-scoped `.bitmap` rows while ignoring schema and lane metadata keys.
 #[test]
 fn lane_addition_selection_counts_only_ids_absent_from_entire_bitmap() {
     let bitmap = json!({

@@ -83,6 +83,7 @@ fn added_and_deleted_candidates_change_resolution_without_touching_disk() {
     assert!(!fixture.0.join("child").exists());
     proof::verify(&budget.proofs().unwrap()).unwrap();
 }
+/// Verifies that [`SourceOverlay`] range [`proof`]s validate the spooled slice without reading the preceding spool prefix.
 #[test]
 fn retained_ranges_validate_without_reading_unrelated_large_spool_prefix() {
     let fixture = Fixture::new();

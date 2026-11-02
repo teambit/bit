@@ -36,6 +36,7 @@ fn outbound_prepare_retains_flat_transport_and_resolution_protocol() {
     assert!(matches!(request, Request::CommandOutboundPrepare(_)));
 }
 
+/// Verifies that `commandOutboundPrepare` [`Request`] deserialization rejects unknown top-level and `options` fields.
 #[test]
 fn outbound_prepare_rejects_unknown_fields_in_flat_protocol() {
     for field in ["unexpected", "resolvedHosts"] {
@@ -48,6 +49,7 @@ fn outbound_prepare_rejects_unknown_fields_in_flat_protocol() {
     assert!(serde_json::from_value::<Request>(input).is_err());
 }
 
+/// Verifies that `commandOutboundPrepare` [`Request`] deserialization requires `globalRemotesFile`, `nodeExecutable`, and boolean `skipRemoteResolution`.
 #[test]
 fn outbound_prepare_requires_typed_resolution_fields() {
     for field in ["globalRemotesFile", "nodeExecutable"] {
@@ -63,6 +65,7 @@ fn outbound_prepare_requires_typed_resolution_fields() {
     assert!(serde_json::from_value::<Request>(input).is_err());
 }
 
+/// Verifies that an unrecognized `kind` tag fails [`Request`] deserialization.
 #[test]
 fn unknown_request_kind_fails_deserialization() {
     let input = serde_json::json!({"kind":"unknownOperation","root":"/tmp"});

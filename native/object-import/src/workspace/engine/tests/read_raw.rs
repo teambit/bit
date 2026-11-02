@@ -51,6 +51,7 @@ fn explicitly_retained_reads_keep_the_original_observation_after_disk_deletion()
     assert_eq!(missing["failed"], true);
     assert!(body.is_empty());
 }
+/// Verifies that [`raw`] binary reads preserve file order, BOM-stripped bytes, and `hash`/`linuxHash`/`snapshotHash` parity with JSON reads.
 #[test]
 fn binary_reads_preserve_order_bom_hashes_and_non_utf8_bytes() {
     let directory = Directory::new();
@@ -83,6 +84,7 @@ fn binary_reads_preserve_order_bom_hashes_and_non_utf8_bytes() {
     }
     assert_eq!(offset, bytes.len());
 }
+/// Verifies that [`raw`] binary read failures on oversized or missing files emit an empty binary payload and `completed: 0`.
 #[test]
 fn binary_read_failures_emit_no_payload_or_completed_prefix() {
     let directory = Directory::new();
@@ -96,6 +98,7 @@ fn binary_read_failures_emit_no_payload_or_completed_prefix() {
     }
 }
 
+/// Verifies that [`raw`] with an empty `files` array returns zero binary bytes and an empty `data.files` array.
 #[test]
 fn empty_binary_read_batch_emits_zero_bytes_and_empty_files_list() {
     let (header, bytes) = raw(&json!({"kind":"read", "files":[], "binary":true}));

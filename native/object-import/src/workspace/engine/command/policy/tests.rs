@@ -66,6 +66,7 @@ fn merged_scope_config_finds_versioned_aspect_by_unversioned_identity() {
     assert_eq!(selected[0]["extensionId"]["version"], "1.0.0");
 }
 
+/// Verifies that `scope::apply` preserves stored `teambit.docs/docs` extension `data` across configuration merges.
 #[test]
 fn scope_configuration_merge_preserves_stored_docs_data() {
     let current =
@@ -76,6 +77,7 @@ fn scope_configuration_merge_preserves_stored_docs_data() {
     assert_eq!(selected[0]["data"]["doc"]["description"], "stored");
 }
 
+/// Verifies that [`workspace_id`] preserves the version in `legacy` and `version` fields when present and omits it when unversioned.
 #[test]
 fn workspace_aspect_identity_keeps_version_for_added_other_lane_config() {
     let workspace = workspace_id(&json!({"identity":"scope/env/install-compat",
@@ -88,6 +90,7 @@ fn workspace_aspect_identity_keeps_version_for_added_other_lane_config() {
     assert_eq!(unversioned["legacy"], "scope/env/install-compat");
 }
 
+/// Verifies that [`Prepared`] configuration conflict formatting accepts an object `extensionId` (`scope`, `name`, `version`).
 #[test]
 fn conflict_aspect_text_accepts_object_extension_id() {
     let mut policy = Prepared::new();

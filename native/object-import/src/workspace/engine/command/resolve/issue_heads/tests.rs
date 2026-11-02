@@ -1,6 +1,6 @@
 //! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs in `bit-object-import`.
 //!
-//! Ensures missing issue head objects are proven absent while corrupt existing objects fail closed on validation.
+//! Ensures missing issue head objects are proven absent via [`capture`] and [`Repository`] while corrupt existing objects fail closed on validation.
 
 use super::{Repository, capture};
 use serde_json::json;

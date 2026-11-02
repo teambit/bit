@@ -50,12 +50,14 @@ fn request(files: &[(&Path, bool, &[u8])]) -> Vec<u8> {
     bytes
 }
 
+/// Executes [`serve`] on `bytes` and parses the JSON [`Value`] response.
 fn response(bytes: Vec<u8>) -> Value {
     let mut output = Vec::new();
     serve(&mut Cursor::new(bytes), &mut output).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 
+/// Verifies that [`serve`] creates nested parent directories and writes empty and binary files.
 #[test]
 fn creates_nested_empty_and_binary_files() {
     let directory = Directory::new();
@@ -68,6 +70,7 @@ fn creates_nested_empty_and_binary_files() {
     assert_eq!(fs::read(binary).unwrap(), b"\0\xff\r\n");
 }
 
+/// Verifies that [`serve`] skips existing files and directories when `overwrite` is `false` and records their indices in `skipped`.
 #[test]
 fn skips_existing_files_and_directories_without_overwrite() {
     let directory = Directory::new();
@@ -79,6 +82,7 @@ fn skips_existing_files_and_directories_without_overwrite() {
     assert_eq!(fs::read(file).unwrap(), b"original");
 }
 
+/// Verifies that [`serve`] halts after the first failed file write without materializing subsequent entries.
 #[test]
 fn stops_after_first_failed_file() {
     let directory = Directory::new();
@@ -95,6 +99,7 @@ fn stops_after_first_failed_file() {
     assert!(!last.exists());
 }
 
+/// Verifies that [`serve`] rejects truncated binary frames before writing any files to disk.
 #[test]
 fn incomplete_frames_never_write_a_prefix() {
     let directory = Directory::new();

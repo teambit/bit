@@ -36,6 +36,7 @@ fn unscoped_identity_must_be_unambiguous() {
     assert_eq!(chosen[0].0["id"]["scope"], "scope.two");
 }
 
+/// Verifies that [`requested`] resolves a scoped `scope.one/one` ID ahead of a component whose name contains a slash in another scope.
 #[test]
 fn scoped_id_wins_over_name_containing_slash() {
     let rows = vec![
@@ -47,6 +48,7 @@ fn scoped_id_wins_over_name_containing_slash() {
     assert!(requested(&["scope.one/missing".to_owned()], rows, false).is_err());
 }
 
+/// Verifies that [`staged_versions`] exports every local tag and snap along with the component `head` and rejects non-local heads or missing tag refs.
 #[test]
 fn every_local_version_is_exported_with_the_head() {
     let head = "cccccccccccccccccccccccccccccccccccccccc";

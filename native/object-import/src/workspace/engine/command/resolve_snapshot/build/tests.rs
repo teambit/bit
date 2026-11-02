@@ -51,6 +51,7 @@ fn artifacts_must_be_confined_to_the_private_root_and_bound_to_the_declared_file
     assert!(artifacts(&mut value, &mut Vec::new(), &mut Vec::new()).is_err());
 }
 
+/// Verifies that [`artifacts`] rejects artifact files exceeding the 32 MiB size limit before reading bytes or recording proofs.
 #[test]
 fn oversized_artifacts_are_rejected_before_reading_their_bytes() {
     let directory = Directory::create().unwrap();
@@ -66,6 +67,7 @@ fn oversized_artifacts_are_rejected_before_reading_their_bytes() {
     assert!(proofs.is_empty());
 }
 
+/// Verifies that [`artifacts`] rejects symlinked artifact files and symlinked parent directories on Unix.
 #[cfg(unix)]
 #[test]
 fn symlink_artifacts_and_symlink_parents_are_rejected() {
@@ -83,6 +85,7 @@ fn symlink_artifacts_and_symlink_parents_are_rejected() {
     assert!(artifacts(&mut value, &mut Vec::new(), &mut Vec::new()).is_err());
 }
 
+/// Verifies that [`metadata`] replaces stale builder pipeline/artifact data with `plannedTasks` and creates a missing builder entry.
 #[test]
 fn unbuilt_tasks_replace_old_builder_data_and_create_missing_builder_entry() {
     let tasks = json!([{"taskId": "sample.build/task", "taskName": "Compile", "taskDescription": "Compile sources"}]);

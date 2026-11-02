@@ -1,6 +1,6 @@
 //! Unit tests for `--versions-file` explicit entry and default release matching via [`tag_data`].
 //!
-//! Checks first-match explicit component version entries, prerelease ID extraction, and default fallback in `bit-object-import`.
+//! Checks first-match explicit component [`Value`] version entries, prerelease ID extraction, and default fallback via [`tag_data`] in `bit-object-import`.
 
 use super::tag_data;
 use serde_json::{Value, json};

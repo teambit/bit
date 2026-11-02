@@ -53,6 +53,7 @@ fn removal_metadata_is_projected_from_head_over_historical_tags() {
     assert_eq!(row(&hash, &ordinary, &tags).unwrap().0["tag"], "1.0.0");
 }
 
+/// Verifies that head removal ranges, snap removals, and staged undeprecation apply across historical log rows.
 #[test]
 fn head_ranges_and_snap_removals_apply_to_history_and_staged_undeprecation() {
     let version = json!({"extensions":[
@@ -79,6 +80,7 @@ fn head_ranges_and_snap_removals_apply_to_history_and_staged_undeprecation() {
     assert_eq!(rows[2]["deleted"], true);
 }
 
+/// Verifies that [`tags`] returns an empty map when a model object has no `versions` or `orphanedVersions` entries.
 #[test]
 fn empty_model_versions_produce_empty_tag_map() {
     let mapped = tags(&json!({})).unwrap();

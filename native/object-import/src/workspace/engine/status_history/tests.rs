@@ -64,6 +64,7 @@ fn validates_whole_batch_before_writing_any_history() {
     assert!(!fixture.file("test.scope/alpha").exists());
     assert_eq!(fs::read(beta).unwrap(), b"concurrent writer");
 }
+/// Verifies that [`commit`] writes `VersionHistory` objects with a `UTF-16` code-unit header length and preserves `graphCompleteRefs`.
 #[test]
 fn commit_uses_canonical_utf16_header_and_preserves_history_fields() {
     let fixture = Fixture::new();
@@ -81,6 +82,7 @@ fn commit_uses_canonical_utf16_header_and_preserves_history_fields() {
     assert_eq!(body, expected);
 }
 
+/// Verifies that [`validate`] and [`commit`] succeed with `written: 0` when `plans` is empty.
 #[test]
 fn empty_plan_batch_validates_and_commits_zero_histories() {
     let fixture = Fixture::new();

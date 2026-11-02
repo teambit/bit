@@ -70,6 +70,7 @@ fn fast_forward_replaces_state_without_versions_and_keeps_orphan_tag_precedence(
     assert!(model(&original, "invalid").is_err());
 }
 
+/// Verifies that `refresh_model` updates fast-forward model metadata after a gap import without retargeting the cached remote head.
 #[test]
 fn gap_import_refreshes_fast_forward_metadata_without_retargeting_cached_head() {
     use super::super::{Action, Selected, loading::refresh_model};

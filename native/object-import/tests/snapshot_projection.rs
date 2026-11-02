@@ -1,6 +1,6 @@
 //! Differential tests for canonical `Version` [`snapshot_projection`] and hashing in `bit-object-import`.
 //!
-//! Validates [`js_json`] [`Value`] projection, pretty serialization, and semantic hash calculation against `@teambit/objects`.
+//! Validates [`js_json`] [`Value`] projection, pretty serialization, and semantic hash calculation against `@teambit/objects` via [`Command`].
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

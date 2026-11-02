@@ -65,6 +65,7 @@ fn overlay_sources_must_stay_inside_the_private_root() {
     assert!(capture::source_path(&fixture.0, &target, "virtual.js").is_err());
 }
 
+/// Verifies that [`capture::source_path`] rejects symlinked overlay files and symlinked parent directories on Unix.
 #[cfg(unix)]
 #[test]
 fn overlay_sources_reject_symlinks_and_symlinked_parent_directories() {
@@ -78,6 +79,7 @@ fn overlay_sources_reject_symlinks_and_symlinked_parent_directories() {
     assert!(capture::source_path(&fixture.0, &target, "virtual.js").is_err());
 }
 
+/// Verifies that [`capture::all`] hashes normalized spooled overlay contents and enforces the shared byte budget.
 #[test]
 fn overlay_capture_hashes_native_contents_and_enforces_the_shared_byte_budget() {
     let fixture = Fixture::new();

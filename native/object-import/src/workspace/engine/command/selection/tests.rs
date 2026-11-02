@@ -50,6 +50,7 @@ fn reset_clean_and_new_components_use_existing_selection_messages() {
     );
 }
 
+/// Verifies that [`select`] with `to: "latest"` uses `SemVer` grammar comparison and ignores `orphanedVersions`.
 #[test]
 fn latest_uses_semver_grammar_and_excludes_orphaned_tags() {
     let model = json!({"head":"a".repeat(40),"versions":{"1.2.0":"a".repeat(40),"1.10.0":"b".repeat(40)},
@@ -62,6 +63,7 @@ fn latest_uses_semver_grammar_and_excludes_orphaned_tags() {
     );
 }
 
+/// Verifies that `versions::resolve` for `"latest"` on a lane selects `lane_head` instead of a `main` branch tag.
 #[test]
 fn latest_on_a_lane_uses_the_lane_head_instead_of_a_main_tag() {
     let main = "a".repeat(40);
@@ -86,6 +88,7 @@ fn latest_on_a_lane_uses_the_lane_head_instead_of_a_main_tag() {
     assert_eq!(resolved, lane);
 }
 
+/// Verifies that [`select`] with `to: "head"` labels the head using the last regular `versions` tag before `orphanedVersions`.
 #[test]
 fn head_names_use_last_regular_tag_before_orphaned_tag() {
     let hash = "a".repeat(40);
@@ -96,6 +99,7 @@ fn head_names_use_last_regular_tag_before_orphaned_tag() {
     );
 }
 
+/// Verifies that [`select`] resolves divergent remote heads before rejecting a `merge_pending` component.
 #[test]
 fn divergent_head_resolves_remote_before_rejecting_merge_pending() {
     let directory = super::super::scratch::Directory::create().unwrap();

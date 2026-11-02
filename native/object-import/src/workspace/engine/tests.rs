@@ -16,7 +16,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
-/// Shared 4-worker Rayon thread pool used by [`Directory`], [`frame`], [`response`], and [`source`] in [`serve`] tests.
+/// Shared 4-worker Rayon thread pool used by [`Directory`], [`frame`], [`response`], [`source`], and [`workspace`] in [`serve`] tests.
 static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(4)

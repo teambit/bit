@@ -65,6 +65,7 @@ fn peer_and_aspect_dependencies_participate_but_core_names_and_changed_edges_do_
     );
 }
 
+/// Verifies that [`reports`] does not cascade a hidden dependent when a dependency is tagged with an older semantic version.
 #[test]
 fn hidden_dependency_does_not_cascade_to_an_older_semantic_tag() {
     let semver = json!({"1.0.0":{"version":{"major":1,"minor":0,"patch":0,"prerelease":[]}},"2.0.0":{"version":{"major":2,"minor":0,"patch":0,"prerelease":[]}}});
@@ -80,6 +81,7 @@ fn hidden_dependency_does_not_cascade_to_an_older_semantic_tag() {
     assert!(result.is_empty());
 }
 
+/// Builds a hidden lane [`Entry`] and version [`Value`] pair for `fixture.scope/<name>`.
 fn candidate(name: &str, version: Value) -> (Entry, Value) {
     (
         Entry {
@@ -91,10 +93,12 @@ fn candidate(name: &str, version: Value) -> (Entry, Value) {
     )
 }
 
+/// Builds a component dependency ID [`Value`] for `fixture.scope/<name>@<version>`.
 fn id(name: &str, version: &str) -> Value {
     json!({"scope":"fixture.scope","name":name,"version":version})
 }
 
+/// Builds a current component version [`Value`] row for `fixture.scope/<name>` at `version`.
 fn current(name: &str, version: &str) -> Value {
     json!({"identity":format!("fixture.scope/{name}"),"version":version})
 }

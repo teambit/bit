@@ -25,6 +25,7 @@ fn explicit_nonpending_and_empty_abort_decline() {
     assert!(select(&context, &json!([]), &request(None)).is_err());
 }
 
+/// Verifies that [`select`] without a pattern orders targets in pending insertion order and rejects duplicate pending entries.
 #[test]
 fn all_abort_follows_pending_insertion_order() {
     let context = json!({"targets":[{"identity":"scope/first","directory":"first"},{"identity":"scope/second","directory":"second"}]});
@@ -36,6 +37,7 @@ fn all_abort_follows_pending_insertion_order() {
     assert!(select(&context, &json!([pending[0], pending[0]]), &request(None)).is_err());
 }
 
+/// Verifies that [`select`] declines an ambiguous unscoped pattern while accepting a fully scoped component identity.
 #[test]
 fn ambiguous_plain_pattern_declines_before_selection() {
     let context = json!({"targets":[{"identity":"one/name","directory":"one"},{"identity":"two/name","directory":"two"}]});
@@ -45,6 +47,7 @@ fn ambiguous_plain_pattern_declines_before_selection() {
     assert!(select(&context, &pending, &request(Some("one/name"))).is_ok());
 }
 
+/// Verifies that `guards::extensions` declines historical versions containing duplicate extension entries before capture.
 #[test]
 fn duplicate_historical_extensions_decline_before_capture() {
     let single = serde_json::json!({"versions":[["head",{"extensions":[{"name":"teambit.pkg/pkg","config":{}}]}]]});
