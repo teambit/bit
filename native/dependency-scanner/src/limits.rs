@@ -1,6 +1,6 @@
-//! Request, source byte, and batch file size limits for the dependency scanner.
+//! Request ([`REQUEST_BYTES`]), source byte ([`SOURCE_BYTES`]), and batch file size ([`BATCH_FILES`]) limits.
 //!
-//! Bounds individual source file reads and JSON request payloads before parsing.
+//! [`read_source`] bounds individual source file reads and JSON request payloads before parsing.
 
 use std::{
     fs::File,

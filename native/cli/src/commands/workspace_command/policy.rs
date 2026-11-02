@@ -2,7 +2,7 @@
 //! built-in Node environment's [`defaults`] and, for the merged files, a fresh
 //! dependency [`Detection`], before it plans the merged metadata.
 //!
-//! Extends [`Steps`] over [`Capture`], [`Facts`], [`Pending`], and [`grammar`].
+//! Extends [`Steps`] into [`Prepared`] over [`Capture`], [`Facts`], [`Pending`], and [`grammar`].
 
 use super::{Steps, defaults};
 use crate::commands::status::{

@@ -2,7 +2,7 @@
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
 //!
-//! Coordinates [`history`] and [`inbound`] progress formatting over [`Output`].
+//! Coordinates [`history`], [`inbound`], and [`REASONS`] progress formatting over [`Output`].
 
 mod history;
 mod inbound;

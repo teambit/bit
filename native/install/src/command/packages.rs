@@ -2,7 +2,7 @@
 //! resolution with the save prefix (`_addPackages`, `getVersionWithSavePrefix`),
 //! and the `workspace.jsonc` policy update (`addToRootPolicy`, `updateConfigPolicy`).
 //!
-//! Resolves component ID arguments to their package names and updates root policy entries.
+//! [`validate`] resolves component ID arguments to [`extract_package_name`] and updates [`policy_edit`] entries.
 
 pub(super) mod policy_edit;
 

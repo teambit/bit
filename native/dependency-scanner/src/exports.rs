@@ -1,6 +1,6 @@
 //! `CommonJS` `exports` and `module.exports` assignment target detection.
 //!
-//! Matches static and computed `exports` member expressions against `ast-module-types` rules.
+//! [`module_exports`] matches static and computed `exports` [`Expression`] nodes against `ast-module-types` rules.
 
 use oxc_ast::ast::{AssignmentTarget, Expression};
 

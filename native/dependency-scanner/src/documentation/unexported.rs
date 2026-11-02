@@ -1,6 +1,6 @@
 //! A valid `CommonJS` or `TypeScript` source without exports cannot yield exported React docs.
 //!
-//! Walks AST nodes within bounded depth and node counts to verify the absence of module exports.
+//! [`proven`] walks [`Program`] AST nodes within bounded depth and node counts to verify the absence of module exports.
 use oxc_ast::ast::{
     BindingPattern, ExportAllDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration,
     Expression, IdentifierReference, JSXElement, JSXFragment, Program, Statement, TSType,

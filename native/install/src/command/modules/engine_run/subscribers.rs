@@ -1,6 +1,6 @@
 //! Exact native inputs for the retained package-manager pre/post subscriber receiver.
 //!
-//! Serializes workspace component directories, root policies, and package manager options for host subscribers.
+//! [`run`] serializes [`Session`], [`Loaded`], and [`Calculated`] state into [`Value`] payloads for host subscribers.
 use super::{Calculated, Loaded, Session};
 use serde_json::{Value, json};
 use std::io;

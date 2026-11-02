@@ -2,8 +2,8 @@
 //! `getDependenciesGraphByComponentIds` (`components/legacy/scope/scope.ts`) —
 //! the stored dependency graphs of the workspace components, merged into one.
 //!
-//! Falls back to a regular install when `rootComponents` is disabled or no graphs exist.
-//! Prunes unreachable nodes and normalizes peer provider versions across merged graphs.
+//! [`input`] falls back to a regular install when `rootComponents` is disabled or no graphs exist.
+//! Prunes unreachable [`graph`] nodes and normalizes [`peers`] provider versions into [`RestoreInput`].
 
 mod graph;
 mod peers;

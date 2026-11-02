@@ -1,7 +1,7 @@
 //! `calcDependenciesGraph` of `@teambit/pnpm`, as snapping runs it
-//! (`_addDependenciesGraphToComponents`): each snapped component's
+//! (`_addDependenciesGraphToComponents`): each [`Snapped`] component's
 //! dependency graph, cut from the workspace's `pnpm-lock.yaml`, which the
-//! snap stores beside its Version (`dependenciesGraphRef`).
+//! snap stores beside its `Version` (`dependenciesGraphRef`).
 //!
 //! The lockfile is read and filtered by pnpm's own `pnpm-lockfile` crate,
 //! the code `@pnpm/napi` runs for the Node.js CLI, re-exporting [`WorkspaceComponent`].

@@ -1,7 +1,7 @@
 //! `formatOutput` and `getAnotherInstallRequiredOutput` of `install.cmd.tsx`.
 //!
-//! Renders the final completion line and any legacy environment policy warnings.
-//! Formats elapsed installation duration and deduplicates non-loaded environment IDs.
+//! [`format`] renders the final completion line and any legacy environment policy warnings with [`Output`] and [`Style`].
+//! Formats elapsed [`Duration`] and deduplicates non-loaded environment IDs.
 
 #[cfg(test)]
 mod tests;

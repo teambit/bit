@@ -1,4 +1,4 @@
-//! Remote fetch request options, traversal flags, and selection descriptors.
+//! Remote fetch request options ([`FetchOptions`]), [`Traversal`] flags, and [`Selection`] descriptors.
 
 use crate::GlobalConfig;
 use serde::Serialize;

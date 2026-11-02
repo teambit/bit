@@ -1,12 +1,11 @@
-//! Dev files of a component (`DevFilesMain.computeDevPatterns` + `computeDevFiles`).
+//! Dev files of a [`WorkspaceComponent`] (`DevFilesMain.computeDevPatterns` + `computeDevFiles`).
 //!
-//! The patterns are composed per aspect id: the component's `teambit.component/dev-files`
-//! config, the tester, docs, and compositions registrations (their workspace config,
+//! The patterns are composed per aspect id: the component's [`DEV_FILES`]
+//! config, the [`TESTER`], [`DOCS`], and [`COMPOSITIONS`] registrations ([`DevPatternConfig`],
 //! plus what the env's `getTestsDevPatterns()`/`getDocsDevPatterns()`/
 //! `getCompositionsDevPatterns()` add), then the env's own patterns, which replace
-//! an aspect's entry of the same name: `env.jsonc` `patterns` for a non-core env, else
-//! the env's `getDevPatterns()`. A dev file is one matching any aspect's patterns.
-//! Evaluates merged glob patterns against every relative path in a workspace component.
+//! an aspect's entry of the same name: [`EnvJsoncReader`] `patterns` for a non-core env, else
+//! the env's `getDevPatterns()`. A dev file is one matching any aspect's patterns via [`glob`].
 
 use super::glob;
 use crate::{

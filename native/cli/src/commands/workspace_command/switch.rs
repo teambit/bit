@@ -1,6 +1,6 @@
 //! Checkout publishes files under the old lane before installer/compiler finalization.
 //!
-//! [`apply`] validates [`commit_receipt`] tokens on [`Planned`] switch checkouts.
+//! [`apply`] and [`complete`] validate [`commit_receipt`] tokens on [`Planned`] switch checkouts.
 use super::{Planned, commit_receipt, file_id};
 use serde_json::{Value, json};
 use std::{io, path::Path};

@@ -1,8 +1,8 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
-//! Native `JavaScript` and `TypeScript` dependency scanner and empty-documentation prover.
+//! Native `JavaScript` and `TypeScript` dependency scanner and empty-documentation prover ([`proves_empty_docs`]).
 //!
-//! Extracts static and dynamic module specifiers and line numbers using the Oxc parser.
+//! Extracts static and dynamic module specifiers and line numbers via [`scan`] using the Oxc parser.
 
 pub use documentation::proves_empty_docs;
 mod calls;

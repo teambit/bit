@@ -1,6 +1,6 @@
-//! The component's `Version` object in the scope (`componentFromModel`).
+//! The component's `Version` object in the scope ([`ComponentModel`]; `componentFromModel`).
 //!
-//! Exposes stored package dependencies, component dependencies, and serialized extension data.
+//! Exposes stored package [`FieldMaps`], [`LegacyDependency`] entries, and [`DEPENDENCY_RESOLVER`] extension data.
 //! Provides fallback version ranges when dependencies are missing from the local file system.
 
 use super::data::{LegacyDependency, legacy_dependencies, string_map};

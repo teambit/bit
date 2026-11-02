@@ -2,7 +2,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 //! The rule compiler of `ignore` 3.3.10 (`node-ignore`), the `.gitignore`
 //! implementation Bit's workspace inventory uses. An [`Ignore`] holds the
-//! rules `ignore().add(patterns)` would hold: the same regular expression
+//! [`Rule`] entries `ignore().add(patterns)` would hold: the same regular expression
 //! sources, in the same order, with the same negation flags. Matching paths
 //! against them is left to the caller, which compiles each source as a
 //! `JavaScript` regular expression with the `i` flag.

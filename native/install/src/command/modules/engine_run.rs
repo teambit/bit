@@ -1,7 +1,7 @@
-//! One engine run with the progress lines `DependencyInstaller.installComponents`
+//! One engine [`run`] with the progress lines `DependencyInstaller.installComponents`
 //! prints, and the `enrichUnpublishedSnapDepError` error rewrite for unpublished snaps.
 //!
-//! Invokes pre/post install subscribers around the native pnpm engine execution.
+//! Invokes [`subscribers`] and [`effective`] around the native pnpm [`engine`] execution.
 mod effective;
 mod subscribers;
 

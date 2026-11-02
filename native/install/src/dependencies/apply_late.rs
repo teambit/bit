@@ -2,7 +2,7 @@
 //! peers of an env component, manually added dependencies, and the final
 //! component/package de-duplication.
 //!
-//! Resolves manually configured dependencies and deduplicates component vs. package entries.
+//! [`auto_detect`] resolves manually configured [`FieldMaps`] and deduplicates [`Detected`] entries via [`Resolver`].
 
 use super::{
     Subject, Workspace,

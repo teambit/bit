@@ -1,6 +1,6 @@
 //! Released 2.2.147 graph filtering copies only reachable packages and snapshots.
 //!
-//! [`graph`] filters lockfile [`Value`] maps for [`Snapped`] components via [`Replacer`] and [`convert`].
+//! [`graph`] filters lockfile [`Value`] maps for [`Snapped`] components via [`Replacer`], [`convert`], and [`remove_workspace_package`].
 #[cfg(test)]
 mod tests;
 

@@ -1,6 +1,6 @@
 //! `Http.listLanes`: the limited remote `GraphQL` projection, including main.
 //!
-//! Queries remote lane descriptors and component heads within bounded response limits.
+//! Extends [`Network`] with [`Network::list_lanes`] using [`LANES_QUERY`] within [`MAX_LANE_BYTES`].
 use super::{Network, throw_for_status};
 use crate::invalid;
 use futures_util::StreamExt;

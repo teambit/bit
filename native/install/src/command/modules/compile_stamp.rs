@@ -1,5 +1,5 @@
 //! Skipping the `JavaScript` `afterInstall` step when a repeat install changed nothing.
-//! Persists SHA-256 digests and filesystem snapshots of dist directories and config files.
+//! [`Stamp`] persists [`Sha256`] digests and filesystem snapshots of [`WorkspaceComponent`] dist directories and config files.
 
 #[cfg(test)]
 mod tests;

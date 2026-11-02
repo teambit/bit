@@ -1,6 +1,6 @@
 //! Typed action errors and the released remote error messages.
 //!
-//! Translates HTTP status codes and JSON error payloads into structured `io::Error` values.
+//! [`throw_for_action_status`] translates HTTP [`Response`] status codes and JSON [`Value`] payloads into structured [`io::Error`] values.
 use reqwest::Response;
 use serde_json::Value;
 use std::io;

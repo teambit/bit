@@ -1,6 +1,6 @@
 //! Stash captures provider facts without the snap build or publication lifecycle.
 //!
-//! Coordinates [`Engine`], [`Startup`] autosync, [`Capture`], and [`receipt`] for `bit stash`.
+//! [`Save`] coordinates [`Engine`], [`Startup`] autosync, [`Capture`], and [`receipt`] for `bit stash`.
 use super::{home, resolve, snapshot::receipt};
 use crate::commands::{
     engine::Engine,

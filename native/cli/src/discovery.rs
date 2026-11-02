@@ -11,7 +11,7 @@
 //! 4. bvm's default link: `<bvm>/links/<link>/node_modules/@teambit/bit/bin/bit`.
 //! 5. A `bit` on `PATH` that is not this executable: bvm's wrapper script.
 //!
-//! The entry runs with `BIT_NODE_BINARY`, else the newest Node bvm installed
+//! The [`Target`] entry runs with `BIT_NODE_BINARY`, else the newest Node bvm installed
 //! beside the entry, else `node` from `PATH`.
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 //! Native dispatch: the first argument names a command, and a command the
-//! [`commands`] table implements runs in process unless it
+//! [`commands`] table implements runs in process via [`run`] into [`Outcome`] unless it
 //! declines its input or `BIT_NATIVE=off` is set.
 //!
 //! Emits dispatch diagnostics via [`trace`] when `BIT_NATIVE_TRACE=1` is enabled.

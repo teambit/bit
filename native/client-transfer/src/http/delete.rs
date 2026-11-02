@@ -3,7 +3,7 @@
 //! cancellation, status or parse error after invocation may hide a committed
 //! delete; callers must never replay it through another implementation.
 //!
-//! Streams and bounds NDJSON/tar deletion responses from direct scopes and central hub endpoints.
+//! Extends [`Network`] with [`Network::delete_scope`] and [`Network::delete_scope_lanes`] over [`Response`] streams.
 #[cfg(test)]
 mod tests;
 

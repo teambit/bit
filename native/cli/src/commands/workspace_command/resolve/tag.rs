@@ -2,7 +2,7 @@
 //! select, and with which entered version; and the versions the plan gives
 //! the tagged components.
 //!
-//! Matches [`component_patterns`] and validates semver tag specifiers.
+//! [`selections`] matches [`component_patterns`] and validates [`RELEASE_TYPES`] semver tag specifiers.
 
 #[cfg(test)]
 mod tag_tests;

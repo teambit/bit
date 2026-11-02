@@ -1,6 +1,6 @@
 //! Labels for snap and tag result reports.
 //!
-//! Defines [`Labels`] and static presets for snap, tag, soft-tag, and persist-tag reports.
+//! Defines [`Labels`] and [`SNAP`] static presets for snap, tag, soft-tag, and persist-tag reports.
 
 /// What differs between the snap and the tag report.
 #[derive(Debug, Clone, PartialEq, Eq)]

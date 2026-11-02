@@ -1,6 +1,6 @@
-//! Global configuration keys (`@teambit/legacy.constants`) and layered [`EffectiveConfig`].
+//! Global configuration [`keys`] (`@teambit/legacy.constants`) and layered [`EffectiveConfig`].
 //!
-//! Resolves `BIT_CONFIG_*` environment variables, `.bitrc.json`, and global config files.
+//! [`load_global_config`] resolves `BIT_CONFIG_*` environment variables, `.bitrc.json`, and global config files.
 
 /// `bit config` keys read during install (`@teambit/legacy.constants`).
 pub mod keys {

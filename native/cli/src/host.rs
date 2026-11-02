@@ -1,5 +1,5 @@
-//! The `JavaScript` host of native commands: the embedded `host/host.js`
-//! running on the Node.js CLI's own Node, started on the first call and spoken
+//! The `JavaScript` host of native commands: the embedded `host/host.js` ([`SCRIPT`])
+//! running on the Node.js CLI's own Node ([`NodeCli`]), started on the first call and spoken
 //! to over newline-delimited JSON. Only behavior that components and aspects
 //! implement in `JavaScript` goes through it; the script reaches those through
 //! the modules the published `@teambit/bit` package ships via [`callback_error`].

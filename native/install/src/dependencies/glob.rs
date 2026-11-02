@@ -1,6 +1,6 @@
 //! Shared `minimatch` pattern matcher for component dev-file classification.
 //!
-//! Delegates non-empty glob pattern checks to `bit_workspace_config::glob`.
+//! [`match_patterns`] and [`matches`] delegate non-empty glob pattern checks to `bit_workspace_config::glob`.
 
 #[inline]
 #[must_use]

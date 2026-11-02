@@ -2,7 +2,7 @@
 //! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
 //! symphony `GraphQL` for hub scope resolution.
 //!
-//! Enforces configured timeouts, proxy rules, TLS certificates, and cancellation bounds.
+//! Re-exports [`LaneNotFound`], [`action_conflict`], [`is_action_not_found`], [`HubReply`], and [`old_server_fallback`].
 
 pub use action_errors::{LaneNotFound, action_conflict, is_action_not_found};
 pub use hub::HubReply;

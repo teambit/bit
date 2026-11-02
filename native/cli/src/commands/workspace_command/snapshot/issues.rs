@@ -1,7 +1,7 @@
 //! The issues that block a snap, computed over the projected workspace, must be
 //! the ones the engine predicted: none, or the snap error it reported.
 //!
-//! Evaluates [`Component`] issues via [`issues`] and declines mismatches via [`decline`].
+//! [`validate`] evaluates [`Component`] issues via [`issues`] and declines mismatches via [`decline`].
 
 use crate::commands::status::{
     issues::{self, Component},

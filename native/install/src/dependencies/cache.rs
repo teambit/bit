@@ -1,12 +1,11 @@
 //! Bit's dependency cache (`<scope>/cache/components/deps`): read when no file of
-//! the component changed since it was written (`getDependenciesDataFromCacheIfPossible`),
-//! written after a detection (`saveDependenciesDataInCache`).
+//! the [`WorkspaceComponent`] changed since it was written (`getDependenciesDataFromCacheIfPossible`),
+//! written after a [`Detected`] run (`saveDependenciesDataInCache`).
 //!
 //! The cache is a `cacache` 20 store: an entry is appended to the index bucket
 //! `index-v5/<sha256(key)>` as `\n<sha1(json)>\t<json>`, and the content lives at
 //! `content-v2/sha512/<hex digest>`.
-//! Honors the `no-fs-cache` flag in `BIT_FEATURES`.
-//! Validates cached file timestamps and config fingerprints before reusing stored dependency data.
+//! Honors the [`NO_FS_CACHE`] (`no-fs-cache`) flag in `BIT_FEATURES` and [`invalidation`] checks.
 
 pub mod invalidation;
 

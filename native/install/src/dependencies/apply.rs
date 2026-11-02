@@ -1,8 +1,8 @@
 //! `ApplyOverrides.populateDependencies`, up to the auto-detect overrides:
-//! ignored dependencies, dev/runtime de-duplication, model peers, the root
-//! `package.json`, the workspace policy, and `@teambit/legacy` as a peer.
+//! ignored dependencies, dev/runtime de-duplication, [`ComponentModel`] peers, the root
+//! `package.json` [`Manifest`], the [`Workspace`] policy, and `@teambit/legacy` as a peer.
 //!
-//! Filters ignored component and package specifiers and promotes `@teambit/legacy` to peer dependencies.
+//! [`early`] filters [`ignored`] component and package specifiers and updates [`Detected`] into [`FieldMaps`].
 
 use super::{Workspace, component_model::ComponentModel, data::Detected};
 use crate::{

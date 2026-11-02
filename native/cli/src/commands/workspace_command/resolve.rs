@@ -1,6 +1,6 @@
 //! The resolve commands, `bit snap`, `bit tag` and `bit merge --resolve`,
-//! planned by the engine's `command{Snap,Tag,Resolve}*` requests on top of
-//! the status capture and the snapshot receipt merges use.
+//! planned by the [`Engine`]'s `command{Snap,Tag,Resolve}*` requests on top of
+//! the status [`Capture`] and the [`snapshot`] receipt merges use.
 //!
 //! Re-exports [`policy`], [`workflow`], [`render_build_output`], [`render_events`], and [`component_receipts`].
 

@@ -1,7 +1,7 @@
 //! The engine's command result with the ids and versions it reports, and the `merge-output` helpers of
 //! `@teambit/component.modules.merge-helper` that checkout and merge share.
 //!
-//! Coordinates [`binary`], [`snaps`], [`Id`], and [`Formatter`] to format command reports.
+//! Coordinates [`binary`], [`snaps`], [`Id`], [`FILE_CHANGES`], and [`Formatter`] to format command reports.
 
 mod binary;
 mod snaps;

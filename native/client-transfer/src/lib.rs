@@ -1,7 +1,7 @@
 //! Shared client transport for file and HTTP Bit scopes.
 //! The transport keeps tar and compressed object bodies inside Rust.
 //!
-//! Coordinates remote resolution, HTTP/tar streaming, configuration precedence, and cancellation.
+//! Coordinates [`remotes`], [`http`], [`tar`], [`config`] ([`GlobalConfig`]), and [`Cancellation`].
 
 pub mod cancellation;
 pub mod config;

@@ -1,6 +1,6 @@
 //! `workspace.jsonc` parser and typed aspect configuration extractors.
 //!
-//! Parses `JSONC` workspace configurations and extracts `workspace`, `dependency-resolver`, and `variants` settings.
+//! Parses [`jsonc`] workspace configurations and extracts [`WORKSPACE_ASPECT`], [`DEPENDENCY_RESOLVER_ASPECT`] ([`DependencyResolverConfig`]), and [`VARIANTS_ASPECT`] settings.
 
 pub(super) use bit_workspace_config::config_string;
 

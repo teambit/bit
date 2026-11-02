@@ -1,6 +1,6 @@
 //! Public remote list and latest-version `GraphQL`, with bounded JSON responses.
 //!
-//! Supports fallback queries when communicating with older scope servers that lack `includeDeleted`.
+//! Extends [`Network`] over [`LIST_QUERY`] and [`Listed`] and exposes [`old_server_fallback`] for legacy servers.
 #[cfg(test)]
 mod tests;
 

@@ -1,6 +1,6 @@
 //! `VersionMaker` lockfile roots and package identities exclude scope-only cascade entries.
 //!
-//! Builds [`graph`] lockfile projections over [`Capture`] component targets.
+//! [`hidden_target`] builds [`graph`] lockfile projections over [`Capture`] component targets.
 use super::graph;
 use crate::commands::status::{
     capture::Capture,

@@ -1,7 +1,7 @@
 //! The legacy component's dependency data (`DependenciesData`): what detection
-//! produces, what Bit's dependency cache stores, and what overrides transform.
+//! produces, what Bit's dependency cache stores, and what [`FieldMaps`] overrides transform.
 //!
-//! Models runtime/dev/peer component and package dependencies alongside missing/untracked file issues.
+//! Models [`LegacyDependency`], [`MissingFile`], and [`UntrackedFile`] issues alongside runtime/dev/peer packages.
 
 use crate::{model::ComponentId, policy::overrides::FieldMaps};
 use indexmap::IndexMap;

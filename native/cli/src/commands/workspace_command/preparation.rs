@@ -1,6 +1,6 @@
 //! Native context, selection and source capture before checkout planning.
 //!
-//! [`Prepared`] coordinates [`Engine`], [`Request`], [`Startup`] autosync, [`checkout_lifecycle`], and [`checkout_selection`].
+//! [`Prepared`] and [`capture`] coordinate [`Engine`], [`Request`], [`Startup`] autosync, [`checkout_lifecycle`], and [`checkout_selection`].
 use super::{Engine, Request, capture, checkout_lifecycle, checkout_selection, home, prepare};
 use crate::commands::status::autosync::Startup;
 use serde_json::Value;

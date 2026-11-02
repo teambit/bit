@@ -1,6 +1,6 @@
 //! Snapshot policy switches, separated from selection and version grammar.
 //!
-//! [`Policy`] models `--build`, `--ignore-issues`, and related snap/tag flags serialized into [`Value`].
+//! [`Policy`] and [`parse`] model `--build`, `--ignore-issues`, and related snap/tag flags serialized into [`Value`].
 
 #[cfg(test)]
 mod tests;

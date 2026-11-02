@@ -1,5 +1,5 @@
-//! `normalizePeerProviderVersions` and the node id helpers of `dependencies-graph.ts`:
-//! after merging graphs, every peer provider points at the best version the merged
+//! [`normalize_peer_provider_versions`] (`normalizePeerProviderVersions`) and the node id helpers of `dependencies-graph.ts`:
+//! after merging graphs, every peer provider points at the best [`SemVer`] version the merged
 //! graph has for it.
 //!
 //! Rewrites peer suffix chains and merges colliding edge neighbor lists after normalization.

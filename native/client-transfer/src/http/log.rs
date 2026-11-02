@@ -1,6 +1,6 @@
 //! The public remote component history `GraphQL` projection.
 //!
-//! Fetches component log entries from a remote scope without downloading full object graphs.
+//! Extends [`Network`] with [`Network::log`] using [`LOG_QUERY`] to fetch component history within [`MAX_LOG_BYTES`].
 
 use super::{Network, network_error, throw_for_status};
 use crate::invalid;

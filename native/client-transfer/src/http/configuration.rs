@@ -1,6 +1,6 @@
 //! Published network, proxy and TLS client configuration.
 //!
-//! Configures `reqwest::ClientBuilder` with socket pool limits, timeouts, proxy rules, and custom CA/client certificates.
+//! [`sockets`] configures `reqwest::ClientBuilder` from [`GlobalConfig`] with [`Proxy`], [`NoProxy`], [`Certificate`], and [`Identity`].
 use crate::{GlobalConfig, invalid};
 use reqwest::{Certificate, Identity, NoProxy, Proxy};
 use serde_json::Value;

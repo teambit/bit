@@ -1,7 +1,7 @@
 //! `node-ignore`'s replacer tables and `String.prototype.replace` with a
 //! function replacement.
 //!
-//! Computes UTF-16 match offsets and applies sequential regex transformation steps.
+//! [`Step`] and [`Found`] compute UTF-16 match offsets and apply sequential [`Regex`] transformation steps.
 
 use regress::{Match, Regex};
 

@@ -4,11 +4,11 @@
 //! lookup for scopes no remote is configured for. Like pnpm's one-shot
 //! pnpmfile hooks, it runs in the Node.js that runs Bit.
 //!
-//! Bit `require`s the path from `remote-resolver.js` of `@teambit/scope.remotes`,
+//! Bit `require`s the path from [`RESOLVER_MODULE`] of `@teambit/scope.remotes`,
 //! so a relative path or a package name resolves from that module, not from the
 //! current directory.
 //!
-//! Invokes the configured resolver script in a child Node.js process and validates its output URL.
+//! Invokes the configured resolver script in a child [`Command`] with [`CFG_USER_TOKEN`] and validates its output URL.
 
 #[cfg(test)]
 mod tests;

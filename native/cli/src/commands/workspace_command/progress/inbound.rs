@@ -1,6 +1,6 @@
 //! Import/fetch progress groups retain Node's main-first fetch order.
 //!
-//! Extends [`Progress`] with [`Progress::render_inbound`] using [`render_import`] and [`render_lane_tail`].
+//! Extends [`Progress`] with [`Progress::render_inbound`] using [`render_import`], [`render_lane_tail`], and [`REASONS`].
 use super::{Import, Progress, REASONS, decline, render_import, render_lane_tail};
 use bit_install::output::Output;
 use std::{io, time::Instant};

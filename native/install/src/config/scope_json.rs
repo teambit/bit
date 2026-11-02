@@ -1,6 +1,6 @@
-//! `<scope>/scope.json` model and loader for local scope settings and lane tracking.
+//! `<scope>/scope.json` model ([`ScopeJson`]) and loader for local scope settings and lane tracking.
 //!
-//! Reads remote scope mappings, tracked lanes, and scope-level configuration overrides.
+//! Reads remote scope mappings, [`Lanes`] ([`TrackLane`]), and scope-level configuration overrides at [`scope_path`].
 
 pub use bit_workspace_config::scope_path;
 

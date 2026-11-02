@@ -1,7 +1,7 @@
 //! `_installModules`: link, calculate manifests, run the engine, link the
 //! components, compile, and repeat while legacy envs keep changing the manifests.
 //!
-//! Tracks compile stamps and manifest hashes across multi-cycle legacy environment convergence.
+//! Tracks [`compile_stamp`] and [`manifests_hash`] across [`MAX_CYCLES`] convergence into [`Installed`].
 
 pub(super) mod linking;
 

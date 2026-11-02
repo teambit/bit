@@ -1,6 +1,6 @@
 //! Per-file source parsing and AST dependency extraction.
 //!
-//! Parses `JavaScript` and `TypeScript` sources with Oxc and classifies module specifiers.
+//! [`scan`] parses `JavaScript` and `TypeScript` [`File`] sources with Oxc [`Parser`] into [`Outcome`].
 
 use crate::{
     File, Outcome, Scanner, classification::classification_outcome, limits, line, line_starts,

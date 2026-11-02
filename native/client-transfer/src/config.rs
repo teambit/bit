@@ -1,6 +1,6 @@
 //! Published config-getter precedence for transport, authentication and remote resolution.
 //!
-//! Normalizes `BIT_CONFIG_*` environment variables against persisted global configuration keys.
+//! Normalizes `BIT_CONFIG_*` environment variables against persisted [`GlobalConfig`] and [`TRANSPORT_KEYS`].
 #[cfg(test)]
 mod tests;
 

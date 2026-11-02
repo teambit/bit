@@ -1,6 +1,6 @@
 //! Bounded HTTP chunks feed a blocking tar reader without retaining a second archive buffer.
 //!
-//! Bridges asynchronous `reqwest` byte streams into synchronous tar archive decoding.
+//! [`read`] bridges asynchronous [`Response`] byte streams into [`tar::read_from`] with [`Cancellation`] support.
 use super::{Cancellation, ObjectItem, Response, network_error};
 use crate::{invalid, tar};
 use futures_util::StreamExt;

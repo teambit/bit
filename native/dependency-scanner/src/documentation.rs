@@ -1,6 +1,6 @@
 //! Sufficient AST proof for the pinned React/`JSDoc` parser's empty result.
 //!
-//! Fast-paths source files that provably produce no documentation entries.
+//! [`proves_empty_docs`] and [`unexported`] fast-path source files that provably produce no documentation entries.
 #[cfg(test)]
 mod tests;
 mod unexported;

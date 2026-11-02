@@ -4,7 +4,7 @@
 //! On Windows the CLI runs as a child; Ctrl-C is left to it and its exit code
 //! is returned.
 //!
-//! Resolves the target Node.js CLI entry and execs or spawns it transparently.
+//! [`run`] resolves the [`Target`] Node.js CLI entry ([`NodeCli`]) and execs or spawns it transparently.
 
 #[cfg(test)]
 mod delegate_tests;

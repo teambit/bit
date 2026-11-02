@@ -2,7 +2,7 @@
 //! it writes. New hashes and a batch id (`newSnapHash`, `newSnapBatchId`),
 //! the user's log (`getBasicLog`) and the Node.js CLI's version.
 //!
-//! Resolves [`identity`] and [`Target`] metadata to construct snapshot receipts.
+//! Resolves [`identity`], [`EffectiveConfig`], and [`Target`] metadata to construct snapshot receipts.
 
 mod identity;
 
