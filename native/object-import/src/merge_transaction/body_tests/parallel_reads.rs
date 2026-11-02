@@ -1,4 +1,4 @@
-//! Unit tests for parallel source body reads ([`State`]) and deterministic spooling in merge prepare in `bit-object-import`.
+//! Unit tests for parallel source body reads ([`State`], [`Fixture`], [`target`]) and deterministic spooling in merge prepare in `bit-object-import`.
 
 use super::{Fixture, State};
 use serde_json::{Value, json};

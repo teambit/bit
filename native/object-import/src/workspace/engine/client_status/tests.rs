@@ -1,6 +1,6 @@
 //! Unit tests for cold client status [`State`], [`prepare`], [`scan`], [`finish`], and [`complete`] phases.
 //!
-//! Validates workspace component scanning, bitmap status classification, and cold-path transitions.
+//! Validates workspace component scanning, bitmap status classification, and cold-path [`Prepare`]/[`Scan`]/[`Finish`] transitions.
 
 use super::{Finish, Prepare, Scan, State, complete, finish, prepare, scan};
 use flate2::{Compression, write::ZlibEncoder};

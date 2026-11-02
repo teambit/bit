@@ -1,4 +1,4 @@
-//! Unit tests for compact merge body responses ([`apply`]) and `knownBodies` prefix checks in `bit-object-import`.
+//! Unit tests for compact merge body responses ([`apply`], [`State`], [`Fixture`]) and `knownBodies` prefix checks in `bit-object-import`.
 
 use super::{Fixture, State, apply};
 use serde_json::json;

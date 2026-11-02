@@ -1,6 +1,6 @@
 //! Unit tests for merge snapshot [`metadata`] schema projection, squash lanes, and models in `bit-object-import`.
 //!
-//! Confirms per-component squash lane scope recording and Harmony schema `2.0.0` projection.
+//! Confirms per-component squash lane scope recording, [`Js`] value conversion, and Harmony schema `2.0.0` projection.
 
 use super::metadata;
 use crate::js_json::Value as Js;

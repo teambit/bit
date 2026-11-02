@@ -1,6 +1,6 @@
 //! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks in `bit-object-import`.
 //!
-//! Checks nested merge destination validation and rejects workspace root escapes.
+//! Checks nested merge destination validation inside [`Directory`] fixtures and rejects workspace root escapes.
 
 use super::{canonical_relative, validate};
 use crate::workspace::engine::command::scratch::Directory;

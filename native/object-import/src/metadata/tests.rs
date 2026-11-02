@@ -1,4 +1,4 @@
-//! Unit tests for bounded [`MAX_BYTES`] zlib object metadata [`inflate`] and corrupt stream rejection in `bit-object-import`.
+//! Unit tests for bounded [`MAX_BYTES`] zlib object metadata [`inflate`] ([`compressed`]) and corrupt stream rejection in `bit-object-import`.
 
 use super::{MAX_BYTES, inflate};
 use flate2::{Compression, write::ZlibEncoder};

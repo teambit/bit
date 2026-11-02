@@ -1,6 +1,6 @@
 //! Unit tests for snapshot publication staging ([`Input`]), `.bit/staged-snaps`, and config guards in `bit-object-import`.
 //!
-//! Validates that build staging writes only `.bit/staged-snaps` prior to object or metadata commit.
+//! Validates that build staging via [`fixture`] writes only `.bit/staged-snaps` prior to object or metadata commit.
 
 use super::{Input, tests::fixture};
 use serde_json::{Value, json};

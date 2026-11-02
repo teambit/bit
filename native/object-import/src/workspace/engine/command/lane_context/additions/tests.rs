@@ -1,6 +1,6 @@
 //! Unit tests for lane addition destination [`directory`] placeholders and prospective metadata in `bit-object-import`.
 //!
-//! Validates `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholder expansion.
+//! Validates `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholder expansion across default and custom templates.
 
 use super::{directory, json};
 

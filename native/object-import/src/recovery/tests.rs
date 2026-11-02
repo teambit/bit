@@ -1,4 +1,4 @@
-//! Unit tests for workspace recovery [`State`] and [`Operation`] plans, `JSONC` parsing, and `.bitmap` updates in `bit-object-import`.
+//! Unit tests for workspace recovery [`State`] and [`Operation`] plans ([`Fixture`]), `JSONC` parsing ([`jsonc`]), and `.bitmap` updates ([`bitmap`]) in `bit-object-import`.
 
 use super::{Operation, State, bitmap, jsonc};
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for authored `.bitmap` row property serialization order via [`reorder_bitmap`] in `bit-object-import`.
 //!
-//! Verifies that `.bitmap` component entries follow canonical `ComponentMap` key order.
+//! Verifies that `.bitmap` component entries follow canonical `ComponentMap` key order when serialized.
 
 use super::reorder_bitmap;
 use serde_json::Value;

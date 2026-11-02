@@ -1,6 +1,6 @@
 //! Unit tests for [`Prepared`] pending `node_modules` package manifest plans and commit in `bit-object-import`.
 //!
-//! Verifies that package manifest updates remain staged in memory until final commit.
+//! Verifies that package manifest updates in [`Directory`] fixtures remain staged in memory until final commit.
 
 use super::super::Prepared;
 use crate::workspace::engine::command::scratch::Directory;

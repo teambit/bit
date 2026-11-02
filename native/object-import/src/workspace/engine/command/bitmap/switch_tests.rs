@@ -1,6 +1,6 @@
 //! Unit tests for `.bitmap` [`Prepared`] lane-only flag transitions during lane switch in `bit-object-import`.
 //!
-//! Verifies that components with main heads drop `onLanesOnly` and `isAvailableOnCurrentLane` flags.
+//! Verifies that components with main heads drop `onLanesOnly` and `isAvailableOnCurrentLane` flags on switch.
 
 use super::Prepared;
 use serde_json::json;

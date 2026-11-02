@@ -1,6 +1,6 @@
 //! Unit tests for `.bitmap` live component ID ordering, metadata validation, and scope resolution in `bit-object-import`.
 //!
-//! Ensures live `.bitmap` ordering preserves existing component positions and appends new targets.
+//! Ensures live `.bitmap` ordering preserves existing component positions and appends new targets deterministically.
 
 use serde_json::json;
 

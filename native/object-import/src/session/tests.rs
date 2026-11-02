@@ -1,4 +1,4 @@
-//! Unit tests for [`WorkspaceSession`] stack frame size bounds and heap-owned operation state in `bit-object-import`.
+//! Unit tests for [`WorkspaceSession`] stack frame size bounds and heap-owned operation state ([`retained_operation_state_does_not_inflate_caller_stack_frames`]) in `bit-object-import`.
 
 use super::WorkspaceSession;
 

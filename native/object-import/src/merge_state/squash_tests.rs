@@ -1,5 +1,5 @@
 //! Unit tests for lane squash parent policy resolution in merge [`State`] and
-//! [`serve`] dispatch in `bit-object-import` merge state.
+//! [`serve`] dispatch ([`request`], [`reference`]) in `bit-object-import` merge state.
 
 use super::{State, serve};
 use flate2::{Compression, write::ZlibEncoder};

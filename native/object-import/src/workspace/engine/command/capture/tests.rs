@@ -1,6 +1,6 @@
 //! Unit tests for private workspace source capture ([`all`], [`all_for_checkout`], [`read`]) and wire budget bounds.
 //!
-//! Validates parallel source retention in [`snapshots`] without exceeding command wire limits.
+//! Validates parallel source retention in [`snapshots`] without exceeding command wire limits in `bit-object-import`.
 
 use super::{all, all_for_checkout, read, snapshots};
 use serde_json::json;

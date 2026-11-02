@@ -1,6 +1,6 @@
 //! Unit tests for checkout [`Prepared`] workspace dependency policy update publication and `JSONC` rendering in `bit-object-import`.
 //!
-//! Verifies that planned dependency policy updates preserve unrelated `workspace.jsonc` comments.
+//! Verifies that planned dependency policy updates preserve unrelated `workspace.jsonc` comments and formatting.
 
 use super::Prepared;
 use serde_json::json;

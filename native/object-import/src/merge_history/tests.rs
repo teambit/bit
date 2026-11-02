@@ -1,12 +1,6 @@
-//! Unit tests for merge history DAG traversal, common-ancestor discovery, and
+//! Unit tests for merge history DAG traversal, common-ancestor discovery ([`Directory`], [`POOL`]), and
 //! file merge resolution ([`serve`]) in `bit-object-import`.
 
-static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(4)
-        .build()
-        .unwrap()
-});
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -17,6 +11,13 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
+
+static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap()
+});
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Directory(PathBuf);

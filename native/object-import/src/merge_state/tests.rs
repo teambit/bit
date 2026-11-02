@@ -1,4 +1,8 @@
-//! Unit tests for lane snap and merge [`State`] transitions, parent reconciliation, and atomic file commits in `bit-object-import`.
+//! Unit tests for lane snap and merge [`State`] transitions ([`serve`], [`write`], [`POOL`]), parent reconciliation, and atomic file commits in `bit-object-import`.
+
+use super::{State, serve, write};
+use serde_json::{Value, json};
+use std::io::Cursor;
 
 pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
@@ -6,9 +10,6 @@ pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::Lazy
         .build()
         .unwrap()
 });
-use super::{State, serve, write};
-use serde_json::{Value, json};
-use std::io::Cursor;
 
 fn hash_value(byte: char) -> String {
     byte.to_string().repeat(40)

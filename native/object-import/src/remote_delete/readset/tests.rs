@@ -1,4 +1,4 @@
-//! Unit tests for remote delete [`Readset`] file watch, stat snapshots, and concurrent mutation validation in `bit-object-import`.
+//! Unit tests for remote delete [`Readset`] file watch, stat snapshots, and concurrent mutation validation ([`watched_source_rejects_later_mutation_and_missing_source_rejects_creation`]) in `bit-object-import`.
 
 use super::Readset;
 use std::fs;

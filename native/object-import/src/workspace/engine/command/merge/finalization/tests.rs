@@ -1,6 +1,6 @@
 //! Unit tests for merge finalization [`Input`] `node_modules` links and manifest planning via [`prepare`].
 //!
-//! Exercises symlink/copy planning, package manifest generation, and atomic finalization commits.
+//! Exercises symlink/copy planning, package manifest generation, and atomic finalization commits across [`Directory`] fixtures.
 
 use super::{Input, prepare};
 use crate::workspace::engine::command::scratch::Directory;

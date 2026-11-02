@@ -1,6 +1,6 @@
 //! Unit tests for workspace root component [`ASPECT`] file manifest [`filter`] and [`validate_version`] checks.
 //!
-//! Ensures root manifests exclude nested member component directories and require `isRoot: true`.
+//! Ensures root manifests exclude nested member component directories and require `isRoot: true` in `bit-object-import`.
 
 use super::{ASPECT, filter, validate_version};
 use serde_json::json;

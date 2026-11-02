@@ -1,6 +1,6 @@
 //! Unit tests for lane [`objects`] head updates and lane history bucket separation in `bit-object-import`.
 //!
-//! Verifies hidden dependent head updates and separate deleted/hidden lane history buckets.
+//! Verifies hidden dependent head updates and separate deleted/hidden lane history buckets during publication.
 
 use super::objects;
 use serde_json::json;

@@ -1,4 +1,4 @@
-//! Unit tests for [`ObjectChange`] deletion, [`object_path`], and empty prefix directory pruning via [`write_objects`] in `bit-object-import`.
+//! Unit tests for [`ObjectChange`] deletion, [`object_path`], and empty prefix directory pruning via [`write_objects`] ([`deleting_the_only_object_prunes_its_prefix_but_keeps_the_object_store`]) in `bit-object-import`.
 
 use crate::reset_lane::{ObjectChange, object_path, write_objects};
 use std::fs;

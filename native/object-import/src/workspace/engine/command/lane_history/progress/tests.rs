@@ -1,6 +1,6 @@
 //! Unit tests for discarding incomplete lane history import progress rows via [`discard_incomplete`] in `bit-object-import`.
 //!
-//! Confirms that failed history imports drop only the in-flight progress entry while retaining completed rows.
+//! Confirms that failed history imports drop only the in-flight progress entry while retaining completed rows and receipts.
 
 use super::discard_incomplete;
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for `.bitmap` [`Prepared`] override clearing, [`prepare_after`], [`prepare_bytes`], and [`Update`] commits.
 //!
-//! Checks that config clearing, history file ID validation, and `.bitmap` commits remain atomic.
+//! Checks that config clearing, [`validate_history_file_id`] checks, and `.bitmap` commits remain atomic.
 
 use super::{Prepared, Update, prepare_after, prepare_bytes, validate_history_file_id};
 use serde_json::{Value, json};

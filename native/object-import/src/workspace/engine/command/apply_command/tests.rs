@@ -1,6 +1,6 @@
 //! Unit tests for post-persistence event [`notify`] execution, [`scratch`] staging, and dependency readset proofs.
 //!
-//! Confirms that `onPostObjectsPersist` notifications remain best-effort and reject stale proofs.
+//! Confirms that `onPostObjectsPersist` notifications remain best-effort and reject stale proofs in `bit-object-import`.
 
 use super::notify;
 use crate::workspace::engine::command::scratch;

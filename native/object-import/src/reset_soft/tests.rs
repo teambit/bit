@@ -1,4 +1,4 @@
-//! Unit tests for clearing soft-tagged `nextVersion` entries and preserving `.bitmap` layout via [`Plan`] in `bit-object-import`.
+//! Unit tests for clearing soft-tagged `nextVersion` entries and preserving `.bitmap` layout via [`Plan`] ([`clears_all_pending_tags_and_refuses_a_stale_plan`]) in `bit-object-import`.
 
 use super::Plan;
 use serde_json::json;

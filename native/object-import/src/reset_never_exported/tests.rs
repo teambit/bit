@@ -1,4 +1,4 @@
-//! Unit tests for clearing unexported `.bitmap` component versions and lane state via [`Plan`] in `bit-object-import`.
+//! Unit tests for clearing unexported `.bitmap` component versions and lane state via [`Plan`] ([`clears_only_unexported_bitmap_versions_and_rejects_a_stale_plan`]) in `bit-object-import`.
 
 use super::Plan;
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for missing version and dependency graph [`ObjectItem`] request discovery via [`requests`].
 //!
-//! Ensures missing component version and dependency objects are requested in topological rounds.
+//! Ensures missing component version and dependency objects are requested in topological rounds with [`hexadecimal`] hashes.
 
 use super::requests;
 use crate::validate::hexadecimal;

@@ -1,4 +1,4 @@
-//! Unit tests for lane reset version graph [`selection`], [`Heads`], population prefixes, and [`diagnostics`] in `bit-object-import`.
+//! Unit tests for lane reset version graph [`selection`], [`Heads`], [`Repository`], population prefixes, and [`diagnostics`] in `bit-object-import`.
 
 use super::{Heads, Repository, diagnostics, object_path, outbound, selection};
 use serde_json::{Value, json};

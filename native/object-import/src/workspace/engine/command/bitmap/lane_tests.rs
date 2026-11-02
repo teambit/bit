@@ -1,6 +1,6 @@
 //! Unit tests for lane-aware `.bitmap` [`Update`] preparation and header ordering via [`prepare_bytes`] in `bit-object-import`.
 //!
-//! Ensures lane metadata headers and component entries preserve canonical `.bitmap` formatting.
+//! Ensures lane metadata headers and component entries preserve canonical `.bitmap` formatting across updates.
 
 use super::{Update, prepare_bytes};
 use serde_json::{Value, json};

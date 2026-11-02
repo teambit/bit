@@ -1,4 +1,4 @@
-//! Differential unit tests for [`future`] version planning against Node semver helpers in `bit-object-import` snapshot transactions.
+//! Differential unit tests for [`future`] version planning against Node semver helpers ([`raw_version_branches_match_actual_semver_helper_normalization`]) in `bit-object-import` snapshot transactions.
 
 use super::future;
 use serde_json::{Value, json};
