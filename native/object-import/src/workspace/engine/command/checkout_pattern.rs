@@ -15,6 +15,7 @@ pub(in crate::workspace::engine) struct Request {
     read_set: Vec<proof::Proof>,
 }
 
+/// Filters the prepared checkout or merge targets on `state` to the validated `input.identities` subset.
 pub(in crate::workspace::engine) fn select(
     input: Request,
     state: &mut State,

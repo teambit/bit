@@ -20,6 +20,7 @@ pub(in super::super) struct Pending {
     targets: Vec<Target>,
     progress_count: usize,
 }
+/// Deserialized completion request carrying the workspace dependency graph for pending dependent imports.
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

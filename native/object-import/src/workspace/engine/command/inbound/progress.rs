@@ -47,6 +47,7 @@ pub(super) fn rows(
     progress
 }
 
+/// Counts root targets whose requested version is empty, `"latest"`, or `"head"` when `depth` is enabled.
 #[inline]
 fn latest_root_count(roots: &[Target], depth: bool) -> usize {
     if !depth {

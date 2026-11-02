@@ -47,6 +47,7 @@ pub(in crate::workspace::engine::command) fn remote(
     }
     Ok(None)
 }
+/// Resolves the local head hash for `identity` from the active lane or fallback `model`.
 #[inline]
 pub(in crate::workspace::engine::command) fn local<'a>(
     context: &'a Value,

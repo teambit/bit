@@ -30,6 +30,7 @@ pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
         .collect()
 }
 
+/// Resolves a local lane alias `id` to `<remoteScope>/<remoteLane>` using `scope.json` tracking entries.
 fn resolve_alias(
     root: &Path,
     scope_doc: &mut Option<serde_json::Value>,

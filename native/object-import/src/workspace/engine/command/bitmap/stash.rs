@@ -1,4 +1,5 @@
 //! Stash restores authored entries ([`append`], [`Prepared`]) without assigning a detached snapshot hash to `.bitmap`.
+//! Rejects workspace-root (`.`) additions and preserves non-overlapping relative `rootDir` paths.
 
 use super::{Prepared, identity, invalid, lane, render_rows, rows};
 use serde_json::Value;

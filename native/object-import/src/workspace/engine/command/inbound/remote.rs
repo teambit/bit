@@ -2,7 +2,6 @@
 
 pub(crate) mod file_list;
 pub(in crate::workspace::engine) mod inventory;
-
 pub(in crate::workspace::engine::command) use history::{history_remote, history_remote_at};
 pub(in crate::workspace::engine::command) use lane_list::lane_entries;
 
@@ -36,7 +35,7 @@ use std::{
 
 /// The compressed bytes one import may retain until publication: one archive's limit.
 const MAX_INBOUND_BYTES: usize = bit_client_transfer::tar::MAX_ARCHIVE_BYTES;
-/// The objects retained from one remote scope.
+/// The objects retained from one remote scope (`16,384` items).
 const MAX_INBOUND_OBJECTS: usize = 16384;
 
 /// Resolves remote scopes and HTTP network configuration for recovery probes.

@@ -15,6 +15,7 @@ pub(super) fn loading(options: &Options) -> bool {
     options.stash.as_ref().is_some_and(|stash| stash.reset_ids.is_none())
 }
 
+/// Returns `true` when the stash checkout contains only newly added components with no versioned snapshots.
 #[inline]
 pub(super) fn new_only(options: &Options) -> bool {
     options.stash

@@ -13,6 +13,7 @@ pub(super) struct Prepared {
     contents: String,
 }
 
+/// Prepares a validated `LICENSE` file write for `input` when `license` content is present.
 pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Option<Prepared>> {
     let Some(contents) = license else { return Ok(None) };
     if contents.len() > 4 * 1024 * 1024 || contents.contains('\0') {

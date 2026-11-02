@@ -9,6 +9,7 @@ use std::io;
 pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     validate_phase(input, true)
 }
+/// Validates [`Prepare`] for local-only operations without requiring workspace file publication mode.
 #[inline]
 pub(super) fn local(input: &Prepare) -> io::Result<()> {
     validate_phase(input, false)

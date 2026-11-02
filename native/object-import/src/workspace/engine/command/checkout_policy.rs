@@ -28,6 +28,7 @@ pub(in crate::workspace::engine) struct Complete {
 }
 
 impl Prepared {
+    /// Creates an unfinalized checkout policy [`Prepared`] state backed by `root/workspace.jsonc`.
     pub(super) fn new(root: &Path, receipt: Value) -> io::Result<Self> {
         let publication = publication::Prepared::new(root.join("workspace.jsonc"))?;
         Ok(Self { input: receipt, publication, ready: false })

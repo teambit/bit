@@ -14,6 +14,7 @@ pub(super) struct Queue {
     bytes: usize,
 }
 impl Queue {
+    /// Initializes a traversal [`Queue`] seeded with single-element paths for each ID in `sources`.
     pub(super) fn from_sources(sources: &[String]) -> io::Result<Self> {
         let mut queue = Self { paths: VecDeque::with_capacity(sources.len()), nodes: 0, bytes: 0 };
         for id in sources {

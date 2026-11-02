@@ -50,6 +50,7 @@ fn select(
     selected(&unique, &mut excluded)
 }
 
+/// Deduplicates dependent `ids` outside `excluded`, promoting repeated identities to `"latest"`.
 fn selected(ids: &[String], excluded: &mut HashSet<String>) -> io::Result<Vec<Target>> {
     if ids.len() > 4096 {
         return Err(invalid("inbound dependent target limit"));

@@ -21,6 +21,7 @@ pub(super) struct Filtered {
     pub(super) excluded: Vec<Value>,
 }
 
+/// Filters lane merge or switch component `statuses` by pattern and `--workspace-only` constraints.
 pub(super) fn filter(
     request: &Prepare,
     context: &Value,

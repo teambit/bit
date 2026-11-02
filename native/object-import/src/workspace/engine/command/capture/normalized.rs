@@ -36,6 +36,7 @@ pub(super) fn read(
     .collect()
 }
 
+/// Canonicalizes a single captured file, normalizing `.bitmap` Linux hashes when `bitmap` is `true`.
 #[inline]
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata, Vec<u8>)> {
     let (mut metadata, contents) = read::canonical(path, bytes);

@@ -44,6 +44,7 @@ pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Resu
     }
     record.repository.prepare_lane_referenced(scope, &heads)
 }
+/// View over planned snapshots and rebased versions used to resolve post-squash head `Version` objects.
 struct Projection<'a> {
     plan: &'a planning::Planned,
     snapshots: &'a [Value],

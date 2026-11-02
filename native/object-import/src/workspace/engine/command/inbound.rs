@@ -1,23 +1,22 @@
 //! Retained public inbound transfer ([`autosync`], [`dependents`], [`details`], [`policy`], [`remote`], [`write_dependencies`]): remote acquisition and validation run during
 //! preparation without touching the local repository, and application publishes.
 pub(in crate::workspace::engine) mod autosync;
+mod dependencies;
 pub(in crate::workspace::engine) mod dependents;
 pub(crate) mod details;
-pub(in crate::workspace::engine) mod policy;
-pub(crate) mod remote;
-pub(in crate::workspace::engine) mod write_dependencies;
-
-mod dependencies;
 mod lane_workspace;
 mod lanes;
 mod owned_writes;
+pub(in crate::workspace::engine) mod policy;
 mod preparation;
 mod progress;
 #[cfg(test)]
 mod protocol_tests;
+pub(crate) mod remote;
 mod selection;
 mod validation;
 mod write;
+pub(in crate::workspace::engine) mod write_dependencies;
 use super::{
     super::{client_status::config, invalid},
     State,
@@ -40,6 +39,7 @@ pub fn recovery_remote_connection(
     let transport = serde_json::from_value(transport.clone()).map_err(io::Error::other)?;
     remote::recovery_connection(root, home, &transport)
 }
+/// Deserialized inbound transfer preparation request (`root`, `home`, `operation`, `ids`, `options`, `transport`).
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {

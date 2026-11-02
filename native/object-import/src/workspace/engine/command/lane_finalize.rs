@@ -1,4 +1,5 @@
 //! Finalize lane histories and referenced objects ([`run`], [`LaneFinalize`], [`State`]) for a prepared lane command.
+//! Rebases version histories and prepares referenced lane objects when no follow-up merge snap is required.
 
 use super::{LaneFinalize, State, invalid, proof, scratch};
 use serde_json::{Value, json};

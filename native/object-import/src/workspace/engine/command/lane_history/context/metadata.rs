@@ -53,6 +53,7 @@ fn row_bare_identity(row: &Value) -> Option<&str> {
         .and_then(bare_identity)
         .or_else(|| row["id"].as_str().and_then(bare_identity))
 }
+/// Extracts all component targets from `bitmap` regardless of current-lane availability flags.
 #[inline]
 fn all_targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
     let mut bitmap = bitmap

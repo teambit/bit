@@ -38,6 +38,7 @@ pub(in crate::workspace::engine::command) fn context(
     Ok(())
 }
 
+/// Extracts existing `<scope>/<name>` component identities from `.bitmap` `rows`.
 #[inline]
 fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
     let rows = bitmap.as_object().ok_or_else(|| invalid("stash bitmap"))?;

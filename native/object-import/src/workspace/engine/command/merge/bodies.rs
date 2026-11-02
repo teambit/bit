@@ -13,7 +13,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Borrowed `Version` hash and parsed JSON body for one side (`base`, `current`, or `incoming`) of a three-way merge.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct VersionSide<'a> {
     pub(in crate::workspace::engine::command) hash: &'a str,

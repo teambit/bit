@@ -50,6 +50,7 @@ pub(super) fn attach_missing(
     Ok(())
 }
 
+/// Selects historical `phase` components that are not currently present in `context["targets"]`.
 fn selected(
     phase: &Phase,
     context: &Value,

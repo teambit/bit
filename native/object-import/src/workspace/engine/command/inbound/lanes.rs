@@ -61,6 +61,7 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     Ok((count, receipt))
 }
 
+/// Resolves the requested lane IDs and virtual remote overlays for `input`.
 fn select(
     input: &Prepare,
     import: Option<&mut command_import::PreparedImport>,

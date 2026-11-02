@@ -1,4 +1,5 @@
 //! Finalize merge-snap planning and `.bitmap` preparation ([`run`], [`Finalize`], [`State`]) for a planned workspace command.
+//! Verifies dependency read-set proofs and records referenced lane objects before returning the finalized plan receipt.
 
 use super::{Finalize, State, bitmap, invalid, proof, scratch};
 use serde_json::{Value, json};

@@ -18,6 +18,7 @@ pub(super) struct Prepared {
 }
 
 impl Prepared {
+    /// Reads and validates the initial `workspace.jsonc` preimage at `path` within [`MAX_BYTES`].
     pub(super) fn new(path: PathBuf) -> io::Result<Self> {
         ordinary(&path)?;
         let before = fs::read(&path)?;

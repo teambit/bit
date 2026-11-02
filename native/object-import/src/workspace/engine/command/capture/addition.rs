@@ -42,6 +42,7 @@ pub(in crate::workspace::engine::command) fn capture(
     })
 }
 
+/// Validates that `identity` matches `<scope>/<name>` in `destination` without control characters or `..` segments.
 #[inline]
 fn validate_addition_identity(identity: &str, destination: &Value) -> io::Result<()> {
     let scope = destination["scope"]

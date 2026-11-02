@@ -20,6 +20,7 @@ pub(super) fn connect(
     with_home(root, transport, &home)
 }
 
+/// Resolves remote scopes, HTTP network client, global configuration, and local scope name using explicit `home`.
 pub(super) fn with_home(
     root: &Path,
     transport: &Transport,

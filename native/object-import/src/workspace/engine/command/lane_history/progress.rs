@@ -44,6 +44,7 @@ pub(in crate::workspace::engine::command) fn import(
     record.context["historyCheckoutImport"]["completed"] = json!(true);
     Ok(())
 }
+/// Attaches retained `historyCheckoutImport` progress onto `error` when a historical checkout phase fails.
 #[inline]
 pub(in crate::workspace::engine::command) fn failure(
     error: io::Error,

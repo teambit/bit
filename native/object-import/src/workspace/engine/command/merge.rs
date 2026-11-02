@@ -21,6 +21,7 @@ pub(super) struct State {
 }
 
 impl State {
+    /// Initializes a native `mergeTransactionBegin` state machine for `count` components.
     pub(super) fn new(count: usize) -> io::Result<Self> {
         if count > 4096 {
             return Err(invalid("command merge status count limit"));

@@ -22,7 +22,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-
+/// Deserialized remote inventory query request (`list` or `latestVersions`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

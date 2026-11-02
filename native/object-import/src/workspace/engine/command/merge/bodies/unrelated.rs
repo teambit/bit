@@ -24,6 +24,7 @@ impl Prepared {
             destinations: Destinations { request: json!({"files":[]}), removals: Vec::new() },
         }
     }
+    /// Returns the unrelated-history resolution metadata when this merge body used [`Conflict::Unrelated`].
     #[inline]
     pub(in crate::workspace::engine::command) fn unrelated_relation(&self) -> Option<&Value> {
         match &self.conflict {

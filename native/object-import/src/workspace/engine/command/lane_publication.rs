@@ -22,6 +22,7 @@ pub(super) struct Prepared {
     squashes: Vec<squash::Prepared>,
 }
 impl Prepared {
+    /// Prepares lane publication state, history, and `last-merged` recovery backups when `options.lane` is active.
     pub(super) fn prepare(record: &mut Record, models: &[Value]) -> io::Result<Option<Self>> {
         if record.request.options.lane.is_none() {
             return Ok(None);

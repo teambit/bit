@@ -35,6 +35,7 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     retain(input, state, import, &targets, &groups, &lane_receipts)
 }
 
+/// Prepares a [`command_import::PreparedImport`] with virtual remotes covering both `selection` lanes and `main` targets.
 fn connected(
     input: &Prepare,
     main: &[Target],

@@ -55,6 +55,7 @@ pub(in crate::workspace::engine::command) fn prepare_switch(
     Ok(additions)
 }
 
+/// Relocates an incoming switch `addition` when its `rootDir` is nested inside an existing component directory.
 fn relocate_nested<'a>(
     addition: &mut Value,
     rows: &(impl Iterator<Item = &'a Value> + Clone),

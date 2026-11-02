@@ -19,6 +19,7 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(default)]
     pub(super) defer_checkout_pattern: bool,
 }
+/// Supported native workspace command kind (`checkout`, `merge`, or `switch`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum Operation {

@@ -1,4 +1,5 @@
 //! Remote lane-history refresh fetches ([`history_remote`], [`history_remote_at`]) without publishing a `Lane` object locally.
+//! Supports both workspace-rooted and bare-scope remote resolution with optional host overrides.
 
 use super::{
     FetchOptions, MAX_INBOUND_BYTES, Remote, VirtualRemote, collect, connection, invalid, lane,

@@ -26,6 +26,7 @@ pub(in crate::workspace::engine) struct Prepare {
     transport: inbound::Transport,
 }
 
+/// Deserialized request to commit a previously prepared lane-history inspection refresh (`token`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Apply {

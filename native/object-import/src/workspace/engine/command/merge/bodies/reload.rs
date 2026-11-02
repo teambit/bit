@@ -24,8 +24,7 @@ pub(super) fn files(
     retain(&input.root.join(input.current.target.directory.trim()), plan, files, removals)
 }
 
-// A writer does not remove a file merely because it is absent from its output.
-// The subsequent workspace reload also sees surviving locally modified files.
+/// Appends unmodified `currentFiles` from `plan` that were neither overwritten nor scheduled for removal.
 fn retain(
     directory: &Path,
     plan: &Value,

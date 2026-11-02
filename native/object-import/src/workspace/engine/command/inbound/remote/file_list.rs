@@ -24,6 +24,7 @@ pub(super) fn list(path: &Path, scope: &str, namespaces: &str) -> io::Result<Vec
     collect(path, scope, &matcher(scope, namespaces)?, &index(path)?)
 }
 
+/// Reads and filters non-symlink component rows from `path/index.json`.
 pub(super) fn index(path: &Path) -> io::Result<Vec<Value>> {
     let index: Value = crate::parse_jsonc(
         &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,

@@ -31,6 +31,7 @@ pub(super) async fn versions(
     results(finished)
 }
 
+/// Sorts completed `(index, rows)` groups by input order and flattens them into JSON strings.
 fn results(finished: Vec<io::Result<(usize, Vec<String>)>>) -> io::Result<Vec<Value>> {
     let mut groups = Vec::with_capacity(finished.len());
     let mut first_error = None;
