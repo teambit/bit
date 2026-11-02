@@ -1,4 +1,4 @@
-//! Ownership and issue records for relative component and untracked file imports.
+//! [`Owner`] and [`State`] issue records for relative component and untracked file imports.
 
 use super::{Detect, invalid, unversioned};
 use serde_json::{Map, Value, json};

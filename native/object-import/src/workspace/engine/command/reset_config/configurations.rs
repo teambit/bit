@@ -1,4 +1,4 @@
-//! Core aspect configuration schema validation for `component.json` reset writes.
+//! Core aspect configuration schema validation via [`plain`] for `component.json` reset writes.
 
 use super::{Value, invalid};
 use std::io;

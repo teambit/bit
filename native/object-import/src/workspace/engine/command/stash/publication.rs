@@ -1,4 +1,4 @@
-//! Stash publication staging and object-store/stash-file persistence.
+//! [`Prepared`] stash publication staging and [`PreparedSave`] persistence for [`Finalize`].
 
 use super::{Finalize, Retained, invalid, scratch, version};
 use crate::{

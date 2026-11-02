@@ -1,4 +1,4 @@
-//! Builder pipeline metadata and artifact object synthesis for resolved snapshots.
+//! Builder pipeline [`metadata`] and artifact object synthesis for resolved snapshots.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Retained file proof and owned path collection for captured snapshot sources.
+//! Retained file [`proof`] and owned path [`capture`] for [`Captured`] snapshot sources.
 
 #[cfg(test)]
 mod tests;

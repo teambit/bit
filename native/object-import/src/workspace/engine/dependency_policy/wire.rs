@@ -1,4 +1,4 @@
-//! Wire payloads and validation for initial dependency policy planning.
+//! Wire [`Entry`], [`Missing`], [`Policy`], [`Request`], and [`Plan`] payloads for initial planning.
 
 use super::{invalid, io};
 use serde::{Deserialize, Serialize};

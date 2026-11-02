@@ -1,4 +1,4 @@
-//! Pre-tag `VersionHistory` staging for resolved snapshot batches.
+//! Pre-tag `VersionHistory` staging via [`tag_histories`] for resolved [`Material`] batches.
 
 #[cfg(test)]
 mod tests;

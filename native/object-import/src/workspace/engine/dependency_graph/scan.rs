@@ -1,4 +1,4 @@
-//! Single-file AST dependency extraction and module specifier resolution under byte budgets.
+//! Single-file AST dependency extraction via [`scan`] under [`ScanBudget`] and [`Budget`].
 
 use super::{
     super::{

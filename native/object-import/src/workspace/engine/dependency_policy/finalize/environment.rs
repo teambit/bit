@@ -1,4 +1,4 @@
-//! Environment dependency policy application and plus-version resolution.
+//! Environment dependency policy [`apply`] and plus-version resolution on [`Output`].
 
 use super::{Output, Request};
 use crate::workspace::engine::{dependency_policy::wire::version, invalid};

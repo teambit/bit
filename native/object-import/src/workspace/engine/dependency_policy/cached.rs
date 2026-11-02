@@ -1,4 +1,4 @@
-//! Pre-policy dependency cache loading and policy application.
+//! Pre-policy dependency cache loading via [`apply`], [`detected`], [`issues`], and [`pipeline`].
 
 mod detected;
 mod issues;

@@ -1,4 +1,4 @@
-//! Workspace status context, lane validation, and proof capture for `snap` and `tag`.
+//! Workspace [`status_context`], lane validation, and [`proof`] capture into [`Retained`].
 
 #[cfg(test)]
 mod tests;

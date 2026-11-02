@@ -1,4 +1,4 @@
-//! Unmerged component target selection for `merge --resolve` and `snap --unmerged`.
+//! Unmerged component target selection via [`select`] for `merge --resolve` and `snap --unmerged`.
 
 #[cfg(test)]
 mod tests;

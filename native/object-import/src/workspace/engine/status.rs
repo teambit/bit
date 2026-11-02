@@ -1,4 +1,4 @@
-//! Target and current file hash comparison for workspace status.
+//! Target and current [`File`] hash comparison via [`compare`] for workspace status.
 
 use std::{collections::HashMap, io};
 

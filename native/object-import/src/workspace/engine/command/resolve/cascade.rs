@@ -1,4 +1,4 @@
-//! Dependent auto-tag cascade computation for workspace `snap` and `tag` commands.
+//! Dependent auto-tag cascade [`reports`] computation for workspace `snap` and `tag` commands.
 
 #[cfg(test)]
 mod tests;

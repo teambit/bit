@@ -1,4 +1,4 @@
-//! Parallel source dependency graph scanning, proof capture, and deterministic replay.
+//! Parallel source dependency graph [`scan`], [`proof`] capture, [`validate`], and [`replay`].
 
 pub(super) mod proof;
 mod replay;

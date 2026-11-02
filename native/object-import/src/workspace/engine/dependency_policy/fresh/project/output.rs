@@ -1,4 +1,4 @@
-//! Fresh dependency detection output assembly and issue serialization.
+//! Fresh dependency detection output assembly and issue serialization on [`Projection`].
 
 use super::Projection;
 use serde_json::{Map, Value, json};

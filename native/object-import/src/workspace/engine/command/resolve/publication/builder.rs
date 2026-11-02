@@ -1,4 +1,4 @@
-//! Persist only staged snap identities before the builder; publish built objects afterward.
+//! Persist only staged snap identities via [`StageBuild`] before the builder; publish via [`BuildFinalize`].
 
 use super::{Phase, invalid, proof};
 use crate::workspace::{engine::command::State, snapshots};

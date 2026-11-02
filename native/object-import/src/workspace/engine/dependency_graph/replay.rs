@@ -1,4 +1,4 @@
-//! Deterministic visitation order and diagnostic aggregation for scanned dependency graphs.
+//! Deterministic [`Replay`] visitation order and [`Diagnostics`] aggregation for [`Row`] graphs.
 
 use super::{super::resolve_dependencies::Budget, PathMap, Request, Row, invalid};
 use serde_json::{Map, Value, json};

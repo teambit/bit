@@ -1,4 +1,4 @@
-//! Refresh callback-owned sources after selection without rerunning the dependent cascade.
+//! [`Refresh`] and [`Validate`] callback-owned [`Callbacks`] sources after selection.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Spool slice descriptor parsing and hash-verified reading for source overlays.
+//! [`Spool`] slice descriptor parsing and hash-verified reading for source overlays.
 
 use super::invalid;
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Bounded parallel and serial workspace file reading with BOM stripping and hash computation.
+//! Bounded parallel and serial workspace [`FileRecord`] and [`Metadata`] reading under [`Budget`].
 
 use super::{MAX_RAW, count, hash, invalid, path};
 use crate::read_budget::Budget;

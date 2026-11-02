@@ -1,4 +1,4 @@
-//! Bounded workspace directory and file traversal excluding ignored system directories.
+//! Bounded workspace directory and file traversal via [`scan`] and [`Scan`] excluding system directories.
 
 use super::{MAX_RAW, count, invalid, path};
 use std::{

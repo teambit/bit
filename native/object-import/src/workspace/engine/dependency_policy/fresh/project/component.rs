@@ -1,4 +1,4 @@
-//! Component package imports, diagnostics, and runtime/dev/peer classification.
+//! Component [`Package`] imports, diagnostics, and runtime/dev/[`peer`] classification on [`Projection`].
 
 use super::{
     super::wire::ComponentVersion, Package, Projection, identity, invalid, peer, unversioned,

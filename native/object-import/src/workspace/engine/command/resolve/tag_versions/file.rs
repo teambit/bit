@@ -1,4 +1,4 @@
-//! `VersionFileParser` applies explicit lines before `DEFAULT` to the complete tag batch.
+//! `VersionFileParser` [`tag_data`] applies explicit lines before `DEFAULT` to the tag batch.
 
 #[cfg(test)]
 mod tests;

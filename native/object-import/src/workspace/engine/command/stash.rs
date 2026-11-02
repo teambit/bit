@@ -1,4 +1,4 @@
-//! Detached stash objects never publish component heads or workspace state.
+//! Detached stash objects via [`Prepare`], [`Plan`], [`planning`], [`version`], and [`publication`].
 
 mod graph;
 mod history;

@@ -1,4 +1,4 @@
-//! Keep the old lane active through `ComponentWriter` installation and compilation.
+//! Keep the old lane active in [`Retained`] via [`prepare`] through [`Complete`] installation.
 
 #[cfg(test)]
 mod tests;

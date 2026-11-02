@@ -1,4 +1,4 @@
-//! Preflight material, graph, and file budget validation for resolved snapshots.
+//! [`preflight`] [`Material`], graph, and file budget validation for resolved snapshots.
 
 use super::{Material, invalid, snapshot};
 use crate::workspace::snapshots;

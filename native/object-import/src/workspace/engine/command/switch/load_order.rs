@@ -1,4 +1,4 @@
-//! The selected checkout order is main-only `.bitmap` IDs followed by stored `Lane` IDs.
+//! The selected checkout order via [`apply`] and [`status_load_order`] is `.bitmap` IDs then `Lane` IDs.
 
 use super::{command_import, invalid};
 use serde_json::{Value, json};

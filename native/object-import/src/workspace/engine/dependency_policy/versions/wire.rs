@@ -1,4 +1,4 @@
-//! Wire request, source, policy, and grammar payloads for version selection.
+//! Wire [`Request`], [`Sources`], [`Policy`], and [`Grammar`] payloads for version selection.
 
 use super::super::wire::Entry;
 use serde::Deserialize;

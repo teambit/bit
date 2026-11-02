@@ -1,4 +1,4 @@
-//! The workspace-root joins changed members and records provenance without becoming a dependency.
+//! The workspace-root joins changed members via [`include`] without becoming a dependency.
 
 use super::{
     super::{capture, resolve_snapshot::Material},

@@ -1,4 +1,4 @@
-//! Unversioned workspace IDs reach the detached graph's canonical rejection.
+//! Unversioned workspace [`Component`] IDs reach the detached graph's rejection via [`version`].
 
 use super::{
     super::resolve::projection::{self, Component},

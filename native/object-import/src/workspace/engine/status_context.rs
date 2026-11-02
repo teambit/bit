@@ -1,4 +1,4 @@
-//! Workspace configuration, target metadata, and scope model loading for status queries.
+//! Workspace [`configuration`], [`metadata`], [`tracking`], and [`status_models`] loading via [`read`].
 
 pub(super) mod configuration;
 pub(super) mod tracking;

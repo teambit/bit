@@ -1,4 +1,4 @@
-//! Two-phase component and workspace file inventory scanning and ignore filtering.
+//! Two-phase component and workspace file [`State`] inventory via [`patterns`] and [`rules`].
 
 pub(super) mod patterns;
 mod rules;

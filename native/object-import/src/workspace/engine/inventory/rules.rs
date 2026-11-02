@@ -1,4 +1,4 @@
-//! Compiled `node-ignore` regular-expression rule matching with parent directory caching.
+//! Compiled `node-ignore` regular-expression [`Rule`] and [`Policy`] matching via [`Matcher`].
 
 use super::super::invalid;
 use rayon::{ThreadPool, prelude::*};

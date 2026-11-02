@@ -1,4 +1,4 @@
-//! Retain canonical package metadata transforms without publishing objects or workspace files.
+//! Retain canonical [`PackageFinalize`] metadata via [`finalize`] without publishing objects.
 
 use super::{Phase, invalid, proof};
 use crate::workspace::engine::command::State;

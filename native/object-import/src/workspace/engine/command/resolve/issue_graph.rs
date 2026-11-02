@@ -1,4 +1,4 @@
-//! Circular dependency and workspace version mismatch issue graph capture for `snap` and `tag`.
+//! Circular dependency and workspace version mismatch issue graph [`capture`] for [`Component`].
 
 #[cfg(test)]
 mod tests;

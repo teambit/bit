@@ -1,4 +1,4 @@
-//! Detached `Version` and `Source` object synthesis for `stash save`.
+//! Detached `Version` and [`sources`] object synthesis for [`Component`] and [`Allocation`].
 
 #[cfg(test)]
 mod tests;

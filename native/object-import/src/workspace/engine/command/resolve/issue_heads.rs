@@ -1,4 +1,4 @@
-//! Model and lane head `Version` capture for component issue inspection callbacks.
+//! Model and lane head `Version` [`capture`] from [`Repository`] for component issue inspection.
 
 #[cfg(test)]
 mod tests;

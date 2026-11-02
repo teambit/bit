@@ -1,4 +1,4 @@
-//! Scope-only lane dependent auto-tag expansion (`getLaneAutoTagIdsFromScope`).
+//! Scope-only lane dependent auto-tag expansion (`getLaneAutoTagIdsFromScope`) via [`append`].
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Bounded Git diff execution over source objects and workspace snapshots.
+//! Bounded Git diff execution over [`InputFile`] and [`Input`] payloads via [`workers`].
 
 #[cfg(test)]
 mod tests;

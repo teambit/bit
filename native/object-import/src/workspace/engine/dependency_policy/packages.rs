@@ -1,4 +1,4 @@
-//! Package and component dependency preparation under model-peer and workspace policies.
+//! Package and component dependency [`prepare`] helpers on [`Plan`] under [`Policy`] rules.
 
 use super::{
     Plan, Request,

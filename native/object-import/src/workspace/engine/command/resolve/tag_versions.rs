@@ -1,4 +1,4 @@
-//! Compute semantic identities before allocating any `Version` object hashes.
+//! Compute semantic identities via [`plan`], [`file`], and [`ranges`] before allocating `Version` hashes.
 
 pub(super) use ranges::update as update_ranges;
 

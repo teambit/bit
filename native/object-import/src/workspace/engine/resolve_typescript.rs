@@ -1,4 +1,4 @@
-//! Relative `TypeScript` 5.9 `Node10` module path lookup with extension substitution.
+//! Relative `TypeScript` 5.9 `Node10` module path [`lookup`] under [`Budget`] with extension substitution.
 
 use super::{
     invalid,

@@ -1,4 +1,4 @@
-//! Bounded `cacache` index-v5 and content-v2 reader with SHA-1/SHA-512 integrity checks.
+//! Bounded `cacache` index-v5 and content-v2 reader via [`read`] with SHA-1/SHA-512 checks.
 
 use super::invalid;
 use base64::{Engine, engine::general_purpose::STANDARD};

@@ -1,4 +1,4 @@
-//! Automatic dependency policy application and peer promotion.
+//! Automatic dependency policy [`apply`] and peer promotion on [`Plan`] from [`Request`].
 
 use super::{Plan, Request, wire::version};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! Component and extension version selection across bitmap, lane, policy, and model sources.
+//! Component and extension version [`apply`] via [`index`], [`select`], [`validate`], and [`wire`].
 
 pub(in crate::workspace::engine) use wire::Request;
 

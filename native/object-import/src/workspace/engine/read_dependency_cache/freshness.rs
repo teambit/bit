@@ -1,4 +1,4 @@
-//! Directory and source-file mtime freshness checks against dependency cache timestamps.
+//! Directory and source-file mtime freshness checks via [`stale`] against cache timestamps.
 
 use super::invalid;
 use rayon::prelude::*;

@@ -1,4 +1,4 @@
-//! Manual dependency policy additions, component promotion, and missing-package tracking.
+//! Manual dependency policy [`Additions`] via [`apply`] on [`Output`] from [`Request`].
 
 use super::{Output, Request, wire::unversioned};
 use crate::workspace::engine::dependency_policy::wire::{Entry, version};

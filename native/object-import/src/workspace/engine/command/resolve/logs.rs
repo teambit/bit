@@ -1,4 +1,4 @@
-//! Resolve per-component editor and pending soft-tag logs before native object allocation.
+//! Resolve per-component editor and pending soft-tag logs via [`apply`] on [`Retained`].
 
 use super::{Retained, invalid};
 use serde_json::{Map, Value, json};

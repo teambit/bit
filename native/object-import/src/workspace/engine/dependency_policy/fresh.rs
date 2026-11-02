@@ -1,4 +1,4 @@
-//! Fresh source dependency detection and policy application.
+//! Fresh source dependency [`detect`], [`project`], and [`complete`] policy application.
 
 pub(in crate::workspace::engine) use wire::{Complete, Detect};
 

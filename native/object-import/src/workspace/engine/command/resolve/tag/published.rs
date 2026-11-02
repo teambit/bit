@@ -1,4 +1,4 @@
-//! Apply registry facts to semantic identities while retaining the selected snapshot batch.
+//! [`apply`] registry [`Overrides`] to semantic identities while retaining the [`Retained`] batch.
 
 use super::super::{Retained, State, invalid, publication};
 use serde::Deserialize;

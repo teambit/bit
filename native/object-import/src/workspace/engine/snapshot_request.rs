@@ -1,4 +1,4 @@
-//! Route native snapshot callback phases before general command execution.
+//! Route native snapshot callback [`Request`] phases via [`dispatch`] before [`owned_command`].
 
 use super::{super::snapshots, Request, command, owned_command};
 use serde_json::Value;

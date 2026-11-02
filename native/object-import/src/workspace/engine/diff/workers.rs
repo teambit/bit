@@ -1,4 +1,4 @@
-//! Bounded parallel worker execution and index-ordered assembly for file diffs.
+//! Bounded parallel worker [`execute`] and index-ordered assembly for [`Prepared`] [`FileDiff`] items.
 
 use super::{FileDiff, Prepared, one};
 use rayon::prelude::*;

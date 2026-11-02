@@ -1,4 +1,4 @@
-//! Relative and untracked dependency issue payload validation.
+//! Relative and untracked dependency issue payload [`validate`] checks.
 
 use super::invalid;
 use serde_json::Value;

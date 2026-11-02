@@ -1,4 +1,4 @@
-//! Checkout imports each selected status, including already cached or unchanged IDs.
+//! Checkout [`import_count`] and [`receipt`] include already cached or unchanged IDs.
 
 use super::invalid;
 use serde_json::{Value, json};

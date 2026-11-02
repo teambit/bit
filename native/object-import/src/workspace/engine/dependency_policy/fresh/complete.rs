@@ -1,4 +1,4 @@
-//! Fresh dependency detection validation and component version selection.
+//! Fresh dependency detection validation via [`detected`] and [`relative`] for [`Complete`].
 
 mod relative;
 

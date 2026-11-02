@@ -1,4 +1,4 @@
-//! Mainline semantic-version planning reuses retained ordinary snapshot materials.
+//! Mainline semantic-version [`Options`], [`published`], and [`report`] planning for [`Material`].
 
 pub(in crate::workspace::engine) use published::{Overrides, apply as override_versions};
 pub(super) use report::report;

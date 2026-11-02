@@ -1,4 +1,4 @@
-//! End-to-end dependency policy pipeline combining initial precedence, disk packages, finalization, and version selection.
+//! End-to-end dependency policy pipeline combining [`Initial`], [`packages_on_disk`], [`finalize`], and [`versions`].
 
 use super::{Request as Initial, finalize, invalid, packages_on_disk, versions};
 use crate::workspace::engine::source_overlay::SourceOverlay;

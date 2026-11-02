@@ -1,5 +1,5 @@
-//! The ordinary (non-merge-command) snapshot produced by `merge --resolve`.
-//! All allocations are supplied by the caller before any object is published.
+//! The ordinary (non-merge-command) snapshot produced by `merge --resolve` from [`Material`].
+//! All allocations are supplied by the caller before any [`object`] is published.
 
 pub(super) mod eligibility;
 pub(super) mod sources;

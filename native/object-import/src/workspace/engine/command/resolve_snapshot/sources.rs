@@ -1,4 +1,4 @@
-//! `Source` object capture, hashing, and UTF-16 path ordering for resolved snapshots.
+//! `Source` object capture, hashing, and UTF-16 path ordering via [`sources`] for [`Material`].
 
 use super::{Material, invalid};
 use crate::workspace::snapshots;

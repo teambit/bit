@@ -1,4 +1,4 @@
-//! Stash dependency IDs are the pre-allocation IDs, never pending snap markers.
+//! Stash [`Component`] dependency IDs via [`project`] are pre-allocation IDs, never pending markers.
 
 #[cfg(test)]
 mod tests;

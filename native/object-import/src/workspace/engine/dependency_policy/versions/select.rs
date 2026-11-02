@@ -1,4 +1,4 @@
-//! Precedence-ordered version and range selection for a single dependency entry.
+//! Precedence-ordered [`Selected`] version and range [`select`] for a single dependency entry.
 
 use super::{
     Request, invalid,

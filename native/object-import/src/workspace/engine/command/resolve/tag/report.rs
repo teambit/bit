@@ -1,4 +1,4 @@
-//! Tagged, auto-tagged, and warning report assembly for workspace `tag` commands.
+//! Tagged, auto-tagged, and warning [`report`] assembly for [`Material`] in workspace `tag` commands.
 
 use super::{Material, Retained, invalid};
 use serde_json::{Value, json};

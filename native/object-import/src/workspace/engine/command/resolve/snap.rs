@@ -1,4 +1,4 @@
-//! Ordinary snapshot selection uses the retained current `Source` and metadata comparison.
+//! Ordinary snapshot selection via [`select`] uses the retained [`comparison`] and [`versions`].
 
 #[cfg(test)]
 mod tests;

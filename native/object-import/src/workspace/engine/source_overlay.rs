@@ -1,4 +1,4 @@
-//! A command-owned view of files before its retained writes become visible.
+//! A command-owned [`SourceOverlay`] view of files via [`lookup`], [`seal`], and [`source`].
 
 mod lookup;
 mod seal;

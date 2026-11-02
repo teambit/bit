@@ -1,4 +1,4 @@
-//! Parallel `node_modules` package resolution for dependency policy evaluation.
+//! Parallel `node_modules` package resolution via [`read`] and [`metadata`] for [`Request`].
 
 mod metadata;
 

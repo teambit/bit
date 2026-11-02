@@ -1,4 +1,4 @@
-//! Dependency precedence before env-self and explicit manual additions.
+//! Dependency precedence via [`apply`], [`packages`], and [`automatic`] before [`finalize`].
 //! Rows identify caller-owned component dependencies; this planner never hydrates public models.
 
 pub(super) mod cached;

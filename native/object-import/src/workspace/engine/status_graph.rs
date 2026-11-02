@@ -1,4 +1,4 @@
-//! `GraphIdsFromFsBuilder`: reuse saved adjacency for unchanged external components.
+//! `GraphIdsFromFsBuilder` [`read`]: reuse saved [`Graph`] adjacency for [`Request`] components.
 
 use super::{command::repository::Repository, invalid};
 use serde::Deserialize;

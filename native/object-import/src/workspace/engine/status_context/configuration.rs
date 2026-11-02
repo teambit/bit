@@ -1,4 +1,4 @@
-//! `load-bit.mergeConfigs`: global aspect settings, overridden by workspace settings.
+//! `load-bit.mergeConfigs`: global aspect settings, overridden by workspace settings via [`effective`].
 
 use super::config;
 use serde_json::Value;

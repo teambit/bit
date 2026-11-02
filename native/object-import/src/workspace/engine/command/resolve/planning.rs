@@ -1,4 +1,4 @@
-//! Snapshot/tag planning, material order, and workspace load progress accounting.
+//! Snapshot/tag [`prepare`] planning, [`Material`] order, and workspace load progress on [`Retained`].
 use super::{
     super::{
         capture, invalid, repository,

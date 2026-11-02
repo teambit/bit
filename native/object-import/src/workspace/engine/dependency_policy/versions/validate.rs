@@ -1,4 +1,4 @@
-//! Input bounds and identity validation for version selection requests.
+//! Input bounds and identity [`validate`] checks for version selection [`Request`] payloads.
 
 use super::{Request, invalid};
 use crate::workspace::engine::dependency_policy::wire::name;

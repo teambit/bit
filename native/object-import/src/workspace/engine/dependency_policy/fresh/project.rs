@@ -1,4 +1,4 @@
-//! Dependency graph projection into component, package, and issue records.
+//! Dependency graph [`project`] into [`component`], [`peer`], [`relative`], and [`output`] records.
 
 mod component;
 mod output;

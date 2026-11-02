@@ -1,4 +1,4 @@
-//! Flattened dependency graph and edge projection for `snap` and `tag` materials.
+//! Flattened dependency graph [`project`], [`rebuild`], and [`saved`] edge projection for [`Material`].
 
 mod saved;
 #[cfg(test)]

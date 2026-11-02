@@ -1,4 +1,4 @@
-//! Co-snapped dependency hash and version rewriting across resolved `Version` objects.
+//! Co-snapped dependency hash and version rewriting via [`rewrite_batch_refs`] across `Version` objects.
 
 use super::invalid;
 use serde_json::{Map, Value, json};

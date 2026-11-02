@@ -1,4 +1,4 @@
-//! Finalization and local publication of `snap` and `tag` transactions.
+//! [`Phase`], [`Prepared`], [`builder`], and [`packages`] publication for `snap` and `tag`.
 
 pub(super) mod builder;
 pub(super) mod packages;

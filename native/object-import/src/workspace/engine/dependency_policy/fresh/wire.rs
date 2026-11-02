@@ -1,4 +1,4 @@
-//! Wire payloads for fresh dependency detection and completion requests.
+//! Wire [`Detect`], [`Detection`], and [`Complete`] payloads for fresh dependency detection.
 
 use crate::workspace::engine::dependency_graph::proof::Proof;
 use serde::{Deserialize, Serialize};

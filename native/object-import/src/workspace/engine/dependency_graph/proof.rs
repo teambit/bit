@@ -1,4 +1,4 @@
-//! Cryptographic content, range, and metadata proofs for workspace dependency reads.
+//! Cryptographic content, [`Range`], and [`Metadata`] [`Proof`] records for dependency reads.
 
 use super::invalid;
 use crate::workspace::engine::path;

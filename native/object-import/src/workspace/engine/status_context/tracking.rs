@@ -1,4 +1,4 @@
-//! Tracking observes projected identities without requiring their bitmap to exist on disk.
+//! Tracking [`read`] observes projected [`Request`] identities without requiring a `.bitmap` on disk.
 
 use super::{Request as StatusRequest, config, configuration, metadata, status_models};
 use crate::{read_budget::Budget, workspace::engine::invalid};

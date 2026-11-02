@@ -1,4 +1,4 @@
-//! Component and scope JSON metadata loading and validation for status context.
+//! Component and scope JSON metadata loading via [`optional`] and [`component`] under [`Budget`].
 
 #[cfg(test)]
 mod tests;

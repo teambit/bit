@@ -1,4 +1,4 @@
-//! Component aspect, dependency, and package metadata projection for `snap` and `tag`.
+//! [`Component`] aspect, dependency, and package metadata projection for `snap` and `tag`.
 
 use super::super::{invalid, policy};
 use serde::Deserialize;

@@ -1,4 +1,4 @@
-//! Capture and verify source-overlay file and spool proofs when sealing.
+//! [`capture`] and verify [`Data`] source-overlay file and spool [`proof`] records when sealing.
 
 use super::{Data, Entry, invalid, lookup, proof};
 use rayon::prelude::*;

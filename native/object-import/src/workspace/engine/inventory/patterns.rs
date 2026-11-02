@@ -1,4 +1,4 @@
-//! `.gitignore` and `.bitignore` file discovery and pattern parsing for workspace inventory.
+//! `.gitignore` and `.bitignore` [`Nested`] file discovery via [`nested`] for workspace inventory.
 
 use super::{Matcher, invalid};
 use rayon::{ThreadPool, prelude::*};

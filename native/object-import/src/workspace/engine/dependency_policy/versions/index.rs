@@ -1,4 +1,4 @@
-//! Indexed bitmap, lane, model, and env-own lookups for version selection.
+//! Indexed bitmap, lane, model, and env-own [`Index`] lookups for [`Request`] version selection.
 
 use super::{
     Request,

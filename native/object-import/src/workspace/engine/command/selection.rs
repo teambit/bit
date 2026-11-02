@@ -1,4 +1,4 @@
-//! Checkout version selection and transition state driver for workspace commands.
+//! Checkout version [`Selection`] via [`select`] and [`versions`] for workspace commands.
 
 pub(super) mod versions;
 

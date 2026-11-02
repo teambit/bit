@@ -1,4 +1,4 @@
-//! Saved `flattenedEdges` and `flattenedEdgesRef` capture from prior `Version` objects.
+//! Saved `flattenedEdges` and `flattenedEdgesRef` [`Graph`] [`capture`] from prior `Version` objects.
 
 use super::{Material, Repository, invalid, key};
 use serde_json::Value;

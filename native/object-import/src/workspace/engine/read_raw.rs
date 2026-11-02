@@ -1,4 +1,4 @@
-//! Binary framing and snapshot token retention for raw workspace file reads.
+//! Binary [`Response`] framing and snapshot token retention for raw workspace [`Record`] reads.
 
 use super::{MAX_OUTPUT, Output, failure, invalid, read};
 use rayon::ThreadPool;

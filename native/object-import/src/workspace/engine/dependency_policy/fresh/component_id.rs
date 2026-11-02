@@ -1,4 +1,4 @@
-//! `BitId.serialize` followed by `ComponentID.toObject` preserves legacy default-scope order.
+//! `BitId.serialize` followed by `ComponentID.toObject` via [`serialize`] preserves field order.
 
 #[cfg(test)]
 mod tests;

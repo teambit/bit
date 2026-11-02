@@ -1,4 +1,4 @@
-//! Wire request, state, and output payloads for dependency policy finalization.
+//! Wire [`Request`], [`State`], [`Resolved`], and [`Output`] payloads for policy finalization.
 
 use super::super::wire::{Entry, Policy};
 use serde::{Deserialize, Serialize};

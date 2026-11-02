@@ -1,4 +1,4 @@
-//! Component status populates existing history before deciding what to stash.
+//! Component [`status_models`] populate existing [`status_history`] on [`Retained`] before stashing.
 
 #[cfg(test)]
 mod tests;

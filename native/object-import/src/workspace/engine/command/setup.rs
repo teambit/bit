@@ -1,4 +1,4 @@
-//! Workspace command transaction setup, control proof capture, and target discovery.
+//! Workspace command transaction setup via [`run`], [`proof`] capture, and target discovery.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Target version resolution (`head`, `latest`, `reset`, `main`, or explicit ref/tag) for checkout.
+//! Target version [`resolve`] (`head`, `latest`, `reset`, `main`, or explicit ref/tag) for [`Selection`].
 
 use super::{Options, Repository, Selection, invalid};
 use serde_json::{Value, json};

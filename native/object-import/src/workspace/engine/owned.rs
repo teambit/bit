@@ -1,4 +1,4 @@
-//! Dispatch requests retaining command, inventory, and status ownership.
+//! Dispatch [`Request`] variants via [`owned_command`] retaining [`command`], [`inventory`], and status state.
 
 use super::{
     super::snapshots, Request, apply, client_status, command, dependency_graph, inventory,

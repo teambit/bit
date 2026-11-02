@@ -1,4 +1,4 @@
-//! Bounded JSON response buffer for the workspace protocol.
+//! Bounded JSON response buffer and [`CanonicalError`] formatting via [`canonical`] and [`with_progress`].
 
 #[cfg(test)]
 mod tests;

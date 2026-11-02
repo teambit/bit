@@ -1,4 +1,4 @@
-//! Route inbound and outbound commands while retaining their shared request state.
+//! Route inbound and outbound [`Request`] variants via [`dispatch`] on [`snapshots::State`].
 
 use super::{Request, command};
 use crate::workspace::snapshots;
