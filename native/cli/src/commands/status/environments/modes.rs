@@ -1,6 +1,6 @@
 //! Retained callback sessions change operation without replaying providers.
 //!
-//! Extends [`Environments`] with [`Environments::stash_added`], checkout, and install callback dispatch over [`Host`].
+//! Extends [`Environments`] with [`Environments::stash_added`], [`dev_files`], checkout, and install callback dispatch over [`Host`].
 use super::{Environments, Host, Path, Value, component, io, json, text};
 
 impl Environments {

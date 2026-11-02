@@ -1,6 +1,6 @@
 //! Native issue kinds and their released class metadata.
 //!
-//! Maps [`Issue`] and [`detected`] categories into formatted [`Value`] descriptors via [`join`] and [`list_or_text`].
+//! Maps [`Issue`] (`parse`, `class`) and [`detected`] categories into formatted [`Value`] descriptors via [`join`] and [`list_or_text`].
 
 use super::{
     SPACE, array, decline, detected,

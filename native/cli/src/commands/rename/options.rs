@@ -1,6 +1,6 @@
 //! Command-line flag and positional argument parser for `bit rename`.
 //!
-//! [`parse`] and [`consume_trailing_positions`] validate `bit rename <current-name> <new-name>` flags into [`Options`].
+//! [`parse`], [`apply_rename_arg`], and [`consume_trailing_positions`] validate `bit rename <current-name> <new-name>` flags into [`Options`].
 use bit_object_import::component_rename::Options;
 
 /// Parses `bit rename <current-name> <new-name>` CLI tokens into [`Options`].

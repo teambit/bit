@@ -1,6 +1,6 @@
 //! Command-line flag and positional argument parser for `bit scope rename`.
 //!
-//! [`parse`] validates `bit scope rename <current-scope> <new-scope>` and `rename-owner` flags into [`Options`].
+//! [`parse`] ([`apply_arg`], [`apply_scope_rename_flag`], [`valid_name_token`]) validates `bit scope rename <current-scope> <new-scope>` and `rename-owner` flags into [`Options`].
 use bit_object_import::component_scope_rename::Options;
 /// Parses `bit scope <rename|rename-owner> <old-scope> <new-scope>` arguments into [`Options`].
 pub(super) fn parse(args: &[&str]) -> Option<Options> {

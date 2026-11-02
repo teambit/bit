@@ -1,6 +1,6 @@
 //! Native `bit server` (`scopes/harmony/bit/server-cmd.ts`).
 //!
-//! Validates [`Options`] workspace preconditions for [`COMMAND`] (`bit server`) before delegating or reporting into [`Outcome`].
+//! Validates [`Options`] ([`parse_options`], [`parse_nonzero_port`]) workspace preconditions for [`COMMAND`] (`bit server`, [`run`]) before delegating or reporting into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

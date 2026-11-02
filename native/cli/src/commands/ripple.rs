@@ -1,4 +1,4 @@
-//! Native `bit ripple <sub-command>` (`scopes/cloud/ripple/ripple.cmd.ts`, [`COMMAND`], [`Subcommand`], [`BARE_RIPPLE_MSG`], [`NO_JOB_MSG`]) producing a [`Report`].
+//! Native `bit ripple <sub-command>` (`scopes/cloud/ripple/ripple.cmd.ts`, [`COMMAND`], [`Subcommand`], [`run`], [`BARE_RIPPLE_MSG`], [`NO_JOB_MSG`]) producing a [`Report`].
 
 #[cfg(test)]
 mod tests;

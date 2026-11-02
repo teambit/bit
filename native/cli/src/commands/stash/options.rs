@@ -1,6 +1,6 @@
 //! Published stash grammar; `--pattern` is a boolean in Bit 2.2.94.
 //!
-//! Defines [`Options`] and [`parse`] for `bit stash [save|list|load]` and serializes checkout [`Value`] options.
+//! Defines [`Options`] and [`parse`] ([`save`], [`load`]) for `bit stash [save|list|load]` and serializes checkout [`Value`] options.
 use serde_json::{Value, json};
 
 /// Parsed subcommand and flags (`Save`, `List`, `Load`) for `bit stash <save|list|load>`.

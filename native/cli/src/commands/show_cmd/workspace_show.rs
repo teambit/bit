@@ -1,6 +1,6 @@
 //! Workspace component loading and eligibility checks for native `bit show`.
 //!
-//! Loads workspace or scope components ([`Options`], [`LoadedComponent`], [`resolve_component_entry`]) and formats output via [`render`].
+//! Loads workspace or scope components ([`Options`], [`LoadedComponent`], [`TargetOutcome`], [`try_run`], [`resolve_component_entry`]) and formats output via [`render`].
 
 use super::{
     Options,

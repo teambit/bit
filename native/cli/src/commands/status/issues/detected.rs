@@ -1,6 +1,6 @@
 //! Detection issue classes from `@teambit/component-issues` 2.2.94.
 //!
-//! Defines [`Issue`] and formats detected component issues using [`list_or_text`] into JSON [`Value`] payloads.
+//! Defines [`Issue`] (`parse`, `class`) and formats detected component issues using [`list_or_text`] into JSON [`Value`] payloads.
 
 #[cfg(test)]
 mod tests;

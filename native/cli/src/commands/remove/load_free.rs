@@ -1,6 +1,6 @@
 //! Removal reads source changes and effective configuration without loading environments.
 //!
-//! [`Reader`] queries [`Engine`] with [`Inventory`] and [`policy`] to prepare load-free component removal.
+//! [`Reader`] ([`preparation`]) queries [`Engine`] with [`Inventory`], [`Options`], and [`policy`] to prepare load-free component removal.
 use super::preparation;
 use crate::commands::{
     engine::Engine,

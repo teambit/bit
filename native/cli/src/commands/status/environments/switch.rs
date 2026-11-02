@@ -1,6 +1,6 @@
 //! Retain one published switch loader while Rust captures each requested source.
 //!
-//! Extends [`Environments`] with [`Environments::switch_begin`] over [`Capture`], [`Host`], and [`callbacks`].
+//! Extends [`Environments`] with [`Environments::switch_begin`], [`Environments::switch_one`], and [`Environments::switch_finish`] over [`Capture`], [`Host`], and [`callbacks`].
 
 use super::{Environments, Host, Value, callbacks, decline, io, json};
 use crate::commands::status::capture::{Capture, callback_load_stdout, callback_startup_stdout};

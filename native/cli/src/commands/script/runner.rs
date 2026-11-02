@@ -1,6 +1,6 @@
 //! Workspace environment resolution, script listing, and script execution.
 //!
-//! Resolves [`WorkspaceComponent`] environments ([`ScriptFailure`]) and executes [`ScriptHandler`] entries for [`Options`].
+//! Resolves [`WorkspaceComponent`] environments ([`ScriptFailure`], [`EnvGroup`], [`resolve_workspace_components`]) and executes [`ScriptHandler`] entries for [`Options`].
 
 use super::{
     Options,

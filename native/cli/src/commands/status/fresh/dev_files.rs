@@ -3,7 +3,7 @@
 //!
 //! `minimatch(file, '**/<name>')` lets `**` match any number of directories
 //! that do not start with a dot, and matches the file name with the [`NAMES`] segment
-//! [`Regex`] below (`dot: false`, case-sensitive).
+//! [`Regex`] below (`dot: false`, case-sensitive; [`Group`], [`group_files`], [`is_dev_file`]).
 
 use regress::Regex;
 use std::sync::OnceLock;

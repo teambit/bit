@@ -1,6 +1,6 @@
 //! Native `bit resume-export <export-id> <remotes...>` (`scopes/scope/export/resume-export.cmd.ts`).
 //!
-//! Coordinates [`COMMAND`], [`Options`], [`deletion`], [`deletion_report`], and [`execute`] to finish or clean up pending exports into [`Outcome`].
+//! Coordinates [`COMMAND`], [`Options`], [`parse_options`], [`deletion`], [`deletion_report`], and [`execute`] to finish or clean up pending exports into [`Outcome`].
 
 mod deletion;
 mod deletion_report;

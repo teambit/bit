@@ -1,6 +1,6 @@
 //! Independent native startup reconciliation for `workspace.bitmapAutoSync`.
 //!
-//! [`Startup`] and [`run_if_enabled`] synchronize [`Bitmap`] entries with [`Engine`] scope state before command execution.
+//! [`Startup`], [`run_if_enabled`], and [`run`] synchronize [`Bitmap`] entries with [`Engine`] scope state before command execution.
 
 use super::{
     Engine,

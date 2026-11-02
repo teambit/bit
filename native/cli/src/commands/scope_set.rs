@@ -1,6 +1,6 @@
 //! Native `bit scope set <scope-name> [component-pattern]` (`ScopeSetCmd`).
 //!
-//! Updates workspace or component default scopes ([`Options`], [`Failure`], [`Bitmap`]) via [`selection`] and formats a [`Report`].
+//! Updates workspace ([`WorkspacePlan`]) or component ([`ComponentPlan`], [`Prepared`]) default scopes ([`Options`], [`Failure`], [`Bitmap`]) via [`selection`] and formats a [`Report`].
 
 pub(in crate::commands) mod selection;
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! Released `ShowCmd` help and argument errors before workspace loading.
 //!
-//! [`try_run`] formats `--help` ([`help_option`], [`GLOBAL_HELP`]) and missing-argument diagnostics with [`Chalk`].
+//! [`try_run`] ([`presentation`], [`argument_error`], [`command_help`]) formats `--help` ([`help_option`], [`GLOBAL_HELP`]) and missing-argument diagnostics with [`Chalk`].
 
 use crate::{
     commands::{app_cmd::GLOBAL_HELP, color::Chalk, run_cmd::help_option},

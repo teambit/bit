@@ -1,6 +1,6 @@
 //! The local sections of `RemoveTemplate`, including successful partial removals.
 //!
-//! [`render`] formats removed ([`removed_section`]), lane, and modified component sections using [`Formatter`].
+//! [`render`] formats removed ([`removed_section`]), lane, and modified ([`modified_section`], [`unique_ids`]) component sections using [`Formatter`].
 use crate::commands::workspace_command::format::Formatter;
 
 /// Renders the workspace, lane, and modified component sections of `RemoveTemplate` using [`Formatter`].

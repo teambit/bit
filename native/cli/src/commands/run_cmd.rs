@@ -1,6 +1,6 @@
 //! Native `bit run [app-name]` (`scopes/harmony/application/run.cmd.tsx`).
 //!
-//! Validates [`Options`] workspace app state ([`COMMAND`], [`is_empty_app_workspace`], [`run_missing_app`]) before running an application.
+//! Validates [`Options`] workspace app state ([`COMMAND`], [`run`], [`command_help`], [`is_empty_app_workspace`], [`run_missing_app`]) before running an application.
 
 #[cfg(test)]
 mod tests;

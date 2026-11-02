@@ -1,6 +1,6 @@
 //! Fixed built-in React facts for qualified component service loading.
 //!
-//! Defines [`Services`] and [`supported`] to resolve built-in environment facts for [`WorkspaceComponent`] and [`Environments`].
+//! Defines [`Services`], [`supported`], and [`facts`] to resolve built-in environment facts for [`WorkspaceComponent`] and [`Environments`].
 use super::{
     Environments, WorkspaceComponent, array, component, core_ids, needs_facts, root_aspects,
 };

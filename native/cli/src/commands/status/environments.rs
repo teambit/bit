@@ -1,6 +1,6 @@
 //! Environment callbacks supply policy and detector facts; Rust owns workspace sources.
 //!
-//! Re-exports [`hydration_rows`], [`read_context`], [`read_inherited_context`], [`read_snapshot_context`], [`dev_files`], [`quick`], [`callbacks`], and [`diagnostics`].
+//! Re-exports [`Environments`], [`hydration_rows`], [`read_context`], [`read_inherited_context`], [`read_snapshot_context`], [`dev_files`], [`quick`], [`callbacks`], and [`diagnostics`].
 
 pub(super) mod callbacks;
 pub(super) mod diagnostics;

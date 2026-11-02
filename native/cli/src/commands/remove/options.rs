@@ -1,6 +1,6 @@
 //! `RemoveCmd`'s local, noninteractive flag grammar.
 //!
-//! Defines [`Options`] (`keep`, `force`, `track`) and [`parse`] for `bit remove <pattern>` CLI arguments.
+//! Defines [`Options`] (`keep`, `force`, `track`), [`parse`], [`is_valid_pattern`], and [`apply_short_bundle`] for `bit remove <pattern>` CLI arguments.
 /// Parsed command-line options (`pattern`, `keep`, `force`, `track`) for `bit remove <pattern>`.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {

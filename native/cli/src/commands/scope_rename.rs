@@ -1,6 +1,6 @@
 //! Scope identity mutation keeps one native batch and one retained provider/tooling session.
 //!
-//! Coordinates [`COMMAND`], [`options`], [`Selection`], [`execution`], and [`report`] for `bit scope rename` and `bit scope fork`.
+//! Coordinates [`COMMAND`], [`run`], [`options`], [`Selection`], [`execution`], and [`report`] for `bit scope rename` and `bit scope fork`.
 mod execution;
 mod options;
 mod report;

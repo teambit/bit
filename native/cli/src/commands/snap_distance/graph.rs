@@ -1,6 +1,6 @@
 //! Graph traversal and lowest-common-ancestor helpers for `bit snap-distance`.
 //!
-//! [`compute_snap_distance`] walks parent maps ([`HashMap`], [`HashSet`], [`VecDeque`]) to compute LCA distance.
+//! [`compute_snap_distance`] ([`build_parents_map`], [`find_closest_common`]) walks parent maps ([`HashMap`], [`HashSet`], [`VecDeque`]) to compute LCA distance.
 
 use serde_json::{Value, json};
 use std::{

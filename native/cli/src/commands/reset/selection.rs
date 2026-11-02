@@ -1,6 +1,6 @@
 //! Resolve reset selectors before preparing one main or lane batch.
 //!
-//! [`identity`] and [`complex`] coordinate [`Engine`], [`bitmap`], [`patterns`], and [`Startup`] autosync for reset target resolution.
+//! [`identity`], [`identities`], and [`complex`] coordinate [`Engine`], [`bitmap`], [`patterns`], and [`Startup`] autosync for reset target resolution.
 use crate::commands::{
     diff::selection,
     engine::Engine,

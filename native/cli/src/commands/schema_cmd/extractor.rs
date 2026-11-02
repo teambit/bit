@@ -1,6 +1,6 @@
 //! Stored schema lookup and workspace pattern matching for `bit schema`.
 //!
-//! [`resolve_workspace_schema`] resolves component entries ([`WorkspaceSchemaOutcome`], [`Bitmap`], [`BitmapEntry`]) via [`resolve_component_entry`] and [`patterns`] matching.
+//! [`resolve_workspace_schema`] and [`diagnose_scope_schema_error`] resolve component entries ([`WorkspaceSchemaOutcome`], [`Bitmap`], [`BitmapEntry`]) via [`resolve_component_entry`] and [`patterns`] matching.
 
 use crate::{
     commands::{

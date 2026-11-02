@@ -1,4 +1,4 @@
-//! Native reset ([`COMMAND`], [`Options`]) of local main ([`Batch`], [`Plan`]) and lane histories ([`LaneBatch`]) while preserving working-tree bytes.
+//! Native reset ([`COMMAND`], [`Options`], [`parse`], [`run`]) of local main ([`Batch`], [`Plan`]) and lane histories ([`LaneBatch`]) while preserving working-tree bytes.
 
 mod main_ext;
 mod reports;

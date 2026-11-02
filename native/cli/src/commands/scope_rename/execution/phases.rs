@@ -1,6 +1,6 @@
 //! Initial and final linking, refactoring, and publication phases for `bit scope rename`.
 //!
-//! [`initial`] and follow-up helpers coordinate [`Entries`], [`ProjectedLinker`], [`Chalk`], and [`Batch`] commits.
+//! [`initial`], [`pairs`], [`targets`], and follow-up helpers coordinate [`Entries`], [`ProjectedLinker`], [`Chalk`], and [`Batch`] commits.
 use super::{Batch, Chalk, Entries, ProjectedLinker, Value, json, workspace_command};
 use std::{io, path::Path};
 /// Stages each component in `entries`, applying file moves and `onAdd` / `onRename` tooling callbacks.

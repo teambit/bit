@@ -1,6 +1,6 @@
 //! Validate all read receipts before publishing capture caches and history.
 //!
-//! [`commit`] publishes [`Capture`] dependency caches and staged history records through [`Engine`] and [`fresh`].
+//! [`commit`], [`commit_checkout_dependencies`], and [`publish_import_dependencies`] publish [`Capture`] dependency caches and staged history records through [`Engine`] and [`fresh`].
 
 #[cfg(test)]
 #[path = "commit_tests.rs"]

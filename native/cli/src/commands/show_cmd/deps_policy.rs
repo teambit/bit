@@ -1,6 +1,6 @@
 //! Dependency policy resolution (model, variants, `component.json`, `.bitmap`) for native `bit show`.
 //!
-//! [`apply_version_dependencies`] applies [`ModelData`], [`WorkspaceConfig`], and [`BitmapEntry`] dependency policies onto [`DepEntry`] sets.
+//! [`apply_version_dependencies`] ([`apply_legacy_pkg_fields`], [`apply_legacy_comp_fields`]) applies [`ModelData`], [`WorkspaceConfig`], and [`BitmapEntry`] dependency policies onto [`DepEntry`] sets.
 
 use super::deps::{DepEntry, Identity, remove_dep, upsert_dep};
 use bit_install::{

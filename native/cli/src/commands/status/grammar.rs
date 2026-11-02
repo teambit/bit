@@ -1,7 +1,7 @@
 //! The npm `semver` facts the status engine asks for, computed with
 //! [`npm`], the port of npm `semver` 7.7.1's strict functions.
 //!
-//! [`snapshot`] serializes canonical version text and [`Identifier`] components into a [`Map`]-backed [`Value`].
+//! [`snapshot`], [`dependency`], and [`config_inputs`] serialize canonical version text and [`Identifier`] components into a [`Map`]-backed [`Value`].
 
 use node_semver::npm::{self, Identifier};
 use serde_json::{Map, Value, json};

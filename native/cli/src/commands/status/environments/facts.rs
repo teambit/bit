@@ -1,6 +1,6 @@
 //! Raw registered environment policies and callback facts.
 //!
-//! [`read`] queries [`Host`] and [`EnvJsoncReader`] for [`WorkspaceComponent`] environment [`Value`] facts.
+//! [`read`] ([`ProviderFacts`], [`provider_facts`]) queries [`Host`] and [`EnvJsoncReader`] for [`WorkspaceComponent`] environment [`Value`] facts.
 
 use super::{EnvJsoncReader, Host, Value, WorkspaceComponent, io, json};
 

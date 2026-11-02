@@ -1,6 +1,6 @@
 //! Dependency detection and policy resolution for native `bit show`.
 //!
-//! Computes [`DepEntry`] component dependencies over [`Workspace`] and [`WorkspaceComponent`] with policy overrides.
+//! Computes [`DepEntry`] ([`Identity`], [`CompContext`], [`collect_dependencies`]) component dependencies over [`Workspace`] and [`WorkspaceComponent`] with policy overrides.
 
 use super::deps_policy::{
     apply_component_json_policy, apply_model_dependencies, apply_policy_object,

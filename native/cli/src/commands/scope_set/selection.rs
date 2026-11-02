@@ -1,6 +1,6 @@
 //! Component-pattern resolution and scope-name validation for `bit scope set`.
 //!
-//! [`resolve_pattern_entries`] matches [`Bitmap`] entries ([`BitmapEntry`]) against [`patterns`] and [`inventory`] rules.
+//! [`resolve_pattern_entries`] ([`resolve_literal_entry`], [`parse_bare_literal`]) matches [`Bitmap`] entries ([`BitmapEntry`]) against [`patterns`] and [`inventory`] rules.
 
 use super::{
     super::{color::Chalk, inventory, patterns},

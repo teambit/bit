@@ -1,6 +1,6 @@
 //! JSON (`--json`, `--json --legacy`) and text table rendering for native `bit show`.
 //!
-//! Formats [`LoadedComponent`] and [`DepEntry`] metadata ([`PKG_ASPECT`], [`DEV_FILES_ASPECT`]) via [`legacy_json`] and table formatters.
+//! Formats [`LoadedComponent`] and [`DepEntry`] metadata ([`PKG_ASPECT`], [`DEV_FILES_ASPECT`]) via [`legacy_json`], [`harmony_json`], and [`text_report`].
 
 use super::{deps::DepEntry, remote_show::ext_id_str, workspace_show::LoadedComponent};
 use bit_install::config::{DEPENDENCY_RESOLVER_ASPECT, aspect_id_without_version};

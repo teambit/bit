@@ -1,6 +1,6 @@
 //! Harmony class hydration and callback results without transporting source bodies.
 //!
-//! [`load`] invokes [`Host`] environment callbacks and populates [`Capture`] metadata.
+//! [`load`], [`callback_info`], [`SwitchStage`], and [`switch_begin`] invoke [`Host`] environment callbacks and populate [`Capture`] metadata.
 
 use crate::{
     commands::status::{

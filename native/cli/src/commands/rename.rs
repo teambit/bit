@@ -1,6 +1,6 @@
 //! Component rename keeps identity, source and bitmap mutation in the native engine.
 //!
-//! Coordinates [`COMMAND`], [`preparation`], [`execution`], [`ast`], [`options`], and [`ProjectedLinker`] into [`Outcome`].
+//! Coordinates [`COMMAND`], [`run`], [`preparation`], [`execution`], [`ast`], [`options`], and [`ProjectedLinker`] into [`Outcome`].
 pub(super) mod execution;
 pub(super) mod preparation;
 

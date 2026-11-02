@@ -1,6 +1,6 @@
 //! Human-readable summary report formatting for `bit scope rename`.
 //!
-//! [`render`] and [`section`] format renamed [`Batch`] entries and refactored component IDs for [`Options`] with [`Formatter`].
+//! [`render`] and [`section`] format renamed [`Batch`] entries and refactored component IDs for [`Options`] with [`Formatter`] into `io::Result`.
 use crate::commands::workspace_command::format::Formatter;
 use bit_object_import::component_scope_rename::{Batch, Options};
 use std::io;

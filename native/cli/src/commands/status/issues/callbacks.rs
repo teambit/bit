@@ -1,6 +1,6 @@
 //! Fully formatted issue objects supplied by installed Harmony callbacks.
 //!
-//! [`merge`] deduplicates and appends aspect callback issue [`Value`] records against [`HashSet`] ignore filters.
+//! [`merge`] and [`validate_callback_object`] deduplicate and append aspect callback issue [`Value`] records against [`HashSet`] ignore filters.
 
 #[cfg(test)]
 mod tests;
