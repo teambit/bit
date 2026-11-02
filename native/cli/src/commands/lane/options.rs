@@ -35,6 +35,7 @@ const BOOLEANS: [&str; 11] = [
     "--workspace",
     "--exclude-non-lane-comps",
 ];
+/// Additional boolean CLI flags accepted by the native lane merge parser.
 const EXTRA_BOOLEANS: [&str; 8] = [
     "--ours",
     "--theirs",

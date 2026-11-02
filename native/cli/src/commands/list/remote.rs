@@ -14,6 +14,7 @@ use std::{
     path::Path,
 };
 
+/// Builds the base `commandRemoteInventory` engine request object for `root` and `mode`.
 #[inline]
 fn request(root: Option<&Path>, mode: &str) -> io::Result<Value> {
     let cli = NodeCli::find()?;

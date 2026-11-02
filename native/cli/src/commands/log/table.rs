@@ -22,6 +22,7 @@ pub(super) fn one_line(logs: &[Value]) -> io::Result<String> {
     Ok(table(&rows))
 }
 
+/// Extracts the trimmed string value of `field` (or its `version`/`author` alias) from a log `row`.
 #[inline]
 fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
     let alias = match field {

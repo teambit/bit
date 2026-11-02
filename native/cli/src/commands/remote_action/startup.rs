@@ -18,6 +18,7 @@ pub(in crate::commands) fn supported(
     supported_workspace(root, config, load_workspace, Installer::needs_canonical(root))
 }
 
+/// Returns `true` when `root` and `config` require no service-level aspect callbacks or lane hydration.
 #[inline]
 pub(in crate::commands) fn service_supported(root: &Path, config: &Value) -> io::Result<bool> {
     supported_workspace(root, config, true, Installer::needs_service_callbacks(root))

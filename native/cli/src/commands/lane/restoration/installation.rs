@@ -49,6 +49,7 @@ pub(super) fn run(
     Ok(Some(Environments::from_host(host).for_checkout()))
 }
 
+/// Invokes `switchCompile` on `host` after package installation and records any compiler error on `result`.
 #[inline]
 fn compile(
     host: &crate::host::Host,

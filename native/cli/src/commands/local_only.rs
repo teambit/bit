@@ -33,6 +33,7 @@ enum Subcommand {
     Unrecognized(String),
 }
 
+/// Staged workspace `.bitmap` mutation or listing payload for `bit local-only`.
 enum Prepared {
     Set { root: PathBuf, ids: Vec<String>, bitmap_before: Vec<u8>, bitmap_val: Value },
     Unset { root: PathBuf, unset_ids: Vec<String>, bitmap_before: Vec<u8>, bitmap_val: Value },

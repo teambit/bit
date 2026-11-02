@@ -36,6 +36,7 @@ pub(crate) fn colors(args: &[OsString]) -> bool {
             .any(|word| lower.contains(word))
 }
 
+/// ANSI SGR open and close escape sequences for cyan table headers.
 const CYAN: (&str, &str) = ("\u{1b}[36m", "\u{1b}[39m");
 const GREY: (&str, &str) = ("\u{1b}[90m", "\u{1b}[39m");
 

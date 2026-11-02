@@ -17,6 +17,7 @@ pub struct Options {
     pub skip_install: bool,
 }
 
+/// Supported boolean CLI flags for `bit merge`.
 const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--verbose", "--no-snap"];
 const VALUED: [&str; 2] = ["--auto-merge-resolve", "--message"];
 

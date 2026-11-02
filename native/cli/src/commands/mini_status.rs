@@ -43,6 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     print(args, report, serde_json::to_string_pretty, false)
 }
 
+/// Parses `--json` (`-j`) and color flags for `bit mini-status`, returning `None` for any other flag.
 #[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;

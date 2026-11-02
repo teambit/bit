@@ -38,6 +38,7 @@ pub(in crate::commands::lane) fn updates(
     updates_in_scope(&root, args, lane_name, json)
 }
 
+/// Validates `bit lane updates` inside a discovered workspace or bare scope.
 fn updates_in_scope(
     root: &scope_root::ScopeRoot,
     args: &[OsString],

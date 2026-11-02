@@ -44,6 +44,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     Some(options)
 }
 
+/// Applies a single `bit lane history` flag or positional lane argument onto `options`.
 #[inline]
 fn apply_history_arg<'a>(
     options: &mut Options<'a>,

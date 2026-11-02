@@ -22,7 +22,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-
+/// Descriptor for the `bit mcp-server` CLI command.
 pub const COMMAND: Command = Command { name: "mcp-server", aliases: &[], run };
 
 const SETUP_EDITORS: &[&str] = &["vscode", "cursor", "windsurf", "roo", "cline", "claude-code"];

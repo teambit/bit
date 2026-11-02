@@ -43,6 +43,7 @@ pub(super) fn resolve_local_target(
     diagnose_missing_local_target(root, raw_id, id, chalk)
 }
 
+/// Matches `id` against `.bitmap` entries by root directory or component name/identity.
 fn resolve_from_bitmap(bitmap: &bitmap::Bitmap, id: &str) -> io::Result<Option<LocalTarget>> {
     let normalized = id.replace('\\', "/");
     let norm_dir = normalized.trim_start_matches("./").trim_end_matches('/');

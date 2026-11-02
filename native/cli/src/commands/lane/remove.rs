@@ -52,6 +52,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     workspace_command::execute_with(&root, args, "remove", &report, |_| plan.commit())
 }
 
+/// Returns whether every remote lane identifier in `names` contains a non-empty `scope/lane` pair.
 #[inline]
 fn all_scoped_remote_lanes(names: &[String]) -> bool {
     names

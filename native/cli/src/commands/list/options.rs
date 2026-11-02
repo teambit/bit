@@ -37,7 +37,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
-/// The long name of a short flag.
+/// Maps a single-character `bit list` short flag (`-i`, `-o`, `-d`, `-l`, `-s`, `-j`, `-n`) to its canonical long flag.
 #[inline]
 fn long_flag(flag: &str) -> &str {
     match flag {

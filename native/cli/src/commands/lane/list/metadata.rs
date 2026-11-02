@@ -20,7 +20,7 @@ impl Tracking {
         )
     }
 
-    /// `getLocalTrackedLaneByRemoteName(name, scope)`.
+    /// `getLocalTrackedLaneByRemoteName(name, scope)`: looks up the local alias for `scope/name`.
     #[inline]
     pub(in crate::commands::lane) fn alias(&self, name: &str, scope: &str) -> Option<String> {
         let name = name.trim();

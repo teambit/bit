@@ -37,6 +37,7 @@ use std::{
 use table::one_line;
 use topology::{LocalTarget, ordered_parents, resolve_local_target};
 
+/// Descriptor for the `bit log` CLI command.
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
 pub(super) const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";

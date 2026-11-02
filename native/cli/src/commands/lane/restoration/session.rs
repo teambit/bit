@@ -51,6 +51,7 @@ impl Session {
         Ok(session)
     }
 
+    /// Executes all checkout partitions in order and merges their outcomes into the final [`Report`].
     pub fn run(
         mut self,
         root: &Path,

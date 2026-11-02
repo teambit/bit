@@ -33,6 +33,7 @@ pub(crate) fn discover() -> io::Result<Option<ScopeRoot>> {
     Ok(None)
 }
 
+/// Validates `scope.json` and optional `index.json` inside `path` and constructs a [`ScopeRoot`].
 fn read(path: &Path, bare: bool) -> io::Result<ScopeRoot> {
     let directory = if bare { path.to_owned() } else { bit_object_import::scope_path(path) };
     if !directory.join("objects").is_dir() {

@@ -20,7 +20,7 @@ use bit_install::workspace::{Bitmap, BitmapEntry, ScopeObjects, sha1_hex};
 use bit_object_import::parse_jsonc;
 use serde_json::{Map, Value};
 use std::{env, ffi::OsString, fs, io, path::Path};
-
+/// Descriptor for the `bit lint` CLI command.
 pub const COMMAND: Command = Command { name: "lint", aliases: &[], run };
 
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";

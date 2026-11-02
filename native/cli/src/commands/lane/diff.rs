@@ -49,6 +49,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     workspace_command::execute_with(&root, args, "diff", &report, |_| Ok(()))
 }
 
+/// Emits user-facing diagnostics when `bit lane diff` is invoked outside a Bit workspace.
 fn outside_workspace_diff(cwd: &Path, args: &[OsString], values: &[&str]) -> io::Result<Outcome> {
     if env::var_os("CI").is_some_and(|val| !val.is_empty()) {
         return Ok(Outcome::Declined("not inside a workspace".into()));

@@ -34,7 +34,7 @@ use report::{
 };
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, sync::Arc};
-
+/// Target scope of a merge abort (`bit merge --abort` or `bit lane merge-abort`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
     Component,

@@ -35,7 +35,7 @@ use std::{
     process::ExitCode,
 };
 
-/// The schema of lanes that record their deleted components.
+/// The schema version (`1.0.0`) of lanes that record their deleted components.
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
 
 /// A lane's data, as `serializeLaneData` writes it.

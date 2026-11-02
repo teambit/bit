@@ -33,6 +33,7 @@ pub(super) struct Session {
 }
 
 impl Session {
+    /// Creates a remote-resolution [`Session`] for an optional workspace `root` and CLI `args`.
     #[inline]
     pub(super) fn new(root: Option<&Path>, args: &[OsString]) -> Self {
         Self {

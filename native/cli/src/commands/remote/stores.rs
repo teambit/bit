@@ -33,6 +33,7 @@ impl From<io::Error> for Failure {
     }
 }
 
+/// Staged terminal report and pending file writes for a `bit remote` operation.
 pub(super) struct Prepared {
     pub(super) report: String,
     writes: Vec<(PathBuf, Vec<u8>)>,

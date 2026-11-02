@@ -48,6 +48,7 @@ fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     (!options.name.is_empty()).then_some(options)
 }
 
+/// Assigns `name` to `slot` once if `slot` is currently empty and `name` is non-empty.
 #[inline]
 fn set_lane_name<'a>(slot: &mut &'a str, name: &'a str) -> bool {
     let name = name.trim();

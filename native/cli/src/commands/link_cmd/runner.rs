@@ -31,7 +31,7 @@ use std::{
 
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
-
+/// Top-level `package.json` keys preserved when regenerating linked component manifests.
 const PRESERVED_MANIFEST_KEYS: &[&str] = &[
     "dependencies",
     "devDependencies",

@@ -23,7 +23,7 @@ use super::{
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
-
+/// Descriptor for the `bit list` (`bit ls`) CLI command.
 pub const COMMAND: Command = Command { name: "list", aliases: &["ls"], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

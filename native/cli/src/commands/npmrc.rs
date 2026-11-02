@@ -43,6 +43,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Formats the red diagnostic emitted when `subcommand` is not a valid `bit npmrc` subcommand.
 #[inline]
 fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
     chalk.red(&format!(

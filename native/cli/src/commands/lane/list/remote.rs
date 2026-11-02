@@ -59,6 +59,7 @@ pub(super) fn run(
     }
 }
 
+/// Renders the human-readable remote lane listing or `--merged`/`--not-merged` report.
 #[inline]
 fn text_report(
     lanes: &[LaneData],

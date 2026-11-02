@@ -26,6 +26,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     run_workspace(&root, &cwd, args, from, to)
 }
+/// Extracts the two non-empty positional path arguments `(from, to)` for `bit move`.
 #[inline]
 fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let positionals = super::scope_set::collect_non_flag_tokens(args)?;

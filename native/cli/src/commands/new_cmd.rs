@@ -29,6 +29,7 @@ pub(super) struct Options {
     pub current_dir: bool,
 }
 
+/// Built-in workspace starter template names recognized without `--aspect`.
 const BUILTIN_WORKSPACE_TEMPLATES: &[&str] = &["basic", "react", "platform", "harmony"];
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

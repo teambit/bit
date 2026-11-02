@@ -23,6 +23,7 @@ pub(super) fn format(error: io::Error) -> io::Error {
     if rendered.trim().is_empty() { error } else { io::Error::other(rendered) }
 }
 
+/// Appends the deleted-on-remote recovery guide to `output` when any conflict or update entry has `deleted: true`.
 fn deleted_report(conflicts: &[Value], updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {
     let deleted: Vec<_> = conflicts
         .iter()

@@ -21,6 +21,7 @@ pub(super) struct Options {
 }
 
 impl Options {
+    /// Parses `args` into [`Options`] when they fit the native `bit remote` (`list`, `add`, `del`) grammar.
     pub(super) fn parse(args: &[OsString]) -> Option<Self> {
         let tokens = args
             .iter()

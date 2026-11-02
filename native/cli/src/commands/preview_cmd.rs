@@ -23,6 +23,7 @@ pub const GENERATE_PREVIEW: Command =
 /// Descriptor for the native `bit serve-preview` command.
 pub const SERVE_PREVIEW: Command = Command { name: "serve-preview", aliases: &[], run: run_serve };
 
+/// Parsed CLI options for `bit generate-preview [component-pattern]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct GenerateOptions {
     pub pattern: Option<String>,

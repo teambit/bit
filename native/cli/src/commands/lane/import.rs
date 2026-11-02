@@ -51,6 +51,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     active(&root, args, &options.lane, &current, providers)
 }
 
+/// Emits the failure report when `bit lane import` is executed outside a Bit workspace.
 #[inline]
 fn outside_workspace_import(
     cwd: &std::path::Path,

@@ -56,6 +56,7 @@ pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     Ok(Report { data: report.join(&hint), code: 0, details: Some(detailed) })
 }
 
+/// Hydrated merge report state combining component [`Results`], [`Mode`], and [`Formatter`].
 struct Merge<'r> {
     results: &'r Results,
     mode: Mode,

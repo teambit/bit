@@ -42,6 +42,7 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
     run_in_workspace(&root, args, name, alias)
 }
 
+/// Returns whether `token` is a non-empty, non-flag lane or alias name within length bounds.
 #[inline]
 fn valid_alias_token(token: &str) -> bool {
     let trimmed = token.trim();

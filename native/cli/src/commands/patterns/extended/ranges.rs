@@ -28,6 +28,7 @@ pub(super) fn expand(pattern: &str) -> io::Result<Vec<String>> {
     Ok(expanded)
 }
 
+/// Locates the rightmost unescaped `{start..end}` sequence inside `pattern`, if any.
 fn sequence(pattern: &str) -> io::Result<Option<(usize, usize, Sequence)>> {
     for (open, _) in pattern
         .char_indices()

@@ -39,6 +39,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         work(&root, args, &options, &mut linker, output)
     })
 }
+/// Selects components, validates dependents and aspect usage, commits the removal plan, and formats the [`Report`].
 fn work(
     root: &Path,
     args: &[OsString],

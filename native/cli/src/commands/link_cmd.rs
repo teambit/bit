@@ -16,6 +16,7 @@ use std::{env, ffi::OsString, io};
 /// Descriptor for the `bit link` CLI command.
 pub const COMMAND: Command = Command { name: "link", aliases: &[], run };
 
+/// Error message emitted when `bit link` is executed outside a Bit workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 /// Parsed CLI options for `bit link`.

@@ -26,7 +26,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-
+/// Resolved component metadata and source files ready to be packed into a tarball.
 struct ResolvedComponent {
     id_display: String,
     scope_name: String,

@@ -35,6 +35,7 @@ pub(super) fn supports_file(name: &str) -> bool {
     file::supports(name.trim())
 }
 
+/// Resolved HTTP or local filesystem remote target for [`Plan`].
 enum Target {
     Http { url: String, network: Network },
     File(PathBuf),

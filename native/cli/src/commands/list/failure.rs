@@ -32,6 +32,7 @@ pub(super) fn preflight(
     None
 }
 
+/// Returns whether the `CI` environment variable is set to a truthy value.
 #[inline]
 fn ci_enabled() -> bool {
     std::env::var_os("CI")

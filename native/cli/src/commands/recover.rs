@@ -45,6 +45,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+/// Returns whether `preview` requires dependency installation after component recovery.
 #[inline]
 fn needs_installation(options: &options::Options, preview: &mut Batch) -> bool {
     !options.skip_installation

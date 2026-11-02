@@ -22,6 +22,7 @@ const WINDSURF_WARNING: &str = "\u{26a0}\u{fe0f}  Windsurf uses a single-file co
 
 const CLAUDE_CODE_PREAMBLE: &str = "<!--\nTo use these Bit instructions, add the following to your main CLAUDE.md file:\n\n@.claude/bit.md\n\nThis will automatically include all Bit-specific instructions in your Claude Code context.\n-->\n\n";
 
+/// Parsed CLI options for `bit mcp-server rules [editor]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct RulesOptions {
     pub editor: String,

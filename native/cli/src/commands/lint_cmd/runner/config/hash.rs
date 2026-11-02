@@ -19,6 +19,7 @@ pub(super) fn hash(value: &Value) -> io::Result<String> {
     Ok(format!("{:x}", Sha1::digest(bytes.as_bytes())))
 }
 
+/// Appends the `object-hash` serialized representation of `value` onto `output`.
 fn encode(value: &Value, output: &mut String, root: bool) -> io::Result<()> {
     match value {
         Value::String(value) => string(value, output),

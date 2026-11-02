@@ -63,6 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+/// Returns `true` when `workspace.jsonc` inside `root` is missing, malformed, or lacks a valid `defaultScope`.
 #[inline]
 fn invalid_workspace_config(root: &std::path::Path) -> bool {
     let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else {

@@ -31,6 +31,7 @@ pub(super) fn remove(path: &Path) -> io::Result<()> {
     }
 }
 
+/// Attempts to remove directory `path` directly before recursively unlinking its children.
 fn remove_directory(path: &Path) -> io::Result<()> {
     match fs::remove_dir(path) {
         Ok(()) => return Ok(()),

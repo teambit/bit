@@ -37,6 +37,7 @@ impl fmt::Display for Restored {
     }
 }
 impl std::error::Error for Restored {}
+/// Wraps a partially restored lane-abort [`Value`] inside an [`io::Error`].
 #[inline]
 pub(super) fn restored(result: Value) -> io::Error {
     io::Error::other(Restored(result))

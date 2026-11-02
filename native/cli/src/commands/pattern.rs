@@ -25,7 +25,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
-
+/// Descriptor for the `bit pattern` CLI command.
 pub const COMMAND: Command = Command { name: "pattern", aliases: &[], run };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

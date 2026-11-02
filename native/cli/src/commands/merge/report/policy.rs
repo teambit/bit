@@ -33,6 +33,7 @@ pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> 
     Ok(Formatter::join(&[unchanged, updates, conflicts]))
 }
 
+/// Formats a single `workspaceDepsUnchanged` or `workspaceDepsUpdates` section when non-empty.
 fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(String::new()) };
     let map = object(value)?;

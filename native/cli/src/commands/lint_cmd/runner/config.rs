@@ -26,6 +26,7 @@ impl Config {
     pub(super) const fn exists(&self) -> bool {
         self.existing
     }
+    /// Builds the expanded `tsconfig` JSON for `directories` and verifies any existing cache file at `root`.
     pub(super) fn prepare(root: &Path, directories: &[&str]) -> io::Result<Self> {
         let mut config: Value = serde_json::from_str(include_str!(
             "../../../../../../scopes/react/react/typescript/tsconfig.json"

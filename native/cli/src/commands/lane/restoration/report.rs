@@ -58,6 +58,7 @@ pub(super) fn render(result: &Value, options: &Options, chalk: Chalk) -> io::Res
     Ok(report)
 }
 
+/// Top-level JSON property names copied when projecting a `bit lane revert --json` response.
 const RESULT_FIELDS: [&str; 14] = [
     "components",
     "removedComponents",

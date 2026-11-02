@@ -61,6 +61,7 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
     emit_selected(&root, scope_root.bare, args, json, lane)
 }
 
+/// Emits the failure report when `bit lane show` is run outside any workspace or bare scope.
 fn outside_scope_show(
     args: &[OsString],
     name: Option<&str>,

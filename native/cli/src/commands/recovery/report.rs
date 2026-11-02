@@ -25,6 +25,7 @@ pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>>
     Ok(ids)
 }
 
+/// Dispatches `result` formatting to either [`format_lane`] or [`format_component`] according to `kind`.
 #[inline]
 pub(super) fn format_result(result: &Value, kind: Kind, chalk: Chalk) -> io::Result<Report> {
     if kind == Kind::Lane { format_lane(result, chalk) } else { format_component(result, chalk) }

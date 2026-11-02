@@ -50,6 +50,7 @@ pub(super) fn rewire_components(
     Ok(results)
 }
 
+/// Rewrites relative component imports across all source files of `component` and returns modified relative paths.
 fn rewire_component(
     component: &WorkspaceComponent,
     all_components: &[&WorkspaceComponent],

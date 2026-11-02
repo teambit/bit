@@ -38,6 +38,7 @@ pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     run_in_workspace(&root, args, argv, &options)
 }
 
+/// Runs a validated lane history checkout or revert inside `root`.
 fn run_in_workspace(
     root: &Path,
     args: &[OsString],
