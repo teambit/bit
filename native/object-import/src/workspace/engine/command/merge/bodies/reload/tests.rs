@@ -1,4 +1,4 @@
-//! Unit tests for retaining surviving current sources via [`retain`] during merge reload in `bit-object-import`.
+//! Unit tests for retaining surviving current sources via [`retain`] ([`reload_keeps_surviving_current_sources_without_replacing_writer_outputs_or_removals`]) during merge reload in `bit-object-import`.
 //!
 //! Ensures merge reload via [`retain`] preserves untouched local files without overwriting merged or removed paths in the workspace.
 

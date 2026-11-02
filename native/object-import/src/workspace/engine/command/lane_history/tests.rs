@@ -1,4 +1,4 @@
-//! Unit tests for lane history phase [`selection`] and selected history proofs in `bit-object-import`.
+//! Unit tests for lane history phase [`selection`] ([`restore_partition_counts_inactive_bitmap_members_and_preserves_history_order`], [`checkout_retains_exact_cross_scope_versions_and_rejects_duplicate_membership`]) and selected history proofs in `bit-object-import`.
 //!
 //! Checks restore/checkout phase partitioning, cross-scope versions, and duplicate detection in lane history items.
 

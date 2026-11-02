@@ -1,4 +1,4 @@
-//! Unit tests for inbound [`Prepared`] workspace file writing, [`bitmap_key`], [`safe_destination`], and [`History`] rollback.
+//! Unit tests for inbound [`Prepared`] workspace file writing, [`bitmap_key`], [`safe_destination`], and [`History`] rollback ([`root`], [`history`], [`NEXT`]).
 //!
 //! Exercises atomic inbound [`WorkspaceFiles`] writes, [`Replacement`]/[`Target`] backup history creation, and failure recovery.
 

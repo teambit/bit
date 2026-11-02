@@ -1,4 +1,4 @@
-//! Unit tests for lane [`objects`] head updates and lane history bucket separation in `bit-object-import`.
+//! Unit tests for lane [`objects`] head updates ([`updating_hidden_lane_head_moves_it_to_tail_without_promoting_component`], [`lane_history_keeps_deleted_and_hidden_buckets_separate_and_preserves_previous_entries`]) and lane history bucket separation in `bit-object-import`.
 //!
 //! Verifies hidden dependent head updates and separate deleted/hidden lane history buckets during publication.
 

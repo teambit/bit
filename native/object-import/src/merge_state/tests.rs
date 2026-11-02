@@ -31,6 +31,7 @@ fn entry(name: &str) -> Value {
     json!({"id":{"scope":"scope","name":name},"head":hash_value('a'),
         "laneId":{"scope":"scope","name":"lane"},"mergedConfig":{"2":"two","a":"å"}})
 }
+/// Builds a baseline `laneSnap` merge state request fixture.
 fn lane() -> Value {
     json!({"kind":"laneSnap","version":hash_value('b'),"versionHash":hash_value('c'),
         "isLegacy":false,"parent":hash_value('a'),"existingHidden":false,

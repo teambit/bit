@@ -1,4 +1,4 @@
-//! Unit tests for merge finalization [`Input`] `node_modules` links and manifest planning via [`prepare`].
+//! Unit tests for merge finalization [`Input`] `node_modules` links and manifest planning via [`prepare`] ([`fixture`], [`write`]).
 //!
 //! Exercises symlink/copy planning, package manifest generation, and atomic finalization commits across [`Directory`] fixtures.
 

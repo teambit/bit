@@ -1,4 +1,4 @@
-//! Unit tests for main-branch component reset [`Plan`] and [`Batch`] planning ([`Fixture`], [`object_path`]) and [`outbound`] publication in `bit-object-import`.
+//! Unit tests for main-branch component reset [`Plan`] and [`Batch`] planning ([`Fixture`], [`object_path`], [`hash`], [`object`], [`NEXT`]) and [`outbound`] publication in `bit-object-import`.
 
 use super::{Batch, Plan, outbound, repository::object_path};
 use serde_json::{Value, json};

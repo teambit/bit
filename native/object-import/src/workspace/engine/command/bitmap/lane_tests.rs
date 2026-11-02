@@ -45,6 +45,7 @@ fn prepare(
     crate::recovery::jsonc::parse(&planned.output)
 }
 
+/// Verifies that [`prepare`] preserves lane membership flags and emits `_bit_lane` in canonical header order.
 #[test]
 fn lane_updates_preserve_membership_and_emit_canonical_header_order() {
     let mut bitmap = bitmap();

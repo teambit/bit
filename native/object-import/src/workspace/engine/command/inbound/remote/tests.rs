@@ -1,4 +1,4 @@
-//! Unit tests for remote lane listing ([`remote_lane`], [`lane_list`]) and HTTP wildcard lane fetching ([`http_lane`]).
+//! Unit tests for remote lane listing ([`remote_lane`], [`lane_list`], [`remote_lane_listing_keeps_visible_heads_and_drops_hidden_updates`]) and HTTP wildcard lane fetching ([`http_lane`]).
 //!
 //! Confirms that remote lane listings keep visible heads, omit hidden dependent updates, and honour [`GlobalConfig`] [`Network`] [`tar`] settings.
 

@@ -1,4 +1,4 @@
-//! Unit tests for lane reset component model [`Selection`] ([`selection`]) and version state pruning via [`remove_versions`] in `bit-object-import`.
+//! Unit tests for lane reset component model [`Selection`] ([`selection`], [`resetting_a_model_without_pending_state_does_not_create_state`]) and version state pruning via [`remove_versions`] in `bit-object-import`.
 
 use super::remove_versions;
 use crate::reset_lane::Selection;

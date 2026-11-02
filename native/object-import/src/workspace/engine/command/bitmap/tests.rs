@@ -1,4 +1,4 @@
-//! Unit tests for `.bitmap` [`Prepared`] override clearing, [`prepare_after`], [`prepare_bytes`], and [`Update`] commits.
+//! Unit tests for `.bitmap` [`Prepared`] override clearing, [`prepare_after`], [`prepare_bytes`], and [`Update`] commits ([`Fixture`], [`prepare`], [`NEXT`]).
 //!
 //! Checks that config clearing, [`validate_history_file_id`] checks, and `.bitmap` commits remain atomic.
 

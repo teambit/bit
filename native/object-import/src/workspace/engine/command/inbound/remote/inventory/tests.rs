@@ -1,4 +1,4 @@
-//! Unit tests for remote file inventory metadata ([`file_component`]) and latest tag selection ([`latest_from_model`]) in `bit-object-import`.
+//! Unit tests for remote file inventory metadata ([`file_component`], [`file_inventory_preserves_removed_deprecated_and_readme_metadata`]) and latest tag selection ([`latest_from_model`]) in `bit-object-import`.
 //!
 //! Verifies removed/deprecated flags, lane readme references, and orphaned tag fallback behavior via [`file_component`] and [`latest_from_model`].
 

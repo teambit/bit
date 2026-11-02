@@ -1,4 +1,4 @@
-//! Unit tests for remote [`ScopeGuard`] deletion validation, readset tracking, and index row matching ([`custom_scope_and_late_metadata_changes_are_rejected_before_file_delete`]) in `bit-object-import`.
+//! Unit tests for remote [`ScopeGuard`] deletion validation, readset tracking, and index row matching ([`custom_scope_and_late_metadata_changes_are_rejected_before_file_delete`], [`scope_guard_accepts_jsonc_and_component_row_matches_string_ids`]) in `bit-object-import`.
 
 use super::ScopeGuard;
 use std::fs;

@@ -1,4 +1,4 @@
-//! Unit tests for cold client status [`State`], [`prepare`], [`scan`], [`finish`], and [`complete`] phases.
+//! Unit tests for cold client status [`State`], [`prepare`], [`scan`], [`finish`], and [`complete`] phases ([`Fixture`], [`inspect`], [`NEXT`]).
 //!
 //! Validates workspace component scanning, bitmap status classification, and cold-path [`Prepare`]/[`Scan`]/[`Finish`] transitions.
 

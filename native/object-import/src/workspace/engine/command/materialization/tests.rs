@@ -1,4 +1,4 @@
-//! Unit tests for command materialization ([`Input`], [`prepare`]), [`Captured`] retained files, and Harmony manifests.
+//! Unit tests for command materialization ([`Input`], [`prepare`], [`retained_metadata_follows_applied_body_indices_without_copying_sources`]), [`Captured`] retained files, and Harmony manifests.
 //!
 //! Validates [`Repository`], [`checkout_transition`], [`snapshots`], [`Captured`] retained body index mapping, and Harmony version manifest schema normalization.
 

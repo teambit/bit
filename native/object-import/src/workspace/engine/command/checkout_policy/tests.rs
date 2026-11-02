@@ -1,4 +1,4 @@
-//! Unit tests for checkout dependency policy [`receipt_versions`] filtering in `bit-object-import`.
+//! Unit tests for checkout dependency policy [`receipt_versions`] filtering ([`checkout_receipt_only_contains_auto_dependencies_overlapping_workspace_policy`]) in `bit-object-import`.
 //!
 //! Ensures checkout receipts include only non-hidden auto-detected dependencies overlapping workspace policy.
 //!

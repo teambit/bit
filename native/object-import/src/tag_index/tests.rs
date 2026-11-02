@@ -1,4 +1,4 @@
-//! Unit tests for component version [`TagIndex`] hash indexing and tag precedence in `bit-object-import`.
+//! Unit tests for component version [`TagIndex`] hash indexing ([`newest_tag_and_normal_versions_take_precedence`], [`indexes_many_tagged_and_untagged_hashes`]) and tag precedence in `bit-object-import`.
 //!
 //! Confirms that normal tagged versions and newest tags take precedence over older or orphan entries across large hash sets.
 

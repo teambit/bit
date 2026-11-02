@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction source body [`prepare_response`] ([`packed`]) and receipt retention from import overlays in `bit-object-import`.
+//! Unit tests for merge transaction source body [`prepare_response`] ([`packed`], [`freshly_imported_added_file_retains_merge_source_receipt_without_publication`]) and receipt retention from import overlays in `bit-object-import`.
 
 use super::{json, prepare_response};
 use flate2::{Compression, write::ZlibEncoder};

@@ -1,4 +1,4 @@
-//! Unit tests for inbound dependent stage [`current_dependencies`] extraction in `bit-object-import`.
+//! Unit tests for inbound dependent stage [`current_dependencies`] extraction ([`resolved_class_dependencies_override_empty_legacy_metadata_and_explicit_empty_is_authoritative`]) in `bit-object-import`.
 //!
 //! Confirms that `resolvedDependencies` override legacy dependency arrays when present and reject non-array shapes.
 

@@ -72,6 +72,7 @@ fn unexported_inactive_bitmap_uses_default_scope_without_becoming_an_addition() 
     assert_eq!(bitmap["inactive"]["scope"], "");
 }
 
+/// Verifies that `identity_bitmap` inherits workspace `defaultScope` for unscoped inactive entries without mutating stored `.bitmap` fields.
 #[test]
 fn inactive_identity_inherits_workspace_default_without_changing_stored_bitmap() {
     let bitmap = json!({"$schema-version":"17.0.0","inactive":{"name":"component","scope":"","version":"1.0.0","rootDir":"existing-root","mainFile":"index.js","isAvailableOnCurrentLane":false}});

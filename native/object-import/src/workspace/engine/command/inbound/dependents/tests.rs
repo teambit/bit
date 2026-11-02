@@ -1,4 +1,4 @@
-//! Unit tests for inbound dependent path [`select`] traversal, [`Target`] matching, and `--through` filtering.
+//! Unit tests for inbound dependent path [`select`] traversal, [`Target`] matching ([`target`]), and `--through` filtering.
 //!
 //! Verifies intermediate dependent path discovery and `through`-node filtering in `bit-object-import`.
 

@@ -50,6 +50,7 @@ fn a_version_with_a_dependency_graph_needs_nothing_more() {
     assert!(requested(&app(&version)).is_empty());
 }
 
+/// Verifies that [`requests`] returns empty when all `flattenedDependencies` are present and built (`buildStatus: "succeed"`).
 #[test]
 fn present_and_built_dependencies_need_nothing_more() {
     let version = json!({"flattenedDependencies": [{"scope": "acme.lib", "name": "lib", "version": "1.0.0"}]});

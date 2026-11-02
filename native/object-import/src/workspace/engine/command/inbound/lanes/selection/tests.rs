@@ -1,4 +1,4 @@
-//! Unit tests for platform separator behavior in implicit tracked lane selection via [`tracked_for_separator`] in `bit-object-import`.
+//! Unit tests for platform separator behavior in implicit tracked lane selection via [`tracked_for_separator`] ([`Scratch`], [`SEQUENCE`]) in `bit-object-import`.
 //!
 //! Ensures implicit remote lane discovery normalizes path separators across platforms and remote ref directories.
 

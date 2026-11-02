@@ -1,4 +1,4 @@
-//! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`] in `bit-object-import`.
+//! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`] ([`replacing_generated_manifest_preserves_injected_hardlink_contents`]) in `bit-object-import`.
 //!
 //! Confirms that replacing generated manifests via [`replace`] in [`scratch`] workspaces unlinks hardlinks before writing new bytes.
 

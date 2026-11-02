@@ -1,4 +1,4 @@
-//! Unit tests for incoming added component [`capture`] validation in `bit-object-import`.
+//! Unit tests for incoming added component [`capture`] validation ([`incoming_capture_never_invents_current_contents_or_version`]) in `bit-object-import`.
 //!
 //! Ensures newly added components start with empty current contents and relative root directories.
 //!

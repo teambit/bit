@@ -1,4 +1,4 @@
-//! Unit tests for inbound component destination collision avoidance, relocation, and retained directory validation in `bit-object-import`.
+//! Unit tests for inbound component destination collision avoidance ([`prepare`], [`owner_destination_is_retained_and_rejects_a_later_filesystem_change`]), relocation, and retained directory validation in `bit-object-import`.
 //!
 //! Confirms that owner-prefixed directories avoid tracked collisions and detect concurrent filesystem edits.
 

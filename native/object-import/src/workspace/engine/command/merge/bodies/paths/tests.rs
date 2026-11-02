@@ -1,4 +1,4 @@
-//! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks in `bit-object-import`.
+//! Unit tests for merge destination path [`validate`] and [`canonical_relative`] checks ([`nested_native_destinations_validate_existing_and_new_merge_files`], [`native_components_do_not_relax_canonical_file_identity_guards`]) in `bit-object-import`.
 //!
 //! Checks nested merge destination validation inside [`Directory`] fixtures and rejects workspace root escapes.
 

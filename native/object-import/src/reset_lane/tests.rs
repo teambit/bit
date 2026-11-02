@@ -1,4 +1,4 @@
-//! Unit tests for single-component linear lane snap reset [`Plan`] execution ([`write_object`]), [`object_hash`], [`object_path`], and publication guards in `bit-object-import`.
+//! Unit tests for single-component linear lane snap reset [`Plan`] execution ([`write_object`], [`NEXT`]), [`object_hash`], [`object_path`], and publication guards in `bit-object-import`.
 
 use super::{Plan, object_hash, object_path};
 use crate::workspace::engine::command::outbound;

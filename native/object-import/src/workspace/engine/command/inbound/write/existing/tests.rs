@@ -1,4 +1,4 @@
-//! Unit tests for authored `.bitmap` row property serialization order via [`reorder_bitmap`] in `bit-object-import`.
+//! Unit tests for authored `.bitmap` row property serialization order via [`reorder_bitmap`] ([`authored_rows_use_component_map_serialization_order`]) in `bit-object-import`.
 //!
 //! Verifies that `.bitmap` component [`Value`] entries follow canonical `ComponentMap` key order when serialized.
 

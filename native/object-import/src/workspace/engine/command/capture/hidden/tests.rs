@@ -1,4 +1,4 @@
-//! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`] in `bit-object-import`.
+//! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`] ([`Fixture`], [`hidden_sources_are_parallel_retained_and_proven_without_workspace_files`]) in `bit-object-import`.
 //!
 //! Confirms that hidden lane sources are retained in [`snapshots`] without requiring workspace files on disk.
 

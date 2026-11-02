@@ -68,6 +68,7 @@ fn incomplete_or_invalid_frames_never_remove_prefixes() {
         assert!(file.exists());
     }
 }
+/// Verifies that [`serve`] removes dangling symlinks and directory symlinks without deleting target directory contents.
 #[cfg(unix)]
 #[test]
 fn removes_dangling_links_and_never_follows_directory_links() {

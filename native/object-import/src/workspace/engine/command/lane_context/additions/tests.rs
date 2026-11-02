@@ -1,4 +1,4 @@
-//! Unit tests for lane addition destination [`directory`] placeholders and prospective metadata in `bit-object-import`.
+//! Unit tests for lane addition destination [`directory`] placeholders ([`destination_matches_canonical_scope_owner_placeholders`], [`prospective_metadata_only_includes_genuinely_new_consumers`]) and prospective metadata in `bit-object-import`.
 //!
 //! Validates `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholder expansion across default and custom templates.
 

@@ -1,5 +1,5 @@
 //! Rename copies empty aspect config and stages deletion on main from a lane.
-//! These tests verify `.bitmap` [`aspect_config`] eligibility after rename in `bit-object-import`.
+//! These tests verify `.bitmap` [`aspect_config`] eligibility ([`renamed_component_configs_allow_empty_core_entries_and_update_main_removal`]) after rename in `bit-object-import`.
 //!
 //! Confirms that empty core aspect entries and `removeOnMain` boolean flags are validated accurately.
 use super::aspect_config;

@@ -1,4 +1,4 @@
-//! Unit tests for workspace root component [`ASPECT`] file manifest [`filter`] and [`validate_version`] checks.
+//! Unit tests for workspace root component [`ASPECT`] file manifest [`filter`] and [`validate_version`] checks ([`root_manifest_keeps_only_files_owned_by_the_root`], [`only_marked_versions_can_land_at_the_workspace_root`]).
 //!
 //! Ensures root manifests exclude nested member component directories via [`filter`] and require `isRoot: true` via [`validate_version`] in `bit-object-import`.
 

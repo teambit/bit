@@ -1,4 +1,4 @@
-//! Unit tests for parallel merge snapshot source [`capture`], [`digest`], [`rekey`], and [`Budget`] enforcement.
+//! Unit tests for parallel merge snapshot source [`capture`], [`digest`], [`rekey`], and [`Budget`] enforcement ([`parallel_sources_preserve_order_hashes_and_share_one_allocation_budget`], [`pending_root_replacement_keeps_reachable_historical_root_distinct`]).
 //!
 //! Verifies deterministic parallel source hashing via [`capture`] and [`digest`], [`PENDING_GRAPH_VERSION`] [`rekey`] handling, and shared [`Budget`] limits.
 

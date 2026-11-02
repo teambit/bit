@@ -1,4 +1,4 @@
-//! Unit tests for post-persistence event [`notify`] execution, [`scratch`] staging, and dependency readset proofs.
+//! Unit tests for post-persistence event [`notify`] execution, [`scratch`] staging, and dependency readset proofs ([`persistence_notification_counts_actual_invocations_and_preserves_empty_payload`], [`changed_final_dependency_proof_is_rejected_before_command_publication`]).
 //!
 //! Confirms that `onPostObjectsPersist` notifications remain best-effort and reject stale proofs in `bit-object-import`.
 

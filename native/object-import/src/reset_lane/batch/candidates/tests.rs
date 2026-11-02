@@ -1,4 +1,4 @@
-//! Unit tests for lane reset batch candidate [`Discovery`], [`ordered`], and [`staged`] model index ordering ([`Heads`], [`Repository`]) in `bit-object-import`.
+//! Unit tests for lane reset batch candidate [`Discovery`], [`ordered`], and [`staged`] model index ordering ([`Heads`], [`Repository`], [`NEXT`]) in `bit-object-import`.
 
 use super::{Discovery, ordered, staged};
 use crate::reset_lane::{Heads, Repository, diagnostics, object_path, outbound, selection};

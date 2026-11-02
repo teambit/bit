@@ -1,4 +1,4 @@
-//! Unit tests for snapshot publication staging ([`Input`]), `.bit/staged-snaps`, and config guards in `bit-object-import`.
+//! Unit tests for snapshot publication staging ([`Input`], [`build_staging_persists_only_snap_ids_before_any_objects_or_other_metadata`]), `.bit/staged-snaps`, and config guards in `bit-object-import`.
 //!
 //! Validates that build staging via [`fixture`] and [`Input`] writes only `.bit/staged-snaps` prior to object or metadata commit.
 

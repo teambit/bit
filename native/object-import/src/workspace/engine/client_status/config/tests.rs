@@ -1,4 +1,4 @@
-//! Unit tests for workspace configuration [`extensions`] and [`ignored_issues`] validation in `bit-object-import`.
+//! Unit tests for workspace configuration [`extensions`] and [`ignored_issues`] validation ([`accepts_the_settings_bit_writes_by_default`], [`accepts_disabled_previews_and_ignored_issues`]) in `bit-object-import`.
 //!
 //! Checks default workspace settings, disabled previews, and issue ignore lists against workspace schemas.
 

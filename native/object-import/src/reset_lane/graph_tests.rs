@@ -34,6 +34,7 @@ fn object(objects: &Path, hash: &str, value: &Value) {
         .expect("object");
 }
 
+/// Builds a temporary [`Fixture`] and [`Repository`] where [`MERGE`] has both [`BASE`] and [`MAIN`] as parents.
 fn merged() -> (Fixture, Repository) {
     let root = std::env::temp_dir()
         .join(format!(

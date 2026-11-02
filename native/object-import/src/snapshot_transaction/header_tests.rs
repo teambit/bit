@@ -1,4 +1,4 @@
-//! Unit tests for parallel object header [`encode`] and zlib [`compress`] routines in `bit-object-import`.
+//! Unit tests for parallel object header [`encode`] and zlib [`compress`] routines ([`parallel_compression_preserves_order_and_serial_bytes_in_shared_pools`], [`seeded_invalid_utf8_source_headers_match_node_buffer_decoding`]) in `bit-object-import`.
 //!
 //! Verifies that multi-threaded compression preserves deterministic ordering, shared-pool execution, and serial byte equivalence.
 

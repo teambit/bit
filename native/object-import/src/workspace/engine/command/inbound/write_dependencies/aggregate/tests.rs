@@ -1,4 +1,4 @@
-//! Unit tests for `--write-deps` root precedence, ranges, and key ordering via [`prepare`] in `bit-object-import`.
+//! Unit tests for `--write-deps` root precedence, ranges, and key ordering via [`prepare`] ([`root_precedence_ranges_and_local_component_exclusion_preserve_order`], [`object_values_lists_array_index_package_names_before_other_names`]) in `bit-object-import`.
 //!
 //! Checks that root policy entries, variant patterns, and component policies merge in precedence order via [`prepare`] while excluding local components.
 

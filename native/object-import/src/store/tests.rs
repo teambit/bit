@@ -1,4 +1,4 @@
-//! Unit tests for atomic concurrent object [`Store`] writes, metadata publication, and duplicate suppression in `bit-object-import`.
+//! Unit tests for atomic concurrent object [`Store`] writes ([`Directory`], [`COUNTER`]), metadata publication, and duplicate suppression in `bit-object-import`.
 //!
 //! Validates object persistence integrity across concurrent writers, temporary files, and duplicate hashes.
 

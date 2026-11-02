@@ -1,4 +1,4 @@
-//! Unit tests for [`Prepared`] pending `node_modules` package manifest plans and commit in `bit-object-import`.
+//! Unit tests for [`Prepared`] pending `node_modules` package manifest plans ([`prepared`], [`canonical_package_metadata_changes_remain_pending_until_native_commit`]) and commit in `bit-object-import`.
 //!
 //! Verifies that package manifest updates in [`Directory`] fixtures remain staged in memory until final commit.
 

@@ -1,4 +1,4 @@
-//! Unit tests for checkout [`Prepared`] workspace dependency policy update publication and `JSONC` rendering in `bit-object-import`.
+//! Unit tests for checkout [`Prepared`] workspace dependency policy update publication ([`Fixture`], [`policy_update_is_planned_and_preserves_unrelated_jsonc_comments`]) and `JSONC` rendering in `bit-object-import`.
 //!
 //! Verifies that planned dependency policy updates preserve unrelated `workspace.jsonc` comments and formatting.
 

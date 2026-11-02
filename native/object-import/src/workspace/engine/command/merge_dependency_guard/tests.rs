@@ -1,4 +1,4 @@
-//! Unit tests for merge dependency import [`compare`] verification, [`Source`], and stale capture [`proof`] rejection.
+//! Unit tests for merge dependency import [`compare`] verification, [`Source`], and stale capture [`proof`] rejection ([`Fixture`], [`NEXT`], [`retained_fast_forward_sources_preserve_imports_and_detect_stale_capture`]).
 //!
 //! Ensures retained fast-forward sources preserve import specifiers, respect [`Budget`] and [`Comparison`] rules, and detect concurrent file edits.
 

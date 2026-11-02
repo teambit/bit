@@ -62,6 +62,7 @@ fn finishing_parent_retires_completed_and_incomplete_children() {
             .is_err(),
     );
 }
+/// Verifies that `super::dependencies::candidates` and `super::dependencies::missing` deduplicate candidate hashes while preserving missing duplicate indices.
 #[test]
 fn dependency_snap_selection_dedupes_hash_and_preserves_missing_duplicates() {
     let hash = "1".repeat(40);
