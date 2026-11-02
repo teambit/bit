@@ -4,13 +4,16 @@
 
 use crate::helper::{Helper, parse};
 
+/// Minimal `CommonJS` module fixture used when testing `package.json` exclusion in `bar/`.
+const BAR_FOO_SOURCE: &str = "module.exports = {};";
+
 /// Verifies `bit add` ignores `package.json` inside a component directory by default.
 #[test]
 fn should_not_track_the_package_json_file() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.output_file("bar/package.json", "{}");
-    helper.output_file("bar/foo.js", "module.exports = {};");
+    helper.output_file("bar/foo.js", BAR_FOO_SOURCE);
     helper.run("add bar");
     helper.run("tag");
 

@@ -2,6 +2,7 @@
 //!
 //! Covers version switching, dependency graphs, file additions and deletions, and merge conflict strategies (`--manual`, `theirs`, `ours`).
 
+/// Additional `checkout head`, `checkout latest`, and lane checkout tests.
 #[path = "checkout_harmony/extra.rs"]
 mod extra;
 

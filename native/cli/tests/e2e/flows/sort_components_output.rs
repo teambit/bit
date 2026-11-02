@@ -14,6 +14,7 @@ fn assert_sorted_alphabetically(output: &str) {
     assert!(p2 < p3, "expected comp2 before comp3: {p2} vs {p3} in:\n{output}");
 }
 
+/// Initializes a workspace with a remote scope and populates `comp1`, `comp2`, and `comp3`.
 fn setup_populated_workspace() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

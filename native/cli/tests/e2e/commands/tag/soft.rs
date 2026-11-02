@@ -10,6 +10,7 @@ pub(super) fn bitmap(root: &Path) -> serde_json::Value {
     config::read_jsonc(&root.join(".bitmap"))
 }
 
+/// Runs `command` natively and under `Node.js` and asserts exit code, streams, and `.bitmap` parity.
 pub(super) fn compare_command(helper: &Helper, node_workspace: &Path, command: &str) {
     let native = helper.native_run(command);
     let node = Helper::cmd_in_with(node_workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);

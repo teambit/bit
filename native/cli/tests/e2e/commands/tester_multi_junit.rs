@@ -17,6 +17,7 @@ fn compare(helper: &Helper, command: &str, summary: bool) -> Run {
     assert_eq!(remote, move_paths::support::tree(&helper.scopes.remote_path));
     result
 }
+/// Compares multi-component `bit test --junit` runs preserving explicit test file argument order.
 pub(super) fn compare_file_order(helper: &Helper, command: &str, summary: bool) -> Run {
     let remote = move_paths::support::tree(&helper.scopes.remote_path);
     let normalize: fn(&str) -> String =

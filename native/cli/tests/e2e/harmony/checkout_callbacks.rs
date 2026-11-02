@@ -34,6 +34,7 @@ fn checkout_with_compiled_onload_callbacks_matches_node() {
     }
 }
 
+/// Runs `command` natively and against `oracle` and asserts exit code, normalized stdout, stderr, `.bitmap`, and `bar/` parity.
 fn compare(helper: &Helper, oracle: &std::path::Path, command: &str, success: bool) {
     let native = helper.native_run(command);
     let node = Helper::cmd_in_with(oracle, command, &[("BIT_NATIVE", OsStr::new("off"))]);

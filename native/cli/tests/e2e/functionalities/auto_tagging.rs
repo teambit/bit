@@ -105,6 +105,7 @@ fn with_dependencies_of_dependencies() {
     assert_eq!(bitmap["comp3"]["version"].as_str().unwrap(), "0.0.2");
 }
 
+/// Verifies dependent auto-tagging across a cyclic component dependency graph (`a/a` -> `a/b` <-> `a/c`).
 #[test]
 fn with_cyclic_dependencies() {
     let helper = Helper::new();

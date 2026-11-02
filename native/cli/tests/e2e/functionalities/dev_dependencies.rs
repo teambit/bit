@@ -109,6 +109,7 @@ fn environment_with_compiler_and_tester() {
     );
 }
 
+/// Verifies nested dev-dependency flattened graphs and `bit deps remove --dev` policy overrides.
 #[test]
 fn dev_dependency_nested_chains_and_deps_remove() {
     // 1. dev-dependency of a nested component that originated from a prod dep

@@ -8,6 +8,7 @@ use std::ffi::OsStr;
 /// Canonical `bit snap --unmerged` command string used in unmerged config tests.
 const COMMAND: &str = "snap --unmerged --ignore-issues * --message merge";
 
+/// Verifies `bit snap --unmerged` captures pending `teambit.pkg/pkg` configuration and matches `Node.js`.
 #[test]
 fn pending_package_configuration_matches_node_snap() {
     let helper = Helper::new();

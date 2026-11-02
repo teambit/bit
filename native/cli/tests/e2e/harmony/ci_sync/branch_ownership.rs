@@ -117,6 +117,7 @@ fn ci_sync_branch_ownership_decides_what_close_pr_may_delete() {
     assert_eq!(branch_tip_sha(&helper, plain_branch), plain_branch_sha);
 }
 
+/// Verifies `close-pr` keeps the branch if its tip advances between ownership inspection and deletion.
 #[test]
 fn ci_sync_branch_advancing_between_ownership_read_and_delete_is_kept() {
     let helper = Helper::new();

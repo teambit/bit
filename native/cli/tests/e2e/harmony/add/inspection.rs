@@ -12,6 +12,7 @@ pub(super) fn show(helper: &Helper, id: &str) -> Value {
     serde_json::from_str(&result.stdout).unwrap()
 }
 
+/// Extracts the `"json"` payload of the `bit show --json` section matching `title`.
 pub(super) fn fragment<'a>(show: &'a Value, title: &str) -> &'a Value {
     &show
         .as_array()

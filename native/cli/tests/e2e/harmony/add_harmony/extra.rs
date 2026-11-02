@@ -202,6 +202,7 @@ fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     );
 }
 
+/// Runs `bit <command>` in `cwd` with `BIT_GLOBALS_DIR` set to `globals` and asserts expected exit status.
 fn run_isolated(cwd: &Path, globals: &Path, command: &str, success: bool) -> String {
     let run = Helper::cmd_in_with(cwd, command, &[("BIT_GLOBALS_DIR", globals.as_os_str())]);
     assert_eq!(run.status.success(), success, "{command}: {run:?}");

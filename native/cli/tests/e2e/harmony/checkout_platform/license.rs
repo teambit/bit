@@ -23,6 +23,7 @@ fn scope_license(helper: &Helper, name: &str, text: &str) {
     fs::write(directory.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
+/// Verifies `bit checkout` writes the `ScopeMeta` license verbatim to `bar/LICENSE` like `Node.js`.
 #[test]
 fn checkout_writes_scope_license_verbatim_like_node() {
     let helper = versions();

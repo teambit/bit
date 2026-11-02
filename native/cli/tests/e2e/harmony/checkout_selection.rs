@@ -18,6 +18,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Runs `command` under `CI=1` via [`compare_with`] and asserts native ownership and `Node.js` parity.
 fn compare(helper: &Helper, command: &str) {
     compare_with(helper, command, true);
 }

@@ -5,13 +5,13 @@
 //! - `e2e/harmony/deps-in-capsules.e2e.ts`
 //! - `e2e/harmony/global-virtual-store.e2e.ts`
 //! - `e2e/harmony/isolate-cyclic-deps.e2e.ts`
-
+/// Offline built-in environment and custom aspect capsule fixture helpers.
 mod core_manifest_setup;
 
 use crate::helper::{Helper, config, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
-
+/// Verifies `bit deps debug` matches `Node.js` when a package has `"+"` in both `dependencies` and `devDependencies`.
 #[test]
 fn deps_debug_duplicate_runtime_dev_plus_matches_node() {
     let helper = Helper::new();

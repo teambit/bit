@@ -14,6 +14,7 @@ pub(super) fn summary_order(output: &str) -> String {
     serde_json::to_string_pretty(&data).unwrap()
 }
 
+/// Sorts a two-element component array by component ID after verifying both `comp1` and `comp2` are present.
 fn sort_component_pair(value: &mut Value, objects: bool) {
     let rows = value.as_array_mut().unwrap();
     if rows.len() != 2 {

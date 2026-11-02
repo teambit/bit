@@ -10,6 +10,7 @@ fn package(root: &Path) -> Vec<u8> {
     fs::read(root.join("node_modules/@my-scope/bar.foo/package.json")).unwrap()
 }
 
+/// Runs `command` natively and under `Node.js` and asserts generated `node_modules` package and `.bitmap` parity.
 fn compare(helper: &Helper, node_workspace: &Path, command: &str) {
     let native = helper.native_run(command);
     let node = Helper::cmd_in_with(node_workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);

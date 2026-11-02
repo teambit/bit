@@ -5,6 +5,9 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
+/// Canonical `bit checkout head --include-new-from-scope` command line used in default-scope tests.
+const COMMAND: &str = "checkout head --include-new-from-scope -x";
+
 /// Verifies that `bit checkout head --include-new-from-scope` imports newly published default-scope components like Node.
 #[test]
 fn checkout_head_includes_new_components_from_the_default_scope() {
@@ -21,12 +24,11 @@ fn checkout_head_includes_new_components_from_the_default_scope() {
     crate::helper::remote::publish(&helper);
     helper.get_cloned_workspace(&old);
     let oracle = helper.clone_workspace();
-    let command = "checkout head --include-new-from-scope -x";
     let native =
-        Helper::cmd_in_with(&helper.scopes.local_path, command, &[("CI", OsStr::new("1"))]);
+        Helper::cmd_in_with(&helper.scopes.local_path, COMMAND, &[("CI", OsStr::new("1"))]);
     let node = Helper::cmd_in_with(
         &oracle,
-        command,
+        COMMAND,
         &[("CI", OsStr::new("1")), ("BIT_NATIVE", OsStr::new("off"))],
     );
     assert!(native.native, "{}", native.trace);

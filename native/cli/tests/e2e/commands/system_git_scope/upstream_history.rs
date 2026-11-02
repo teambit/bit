@@ -50,6 +50,7 @@ pub(super) fn compare_hidden_lane(
     native
 }
 
+/// Compares `bit version-history build comp1` against `Node.js` with release-specific hash-count normalization.
 pub(super) fn compare_deduplicated(helper: &Helper, expected_count: usize) -> Run {
     let scope = &helper.scopes.remote_path;
     let version = Helper::cmd_in_with(scope, "version", &[("BIT_NATIVE", OsStr::new("off"))]);

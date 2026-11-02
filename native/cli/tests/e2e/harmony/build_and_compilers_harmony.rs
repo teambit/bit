@@ -3,9 +3,9 @@
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
-
+/// `TypeScript` declaration-only `tsconfig.json` used in multi-compiler Harmony environment tests.
 const MULTI_TSCONFIG: &str = r#"{"compilerOptions":{"target":"es2015","module":"commonjs","emitDeclarationOnly":true,"declaration":true,"skipLibCheck":true,"outDir":"dist","esModuleInterop":true},"exclude":["dist"]}"#;
-
+/// Copies, adds, links, installs, and compiles the fixture environment in `folder`.
 fn setup_custom_new_env(helper: &Helper, folder: &str) -> String {
     helper.copy_fixture_extensions(folder);
     helper.native(&format!("add {folder}"));

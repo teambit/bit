@@ -20,6 +20,7 @@ fn builtin_test_summary_counts_statuses_and_preserves_exit_codes() {
     }
 }
 
+/// Verifies `bit test --json --summary` matches `Node.js` when no test files or components are selected.
 #[test]
 fn builtin_test_summary_without_test_files_and_without_selected_components_match_node() {
     let helper = support::workspace(1, true);

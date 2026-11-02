@@ -14,6 +14,7 @@ fn fixture() -> Helper {
     }
     helper
 }
+/// Asserts that both `index.spec.js` files executed once and neither `excluded.spec.js` file ran.
 fn assert_effects(helper: &Helper) {
     assert_eq!(
         std::fs::read_to_string(helper.scopes.local_path.join("selected-effect")).unwrap(),

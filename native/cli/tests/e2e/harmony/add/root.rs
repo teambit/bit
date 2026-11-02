@@ -27,6 +27,7 @@ fn root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries() {
     compare(&helper, "add . -i ws-root --root");
     assert_loaded_root_sources(&helper);
 }
+/// Asserts that `ws-root` tracks `README.md`, `LICENSE`, and `.bitmap` while excluding `comp1/` and `.bit/`.
 fn assert_loaded_root_sources(helper: &crate::helper::Helper) {
     let loaded = super::inspection::show(helper, "ws-root");
     let files: Vec<_> = super::inspection::fragment(&loaded, "files")

@@ -24,6 +24,7 @@ struct Registry {
 }
 
 impl Registry {
+    /// Starts a nonblocking mock npm [`Registry`] server on an ephemeral loopback port.
     fn new(always_taken: bool) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}", listener.local_addr().unwrap());

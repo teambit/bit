@@ -105,6 +105,7 @@ fn custom_env_issues_tag_untag_and_env_replacement() -> KnownResult<()> {
     Ok(())
 }
 
+/// Verifies `bit rename` on a custom environment, `empty-env` compilation, and invalid `env.jsonc` rejection.
 #[test]
 fn custom_env_operations_rename_empty_env_and_invalid_env_jsonc() -> KnownResult<()> {
     let helper = Helper::new();

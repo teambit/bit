@@ -14,6 +14,7 @@ fn set_policy_to_variant(helper: &Helper, variant: &str, policy: serde_json::Val
     helper.add_extension_to_variant(variant, OVERRIDE_EXTENSION, serde_json::Value::Object(config));
 }
 
+/// Verifies `"-"`, `"+"`, and explicit version overrides in variant dependency-resolver policies.
 #[test]
 fn ignoring_components_and_packages_dependencies() {
     // 1. ignoring a dependency component when requiring with module path: should not add the removed dependency to the component

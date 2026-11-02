@@ -18,6 +18,7 @@ fn jest_times(output: &str) -> String {
     test.replace(&output, "  $1 first <duration>").into_owned()
 }
 
+/// Verifies `bit test comp1/index.spec.js` preserves direct stdout/stderr writes and exit code `1` on failure.
 #[test]
 fn text_single_explicit_test_preserves_failure_and_direct_stream_writes() {
     let helper = support::workspace(1, true);

@@ -13,6 +13,7 @@ fn compare(helper: &Helper, command: &str) -> Run {
     assert_eq!(remote, move_paths::support::tree(&helper.scopes.remote_path));
     result
 }
+/// Validates `reports/test.xml` `JUnit` timestamps and durations against the command execution window and normalizes them.
 pub(super) fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
     let Some(bytes) = files.get_mut("reports/test.xml") else {
         return;

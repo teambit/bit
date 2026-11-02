@@ -21,6 +21,7 @@ fn case_globals(helper: &Helper) -> PathBuf {
     globals
 }
 
+/// Runs `bit <line>` in `helper.scopes.local_path` with `BIT_GLOBALS_DIR` pointed at `globals`.
 fn cmd_with_globals(helper: &Helper, globals: &Path, line: &str) -> Run {
     cmd_with_globals_and_env(helper, globals, line, &[])
 }

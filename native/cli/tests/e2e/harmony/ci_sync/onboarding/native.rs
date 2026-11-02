@@ -28,6 +28,7 @@ fn initial_scaffolding_matches_node_and_writes_without_the_published_runtime() {
     assert!(repeated.status.success(), "{repeated:?}");
 }
 
+/// Verifies `bit ci sync --init` preserves `AGENTS.md` front-matter, `JSONC` comments, and existing workflows.
 #[test]
 fn onboarding_preserves_front_matter_comments_and_existing_workflows() {
     let helper = super::empty_repository();

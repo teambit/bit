@@ -22,6 +22,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Returns the `teambit.workspace/workspace-root` aspect `data` payload from `component@latest`.
 fn provenance(helper: &Helper, component: &str) -> serde_json::Value {
     let component = parse(&helper.run(&format!("cat-component {component}@latest --json")));
     component["extensions"]

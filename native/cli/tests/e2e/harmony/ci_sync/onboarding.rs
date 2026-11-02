@@ -2,6 +2,7 @@
 //!
 //! Verifies `bit ci sync --init` staging instructions, `.gitignore` force-add guidance, and GitHub and Enterprise output.
 
+/// End-to-end native `bit ci sync --init` parity tests without the `JavaScript` runtime.
 mod native;
 
 use super::support::{run_bit, setup_sync_workspace};

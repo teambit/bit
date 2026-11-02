@@ -17,6 +17,7 @@ fn exported() -> Helper {
     helper
 }
 
+/// Verifies exporting a deprecated component clears `.bitmap` config and reports deprecation in remote `list` and `import`.
 #[test]
 fn exported_deprecation_clears_bitmap_config_and_is_reported_by_remote_list_and_import() {
     let helper = exported();

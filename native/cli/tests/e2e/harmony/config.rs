@@ -30,6 +30,7 @@ fn compare(helper: &Helper, oracle: &Path, command: &str, mode: &[(&str, &OsStr)
     assert_eq!(history(&helper.scopes.local_path), history(oracle), "{command}");
 }
 
+/// Asserts `.bit/scope.json`, `workspace.jsonc`, and `config/config.json` byte parity between native and `oracle`.
 fn compare_files(helper: &Helper, oracle: &Path, command: &str, actual: &Path, expected: &Path) {
     for name in [".bit/scope.json", "workspace.jsonc"] {
         assert_eq!(

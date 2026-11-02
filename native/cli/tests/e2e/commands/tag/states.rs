@@ -28,6 +28,7 @@ fn local_only_components_stay_out_of_snap_soft_tag_and_persist() {
     compare_command(&helper, &node_workspace, "tag --persist=skip-build");
 }
 
+/// Compares `bit snap --message first` against `Node.js` after normalizing snap hashes in stdout and `.bitmap`.
 fn compare_snap(helper: &Helper, node_workspace: &std::path::Path) {
     let native = helper.native_run("snap --message first");
     let node = Helper::cmd_in_with(

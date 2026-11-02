@@ -19,6 +19,7 @@ fn create_bare_scope(helper: &Helper, name: &str) -> PathBuf {
     path
 }
 
+/// Registers `file://<path>` under `remotes[name]` in `.bit/scope.json`.
 fn add_remote(helper: &Helper, name: &str, path: &Path) {
     let url = format!("file://{}", path.display());
     crate::helper::config::update_scope_json(

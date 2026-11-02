@@ -4,6 +4,7 @@
 
 /// End-to-end CRLF large-file tracking and tagging flow tests.
 mod big_file;
+/// End-to-end `bit init` and `bit init --force` tests when `.bitmap` is deleted.
 mod bitmap_deleted;
 mod cyclic_dependencies;
 mod delete_files;

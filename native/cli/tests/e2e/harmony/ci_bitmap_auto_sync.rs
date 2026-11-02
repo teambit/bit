@@ -6,7 +6,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
-
+/// Creates a bare Git remote repository and registers it as `origin` on `helper`.
 fn setup_git_remote(helper: &Helper) -> PathBuf {
     let (_, scope_path) = helper.new_bare_scope();
     let bare_repo_path = helper.scopes.e2e_dir.join(format!(
@@ -21,7 +21,7 @@ fn setup_git_remote(helper: &Helper) -> PathBuf {
     helper.git(&format!("remote add origin {}", bare_repo_path.display()));
     bare_repo_path
 }
-
+/// Populates `num_components`, tags and exports them, commits `.bitmap`, and pushes the default branch.
 fn setup_components_and_initial_commit(helper: &Helper, num_components: usize) -> String {
     helper.populate_components(num_components, true, "");
     helper.native("tag --skip-tests");

@@ -5,20 +5,23 @@
 use crate::helper::Helper;
 use serde_json::{Value, json};
 
+/// Built-in React environment aspect ID assigned to `comp1` in `bit debug-load` tests.
+const REACT_ENV: &str = "teambit.react/react";
+
 /// Verifies human and `--json` output of `bit debug-load` as well as unknown-component error reporting.
 #[test]
 fn debug_load_command_human_json_and_unknown_component() {
     let helper = Helper::new();
     helper.re_init_workspace();
     helper.populate_components(1, true, "");
-    helper.add_extension_to_variant("comp1", "teambit.react/react", json!({}));
+    helper.add_extension_to_variant("comp1", REACT_ENV, json!({}));
 
     let output = helper.run_cmd("bit debug-load comp1");
     assert!(output.contains("load stages"), "{output}");
     assert!(output.contains("extension sources"), "{output}");
     assert!(output.contains("environment"), "{output}");
     assert!(output.contains("load issues"), "{output}");
-    assert!(output.contains("teambit.react/react"), "{output}");
+    assert!(output.contains(REACT_ENV), "{output}");
     assert!(output.contains("WorkspaceVariants"), "{output}");
     assert!(output.contains("workspace.get"), "{output}");
     assert!(output.contains("componentsCache"), "{output}");

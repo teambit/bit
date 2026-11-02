@@ -2,7 +2,7 @@
 use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
-
+/// Verifies remote `bit version-history build` dispatches `BuildVersionHistoryAction` without a `JavaScript` host.
 #[test]
 fn remote_history_rebuild_dispatches_without_a_javascript_host() {
     let command = "version-history build 'one*' --remote fixture.scope --from-snap aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa --from-all-lanes --delete-existing";

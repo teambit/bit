@@ -54,6 +54,7 @@ fn checkout_head_and_latest_and_non_existing_local_version() {
     assert_latest_without_tag_and_missing_local_version(&helper);
 }
 
+/// Verifies `bit checkout latest` on snap-only history and when the target version exists only on the remote.
 fn assert_latest_without_tag_and_missing_local_version(helper: &Helper) {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, false, "");

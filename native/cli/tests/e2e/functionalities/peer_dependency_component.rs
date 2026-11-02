@@ -5,6 +5,9 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
+/// Aspect ID for dependency-resolver peer configuration in component extensions and `.bitmap`.
+const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
+
 /// Verifies `bit set-peer` and `bit unset-peer` component peer dependency persistence across `.bitmap`, model, and `package.json`.
 #[test]
 fn set_peer_and_unset_peer_component_workflows() {
@@ -34,7 +37,7 @@ fn set_peer_and_unset_peer_component_workflows() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|ext| ext["name"].as_str() == Some("teambit.dependencies/dependency-resolver"))
+        .find(|ext| ext["name"].as_str() == Some(DEPENDENCY_RESOLVER_ASPECT))
         .unwrap();
     let peer_dep1 = &dep_res1["data"]["dependencies"][0];
     assert_eq!(peer_dep1["packageName"].as_str(), Some(comp2_pkg.as_str()));

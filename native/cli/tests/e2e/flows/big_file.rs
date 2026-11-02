@@ -16,6 +16,7 @@ fn fixture_content() -> String {
         .replace('\n', "\r\n")
 }
 
+/// Initializes a workspace with `bar/big-text-file.txt` and `bar/foo.js` and tags `bar/text`.
 fn setup_big_file(helper: &Helper) -> String {
     helper.set_workspace_with_remote_scope();
     let content = fixture_content();

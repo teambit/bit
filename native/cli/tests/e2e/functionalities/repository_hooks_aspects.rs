@@ -4,13 +4,16 @@
 
 use crate::helper::Helper;
 
+/// Component name for the fixture aspect used in `bit use` repository-hooks tests.
+const REPOSITORY_HOOKS_ASPECT_NAME: &str = "repository-hooks-aspect";
+
 /// Verifies registering a repository-hooks aspect in `workspace.jsonc` via native `bit use`.
 #[test]
 fn repository_hooks_aspect_use_and_tag() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
-    helper.create_aspect("repository-hooks-aspect");
-    let aspect_id = format!("{}/repository-hooks-aspect", helper.scopes.remote);
+    helper.create_aspect(REPOSITORY_HOOKS_ASPECT_NAME);
+    let aspect_id = format!("{}/{REPOSITORY_HOOKS_ASPECT_NAME}", helper.scopes.remote);
     let use_out = helper.native(&format!("use {aspect_id}"));
     assert!(use_out.contains(&aspect_id), "{use_out}");
     let ws = helper.read_workspace_jsonc();

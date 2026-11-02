@@ -8,7 +8,9 @@
 //!
 //! Groups lane and branch reconciliation, ownership, convergence, main-scope sync, and onboarding test suites.
 
+/// End-to-end `bit ci sync` branch ownership and first-contact adoption tests.
 mod branch_ownership;
+/// End-to-end `bit ci sync` convergence, push-race, and conflict-policy tests.
 mod convergence;
 mod lane_cycle;
 mod main_scope;

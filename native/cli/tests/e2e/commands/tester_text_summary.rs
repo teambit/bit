@@ -13,6 +13,7 @@ pub(super) fn without_duration(output: &str) -> String {
     format!("{prefix}Finished. (<duration>s){suffix}")
 }
 
+/// Verifies `bit test comp1 --summary` matches `Node.js` across passing, pending, repeated, and failing runs.
 #[test]
 fn text_summary_pass_fail_pending_and_repeated_execution_match_node() {
     let helper = support::workspace(1, true);

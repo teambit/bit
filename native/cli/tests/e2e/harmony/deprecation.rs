@@ -2,7 +2,9 @@
 //!
 //! Covers `bit deprecate` and `bit undeprecate` on single and wildcard targets, `--new-id` replacement metadata, and `bit checkout reset`.
 
+/// End-to-end exported deprecation lifecycle and remote reporting tests.
 mod lifecycle;
+/// End-to-end version-range deprecation and `bit log` presentation tests.
 mod ranges;
 
 use crate::commands::move_paths::support::{self, aspect, bitmap, compare, json, successful};

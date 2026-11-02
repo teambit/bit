@@ -17,6 +17,7 @@ fn two_versions() -> Helper {
     helper
 }
 
+/// Verifies unstaged `--range` deprecation appears in `bit log --json` and is cleared by `bit undeprecate`.
 #[test]
 fn unstaged_ranges_are_reflected_in_log_and_undeprecation_clears_them() {
     let helper = two_versions();

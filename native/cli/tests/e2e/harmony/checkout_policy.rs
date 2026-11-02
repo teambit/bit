@@ -16,6 +16,7 @@ fn node(helper: &Helper, command: &str) {
     assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
 }
 
+/// Creates a workspace with two published versions of `bar/foo` and returns a pre-v2 workspace clone.
 fn source() -> (Helper, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

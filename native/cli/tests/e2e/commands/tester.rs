@@ -17,6 +17,7 @@ pub(super) fn timings(output: &str) -> String {
     }
     serde_json::to_string_pretty(&value).unwrap()
 }
+/// Validates and zeroes `start` and per-file/per-assertion [`duration`] fields in a component's test `results`.
 fn component_timings(results: &mut Value) {
     assert!(
         results["start"]

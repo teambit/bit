@@ -177,6 +177,7 @@ fn ci_sync_lane_branch_reconcile_cycle() {
     assert_eq!(branch_tip_sha(&helper, lane), tip_before);
 }
 
+/// Verifies `bit ci sync --all` across two mapped lanes and an unmapped developer branch.
 #[test]
 fn ci_sync_all_across_two_lanes() {
     let helper = Helper::new();
