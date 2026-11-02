@@ -8,6 +8,7 @@ use node_semver::Version;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::Path};
 
+/// Workspace component identity, package name, and direct dependency list for deletion pinning.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DependencyComponent {
     pub identity: String,

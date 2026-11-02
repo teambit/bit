@@ -2,6 +2,7 @@
 
 use super::{ASPECT, Plan, Value, invalid, selection};
 use std::io;
+/// Resolves the effective deprecation aspect metadata for component `id` from `.bitmap` or scope.
 pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     let key = selection::key(&plan.bitmap, id)?;
     let row = &plan.bitmap[key];

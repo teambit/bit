@@ -19,6 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Validated CLI options for `bit fork` component creation.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,

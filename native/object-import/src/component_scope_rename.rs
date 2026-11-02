@@ -9,6 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Validated CLI options for `bit scope rename` operations.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub old: String,

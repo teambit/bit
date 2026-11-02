@@ -5,6 +5,7 @@ use crate::component_remove::{RowKind, Selected, VersionedPlan, batch, invalid, 
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Captures preimages, validates selected components, and projects the post-removal [`LocalBatch`].
 pub(super) fn prepare(
     root: &Path,
     identities: &[String],

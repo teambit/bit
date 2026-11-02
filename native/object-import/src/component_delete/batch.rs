@@ -4,6 +4,7 @@ use crate::{component_remove::backup_bitmap, inspection};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Prepared batch of component deletion [`Plan`]s sharing one final `.bitmap` image.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Batch {
     plans: Vec<Plan>,

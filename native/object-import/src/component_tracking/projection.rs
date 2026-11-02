@@ -6,6 +6,7 @@ use super::{Options, Plan, error, files, identity, main_file, rows};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Candidate component directory, identity, scope, and scanned file list prior to `.bitmap` insertion.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidate {
     name: String,

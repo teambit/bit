@@ -6,6 +6,7 @@ use super::{
 };
 use serde_json::{Value, json};
 use std::{io, path::Path};
+/// Receives a main-branch component payload and its optional history into [`PreparedImport`].
 #[inline]
 pub(super) fn receive(
     plan: &mut PreparedImport,

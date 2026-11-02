@@ -8,6 +8,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Inserts the newly forked component row and aspect configuration into `bitmap`.
 #[inline]
 pub(super) fn insert(
     bitmap: &mut Value,

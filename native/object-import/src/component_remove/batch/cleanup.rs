@@ -8,6 +8,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Bundled manifest, `workspace.jsonc`, staged-config, and unmerged-record edits for removal.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::component_remove) struct Cleanup {
     manifest: Option<Change>,

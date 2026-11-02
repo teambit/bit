@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Captured active lane object, scope index preimage, and parsed lane JSON for component removal.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Lane {
     pub(super) scope: String,

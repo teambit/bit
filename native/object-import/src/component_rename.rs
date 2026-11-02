@@ -29,7 +29,7 @@ use std::{
     sync::Arc,
 };
 
-/// Pure regex programs shared by an ordered rename batch. File bytes and
+/// Pure compiled regex programs shared by an ordered rename batch. File bytes and
 /// workspace controls are deliberately read again after provider callbacks.
 #[derive(Debug, Default, Clone)]
 pub struct PreparationContext {

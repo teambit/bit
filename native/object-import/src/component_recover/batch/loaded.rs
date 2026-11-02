@@ -2,6 +2,7 @@
 use super::{Action, Batch, REMOVE, Value, configuration, invalid, selection};
 use std::io;
 
+/// Refines recovery actions and `component.json` edits using loaded workspace aspect receipts.
 pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
     let mut items = std::mem::take(&mut batch.items);
     for item in &mut items {

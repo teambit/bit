@@ -3,6 +3,7 @@ use super::{Action, Batch, Configuration, Item, REMOVE, Value, invalid, selectio
 use bit_workspace_config::package_json::{detect_indent, detect_newline, stringify_package};
 use std::io;
 
+/// Prepares a `component.json` edit removing the [`REMOVE`] aspect while preserving formatting.
 pub(super) fn prepare(batch: &mut Batch, item: &Item) -> io::Result<Option<Configuration>> {
     if !matches!(item.action, Action::Import | Action::UpdateConfig) {
         return Ok(None);

@@ -5,6 +5,7 @@ use super::{PreparedImport, invalid};
 use std::{fs, io, path::Path};
 
 impl PreparedImport {
+    /// Verifies and registers loose objects already published by the recovery phase.
     pub(crate) fn accept_recovery_objects(
         &mut self,
         root: &Path,

@@ -15,6 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 const REMOVE: &str = "teambit.component/remove";
+/// Per-component recovery classification determining how `bit recover` restores the component.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Action {
     WriteFromScope,

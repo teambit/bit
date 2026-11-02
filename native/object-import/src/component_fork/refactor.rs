@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained multi-component file replacement plan for fork refactoring.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Refactor {
     groups: Vec<Group>,

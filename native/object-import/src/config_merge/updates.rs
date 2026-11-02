@@ -4,6 +4,7 @@ use super::{array, invalid, semver, text};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
+/// Accumulated workspace dependency policy updates, conflicts, logs, and warnings.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Plan {
     updates: Vec<Value>,

@@ -11,6 +11,7 @@ use super::{
 use serde_json::json;
 use std::io;
 
+/// Merges three-way aspect `data` entries on `engine` and records any aspect data conflicts.
 pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     if engine.input["shouldMergeAspectsData"] != true {
         return Ok(());

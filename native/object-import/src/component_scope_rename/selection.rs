@@ -2,6 +2,7 @@
 
 use super::{Options, Value};
 use std::io;
+/// Maps `scope` to its renamed target scope when it matches `options.old` (or owner prefix).
 #[inline]
 pub(super) fn scope(scope: &str, options: &Options) -> Option<String> {
     let (scope, old, new) = (scope.trim(), options.old.trim(), options.new.trim());

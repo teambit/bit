@@ -3,6 +3,7 @@ use super::{Change, read_optional};
 use crate::component_remove::{Selected, invalid};
 use serde_json::Value;
 use std::{io, path::Path};
+/// Prepares an `unmerged.json` edit removing records for `selected` components when present.
 pub(super) fn prepare(root: &Path, selected: &[Selected]) -> io::Result<Option<Change>> {
     let path = crate::scope_path(root).join("unmerged.json");
     let Some(before) = read_optional(&path)? else { return Ok(None) };

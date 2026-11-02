@@ -8,6 +8,7 @@ use bit_client_transfer::tar::ObjectItem;
 use serde_json::Value;
 use std::{collections::HashMap, io, path::Path};
 
+/// Inspects a file-based remote `scope` to determine whether component `id` is soft-deleted.
 pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
     let id = id.trim();
     let bare = id

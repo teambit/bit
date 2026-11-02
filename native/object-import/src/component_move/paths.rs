@@ -5,6 +5,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Validates and normalizes `from` and `to` move paths within the workspace `root`.
 pub(super) fn locations(
     root: &Path,
     cwd: &Path,

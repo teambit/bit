@@ -4,6 +4,7 @@ use super::{error, paths, unsupported};
 use std::{io, path::Path};
 const EXTENSIONS: &[&str] =
     &["js", "ts", "jsx", "tsx", "cjs", "mjs", "mts", "cts", "css", "scss", "less", "sass"];
+/// Selects or infers the component `mainFile` relative path from `files` and `explicit`/`existing`.
 pub(super) fn choose(
     id: &str,
     directory: &str,

@@ -11,6 +11,7 @@ use std::{
 };
 const ASPECT: &str = "teambit.component/deprecation";
 
+/// Retained `.bitmap` and observation plan for component deprecation or undeprecation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

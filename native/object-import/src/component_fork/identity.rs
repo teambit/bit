@@ -8,6 +8,7 @@ use std::{
     path::{Component, Path},
 };
 
+/// Resolved target component identity, scope, root directory, and main file for a fork.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Identity {
     pub target: String,

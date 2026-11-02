@@ -7,6 +7,7 @@ use std::{
     path::{Component, Path},
 };
 
+/// Resolves and validates source and target component [`Identity`] fields for a rename operation.
 pub(super) fn prepare(
     root: &Path,
     bitmap: &Value,

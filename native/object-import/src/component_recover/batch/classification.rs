@@ -2,6 +2,7 @@
 
 use super::{Action, Batch, Item, REMOVE, Value, invalid, repository, selection};
 use std::io;
+/// Classifies how component `id` should be recovered from `.bitmap` and local scope objects.
 pub(super) fn classify(batch: &mut Batch, id: &str) -> io::Result<Item> {
     let id = id.trim();
     let key = selection::key(&batch.bitmap, id)?;

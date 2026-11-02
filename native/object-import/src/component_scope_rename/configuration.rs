@@ -4,6 +4,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+/// Updates `defaultScope` in `workspace.jsonc` and writes a `.bit/config-backup` snapshot.
 pub(super) fn publish(
     root: &Path,
     before: &[u8],

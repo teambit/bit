@@ -3,6 +3,7 @@ use super::unsupported;
 use serde_json::{Value, json};
 use std::io;
 
+/// Projects auto-detected source dependencies into workspace dependency policy entries for a fork.
 pub fn dependency_policy(source: &Value) -> io::Result<Vec<Value>> {
     let dependencies =
         source["dependencies"].as_array().ok_or_else(|| unsupported("fork dependency metadata"))?;

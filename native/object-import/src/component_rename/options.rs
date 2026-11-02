@@ -1,4 +1,5 @@
 //! Published component-rename [`Options`] and flag normalization, independent of CLI parsing.
+/// Validated CLI options for `bit rename` component identity and refactoring operations.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,

@@ -3,6 +3,7 @@ use super::{Plan, refactor, unsupported};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Validates and preflight-refactors a dependent component file without retaining writes.
 pub(super) fn dependent(
     plan: &mut Plan,
     component: &Value,

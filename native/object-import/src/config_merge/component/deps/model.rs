@@ -10,6 +10,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Mutable three-way dependency-resolver merge state holding parsed policies, data, and outputs.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct State<'a, 'b> {
     pub engine: &'a mut Engine<'b>,

@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Target scope of a `bit delete` operation (`Entire` component, semver `Range`, or `Snaps`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Scope {
     Entire,

@@ -15,6 +15,7 @@ type Compiled = Result<Arc<Regex>, String>;
 #[derive(Debug, Default)]
 pub(super) struct PatternCache(Mutex<HashMap<String, Arc<OnceLock<Compiled>>>>);
 impl PatternCache {
+    /// Returns a compiled [`Regex`] for `pattern`, compiling and caching it on first use.
     fn get(&self, pattern: &str) -> io::Result<Arc<Regex>> {
         let mut guard = self.0.lock().map_err(|_| invalid("rename pattern cache unavailable"))?;
         let slot = if let Some(existing) = guard.get(pattern) {

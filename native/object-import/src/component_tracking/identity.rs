@@ -4,6 +4,7 @@ use super::{Options, error, rows, unsupported};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Chooses the component `(name, generated, scope)` for `directory` from `options` or `.bitmap`.
 pub(super) fn choose(
     root: &Path,
     directory: &str,

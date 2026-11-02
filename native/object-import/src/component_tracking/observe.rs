@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Preimage digests, directory listings, and ancestor checks recorded before plan publication.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Observed {
     files: BTreeMap<PathBuf, Option<Vec<u8>>>,

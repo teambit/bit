@@ -15,6 +15,7 @@ use super::{array, invalid};
 use serde_json::{Value, json};
 use std::io;
 
+/// Executes three-way aspect configuration and data merge planning for a single component.
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     let mut engine = Engine::new(input)?;
     engine.start()?;

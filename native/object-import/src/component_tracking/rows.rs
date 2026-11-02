@@ -3,6 +3,7 @@ use super::unsupported;
 use serde_json::{Map, Value};
 use std::io;
 
+/// Extracts the non-empty `scope` or `defaultScope` string from a `.bitmap` component `row`.
 #[inline]
 pub(super) fn scope(row: &Value) -> Option<&str> {
     row["scope"]

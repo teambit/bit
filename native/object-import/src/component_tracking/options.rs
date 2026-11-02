@@ -17,6 +17,7 @@ pub struct Options {
     pub config: Value,
 }
 impl Options {
+    /// Validates `bit add` flag combinations and workspace-root tracking constraints.
     pub(super) fn validate(&self, directories: &[String], bitmap: &Value) -> io::Result<()> {
         let trimmed_id = self.id
             .as_deref()

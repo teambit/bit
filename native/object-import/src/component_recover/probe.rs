@@ -6,6 +6,7 @@ use bit_client_transfer::{
     remotes::{Remote, Remotes},
 };
 use std::{collections::BTreeMap, io};
+/// Fetches remote component metadata into memory to check whether each ID is soft-deleted.
 /// Fetch only into Rust memory. Recovery imports are a separate later publication owner.
 pub fn probe_remote(
     ids: &[String],

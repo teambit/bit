@@ -10,6 +10,7 @@ use super::Engine;
 use serde_json::Value;
 use std::io;
 
+/// Runs the `teambit.dependencies/dependency-resolver` config and data merge strategy on `engine`.
 pub(super) fn merge(
     engine: &mut Engine<'_>,
     current: usize,

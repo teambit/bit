@@ -1,6 +1,7 @@
 //! `Workspace.idsByPattern` resolution ([`select_ids`]) of exact names before matching full scoped pattern IDs.
 use super::invalid;
 use std::{fs, io, path::Path};
+/// Resolves a component ID or glob `pattern` against `.bitmap` in `Workspace.idsByPattern` order.
 pub fn select_ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     if pattern.is_empty() {

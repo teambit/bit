@@ -9,6 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Retained multi-component rename transaction holding individual [`Plan`]s and shared `.bitmap` state.
 #[derive(Debug, Clone)]
 pub struct Batch {
     root: PathBuf,

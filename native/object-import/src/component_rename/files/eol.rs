@@ -3,6 +3,7 @@
 #[cfg(test)]
 mod tests;
 
+/// End-of-line normalization policy distinguishing `ComponentWriter` from `Workspace.write()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Writer {
     Component,

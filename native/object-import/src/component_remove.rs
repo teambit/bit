@@ -31,6 +31,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained single-component `.bitmap`, lane, and directory removal plan.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

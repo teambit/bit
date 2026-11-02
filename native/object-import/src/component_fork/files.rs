@@ -13,6 +13,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Retained source-to-destination file copy with transformed bytes for a component fork.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Copy {
     pub source: PathBuf,

@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained multi-component local removal transaction covering `.bitmap`, scope objects, and files.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LocalBatch {
     root: PathBuf,

@@ -10,6 +10,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Expands `patterns` relative to `cwd` into deduplicated workspace-relative directories.
 pub(super) fn select(
     root: &Path,
     cwd: &Path,

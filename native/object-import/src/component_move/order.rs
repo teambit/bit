@@ -5,6 +5,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
+/// Orders component `files` in `directory` using breadth-first directory enumeration.
 pub(super) fn files(root: &Path, directory: &str, files: &[String]) -> io::Result<Vec<String>> {
     let mut remaining = files
         .iter()

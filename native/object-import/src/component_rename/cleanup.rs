@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Observed directory tree under the old component root scheduled for removal during rename.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Tree {
     directories: BTreeMap<PathBuf, Vec<String>>,

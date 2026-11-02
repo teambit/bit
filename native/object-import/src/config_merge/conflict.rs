@@ -12,6 +12,7 @@ use std::{
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Prepared `config-merge` conflict entry with its token, file path, and rendered conflict text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Conflict {
     token: String,

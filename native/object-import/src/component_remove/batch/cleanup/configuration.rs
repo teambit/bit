@@ -6,6 +6,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+/// Retained comment-preserving `workspace.jsonc` edit removing component aspect entries.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Configuration(Change);
 impl Configuration {

@@ -4,6 +4,7 @@ use super::{State, append, field};
 use serde_json::json;
 use std::io;
 
+/// Merges explicit dependency-resolver policy configurations across `current`, `other`, and `base`.
 pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     if state.same(0, 1) || state.same(2, 1) {
         return Ok(());

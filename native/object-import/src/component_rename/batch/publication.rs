@@ -2,6 +2,7 @@
 
 use super::{Value, invalid};
 use std::{fs, io, path::Path};
+/// Recursively merges changed keys from `before` -> `after` into `target` control JSON.
 pub(super) fn merge(target: &mut Value, before: &Value, after: &Value) -> io::Result<()> {
     let original = before.as_object().ok_or_else(|| invalid("scope rename original controls"))?;
     let changed = after.as_object().ok_or_else(|| invalid("scope rename projected controls"))?;

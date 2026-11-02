@@ -10,6 +10,7 @@ use std::{
 };
 type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
 
+/// Reads a remote file-scope's `Component`, head `Version`, and `Source` blobs for `id`.
 pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Result<Captured> {
     let index: Value = crate::parse_jsonc(&required(observed, &scope.join("index.json"))?)?;
     let hash = trimmed_str(&model_row(&index, id)?["hash"])
