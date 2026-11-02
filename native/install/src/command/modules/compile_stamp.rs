@@ -24,7 +24,7 @@ const VERSION: u32 = 1;
 /// The manifest fields whose `link:`/`file:` values are checked.
 const DEPENDENCY_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
-
+/// Persisted `afterInstall` compile stamp recording input fingerprint and output file states.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Stamp {

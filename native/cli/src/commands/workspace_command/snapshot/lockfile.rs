@@ -36,6 +36,7 @@ pub(in crate::commands::workspace_command) fn hidden_target(
             })
 }
 
+/// Extracts the unversioned component identity from `target["identity"]` or `target["id"]`.
 #[inline]
 fn target_identity(target: &Value) -> Option<&str> {
     non_empty_str(&target["identity"])

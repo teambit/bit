@@ -16,6 +16,7 @@ pub use cancellation::Cancellation;
 /// Global Bit configuration map preserving key insertion order.
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 
+/// Constructs an [`std::io::ErrorKind::InvalidData`] error with `message` (or `"invalid transport data"` when blank).
 #[inline]
 pub(crate) fn invalid(message: &str) -> std::io::Error {
     let trimmed = message.trim();

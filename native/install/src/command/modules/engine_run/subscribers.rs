@@ -42,6 +42,7 @@ pub(super) async fn run(
     .await
 }
 
+/// Formats `id` as `scope/name` with `@<version>` appended when a version is present.
 #[inline]
 fn component_id(id: &crate::model::ComponentId) -> String {
     let mut identity = id.to_string_without_version();

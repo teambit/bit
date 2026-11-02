@@ -44,6 +44,7 @@ pub(super) fn apply(
     Ok((plan, settings))
 }
 
+/// Supported `packageManagerChanges` keys accepted from pre-install subscriber receipts.
 const SUPPORTED_PM_CHANGES: &[&str] = &[
     "updateAll",
     "lockfileOnly",

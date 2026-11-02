@@ -24,7 +24,7 @@ use std::{collections::HashSet, fs, io, path::Path, time::Instant};
 /// Maximum number of manifest recalculation and installation convergence cycles.
 const MAX_CYCLES: usize = 5;
 
-/// What the installation did, for the summary.
+/// Summary of a completed module installation run (`components` count and legacy non-loaded environments).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Installed {
     pub components: usize,

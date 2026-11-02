@@ -31,6 +31,7 @@ pub fn run(target: &Target, args: &[OsString]) -> io::Result<ExitCode> {
     exec(command)
 }
 
+/// Constructs the [`Command`] to launch `target` with `args`.
 #[must_use]
 #[inline]
 pub fn command(target: &Target, args: &[OsString]) -> Command {

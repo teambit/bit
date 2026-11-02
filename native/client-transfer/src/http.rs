@@ -40,6 +40,7 @@ use reqwest::{Client, RequestBuilder, Response, redirect::Policy};
 use serde_json::{Value, json};
 use std::{io, time::Duration};
 
+/// Global config key (`CFG_USER_TOKEN_KEY`) storing the Bit Cloud bearer token.
 const CFG_USER_TOKEN: &str = "user.token";
 /// `@pnpm/node-fetch`'s default. bit.cloud's edge answers requests without
 /// a `User-Agent` with a 403 challenge page.

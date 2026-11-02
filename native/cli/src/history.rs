@@ -68,6 +68,7 @@ impl History {
             .join(" ")
     }
 
+    /// Appends a `succeeded` or `failed` completion line to `<scope>/command-history`.
     #[inline]
     pub fn end(&self, succeeded: bool) {
         self.write(if succeeded { "succeeded" } else { "failed" });

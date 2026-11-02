@@ -9,6 +9,7 @@ use std::io;
 
 /// Embedded `GraphQL` query (`doctor.graphql`) for remote scope diagnostic checks.
 const QUERY: &str = concat!(include_str!("doctor.graphql"), "    ");
+/// Maximum buffered response size (`32 MiB`) for remote `doctor` `GraphQL` queries.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
 impl Network {

@@ -24,6 +24,7 @@ use std::{fs, io, path::Path};
 
 /// Default `postinstall` script (`EXTERNAL_PM_POSTINSTALL_SCRIPT`) for external package manager mode.
 const POSTINSTALL: &str = "bit link && bit compile && bit ws-config write";
+/// Error message emitted when `bit install` is declined under external package manager mode.
 const DECLINED: &str = r#"External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install"."#;
 const SKIPPED: &str = "Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.";
 

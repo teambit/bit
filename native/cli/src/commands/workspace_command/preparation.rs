@@ -20,6 +20,7 @@ pub(super) struct Prepared {
     pub docs: Option<crate::commands::add::PreparedDocs>,
 }
 
+/// Starts an [`Engine`] and captures workspace targets, sources, and docs for `request`.
 #[inline]
 pub(super) fn capture(
     root: &Path,

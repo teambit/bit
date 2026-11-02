@@ -52,6 +52,7 @@ pub(super) fn resolve(
     Ok(())
 }
 
+/// Returns `true` when `request` and `plan` require npm registry version lookups (`--skip-published-versions`).
 #[inline]
 fn enabled(request: &ResolveRequest<'_>, plan: &Value) -> bool {
     let Selection::Tag { tag_options, .. } = &request.selection else { return false };

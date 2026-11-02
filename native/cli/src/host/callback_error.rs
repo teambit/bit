@@ -12,6 +12,7 @@ pub(crate) struct CallbackError {
 }
 
 impl CallbackError {
+    /// Wraps `cause` in a [`CallbackError`] preserving `startup` and `output` stdout buffers.
     #[must_use]
     #[inline]
     pub(crate) fn wrap(cause: io::Error, mut startup: String, mut output: String) -> io::Error {

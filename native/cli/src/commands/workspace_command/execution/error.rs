@@ -33,6 +33,7 @@ pub fn with_error_details(error: io::Error, details: String) -> io::Error {
     io::Error::new(error.kind(), WithDetails { error, details })
 }
 
+/// Prints `error`'s message in red to stderr followed by any attached uncolored [`WithDetails`] lines.
 pub(in crate::commands) fn print(error: &io::Error, chalk: Chalk) {
     let mut stderr = io::stderr().lock();
     let _ = writeln!(stderr, "{}", chalk.red(&error.to_string()));

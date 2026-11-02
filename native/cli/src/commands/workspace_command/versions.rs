@@ -30,7 +30,7 @@ struct Versioned<'l> {
     /// `(laneName, totalComponentsCount)`.
     summary: (Option<String>, u64),
 }
-
+/// Formats a validated engine snap or tag `result` into a [`Report`] using `labels` and `chalk`.
 #[inline]
 pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Report> {
     if result.is_null() {

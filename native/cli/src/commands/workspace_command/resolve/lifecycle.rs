@@ -12,7 +12,7 @@ use crate::commands::status::{
 };
 use serde_json::{Value, json};
 use std::io;
-
+/// Validates component issues and runs pre-snap lifecycle hooks before snapshot version allocation.
 pub(super) fn before_snapshot(
     session: &mut Session<'_>,
     plan: &Value,

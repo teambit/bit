@@ -11,6 +11,7 @@ use reqwest::{Response, StatusCode};
 use serde_json::{Value, json};
 use std::{io, time::Duration};
 
+/// Maximum single NDJSON line length (`4 MiB`) accepted from `Http.pushToCentralHub`.
 const MAX_LINE: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 

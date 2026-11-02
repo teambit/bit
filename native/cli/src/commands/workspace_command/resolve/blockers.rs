@@ -62,6 +62,7 @@ pub(super) fn callbacks(
     Ok(())
 }
 
+/// Marks `startup.committed` when `result` is an owned component-issues blocker error.
 #[inline]
 fn handled(
     result: &io::Result<()>,

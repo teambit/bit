@@ -45,6 +45,7 @@ impl Progress {
     }
 }
 
+/// Returns `true` when `value` carries unexpected `reason` or truthy `objectRequest` fields.
 #[inline]
 fn unexpected_history_fields(value: &Value) -> bool {
     !value["reason"].is_null()

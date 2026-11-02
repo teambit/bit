@@ -39,6 +39,7 @@ pub(super) fn graph(
     serde_json::to_string(&graph).map(Some).map_err(io::Error::other)
 }
 
+/// Resolves the lockfile importer key for `environment` when it has a snapshot entry for `package`.
 #[inline]
 fn environment_root<'a>(lockfile: &Value, environment: &'a str, package: &str) -> Option<&'a str> {
     let environment = environment.trim();

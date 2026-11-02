@@ -33,6 +33,7 @@ pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_jso
     Ok(json!({"version":1,"id":request.id,"files":files}))
 }
 
+/// [`std::io::Write`] sink that counts serialized JSON bytes without allocating a buffer.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct ByteCount(usize);
 

@@ -27,6 +27,7 @@ pub fn old_server_fallback(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<OldServerFallbackError>)
 }
 
+/// Wraps `error` in [`OldServerFallbackError`] so callers know the fallback warning was already emitted.
 #[inline]
 fn fallback_error(error: &io::Error) -> io::Error {
     io::Error::other(OldServerFallbackError(error.to_string()))

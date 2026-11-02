@@ -20,6 +20,7 @@ pub struct Workflow {
     pipeline: Pipeline,
 }
 
+/// Build pipeline flags (`--skip-tests`, `--skip-tasks`, `--loose`, etc.) parsed for a [`Workflow`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Pipeline {
     skip_tests: bool,

@@ -11,7 +11,7 @@ use crate::commands::status::js::{array, decline, text};
 use bit_install::output::Output;
 use serde_json::Value;
 use std::{collections::HashSet, io, time::Instant};
-
+/// Allowed `importMany` progress reason suffixes validated on engine import receipts.
 const REASONS: [&str; 5] = [
     "of their latest on main",
     "for getting missing versions and dependencies",

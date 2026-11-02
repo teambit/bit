@@ -31,7 +31,7 @@ use std::{
     path::Path,
     process::ExitCode,
 };
-
+/// Descriptor for the native `bit ws-config` (`workspace-config`) command.
 pub const COMMAND: Command = Command { name: "ws-config", aliases: &["workspace-config"], run };
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

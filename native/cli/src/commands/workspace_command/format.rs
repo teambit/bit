@@ -11,6 +11,7 @@ pub struct Formatter {
 }
 
 impl Formatter {
+    /// Creates a [`Formatter`] using `chalk` for ANSI styling.
     #[must_use]
     #[inline]
     pub const fn new(chalk: Chalk) -> Self {

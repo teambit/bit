@@ -10,6 +10,7 @@ use std::{
 
 /// Maximum allowed JSON batch request size (`8 MiB`).
 pub(crate) const REQUEST_BYTES: usize = 8 * 1024 * 1024;
+/// Maximum allowed size (`1 MiB`) for a single scanned source file.
 pub(crate) const SOURCE_BYTES: usize = 1024 * 1024;
 pub(crate) const BATCH_FILES: usize = 4096;
 

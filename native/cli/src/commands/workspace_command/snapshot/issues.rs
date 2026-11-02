@@ -60,6 +60,7 @@ fn predicted(component: &Value, id: &str, errors: &[Value]) -> io::Result<bool> 
     Ok(actual == serde_json::to_string(&expected).map_err(io::Error::other)?)
 }
 
+/// Returns `true` when `entry_id` (string or `{ scope, name }` object) matches `id` without version.
 #[inline]
 fn entry_matches_id(entry_id: &Value, id: &str) -> bool {
     let target = without_version(id.trim());

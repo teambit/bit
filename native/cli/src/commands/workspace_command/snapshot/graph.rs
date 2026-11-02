@@ -63,6 +63,7 @@ pub fn graphs(
         .collect()
 }
 
+/// Resolves the workspace root components directory from `workspace.jsonc`.
 #[inline]
 fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
     let config = WorkspaceConfig::load(root)?;

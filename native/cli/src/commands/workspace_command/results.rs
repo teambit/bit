@@ -17,6 +17,7 @@ use std::io;
 
 /// Section title (`FILE_CHANGES_CHECKOUT_MSG`) for components with file changes.
 pub const FILE_CHANGES: &str = "components with file changes";
+/// Allowed top-level keys on a validated engine checkout or merge result object.
 const RESULT_KEYS: [&str; 13] = [
     "components",
     "failedComponents",

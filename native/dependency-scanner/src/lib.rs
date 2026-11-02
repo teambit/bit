@@ -50,6 +50,7 @@ struct File {
     source: Option<String>,
     kind: Option<String>,
 }
+/// Serialized scan result for a single [`File`], including status, dependencies, and diagnostics.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 struct Outcome {
     path: String,

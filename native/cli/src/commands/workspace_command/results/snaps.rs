@@ -49,6 +49,7 @@ fn record<'v>(value: &'v Value, keys: &[&str]) -> io::Result<&'v serde_json::Map
     Ok(map)
 }
 
+/// Parses `value` into a validated [`Id`], declining strings over 4096 bytes.
 #[inline]
 fn id(value: Option<&Value>) -> io::Result<Id> {
     let value = value.ok_or_else(|| decline("native command report identity"))?;

@@ -35,6 +35,7 @@ use "+" or a semver range instead. to use them anyway, run "bit config set featu
         details.join("\n"),
     )))
 }
+/// Collects deduplicated `(identity, captured_component)` pairs for selected and auto-snapped targets in `plan`.
 fn targets<'a>(session: &'a Session<'_>, plan: &'a Value) -> Vec<(String, &'a Value)> {
     let mut seen = Vec::new();
     let mut targets = Vec::new();

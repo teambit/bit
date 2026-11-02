@@ -23,6 +23,7 @@ pub struct Labels {
     pub(super) tag: bool,
 }
 
+/// Report label preset for `bit snap`.
 pub const SNAP: Labels = Labels {
     versioned: "snappedComponents",
     automatic: "autoSnappedResults",

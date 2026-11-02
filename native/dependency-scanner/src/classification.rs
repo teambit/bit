@@ -16,6 +16,7 @@ pub(crate) enum Classification {
     Supported,
     Fallback,
 }
+/// AST visitor that classifies a `JavaScript` program into [`Classification`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Classifier {
     classification: Classification,

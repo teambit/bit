@@ -16,6 +16,7 @@ use std::io;
 
 /// Maximum buffered response payload size (`8 MiB`) for remote delete requests.
 const MAX_DELETE_BYTES: usize = 8 * 1024 * 1024;
+/// Maximum number of NDJSON progress lines (`4096`) accepted from a central hub delete stream.
 const MAX_DELETE_LINES: usize = 4096;
 
 impl Network {

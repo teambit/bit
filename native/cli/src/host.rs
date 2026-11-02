@@ -58,6 +58,7 @@ const SCRIPT: &str = concat!(
     "\n",
     include_str!("host/inventory.js"),
 );
+/// Maximum duration (`5s`) waited for the Node.js host child process to exit gracefully on shutdown.
 const EXIT_GRACE: Duration = Duration::from_secs(5);
 
 pub struct Host {

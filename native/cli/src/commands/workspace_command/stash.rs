@@ -27,7 +27,7 @@ pub(in crate::commands) struct Save {
 }
 
 impl Save {
-    /// Load providers, observe native sources, and stage detached Versions.
+    /// Loads providers, observes native sources, and stages detached `Version` objects for `bit stash`.
     pub fn prepare(
         root: &Path,
         include_new: bool,

@@ -33,6 +33,7 @@ pub(super) fn render(error: &Failure, chalk: Chalk) -> String {
     format!("[Error: {}] {{\n  {}\n}}", error.description(), fields.join(",\n  "))
 }
 
+/// Returns `true` when `value` contains backslashes, `delimiter`, or control characters requiring escaping.
 #[inline]
 fn needs_escaping(value: &str, delimiter: char) -> bool {
     value

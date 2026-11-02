@@ -37,7 +37,7 @@ pub fn validate(
 }
 
 /// `commandLanePatternIds`: the lane targets the pattern matches; `None`
-/// outside a lane merge or without a pattern.
+/// outside a lane merge or without a `--pattern` filter.
 pub fn pattern_ids(options: &Value, context: &Value) -> io::Result<Option<Vec<String>>> {
     let Some(pattern) = options
         .get("pattern")

@@ -36,8 +36,7 @@ pub struct Snapped<'s> {
     pub graphs: &'s [Option<String>],
 }
 
-/// `count` new snap hashes, allocated before the dependency graphs that
-/// name them.
+/// Allocates `count` new SHA-1 snap hashes before the dependency graphs that reference them.
 #[inline]
 pub fn new_snap_hashes(count: usize) -> io::Result<Vec<String>> {
     (0..count).map(|_| new_snap_hash()).collect()

@@ -11,6 +11,7 @@ use std::{io, sync::OnceLock};
 /// Process-wide cache of the resolved [`User`] identity or initialization [`Failure`].
 static IDENTITY: Cache = Cache::new();
 
+/// Loads the cached [`User`] identity, initializing [`IDENTITY`] with `factory` on first call.
 #[inline]
 pub(super) fn load(factory: impl FnOnce() -> io::Result<User>) -> io::Result<User> {
     IDENTITY.load(factory)

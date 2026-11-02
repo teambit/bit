@@ -42,6 +42,7 @@ pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> 
     Some((policy, remaining))
 }
 
+/// Expands short policy flag aliases (`-i`, `-I`) to their canonical long flag names.
 #[inline]
 fn policy_alias(raw: &str) -> &str {
     match raw {

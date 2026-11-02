@@ -18,6 +18,7 @@ const STANDARD_WRITER_ENVS: &[&str] = &[
     "teambit.mdx/mdx",
 ];
 
+/// Standard `(id, class_name, file_name, generated_marker)` tuples for built-in config writers.
 pub(super) const STANDARD_WRITERS: &[(&str, &str, &str, &str)] = &[
     ("typescript", "TypescriptConfigWriter", "tsconfig.json", "// bit-generated-typescript-config"),
     ("eslint", "EslintConfigWriter", ".eslintrc.json", "// bit-generated-eslint-config"),
