@@ -10,6 +10,7 @@ use std::collections::HashMap;
 fn target(name: &str, version: &str) -> Target {
     Target { scope: Some("scope".into()), name: name.into(), version: version.into() }
 }
+/// Verifies that [`select`] excludes direct dependencies and filters intermediate dependent paths by `through` nodes.
 #[test]
 fn paths_exclude_direct_dependencies_and_filter_every_via_node() {
     let graph = HashMap::from([

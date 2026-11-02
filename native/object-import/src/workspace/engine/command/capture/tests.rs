@@ -28,6 +28,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Verifies that [`all`] retains 64 large source bodies in [`snapshots::State`] while omitting inline `contents` from the wire payload.
 #[test]
 fn private_capture_retains_large_parallel_sources_without_expanding_the_wire_budget() {
     let fixture = Fixture::new();

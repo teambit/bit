@@ -13,6 +13,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter for unique cold-status fixture directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Temporary workspace fixture initialized with `.bit`, `workspace.jsonc`, and `alpha` component directory.
 #[derive(Debug)]

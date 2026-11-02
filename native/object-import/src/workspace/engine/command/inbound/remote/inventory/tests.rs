@@ -25,6 +25,7 @@ fn file_inventory_preserves_removed_deprecated_and_readme_metadata() {
     );
 }
 
+/// Verifies that [`latest_from_model`] selects the last matching active tag before falling back to `orphanedVersions`.
 #[test]
 fn latest_version_prefers_last_matching_tag_then_orphaned_tag() {
     let head = "b".repeat(40);

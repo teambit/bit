@@ -34,6 +34,7 @@ fn tracked_lane_component_with_a_main_head_loses_lane_only_flags() {
     assert!(bitmap.get("_bit_lane").is_none());
 }
 
+/// Verifies that [`Prepared::switch_lane`] preserves `onLanesOnly` and `isAvailableOnCurrentLane` when switching between non-main lanes.
 #[test]
 fn tracked_lane_component_keeps_lane_only_flags_on_another_lane() {
     let original = serde_json::to_vec(&json!({

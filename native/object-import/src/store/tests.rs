@@ -31,6 +31,7 @@ impl Drop for Directory {
     }
 }
 
+/// Verifies that concurrent [`Store::write`] calls are atomic and retain the first payload written for duplicate hashes.
 #[test]
 fn concurrent_writes_are_atomic_and_duplicate_identities_keep_first_payload() {
     let directory = Directory::new();

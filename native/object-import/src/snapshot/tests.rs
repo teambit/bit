@@ -31,6 +31,7 @@ impl Drop for Directory {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Computes the lowercase 40-character hexadecimal SHA-1 digest of `body`.
 fn hash(body: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(body))
 }

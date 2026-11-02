@@ -15,6 +15,7 @@ use std::{
 fn reference(character: char) -> String {
     character.to_string().repeat(40)
 }
+/// Encodes `input` into an opcode-21 frame and executes [`serve`] on a default [`State`].
 fn request(input: impl serde::Serialize) -> Value {
     let bytes = serde_json::to_vec(&input).unwrap();
     let mut frame = 21_u32.to_be_bytes().to_vec();

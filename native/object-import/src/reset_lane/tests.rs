@@ -18,6 +18,7 @@ fn write_object(root: &Path, hash: &str, kind: &str, value: &Value) {
     fs::write(path, outbound::encode_object(hash, kind, value).expect("encode")).expect("object");
 }
 
+/// Verifies that [`Plan`] resets linear lane snaps back to `main` and rejects commits when workspace state is stale.
 #[test]
 fn resets_linear_lane_snaps_and_refuses_stale_publication() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

@@ -28,6 +28,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Verifies that [`Prepared::prepare`] and [`Prepared::commit`] update `workspace.jsonc` dependency policy while preserving comments.
 #[test]
 fn policy_update_is_planned_and_preserves_unrelated_jsonc_comments() {
     let fixture = Fixture::new();

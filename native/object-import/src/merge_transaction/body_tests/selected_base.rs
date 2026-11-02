@@ -16,6 +16,7 @@ fn request(fixture: &Fixture, base: &Value, target: &Value, raw: &[u8]) -> Value
         "labels":{"current":"current","other":"other"},
         "current":[{"relativePath":"index.ts","workspace":{"path":current,"rawHash":raw_hash,"snapshotHash":snapshot_hash}}]})
 }
+/// Starts a merge transaction and invokes `mergePrepare` with `request` on a fresh [`State`].
 fn prepare(mut request: Value) -> io::Result<Value> {
     let mut state = State::default();
     let owner = apply("mergeTransactionBegin", json!({"mode":"status","count":1}), &mut state)?;

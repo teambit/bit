@@ -35,6 +35,7 @@ fn accepts_disabled_previews_and_ignored_issues() {
     assert!(ignored_issues(&json!({})).unwrap().is_empty());
 }
 
+/// Verifies that [`extensions`] rejects non-string generator envs, non-boolean preview flags, and unknown `ignoreIssues` entries.
 #[test]
 fn declines_settings_that_change_what_harmony_does() {
     for config in [

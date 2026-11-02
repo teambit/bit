@@ -20,6 +20,7 @@ fn compressed(kind: &str, hash: &str, body: &Value) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
+/// Writes a `Source` and `Version` object into `root` and runs `transferCollect` on `state`.
 fn fixture(root: &Path, state: &mut State) -> Value {
     let (hash, _) = source(root, b"frozen\xff\r\n");
     let hash = crate::validate::hexadecimal(&hash);

@@ -11,6 +11,7 @@ fn selection() -> Selection {
     selection
 }
 
+/// Verifies that [`remove_versions`] does not synthesize a `state` object when resetting a model that lacks one.
 #[test]
 fn resetting_a_model_without_pending_state_does_not_create_state() {
     let mut model = json!({"versions":{"1.0.0":"a".repeat(40)}});

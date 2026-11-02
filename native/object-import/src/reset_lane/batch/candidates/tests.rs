@@ -19,6 +19,7 @@ fn model_index_order_overrides_lane_and_alphabetical_order() {
     assert_eq!(ordered(&index, &membership).expect("index order"), ["scope/zed", "scope/alpha"]);
 }
 
+/// Verifies that [`staged`] discovers candidate version graphs without requiring a valid replacement head upfront.
 #[test]
 fn candidate_discovery_avoids_unknown_replacement_and_lane_history_validation() {
     let root = std::env::temp_dir()

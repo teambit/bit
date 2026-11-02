@@ -390,7 +390,7 @@ if(files.refs[0].ref.toString()!==hash||files.refs[0].relativePath!=='dist/index
         .unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
-
+/// Verifies that indexed history walks preserve deep linear ordering and stop at `stopAt` overlay boundaries.
 #[test]
 fn indexed_history_preserves_deep_order_and_overlay_stop_boundaries() {
     let directory = Directory::new();

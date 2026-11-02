@@ -48,6 +48,7 @@ impl PublicationFixture {
     }
 }
 
+/// Builds an [`Apply`] request for token `"owner"` with `omit_owned_write_receipts`.
 fn request(omit_owned_write_receipts: bool) -> Apply {
     Apply { token: "owner".into(), omit_owned_write_receipts }
 }

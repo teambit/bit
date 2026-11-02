@@ -11,6 +11,7 @@ fn compressed(bytes: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
+/// Verifies that [`inflate`] preserves UTF-8 metadata up to [`MAX_BYTES`] without parsing the JSON body.
 #[test]
 fn metadata_is_lossless_and_bounded_without_parsing_json() {
     let contents = "Version external-hash 0\0{\"unicode\":\"日本語 🚀\",\"invalid\":";

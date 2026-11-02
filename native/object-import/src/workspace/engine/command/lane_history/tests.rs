@@ -23,6 +23,7 @@ fn restore_partition_counts_inactive_bitmap_members_and_preserves_history_order(
     assert_eq!(phases[1].versions[0].0, "s/b");
     assert!(!phases[1].revert);
 }
+/// Verifies that [`selection::phases`] retains cross-scope versions on checkout and rejects duplicate component entries.
 #[test]
 fn checkout_retains_exact_cross_scope_versions_and_rejects_duplicate_membership() {
     let item =

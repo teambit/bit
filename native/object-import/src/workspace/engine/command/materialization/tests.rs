@@ -20,6 +20,7 @@ fn retained_metadata_follows_applied_body_indices_without_copying_sources() {
     assert!(super::retained_files(&plan, &applied).is_err());
 }
 
+/// Verifies that `manifest` normalizes schema `1.0.0` and `2.0.0` versions identically while rejecting invalid schemas or dependencies.
 #[test]
 fn imported_harmony_manifests_share_layout_and_preserve_source_references() {
     let mut version = json!({"schema":"1.0.0","mainFile":"index.js","log":{"message":"initial","date":"1"},"files":[{"relativePath":"index.js","name":"index.js","test":false,"file":"a".repeat(40)}]});

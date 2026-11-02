@@ -22,6 +22,7 @@ fn deleting_the_only_object_prunes_its_prefix_but_keeps_the_object_store() {
     assert!(objects.is_dir());
 }
 
+/// Verifies that [`write_objects`] retains a shared two-character prefix directory and sibling objects when deleting one object.
 #[test]
 fn deleting_an_object_keeps_its_shared_prefix_and_neighbor_bytes() {
     let fixture = tempfile::tempdir().expect("fixture");

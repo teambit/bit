@@ -21,6 +21,7 @@ fn diverged_squash_records_per_component_main_scope() {
     assert_eq!(metadata::squash_lane(&model, &lane).unwrap(), lane["otherId"]);
 }
 
+/// Verifies that [`metadata::current_schema`] upgrades `Version` schema `1.0.0` to `2.0.0` without mutating the input JSON.
 #[test]
 fn autosnap_upgrades_harmony_version_schema_without_rewriting_original() {
     let original = json!({"schema":"1.0.0","files":[],"log":{"date":"1","message":"initial"},"extensions":[],"flattenedDependencies":["scope/dep@1.0.0"]});

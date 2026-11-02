@@ -18,6 +18,7 @@ fn persistence_notification_counts_actual_invocations_and_preserves_empty_payloa
     assert_eq!(fs::read(&event).unwrap(), b"");
 }
 
+/// Verifies that [`notify`] still returns `1` as best-effort when `.bit` is a regular file instead of a directory.
 #[test]
 fn persistence_notification_failure_remains_best_effort_but_records_invocation() {
     let directory = scratch::Directory::create().unwrap();

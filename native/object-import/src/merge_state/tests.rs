@@ -15,6 +15,7 @@ pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::Lazy
 fn hash_value(byte: char) -> String {
     byte.to_string().repeat(40)
 }
+/// Encodes `value` into an opcode-17 frame and dispatches it through [`serve`] against `state`.
 fn request(state: &mut State, value: impl serde::Serialize) -> Value {
     let bytes = serde_json::to_vec(&value).unwrap();
     let mut frame = 17_u32.to_be_bytes().to_vec();

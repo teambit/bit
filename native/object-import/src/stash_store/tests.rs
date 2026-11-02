@@ -18,6 +18,7 @@ fn scope() -> PathBuf {
     fs::create_dir_all(&root).unwrap();
     root
 }
+/// Verifies that [`list`], [`PreparedSave`], and [`PreparedLoad`] follow lexical stash ID ordering across double-digit rollovers (`stash-10` vs `stash-9`).
 #[test]
 fn lexical_latest_preserves_the_published_double_digit_rollover() {
     let scope = scope();

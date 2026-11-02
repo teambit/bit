@@ -33,6 +33,7 @@ impl Drop for Fixture {
         let _removed = fs::remove_dir_all(&self.0);
     }
 }
+/// Verifies that [`jsonc::parse`] strips block/line comments and trailing commas while rejecting malformed syntax.
 #[test]
 fn jsonc_comments_trailing_commas_and_string_escapes_are_preserved() {
     let value = jsonc::parse(

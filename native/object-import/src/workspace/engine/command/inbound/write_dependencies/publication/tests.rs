@@ -41,6 +41,7 @@ fn workspace_policy_reorders_entries_preserves_comments_and_serializes_runtime_d
     );
 }
 
+/// Verifies that `write` records the `workspace.jsonc` history backup and metadata even when dependency entries are unchanged.
 #[test]
 fn unchanged_workspace_dependency_write_still_records_the_complete_preimage() {
     let root = tempfile::tempdir().unwrap();

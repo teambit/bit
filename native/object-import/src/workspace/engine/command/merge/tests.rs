@@ -10,6 +10,7 @@ fn select(distance: &Value, modified: bool) -> Value {
     select_options(distance, modified, false)
 }
 
+/// Selects the merge action for `distance`, `modified`, and `target_as_diverged` on a single-component [`State`].
 fn select_options(distance: &Value, modified: bool, target_as_diverged: bool) -> Value {
     let mut state = State::new(1).unwrap();
     let target = json!({"identity":"scope/alpha","version":"1.0.0"});

@@ -38,6 +38,7 @@ fn destination_matches_canonical_scope_owner_placeholders() {
     );
 }
 
+/// Verifies that `targets` includes only genuinely new consumer components absent from both `.bitmap` and the current lane.
 #[test]
 fn prospective_metadata_only_includes_genuinely_new_consumers() {
     let destinations = json!([

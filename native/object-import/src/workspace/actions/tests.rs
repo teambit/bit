@@ -23,6 +23,7 @@ fn frame(actions: &[(u32, &Path, Option<&Path>)]) -> Vec<u8> {
     }
     bytes
 }
+/// Executes [`serve`] on `bytes` and parses the JSON response.
 fn response(bytes: Vec<u8>) -> Value {
     let mut output = Vec::new();
     serve(&mut Cursor::new(bytes), &mut output).unwrap();

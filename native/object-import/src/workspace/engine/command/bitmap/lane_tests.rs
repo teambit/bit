@@ -10,6 +10,7 @@ use std::path::Path;
 fn row(scope: &str, name: &str, root: &str) -> Value {
     json!({"name":name,"scope":scope,"version":"1.0.0","mainFile":"index.js","rootDir":root})
 }
+/// Builds a `1.1.0` `.bitmap` [`Update`] for `identity` with `main.js` as its main file.
 fn update(identity: &str) -> Update {
     Update {
         identity: identity.into(),

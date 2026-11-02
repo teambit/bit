@@ -21,6 +21,7 @@ fn target(fixture: &Fixture, sizes: &[usize]) -> Value {
     );
     json!({"hash":"1".repeat(40), "files":files})
 }
+/// Verifies that parallel `Source` reads in `prepare_packed` preserve file order, receipts, and serial equivalence.
 #[test]
 fn parallel_sources_keep_order_complete_receipts_and_serial_equivalence() {
     let mut serial = None;

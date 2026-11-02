@@ -22,6 +22,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Encodes and writes a `Version` object (`hash`, `value`) into `objects`.
 fn object(objects: &Path, hash: &str, value: &Value) {
     let path = object_path(objects, hash);
     fs::create_dir_all(path.parent().expect("parent")).expect("directory");

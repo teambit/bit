@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 fn begin(state: &mut State, mode: &str, count: usize) -> Value {
     apply("mergeTransactionBegin", json!({"mode":mode,"count":count}), state).expect("begin")
 }
+/// Advances `state` by submitting a `mergeTransactionReceipt` for `previous` with `nextCount: next`.
 fn receipt(state: &mut State, previous: &Value, next: usize) -> Value {
     apply("mergeTransactionReceipt", json!({"token":previous["token"],"revision":previous["revision"],"phase":previous["directive"]["phase"],"index":previous["directive"]["index"],"completed":previous["directive"]["count"],"nextCount":next}), state).expect("receipt")
 }

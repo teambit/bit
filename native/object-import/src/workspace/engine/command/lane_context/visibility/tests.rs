@@ -21,6 +21,7 @@ fn switch_reselects_tracked_hidden_components_only_on_their_destination() {
     assert_eq!(main.len(), 3);
     assert_eq!(bitmap["returning"]["isAvailableOnCurrentLane"], false);
 }
+/// Verifies that [`targets`] and [`inactive_targets`] keep active and selected inactive `.bitmap` entries disjoint.
 #[test]
 fn active_and_selected_inactive_bitmap_metadata_are_separate() {
     let row = |name: &str, available| json!({"name":name,"scope":"scope","version":"1.0.0","rootDir":name,"mainFile":"index.js","isAvailableOnCurrentLane":available,"onLanesOnly":true});

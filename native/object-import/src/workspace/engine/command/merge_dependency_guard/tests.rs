@@ -11,6 +11,7 @@ use std::{
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary workspace directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+/// Verifies that `verify` preserves unchanged import specifiers on fast-forward sources and rejects stale captures.
 #[test]
 fn retained_fast_forward_sources_preserve_imports_and_detect_stale_capture() {
     use serde_json::json;

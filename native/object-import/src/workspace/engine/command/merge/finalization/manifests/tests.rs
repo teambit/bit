@@ -22,6 +22,7 @@ fn prepared(directory: &Directory) -> Prepared {
     }
 }
 
+/// Verifies that [`Prepared::package_manifests`] stages callback manifest updates in memory without touching `node_modules` until [`Prepared::commit`].
 #[test]
 fn canonical_package_metadata_changes_remain_pending_until_native_commit() {
     let directory = Directory::create().unwrap();

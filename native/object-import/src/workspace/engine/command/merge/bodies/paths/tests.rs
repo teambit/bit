@@ -31,6 +31,7 @@ fn nested_native_destinations_validate_existing_and_new_merge_files() {
     assert!(validate(&root.0, &root.0.join("..").join("escape.js")).is_err());
 }
 
+/// Verifies that [`canonical_relative`] rejects empty, parent-traversal, absolute, `__proto__`, and colon-stream paths.
 #[test]
 fn native_components_do_not_relax_canonical_file_identity_guards() {
     for path in [

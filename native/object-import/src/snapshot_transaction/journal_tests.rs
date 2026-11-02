@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 fn receipt(state: &mut State, output: &Value, next: usize) -> Value {
     state.receipt(json!({"token":output["token"],"revision":output["revision"],"completed":output["directive"]["count"],"failed":false,"nextCount":next})).unwrap()
 }
+/// Verifies that [`State`] emits `addObjects` and `updateWorkspace` directives per component before `clearCache`.
 #[test]
 fn callbacks_and_per_component_effects_have_canonical_order() {
     let mut state = State::default();

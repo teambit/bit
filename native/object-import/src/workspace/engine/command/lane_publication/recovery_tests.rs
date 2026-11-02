@@ -34,6 +34,7 @@ impl Drop for Workspace {
     }
 }
 
+/// Verifies that [`Recovery::prepare`] and [`Recovery::commit`] persist pre-merge `.bitmap`, `workspace.jsonc`, and `staged-snaps` backups.
 #[test]
 fn recovery_retains_original_bytes_after_merge_and_replaces_old_backup_file() {
     let workspace = Workspace::new();

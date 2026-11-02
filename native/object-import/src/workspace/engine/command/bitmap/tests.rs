@@ -15,6 +15,7 @@ fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepa
 }
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+/// Verifies that [`Prepared::clear_config`] removes component config overrides only for targeted components and backs up `.bitmap`.
 #[test]
 fn reset_clears_only_written_overrides_and_retains_original_history() {
     let fixture = Fixture::new();

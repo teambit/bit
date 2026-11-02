@@ -15,6 +15,7 @@ fn newest_tag_and_normal_versions_take_precedence() {
     assert_eq!(index.get("a"), Some(("normal-new", true)));
     assert_eq!(index.get("missing"), None);
 }
+/// Verifies that [`TagIndex`] indexes 20,000 tagged hashes and returns `None` for untagged hashes.
 #[test]
 fn indexes_many_tagged_and_untagged_hashes() {
     let mut index = TagIndex::default();

@@ -41,6 +41,7 @@ for(const text of ['v1.2.3',' 1.2.3 ','1.2.3+build','1.2.3-beta.2+build','minor'
     }
 }
 
+/// Verifies that [`future::plan`] returns the prerelease type (`preminor`) for soft-tagged auto-tag dependents.
 #[test]
 fn soft_prerelease_autotags_ignore_direct_exact_version() {
     let request = json!({"components":[{"versions":[],"isAutoTag":true,"isAutoAddedRoot":false}],"params":{"releaseType":"preminor","incrementBy":1,"persist":false,"soft":true,"exactVersion":"7.0.0","hasTagData":false},"semver":{}});

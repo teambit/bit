@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic counter for unique main-branch reset fixture directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Temporary workspace fixture holding `scope/alpha` and optional dependent components on `main`.

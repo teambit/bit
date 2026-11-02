@@ -9,7 +9,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
-/// Verifies that [`Plan`] removes `nextVersion` entries from `.bitmap` and rejects stale plans.
+/// Verifies that [`Plan::prepare`] and [`Plan::commit`] remove `nextVersion` entries from `.bitmap` and reject stale plans.
 #[test]
 fn clears_all_pending_tags_and_refuses_a_stale_plan() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

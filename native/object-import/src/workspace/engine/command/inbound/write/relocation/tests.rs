@@ -16,6 +16,7 @@ fn prepare(
     Ok(retained)
 }
 
+/// Verifies that `avoid_tracked` relocates conflicting imports to an owner-prefixed path and detects subsequent disk changes.
 #[test]
 fn owner_destination_is_retained_and_rejects_a_later_filesystem_change() {
     let root = tempfile::tempdir().unwrap();

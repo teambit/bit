@@ -28,6 +28,7 @@ pub(super) fn directory() -> PathBuf {
     path
 }
 
+/// Writes `bytes` as a zlib-compressed `Source` object under `directory` and returns its 20-byte SHA-1 hash and compressed bytes.
 pub(super) fn source(directory: &std::path::Path, bytes: &[u8]) -> ([u8; 20], Vec<u8>) {
     let hash: [u8; 20] = Sha1::digest(bytes).into();
     let text = crate::validate::hexadecimal(&hash);

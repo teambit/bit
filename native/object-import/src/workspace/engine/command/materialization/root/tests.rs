@@ -24,6 +24,7 @@ fn root_manifest_keeps_only_files_owned_by_the_root() {
     );
 }
 
+/// Verifies that [`validate_version`] requires [`ASPECT`] with `isRoot: true` before materializing at the workspace root.
 #[test]
 fn only_marked_versions_can_land_at_the_workspace_root() {
     assert!(validate_version(&json!({"extensions":[]})).is_err());

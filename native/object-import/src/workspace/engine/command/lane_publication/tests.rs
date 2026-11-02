@@ -27,6 +27,7 @@ fn updating_hidden_lane_head_moves_it_to_tail_without_promoting_component() {
     assert!(lane.get("overrideUpdateDependents").is_none());
 }
 
+/// Verifies that [`objects::history`] separates deleted and hidden component buckets while preserving prior history entries.
 #[test]
 fn lane_history_keeps_deleted_and_hidden_buckets_separate_and_preserves_previous_entries() {
     let lane = json!({"scope":"scope","name":"feature","components":[{"id":{"scope":"scope","name":"deleted"},"head":"a".repeat(40),"isDeleted":true}],"updateDependents":[format!("scope/hidden@{}","b".repeat(40))]});

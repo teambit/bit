@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 fn initialize(state: &mut State, resume: bool) -> Value {
     apply("transferTransactionInitialize",&json!({"scopes":["one.scope","two.scope","three.scope"],"clientId":"same-client","resuming":resume}),state).unwrap()
 }
+/// Submits a `transferTransactionReceipt` for `previous` with `success` to `state`.
 fn receipt(state: &mut State, previous: &Value, success: bool) -> Value {
     apply(
         "transferTransactionReceipt",

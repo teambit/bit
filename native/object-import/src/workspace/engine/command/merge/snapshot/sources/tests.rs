@@ -50,6 +50,7 @@ fn parallel_sources_preserve_order_hashes_and_share_one_allocation_budget() {
     );
 }
 
+/// Verifies that [`rekey`] replaces only [`PENDING_GRAPH_VERSION`] root nodes while preserving historical versions of the same component.
 #[test]
 fn pending_root_replacement_keeps_reachable_historical_root_distinct() {
     let pending = json!({"scope":"scope","name":"a","version":PENDING_GRAPH_VERSION});

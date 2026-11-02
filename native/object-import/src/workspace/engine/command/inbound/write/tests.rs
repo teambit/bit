@@ -328,7 +328,7 @@ fn history_revalidates_source_mode_before_publication() {
     assert!(!history.backup.exists());
     fs::remove_dir_all(root).unwrap();
 }
-
+/// Verifies that publishing an empty `.bitmap` history backup preserves the source file's modified and accessed timestamps.
 #[test]
 fn empty_history_copy_keeps_the_source_modified_time() {
     use std::time::{Duration, UNIX_EPOCH};

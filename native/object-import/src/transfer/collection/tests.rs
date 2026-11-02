@@ -23,6 +23,7 @@ fn version(root: &std::path::Path, hash: [u8; 20], sources: &[[u8; 20]], artifac
     fs::write(root.join(&text[..2]).join(&text[2..]), encoder.finish().unwrap()).unwrap();
 }
 
+/// Verifies that [`select`] groups `Version`, `Source`, and artifact objects for export while ordering `Version` objects last for fetch.
 #[test]
 fn export_groups_and_fetch_version_last_preserve_exact_order() {
     let root = directory();

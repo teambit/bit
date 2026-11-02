@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 fn hash(byte: char) -> String {
     std::iter::repeat_n(byte, 40).collect()
 }
+/// Builds a baseline component reset [`plan`] request JSON object.
 fn input() -> Value {
     json!({"objectsDirectory":std::env::temp_dir(),"versions":[],"deletedRefs":[],"removeOnlyHead":false,"laneHidden":false,"laneNew":false,"hasScope":false,"tags":[],"orphaned":[],"detachedHeads":[]})
 }

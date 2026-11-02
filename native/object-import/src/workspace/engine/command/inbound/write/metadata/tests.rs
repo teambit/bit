@@ -30,6 +30,7 @@ fn live_order_preserves_existing_positions_and_appends_only_new_targets() {
     );
 }
 
+/// Verifies that `ordered_ids` resolves workspace default scopes and per-row `defaultScope` overrides.
 #[test]
 fn live_order_resolves_authored_and_row_specific_default_scopes() {
     let rows = json!({

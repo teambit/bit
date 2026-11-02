@@ -13,6 +13,7 @@ fn pattern_receipt_preserves_order_and_rejects_duplicates_or_unknown_ids() {
     assert!(indices_for_ids(&rows, &["scope/missing".into()]).is_err());
 }
 
+/// Verifies that [`versions_to_check`] checks only the target head when squashing and skips excluded components.
 #[test]
 fn squash_only_checks_head_and_excluded_status_does_not_import_ancestry() {
     let first = "1".repeat(40);

@@ -36,6 +36,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+/// Builds a `Source` object wire JSON descriptor for `body`.
 fn source(body: &[u8]) -> Value {
     json!({"type":"Source","hash":crate::validate::hexadecimal(&Sha1::digest(body)),"body":crate::validate::hexadecimal(body)})
 }

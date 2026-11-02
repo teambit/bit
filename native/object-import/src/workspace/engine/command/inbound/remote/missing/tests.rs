@@ -25,6 +25,7 @@ fn component(id: &str, version_hash: &str, version: &Value) -> [ObjectItem; 2] {
     [object("Component", &model_hash, &model), object("Version", version_hash, version)]
 }
 
+/// Fixed 40-char SHA-1 hash for the root `acme.app/app` test version.
 const APP: &str = "1111111111111111111111111111111111111111";
 const DEPENDENCY: &str = "2222222222222222222222222222222222222222";
 
