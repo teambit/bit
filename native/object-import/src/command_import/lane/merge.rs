@@ -47,6 +47,7 @@ pub(super) fn merge(
     Ok(merged)
 }
 
+/// Return `true` when `incoming` is strictly ahead of `current` in the component's `VersionHistory`.
 fn ahead(
     plan: &mut PreparedImport,
     identity: &str,

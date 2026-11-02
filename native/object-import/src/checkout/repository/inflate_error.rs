@@ -17,6 +17,7 @@ impl std::error::Error for Failure {
         Some(&self.0)
     }
 }
+/// Wrap a [`flate2::DecompressError`] in an [`io::ErrorKind::InvalidData`] error preserving its cause.
 #[inline]
 pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, Failure(error))

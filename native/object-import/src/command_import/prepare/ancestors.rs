@@ -16,6 +16,7 @@ pub(super) fn collect(
     collect_target(plan, directory, target, None)
 }
 
+/// Traverse and stage all parent `Version` and `Source` objects reachable from `requested` or `target`'s head.
 fn collect_target(
     plan: &mut PreparedImport,
     directory: &Path,

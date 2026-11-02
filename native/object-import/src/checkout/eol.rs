@@ -40,6 +40,7 @@ fn suspicious_prefix(bytes: &[u8]) -> bool {
     suspicious.saturating_mul(100) > total.saturating_mul(10)
 }
 
+/// Return `true` when `byte` is a printable ASCII or standard control character (`7..=14` or `32..=127`).
 #[inline]
 fn ordinary(byte: u8) -> bool {
     matches!(byte, 7..=14 | 32..=127)

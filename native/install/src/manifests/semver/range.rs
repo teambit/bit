@@ -43,6 +43,7 @@ fn comparator_strings(range: &str, flavor: Flavor) -> Vec<String> {
     }
 }
 
+/// Strip redundant `>=0.0.0` or `>=0.0.0-0` comparators in semver 7 mode.
 #[inline]
 fn replace_gte0(comp: &str) -> String {
     re(Token::Gte0).replace(comp, "")

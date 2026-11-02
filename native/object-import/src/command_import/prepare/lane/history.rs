@@ -39,6 +39,7 @@ impl PreparedImport {
         self.merge_remote_history(&directory, &hash)?;
         self.validate()
     }
+    /// Merge the remote `LaneHistory` object for `hash` from `directory` into the prepared overlay.
     #[inline]
     fn merge_remote_history(&mut self, directory: &std::path::Path, hash: &str) -> io::Result<()> {
         let history_hash = crate::lane_history::hash(hash);

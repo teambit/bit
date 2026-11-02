@@ -18,7 +18,9 @@ pub type DependencyMap = IndexMap<String, String>;
 /// a new component that has only a `defaultScope`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct ComponentId {
+    /// Exported scope name, or `None` when the component is new/unexported.
     pub scope: Option<String>,
+    /// Workspace or variant default scope for unexported components.
     pub default_scope: Option<String>,
     pub name: String,
     pub version: Option<String>,

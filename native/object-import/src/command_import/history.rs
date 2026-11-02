@@ -19,6 +19,7 @@ pub(super) fn identity(component: &str) -> String {
     hasher.update(b":VersionHistory");
     crate::validate::hexadecimal(&hasher.finalize())
 }
+/// Populate the `VersionHistory` object for `model` from `head` and return `(hash, history, changed)`.
 pub(super) fn populate(
     capture: &mut Capture,
     directory: &Path,

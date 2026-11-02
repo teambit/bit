@@ -34,7 +34,9 @@ pub const IGNORE_ROOT_ONLY_LIST: [&str; 7] = [
     "oxlint.config.ts",
     "oxlint.config.js",
 ];
+/// Standard Git ignore filename (`.gitignore`).
 const GIT_IGNORE: &str = ".gitignore";
+/// Bit-specific ignore filename (`.bitignore`) taking precedence over `.gitignore`.
 const BIT_IGNORE: &str = ".bitignore";
 /// Directory names a scan never enters (`SCAN_IGNORE_LIST`).
 const SKIPPED_DIRS: [&str; 4] = ["node_modules", ".bit", ".git", ".bitTmp"];

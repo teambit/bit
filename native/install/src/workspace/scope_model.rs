@@ -22,7 +22,9 @@ use std::{
 /// Maximum inflated byte size (`64 MiB`) allowed when reading a component or `Version` object.
 const MAX_OBJECT_BYTES: u64 = 64 * 1024 * 1024;
 
+/// Aspect ID (`teambit.envs/envs`) storing the environment descriptor on a `Version` object.
 const ENVS_ASPECT: &str = "teambit.envs/envs";
+/// Aspect ID (`teambit.dependencies/dependency-resolver`) storing resolved package metadata on a `Version` object.
 const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
 
 /// What install needs from a component's scope objects.

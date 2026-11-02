@@ -18,6 +18,7 @@ use std::{
 
 /// Braille `dots` spinner frames matching `ora` 5 on stdout.
 const FRAMES: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+/// Frame advance interval (`80 ms`) for the `ora` terminal spinner.
 const FRAME_INTERVAL: Duration = Duration::from_millis(80);
 
 /// ANSI styles used by Bit's install output.

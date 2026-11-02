@@ -7,6 +7,7 @@ use std::{cmp::Ordering, io};
 
 /// Maximum allowed byte length (`256`) of a semver version string.
 const MAX_LENGTH: usize = 256;
+/// `Number.MAX_SAFE_INTEGER` (`2^53 - 1`) upper bound for numeric semver components.
 const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 
 /// A parsed version. Prerelease identifiers keep their source text; numeric

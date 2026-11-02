@@ -37,6 +37,7 @@ impl Field {
         }
     }
 
+    /// Map a [`Lifecycle`] (`Runtime`, `Dev`, `Peer`) to its corresponding [`Field`].
     #[inline]
     pub(super) const fn of(lifecycle: Lifecycle) -> Self {
         match lifecycle {

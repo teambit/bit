@@ -28,6 +28,7 @@ pub(crate) fn source(
     Ok(source_record(directory, hash, maximum, compressed_total)?.body)
 }
 
+/// Verified `Source` object body along with its raw compressed bytes and inflated byte size.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SourceRecord {
     pub(crate) body: Vec<u8>,

@@ -10,7 +10,9 @@ pub use crate::policy::CORE_ENVS;
 use crate::{config::aspect_id_without_version, model::ComponentId};
 use serde_json::{Map, Value};
 
+/// Aspect ID of the built-in environments aspect (`teambit.envs/envs`).
 const ENVS_ASPECT: &str = "teambit.envs/envs";
+/// Extension data marker field (`__specific`) distinguishing component-specific model aspects.
 const SPECIFIC_FIELD: &str = "__specific";
 /// Default built-in environment ID (`teambit.harmony/node`) when no env aspect is configured.
 pub const DEFAULT_ENV: &str = "teambit.harmony/node";

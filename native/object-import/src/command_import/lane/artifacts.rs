@@ -34,6 +34,7 @@ impl PreparedImport {
         )
     }
 }
+/// Extract a required trimmed non-empty string field `key` from a `Lane` JSON [`Value`].
 #[inline]
 fn lane_field(lane: &Value, key: &str, msg: &'static str) -> io::Result<String> {
     lane[key]

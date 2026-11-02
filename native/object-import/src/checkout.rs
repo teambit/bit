@@ -25,7 +25,9 @@ use crate::protocol;
 
 /// Maximum number of files (`64`) accepted in a single checkout write batch.
 const MAX_FILES: u32 = 64;
+/// Maximum total byte budget (`32 MiB`) for a single checkout batch.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
+/// Maximum destination path byte length (`32 KiB`) accepted in a checkout batch.
 const MAX_PATH: usize = 32_768;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -20,6 +20,7 @@ use indexmap::IndexMap;
 /// Single `DependencyList` entry representing either a package or a workspace component dependency.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Dep<'a> {
+    /// Target package name in `node_modules`.
     pub(super) package_name: &'a str,
     pub(super) version: String,
     pub(super) lifecycle: Lifecycle,

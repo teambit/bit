@@ -17,6 +17,7 @@ pub(super) struct File {
     pub(super) alias_kind: &'static str,
     pub(super) alias_index: usize,
 }
+/// Apply a prepared checkout plan for `input` against `state` and compute file statuses and removals.
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Apply = serde_json::from_value(input).map_err(io::Error::other)?;
     let plan = state.plans

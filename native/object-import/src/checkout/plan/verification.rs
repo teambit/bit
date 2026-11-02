@@ -16,6 +16,7 @@ pub(crate) fn verify_manifest(
     let version = metadata(directory, hash(expected_hash.trim())?, "Version", compressed)?;
     verify_manifest_value(&version, expected)
 }
+/// Verify that a parsed `Version` [`Value`] has a file manifest matching `expected`.
 #[inline]
 pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Result<()> {
     let Some(items) = expected.as_array() else {

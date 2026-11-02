@@ -1,4 +1,4 @@
-//! Transitive `flattenedDependencies` [`closure`] traversal and unbuilt version filtering for import.
+//! Transitive `flattenedDependencies` [`closure`] traversal, remote-cache [`cached`] dependency merging, and unbuilt version filtering for import.
 
 use super::{
     PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,

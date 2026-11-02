@@ -15,6 +15,7 @@ pub(super) struct State {
     pub(super) plans: HashMap<String, Plan>,
     sequence: u64,
 }
+/// Prepared checkout plan holding spooled bodies, target manifests, current snapshots, and merge rows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     pub(super) bodies: Vec<Body>,

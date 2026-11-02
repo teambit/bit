@@ -18,6 +18,7 @@ pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,
     pub(super) normalized: Vec<u8>,
 }
+/// Load and verify current workspace `files` using optional retained `snapshots` and import `overlay`.
 pub(super) fn load_with_overlay(
     files: &[wire::Current],
     directory: &std::path::Path,

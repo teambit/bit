@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use verification::plain_tag;
-
+/// Maximum serialized JSON request size (`4 MiB`) accepted by checkout planning.
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
 

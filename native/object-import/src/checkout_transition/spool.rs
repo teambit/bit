@@ -24,6 +24,7 @@ pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: 
         offset = offset.saturating_add(body.contents.len());
     }
 }
+/// Write `bodies` either into a single packed `.checkout-pack` file or individual spool files.
 #[inline]
 pub(super) fn write(bodies: &[Body]) -> io::Result<()> {
     let Some(first) = bodies.first() else {

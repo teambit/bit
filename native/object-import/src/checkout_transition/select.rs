@@ -19,6 +19,7 @@ pub(super) struct State {
     sequence: u64,
     bytes: usize,
 }
+/// Stage in the multi-step component version selection state machine.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Stage {
     Unmerged,

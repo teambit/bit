@@ -17,6 +17,7 @@ pub(crate) struct SwitchTracking {
     after: Vec<u8>,
 }
 impl SwitchTracking {
+    /// Verify that `scope.json` on disk still matches the pre-write byte proof `before`.
     #[inline]
     pub(crate) fn validate(&self) -> io::Result<()> {
         if read(&self.path)? != self.before {

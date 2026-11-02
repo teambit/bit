@@ -12,9 +12,13 @@ use std::{
 
 /// Workspace `.bitmap` filename.
 pub const BITMAP: &str = ".bitmap";
+/// Legacy `.bit.map.json` fallback filename.
 const OLD_BITMAP: &str = ".bit.map.json";
+/// Top-level `.bitmap` key (`$schema-version`) storing the bitmap format version.
 const SCHEMA_FIELD: &str = "$schema-version";
+/// Top-level `.bitmap` key (`_bit_lane`) storing active lane metadata.
 const LANE_KEY: &str = "_bit_lane";
+/// Aspect ID (`teambit.component/remove`) marking soft-removed components in `.bitmap`.
 const REMOVE_ASPECT: &str = "teambit.component/remove";
 /// The root dir of the component that owns the workspace root.
 pub const WORKSPACE_ROOT_DIR: &str = ".";

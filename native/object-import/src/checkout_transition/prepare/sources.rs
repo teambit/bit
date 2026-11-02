@@ -9,6 +9,7 @@ use rayon::prelude::*;
 use std::{io, path::Path};
 /// Maximum total byte budget (`32 MiB`) for loading target and base `Source` blobs.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
+/// Pair of a 20-byte SHA-1 object hash and its verified [`repository::SourceRecord`].
 type Source = ([u8; 20], repository::SourceRecord);
 #[inline]
 pub(in crate::checkout_transition) fn load_with_overlay(

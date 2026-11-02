@@ -36,6 +36,7 @@ struct Parts<'a> {
 }
 
 impl<'a> Parts<'a> {
+    /// Extract major, minor, patch, and prerelease capture groups starting at `offset`.
     #[inline]
     fn new(groups: &[Option<&'a str>], offset: usize) -> Self {
         let group = |index: usize| {

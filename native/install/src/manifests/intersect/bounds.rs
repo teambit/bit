@@ -15,6 +15,7 @@ fn version_text(comparator: &Comparator) -> String {
         .unwrap_or_default()
 }
 
+/// Return `true` when `comparator`'s version includes a non-empty prerelease tag.
 #[inline]
 fn is_prerelease(comparator: &Comparator) -> bool {
     comparator.semver

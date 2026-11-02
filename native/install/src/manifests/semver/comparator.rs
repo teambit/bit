@@ -39,6 +39,7 @@ impl Comparator {
         Ok(Self::new(operator, semver))
     }
 
+    /// Construct a [`Comparator`] from `operator` and an optional [`SemVer`].
     #[inline]
     pub(crate) fn new(operator: &str, semver: Option<SemVer>) -> Self {
         let operator = if semver.is_some() { operator.trim() } else { "" };

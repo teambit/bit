@@ -53,6 +53,7 @@ use std::{
 /// The env of env components.
 pub(super) const ENV_OF_ENVS: &str = "teambit.envs/env";
 
+/// Loaded workspace state combining `.bitmap` entries, resolved [`WorkspaceComponent`]s, root `package.json`, and [`MergeConfig`].
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Workspace {
     pub root: PathBuf,

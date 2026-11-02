@@ -50,6 +50,7 @@ pub(super) fn model_from(
     }
     canonical(existing)
 }
+/// Intermediate merge plan for reconciling an incoming `Component` model with local scope state.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct MergePlan {
     plan: Value,

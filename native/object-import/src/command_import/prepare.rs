@@ -36,6 +36,7 @@ pub(crate) fn prepare(
     prepare_with_virtual(root, global_remotes_file, targets, &[])
 }
 
+/// Pre-fetched remote scope directory and raw loose objects supplied to [`prepare_with_virtual`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VirtualRemote {
     pub(crate) scope: String,

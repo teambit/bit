@@ -38,6 +38,7 @@ pub(super) fn apply(
     }
     Ok(None)
 }
+/// Apply a single merge row `kind` effect onto `files` and `status`.
 #[inline]
 fn effect(
     kind: &str,

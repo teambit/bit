@@ -21,7 +21,7 @@ pub fn binding_prefix_by_default_scope(scope: &str) -> String {
     format!("@{owner}")
 }
 
-/// `parseScope`: `owner.scope` → (owner, scope).
+/// `parseScope`: split `owner.scope` into `(Some(owner), Some(scope))` or `(None, Some(scope))`.
 #[inline]
 fn parse_scope(scope_id: Option<&str>) -> (Option<&str>, Option<&str>) {
     match scope_id

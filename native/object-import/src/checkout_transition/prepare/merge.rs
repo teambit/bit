@@ -54,6 +54,7 @@ pub(super) fn rows(
     }
     Ok(output)
 }
+/// Extract `output` and `conflict` byte buffers from `row` into `bodies` and record their plan indices.
 #[inline]
 fn retain(row: &mut Value, bodies: &mut Vec<plan::Body>, offset: usize) -> io::Result<()> {
     for (field, output) in [("output", "outputPlanIndex"), ("conflict", "conflictPlanIndex")] {

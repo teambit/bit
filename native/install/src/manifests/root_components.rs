@@ -61,7 +61,7 @@ fn env_dependencies(
         .collect()
 }
 
-/// `_getEnvPackage`: an external env's own package, pinned to the env version.
+/// `_getEnvPackage`: an external env's own package, pinned to the env version from `env_id`.
 fn env_package(input: &ManifestInput<'_>, env_id: &str) -> DependencyMap {
     let bare = without_version(env_id);
     if CORE_ENVS.contains(&bare) || in_workspace(input, bare) {

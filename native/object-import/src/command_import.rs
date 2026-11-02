@@ -37,6 +37,7 @@ pub(crate) struct Target {
     pub(crate) name: String,
     pub(crate) version: String,
 }
+/// In-memory overlay of staged scope [`Object`]s, remote refs, and lane refs for a prepared import.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Overlay {
     objects: HashMap<String, Object>,

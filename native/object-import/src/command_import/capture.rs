@@ -30,6 +30,7 @@ pub(super) struct Object {
     pub(super) source: Option<Vec<u8>>,
     pub(super) inflated_size: usize,
 }
+/// Read-only import capture state tracking SHA-256 file proofs, virtual files, and byte budgets.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Capture {
     proofs: HashMap<PathBuf, Option<[u8; 32]>>,

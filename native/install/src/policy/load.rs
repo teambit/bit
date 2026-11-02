@@ -17,7 +17,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// `getCoreEnvsIds()`.
+/// `getCoreEnvsIds()`: built-in core environment aspect IDs shipped with Bit.
 pub const CORE_ENVS: [&str; 10] = [
     "teambit.harmony/aspect",
     "teambit.react/react",

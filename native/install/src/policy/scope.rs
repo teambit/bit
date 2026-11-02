@@ -21,7 +21,9 @@ const MAX_OBJECT: u64 = 64 * 1024 * 1024;
 /// The workspace scope: `.bit`, or `.git/bit` in a git repository.
 #[derive(Debug, Clone)]
 pub struct Scope {
+    /// Path to the local `.bit` or `.git/bit` directory.
     path: PathBuf,
+    /// Optional content proof log populated when [`Scope::recording`] is active.
     proofs: Option<Arc<Mutex<Vec<Value>>>>,
 }
 

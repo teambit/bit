@@ -16,6 +16,7 @@ pub const FIELDS: [(&str, Lifecycle); 3] = [
 /// Options controlling source label, `force`, and `hidden` defaults in `VariantPolicy.fromConfigObject`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct VariantOptions {
+    /// Policy entry origin label (such as `"env"` or `"config"`).
     pub source: Option<&'static str>,
     pub force: Option<bool>,
     pub hidden: Option<bool>,

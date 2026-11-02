@@ -5,8 +5,8 @@ mod history;
 use super::{PreparedImport, Target, invalid, read_model, receive, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
-
 impl PreparedImport {
+    /// Stage missing `Version` or `Source` objects for `hashes` from `scope` into the import overlay.
     #[inline]
     pub(crate) fn prepare_lane_objects(
         &mut self,

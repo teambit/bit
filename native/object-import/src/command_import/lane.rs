@@ -16,6 +16,7 @@ use serde_json::Value;
 use std::io;
 use tracking::{component_identity_with_scope, hidden_entry};
 
+/// Validated `(scope, name)` lane identifier.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Id {

@@ -11,6 +11,7 @@ use std::io;
 /// Maximum total byte budget (`32 MiB`) for parallel workspace file loading.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
+/// Load and verify `files` in parallel under `MAX_BYTES`, falling back to [`serial`] on error.
 #[inline]
 pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec<Loaded>> {
     if files.is_empty() {

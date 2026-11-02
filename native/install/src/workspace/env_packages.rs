@@ -49,7 +49,7 @@ pub fn external_env_packages(
     Ok(packages)
 }
 
-/// `scope/name` (the scope may contain dots, the name slashes).
+/// Parse `scope/name` into a versionless [`ComponentId`] (the scope may contain dots, the name slashes).
 #[inline]
 fn bare_id(id: &str) -> ComponentId {
     let id = id.trim().trim_matches('/');

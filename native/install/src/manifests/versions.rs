@@ -69,7 +69,7 @@ pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
     Ok(condition_len > 0 && &valid[..condition_len] != "=")
 }
 
-/// `policy.getDepVersion(name, lifecycle)`: the first entry for the name and lifecycle.
+/// `policy.getDepVersion(name, lifecycle)`: the first entry in `entries` matching `name` and `lifecycle`.
 #[inline]
 pub(super) fn policy_version<'a>(
     entries: &'a [PolicyEntry],

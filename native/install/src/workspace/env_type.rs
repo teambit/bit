@@ -44,6 +44,7 @@ pub fn aspect_env_ids(
     Ok(ids)
 }
 
+/// Trim, filter empty entries, and deduplicate the initial `core` aspect environment ID list.
 #[inline]
 fn seed_core_ids(core: &[&str]) -> Vec<String> {
     let mut ids = Vec::with_capacity(core.len());

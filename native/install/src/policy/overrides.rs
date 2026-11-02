@@ -67,7 +67,7 @@ pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {
     result
 }
 
-/// `ComponentOverrides.getIgnoredPackages(field)`: names set to `-`.
+/// `ComponentOverrides.getIgnoredPackages(field)`: package names set to [`REMOVE`] (`"-"`) in `overrides`.
 #[must_use]
 #[inline]
 pub fn ignored(overrides: &FieldMaps, lifecycle: Lifecycle) -> Vec<String> {

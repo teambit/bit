@@ -8,6 +8,7 @@ use std::{io, path::PathBuf};
 pub(super) fn settings(value: &Value) -> io::Result<()> {
     settings_for_lane(value, false)
 }
+/// Validate a `scope.json` [`Value`], rejecting non-`main` active lanes unless `allow_lane` is `true`.
 #[inline]
 pub(in crate::command_import) fn settings_for_lane(
     value: &Value,

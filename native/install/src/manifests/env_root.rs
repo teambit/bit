@@ -33,6 +33,7 @@ pub(super) struct EnvRoot {
     pub(super) messages: Vec<String>,
 }
 
+/// Collect environment peer version requirements in [`super::load_order::load_order`] component order.
 fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
     let mut peers: IndexMap<String, PeerVersions> = IndexMap::new();
     for component in super::load_order::load_order(input.components) {

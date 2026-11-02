@@ -23,7 +23,9 @@ mod version;
 /// Major `semver` flavor (`V6` vs. `V7`) controlling desugared exclusive upper-bound suffixes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum Flavor {
+    /// `semver` 6 (`<2.0.0` upper bounds without `-0`).
     V6,
+    /// `semver` 7 (`<2.0.0-0` upper bounds with `-0`).
     V7,
 }
 

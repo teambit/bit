@@ -12,6 +12,7 @@ pub(super) struct Begin {
     pub(super) model: Option<Model>,
     pub(super) options: Options,
 }
+/// Component metadata descriptor in a checkout selection request.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Component {

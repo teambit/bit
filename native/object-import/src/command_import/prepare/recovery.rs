@@ -24,6 +24,7 @@ pub(super) fn retain<'a>(
     Ok((local, remote))
 }
 
+/// Return `true` when `model` has at least one locally staged (`state.versions[*].local == true`) version.
 #[inline]
 fn staged(model: &Value) -> bool {
     model["state"]["versions"]

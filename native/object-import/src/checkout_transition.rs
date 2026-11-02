@@ -20,6 +20,7 @@ pub(crate) struct State {
     select: select::State,
     plans: plan::State,
 }
+/// Dispatch a checkout transition operation (`kind`) against `state`.
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind.trim() {
         "checkoutApply" => apply::apply(input, &state.plans),

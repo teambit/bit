@@ -14,6 +14,7 @@ struct Record {
     compressed: usize,
     inflated: usize,
 }
+/// Framed response payload summarizing total binary bytes and per-file `[offset, len, compressed, inflated]` spans.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Output {

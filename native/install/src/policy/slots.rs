@@ -19,7 +19,7 @@ use std::io;
 /// One registration: the registering aspect ID and its `VariantPolicyConfigObject`.
 pub type Registration = (String, Value);
 
-/// The aspects Bit treats as core besides the manifest's core aspects.
+/// The aspects Bit treats as core besides the manifest's core aspects (`teambit.harmony/bit` and `teambit.harmony/config`).
 const RESERVED: [&str; 2] = ["teambit.harmony/bit", "teambit.harmony/config"];
 
 /// Aspect ID (`teambit.envs/env`) of environment plugins (`*.bit-env.*`).

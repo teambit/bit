@@ -67,7 +67,7 @@ pub struct InstallOptions {
     pub external_prompt: bool,
     /// `updateExisting` / `skipIfExisting` for packages added to the workspace policy.
     pub existing_entries: ExistingEntries,
-    /// `skipPrune`
+    /// `skipPrune`: skip pruning unreferenced virtual-store directories after install.
     pub skip_prune: bool,
     /// `optimizeReportForNonTerminal`: the package manager appends output lines.
     pub append_only: bool,

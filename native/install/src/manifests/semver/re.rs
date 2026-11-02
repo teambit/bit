@@ -25,9 +25,13 @@ pub(super) enum Token {
 
 /// Regex pattern matching strict non-leading-zero numeric semver identifiers.
 const NUMERIC: &str = r"0|[1-9]\d*";
+/// Regex pattern matching loose numeric semver identifiers (leading zeros permitted).
 const NUMERIC_LOOSE: &str = r"\d+";
+/// Regex pattern matching alphanumeric or hyphenated non-numeric semver identifiers.
 const NON_NUMERIC: &str = r"\d*[a-zA-Z-][a-zA-Z0-9-]*";
+/// Regex pattern matching build metadata identifiers.
 const BUILD_IDENTIFIER: &str = "[a-zA-Z0-9-]+";
+/// Regex capture group matching `<`, `<=`, `>`, `>=`, `=`, or empty comparator operators.
 const GTLT: &str = "((?:<|>)?=?)";
 
 #[inline]
