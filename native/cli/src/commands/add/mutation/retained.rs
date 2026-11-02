@@ -30,6 +30,7 @@ impl Retained {
         self.facts = super::selectors::Facts::default();
         self.started = false;
     }
+    /// Verifies that every retained proof for `before`'s path matches `before` and advances it to `after`.
     pub(super) fn advance_bitmap(&mut self, before: &Value, after: &Value) -> io::Result<()> {
         let target_path = trimmed_str(&before["path"])
             .ok_or_else(|| io::Error::other("fork bitmap preimage path"))?;

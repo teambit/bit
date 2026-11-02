@@ -64,6 +64,7 @@ fn apply_captured(component: &mut WorkspaceComponent, row: &Value) -> io::Result
     Ok(())
 }
 
+/// Returns `true` when `row`'s bare component identity matches `expected`.
 #[inline]
 fn matches_captured(row: &Value, expected: &str) -> bool {
     let expected = expected.trim();

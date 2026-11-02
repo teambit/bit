@@ -64,6 +64,7 @@ fn resolve_bare_literal_target(
     }])
 }
 
+/// Resolves a glob or comma-separated component `pattern` in a bare scope at `scope_dir`.
 fn resolve_bare_pattern_targets(
     scope_dir: &Path,
     scope_name: &str,

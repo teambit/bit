@@ -19,6 +19,7 @@ impl Repository {
         if host.eq_ignore_ascii_case("github.com") { repo } else { format!("{host}/{repo}") }
     }
 }
+/// Parses `GITHUB_SERVER_URL` from the environment when present and valid.
 #[inline]
 fn server() -> Option<Url> {
     env::var("GITHUB_SERVER_URL")

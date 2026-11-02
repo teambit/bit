@@ -56,6 +56,7 @@ fn json_report(
     serde_json::to_string_pretty(&Value::Object(output)).map_err(io::Error::other)
 }
 
+/// Selects a single file entry from `files` matching the normalized `requested` path.
 pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
     let normalized = requested
         .trim()

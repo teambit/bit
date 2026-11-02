@@ -44,6 +44,7 @@ pub(super) struct SyncOptions {
     pub init: bool,
 }
 
+/// Parsed subcommand and options for `bit ci`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Bare,

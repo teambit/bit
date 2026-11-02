@@ -6,6 +6,7 @@ mod json_color;
 
 use super::{Chalk, GLOBAL_HELP, inline_json_value, run_cmd};
 
+/// Returns the trimmed top-level command name (`app` or `apps`) from `argv`.
 #[inline]
 fn command_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     argv.first()

@@ -51,6 +51,7 @@ impl Chalk {
         self.enabled
     }
 
+    /// Wraps `text` in ANSI red when colors are enabled.
     #[inline]
     pub fn red(self, text: &str) -> String {
         self.apply(&[RED], text)

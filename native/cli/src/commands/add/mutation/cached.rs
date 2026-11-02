@@ -18,6 +18,7 @@ impl ProjectedLinker {
         let result = self.capture_cached_inner(root, bitmap, identities);
         self.finish(result)
     }
+    /// Loads any missing `identities` into `retained` and seeds cached provider classes against `bitmap`.
     fn capture_cached_inner(
         &mut self,
         root: &Path,

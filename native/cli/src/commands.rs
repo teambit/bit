@@ -129,6 +129,7 @@ pub struct Command {
     pub run: fn(&[OsString]) -> io::Result<Outcome>,
 }
 
+/// Static registry of all native CLI [`Command`] descriptors searched by [`find`].
 pub const COMMANDS: &[Command] = &[
     add::COMMAND,
     app_cmd::COMMAND,

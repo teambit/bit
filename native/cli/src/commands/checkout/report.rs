@@ -55,6 +55,7 @@ pub(in crate::commands) fn format_title(
     Ok(Report { data, code: 0, details: Some(details) })
 }
 
+/// Returns a non-empty trimmed version slice from `version`.
 #[inline]
 fn non_empty_trimmed(version: Option<&str>) -> Option<&str> {
     version

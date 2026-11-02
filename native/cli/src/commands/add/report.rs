@@ -29,6 +29,7 @@ pub(super) fn text(components: &[Value], warnings: &Value, chalk: Chalk) -> io::
         .collect::<Vec<_>>()
         .join("\n\n"))
 }
+/// Renders the tracked-files section for a single `component` using `formatter`.
 fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String> {
     let id = component_id(component)?;
     let files = component["files"]

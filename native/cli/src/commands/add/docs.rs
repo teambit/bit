@@ -39,6 +39,7 @@ pub(in crate::commands) struct Prepared {
     deferred: bool,
 }
 
+/// Observes sources, resolves [`cache_hits`], and stages [`Prepared`] documentation entries for `components`.
 pub(super) fn prepare(
     root: &Path,
     environment: &mut Environments,

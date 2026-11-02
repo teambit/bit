@@ -46,6 +46,7 @@ fn save_component_artifacts(
     Ok(count)
 }
 
+/// Reads a 40-hex `Source` object from `scope_dir` and writes it to `comp_path` when the relative path is safe.
 fn save_single_artifact_file(
     scope_dir: &Path,
     comp_path: &Path,

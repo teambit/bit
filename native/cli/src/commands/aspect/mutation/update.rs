@@ -30,6 +30,7 @@ pub(in crate::commands::aspect) struct UpdatePlan {
 }
 
 impl UpdatePlan {
+    /// Commits staged `component.json` and `.bitmap` edits and formats the `aspect update` summary.
     pub(super) fn commit(self, formatter: &Formatter, chalk: Chalk) -> io::Result<String> {
         for edit in self.comp_json_edits {
             fs::write(edit.path, edit.bytes)?;

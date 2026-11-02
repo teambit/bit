@@ -27,6 +27,7 @@ pub(super) struct ArtifactFile {
     pub hash: String,
 }
 
+/// Metadata and [`ArtifactFile`] entries for a single aspect build task artifact.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ArtifactItem {
     pub artifact_name: String,

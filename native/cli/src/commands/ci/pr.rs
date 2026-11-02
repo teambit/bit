@@ -64,6 +64,7 @@ impl WorkspaceSnapshot {
     }
 }
 
+/// Parses CLI tokens after `bit ci pr` into [`PrOptions`].
 pub(super) fn parse_pr(rest: &[&str]) -> Option<PrOptions> {
     let mut opts = PrOptions::default();
     let mut idx = 0;

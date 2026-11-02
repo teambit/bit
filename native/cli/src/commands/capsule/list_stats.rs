@@ -59,6 +59,7 @@ pub(super) fn collect(cwd: &Path, with_sizes: bool) -> io::Result<Vec<RootEntry>
         .collect())
 }
 
+/// Inspects a single capsule directory `path` and builds its [`RootEntry`] metadata.
 pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     let marker = path.join(ORIGIN_FILE);
     let origin = fs::read(&marker)

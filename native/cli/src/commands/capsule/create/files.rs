@@ -16,7 +16,7 @@ struct PackageComponentId<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     scope: Option<&'a str>,
 }
-
+/// Either a generated [`PackageComponentId`] or a pre-configured `componentId` JSON value.
 #[derive(Serialize)]
 #[serde(untagged)]
 enum PackageComponentIdValue<'a> {

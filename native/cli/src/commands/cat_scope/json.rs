@@ -62,6 +62,7 @@ fn insert_extra(map: &mut Map<String, Value>, hash: &str, json_extra: bool) {
     }
 }
 
+/// Derives the default `@<owner>` binding prefix from the leading segment of `scope`.
 #[inline]
 fn default_binding_prefix(scope: &str) -> String {
     let owner = scope

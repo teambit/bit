@@ -40,6 +40,7 @@ fn parse_concurrency_limit(value: &str) -> io::Result<usize> {
     }
     Ok(number)
 }
+/// Reads and parses a JSONC configuration file at `path`, returning `Value::Null` when absent.
 #[inline]
 fn read(path: &Path) -> io::Result<Value> {
     match fs::read(path) {

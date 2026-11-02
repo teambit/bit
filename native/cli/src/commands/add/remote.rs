@@ -66,6 +66,7 @@ fn remote_id_str(value: &Value) -> Option<String> {
     )
 }
 
+/// Returns `Some` trimmed string when `value` is a non-empty JSON string.
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

@@ -38,6 +38,7 @@ pub(super) fn prepare(
             proven: Vec::new(),
         })
 }
+/// Partitions `components` into cache hits, misses, and proven entries under the [`MAX_METADATA`] budget.
 fn partition(
     root: &Path,
     cache: &Path,

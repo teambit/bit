@@ -54,6 +54,7 @@ fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
     }
     Ok(None)
 }
+/// Normalizes `.` and `..` components in `path` without touching the filesystem.
 #[inline]
 fn normalize(path: &Path) -> PathBuf {
     let mut result = PathBuf::with_capacity(path.as_os_str().len());

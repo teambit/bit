@@ -33,7 +33,7 @@ pub(super) struct AspectSourceItem {
     pub source: &'static str,
     pub level: &'static str,
 }
-
+/// Raw aspect origin layer and its [`AspectEntry`] list before provenance merging.
 pub(super) struct RawOrigin {
     pub source: &'static str,
     pub level: &'static str,

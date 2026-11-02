@@ -34,6 +34,7 @@ pub(super) struct Options {
     pub out_dir: Option<String>,
 }
 
+/// Executes `bit artifacts`, dispatching workspace, bare-scope, and outside-workspace invocations.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("artifacts arguments are not UTF-8".into()));

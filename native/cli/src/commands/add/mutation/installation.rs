@@ -7,7 +7,7 @@ use serde_json::json;
 use std::{ffi::OsString, io, path::Path, sync::Arc};
 
 impl ProjectedLinker {
-    /// Prepare process facts before native inventory or dependency worker threads start.
+    /// Prepare [`Environments`] and [`bit_install::HostInfo`] process facts before native inventory or dependency worker threads start.
     pub(in crate::commands) fn prepare_with_installation(
         root: &Path,
         args: &[OsString],

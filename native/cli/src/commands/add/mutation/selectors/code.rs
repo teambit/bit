@@ -67,6 +67,7 @@ fn target(
         json!({"identity":id,"version":version,"directory":component.root_dir,"files":component.files,"current":current}),
     ))
 }
+/// Resolves the stored `[hash, version_object]` pair for component `id` at `version` from `context`.
 #[inline]
 fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Value> {
     let id = id.trim();

@@ -71,6 +71,7 @@ impl ProjectedLinker {
         Ok(grammar::identities(&selected))
     }
 
+    /// Requests `trackingContext` from [`Engine`], validates control proofs via [`controls::validate`], and retains them.
     fn selection_context(&mut self, root: &Path, bitmap: &Value) -> io::Result<Value> {
         let mut engine = Engine::new()?;
         let context: Value = engine.request(&json!({"kind":"trackingContext","root":root,

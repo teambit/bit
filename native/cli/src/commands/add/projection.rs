@@ -31,6 +31,7 @@ impl Projection {
     }
 }
 
+/// Loads the projected [`Workspace`] from `bitmap` and `context` and constructs a [`Projection`].
 pub(super) fn prepare(
     root: &Path,
     bitmap: &Value,

@@ -15,6 +15,7 @@ struct RootPackage<'a> {
     bit_capsule: bool,
 }
 
+/// Serialized `.bit-capsule-origin.json` marker recording capsule origin path, timestamp, and kind.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct OriginMarker<'a> {

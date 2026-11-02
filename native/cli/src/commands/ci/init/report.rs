@@ -16,6 +16,7 @@ pub(super) struct Report {
     pub target: Target,
     pub changes: Changes,
 }
+/// Target scope, repository, and default branch metadata for the `bit ci init` report.
 pub(super) struct Target {
     pub scope: String,
     pub repository: Option<remote::Repository>,

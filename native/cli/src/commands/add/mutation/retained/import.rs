@@ -57,6 +57,7 @@ impl Retained {
         }
         Ok(())
     }
+    /// Validates unique write receipts in `writes` against retained preimages and on-disk postimages.
     fn import_replacements(&self, writes: &[Value]) -> io::Result<Vec<(Value, Value)>> {
         let mut seen = HashSet::with_capacity(writes.len());
         let mut replacements = Vec::new();

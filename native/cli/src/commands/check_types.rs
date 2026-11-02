@@ -32,6 +32,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+/// Executes `bit check-types`, delegating when outside the native grammar or in CI.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("check-types arguments are not UTF-8".into()));

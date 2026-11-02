@@ -57,6 +57,7 @@ fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<Str
         chalk.dim("optional: a GitHub token, so the pushes the sync makes start your other workflows (CI checks)"),
     ]
 }
+/// Returns the trimmed target scope name or `"<scope>"` when unset.
 #[inline]
 fn scope_or_placeholder(input: &Report) -> &str {
     match input.target.scope.trim() {

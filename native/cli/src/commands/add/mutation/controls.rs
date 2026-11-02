@@ -44,6 +44,7 @@ pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
     Ok(())
 }
 
+/// Extracts a validated absolute filesystem path without parent-directory traversal from `proof`.
 #[inline]
 fn proof_path(proof: &Value) -> Option<&str> {
     proof

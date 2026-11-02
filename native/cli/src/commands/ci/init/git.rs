@@ -18,6 +18,7 @@ fn run(root: &Path, args: &[&str]) -> Option<String> {
 pub(super) fn origin(root: &Path) -> Option<String> {
     run(root, &["remote", "get-url", "origin"]).filter(|value| !value.is_empty())
 }
+/// Resolves the Git repository top-level directory containing `root`.
 #[inline]
 pub(super) fn repository_root(root: &Path) -> Option<PathBuf> {
     run(root, &["rev-parse", "--show-toplevel"])

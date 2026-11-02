@@ -34,6 +34,7 @@ pub(super) struct CapsuleFlags {
     pub reinstall: bool,
 }
 
+/// Pipeline task filter and execution flags for `bit build`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct PipelineFlags {
     pub tasks: Option<String>,

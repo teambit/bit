@@ -46,6 +46,7 @@ pub(super) enum Subcommand {
     Create(create::CreateArgs),
 }
 
+/// Resolved workspace, scope-aspects, and bare-scope capsule root directory paths.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct CapsuleRootDirs {
     pub workspace: Option<String>,

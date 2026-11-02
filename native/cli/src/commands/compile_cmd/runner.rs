@@ -27,6 +27,7 @@ struct Diagnostic {
     path: PathBuf,
     message: String,
 }
+/// Aggregated emitted files and diagnostics for a single compiled component.
 struct Compiled {
     identity: String,
     files: Vec<Emitted>,

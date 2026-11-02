@@ -35,7 +35,7 @@ struct Options {
     json: bool,
     json_extra: bool,
 }
-
+/// Rendered `ModelComponent` row and optional JSON payload for `bit cat-scope`.
 struct ScopeEntry {
     id: String,
     hash: String,

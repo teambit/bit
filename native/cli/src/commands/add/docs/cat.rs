@@ -52,6 +52,7 @@ impl CatDocs {
         &self.plan.misses
     }
 
+    /// Returns the component entries tracked by this [`CatDocs`] session.
     #[inline]
     pub(in crate::commands) fn components(&self) -> &[Value] {
         &self.components

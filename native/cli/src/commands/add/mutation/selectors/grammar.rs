@@ -46,6 +46,7 @@ pub(super) fn loads(criterion: &str) -> bool {
     let criterion = criterion.trim();
     matches!(criterion, "$modified" | "$deprecated" | "$deleted") || criterion.starts_with("$env:")
 }
+/// Collects bare component identity strings from `targets` in slice order.
 #[inline]
 pub(super) fn identities(targets: &[Value]) -> Vec<String> {
     targets

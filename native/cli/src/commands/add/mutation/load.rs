@@ -37,6 +37,7 @@ pub(super) fn prepare(
 ) -> io::Result<Loaded> {
     prepare_with(root, bitmap, identities, environment, stdout, true)
 }
+/// Prepares [`Loaded`] component metadata for `identities`, optionally invalidating the dependency cache first.
 fn prepare_with(
     root: &Path,
     bitmap: &Value,

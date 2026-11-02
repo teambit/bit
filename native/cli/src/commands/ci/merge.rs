@@ -36,6 +36,7 @@ pub(in crate::commands) struct MergeOptions {
     pub skip_push: bool,
 }
 
+/// Parses CLI tokens after `bit ci merge` into [`MergeOptions`].
 pub(super) fn parse_merge(rest: &[&str]) -> Option<MergeOptions> {
     let mut opts = MergeOptions::default();
     let mut idx = 0;

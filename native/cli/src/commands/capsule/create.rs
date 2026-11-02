@@ -55,7 +55,7 @@ struct CreatedCapsule {
     id: String,
     path: String,
 }
-
+/// Categorizes capsule creation failures by whether any filesystem write has occurred.
 enum BuildError {
     BeforeWrite,
     AfterWrite(io::Error),

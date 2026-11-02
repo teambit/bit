@@ -45,6 +45,7 @@ fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
     }
     fs::write(path, content).map_err(|error| failure(error, "open", path))
 }
+/// Renders a workflow template by substituting the default branch and optional `ws-dir` comment.
 #[inline]
 fn render(raw: &str, marker: &str, branch: &str, workspace_dir: &str) -> String {
     let branch = super::trim(branch);

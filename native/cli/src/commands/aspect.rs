@@ -41,6 +41,7 @@ pub const COMMAND: Command = Command { name: "aspect", aliases: &[], run };
 pub(super) const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
+/// Parsed CLI flags for `bit aspect list`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ListOpts {
     pub pattern: Option<String>,

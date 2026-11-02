@@ -3,7 +3,7 @@
 //! Removes `.bitTmp` when it exists as a live filesystem entry under the workspace root.
 use std::{fs, io, path::Path};
 
-/// Removes `.bitTmp` under `root` when present as a live filesystem entry.
+/// Removes `.bitTmp` under `root` via [`has_temporary_path`] when present as a live filesystem entry.
 #[inline]
 pub(super) fn temporary(root: &Path) -> io::Result<()> {
     // Published pathExists follows symlinks and treats inaccessible/missing paths

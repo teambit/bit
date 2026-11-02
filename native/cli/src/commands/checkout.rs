@@ -35,6 +35,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_options(args, &argv, &options)
 }
 
+/// Returns `true` when the `CI` environment variable is set to a truthy non-zero value.
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

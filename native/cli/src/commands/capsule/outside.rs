@@ -56,6 +56,7 @@ fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> i
     run_outside_failure(chalk, "create", args.json, error)
 }
 
+/// Handles `bit capsule create` inside a bare scope when no workspace exists.
 pub(super) fn run_create_in_bare_scope(
     chalk: Chalk,
     command_args: &[OsString],

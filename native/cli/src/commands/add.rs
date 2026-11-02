@@ -78,6 +78,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, &cwd, args, &options)
 }
 
+/// Prepares and executes `bit add` inside a verified workspace `root` from `cwd`.
 #[inline]
 fn run_workspace(
     root: &Path,

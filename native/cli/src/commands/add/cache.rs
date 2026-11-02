@@ -29,6 +29,7 @@ pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
     capture.cache.block_dependencies(&identities);
 }
 
+/// Strips any trailing `@version` suffix from `value` and returns the trimmed component identity.
 #[inline]
 fn identity(value: &str) -> &str {
     let trimmed = value.trim();

@@ -20,7 +20,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
-/// Retained provider and source-spool session shared across native workspace identity mutations.
+/// Retained [`Environments`] provider and [`retained::Retained`] source-spool session shared across native workspace identity mutations.
 pub(in crate::commands) struct ProjectedLinker {
     environment: Option<Environments>,
     stdout: String,

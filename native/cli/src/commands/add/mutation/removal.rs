@@ -58,6 +58,7 @@ impl ProjectedLinker {
     }
 }
 
+/// Strips `@version` suffixes and deduplicates non-empty component `ids` while preserving first-seen order.
 #[inline]
 fn normalize_ids(ids: &[String]) -> Vec<String> {
     let mut seen = std::collections::HashSet::with_capacity(ids.len());

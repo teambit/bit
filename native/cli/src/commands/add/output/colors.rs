@@ -32,6 +32,7 @@ pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     }
     io::Error::new(error.kind(), Colored { message: chalk.red(&message), source: error })
 }
+/// Returns `true` when `error`'s source chain already contains a [`CallbackError`](crate::host::callback_error::CallbackError) or [`Colored`] wrapper.
 #[inline]
 fn has_colored_or_callback(error: &io::Error) -> bool {
     std::iter::successors(

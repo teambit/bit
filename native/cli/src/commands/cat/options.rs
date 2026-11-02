@@ -32,6 +32,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     options.id.map(|_| options)
 }
 
+/// Consumes a single flag or positional component ID token in `bit cat`, returning the step count.
 fn apply_cat_arg<'a>(
     options: &mut Options<'a>,
     arg: &'a str,

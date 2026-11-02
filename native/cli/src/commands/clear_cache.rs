@@ -48,6 +48,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Executes `ClearCacheAction` against the HTTP remote `remote` and prints the summary report.
 fn run_remote(cwd: &Path, args: &[OsString], remote: &str) -> io::Result<Outcome> {
     let remote = remote.trim();
     let Ok(Some(plan)) = remote_action::prepare(cwd, remote, true, false) else {

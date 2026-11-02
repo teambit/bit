@@ -18,6 +18,7 @@ pub(super) struct Source {
     modified: SystemTime,
 }
 impl Source {
+    /// Returns the raw byte slice of this observed [`Source`].
     #[inline]
     pub(super) fn bytes(&self) -> &[u8] {
         &self.bytes

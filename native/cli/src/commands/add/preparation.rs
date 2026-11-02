@@ -67,6 +67,7 @@ fn context(
     Ok((context, preflight))
 }
 
+/// Resolves `--env` tracking configuration via `environments` and marks `startup.committed` when an env is requested.
 fn environment_options(
     root: &Path,
     options: &options::Options,

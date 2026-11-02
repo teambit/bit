@@ -48,6 +48,7 @@ fn node_like(env: BuiltinEnv, dev: &mut Map<String, Value>) {
     }
 }
 
+/// Populates default runtime, dev, and peer dependencies for React-like builtin capsule environments.
 fn react_like(
     env: BuiltinEnv,
     runtime: &mut Map<String, Value>,

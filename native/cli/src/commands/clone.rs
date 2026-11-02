@@ -27,6 +27,7 @@ pub(super) struct Options {
     pub skip_dependency_installation: bool,
 }
 
+/// Executes `bit clone`, validating workspace boundaries and outside-workspace target paths.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("clone arguments are not UTF-8".into()));

@@ -42,6 +42,7 @@ struct DebugReport {
     final_entries: Vec<AspectEntry>,
 }
 
+/// Executes `bit aspect get --debug` in text or `--json` mode.
 pub(super) fn run_get_debug(
     root: &Path,
     args: &[OsString],
