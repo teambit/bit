@@ -4,6 +4,7 @@
 use super::{EngineError, READ_PACKAGE_HOOKS_CHECKSUM, VIRTUAL_STORE_DIR_MAX_LENGTH};
 use pretty_assertions::assert_eq;
 
+/// Verifies that [`EngineError`] formats error messages and hints identically to Bit's pnpm error renderer.
 #[test]
 fn engine_errors_render_like_bit_renders_pnpm_errors() {
     let error = EngineError {

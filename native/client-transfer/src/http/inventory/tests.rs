@@ -10,6 +10,7 @@ use std::{
     thread,
 };
 
+/// Verifies that omitted namespaces are left out of `GraphQL` list variables rather than serialized as `null`.
 #[test]
 fn omitted_namespace_is_not_serialized_as_null() {
     assert_eq!(list_variables(None, false), json!({}));

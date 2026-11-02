@@ -11,6 +11,7 @@ use tempfile::TempDir;
 /// Echoes its command-line arguments so a delegated run is recognizable.
 const STUB: &str = "process.stdout.write(JSON.stringify(process.argv.slice(2)));";
 
+/// Isolated temporary workspace fixture for `bit mini-status --json` tests.
 struct Workspace {
     dir: TempDir,
 }

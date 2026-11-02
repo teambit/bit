@@ -3,6 +3,7 @@
 
 use crate::helper::Helper;
 
+/// Verifies `--detach-head` patch maintenance on older major branches and `bit export` flows.
 #[test]
 fn detached_head_branches_and_export_flows() {
     let helper = Helper::new();

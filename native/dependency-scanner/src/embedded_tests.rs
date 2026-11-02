@@ -6,6 +6,7 @@ use rayon::ThreadPoolBuilder;
 use serde_json::json;
 use std::fmt::Write;
 
+/// Verifies that invalid schema versions, oversized file arrays, and unbounded payloads are declined.
 #[test]
 fn embedded_declines_invalid_or_unbounded_requests() {
     let pool = ThreadPoolBuilder::new()

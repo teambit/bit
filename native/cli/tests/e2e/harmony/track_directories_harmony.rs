@@ -21,6 +21,8 @@ use serde_json::json;
 /// - `track directories functionality › add a directory as authored › importing the component › should not change the rootDir`
 /// - `track directories functionality › add multiple directories › should add rootDir property for each one of the directories`
 /// - `track directories functionality › adding files to sub-directories › the files on the sub-dir should be auto-tracked`
+///
+/// Verifies `rootDir` directory tracking, file auto-discovery, and parent directory promotion in `.bitmap`.
 #[test]
 fn track_directories_functionality() {
     let helper = Helper::new();

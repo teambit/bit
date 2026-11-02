@@ -1,4 +1,4 @@
-//! End-to-end miscellaneous Harmony workspace and scope parity tests (`status`, `show`, `graph`, `link`, `preview`) for:
+//! End-to-end miscellaneous Harmony workspace and scope parity suites (`status`, `show`, `graph`, `link`, `preview`) for:
 //! - `e2e/harmony/corrupted-objects.e2e.ts`
 //! - `e2e/harmony/load-bit.e2e.ts`
 //! - `e2e/harmony/node-linker.e2e.ts`

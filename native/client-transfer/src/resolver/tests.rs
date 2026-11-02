@@ -7,6 +7,7 @@ use serde_json::json;
 use std::{fs, path::PathBuf};
 use tempfile::TempDir;
 
+/// Builds a single-threaded Tokio runtime for synchronous resolver test execution.
 fn runtime() -> tokio::runtime::Runtime {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()

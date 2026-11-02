@@ -4,6 +4,7 @@
 use super::{assert_safe_transition, recorded_virtual_store_dir};
 use std::fs;
 
+/// Verifies that [`recorded_virtual_store_dir`] parses JSON and YAML `virtualStoreDir` fields from `.modules.yaml`.
 #[test]
 fn reads_the_recorded_virtual_store_dir() {
     assert_eq!(

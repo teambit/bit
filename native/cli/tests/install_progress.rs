@@ -9,6 +9,7 @@ const FRAME: &str =
 const BANNER: &str =
     "Packages are hard linked from the content-addressable store to the virtual store.\n";
 
+/// Verifies that an optional startup timer frame projects to the identical banner and remaining output.
 #[test]
 fn startup_timer_sample_projects_to_the_identical_banner_and_remaining_output() {
     let remaining = "  Content-addressable store is at: fixture\nPackages: +1\nProgress: resolved 1, reused 0, downloaded 0, added 1, done\n- compiling components\n";

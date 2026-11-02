@@ -9,6 +9,7 @@ use crate::helper::{
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs};
 
+/// Verifies that missing external model objects fall back to saved graph adjacency like the Node.js CLI.
 #[test]
 fn missing_external_model_uses_saved_adjacency_like_node() {
     let helper = Helper::new();

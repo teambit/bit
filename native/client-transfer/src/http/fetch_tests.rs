@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 
+/// Builds an in-memory tar object archive with `.BIT.START` and an optional `.BIT.END` trailer.
 fn archive(end: bool) -> Vec<u8> {
     let mut tar = tar::Builder::new(Vec::new());
     let mut entries = vec![

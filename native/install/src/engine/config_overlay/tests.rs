@@ -12,7 +12,7 @@ use pnpm_config::{LinkWorkspacePackages, NodeLinker};
 use pretty_assertions::assert_eq;
 use serde_json::json;
 
-/// The settings of an empty workspace, and the directory that holds it.
+/// Builds the engine settings of an empty temporary workspace and returns both its directory and settings.
 fn engine_settings(
     config: &DependencyResolverConfig,
     global: &GlobalConfig,

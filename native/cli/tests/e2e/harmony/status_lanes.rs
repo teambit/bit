@@ -6,6 +6,7 @@ use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs, io::Read, path::Path};
 
+/// Decompresses a zlib-encoded object file from `path` into raw bytes.
 fn inflated(path: &Path) -> Vec<u8> {
     let mut decoder = ZlibDecoder::new(fs::File::open(path).unwrap());
     let mut body = Vec::new();

@@ -3,6 +3,7 @@
 
 use super::{read, read_bounded};
 use std::io::{self, Read};
+/// Packs `(name, bytes)` entries into an in-memory GNU tar archive.
 fn archive(entries: &[(&str, &[u8])]) -> Vec<u8> {
     let mut archive = tar::Builder::new(Vec::new());
     for (name, bytes) in entries {

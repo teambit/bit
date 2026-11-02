@@ -17,6 +17,7 @@ use std::{
     sync::Mutex,
 };
 
+/// Mock [`Host`] recording IPC calls and package.json transformations during component linking tests.
 #[derive(Default)]
 struct FakeHost {
     calls: Mutex<Vec<String>>,

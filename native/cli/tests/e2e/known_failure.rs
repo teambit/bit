@@ -9,6 +9,7 @@ pub struct KnownFailure {
     pub reason: String,
 }
 
+/// Result alias for E2E operations that fail with [`KnownFailure`] when delegating to the Node.js CLI.
 pub type KnownResult<Value> = Result<Value, KnownFailure>;
 
 /// Continue a ported case only once its command runs natively.

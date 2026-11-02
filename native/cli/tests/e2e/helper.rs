@@ -22,7 +22,7 @@ use std::{
 };
 use tempfile::TempDir;
 
-/// `e2e-scopes.ts`: the case's directory and the scopes in it.
+/// `e2e-scopes.ts`: the test case's directory and local/remote scope paths.
 pub struct Scopes {
     pub e2e_dir: PathBuf,
     pub local_path: PathBuf,

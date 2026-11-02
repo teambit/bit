@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 
+/// Verifies that HTTP action requests send canonical route headers and JSON bodies.
 #[test]
 fn action_posts_canonical_route_headers_and_json() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

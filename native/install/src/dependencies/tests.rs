@@ -1,5 +1,5 @@
 //! Unit tests for dependency detection ([`detect`], [`Detected`]), resolution ([`Resolver`], [`Resolved`]), and computation ([`compute`])
-//! across workspace components in `bit-install`.
+//! across workspace components and policies in `bit-install`.
 
 use super::{
     DEFAULT_DEV_PATTERNS, DependencyOptions, DevPatternConfig, Subject, Workspace, cache, compute,

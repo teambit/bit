@@ -8,7 +8,7 @@ use std::fs;
 /// workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments above the workspace aspect
 /// workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should preserve comments inside the workspace aspect object
 /// workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should update the defaultScope value
-/// workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should not lose any other properties
+/// workspace config (workspace.jsonc) › comment preservation in workspace.jsonc › when changing defaultScope using workspace config API › should not lose any other properties.
 #[test]
 fn comment_preservation_in_workspace_jsonc() {
     let helper = Helper::new();

@@ -3,6 +3,7 @@
 
 use super::proves_empty_docs;
 
+/// Verifies that unexported test callbacks and definitions are proven to have empty documentation.
 #[test]
 fn unexported_test_callbacks_and_definitions_match_released_empty_documentation() {
     for source in [

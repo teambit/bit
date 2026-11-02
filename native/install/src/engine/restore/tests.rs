@@ -12,6 +12,7 @@ use pretty_assertions::assert_eq;
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, path::Path};
 
+/// Extracts the inner [`Map`] from a JSON object [`Value`], panicking if it is not an object.
 fn object(value: Value) -> Map<String, Value> {
     match value {
         Value::Object(object) => object,

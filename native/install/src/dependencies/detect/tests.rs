@@ -10,6 +10,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::{fs, path::Path};
 
+/// Verifies that detected core aspects follow file tree order and repeat for each file origin.
 #[test]
 fn core_aspects_follow_tree_order_and_repeat_for_each_origin() {
     let temporary = tempfile::tempdir().unwrap();

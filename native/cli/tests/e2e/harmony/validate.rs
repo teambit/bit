@@ -3,6 +3,7 @@
 
 use crate::helper::Helper;
 
+/// Verifies `bit validate` across clean components, type/lint errors, `--skip-tasks`, `--unmodified`, and component patterns.
 #[test]
 fn validate_clean_type_errors_lint_errors_skip_tasks_unmodified_pattern_and_empty() {
     let helper = Helper::new();

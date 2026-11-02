@@ -5,6 +5,7 @@ use super::{format, seconds};
 use crate::output::Output;
 use std::{sync::Arc, time::Duration};
 
+/// Creates a quiet test [`Output`] sink with ANSI colors disabled.
 fn output() -> Output {
     Output::new(false, false, true, Arc::new(|_: &str| {}))
 }

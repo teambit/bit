@@ -11,6 +11,7 @@ pub fn read_jsonc(path: &Path) -> Value {
     serde_json::from_str(&strip_comments(&text)).unwrap()
 }
 
+/// Writes `value` to `path` as pretty-printed JSON using `indent`.
 pub fn write_json(path: &Path, value: &Value, indent: &[u8]) {
     let mut out = Vec::new();
     let formatter = serde_json::ser::PrettyFormatter::with_indent(indent);

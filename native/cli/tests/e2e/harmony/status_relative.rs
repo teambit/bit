@@ -4,6 +4,7 @@
 use crate::helper::Helper;
 use std::{ffi::OsStr, fmt::Write as _};
 
+/// Asserts that `bit status --json` output and exit code match the Node.js CLI on a cloned workspace.
 fn parity(helper: &Helper) {
     let root = helper.clone_workspace();
     let expected =

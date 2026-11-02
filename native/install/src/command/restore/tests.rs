@@ -9,6 +9,7 @@ use super::{
 use crate::options::InstallOptions;
 use serde_json::json;
 
+/// Verifies that explicit dependency graphs restore best-effort unless `restore: true` is set.
 #[test]
 fn an_explicit_graph_is_restored_best_effort_unless_restore_is_set() {
     assert_eq!(explicit(&InstallOptions::default()), None);

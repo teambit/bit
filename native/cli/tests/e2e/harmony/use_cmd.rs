@@ -4,6 +4,7 @@
 use crate::helper::Helper;
 use std::fs;
 
+/// Creates a minimal local aspect component named `name` and assigns it the `teambit.harmony/aspect` env.
 fn create_aspect(helper: &Helper, name: &str) {
     let remote = &helper.scopes.remote;
     let dir = format!("{remote}/{name}");

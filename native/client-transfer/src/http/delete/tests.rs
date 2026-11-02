@@ -12,6 +12,7 @@ use std::{
     time::Duration,
 };
 
+/// Builds a test [`Network`] client configured with 2 fetch retries and optional [`Cancellation`].
 fn network(cancellation: Option<Cancellation>) -> Network {
     let mut global = GlobalConfig::new();
     global.insert("network.fetch_retries".to_owned(), json!(2));

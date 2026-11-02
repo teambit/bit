@@ -28,6 +28,7 @@ pub struct Shared {
     pub bare_scope_template: PathBuf,
 }
 
+/// Returns the process-wide [`Shared`] E2E test environment, initializing templates once on first access.
 pub fn shared() -> &'static Shared {
     static SHARED: OnceLock<Shared> = OnceLock::new();
     SHARED.get_or_init(|| {

@@ -1,4 +1,4 @@
-//! End-to-end Jest, Mocha, and multi-tester integration tests ([`PASSING_JEST_SPEC`], [`PASSING_MOCHA_SPEC`]) for:
+//! End-to-end Jest, Mocha, and multi-tester integration suites ([`PASSING_JEST_SPEC`], [`PASSING_MOCHA_SPEC`]) for:
 //! - `e2e/harmony/jest.e2e.ts`
 //! - `e2e/harmony/mocha-tester.e2e.ts`
 //! - `e2e/harmony/mocha-tester-spec-files.e2e.ts`

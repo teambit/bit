@@ -6,6 +6,7 @@ use crate::{jsonc::Document, model::DependencyMap};
 use serde_json::json;
 use std::fs;
 
+/// Converts `(name, range)` pairs into an ordered [`DependencyMap`].
 fn dependencies(entries: &[(&str, &str)]) -> DependencyMap {
     entries
         .iter()

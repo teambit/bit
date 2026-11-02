@@ -8,6 +8,7 @@ use crate::model::{
 };
 use serde_json::{Map, Value, json};
 
+/// Builds a [`WorkspaceComponent`] fixture for `ui/button` with optional `scope` and `version`.
 fn component(scope: Option<&str>, version: Option<&str>) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {

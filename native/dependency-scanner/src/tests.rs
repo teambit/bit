@@ -4,6 +4,7 @@
 use super::{File, scan};
 use serde_json::json;
 
+/// Builds an in-memory [`File`] fixture with extension `kind` and inline `source`.
 fn fixture(kind: &str, source: &str) -> File {
     File { path: format!("fixture.{kind}"), source: Some(source.into()), kind: None }
 }

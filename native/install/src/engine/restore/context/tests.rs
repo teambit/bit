@@ -4,6 +4,7 @@
 use super::{graph, merge};
 use serde_json::{Value, json};
 
+/// Verifies that legacy `pnpmfileChecksum` values become default overrides only when explicit overrides are absent.
 #[test]
 fn legacy_checksums_become_overrides_only_without_explicit_overrides() {
     let legacy =

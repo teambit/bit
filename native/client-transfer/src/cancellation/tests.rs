@@ -3,6 +3,7 @@
 
 use super::Cancellation;
 use std::{future, io};
+/// Verifies that pre-cancelled operations fail with `Interrupted` without polling the transport future.
 #[test]
 fn cancelled_operations_never_poll_the_transport() {
     let cancellation = Cancellation::new();

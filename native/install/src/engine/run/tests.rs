@@ -12,6 +12,7 @@ use pnpm_lockfile::Lockfile;
 use serde_json::{Map, Value, json};
 use std::{fs, path::Path};
 
+/// Extracts the inner [`Map`] from a JSON object [`Value`] for lockfile assertions.
 fn object(value: Value) -> Map<String, Value> {
     match value {
         Value::Object(object) => object,

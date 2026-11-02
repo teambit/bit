@@ -8,6 +8,7 @@ use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 use std::fs;
 
+/// Builds a [`GlobalConfig`] map from `(key, value)` pairs.
 fn global(entries: &[(&str, Value)]) -> GlobalConfig {
     entries
         .iter()

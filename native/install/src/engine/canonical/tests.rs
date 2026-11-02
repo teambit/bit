@@ -10,6 +10,7 @@ use crate::host::HostInfo;
 use serde_json::{Value, json};
 use std::{path::Path, time::Duration};
 
+/// Builds a baseline canonical pnpm install request JSON payload rooted at `root`.
 fn request(root: &Path) -> Value {
     let mut input = json!({
         "rootDir":root,

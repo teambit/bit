@@ -10,6 +10,7 @@ use pretty_assertions::assert_eq;
 /// [`Compiler`]'s. The last entry is `ignore().add(['zzz']).add(['!zzz'])`.
 const FIXTURES: &str = include_str!("node_ignore_3_3_10.json");
 
+/// Verifies that compiled rule regex sources and negations match `node-ignore` 3.3.10 across cached entries.
 #[test]
 fn matches_node_ignore_sources_and_cache() {
     let fixtures: Vec<(String, Vec<(String, bool)>)> = serde_json::from_str(FIXTURES).unwrap();

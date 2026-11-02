@@ -11,7 +11,7 @@ use std::{
     time::Duration,
 };
 
-/// Answer one request with `body` and return what was received.
+/// Answers one HTTP request with `body` and returns the received request string.
 fn serve_once(body: &'static str) -> (String, thread::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

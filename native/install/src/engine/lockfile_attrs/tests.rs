@@ -6,6 +6,7 @@ use pretty_assertions::assert_eq;
 use serde_json::{Map, Value, json};
 use std::fs;
 
+/// Baseline `pnpm-lock.yaml` fixture containing a `bit:` custom attributes block.
 const LOCKFILE: &str = "lockfileVersion: '9.0'
 
 settings:

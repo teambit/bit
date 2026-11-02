@@ -4,6 +4,7 @@
 use super::super::{LinkKind, create_link_or_symlink, hard_link_directory};
 use std::{fs, path::Path};
 
+/// Verifies that [`LinkKind::Symlink`] creates an absolute symlink pointing to `src`.
 #[test]
 fn symlink_kind_creates_an_absolute_symlink() {
     let dir = tempfile::tempdir().unwrap();
