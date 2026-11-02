@@ -63,6 +63,7 @@ fn new_rename_reloads_the_target_consumer_after_renaming_the_bitmap_identity() {
     assert!(text.contains("comp2"));
 }
 
+/// Verifies that a target `onLoad` failure during `bit rename` keeps the renamed `.bitmap` entry without writing target files.
 #[test]
 fn target_onload_failure_keeps_renamed_bitmap_but_original_sources_unwritten() {
     let helper = configured(false);

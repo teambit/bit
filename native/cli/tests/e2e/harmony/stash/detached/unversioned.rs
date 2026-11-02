@@ -56,6 +56,7 @@ fn assert_history_prefix(before: &BTreeMap<String, Vec<u8>>, actual: &Path, expe
     }
 }
 
+/// Inflates all loose objects in `root`'s scope into a deterministic [`BTreeMap`].
 fn inflated_objects(root: &Path) -> BTreeMap<String, Vec<u8>> {
     super::proof::objects(root)
         .into_iter()

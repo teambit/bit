@@ -37,6 +37,7 @@ fn qualify(modified: bool) {
     compare_stashes(&helper.scopes.local_path, &oracle);
 }
 
+/// Reads and inflates the `VersionHistory` object at `hash` under `root`.
 fn unpack(root: &Path, hash: &str) -> Vec<u8> {
     let packed = fs::read(object_path(root, hash)).unwrap();
     let mut bytes = Vec::new();

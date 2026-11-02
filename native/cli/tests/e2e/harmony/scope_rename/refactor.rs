@@ -94,6 +94,7 @@ fn assert_mixed_results(helper: &crate::helper::Helper, map: &serde_json::Value,
     assert_mixed_status(helper, old);
 }
 
+/// Asserts that `bit status --json` after `scope rename` reports no issues and updated `defaultScope` entries.
 fn assert_mixed_status(helper: &crate::helper::Helper, old: &str) {
     let status = support::json(helper, "status --json");
     assert!(

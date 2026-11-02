@@ -58,6 +58,7 @@ fn older_hidden_dependency_cascades_transitively_without_becoming_visible() {
     );
 }
 
+/// Seeds a remote `dev` lane with `comp2` (and optionally `comp1`) in `updateDependents` and imports the lane ([`Helper`]).
 fn fixture(transitive: bool) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

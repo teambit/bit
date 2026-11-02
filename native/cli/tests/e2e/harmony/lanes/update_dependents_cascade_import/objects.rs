@@ -63,6 +63,7 @@ fn state(helper: &Helper, head: &str) -> Value {
     })
 }
 
+/// Verifies that no-ID `bit import` on a lane refreshes `updateDependents` versions without promoting them into `.bitmap`.
 #[test]
 fn no_id_lane_import_refreshes_hidden_versions_without_promoting_them() {
     let helper = Helper::new();

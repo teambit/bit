@@ -52,6 +52,7 @@ fn setup_diverged() -> DivergedSetup {
     }
 }
 
+/// Asserts that component `name` has `version` in `.bitmap` ([`Helper`]).
 fn expect_bitmap_version(helper: &Helper, name: &str, version: &str) {
     let bitmap = helper.read_bit_map();
     let key = format!("{}/{name}", helper.scopes.remote);

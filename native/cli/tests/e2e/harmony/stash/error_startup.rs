@@ -1,4 +1,4 @@
-//! Root providers ([`fixture`]) run before report-level stash errors, exactly once per
+//! Root providers ([`fixture`], [`report_errors_keep_root_provider_effects_output_and_complete_history`]) run before report-level stash errors, exactly once per
 //! invocation, preserving side effects and `VersionHistory` scope objects.
 use super::support::{command, compare_stashes};
 use crate::helper::{Helper, config};

@@ -52,6 +52,7 @@ fn pending_with(fail: bool) -> Helper {
     helper
 }
 
+/// Verifies that `bit merge --resolve` runs configured pre-snap and load callbacks and cleans `.bitTmp`.
 #[test]
 fn configured_merge_resolution_runs_published_presnap_and_load_callbacks() {
     let helper = pending();

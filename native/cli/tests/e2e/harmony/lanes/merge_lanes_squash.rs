@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-squash.e2e.ts` for `--squash` lane merge parity ([`merge_with_squash_one_snap_and_three_snaps`]).
+//! Port of `e2e/harmony/lanes/merge-lanes-squash.e2e.ts` for `--squash` lane merge parity ([`merge_with_squash_one_snap_and_three_snaps`], [`merge_with_squash_after_exporting_and_importing_lane_to_new_workspace`]).
 //!
 //! Verifies single-snap no-op squash and multi-snap squashed metadata recording.
 

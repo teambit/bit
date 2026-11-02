@@ -47,6 +47,7 @@ pub(super) fn lane() -> Helper {
     helper.delete_path("merge-presnap-events");
     helper
 }
+/// Normalizes workspace root paths and completion durations in `text` against `root`.
 pub(super) fn output(text: &str, root: &Path) -> String {
     let text = allocated(text, root);
     text.lines()

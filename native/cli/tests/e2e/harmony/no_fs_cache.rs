@@ -28,6 +28,7 @@ fn cache_contents(directory: &Path) -> Vec<(std::path::PathBuf, Vec<u8>)> {
     files
 }
 
+/// Recursively appends relative file paths and contents under `directory` into `files`.
 fn collect_cache_contents(
     root: &Path,
     directory: &Path,

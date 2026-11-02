@@ -50,6 +50,7 @@ fn compare(helper: &Helper, command: &str) {
     assert_eq!(actual.stdout, expected.stdout);
 }
 
+/// Verifies that `bit reset` glob patterns and `--head` batches match Node on `main`.
 #[test]
 fn main_reset_globs_and_head_batches_match_node() {
     let helper = workspace();

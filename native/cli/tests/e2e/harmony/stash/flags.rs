@@ -55,6 +55,7 @@ fn empty_load_and_invalid_strategy_errors_match_the_published_cli() {
         command(&helper, &oracle, error);
     }
 }
+/// Verifies that `stash-10` and `stash-11` preserve lexical latest-stash selection order (`stash-9` selected by `stash load`).
 #[test]
 fn double_digit_stash_names_keep_the_published_lexical_latest_selection() {
     let helper = workspace();

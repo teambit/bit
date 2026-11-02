@@ -50,6 +50,7 @@ fn completion(line: &str) -> String {
     let start = body.len() - duration.len() - 1;
     format!("{}<duration>){newline}", &body[..start])
 }
+/// Extracts the trailing completion duration substring from `body` when it matches a known progress line.
 fn completion_duration(body: &str) -> Option<&str> {
     for symbol in ["✔", "✓"] {
         for action in [

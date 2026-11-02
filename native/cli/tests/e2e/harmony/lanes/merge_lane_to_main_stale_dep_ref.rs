@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts` for cross-scope dependency refs on lane merge ([`stale_pinned_dependency_lives_in_another_scope_cross_scope_pin`]).
+//! Port of `e2e/harmony/lanes/merge-lane-to-main-stale-dep-ref.e2e.ts` for cross-scope dependency refs on lane merge ([`stale_pinned_dependency_lives_in_another_scope_cross_scope_pin`], [`referenced_snap_is_only_on_the_lane_scope_fresh_import`]).
 //!
 //! Verifies that stale cross-scope dependency refs are refreshed when merging to `main`.
 

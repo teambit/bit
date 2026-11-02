@@ -68,6 +68,7 @@ fn exported_rename_can_change_the_new_scope_and_delete_the_old_component() {
         }
     }
 }
+/// Verifies that invalid target names and occupied `--path` destinations fail without creating partial directories.
 #[test]
 fn invalid_name_and_occupied_destination_do_not_leave_new_component_directories() {
     for command in ["rename comp1 my.comp", "rename comp1 comp2 --path src"] {

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/update-dependents-cascade.e2e.ts` for hidden dependent cascade on snap ([`older`], [`scenarios_3_4_5_6_local_snap_cascades_update_dependents`]).
+//! Port of `e2e/harmony/lanes/update-dependents-cascade.e2e.ts` for hidden dependent cascade on snap ([`older`], [`scenarios_3_4_5_6_local_snap_cascades_update_dependents`], [`Helper`]).
 //!
 //! Covers transitive `updateDependents` cascades, promotion on import, and divergence guards.
 

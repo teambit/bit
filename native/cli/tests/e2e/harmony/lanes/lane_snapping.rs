@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-snapping.e2e.ts` for `bit snap` and `bit tag` on lanes ([`create_snap_on_main_then_on_new_lane_and_block_tag_on_lane`]).
+//! Port of `e2e/harmony/lanes/lane-snapping.e2e.ts` for `bit snap` and `bit tag` on lanes ([`create_snap_on_main_then_on_new_lane_and_block_tag_on_lane`], [`auto_snap_when_on_a_lane`]).
 //!
 //! Covers snapping on lanes, blocking `bit tag` on lanes, auto-snapping dependents, and `bit reset`.
 

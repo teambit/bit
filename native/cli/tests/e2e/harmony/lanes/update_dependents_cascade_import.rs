@@ -2,7 +2,9 @@
 //!
 //! Covers importing hidden `updateDependents` entries and cross-scope merge interactions.
 
+/// Cross-scope hidden `updateDependents` merge tests.
 mod merge;
+/// Object-only lane import parity tests.
 mod objects;
 
 use crate::helper::{Helper, parse};

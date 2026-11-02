@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-diverge.e2e.ts` for diverged lane merge behavior ([`setup_diverged_lane`]).
+//! Port of `e2e/harmony/lanes/merge-lanes-diverge.e2e.ts` for diverged lane merge behavior ([`setup_diverged_lane`], [`getting_updates_from_main_when_lane_is_diverged`]).
 //!
 //! Covers manual snap, auto-snap, and conflict handling when merging a diverged lane.
 

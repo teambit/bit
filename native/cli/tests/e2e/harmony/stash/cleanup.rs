@@ -71,6 +71,7 @@ fn new_aspect_cleanup_removes_root_configuration_and_generator_entries() {
     assert!(workspace.get(&id).is_none());
     assert_eq!(workspace["teambit.generator/generator"]["envs"], json!(["teambit.harmony/node"]));
 }
+/// Verifies that `bit stash save --include-new` removes a root-configured new aspect even when unused by other components.
 #[test]
 fn root_configured_new_aspect_without_component_usage_is_removed() {
     let helper = workspace();

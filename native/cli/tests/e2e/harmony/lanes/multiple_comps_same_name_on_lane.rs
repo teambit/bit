@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/multiple-comps-same-name-on-lane.e2e.ts` for same-name components across scopes on a lane ([`multiple_components_with_same_name_on_lane_keep_both_and_import`]).
+//! Port of `e2e/harmony/lanes/multiple-comps-same-name-on-lane.e2e.ts` for same-name components across scopes on a lane ([`LANE_A`], [`multiple_components_with_same_name_on_lane_keep_both_and_import`]).
 //!
 //! Verifies distinct workspace directories and `.bitmap` entries for identically named components.
 

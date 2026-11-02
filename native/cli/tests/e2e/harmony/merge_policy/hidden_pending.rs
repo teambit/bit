@@ -85,6 +85,7 @@ fn hidden_fast_forward_cascades_when_the_visible_merge_changes_its_older_depende
     compare_lane(&helper, &oracle, &actual, &expected);
 }
 
+/// Reads the current `comp2` version hash from `.bitmap` under `root`.
 fn hash(root: &Path) -> String {
     config::read_jsonc(&root.join(".bitmap"))["comp2"]["version"]
         .as_str()

@@ -1,5 +1,5 @@
 //! Snapshot extension hooks retain data and source transformations without Node
-//! VCS writes across `bit tag` and `bit snap` executions ([`build`], [`plus_ranges`], [`workspace`], [`version`]).
+//! VCS writes across `bit tag` and `bit snap` executions ([`build`], [`plus_ranges`], [`workspace`], [`version`], [`react_environment_snapshot_retains_actual_aspect_data`]).
 mod build;
 mod plus_ranges;
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};

@@ -73,6 +73,7 @@ fn version(helper: &Helper, id: &str) -> Value {
     value
 }
 
+/// Replaces every hash in `hashes` with its deterministic `SNAP_<index>` placeholder in `text`.
 fn normalize(text: &str, hashes: &[String]) -> String {
     let mut result = text.to_owned();
     for (index, hash) in hashes.iter().enumerate() {

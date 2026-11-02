@@ -29,6 +29,7 @@ fn lane_merge_build_uses_the_published_pipeline_once() {
     qualify("lane merge dev --auto-merge-resolve theirs --build -m merged -x", false, true);
 }
 
+/// Verifies that `force_local_build` in `teambit.harmony/config-store` triggers local build during `bit lane merge`.
 #[test]
 fn force_local_build_is_honored_for_configured_lane_merge() {
     let helper = fixture::lane();

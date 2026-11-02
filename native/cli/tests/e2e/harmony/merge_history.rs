@@ -40,6 +40,7 @@ pub(super) fn unrelated_with(publish: fn(&Helper)) -> (Helper, PathBuf) {
     (helper, left)
 }
 
+/// Normalizes `(completed in ...)` duration suffixes in `output` to `(completed)`.
 fn stable(output: &str) -> String {
     output
         .lines()

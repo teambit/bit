@@ -57,6 +57,7 @@ fn manual_load_preserves_the_published_conflict_labels() {
 fn stash_parent_remains_the_merge_base_after_a_new_tag() {
     shared_base(true);
 }
+/// Verifies that `bit stash load` merges independent local edits against the stashed parent version.
 #[test]
 fn independent_local_edits_merge_using_the_saved_parent() {
     shared_base(false);

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity ([`switch_to_remote_lane_diff_snap_alias_and_local_lane`]).
+//! Port of `e2e/harmony/lanes/switch-lanes.e2e.ts` for `bit switch` parity ([`FOO_V2`], [`FOO_V3`], [`switch_to_remote_lane_diff_snap_alias_and_local_lane`]).
 //!
 //! Covers switching to remote and local lanes, aliases, diffing, and snapping.
 

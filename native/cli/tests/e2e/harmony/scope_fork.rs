@@ -75,6 +75,7 @@ fn scope_fork_resolves_component_name_prefixes_without_nested_root_ownership() {
     }
     fork::assert_origins(&helper, &["comp1", "comp1/ui"]);
 }
+/// Verifies that `bit scope fork` rejects components already tracked in the workspace with the same scope.
 #[test]
 fn scope_fork_rejects_an_original_already_tracked_with_the_same_scope() {
     let helper = fork::exported(1);

@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse, remote};
 
-/// Returns the head hash of component `name` on `lane` from `bit lane show <lane> --json`.
+/// Returns the head hash of component `name` on `lane` from `bit lane show <lane> --json` ([`Helper`], [`parse`]).
 fn head_of_lane(helper: &Helper, lane: &str, name: &str) -> String {
     let lane_obj = parse(&helper.native(&format!("lane show {lane} --json")));
     lane_obj["components"]

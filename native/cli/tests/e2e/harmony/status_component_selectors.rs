@@ -74,6 +74,7 @@ fn bitmap_and_snapshot_selectors_match_diff() {
     parity(&helper, "$localOnly");
 }
 
+/// Asserts that native and Node `bit diff "<pattern>" --name-only` match in ordinary or CI mode.
 fn text_parity(helper: &Helper, pattern: &str, ci: bool) {
     let command = format!(r#"diff "{pattern}" --name-only"#);
     let baseline = helper.clone_workspace();

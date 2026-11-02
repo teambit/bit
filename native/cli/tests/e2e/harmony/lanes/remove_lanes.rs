@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/remove-lanes.e2e.ts` for `bit lane remove` parity ([`remove_local_lanes`]).
+//! Port of `e2e/harmony/lanes/remove-lanes.e2e.ts` for `bit lane remove` parity ([`remove_local_lanes`], [`remove_remote_lane`]).
 //!
 //! Covers local and remote lane removal guards, `--force`, and merged lane cleanup.
 

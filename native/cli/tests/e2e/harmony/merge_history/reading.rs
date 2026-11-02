@@ -59,6 +59,7 @@ fn versions() -> Helper {
     helper
 }
 
+/// Verifies that `bit log`views match Node across historical deprecation and removal range overlays.
 #[test]
 fn historical_deprecation_and_removal_overlays_match_log_views() {
     let helper = versions();

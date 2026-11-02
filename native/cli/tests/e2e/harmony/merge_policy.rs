@@ -53,6 +53,7 @@ fn workspace_files(root: &Path, directory: &Path, files: &mut BTreeMap<String, V
     }
 }
 
+/// Collects all tracked workspace files under `root` into a deterministic [`BTreeMap`].
 fn files(root: &Path) -> BTreeMap<String, Vec<u8>> {
     let mut files = BTreeMap::new();
     workspace_files(root, root, &mut files);

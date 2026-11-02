@@ -4,7 +4,7 @@ use super::{version, workspace};
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;
 
-/// Verifies that `+^` peer dependency ranges require `BIT_FEATURES=plus-range-versions` during `bit snap`.
+/// Verifies that `+^` peer dependency ranges require `BIT_FEATURES=plus-range-versions` during `bit snap` ([`normalize_hash`]).
 #[test]
 fn plus_ranges_require_the_feature_before_snapshot_publication() {
     let helper = workspace();

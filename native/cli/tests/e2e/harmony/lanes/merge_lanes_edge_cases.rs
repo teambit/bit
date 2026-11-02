@@ -25,7 +25,7 @@ fn merge_a_diverged_lane_into_main_with_tag() {
     let cat = parse(&helper.cat_component("comp1@latest"));
     assert_eq!(cat["parents"].as_array().unwrap().len(), 2);
 }
-/// Verifies failed auto-snap rollback during `bit lane merge --build` and merging into an empty lane.
+/// Verifies failed auto-snap rollback during `bit lane merge --build` and merging into an empty lane ([`Helper`]).
 #[test]
 fn auto_snap_during_merge_when_the_snap_is_failing_and_merge_to_empty_lane() {
     // 1. auto-snap during merge when the snap is failing: should not change the .bitmap with the failed-snap version

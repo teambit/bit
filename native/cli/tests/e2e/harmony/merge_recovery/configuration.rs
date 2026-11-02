@@ -7,7 +7,7 @@ use std::fs;
 /// Workspace-root filename holding per-component configuration merge conflicts.
 const MERGE_CONFLICT_FILE: &str = "merge-conflict";
 
-/// Verifies that `bit merge --resolve` snapshots resolved per-component config and removes `merge-conflict`.
+/// Verifies that `bit merge --resolve` snapshots resolved per-component config and removes [`MERGE_CONFLICT_FILE`].
 #[test]
 fn resolved_configuration_is_snapshotted_and_conflict_document_is_consumed() {
     let helper = pending();

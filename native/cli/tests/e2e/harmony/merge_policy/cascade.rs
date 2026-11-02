@@ -52,6 +52,7 @@ fn current(helper: &Helper, mixed: bool) {
     }
 }
 
+/// Verifies that automatic `bit lane merge` resolves changed dependencies in a single snapshot.
 #[test]
 fn automatic_merge_resolves_changed_dependencies_in_one_snapshot() {
     let helper = divergent(false);

@@ -65,6 +65,7 @@ fn global_aspect_settings_merge_before_workspace_settings() {
     }
 }
 
+/// Verifies `bit status` and `bit diff` when `.bit` is relocated into `.git/bit`.
 #[test]
 fn embedded_git_scope_status_and_diff_match_node() {
     let helper = Helper::new();

@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/recovery-after-deletion.e2e.ts` ([`mark_versions_built`], [`mark_version_object_built`]) covering post-delete recovery.
+//! End-to-end tests for `e2e/harmony/recovery-after-deletion.e2e.ts` ([`mark_versions_built`], [`mark_version_object_built`], [`write_comp_pkg_in_nm`]).
 
 use crate::helper::{Helper, setup};
 use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-remote.e2e.ts` for remote lane merge parity ([`setup_exported_dev_lane`], [`merging_remote_lane_into_main_and_exporting`]).
+//! Port of `e2e/harmony/lanes/merge-lanes-remote.e2e.ts` for remote lane merge parity ([`setup_exported_dev_lane`], [`merging_remote_lane_into_main_and_exporting`], [`merging_remote_lane_into_main_with_workspace_flag_skips_non_workspace_components`]).
 //!
 //! Covers merging remote lanes into `main` or another lane and re-exporting.
 

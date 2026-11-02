@@ -62,6 +62,7 @@ fn parity(command: &str, ci: bool) {
     qualify(&workspace(), command, ci);
 }
 
+/// Runs `command` against `helper` and asserts native/Node `bitmapAutoSync` parity on `.bitmap` and `.bit/last-pull-sync`.
 fn qualify(helper: &Helper, command: &str, ci: bool) {
     let copy = helper.clone_workspace();
     let node = Helper::cmd_in_with(

@@ -3,7 +3,7 @@
 use crate::helper::{self, Run};
 use std::{io::Write, path::Path, process::Stdio};
 
-/// Verifies that interactive `bit merge --abort` prompts before starting providers or restoring workspace state.
+/// Verifies that interactive `bit merge --abort` prompts before starting providers or restoring workspace state ([`run`]).
 #[test]
 fn interactive_abort_confirmation_precedes_providers_and_restoration() {
     let helper = super::pending();

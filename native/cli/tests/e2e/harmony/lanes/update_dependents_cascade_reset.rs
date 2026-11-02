@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts` for resetting hidden lane dependents ([`build_base_remote_state`]).
+//! Port of `e2e/harmony/lanes/update-dependents-cascade-reset.e2e.ts` for resetting hidden lane dependents ([`build_base_remote_state`], [`scenarios_7_and_8_local_cascade_survives_fetch_and_reset_reverts_cascade`]).
 //!
 //! Covers `bit fetch --lanes`, `bit reset`, history preservation, and checkout with `updateDependents`.
 

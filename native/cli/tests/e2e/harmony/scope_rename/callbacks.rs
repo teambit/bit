@@ -90,6 +90,7 @@ fn second_onadd_failure_preserves_the_first_renamed_component_and_the_second_add
     );
 }
 
+/// Verifies that a second `onLoad` failure during `bit scope rename` stops before adding any replacement components.
 #[test]
 fn later_onload_failure_stops_before_any_scope_addition() {
     let helper = configured(true);

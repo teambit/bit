@@ -51,6 +51,7 @@ fn rename_a_new_component_with_refactor_flag() {
     assert!(file.contains("new-comp2"), "{file}");
 }
 
+/// Verifies that `bit rename --refactor` on an exported component updates dependent import specifiers ([`read_comp1`]).
 #[test]
 fn rename_an_exported_component_with_refactor_flag() {
     let helper = Helper::new();

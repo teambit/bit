@@ -39,6 +39,7 @@ pub(super) fn command(helper: &Helper, oracle: &Path, command: &str) {
 pub(super) fn node(root: &Path, command: &str) -> crate::helper::Run {
     Helper::cmd_in_with(root, command, &[("BIT_NATIVE", OsStr::new("off"))])
 }
+/// Writes `contents` to `path` inside both `helper`'s workspace and `oracle`.
 pub(super) fn write_both(helper: &Helper, oracle: &Path, path: &str, contents: &str) {
     for root in [&helper.scopes.local_path, oracle] {
         let path = root.join(path);

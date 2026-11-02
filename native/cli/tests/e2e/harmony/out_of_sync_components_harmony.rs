@@ -6,7 +6,7 @@ use crate::helper::{Helper, config};
 /// Component ID tested for `.bitmap` and local scope version synchronization.
 const BAR_FOO_ID: &str = "bar/foo";
 
-/// Verifies `.bitmap` and scope reconciliation when workspace and local scope component states are out of sync.
+/// Verifies `.bitmap` and scope reconciliation when workspace and local scope component states are out of sync ([`BAR_FOO_ID`]).
 #[test]
 fn out_of_sync_components_between_scope_and_consumer() {
     let helper = Helper::new();

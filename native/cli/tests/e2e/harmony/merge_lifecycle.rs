@@ -74,6 +74,7 @@ fn compare(helper: &Helper, command: &str) {
     assert_eq!(version(&helper.scopes.local_path), version(&oracle));
 }
 
+/// Reads the latest `Version` object from `root` and strips volatile `modified[].date` fields.
 fn version(root: &std::path::Path) -> serde_json::Value {
     let mut value = super::snapshot_environments::version(root);
     if let Some(logs) = value["modified"].as_array_mut() {

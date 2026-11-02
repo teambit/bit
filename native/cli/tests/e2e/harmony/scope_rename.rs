@@ -84,6 +84,7 @@ fn default_only_scope_rename_does_not_require_a_matching_component() {
     successful(&helper, &format!("scope rename {old} replacement.scope -x"));
     assert!(bitmap(&helper).get("comp1").is_none());
 }
+/// Verifies that a staged-component failure during `bit scope rename` retains the earlier `defaultScope` write.
 #[test]
 fn staged_component_failure_retains_the_earlier_default_scope_write() {
     let helper = support::workspace(1, true);

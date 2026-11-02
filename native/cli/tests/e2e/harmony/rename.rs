@@ -70,6 +70,7 @@ fn refactoring_replaces_exact_package_imports_without_replacing_longer_names() {
     assert!(text.contains(&format!("@{scope}/comp2-other")));
     assert!(!text.contains("my-new-name-other"));
 }
+/// Verifies that an invalid target scope in `bit rename` fails without mutating `.bitmap`.
 #[test]
 fn invalid_scope_inside_target_name_is_rejected_without_partial_files() {
     let helper = support::workspace(1, false);

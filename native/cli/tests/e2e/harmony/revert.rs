@@ -49,6 +49,7 @@ fn capture(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>)
     }
 }
 
+/// Captures `.bitmap`, `.bit` scope files, `workspace.jsonc`, and `comp1` under `root` into a [`BTreeMap`].
 fn modeled_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     let mut files = BTreeMap::new();
     for relative in [
