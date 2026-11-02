@@ -37,6 +37,8 @@ fn declines_unsupported_scope_set_arguments() {
 }
 
 /// Verifies that [`parse`] accepts `--no-color` alongside a workspace scope name.
+///
+/// Ensures `--no-color` is stripped before validating positional `scope_name` and `pattern` tokens.
 #[test]
 fn accepts_no_color_flag_with_scope_set() {
     assert_eq!(

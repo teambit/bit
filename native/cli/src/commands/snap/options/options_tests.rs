@@ -46,6 +46,8 @@ fn component_selector_grammar_is_retained_for_native_selection() {
 }
 
 /// Verifies that [`parse`] accepts a single positional snap pattern following `--`.
+///
+/// Ensures `--` terminates flag parsing while still recording the trailing component pattern.
 #[test]
 fn double_dash_accepts_single_snap_pattern() {
     let options = parse(&["-m", "msg", "--", "remote/one"]).unwrap();

@@ -41,6 +41,7 @@ fn rejects_unsupported_flags() {
     assert!(parse_args(&os_args(&["search", "--invalid"])).is_none());
 }
 
+/// Verifies that [`match_queries`] matches component IDs case-insensitively and deduplicates results across queries.
 #[test]
 fn matches_queries_case_insensitively_and_deduplicates() {
     let ids = vec!["my-scope/bar/foo".to_owned(), "my-scope/utils/is-type".to_owned()];

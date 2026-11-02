@@ -5,6 +5,8 @@
 use super::{Options, check_types_error, parse_options};
 
 /// Verifies `bit watch` [`Options`] parsing via [`parse_options`] and validation via [`check_types_error`].
+///
+/// Checks `"file"` and `"project"` `--check-types` modes alongside invalid mode error messages.
 #[test]
 fn parses_watch_options_and_validates_check_types() {
     let opts = parse_options(&[

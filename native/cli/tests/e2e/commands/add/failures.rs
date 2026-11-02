@@ -51,6 +51,7 @@ fn ci_success_stays_native_and_preserves_exact_released_output() {
     assert!(result.status.success());
 }
 
+/// Verifies that fully ignored `bit add` inputs under `CI=true` delegate before effects with the exact error stack.
 #[test]
 fn ci_fully_ignored_input_delegates_before_effects_with_exact_error_stack() {
     let helper = workspace();

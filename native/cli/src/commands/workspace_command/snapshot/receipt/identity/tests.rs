@@ -86,6 +86,7 @@ fn fallback(cache: &Cache, calls: &AtomicUsize) -> User {
         .unwrap()
 }
 
+/// Verifies that [`User::log`] embeds `username` and `email` fields when both are present on [`User`].
 #[test]
 fn user_log_embeds_email_when_present() {
     let user = User { username: Some("alice".into()), email: Some("alice@example.test".into()) };

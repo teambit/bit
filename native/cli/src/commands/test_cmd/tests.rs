@@ -8,6 +8,8 @@ use std::fs;
 use tempfile::tempdir;
 
 /// Verifies `bit test` [`Options`] CLI flag and pattern parsing via [`parse_options`].
+///
+/// Covers `--unmodified`, `--coverage`, `--junit`, `--env`, `--update-snapshot`, and combined short flags (`-wduaj`).
 #[test]
 fn parses_test_arguments_and_options() {
     assert_eq!(

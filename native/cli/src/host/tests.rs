@@ -7,6 +7,8 @@ use serde_json::json;
 use std::{fs, path::PathBuf};
 
 /// Verifies [`Host`] retains its private `.cjs` [`SCRIPT`] until session drop even after callback failures.
+///
+/// Tests both `"result": true` and `"error": "callback rejected"` JSON-RPC responses.
 #[test]
 fn private_host_script_is_retained_until_the_session_ends_including_callback_failures() {
     for response in [r#"{"id":1,"result":true}"#, r#"{"id":1,"error":"callback rejected"}"#] {

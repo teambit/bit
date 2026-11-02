@@ -89,6 +89,8 @@ fn lane_import_has_its_own_flag_set_but_retains_semantic_errors() {
 }
 
 /// Verifies that [`parse`] accepts static character-class bracket globs as native switch patterns.
+///
+/// Confirms `remote/comp0[024]` and `remote/comp[1-3]` pass `supported_pattern()` without enabling state selectors.
 #[test]
 fn static_bracket_patterns_remain_native_without_enabling_state_expressions() {
     let options = parse(&["remote/dev", "--pattern", "remote/comp0[024]", "-x"]).unwrap();

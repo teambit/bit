@@ -7,6 +7,8 @@ use crate::commands::workspace_command::resolve::Kind;
 use serde_json::json;
 
 /// Verifies [`parse`] extracts workflow tooling flags while preserving selection and release arguments.
+///
+/// Confirms `--build`, `--skip-tests`, and `--skip-tasks` populate `workflow.parameters(Kind::Tag)`.
 #[test]
 fn tooling_flags_preserve_selection_and_release_arguments() {
     let (workflow, args) = parse(

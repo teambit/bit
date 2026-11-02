@@ -27,6 +27,8 @@ fn capture(loader_checked: bool) -> Capture {
 }
 
 /// Verifies that [`fresh::commit`] retains loader cache entries when [`checkout_reset`] sees a checked loader capture.
+///
+/// Also confirms that an unchecked capture clears the dependency cache directory on commit.
 #[test]
 fn checkout_commit_keeps_the_entry_written_by_the_retained_loader_after_invalidation() {
     let workspace = tempfile::tempdir().unwrap();

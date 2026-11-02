@@ -54,6 +54,7 @@ fn ignored_files_and_fully_ignored_directories_match_node() {
     }
 }
 
+/// Verifies that an embedded `.git/bit` scope without `.bitmap` is recovered before `bit add` tracks components.
 #[test]
 fn embedded_scope_without_bitmap_is_recovered_before_tracking() {
     let helper = workspace();

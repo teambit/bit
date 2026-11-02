@@ -77,6 +77,7 @@ fn a_hundred_components_with_eleven_files_keep_native_capture_frames_bounded() {
     }
 }
 
+/// Asserts that `entry` has `mainFile: "index.js"` and all 11 expected package/source links under `node_modules`.
 fn assert_component_links(helper: &crate::helper::Helper, entry: &serde_json::Value) {
     let name = entry["name"].as_str().unwrap();
     let package = helper.scopes.local_path.join(format!(

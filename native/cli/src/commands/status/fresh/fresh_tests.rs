@@ -17,6 +17,8 @@ fn dev_files_match_minimatch() {
 }
 
 /// Verifies that [`core_package_name`] converts `teambit.*` aspect IDs into `@teambit/*` package names.
+///
+/// Checks both single-segment (`teambit.dependencies/pnpm`) and nested (`teambit.a/b/c`) aspect paths.
 #[test]
 fn core_package_names() {
     assert_eq!(core_package_name("teambit.workspace/workspace"), "@teambit/workspace");

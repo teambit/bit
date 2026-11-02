@@ -83,6 +83,7 @@ pub(super) fn normalize(root: &Path, baseline: &Snapshot, output: &mut BTreeMap<
     baseline_files(baseline, &current, &fresh, output);
     directory_modes(root, output);
 }
+/// Records `baseline` config history backups into `output` and verifies unrefreshed entries remain unchanged in `current`.
 fn baseline_files(
     baseline: &Snapshot,
     current: &Snapshot,

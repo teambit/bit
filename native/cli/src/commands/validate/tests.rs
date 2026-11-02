@@ -10,6 +10,8 @@ use super::{
 use std::fs;
 
 /// Verifies `bit validate` [`Options`] parsing via [`parse_options`].
+///
+/// Covers positional component pattern, `-u`, `--fail-fast`, and `--skip-tasks` arguments.
 #[test]
 fn parses_validate_options() {
     assert_eq!(

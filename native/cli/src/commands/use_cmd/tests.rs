@@ -32,6 +32,8 @@ fn rejects_invalid_args() {
 }
 
 /// Verifies [`is_extension_configured`] matches exact and versioned aspect keys in `workspace.jsonc`.
+///
+/// Also confirms that unconfigured aspect names and `null` JSON values return `false`.
 #[test]
 fn detects_configured_extension() {
     let doc = json!({

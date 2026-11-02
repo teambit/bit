@@ -32,6 +32,8 @@ fn rejects_invalid_args() {
 }
 
 /// Verifies [`find_extension_key`] matches exact and version-suffixed aspect keys in `workspace.jsonc`.
+///
+/// Also confirms that non-existent aspect IDs and non-object JSON documents return `None`.
 #[test]
 fn finds_extension_key() {
     let doc = json!({

@@ -5,6 +5,8 @@
 use super::compare;
 
 /// Verifies [`compare`] matches `[...ids].sort((a, b) => a.localeCompare(b))` in Node 22 with `LANG=en_US.UTF-8`.
+///
+/// Covers underscores, hyphens, dots, slashes, multi-digit numbers, and uppercase/lowercase ordering.
 #[test]
 fn sorts_like_node_root_collation() {
     let mut ids = vec![

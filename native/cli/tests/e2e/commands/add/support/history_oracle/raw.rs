@@ -83,6 +83,7 @@ impl Snapshot {
         );
         fs::write(evidence.join(name), serde_json::to_vec_pretty(&record).unwrap()).unwrap();
     }
+    /// Validates that `self` appends `transitions` onto `baseline` within `[started, ended]` and returns normalized history bytes.
     pub(super) fn validate(
         &self,
         baseline: &Self,

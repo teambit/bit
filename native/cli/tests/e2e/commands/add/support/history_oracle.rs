@@ -22,7 +22,7 @@ pub(crate) fn compare<const WRITE_COUNT: usize>(
     compare_mode(helper, command, stdout, reasons, installation, false)
 }
 
-/// The untimed oracle and both measured commands receive CI independently.
+/// The untimed oracle and both measured commands in [`compare_ci`] receive `CI=true` independently.
 pub(crate) fn compare_ci<const WRITE_COUNT: usize>(
     helper: &Helper,
     command: &str,

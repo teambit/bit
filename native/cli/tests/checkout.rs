@@ -72,6 +72,7 @@ fn input_outside_the_native_grammar_declines() {
     declined(&output, r#"["checkout","head","-x","--json"]"#, grammar);
 }
 
+/// Verifies that default `bit checkout` preflights the install host before planning and declines to [`STUB`] when missing.
 #[test]
 fn default_checkout_preflights_the_install_host_before_planning() {
     let dir = setup();

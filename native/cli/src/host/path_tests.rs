@@ -28,6 +28,8 @@ for (const [actual, requested, expected] of cases) {
 }
 
 /// Verifies POSIX installation directory receipts keep backslashes and case significant in `installationDirectoryEquals`.
+///
+/// Executes the POSIX path test matrix via [`check`].
 #[test]
 fn posix_directory_receipts_keep_backslashes_and_case_significant() {
     check(

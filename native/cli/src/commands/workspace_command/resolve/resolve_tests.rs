@@ -58,6 +58,7 @@ fn a_resolve_needs_components_in_merge_state() {
     assert!(validate_preparation(&none, Kind::Resolve).is_err());
 }
 
+/// Verifies that [`squash_logs`] attaches the squash merge log only to the resolved lane component.
 #[test]
 fn squash_logs_attach_only_to_the_resolved_lane_component() {
     let mut receipt = json!({

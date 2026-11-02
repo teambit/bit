@@ -5,6 +5,8 @@
 use super::{is_outside_workspace_and_scope, parse_options};
 
 /// Verifies `bit start` option parsing via [`parse_options`] and host checks via [`is_outside_workspace_and_scope`].
+///
+/// Covers explicit long flags, combined short flags (`-drsnv`), and uninitialized directory detection.
 #[test]
 fn parses_start_options_and_detects_missing_workspace_or_scope() {
     let opts = parse_options(&[

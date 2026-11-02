@@ -6,6 +6,8 @@ use super::{Chalk, render};
 use serde_json::json;
 
 /// Verifies [`render`] orders linear history with heads first and preserves version pointers.
+///
+/// Confirms 9-character short hashes and `(main, 2.0.0)` / `(parent)` labels in rendered lines.
 #[test]
 fn linear_history_orders_heads_first_and_preserves_pointers() {
     let first = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

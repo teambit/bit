@@ -67,6 +67,7 @@ fn validates_scope_trust_patterns() {
     assert!(!is_valid_pattern(".*"));
 }
 
+/// Verifies [`WorkspaceTrust`] lifecycle (`enable`, `add`, `remove`, `disable`) in `workspace.jsonc`.
 #[test]
 fn manages_trusted_scopes_lifecycle_in_workspace_jsonc() {
     let dir = tempfile::tempdir().unwrap();

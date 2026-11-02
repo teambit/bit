@@ -50,6 +50,7 @@ fn echoed(output: &Output) -> Vec<String> {
         })
 }
 
+/// Verifies [`bit`] forwards all CLI arguments and preserves the child exit code from [`STUB`].
 #[test]
 fn delegates_arguments_and_exit_code() {
     let dir = TempDir::new().unwrap();

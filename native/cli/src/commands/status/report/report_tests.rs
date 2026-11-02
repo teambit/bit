@@ -92,6 +92,7 @@ fn reports_a_clean_workspace() {
     assert_eq!(output.code, 0);
 }
 
+/// Verifies that [`report`] renders the active lane header after the component status sections.
 #[test]
 fn reports_the_current_lane_after_status_sections() {
     let mut lane = result(&json!({

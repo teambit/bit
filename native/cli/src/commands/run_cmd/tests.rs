@@ -5,6 +5,8 @@
 use super::{Options, parse_options};
 
 /// Verifies `bit run` [`Options`] flag parsing via [`parse_options`].
+///
+/// Covers `-d`, `-p`, `-w`, `-n`, and `--args` flag extraction alongside the positional app name.
 #[test]
 fn parses_run_options() {
     assert_eq!(

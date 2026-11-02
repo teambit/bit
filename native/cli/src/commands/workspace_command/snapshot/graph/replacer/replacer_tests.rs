@@ -18,6 +18,8 @@ fn replacer() -> Replacer {
 }
 
 /// Verifies that [`Replacer::replace`] rewrites `@scope/pkg@file:...` specifiers to component versions and preserves registry packages.
+///
+/// Also checks [`Replacer::component`] lookup for known workspace package names.
 #[test]
 fn file_versions_become_component_versions() {
     let replacer = replacer();

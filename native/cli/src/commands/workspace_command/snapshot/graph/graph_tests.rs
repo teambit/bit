@@ -28,6 +28,8 @@ fn other_workspace_packages_are_removed_unless_injected_into_the_component() {
 }
 
 /// Verifies that [`snapshot_order`] traverses reachable lockfile snapshots in `pnpm` depth-first walker order.
+///
+/// Also confirms that querying a missing importer key returns an empty snapshot list.
 #[test]
 fn filtered_snapshot_order_follows_pnpm_walker() {
     let lockfile = json!({

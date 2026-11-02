@@ -72,6 +72,8 @@ fn persist_optional_build_argument_and_state_patterns() {
 }
 
 /// Verifies that [`parse`] defaults `bit tag` with no arguments to a `"patch"` release with empty pattern selection.
+///
+/// Confirms `release.level` is `"patch"` when no explicit release level flag is supplied.
 #[test]
 fn empty_tag_args_parse_to_patch_release_level() {
     let options = parse(&[]).unwrap();

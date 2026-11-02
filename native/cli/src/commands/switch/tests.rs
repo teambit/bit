@@ -6,6 +6,8 @@ use super::writer_ids;
 use serde_json::json;
 
 /// Verifies [`writer_ids`] extracts only materialized writer component IDs from `switchWriterIds`.
+///
+/// Also confirms that missing `switchWriterIds` or `null` array elements return an error.
 #[test]
 fn installation_uses_only_materialized_writers_even_when_report_lists_components() {
     let all_ours = json!({

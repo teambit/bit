@@ -5,6 +5,8 @@
 use super::{Options, parse_options};
 
 /// Verifies `bit server` [`Options`] port and `--compile` flag parsing via [`parse_options`].
+///
+/// Also confirms that non-numeric `--port` values return `None`.
 #[test]
 fn parses_and_validates_server_port() {
     assert_eq!(parse_options(&[]), Some(Options { port: None, compile: false }));

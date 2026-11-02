@@ -6,6 +6,8 @@ use super::{Options, has_no_workspace_dependencies, parse_options};
 use std::fs;
 
 /// Verifies `bit update` [`Options`] parsing via [`parse_options`] and empty dependency checks via [`has_no_workspace_dependencies`].
+///
+/// Checks both empty `workspace.jsonc` policies and configured `teambit.dependencies/dependency-resolver` policies.
 #[test]
 fn parses_update_options_and_detects_empty_dependencies() {
     assert_eq!(

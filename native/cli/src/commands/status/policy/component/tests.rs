@@ -16,6 +16,8 @@ fn policy(config: &Value) -> Policy {
 }
 
 /// Verifies that forced component dependency [`policy`] entries override environment defaults and retain `-` removals.
+///
+/// Checks `dependencies`, `devDependencies`, and `peerDependencies` (`resolveFromEnv: true`) precedence.
 #[test]
 fn forced_component_policy_overrides_environment_and_keeps_removals() {
     let policy = policy(&json!({

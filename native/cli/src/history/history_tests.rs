@@ -7,6 +7,8 @@ use std::{ffi::OsString, fs};
 use tempfile::TempDir;
 
 /// Verifies [`iso`] matches `JavaScript` `Date.prototype.toISOString` formatting.
+///
+/// Covers epoch `0`, sub-second milliseconds (`999`), arbitrary timestamps, and leap-year dates.
 #[test]
 fn iso_matches_javascript() {
     assert_eq!(iso(0), "1970-01-01T00:00:00.000Z");

@@ -32,6 +32,8 @@ fn reports_an_empty_switch() {
 }
 
 /// Verifies that [`format`] describes switching to the remote head when `skip_fetch` is `false`.
+///
+/// Ensures `"to the head of lane"` is emitted without `"local head"`.
 #[test]
 fn reports_fetched_head() {
     let report = format(

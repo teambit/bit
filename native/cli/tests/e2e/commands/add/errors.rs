@@ -4,6 +4,8 @@
 
 use super::support::{compare, workspace};
 /// Verifies invalid component IDs, version suffixes, and conflicting `-i`/`-n` flags fail identically via [`compare`].
+///
+/// Covers `-i` with `-n`, dots in component names, and `@version` suffixes on `bit add`.
 #[test]
 fn invalid_id_version_and_conflicting_name_flags_leave_state_unchanged() {
     for command in ["add bar -i jaja -n test", "add bar -i bar/fo.o", "add bar -i bar/foo@0.0.4"] {

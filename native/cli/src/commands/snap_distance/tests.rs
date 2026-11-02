@@ -67,6 +67,8 @@ fn bitmap_lane_helpers_accept_object_and_string_lane_ids() {
 }
 
 /// Verifies that [`parse_options`] returns `None` when given zero or more than three positional arguments.
+///
+/// Ensures `bit snap-distance` accepts between 1 and 3 positional arguments inclusive.
 #[test]
 fn rejects_empty_or_excessive_snap_distance_arguments() {
     assert_eq!(parse_options(&[]), None);

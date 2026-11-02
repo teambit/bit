@@ -96,7 +96,7 @@ pub(crate) fn compare_with_error_variants(
     compare_mode(helper, command, false, true, output, false, None)
 }
 
-/// Require clean delegation while retaining exact command bytes and full state.
+/// Require clean delegation in [`compare_declined`] while retaining exact command bytes and full state.
 pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     compare_mode(helper, command, false, false, Comparison::exact(stdout), false, None)
 }

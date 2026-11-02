@@ -5,6 +5,8 @@
 use super::app_file;
 
 /// Verifies [`app_file`] recognizes `.bit-app.*` and `.*-app.*` filenames and rejects bare suffixes.
+///
+/// Checks `.bit-app.ts`, `.react-app.tsx`, `.node-app.js`, and non-app source paths.
 #[test]
 fn app_files() {
     assert!(app_file("src/my.bit-app.ts"));

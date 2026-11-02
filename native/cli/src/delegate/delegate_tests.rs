@@ -60,6 +60,7 @@ fn node_from_path_leaves_path_alone() {
     );
 }
 
+/// Verifies [`command`] runs a [`Target::Wrapper`] executable directly without a separate `node` invocation.
 #[test]
 fn wrapper_runs_directly() {
     let command = command(&Target::Wrapper(PathBuf::from("/usr/local/bin/bit")), &["-v".into()]);

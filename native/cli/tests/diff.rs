@@ -91,6 +91,7 @@ fn unresolved_patterns_decline() {
     declined(&output, r#"["diff","missing","-j"]"#, "exactly one component");
 }
 
+/// Verifies that `BIT_CONFIG_GIT_PATH` reaches status capture before the [`STUB`] host declines.
 #[test]
 fn configured_git_reaches_capture_before_the_stub_host_declines() {
     let dir = workspace();

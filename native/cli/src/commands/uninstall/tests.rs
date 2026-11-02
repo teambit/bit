@@ -6,6 +6,8 @@ use super::parse_arguments;
 use std::ffi::OsString;
 
 /// Verifies [`parse_arguments`] extracts positional package names while ignoring `--no-color`.
+///
+/// Confirms multiple package arguments preserve their CLI order.
 #[test]
 fn extracts_positional_package_names() {
     let args = [

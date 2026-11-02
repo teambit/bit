@@ -32,6 +32,7 @@ fn changed_components_without_dependents() {
     assert!(report.details.is_none());
 }
 
+/// Verifies [`format`] counts and details `autoSnappedResults` for [`SNAP`] with [`ONE`] and [`TWO`].
 #[test]
 fn auto_snapped_dependents_are_counted_and_detailed() {
     let result = json!({

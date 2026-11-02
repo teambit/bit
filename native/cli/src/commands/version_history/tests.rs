@@ -5,6 +5,8 @@
 use super::{Subcommand, parse_subcommand};
 
 /// Verifies `bit version-history` [`Subcommand`] parsing via [`parse_subcommand`].
+///
+/// Covers `show --json`, `show -s`, `build --from-snap`, `build --delete-existing`, and unrecognized subcommands.
 #[test]
 fn parses_show_json_and_unrecognized_subcommands() {
     assert_eq!(

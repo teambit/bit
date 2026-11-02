@@ -6,6 +6,8 @@ use super::complete;
 use serde_json::json;
 
 /// Verifies [`complete`] proves full parent ancestry and respects `graphCompleteRefs`.
+///
+/// Checks complete two-snap chains, missing heads, incomplete parents, and `graphCompleteRefs` short-circuits.
 #[test]
 fn proves_complete_parents_and_respects_recorded_complete_heads() {
     let complete_graph = json!({"versions":[{"hash":"first","parents":[]},{"hash":"second","parents":["first"]}],"graphCompleteRefs":[]});

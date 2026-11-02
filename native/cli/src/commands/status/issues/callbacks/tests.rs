@@ -7,6 +7,8 @@ use serde_json::json;
 use std::collections::HashSet;
 
 /// Verifies [`merge`] replaces existing issue types, orders custom plugin issues before later checks, and filters ignored issues.
+///
+/// Ensures `ParseErrors` is replaced in-place while `IgnoredPluginIssue` is omitted via [`HashSet`].
 #[test]
 fn callbacks_replace_existing_types_and_precede_later_native_checks() {
     let replacement = json!({"type":"ParseErrors","dataAsString":"callback parser details","data":{"a.js":"error"}});

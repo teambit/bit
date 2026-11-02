@@ -21,6 +21,8 @@ fn dynamic_parent_main_file_and_missing_directory_main_match_node() {
     }
 }
 /// Verifies that a removed `mainFile` can be replaced by a new explicit `-m` main file.
+///
+/// Confirms `.bitmap` updates `mainFile` to `"foo-main2.js"` after `"foo-main.js"` is deleted.
 #[test]
 fn removed_main_can_be_replaced_by_a_new_explicit_main() {
     let helper = workspace();

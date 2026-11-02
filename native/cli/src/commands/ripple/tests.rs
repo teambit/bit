@@ -5,6 +5,8 @@
 use super::{Subcommand, parse_positive_int, parse_subcommand};
 
 /// Verifies bare `bit ripple` [`Subcommand`] parsing via [`parse_subcommand`] and [`parse_positive_int`].
+///
+/// Covers `list --limit`, `simulate --lane`, `retry -j`, and non-positive integer rejection.
 #[test]
 fn parses_bare_ripple_and_invalid_limit() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::Bare));

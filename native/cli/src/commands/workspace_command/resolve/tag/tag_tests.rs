@@ -30,6 +30,8 @@ fn literal_patterns_select_one_component_with_its_version() {
 }
 
 /// Verifies that [`planned_versions`] extracts target versions from `taggedComponents` and `autoTaggedResults`.
+///
+/// Also confirms that missing component identities in `planned_versions` return an error.
 #[test]
 fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
     let result = json!({ "taggedComponents": ["s/two@0.0.2"], "autoTaggedResults": [{ "id": "s/one@0.0.2", "triggeredBy": ["s/two@0.0.2"] }] });

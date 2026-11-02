@@ -39,6 +39,7 @@ fn interval() -> (i64, i64) {
         .unwrap();
     (start.timestamp_millis(), start.timestamp_millis() + 1999)
 }
+/// Verifies [`Snapshot::validate`] equates separate-second and same-second clock groups once last-writer bytes are proven.
 #[test]
 fn different_clock_groups_are_equal_only_after_last_writer_bytes_are_proven() {
     let (start, end) = interval();

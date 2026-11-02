@@ -53,6 +53,7 @@ fn variant_specificity_exclusions_and_propagation_share_installer_rules() {
     assert_eq!(rows[1]["config"]["policy"]["dependencies"], json!({"directory":"2"}));
 }
 
+/// Verifies that a [`target`] without variant or stored version config projects an empty extensions list.
 #[test]
 fn target_without_variant_or_stored_config_projects_empty_extensions() {
     let target = target();

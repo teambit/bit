@@ -93,6 +93,8 @@ fn cleans_only_bit_generated_config_files_and_formats_list() {
 }
 
 /// Verifies [`write_workspace_configs`] and [`format_write_output`] for standard `TypeScript`, `ESLint`, and `Prettier` writers.
+///
+/// Checks generated `tsconfig.json`, `.eslintrc.json`, and `.prettierrc.cjs` files with [`Chalk`].
 #[test]
 fn writes_standard_workspace_configs_and_formats_output() {
     let temp = tempfile::tempdir().unwrap();

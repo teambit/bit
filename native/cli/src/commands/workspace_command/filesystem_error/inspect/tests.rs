@@ -4,6 +4,8 @@
 use std::process::Command;
 
 /// Verifies error property quoting matches `Node.js` `util.inspect` across quotes and control characters.
+///
+/// Spawns [`Command`] running `node -e` to compare `util.inspect` against [`super::quote`].
 #[test]
 fn filesystem_error_strings_match_node_inspection() {
     let mut values = vec![
