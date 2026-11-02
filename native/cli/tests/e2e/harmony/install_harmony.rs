@@ -8,6 +8,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::fs;
 
+/// Reads the `version` field from the JSON file at `rel` in the local workspace.
 fn read_pkg_version(helper: &Helper, rel: &str) -> String {
     let content = fs::read_to_string(helper.scopes.local_path.join(rel)).unwrap();
     parse(&content)["version"]
@@ -16,6 +17,7 @@ fn read_pkg_version(helper: &Helper, rel: &str) -> String {
         .to_owned()
 }
 
+/// Reads the dependency version range for `pkg` from `workspace.jsonc` policy.
 fn read_ws_dep(helper: &Helper, pkg: &str) -> String {
     let ws = helper.read_workspace_jsonc();
     ws["teambit.dependencies/dependency-resolver"]["policy"]["dependencies"][pkg]

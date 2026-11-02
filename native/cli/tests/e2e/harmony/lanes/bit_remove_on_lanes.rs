@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts` for `bit remove` and `bit delete` on lanes ([`remove_flag_in_show`], [`is_removed_in_show`], [`is_remove_on_main_in_show`]).
+//! Port of `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts` for `bit remove` and `bit delete` on lanes ([`remove_flag_in_show`], [`is_removed_in_show`], [`is_remove_on_main_in_show`]) across workspaces.
 //!
 //! Validates `--lane` soft removals, `--update-main`, forked lane merges, and `bit recover` on lanes.
 

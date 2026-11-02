@@ -16,6 +16,7 @@ use crate::{
     helper::{Helper, config, remote},
 };
 
+/// Creates an exported workspace with `count` `empty-env` components and an exported `dev` lane snap on `comp1`.
 fn exported(count: usize) -> Helper {
     let helper = support::workspace(count, false);
     for index in 1..=count {

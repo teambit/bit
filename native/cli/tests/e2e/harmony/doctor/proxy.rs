@@ -11,6 +11,7 @@ use std::{
     process::{Child, Command, Stdio},
 };
 
+/// Local HTTPS `CONNECT` proxy fixture for offline BVM version check tests.
 pub(super) struct Proxy {
     pub url: String,
     child: Child,

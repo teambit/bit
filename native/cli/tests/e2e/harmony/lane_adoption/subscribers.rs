@@ -7,6 +7,7 @@ use crate::{commands::add::support::history_oracle, helper::config};
 use serde_json::json;
 use std::fs;
 
+/// Verifies that `preInstall` subscribers can mutate installer arguments and retain reassigned fields outside CI.
 #[test]
 fn install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_fields() {
     install_subscribers(false);

@@ -15,6 +15,7 @@ use std::{
     time::Duration,
 };
 
+/// Spawns `bit export --verbose` against `hub` and sends `SIGINT` once publication is acknowledged.
 fn run(hub: &Hub, root: &Path, node: bool) -> Output {
     let release = hub.journal
         .parent()

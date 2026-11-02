@@ -9,6 +9,7 @@ use crate::{
 };
 use serde_json::json;
 
+/// Verifies that patterned `bit lane import -p` resolves `+` peer versions before handling unpublished peer errors.
 #[test]
 fn patterned_lane_import_resolves_peer_plus_before_graceful_unpublished_peer_failure() {
     let helper = support::workspace(2, false);

@@ -13,6 +13,7 @@ use crate::{
     helper::{config, remote},
 };
 
+/// Normalizes coalescible pnpm startup-frame progress redraws in `text`.
 pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {
     startup_frame::project(text)
 }

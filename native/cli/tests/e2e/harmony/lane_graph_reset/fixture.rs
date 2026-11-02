@@ -9,6 +9,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::PathBuf};
 
+/// Creates a workspace with `count` `empty-env` components, optionally tagged at `0.0.1`.
 pub(super) fn workspace(count: usize, tagged: bool) -> Helper {
     let helper = support::workspace(count, false);
     for index in 1..=count {

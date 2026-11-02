@@ -11,6 +11,7 @@ use crate::{
 };
 use std::ffi::OsStr;
 
+/// Verifies that `bit switch --workspace-only` updates existing workspace components without adding new lane members.
 #[test]
 fn workspace_only_switches_existing_component_without_adding_new_lane_rows() {
     let helper = exported(2);

@@ -12,6 +12,7 @@ use std::{
     time::Duration,
 };
 
+/// Captured HTTP `GraphQL` request body and headers received by [`Server`].
 #[derive(Debug)]
 pub(super) struct Request {
     pub body: Value,

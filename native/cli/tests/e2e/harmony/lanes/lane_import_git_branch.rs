@@ -5,6 +5,7 @@
 use crate::helper::{Helper, parse};
 use std::process::Command;
 
+/// Executes `git <args>` in `cwd` and returns stdout, panicking on non-zero exit status.
 fn git(cwd: &std::path::Path, args: &[&str]) -> String {
     let out = Command::new("git")
         .args(args)

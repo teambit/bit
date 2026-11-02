@@ -9,6 +9,7 @@ use crate::{
 };
 use serde_json::Value;
 
+/// Workspace and historical snapshot state for `bit lane checkout` and `bit lane revert` tests.
 pub(super) struct Fixture {
     pub helper: Helper,
     pub history: String,

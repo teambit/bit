@@ -8,6 +8,7 @@ use crate::helper::{Helper, config};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs, time::Duration};
 
+/// Builds a sample `GraphQL` `scope.doctor` response payload for HTTP remote `bit doctor` tests.
 fn response() -> Value {
     json!({"data":{"scope":{"doctor":{
         "examineResults":[{"diagnosisMetaData":{"name":"validate git exec","description":"validate that git executable found","category":"vendors"},"bareResult":{"valid":true},"formattedSymptoms":"","formattedManualTreat":""}],

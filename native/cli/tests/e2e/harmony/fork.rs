@@ -17,6 +17,7 @@ mod support;
 use crate::commands::move_paths::support::{aspect, bitmap, json, setup, successful};
 use serde_json::json;
 
+/// Verifies that local `bit fork` creates a new component with sanitized `teambit.component/forking` provenance.
 #[test]
 fn local_fork_creates_a_new_component_with_sanitized_original_provenance() {
     let helper = support::exported(1);

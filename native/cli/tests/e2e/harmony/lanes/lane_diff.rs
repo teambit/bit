@@ -4,9 +4,12 @@
 
 use crate::helper::{Helper, strip_ansi};
 
+/// Fixture source for `bar/foo.js` version 2 on a lane.
 const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; }";
+/// Fixture source for `bar/foo.js` version 3 on a lane.
 const FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; }";
 
+/// Asserts that `diff` contains the unified diff headers and hunks from `main` to `dev` for `foo.js`.
 fn expect_main_to_dev_diff(diff: &str) {
     let diff = strip_ansi(diff);
     assert!(diff.contains("--- foo.js (main)"), "{diff}");

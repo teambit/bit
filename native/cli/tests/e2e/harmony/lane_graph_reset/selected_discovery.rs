@@ -9,6 +9,7 @@ use crate::{
 };
 use std::fs;
 
+/// Verifies that resetting a selected local component succeeds even when an unselected lane member has no base head.
 #[test]
 fn selected_local_member_resets_while_unselected_inherited_member_has_no_replacement() {
     let helper = fixture::unknown_inherited();

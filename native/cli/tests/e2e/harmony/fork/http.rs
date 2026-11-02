@@ -6,6 +6,7 @@ use super::support;
 use crate::commands::{diff_completion::http as server, move_paths::support::successful};
 use std::{collections::BTreeMap, fs, path::Path};
 
+/// Verifies that single-component HTTP `bit fork` materializes the target without importing remote objects into `.bit/objects`.
 #[test]
 fn http_single_fork_preserves_private_capture_and_original_provenance() {
     let helper = support::remote_workspace(1);

@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, remote},
 };
 
+/// Creates an exported `dev` lane with a cloned reader workspace lagging one snap behind the remote head.
 fn exported_ahead() -> (Helper, std::path::PathBuf, String, String) {
     let helper = fixture::workspace(1, false);
     support::setup(&helper, "lane create dev");

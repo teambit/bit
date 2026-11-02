@@ -5,9 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
-/// - `harmony extension config › persist extension config (provided by the user)to models › core extensions › should persist core extension config during tag`
-/// - `harmony extension config › persist extension config (provided by the user)to models › core extensions › should not have version for core extension in the models`
-/// - `harmony extension config › persist extension config (provided by the user)to models › core extensions › should not insert core extensions into the component dev deps`
+/// Verifies that core extension configuration in `variants` is persisted to the model without adding dev dependencies.
 #[test]
 fn persist_core_extension_config_to_models() {
     let helper = Helper::new();

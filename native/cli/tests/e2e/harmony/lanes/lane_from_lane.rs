@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use serde_json::json;
 
-/// bit lane command › main => lane-a => lane-b, so `laneB` branched from `laneA`
+/// Verifies branching `lane-b` from `lane-a` and switching between `main`, `lane-a`, and `lane-b`.
 #[test]
 fn main_to_lane_a_to_lane_b_branching_and_switching() {
     let helper = Helper::new();

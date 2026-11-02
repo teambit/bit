@@ -8,6 +8,7 @@ use crate::{
 };
 use serde_json::json;
 
+/// Configures and exports a `quiet-reporter` aspect registered in `workspace.jsonc` without `.bitmap` tracking.
 pub(super) fn configure(helper: &Helper) {
     let source = include_str!("reporter.cjs");
     helper.output_file("quiet-reporter/index.js", source);

@@ -10,6 +10,7 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
+/// Verifies that `bit fork --scope --path --preserve` copies component files without renaming identifiers.
 #[test]
 fn local_path_scope_and_preserve_copy_source_without_renaming_its_identifiers() {
     let helper = support::exported(1);

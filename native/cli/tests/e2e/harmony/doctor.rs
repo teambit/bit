@@ -9,6 +9,7 @@ use crate::helper::Helper;
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, io::Read, path::Path};
 
+/// Runs `command` via native and Node (`BIT_NATIVE=off`) and asserts identical exit code, stdout, and stderr.
 fn compare(helper: &Helper, oracle: &Path, command: &str, environment: &[(&str, &OsStr)]) {
     let mut node_environment = environment.to_vec();
     node_environment.push(("BIT_NATIVE", OsStr::new("off")));

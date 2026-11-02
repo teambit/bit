@@ -10,6 +10,7 @@ use crate::{
 use serde_json::Value;
 use std::fs;
 
+/// Seeds an exported `dev` lane containing a hidden `updateDependents` entry for `comp2`.
 fn seeded() -> Helper {
     let helper = fixture::workspace(3, false);
     helper.output_file("comp1/index.js", "module.exports=require('../comp2');\n");

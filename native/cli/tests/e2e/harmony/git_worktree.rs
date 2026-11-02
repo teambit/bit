@@ -9,6 +9,7 @@ use crate::{
 };
 use std::{fs, process::Command};
 
+/// Initializes a Git-backed workspace with `num_components` tagged and exported components and an initial commit.
 fn init_git_workspace_with_exported_components(
     helper: &Helper,
     num_components: usize,

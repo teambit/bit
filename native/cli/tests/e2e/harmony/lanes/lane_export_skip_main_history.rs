@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/lane-export-skip-main-history.e2e.ts` for `bit export` lane main-history object pruning ([`scope_has_object`], [`vh_hashes`], [`dangling_parents_in`]).
+//! Port of `e2e/harmony/lanes/lane-export-skip-main-history.e2e.ts` for `bit export` lane main-history object pruning ([`scope_has_object`], [`vh_hashes`], [`dangling_parents_in`]) across scopes.
 
 use crate::helper::{Helper, parse};
 use std::{collections::HashSet, path::Path};

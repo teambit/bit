@@ -5,6 +5,7 @@
 use crate::commands::move_paths::support;
 use std::fs;
 
+/// Verifies that `bit lane import` on an active lane starts the configured aspect provider once like Node.
 #[test]
 fn active_lane_import_with_configured_provider_matches_released_node() {
     let helper = super::snapshot_environments::callback_workspace(false);

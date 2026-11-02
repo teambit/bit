@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, config, parse, remote};
 
-/// bit lane management › rename an exported lane that has an alias
+/// Verifies `bit lane rename` on an exported lane created with `--alias`.
 #[test]
 fn rename_exported_lane_with_alias() {
     let helper = Helper::new();

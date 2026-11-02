@@ -5,6 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
+/// Creates and compiles a `.bit-env.ts` plugin environment component (`my-env`).
 fn create_bit_env_plugin_env(helper: &Helper) {
     helper.output_file(
         "my-env/my-env.bit-env.ts",

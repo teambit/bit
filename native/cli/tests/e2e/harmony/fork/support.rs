@@ -9,8 +9,10 @@ use crate::{
 use serde_json::{Value, json};
 use std::fs;
 
+/// Aspect ID for component forking metadata (`teambit.component/forking`).
 pub(super) const FORK: &str = "teambit.component/forking";
 
+/// Creates a workspace with `count` tagged and exported components.
 pub(in crate::harmony) fn exported(count: usize) -> Helper {
     let helper = support::workspace(count, true);
     remote::publish(&helper);

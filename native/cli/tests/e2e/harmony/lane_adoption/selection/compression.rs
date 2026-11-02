@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Verifies that `bit switch main` re-compresses level-0 zlib component objects using default compression.
 #[test]
 fn main_switch_canonicalizes_an_unchanged_main_only_component_zlib_stream() {
     let helper = support::workspace(2, true);

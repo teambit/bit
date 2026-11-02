@@ -9,6 +9,7 @@ use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::json;
 use std::{ffi::OsStr, fs, time::Instant};
 
+/// Parses the integer metric immediately following `prefix` in `output`.
 fn extract_metric(output: &str, prefix: &str) -> Option<u64> {
     let idx = output.find(prefix)?;
     let rest = &output[idx + prefix.len()..];

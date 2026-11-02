@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// bit lane forking › multiple scopes - fork the lane and export to another scope › should be able to import the forked lane with no errors
+/// Verifies forking a lane into another remote scope (`--fork-lane-new-scope`) and importing it cleanly.
 #[test]
 fn fork_lane_and_export_to_another_scope_then_import() {
     let helper = Helper::new();

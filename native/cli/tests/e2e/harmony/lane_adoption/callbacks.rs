@@ -6,6 +6,7 @@ use super::exported;
 use crate::{commands::move_paths::support, helper::config};
 use serde_json::json;
 
+/// Verifies that `bit lane import` starts the configured provider once and preserves `workspace.jsonc` mutations.
 #[test]
 fn active_lane_import_preserves_real_provider_startup_and_config_mutation() {
     let helper = exported(1);

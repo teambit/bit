@@ -7,6 +7,7 @@ use crate::helper::Helper;
 use sha1::{Digest, Sha1};
 use std::{collections::BTreeMap, fs};
 
+/// Returns the expected `last-merged/main-components` backup entries for `comp1` in `helper`.
 pub(super) fn expected(helper: &Helper) -> BTreeMap<String, Vec<u8>> {
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     let hash = format!("{:x}", Sha1::digest(format!("{}/comp1", helper.scopes.remote).as_bytes()));

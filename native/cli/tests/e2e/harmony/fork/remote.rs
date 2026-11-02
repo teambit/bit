@@ -5,6 +5,7 @@
 use super::support;
 use crate::commands::move_paths::support::{compare, json, successful};
 
+/// Verifies that remote `bit fork <scope>/<name>` defaults the target name and records `forkedFrom` provenance.
 #[test]
 fn remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance() {
     let helper = support::remote_workspace(1);

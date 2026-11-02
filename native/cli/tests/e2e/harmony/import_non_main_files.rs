@@ -4,8 +4,7 @@
 
 use crate::helper::{Helper, issue_types, parse};
 
-/// importing internal files flow › importing of a non-main .js file › bit status should show it as an invalid component
-/// importing internal files flow › importing of a non-main .js file › bit status should print the path for the non-main file
+/// Verifies that importing a non-main `.js` file triggers an `ImportNonMainFiles` issue in `bit status`.
 #[test]
 fn importing_non_main_js_file_shows_issue_and_path() {
     let helper = Helper::new();

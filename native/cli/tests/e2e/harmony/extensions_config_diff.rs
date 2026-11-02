@@ -5,6 +5,7 @@
 use crate::helper::{Helper, parse, strip_ansi};
 use serde_json::json;
 
+/// Re-runs `bit eject-conf bar/foo --override` and asserts that `full_id` is not marked modified in `bit status`.
 fn re_eject_and_check_status_before(helper: &Helper, full_id: &str) {
     helper.run("eject-conf bar/foo --override");
     let status = parse(&helper.native("status --json"));

@@ -6,6 +6,7 @@ use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};
 use std::fs;
 
+/// Verifies that `bit lane revert --restore-deleted-components` keeps existing component heads while restoring historical file bytes.
 #[test]
 fn mixed_revert_keeps_the_existing_version_and_restores_historical_file_bytes() {
     let fixture = fixture::deleted(true);

@@ -8,6 +8,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
 
+/// Runs `command` via the Node CLI (`BIT_NATIVE=off`) and asserts success.
 fn node(helper: &Helper, command: &str) {
     let result = Helper::cmd_in_with(
         &helper.scopes.local_path,

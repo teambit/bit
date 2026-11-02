@@ -5,9 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;
 
-/// bit lane multiple scopes › multiple scopes › exporting the lane to the remote
-/// bit lane multiple scopes › multiple scopes › when artifacts from older versions are missing locally
-/// bit lane multiple scopes › multiple scopes › importing the lane
+/// Verifies exporting and importing a lane whose components belong to multiple remote scopes.
 #[test]
 fn multiple_scopes_export_and_import_lane() {
     let helper = Helper::new();

@@ -2,6 +2,7 @@
 //!
 //! Provides duration token normalization for `bit switch` and `bit lane import` comparisons.
 
+/// Replaces validated completion duration tokens in `text` with `<duration>)`.
 pub(crate) fn durations(text: &str) -> String {
     text.split_inclusive('\n')
         .map(completion)

@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, remote};
 use std::fs;
 
-/// init command on Harmony › init --reset-new
+/// Verifies that `bit init --reset-new` resets `.bitmap` versions/scopes and clears `.bit/objects`.
 #[test]
 fn init_reset_new_resets_bitmap_and_clears_objects() {
     let helper = Helper::new();

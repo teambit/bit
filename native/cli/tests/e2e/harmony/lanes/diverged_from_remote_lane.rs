@@ -5,6 +5,7 @@
 use crate::helper::{Helper, parse};
 use std::{thread, time::Duration};
 
+/// Verifies `mergePendingComponents` and `bit reset` behavior when a local lane diverges from its remote counterpart.
 #[test]
 fn local_is_diverged_from_the_remote() {
     let helper = Helper::new();

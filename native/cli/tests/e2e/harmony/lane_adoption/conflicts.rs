@@ -8,6 +8,7 @@ use crate::{
 };
 use std::fs;
 
+/// Creates a workspace on `lane-a` with an uncommitted local edit that conflicts with exported `lane-b`.
 fn fixture() -> Helper {
     let helper = support::workspace(1, false);
     support::setup(&helper, "lane create lane-a");

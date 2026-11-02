@@ -7,6 +7,7 @@ mod packages;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Creates a workspace with `bar/foo` tagged across three unexported versions (`0.0.1`..`0.0.3`).
 fn pending() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

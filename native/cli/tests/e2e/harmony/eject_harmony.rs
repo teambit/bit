@@ -5,14 +5,7 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should indicate that the eject was successful`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should save the component in workspace.jsonc`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should have the component files as a package (in node_modules)`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should delete the original component files from the file-system`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should delete the component from bit.map`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › bit status should show a clean state`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with the default options › should not delete the objects from the scope`
-/// - `eject command on Harmony › eject components with dependencies after export › eject with --keep-files flag › should keep the original component files from the file-system intact`
+/// Verifies `bit eject` default and `--keep-files` behavior on exported components with dependencies.
 #[test]
 fn eject_components_with_dependencies_after_export() {
     let helper = Helper::new();

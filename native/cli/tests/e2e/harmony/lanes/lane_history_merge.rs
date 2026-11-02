@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// lane history with merge operations › merging a lane when the target lane is behind (fast-forward merge, no snap)
+/// Verifies that a fast-forward `bit lane merge` records a merge entry in `bit lane history --json`.
 #[test]
 fn lane_history_records_fast_forward_merge_entry() {
     let helper = Helper::new();

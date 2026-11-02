@@ -14,6 +14,7 @@ use crate::{
 use serde_json::Value;
 use std::{fs, path::PathBuf};
 
+/// Verifies that phase-two deleted-component `Source` corruption fails after persisting existing-component reverts.
 #[test]
 fn corrupt_restored_source_fails_after_the_existing_component_revert_is_persisted() {
     let fixture = fixture::deleted(true);

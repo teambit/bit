@@ -13,6 +13,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{fs, io::Write};
 
+/// Verifies that `bit lane checkout` refreshes stale local `LaneHistory` from the remote scope before materialization.
 #[test]
 fn checkout_refreshes_remote_lane_history_before_resolving_the_requested_entry() {
     let fixture = stale_file_remote();

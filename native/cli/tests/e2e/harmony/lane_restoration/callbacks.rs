@@ -10,6 +10,7 @@ use crate::{
 };
 use serde_json::Value;
 
+/// Prepares a two-entry `LaneHistory` workspace with phase-recording callbacks enabled on `dev`.
 fn prepared() -> (Helper, String) {
     let helper = installation_fixture();
     support::setup(&helper, "switch dev -x");

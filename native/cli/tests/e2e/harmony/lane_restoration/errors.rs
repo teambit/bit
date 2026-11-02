@@ -5,6 +5,7 @@
 use super::fixture;
 use crate::commands::move_paths::support;
 
+/// Verifies that `bit lane checkout` and `bit lane revert` reject unknown history IDs without mutating `.bitmap`.
 #[test]
 fn missing_history_id_reports_the_current_lane_and_preserves_every_control() {
     let fixture = fixture::initial();

@@ -6,6 +6,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::ffi::OsStr;
 
+/// Verifies `export`, `log --remote`, `import`, `remove`, and `lane list` over an HTTP remote scope.
 #[test]
 fn http_export_log_import_remove_and_lane_list() {
     let helper = Helper::new();

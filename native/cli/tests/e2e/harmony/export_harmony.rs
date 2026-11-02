@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, remote};
 
-/// export functionality on Harmony › export, re-init the remote scope, tag and export
+/// Verifies that exporting after re-initializing the remote scope requires `--all-versions` for missing history.
 #[test]
 fn export_reinit_remote_scope_tag_and_export() {
     let helper = Helper::new();

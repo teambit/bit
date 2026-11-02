@@ -4,6 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
+/// Verifies that `bit reset` removes the reset snap's `LaneHistory` entry and `lane history-diff` succeeds.
 #[test]
 fn bit_reset_removes_the_lane_history_entry_of_the_reset_snap() {
     let helper = Helper::new();

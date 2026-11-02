@@ -5,6 +5,7 @@
 use crate::helper::{Helper, setup};
 use std::{env, path::PathBuf, process::Command};
 
+/// Runs the `inflate_origin.cjs` conformance probe to return the two expected `ObjectFetcher` corruption error strings.
 pub(super) fn qualified_errors(helper: &Helper) -> [String; 2] {
     let package = setup::shared().node_cli
         .parent()

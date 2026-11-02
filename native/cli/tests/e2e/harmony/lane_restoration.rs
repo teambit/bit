@@ -12,6 +12,7 @@ mod versions;
 
 use crate::{commands::move_paths::support, helper::config};
 
+/// Verifies that `bit lane checkout` restores deleted components at their historical versions.
 #[test]
 fn checkout_restores_deleted_components_at_the_historical_versions() {
     let fixture = fixture::deleted(false);

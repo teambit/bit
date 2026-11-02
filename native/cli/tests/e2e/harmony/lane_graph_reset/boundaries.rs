@@ -5,6 +5,7 @@
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};
 
+/// Verifies that `bit reset` on a newly created lane restores the exported `main` base version.
 #[test]
 fn resetting_a_new_lane_preserves_its_exported_main_base() {
     let helper = fixture::workspace(1, true);

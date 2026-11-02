@@ -6,10 +6,15 @@
 
 mod tests;
 
+/// Spinner startup prefix preceding pnpm progress output.
 const START: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
+/// Single-package zero-add pnpm progress counter line.
 const COUNTERS: &str = "Progress: resolved 1, reused 0, downloaded 0, added 0";
+/// Two-package zero-add pnpm progress counter line.
 const TWO_COUNTERS: &str = "Progress: resolved 2, reused 0, downloaded 0, added 0";
+/// ANSI cursor-up redraw escape sequence between progress frames.
 const REDRAW: &str = "\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
+/// Non-coalescible pnpm content-addressable store banner line.
 const BANNER: &str =
     "Packages are hard linked from the content-addressable store to the virtual store.\n";
 

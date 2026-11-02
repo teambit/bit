@@ -4,6 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
+/// Verifies `updatesFromForked` in `bit status --lanes` and two-parent merge commits when forked lanes diverge.
 #[test]
 fn lane_b_was_forked_from_lane_a_and_they_are_now_diverged() {
     let helper = Helper::new();

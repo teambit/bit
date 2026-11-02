@@ -17,6 +17,7 @@ use std::{
     process::{Child, Command, Stdio},
 };
 
+/// Local central-export hub server process and request journal handle.
 struct Hub {
     child: Child,
     url: String,

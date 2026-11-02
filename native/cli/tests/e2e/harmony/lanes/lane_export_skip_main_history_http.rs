@@ -4,10 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// - `lane export skips main history — HTTP protocol › lane scope served over HTTP, components home scope on fs › the HTTP-served lane scope should hold the merge and lane snaps`
-/// - `lane export skips main history — HTTP protocol › lane scope served over HTTP, components home scope on fs › the HTTP-served lane scope should NOT contain pre-lane main Version objects`
-/// - `lane export skips main history — HTTP protocol › lane scope served over HTTP, components home scope on fs › fresh consumer imports the lane over HTTP › bit status should not throw`
-/// - `lane export skips main history — HTTP protocol › lane scope served over HTTP, components home scope on fs › fresh consumer imports the lane over HTTP › bit log should reach into main history transparently (fetched from home scope)`
+/// Verifies that exporting a lane to a separate scope omits pre-lane `main` `Version` objects while preserving `bit log`.
 #[test]
 fn lane_export_skips_main_history_separate_lane_scope() {
     let helper = Helper::new();

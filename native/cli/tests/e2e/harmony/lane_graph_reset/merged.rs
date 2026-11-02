@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, remote},
 };
 
+/// Creates a `dev` lane that has merged a diverging `main` tag, optionally with `--no-snap`.
 fn diverged(no_snap: bool) -> (Helper, String, String) {
     let helper = fixture::workspace(1, true);
     remote::publish(&helper);

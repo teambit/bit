@@ -4,6 +4,7 @@
 
 use super::{BANNER, COUNTERS, REDRAW, START, project};
 
+/// Builds a sample pnpm store banner followed by a single-package progress transition.
 fn banner() -> String {
     format!(
         "{BANNER}  Content-addressable store is at: C:\\fixture\\store\\v11\u{1b}[0K\n  Virtual store is at:             node_modules/.pnpm\u{1b}[0K\n{COUNTERS}\u{1b}[0K\n\u{1b}[0K\u{1b}[K\u{1b}[0J\r\u{1b}[1APackages: +1\u{1b}[0K\n+\nProgress: resolved 1, reused 0, downloaded 0, added 1\n",

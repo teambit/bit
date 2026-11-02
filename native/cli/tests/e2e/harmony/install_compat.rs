@@ -11,6 +11,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{fmt::Write, fs};
 
+/// Creates a tagged single-component workspace configured with the `env/install-compat` provider aspect.
 fn configured() -> Helper {
     let helper = support::workspace(1, true);
     finish_configured(helper)
