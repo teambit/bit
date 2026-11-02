@@ -36,7 +36,7 @@ const DOCS_PATTERNS: [&str; 1] = ["**/*.docs.*"];
 /// Default composition file glob patterns for the built-in Node environment.
 const COMPOSITIONS_PATTERNS: [&str; 1] = ["**/*.composition?(s).*"];
 
-/// Builds the serialized default Node.js environment dependency policy array (`@types/jest`, `@types/node`, `react`, `react-dom`).
+/// Builds the serialized default Node.js environment dependency policy [`Value`] array (`@types/jest`, `@types/node`, `react`, `react-dom`).
 #[inline]
 fn policy_entries() -> Value {
     let dev = |id: &str, version: &str| {

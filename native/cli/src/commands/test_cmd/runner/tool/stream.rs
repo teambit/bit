@@ -21,11 +21,17 @@ use std::{
 
 /// Inherited-stdio Jest worker session controlled over a local loopback [`TcpStream`].
 pub(super) struct Stream {
+    /// Spawned Node.js Jest worker [`Child`] process.
     child: Child,
+    /// Open stdin pipe used to send JSON control commands to the worker.
     input: Option<ChildStdin>,
+    /// Authenticated loopback [`TcpStream`] reader receiving JSON status frames from the worker.
     control: BufReader<TcpStream>,
+    /// Temporary file capturing worker stdout during preparation before streaming starts.
     output: tempfile::NamedTempFile,
+    /// Temporary file capturing worker stderr during preparation before streaming starts.
     errors: tempfile::NamedTempFile,
+    /// Materialized Jest helper [`Assets`] directory.
     assets: Assets,
 }
 impl Stream {

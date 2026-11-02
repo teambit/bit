@@ -94,6 +94,7 @@ fn any_existing_file(values: &[String]) -> bool {
         .any(|value| Path::new(value.trim()).is_file())
 }
 
+/// Returns `true` when every path in `values` resolves to an existing regular file.
 #[inline]
 fn all_existing_files(values: &[String]) -> bool {
     values

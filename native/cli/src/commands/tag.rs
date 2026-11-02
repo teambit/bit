@@ -2,7 +2,6 @@
 //! tags ([`resolve`]), with the tag [`options`] and [`Report`].
 //!
 //! Coordinates [`diagnostics`], [`version_file`], [`Planned`] execution, [`MESSAGE_WARNING`], [`REMOTE_BUILD_WARNING`], and [`versions`] output formatting.
-
 mod diagnostics;
 mod options;
 mod version_file;
@@ -76,6 +75,7 @@ fn is_ci() -> bool {
     super::scope_rename::ci_active()
 }
 
+/// Handles option-validation errors and invalid `--ver` inputs before declining `bit tag`.
 fn fallback_parse_error(
     args: &[OsString],
     raw_args: &[&str],

@@ -22,10 +22,15 @@ use std::{
 
 /// Prepared tester execution plan holding [`Loaded`] component state, [`Session`] worker, and [`Coverage`] targets.
 pub(super) struct Plan {
+    /// Materialized workspace component state and progress metadata.
     loaded: Loaded,
+    /// Active Jest worker [`Session`] when at least one test file matched.
     tool: Option<Session>,
+    /// Per-component [`Coverage`] directory/main targets.
     coverage: Vec<Coverage>,
+    /// Validated CLI [`Settings`] for the test run.
     settings: Settings,
+    /// Number of components with runnable test files.
     runnable: usize,
 }
 impl Plan {

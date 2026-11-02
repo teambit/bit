@@ -79,9 +79,13 @@ fn detect_terminal(args: &[OsString]) -> Terminal {
 
 /// Validated package list, discovered [`discovery::NodeCli`], working directory, and workspace root for `bit uninstall`.
 struct Prepared {
+    /// Package names to remove from `workspace.jsonc` dependency policy.
     packages: Vec<String>,
+    /// Discovered [`discovery::NodeCli`] entry and paths.
     cli: discovery::NodeCli,
+    /// Current working directory where `bit uninstall` was invoked.
     cwd: PathBuf,
+    /// Workspace root directory containing `workspace.jsonc`.
     root: PathBuf,
 }
 

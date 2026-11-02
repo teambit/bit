@@ -12,7 +12,9 @@ use std::{fs, io, path::Path};
 
 /// Parsed `--versions-file` payload paired with its filesystem [`read_proof`] receipt.
 pub(super) struct Captured {
+    /// Parsed JSON [`Value`] containing `entries`, `default`, and `semver` grammar snapshot.
     pub(super) data: Value,
+    /// Filesystem [`read_proof`] receipt captured when reading the `--versions-file`.
     pub(super) proof: Value,
 }
 

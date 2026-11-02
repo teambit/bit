@@ -25,7 +25,7 @@ use std::{env, ffi::OsString, io, path::Path};
 
 /// Descriptor for the native `bit switch` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "switch", aliases: &[], run };
-/// Entry point for `bit switch`.
+/// Entry point for `bit switch` that parses [`options::Options`] and delegates to [`run_options`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

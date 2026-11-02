@@ -46,7 +46,7 @@ pub fn execute_with_scope(
     })
 }
 
-/// Run command-owned scope work after starting its loader, without workspace history.
+/// Run command-owned scope work after starting its [`Output`] loader, without workspace [`History`].
 #[inline]
 pub fn execute_then_scope(
     scope: &Path,

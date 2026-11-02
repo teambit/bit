@@ -72,6 +72,7 @@ fn parse_target(args: &[OsString]) -> Option<String> {
     (!target.is_empty()).then(|| target.to_owned())
 }
 
+/// Resolves the configured aspect entry for `target`, removes it from `workspace.jsonc`, and formats the [`Report`].
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     let content = fs::read_to_string(root.join("workspace.jsonc"))?;
     let doc = Document::parse(&content)?;
@@ -90,6 +91,7 @@ fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     Ok(Report { data: summary, code: 0, details: None })
 }
 
+/// Removes `key_to_remove` from `workspace.jsonc` and deletes `resolved_id` from `.bitmap` when applicable.
 fn apply_unuse(
     root: &Path,
     target: &str,

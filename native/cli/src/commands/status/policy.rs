@@ -40,7 +40,7 @@ const NODE_DEV_DEPENDENCIES: [(&str, &str); 2] =
 const NODE_PEERS: [(&str, &str); 2] =
     [("react", "^17.0.0 || ^18.0.0 || ^19.0.0"), ("react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0")];
 
-/// Effective dependency policy, merged extensions, overrides, and package naming for one component.
+/// Effective dependency policy, merged extensions, overrides, and package naming (`binding_prefix`, `package_name`) for one component.
 pub struct Policy {
     pub input: Value,
     pub extensions: Vec<Value>,

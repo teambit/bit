@@ -36,8 +36,11 @@ const CORE_ASPECT_IDS: &str =
 /// Parsed CLI options for `bit templates`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
+    /// Whether `--show-all` (`-s`) was passed to include hidden templates.
     pub show_all: bool,
+    /// Optional `--aspect` (`-a`) filter restricting templates to a specific aspect ID.
     pub aspect: Option<String>,
+    /// Whether `--json` (`-j`) output was requested.
     pub json: bool,
 }
 

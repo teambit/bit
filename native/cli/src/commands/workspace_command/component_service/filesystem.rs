@@ -26,7 +26,7 @@ pub(in crate::commands) fn error(
     Ok(json!({"errno":errno,"code":code,"syscall":syscall.trim(),"path":path}))
 }
 
-/// Extracts a trimmed, non-empty string slice from `val`.
+/// Extracts a trimmed, non-empty string slice from `val` ([`Value`]).
 #[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()

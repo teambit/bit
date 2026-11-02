@@ -1,6 +1,6 @@
 //! XML character filtering and attribute escaping for `JUnit` reports.
 //!
-//! [`attribute`] and [`strip_ansi`] filter invalid XML codepoints and escape entity characters.
+//! [`attribute`], [`strip_ansi`], and [`is_allowed_xml_char`] filter invalid XML codepoints and escape entity characters.
 use std::sync::LazyLock;
 
 /// Filters disallowed XML 1.0 characters and escapes XML attribute entities in `value`.

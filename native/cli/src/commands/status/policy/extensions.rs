@@ -79,6 +79,7 @@ fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
     Ok(json!({ "name": bare, "config": config }))
 }
 
+/// Validates `config` fields when `name` is [`DEPRECATION`] or [`REMOVAL`].
 #[inline]
 fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
     let valid = match name {

@@ -4,7 +4,7 @@
 //!
 //! Until the commit starts, every failure leaves the command to the Node.js
 //! CLI. After it starts, failures are the command's own, reported as the
-//! Node.js CLI reports them via [`checkout_lifecycle`], [`checkout_policy`], [`component_service`], and [`execute_with`].
+//! Node.js CLI reports them via [`checkout_lifecycle`], [`checkout_policy`], [`component_service`], [`execute_with`], and [`Planned`].
 
 pub(super) mod checkout_lifecycle;
 pub(crate) mod checkout_policy;

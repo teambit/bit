@@ -52,6 +52,7 @@ fn trim_owned(val: String) -> String {
 }
 
 impl Progress {
+    /// Initializes a [`Progress`] tracker for `name` and `environment` from `counts` and `options` ([`Selection`]).
     #[inline]
     fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
         Self {

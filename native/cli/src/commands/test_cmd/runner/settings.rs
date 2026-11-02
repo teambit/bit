@@ -11,12 +11,19 @@ use std::{
 
 /// Validated tester flags, component [`Selection`], explicit file list, and `JUnit` output path.
 pub(super) struct Settings {
+    /// Component [`Selection`] criteria resolved from patterns and flags.
     pub selection: Selection,
+    /// Whether `--summary` mode is active.
     pub summary: bool,
+    /// Whether `--coverage` collection is enabled.
     pub coverage: bool,
+    /// Whether `--update-snapshot` (`-u`) is enabled.
     pub update_snapshot: bool,
+    /// Explicit test file paths resolved from CLI arguments.
     pub files: Vec<PathBuf>,
+    /// Optional `--junit` XML report destination path.
     pub junit: Option<PathBuf>,
+    /// Optional `--env` (`-e`) filter string.
     pub environment: Option<String>,
 }
 impl Settings {

@@ -1,6 +1,6 @@
 //! Prove an existing history is complete before owning its no-change rebuild.
 //!
-//! Coordinates [`bare`] scope rebuilds, [`has_bool_flag`], [`startup`] checks, and [`Formatter`] output into [`Outcome`].
+//! Coordinates [`bare`] scope rebuilds, [`has_bool_flag`], [`select`], [`startup`] checks, and [`Formatter`] output into [`Outcome`].
 mod bare;
 #[cfg(test)]
 mod tests;

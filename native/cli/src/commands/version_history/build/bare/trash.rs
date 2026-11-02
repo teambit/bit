@@ -70,12 +70,14 @@ fn valid_directory(path: &Path, device: u64) -> Option<()> {
     }
 }
 
+/// Stub for non-Unix platforms where bare-scope trash relocation is not supported.
 #[cfg(not(unix))]
 #[inline]
 pub(super) fn target(_root: &Path, _source: &Path) -> Option<PathBuf> {
     None
 }
 
+/// Verifies `plan` proofs and moves the existing `VersionHistory` object into `root/trash`.
 pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
     verify_proofs(plan)?;
     let target =

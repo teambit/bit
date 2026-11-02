@@ -83,7 +83,7 @@ fn compiler_error(value: &serde_json::Value) -> io::Result<Option<String>> {
     Err(io::Error::other("switch compiler receipt"))
 }
 
-/// Formats a `Compilation Error` section for a post-switch compiler failure `message`.
+/// Formats a `Compilation Error` section using [`Formatter`] and [`Chalk`] for a post-switch compiler failure `message`.
 #[inline]
 fn compilation_error(chalk: Chalk, message: &str) -> String {
     let formatter = Formatter::new(chalk);

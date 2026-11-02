@@ -9,8 +9,10 @@ mod options_tests;
 
 use serde_json::{Map, Value, json};
 
+/// Allowed `--increment` and `--auto-tag-increment` release level names.
 const RELEASE_TYPES: [&str; 7] =
     ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
+/// Allowed pre-release level names (`prepatch`, `prerelease`, `preminor`, `premajor`).
 const PRE_RELEASE_TYPES: [&str; 4] = ["prepatch", "prerelease", "preminor", "premajor"];
 const BOOLEANS: [&str; 8] = [
     "--unmodified",
@@ -50,7 +52,6 @@ pub struct TagSelection {
     pub patterns: Vec<String>,
     pub versions_file: Option<String>,
 }
-
 /// Execution mode for `bit tag` (ordinary tag, `--soft`, or `--persist`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Mode {
@@ -59,7 +60,6 @@ pub enum Mode {
     Soft,
     Persist,
 }
-
 /// How the versions are bumped: `validateOptions`' release types,
 /// `--increment-by` and `--ver`.
 #[derive(Debug, Default, Clone, PartialEq)]

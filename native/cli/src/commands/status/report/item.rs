@@ -79,6 +79,7 @@ impl Status<'_> {
         format!("{formatted} ... {label}{}", self.issues_text(with_issues.issues))
     }
 
+    /// Formats the red or yellow issue summary label (`issues found` / `warnings found`) for `with_issues`.
     #[inline]
     fn issue_label(&self, with_issues: &WithIssues<'_>, soft_tagged: bool) -> String {
         let label = if with_issues.tag_blocker() { FAILURE } else { WARNINGS };

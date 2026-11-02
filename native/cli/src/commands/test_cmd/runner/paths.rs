@@ -1,6 +1,6 @@
 //! Lexically normalize absolute filesystem paths without following symlinks.
 //!
-//! [`normalized`] resolves `.` and `..` segments in a [`Path`] into a clean [`PathBuf`] without disk I/O.
+//! [`normalized`] resolves `.` and `..` segments in a [`Path`] into a clean [`PathBuf`] without disk I/O or symlink resolution.
 use std::path::{Path, PathBuf};
 
 /// Lexically normalizes `.` and `..` segments in `path` into a clean [`PathBuf`] without disk I/O or symlink traversal.

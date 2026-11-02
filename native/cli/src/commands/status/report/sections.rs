@@ -91,6 +91,7 @@ impl<'r> Status<'r> {
         ))
     }
 
+    /// Formats the workspace-level status sections (unavailable on main, issues, auto-tag, soft-tagged, soft-removed).
     fn workspace_sections(&self) -> io::Result<Vec<String>> {
         let format = &self.format;
         let auto_tag = self.listed("autoTagPendingComponents", |identity| self.version(identity))?;

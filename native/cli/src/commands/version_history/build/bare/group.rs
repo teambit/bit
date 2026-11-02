@@ -55,6 +55,7 @@ pub(super) fn resolve(_name: &str) -> Option<(PathBuf, Vec<u8>)> {
     None
 }
 
+/// Verifies that `root`, `root/objects`, and `object`'s parent directory either lack `setgid` or match the process effective GID.
 #[cfg(unix)]
 #[inline]
 pub(super) fn safe_parents(root: &Path, object: &Path) -> Option<bool> {

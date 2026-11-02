@@ -93,6 +93,7 @@ fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>
     Some(head)
 }
 
+/// Validates that `value` is a non-empty lane or component identifier free of control characters and path traversal.
 #[inline]
 fn identifier(value: &str) -> Option<&str> {
     let value = value.trim();

@@ -76,6 +76,7 @@ fn reject_symlinks(directory: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Returns `true` when `directory` contains any glob metacharacter (`*?[]{}()!`).
 #[inline]
 fn has_glob_metacharacters(directory: &Path) -> bool {
     directory
@@ -84,6 +85,7 @@ fn has_glob_metacharacters(directory: &Path) -> bool {
         .any(|character| "*?[]{}()!".contains(character))
 }
 
+/// Returns `true` when `left` is a prefix of `right` or `right` is a prefix of `left`.
 #[inline]
 fn overlaps(left: &Path, right: &Path) -> bool {
     left.starts_with(right) || right.starts_with(left)

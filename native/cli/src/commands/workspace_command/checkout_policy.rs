@@ -34,7 +34,7 @@ pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
     grammar::config_inputs(&json!(inputs)).ok_or_else(|| decline("checkout policy semver grammar"))
 }
 
-/// Appends range-prefixed dependency versions matching `entry` from `dependencies` into `inputs`.
+/// Appends range-prefixed dependency versions matching `entry` from `dependencies` into `inputs` ([`Value`]).
 fn append_prefixed_ranges(
     entry: &Value,
     dependencies: &[Value],

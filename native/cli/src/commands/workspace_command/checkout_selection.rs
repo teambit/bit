@@ -45,7 +45,7 @@ pub(super) fn deferred(request: &Request<'_>) -> bool {
             })
 }
 
-/// Resolves deferred glob or stateful checkout/merge targets and captures their workspace state.
+/// Resolves deferred glob or stateful checkout/merge targets and captures their workspace [`Capture`] state.
 pub(super) fn select(
     engine: &mut Engine,
     root: &Path,

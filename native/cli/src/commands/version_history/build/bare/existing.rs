@@ -75,6 +75,7 @@ fn valid_hash(hash: &str) -> Option<&str> {
     .then_some(hash)
 }
 
+/// Verifies that `value` is a valid SHA-1 reference array with no duplicate hashes.
 #[inline]
 pub(super) fn complete_refs(value: &Value) -> Option<bool> {
     let values = refs(value)?;

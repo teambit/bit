@@ -53,7 +53,7 @@ pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> Strin
     format!("{prefix}/{trimmed}")
 }
 
-/// Returns `(binding_prefix, package_name)` for `identity` from `model` and merged `extensions`.
+/// Returns `(binding_prefix, package_name)` for `identity` from `model` and merged `extensions` ([`configured_package_name`]).
 #[inline]
 pub(super) fn names(
     identity: &str,

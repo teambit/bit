@@ -79,6 +79,7 @@ impl Graph {
             .all(|node| unique.insert(&node.hash[..9]))
     }
 
+    /// Inserts `hash` as a vertex in `self.nodes` if not already present, enforcing a 10,000-node cap.
     fn add_node(&mut self, hash: &str) -> Option<()> {
         if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return None;
@@ -93,6 +94,7 @@ impl Graph {
         Some(())
     }
 
+    /// Adds `"parent"`, `"squashed"`, and `"unrelated"` outgoing edges for `row` in `self`.
     fn add_edges(&mut self, row: &Value) -> Option<()> {
         let source = *self.indices.get(row["hash"].as_str().map(str::trim)?)?;
         let parents = refs(row, "parents")?;

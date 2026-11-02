@@ -1,6 +1,6 @@
 //! Expected output for platform-specific CLI report tests.
 //!
-//! [`expected_success_symbols`] normalizes `\r\n` line endings and Windows checkmarks in test expectations.
+//! [`expected_success_symbols`] normalizes `\r\n` line endings, trailing NUL bytes, and Windows checkmarks in test expectations.
 
 /// Normalizes CRLF (`\r\n`) line endings and converts heavy checkmarks (`✔`) to Windows checkmarks (`✓`) when `cfg!(windows)` is active.
 #[must_use]

@@ -36,11 +36,17 @@ const NO_OUTDATED_MSG: &str = "No outdated dependencies found";
 /// Parsed command-line options for `bit update [package-patterns...]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
+    /// Optional glob patterns filtering which dependencies are updated.
     pub patterns: Vec<String>,
+    /// Whether `--yes` (`-y`) was passed to bypass interactive prompts.
     pub yes: bool,
+    /// Whether `--patch` was passed to restrict updates to patch versions.
     pub patch: bool,
+    /// Whether `--minor` was passed to restrict updates to minor/patch versions.
     pub minor: bool,
+    /// Whether `--major` was passed to allow major version jumps.
     pub major: bool,
+    /// Whether `--semver` was passed to update within existing semver range constraints.
     pub semver: bool,
 }
 

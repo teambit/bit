@@ -67,7 +67,7 @@ pub fn string_map(value: Option<&Value>) -> io::Result<Map<String, Value>> {
     Ok(map.clone())
 }
 
-/// `Object.assign(target, source)`: existing keys keep their position.
+/// `Object.assign(target, source)`: existing keys keep their position in `target` ([`Map`]).
 #[inline]
 pub fn assign(target: &mut Map<String, Value>, source: &Map<String, Value>) {
     for (key, value) in source {

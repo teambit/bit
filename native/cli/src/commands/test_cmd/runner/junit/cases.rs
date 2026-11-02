@@ -95,6 +95,7 @@ pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     Ok(cases)
 }
 
+/// Converts a single Jest assertion JSON [`Value`] `test` in `file_name` into a [`Case`].
 #[inline]
 fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
     Ok(Case {

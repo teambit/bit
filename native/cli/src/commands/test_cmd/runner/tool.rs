@@ -50,6 +50,7 @@ impl Session {
 /// Maximum serialized byte size (16 MiB) for a Jest worker request or response message.
 const LIMIT: u64 = 16 * 1024 * 1024;
 
+/// Buffered-stdio Jest worker session used when `--json` or `--summary` suppresses live test streaming.
 struct Quiet {
     child: Child,
     input: Option<ChildStdin>,
@@ -59,6 +60,7 @@ struct Quiet {
 }
 
 impl Quiet {
+    /// Spawns a [`Quiet`] Jest worker and sends the initial preparation `request`.
     pub(super) fn prepare(request: &Value, colors: bool, args: &[OsString]) -> io::Result<Self> {
         let mut session = Self::spawn(colors, args)?;
         let mut request = request.clone();

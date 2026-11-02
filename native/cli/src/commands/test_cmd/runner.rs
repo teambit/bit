@@ -22,8 +22,11 @@ use std::{ffi::OsString, io, path::Path, time::Instant};
 
 /// Completed test execution outcome pairing the [`workspace_command::results::Report`] with termination and empty-run flags.
 struct Execution {
+    /// Formatted tester [`workspace_command::results::Report`] payload and exit code.
     report: workspace_command::results::Report,
+    /// Whether the Jest worker terminated early via signal.
     terminated: bool,
+    /// Whether zero test files were matched across all selected components.
     empty: bool,
 }
 

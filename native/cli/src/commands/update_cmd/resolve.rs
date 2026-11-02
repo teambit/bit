@@ -69,6 +69,7 @@ fn read_local_remotes(root: &Path) -> HashMap<String, PathBuf> {
         .collect()
 }
 
+/// Returns cached or freshly queried available versions for `cand` across `remotes` and npm.
 fn available_versions(
     root: &Path,
     cand: &Candidate,
@@ -84,7 +85,7 @@ fn available_versions(
     cache.insert(cand.name.clone(), resolved.clone());
     resolved
 }
-
+/// Resolves published tag versions for `cand` from a local `file://` remote scope in `remotes`.
 fn resolve_scope_versions(
     root: &Path,
     cand: &Candidate,

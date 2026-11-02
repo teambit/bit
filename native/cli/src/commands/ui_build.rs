@@ -79,6 +79,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { ui_root_name })
 }
 
+/// Consumes a single trailing positional UI root name after `--` into `ui_root_name`.
 #[inline]
 fn consume_trailing_ui_type<'a>(
     iter: impl Iterator<Item = &'a str>,

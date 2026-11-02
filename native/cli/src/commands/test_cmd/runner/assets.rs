@@ -75,6 +75,7 @@ fn payload_hash(payloads: &[(&str, String)]) -> String {
     }
     format!("{:x}", hash.finalize())
 }
+/// Verifies that `root` is a directory containing byte-identical copies of all `files`.
 #[inline]
 fn validate(root: &Path, files: &[(&str, String)]) -> io::Result<()> {
     if !fs::symlink_metadata(root)?.file_type().is_dir() {

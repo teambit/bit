@@ -26,7 +26,7 @@ enum Parsed {
     Unrecognized(String),
 }
 
-/// Entry point for `bit system`.
+/// Entry point for `bit system` that dispatches [`Parsed::Log`] or [`Parsed::Unrecognized`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(parsed) = parse_args(args) else {
         return Ok(Outcome::Declined("arguments outside the native `system` grammar".to_owned()));

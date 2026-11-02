@@ -48,7 +48,7 @@ impl Status<'_> {
         Ok(format!("\n\n{}\n{}", self.format.title("workspace issues"), issues.join("\n")))
     }
 
-    /// Joins all non-empty status `sections`, `warnings`, `troubleshooting`, and `workspace_issues` without collapsing.
+    /// Joins all non-empty status `sections`, `warnings`, `troubleshooting`, and `workspace_issues` via [`Formatter::join`] without collapsing.
     #[inline]
     pub(super) fn joined(
         &self,

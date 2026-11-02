@@ -50,7 +50,7 @@ pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::
     Ok(Value::Object(metadata))
 }
 
-/// Replaces each extension's `extensionId` in `policy.extensions` with its resolved version from `output`.
+/// Replaces each extension's `extensionId` in `policy.extensions` ([`Policy`]) with its resolved version from `output`.
 fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
     let ids = array(output.get("extensions"), "extension versions")?;
     let mut extensions = policy.extensions.clone();

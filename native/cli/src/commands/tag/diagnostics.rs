@@ -2,7 +2,6 @@
 //! existing exact version, auto-tagged dependent issue, or excluded new dependency.
 //!
 //! [`diagnose`] and [`main_file_removed`] query [`Engine`], [`capture`], and [`issues`] for [`Options`] and [`Mode`].
-
 use super::options::{Mode, Options};
 use crate::commands::{
     color::Chalk,
@@ -76,6 +75,7 @@ fn non_empty(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Returns `true` when `.bitmap` entry `(key, value)` is missing its `mainFile` while still containing scanned files.
 fn entry_missing_main(root: &Path, bitmap: &Value, key: &str, value: &Value) -> io::Result<bool> {
     if key.starts_with('$')
         || matches!(key, "_bit_lane" | "version")

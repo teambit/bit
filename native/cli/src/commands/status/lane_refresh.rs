@@ -58,6 +58,7 @@ impl Refreshes {
         }
     }
 
+    /// Builds the [`super::loader::Progress`] summary for this [`Refreshes`] batch.
     #[inline]
     pub(super) fn progress(&self, context: &Value) -> super::loader::Progress {
         super::loader::Progress {

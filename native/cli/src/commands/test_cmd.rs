@@ -95,6 +95,7 @@ fn emit_fast_outcome(
     }
 }
 
+/// Classifies whether `bit test` in `root` can return a [`FastOutcome`] without launching the tester [`runner`].
 pub(super) fn classify_workspace(
     cwd: &Path,
     root: &Path,

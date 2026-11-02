@@ -93,6 +93,7 @@ fn is_unknown_harmony_aspect(aspect_key: &str) -> bool {
             .any(|core_id| core_id == bare)
 }
 
+/// Returns `true` when `key` refers to the `teambit.workspace/variants` aspect (with or without a version suffix).
 #[inline]
 fn is_variants_aspect_key(key: &str) -> bool {
     let trimmed = key.trim();

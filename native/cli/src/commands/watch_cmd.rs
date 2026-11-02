@@ -82,6 +82,7 @@ fn ci_enabled() -> bool {
     super::scope_rename::ci_active()
 }
 
+/// Returns an error message when `--check-types` in `options` is neither `"file"` nor `"project"`.
 #[must_use]
 #[inline]
 pub(super) fn check_types_error(options: &Options) -> Option<String> {
@@ -93,6 +94,7 @@ pub(super) fn check_types_error(options: &Options) -> Option<String> {
     }
 }
 
+/// Parses CLI `args` into [`Options`] for `bit watch`.
 #[must_use]
 #[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

@@ -77,6 +77,7 @@ fn lane_paths(root: &Path) -> Option<Vec<(String, PathBuf)>> {
     Some(paths)
 }
 
+/// Collects non-default lane ref files inside `root` for `remote` into `paths`.
 fn remote_lanes(root: &Path, remote: &str, paths: &mut Vec<(String, PathBuf)>) -> Option<()> {
     for lane in entries(root)? {
         let name = lane.file_name().into_string().ok()?;
@@ -92,6 +93,7 @@ fn remote_lanes(root: &Path, remote: &str, paths: &mut Vec<(String, PathBuf)>) -
     Some(())
 }
 
+/// Reads up to 1,024 directory entries from `path`, returning an empty vector when `path` does not exist.
 #[inline]
 fn entries(path: &Path) -> Option<Vec<fs::DirEntry>> {
     match fs::read_dir(path) {

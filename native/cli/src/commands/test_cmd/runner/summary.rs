@@ -81,6 +81,7 @@ fn non_empty_str(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Extracts the versionless `<scope>/<name>` identity from a string or legacy object `id` [`Value`].
 #[inline]
 fn component_identity(id: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(id) {
@@ -94,6 +95,7 @@ fn component_identity(id: &Value) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
+/// Sums the three numeric `fields` across all JSON objects in `rows`.
 #[inline]
 fn sum_triple(rows: &[Value], fields: [&str; 3]) -> (u64, u64, u64) {
     rows.iter()

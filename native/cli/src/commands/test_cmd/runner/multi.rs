@@ -1,6 +1,6 @@
 //! Aggregate built-in Jest results for multiple selected components.
 //!
-//! [`request`] validates [`ownership`] and aggregates [`Component`] test runs for [`Settings`] into a [`Report`].
+//! [`request`] and [`report_detail`] validate [`ownership`] and aggregate [`Component`] test runs for [`Settings`] into a [`Report`].
 mod ownership;
 use super::{config, invalid, report, settings::Settings, summary};
 use crate::commands::workspace_command::{component_service::Component, results::Report};

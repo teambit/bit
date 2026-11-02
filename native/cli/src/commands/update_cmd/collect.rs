@@ -76,6 +76,7 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     Ok(Collected { candidates, save_prefix })
 }
 
+/// Reads the configured `savePrefix` string from `teambit.dependencies/dependency-resolver` in `ws_val`.
 #[inline]
 fn extract_save_prefix(ws_val: &Value) -> Option<String> {
     super::aspect_entry(ws_val, DEP_RESOLVER_ID)
@@ -85,6 +86,7 @@ fn extract_save_prefix(ws_val: &Value) -> Option<String> {
         .map(str::to_owned)
 }
 
+/// Builds the set of package names owned by local workspace components in `bitmap`.
 fn build_local_package_set(bitmap: &Bitmap, default_scope: Option<&str>) -> HashSet<String> {
     let mut set = HashSet::with_capacity(bitmap.entries.len() * 3);
     for entry in bitmap.entries.iter().filter(|ent| ent.owns_its_dir()) {

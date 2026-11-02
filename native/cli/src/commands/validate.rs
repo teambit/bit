@@ -30,11 +30,17 @@ const VALID_TASKS: &[&str] = &["check-types", "lint", "test"];
 /// Parsed command-line options for `bit validate [component-pattern]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
+    /// Optional component pattern filter argument.
     pub pattern: Option<String>,
+    /// Whether `--all` (`-a`, deprecated) was passed to validate unmodified components.
     pub all: bool,
+    /// Whether `--unmodified` (`-u`) was passed to validate unmodified components.
     pub unmodified: bool,
+    /// Whether `--fail-fast` was passed to stop on the first failing validation step.
     pub fail_fast: bool,
+    /// Whether `--continue-on-error` (`-c`) was passed to run all steps despite errors.
     pub continue_on_error: bool,
+    /// Optional `--skip-tasks` comma-separated list of task names to skip.
     pub skip_tasks: Option<String>,
 }
 

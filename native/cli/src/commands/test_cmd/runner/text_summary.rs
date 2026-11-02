@@ -42,11 +42,13 @@ impl Summary<'_> {
         }
         if parts.is_empty() { String::new() } else { format!(", {}", parts.join(", ")) }
     }
+    /// Formats the `, <n> pending` suffix when `testsPending` is non-zero.
     #[inline]
     fn pending(&self) -> String {
         let pending = self.number("testsPending");
         if pending > 0 { format!(", {pending} pending") } else { String::new() }
     }
+    /// Formats the `<passed>/<total> tests passed across <components> components` clause.
     #[inline]
     fn passed(&self, components: u64) -> String {
         let passed = self.number("testsPassed");

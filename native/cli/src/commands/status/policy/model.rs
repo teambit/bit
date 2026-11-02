@@ -77,7 +77,7 @@ pub(super) fn stored_version<'c>(
     version.map(Some).ok_or_else(|| decline("status version absent"))
 }
 
-/// Resolves a version `tag` (`"latest"`, `"head"`, 40-char hash, or semver tag) against `model`.
+/// Resolves a version `tag` (`"latest"`, `"head"`, 40-char hash, or semver tag) against `model` ([`Value`]).
 fn resolve_tag_reference(model: Option<&Value>, tag: &str) -> Option<Value> {
     let tag = tag.trim();
     if matches!(tag, "latest" | "head") {

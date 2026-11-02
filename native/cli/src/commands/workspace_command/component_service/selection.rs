@@ -46,7 +46,7 @@ fn matches(row: &Value, selector: &str) -> bool {
             .is_some_and(|dir| normalized_dir(dir) == directory)
 }
 
-/// Returns the first non-empty trimmed string value found in `row` for `keys`.
+/// Returns the first non-empty trimmed string value found in `row` ([`Value`]) for `keys`.
 #[inline]
 fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
     keys.into_iter()

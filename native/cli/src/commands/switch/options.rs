@@ -71,6 +71,7 @@ fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     }
     (!options.lane.is_empty()).then_some(options)
 }
+/// Consumes post-`--` positional lane arguments from `values` into `options` ([`Options`]).
 #[inline]
 fn consume_trailing_lanes<'a>(
     values: impl Iterator<Item = &'a str>,

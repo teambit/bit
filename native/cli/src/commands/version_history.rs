@@ -30,9 +30,13 @@ pub const COMMAND: Command = Command { name: "version-history", aliases: &["vh"]
 /// Parsed subcommand for `bit version-history`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Subcommand {
+    /// `version-history show <id> --json`
     ShowJson(String),
+    /// `version-history show <id> [--short-hash]`
     ShowText(String, bool),
+    /// `version-history build <id> [--from-snap <snap>] [--remote <scope>]`
     Build(String, Option<String>, Option<String>),
+    /// Unrecognized subcommand name forwarded to the error handler.
     Unrecognized(String),
 }
 

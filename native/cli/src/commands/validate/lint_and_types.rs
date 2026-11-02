@@ -68,7 +68,9 @@ const KNOWN_GLOBALS: &[&str] = &[
 /// Exit code and rendered diagnostic message for a single `bit validate` step.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct StepResult {
+    /// Exit code (`0` for success, `1` when errors were found).
     pub code: i32,
+    /// Human-readable step summary and per-file diagnostic lines.
     pub message: String,
 }
 

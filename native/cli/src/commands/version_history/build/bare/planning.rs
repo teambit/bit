@@ -74,6 +74,7 @@ struct Candidate {
     display: String,
 }
 
+/// Resolves a single component [`Target`] matching glob `pattern` in `root`.
 fn pattern_target(root: &Path, pattern: &str) -> Option<Target> {
     if pattern
         .split(',')
