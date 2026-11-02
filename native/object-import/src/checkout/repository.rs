@@ -35,6 +35,7 @@ pub(crate) struct SourceRecord {
     pub(crate) compressed: Vec<u8>,
     pub(crate) inflated_size: usize,
 }
+/// Inflate, verify, and record the `Source` object at `hash` in the active merge receipt trace.
 #[inline]
 pub(crate) fn source_record(
     directory: &Path,

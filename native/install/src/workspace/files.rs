@@ -40,6 +40,7 @@ const GIT_IGNORE: &str = ".gitignore";
 const BIT_IGNORE: &str = ".bitignore";
 /// Directory names a scan never enters (`SCAN_IGNORE_LIST`).
 const SKIPPED_DIRS: [&str; 4] = ["node_modules", ".bit", ".git", ".bitTmp"];
+/// Maximum directory recursion depth (`128`) when walking component files.
 const MAX_DEPTH: usize = 128;
 
 #[inline]

@@ -74,6 +74,7 @@ fn index_by_dep_id(
     index
 }
 
+/// Append all non-empty dependency requirements of `origin` from `deps` into `index`.
 #[inline]
 fn insert_component_deps(
     index: &mut IndexMap<String, IndexEntry>,

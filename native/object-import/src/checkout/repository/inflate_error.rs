@@ -22,6 +22,7 @@ impl std::error::Error for Failure {
 pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, Failure(error))
 }
+/// Return `true` when `ch` is whitespace or a control character to strip from zlib error messages.
 #[inline]
 const fn is_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch.is_control()

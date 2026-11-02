@@ -58,6 +58,7 @@ impl Ignore {
         self
     }
 
+    /// Return `true` when this rule set contains no compiled ignore rules.
     #[must_use]
     #[inline]
     pub const fn is_empty(&self) -> bool {

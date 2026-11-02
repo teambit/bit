@@ -83,7 +83,7 @@ pub(super) fn policy_version<'a>(
         .map(|entry| entry.version.trim())
 }
 
-/// `id@version` → `id`.
+/// Strip any trailing `@version` suffix from `id` (`id@version` → `id`).
 #[inline]
 pub(super) fn without_version(id: &str) -> &str {
     let trimmed = id.trim();

@@ -87,6 +87,7 @@ fn satisfied_envs(
         .sum()
 }
 
+/// Format a console warning when `best` fails to satisfy every environment's required version in `versions`.
 fn conflict_warning(
     name: &str,
     best: &str,

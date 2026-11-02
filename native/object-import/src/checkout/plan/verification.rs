@@ -35,6 +35,7 @@ pub(crate) fn verify_manifest_value(version: &Value, expected: &Value) -> io::Re
     Ok(())
 }
 
+/// Return `true` when `tag` is a syntactically valid `SemVer` tag string without range operators.
 #[inline]
 pub(super) fn plain_tag(tag: &str) -> bool {
     let tag = tag.trim();

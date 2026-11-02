@@ -54,6 +54,7 @@ impl<'a> Parts<'a> {
         }
     }
 
+    /// Format the inclusive lower-bound comparator (`>=M.m.p[-pre]`) for `self`.
     #[inline]
     fn lower(&self) -> String {
         let (major, minor, patch) =

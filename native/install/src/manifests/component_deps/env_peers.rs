@@ -88,8 +88,7 @@ pub(super) fn used_env_peers(
     used
 }
 
-/// `getComponentExplicitPackages`: the names in the component's configured policy,
-/// without removals (`-` or `{ version: "-" }`).
+/// Return the package names configured in `component`'s own `dependency-resolver` policy (`getComponentExplicitPackages`), excluding `-` removals.
 #[inline]
 fn explicit_packages(component: &WorkspaceComponent) -> Vec<String> {
     let Some(policy) = component.config

@@ -56,6 +56,7 @@ fn collect_forced_dependencies(
     Ok(dependencies)
 }
 
+/// Return `true` when any versioned ID in `ids` matches a base identity in `identities`.
 #[inline]
 fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
     ids.iter()

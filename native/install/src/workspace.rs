@@ -74,6 +74,7 @@ struct ComponentJson {
     propagate: bool,
 }
 
+/// Read and parse `<dir>/component.json` (`ComponentConfigFile`) when present.
 fn component_json(dir: &Path) -> io::Result<Option<ComponentJson>> {
     let path = dir.join("component.json");
     let text = match fs::read_to_string(&path) {

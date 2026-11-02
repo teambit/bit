@@ -69,6 +69,7 @@ pub(super) enum End {
 }
 
 impl End {
+    /// Return the exclusive and inclusive comparator operators (`[">", ">="]` or `["<", "<="]`) for `self`.
     #[inline]
     const fn operators(self) -> [&'static str; 2] {
         match self {

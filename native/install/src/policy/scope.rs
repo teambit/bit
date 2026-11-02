@@ -68,7 +68,7 @@ impl Scope {
             .unwrap_or_default()
     }
 
-    /// The scope directory.
+    /// Return the local scope directory path (`.bit` or `.git/bit`).
     #[must_use]
     #[inline]
     pub fn path(&self) -> &Path {

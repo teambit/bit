@@ -58,6 +58,7 @@ fn target_scope(target: &Target) -> io::Result<&str> {
         .filter(|scope| !scope.is_empty())
         .ok_or_else(|| invalid("import scope"))
 }
+/// Record the remote `main` head observation for `target` when `status` mode is enabled.
 #[inline]
 fn record_main_refresh(
     plan: &mut PreparedImport,

@@ -46,6 +46,7 @@ fn ordinary(byte: u8) -> bool {
     matches!(byte, 7..=14 | 32..=127)
 }
 
+/// Advance `index` past a valid two- or three-byte UTF-8 sequence in `bytes`.
 #[inline]
 fn utf8_sequence(bytes: &[u8], index: &mut usize) -> bool {
     let byte = bytes[*index];

@@ -33,6 +33,7 @@ impl Multi {
         ))
     }
 
+    /// Compute the normalized pairwise intersection of `self` and `other`.
     fn intersect(self, other: Self) -> io::Result<Self> {
         if self.0.is_empty() {
             return Ok(other);

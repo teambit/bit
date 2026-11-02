@@ -59,6 +59,7 @@ impl SemVer {
         format!("{}.{}.{}-{}", self.major, self.minor, self.patch, self.prerelease.join("."))
     }
 
+    /// Compare the `(major, minor, patch)` tuple of `self` and `other`, ignoring prereleases.
     #[inline]
     pub(crate) fn compare_main(&self, other: &Self) -> Ordering {
         (self.major, self.minor, self.patch).cmp(&(other.major, other.minor, other.patch))

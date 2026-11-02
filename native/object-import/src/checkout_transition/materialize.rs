@@ -64,6 +64,7 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
     }
     Ok(contents)
 }
+/// Create parent directories if needed and write `body` to `file.path`.
 #[inline]
 fn write(
     file: &wire::Destination,

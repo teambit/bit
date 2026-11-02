@@ -38,6 +38,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     Ok(json!({"statuses":statuses,"removals":removals}))
 }
 
+/// Normalize a workspace-relative path by converting backslashes and stripping leading `./` or `/`.
 #[inline]
 fn normalize_rel(path: &str) -> String {
     let trimmed = path.trim();

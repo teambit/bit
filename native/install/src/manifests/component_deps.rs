@@ -22,6 +22,7 @@ use indexmap::IndexMap;
 pub(super) struct Dep<'a> {
     /// Target package name in `node_modules`.
     pub(super) package_name: &'a str,
+    /// Resolved version range or component snap/tag version.
     pub(super) version: String,
     pub(super) lifecycle: Lifecycle,
     pub(super) optional: bool,

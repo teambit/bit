@@ -43,6 +43,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     }
     Ok(output)
 }
+/// Return `true` when `strategy` matches `expected` case-insensitively.
 #[inline]
 fn strategy_eq(strategy: Option<&str>, expected: &str) -> bool {
     strategy.is_some_and(|strat| strat.eq_ignore_ascii_case(expected))

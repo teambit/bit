@@ -33,6 +33,7 @@ pub(in crate::command_import) fn settings_for_lane(
     Ok(())
 }
 
+/// Return `true` when `current` specifies an active lane name other than `"main"`.
 #[inline]
 fn is_non_main_lane(current: &Value) -> bool {
     if current.is_null() {

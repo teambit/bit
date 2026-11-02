@@ -35,6 +35,7 @@ impl AspectEntry {
         (self.core, aspect_id_without_version(&self.id))
     }
 
+    /// Return `true` when `self.config` is set to the `"-"` removal sentinel.
     #[inline]
     fn is_removed(&self) -> bool {
         self.config.as_str().map(str::trim) == Some("-")

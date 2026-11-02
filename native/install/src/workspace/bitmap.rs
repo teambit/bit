@@ -45,6 +45,7 @@ impl LaneInfo {
 pub struct BitmapEntry {
     /// The entry's key in `.bitmap`.
     pub key: String,
+    /// Parsed component identifier (`scope/name@version`).
     pub id: ComponentId,
     pub main_file: String,
     /// `/`-separated, relative to the workspace; `.` for the workspace root.

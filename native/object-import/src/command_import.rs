@@ -45,6 +45,7 @@ pub(crate) struct Overlay {
     lane_refs: HashMap<(String, String), Value>,
 }
 impl Overlay {
+    /// Iterate over all staged object SHA-1 hex keys in this overlay.
     #[inline]
     pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
         self.objects.keys().map(String::as_str)

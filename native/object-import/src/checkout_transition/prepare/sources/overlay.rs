@@ -82,6 +82,7 @@ pub(super) fn files(
         .collect()
 }
 
+/// Load a single `Source` body by `hash` from `overlay` or `directory` within byte budgets.
 #[inline]
 pub(in crate::checkout_transition::prepare) fn body(
     directory: &Path,

@@ -57,6 +57,7 @@ pub(super) fn apply_with_overlay(
     Ok(manifest(plan, token, request.known_bodies))
 }
 
+/// Serialize either the full retargeted [`plan::Plan`] manifest or the delta since `known` bodies.
 #[inline]
 fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
     known.map_or_else(|| plan.manifest(token), |known| {

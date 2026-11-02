@@ -22,6 +22,7 @@ pub struct ComponentId {
     pub scope: Option<String>,
     /// Workspace or variant default scope for unexported components.
     pub default_scope: Option<String>,
+    /// Component name within its scope (may include `/` namespaces).
     pub name: String,
     pub version: Option<String>,
 }

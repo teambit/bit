@@ -50,6 +50,7 @@ fn collect_target(
     Ok(())
 }
 
+/// Append validated parent version hashes from `version` onto `pending`.
 #[inline]
 fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> {
     let Some(parents) = version

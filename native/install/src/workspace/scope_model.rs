@@ -30,6 +30,7 @@ const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolv
 /// What install needs from a component's scope objects.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ModelData {
+    /// Stored `bindingPrefix` on the component's `ModelComponent` object, if any.
     pub binding_prefix: Option<String>,
     /// The Version's `extensions` array, as stored.
     pub extensions: Vec<Value>,

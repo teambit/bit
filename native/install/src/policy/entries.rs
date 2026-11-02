@@ -18,6 +18,7 @@ pub const FIELDS: [(&str, Lifecycle); 3] = [
 pub struct VariantOptions {
     /// Policy entry origin label (such as `"env"` or `"config"`).
     pub source: Option<&'static str>,
+    /// Default `force` flag applied when an entry does not specify its own `force` property.
     pub force: Option<bool>,
     pub hidden: Option<bool>,
 }

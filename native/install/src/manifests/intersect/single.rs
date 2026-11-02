@@ -87,6 +87,7 @@ fn merge_blocked(left: &SemVer, right: &SemVer, end: End) -> bool {
     (right_side && is_pre(right)) || (left_side && is_pre(left))
 }
 
+/// Yield clones of the comparators in `items` that carry a concrete [`SemVer`] version.
 #[inline]
 fn versioned(items: [&Comparator; 2]) -> impl Iterator<Item = Comparator> + '_ {
     items

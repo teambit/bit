@@ -24,6 +24,7 @@ const MAX_KEY_BYTES: usize = 4 * 1024 * 1024;
 /// Maximum number of cached `Source` object entries (`4096`) retained in [`State`].
 const MAX_ENTRIES: usize = 4096;
 
+/// Normalize `directory` by collecting its path components into a clean [`PathBuf`].
 #[inline]
 fn canonical_dir(directory: &Path) -> PathBuf {
     directory.components().collect()

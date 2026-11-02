@@ -76,6 +76,7 @@ impl PreparedImport {
         self.validate()
     }
 
+    /// Refresh `main` heads and transitive dependencies for `targets` from configured remotes.
     pub(crate) fn prepare_main_fetch(
         &mut self,
         root: &Path,

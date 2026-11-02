@@ -27,6 +27,7 @@ pub(super) struct Plan {
     pub(super) statuses: Vec<Value>,
     pub(super) other: Option<Vec<wire::Manifest>>,
 }
+/// Tracked current workspace file metadata and its associated [`Body`] plan index.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Current {
     pub(super) relative_path: String,

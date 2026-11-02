@@ -80,6 +80,7 @@ fn env_package(input: &ManifestInput<'_>, env_id: &str) -> DependencyMap {
     }
 }
 
+/// Return the `pnpm` manifest block (`{ "hoistingLimits": "workspaces" }`) for `.bit_roots` projects.
 #[inline]
 fn hoisting_limits() -> Value {
     json!({ "hoistingLimits": "workspaces" })

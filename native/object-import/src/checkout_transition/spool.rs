@@ -1,4 +1,6 @@
 //! Packed checkout plan [`Body`] spooling ([`assign`], [`write`]) into temporary `.checkout-pack` files.
+//!
+//! Assigns contiguous byte offsets when packed bodies are requested or spools individual files otherwise.
 
 use super::plan::Body;
 use std::{

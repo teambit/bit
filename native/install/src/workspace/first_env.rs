@@ -79,6 +79,7 @@ fn has_configured_env(component: &WorkspaceComponent) -> bool {
             .is_some_and(|env| !env.trim().is_empty())
 }
 
+/// Return `true` when `id` resolves to an environment component in `envs` or [`ScopeObjects`].
 #[inline]
 fn is_env_component(
     id: &str,

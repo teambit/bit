@@ -17,7 +17,7 @@ use verification::plain_tag;
 /// Maximum serialized JSON request size (`4 MiB`) accepted by checkout planning.
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
-
+/// Deserialized checkout plan request containing expected version hashes and file manifests.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

@@ -34,6 +34,7 @@ pub enum Style {
 }
 
 impl Style {
+    /// Return the ANSI `(open, close)` SGR parameter codes for `self`.
     #[inline]
     const fn codes(self) -> (u8, u8) {
         match self {

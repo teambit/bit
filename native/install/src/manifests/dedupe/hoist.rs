@@ -49,7 +49,7 @@ fn handle_preserved(deduped: &mut Deduped, name: &str, entry: &IndexEntry) -> io
     Ok(false)
 }
 
-/// `addOneOccurrenceToRoot`: one requirement, or all requirements equal.
+/// Hoist `name` directly to the root when `items` has a single occurrence or all occurrences share the same range (`addOneOccurrenceToRoot`).
 fn add_one_occurrence_to_root(deduped: &mut Deduped, name: &str, items: &[Item]) -> bool {
     let Some(first) = items.first() else {
         return false;

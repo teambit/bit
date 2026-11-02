@@ -56,6 +56,7 @@ pub(super) fn populate(
     Ok((hash, history, true))
 }
 
+/// Extract the trimmed `(scope, name)` pair from a parsed `Component` model [`Value`].
 #[inline]
 fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
     if let Some((scope, name)) = model["id"]

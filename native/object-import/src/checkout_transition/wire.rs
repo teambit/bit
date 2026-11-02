@@ -24,6 +24,7 @@ pub(super) struct Version {
     #[serde(rename = "proofFiles")]
     pub(super) proof_files: Option<Vec<Manifest>>,
 }
+/// Manifest file entry pairing a `Source` SHA-1 hash with its workspace-relative path.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Manifest {

@@ -26,7 +26,7 @@ pub const fn field_index(lifecycle: Lifecycle) -> usize {
     }
 }
 
-/// Non-forced entries: rules applied to auto-detected dependencies only.
+/// Extract non-forced [`FieldMaps`] entries (`toLegacyAutoDetectOverrides`) applied only to auto-detected dependencies.
 #[must_use]
 #[inline]
 pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {

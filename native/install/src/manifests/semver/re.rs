@@ -34,6 +34,7 @@ const BUILD_IDENTIFIER: &str = "[a-zA-Z0-9-]+";
 /// Regex capture group matching `<`, `<=`, `>`, `>=`, `=`, or empty comparator operators.
 const GTLT: &str = "((?:<|>)?=?)";
 
+/// Build the `(M).(m).(p)` capture group pattern using the given `numeric` sub-pattern.
 #[inline]
 fn main_version(numeric: &str) -> String {
     format!(r"({numeric})\.({numeric})\.({numeric})")

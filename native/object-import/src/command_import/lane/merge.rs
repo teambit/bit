@@ -77,6 +77,7 @@ fn ahead(
             .is_some_and(|rows| !rows.is_empty()))
 }
 
+/// Replace or hide a single component [`Entry`] in `value` using `incoming` lane metadata.
 fn replace_entry(value: &mut Value, incoming: &Value, entry: &Entry) -> io::Result<()> {
     let visible = value["components"].as_array_mut().ok_or_else(|| invalid("lane components"))?;
     let (scope, name) =

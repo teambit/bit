@@ -35,6 +35,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         self.fetch_lane_with_policy(id, supplied_hash, false, false)
     }
+    /// Fetch the remote [`Record`] for workspace lane checkout, optionally skipping unchanged heads (`delta`).
     #[inline]
     pub(crate) fn fetch_lane_workspace_at_hash(
         &mut self,

@@ -11,6 +11,7 @@ use std::{io, path::Path};
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 /// Pair of a 20-byte SHA-1 object hash and its verified [`repository::SourceRecord`].
 type Source = ([u8; 20], repository::SourceRecord);
+/// Verify `version` and load its `Source` file bodies from `directory` or `overlay`.
 #[inline]
 pub(in crate::checkout_transition) fn load_with_overlay(
     directory: &Path,

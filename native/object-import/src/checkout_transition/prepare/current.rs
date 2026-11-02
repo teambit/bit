@@ -54,6 +54,7 @@ pub(super) fn load_with_overlay(
     }
     Ok(output)
 }
+/// Read and verify a current workspace file from disk within the remaining byte budget.
 fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     let raw_hash = file.raw_hash.trim();
     let snapshot_hash = file.snapshot_hash.trim();

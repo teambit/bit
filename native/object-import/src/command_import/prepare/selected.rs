@@ -61,6 +61,7 @@ impl PreparedImport {
             .cloned()
             .collect()
     }
+    /// Merge global and local `scope.json` remote maps into `self.environment.remotes`.
     fn sync_remotes(&mut self, global_remotes_file: &Path) -> io::Result<Value> {
         let global = self.capture.json(global_remotes_file)?;
         if global.is_none() {

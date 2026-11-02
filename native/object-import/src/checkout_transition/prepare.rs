@@ -66,6 +66,7 @@ pub(super) fn prepare_with_overlay(
     };
     state.retain(plan, input, &request.snapshot_directory)
 }
+/// Return `true` when any three-way merge row in `rows` reports a text or binary conflict.
 #[inline]
 fn has_conflicts(rows: &[Value]) -> bool {
     rows.iter()

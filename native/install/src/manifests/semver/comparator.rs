@@ -69,6 +69,7 @@ impl Comparator {
         }
     }
 
+    /// Return `true` when `self.operator` is a lower-bound operator (`">="` or `">"`).
     #[inline]
     fn increasing(&self) -> bool {
         matches!(self.operator.trim(), ">=" | ">")

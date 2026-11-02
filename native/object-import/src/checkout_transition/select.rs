@@ -31,6 +31,7 @@ enum Stage {
     TargetRemoved,
     Terminal,
 }
+/// Active selection state record tracking the current [`Stage`], revision, and target version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
     revision: u32,

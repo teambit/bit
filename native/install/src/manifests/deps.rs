@@ -47,6 +47,7 @@ impl Field {
         }
     }
 
+    /// Return the array slot index (`0..=3`) for `self` in [`DepsObject`].
     #[inline]
     const fn index(self) -> usize {
         self as usize

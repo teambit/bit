@@ -1,6 +1,7 @@
 //! Read imported component policy metadata through the retained object proofs.
 //!
 //! Resolves `Version` objects for inbound policy inspection via [`PreparedImport::policy_version`] from the overlay or local scope.
+//! Validates each resolved `Version` object with [`crate::history_query::validate_version`] before returning.
 use super::{PreparedImport, Target, invalid, read_model, read_version, version_ref};
 use serde_json::Value;
 use std::io;

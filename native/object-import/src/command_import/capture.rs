@@ -19,6 +19,7 @@ use std::{
 /// The bytes one import holds in memory: retained objects, and separately
 /// their inflated bodies. A pattern import of a whole scope reaches hundreds of MiB.
 pub(super) const MAX_BYTES: usize = 1024 * 1024 * 1024;
+/// Maximum number of file or object records (`131_072`) tracked in a single [`Capture`].
 const MAX_RECORDS: usize = 131_072;
 
 /// Captured loose scope object with its kind, raw bytes, parsed JSON [`Value`], or raw `Source` body.
