@@ -2,6 +2,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
+/// Extracts non-empty string identifiers from `receipt[field]`.
 #[inline]
 pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
     receipt[field.trim()]

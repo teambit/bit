@@ -9,6 +9,7 @@ use bit_install::{config::WorkspaceConfig, output::Output};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, time::Instant};
 
+/// Manages the optional [`ProjectedLinker`] session and workspace ordering across import stages.
 pub(super) struct Lifecycle {
     linker: Option<ProjectedLinker>,
     workspace_order: Vec<String>,
@@ -16,6 +17,7 @@ pub(super) struct Lifecycle {
     json: bool,
 }
 impl Lifecycle {
+    /// Returns whether `options` and workspace configuration require bootstrapping a [`ProjectedLinker`] host.
     pub(super) fn required(root: &Path, options: &Options, preflight_ok: bool) -> io::Result<bool> {
         if options.operation != "import" {
             return Ok(false);

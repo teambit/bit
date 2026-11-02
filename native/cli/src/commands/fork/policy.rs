@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Updates `workspace.jsonc` dependency-resolver policy with forked dependency `facts` and notifies `linker`.
 pub(super) fn persist(
     root: &Path,
     linker: &mut ProjectedLinker,

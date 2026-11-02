@@ -2,6 +2,7 @@
 //! pattern listed on its remote (`Lister.getRemoteCompIdsByWildcards`).
 //!
 //! Resolves [`has_wildcard`] patterns ([`Selection`], [`select`]) against remotes via [`Engine`] for [`Options`].
+//! Preserves `sortListScopeResults` collation and `ComponentIdList.uniqFromArray` deduplication.
 
 use super::options::{Options, has_wildcard};
 use crate::commands::{

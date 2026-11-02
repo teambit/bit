@@ -5,6 +5,7 @@ mod check;
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
+/// Recursively validates `source` and `target` metadata before copying backup entries.
 pub(super) fn preflight(source: &Path, target: &Path) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() || source == target {
         return Err(io::Error::other("Source and destination must not be the same."));

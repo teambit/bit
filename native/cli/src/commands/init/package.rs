@@ -5,6 +5,7 @@ use bit_workspace_config::package_json::{detect_indent, detect_newline, stringif
 use serde_json::Value;
 use std::io;
 
+/// Serializes `value` as a `package.json` byte buffer preserving the indentation and newline style of `original`.
 #[inline]
 pub(super) fn render(value: &Value, original: Option<&[u8]>) -> io::Result<Vec<u8>> {
     let original = decode_original(original)?;

@@ -23,6 +23,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit init` CLI command.
 pub const COMMAND: Command = Command { name: "init", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

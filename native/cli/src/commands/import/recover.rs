@@ -7,9 +7,11 @@ use bit_install::output::Output;
 use serde_json::Value;
 use std::{fs, io, path::Path, time::Instant};
 
+/// Configuration flags forwarded from `bit recover` into [`recover_import`].
 pub(in crate::commands) struct RecoverOptions {
     pub skip_write_config_files: bool,
 }
+/// Imports soft-deleted components back into `root` during `bit recover` and returns the updated `.bitmap`.
 #[inline]
 pub(in crate::commands) fn recover_import(
     root: &Path,

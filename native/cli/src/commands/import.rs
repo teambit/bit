@@ -1,4 +1,4 @@
-//! Native `bit import` and `bit fetch`: the engine fetches, writes and
+//! Native `bit import` ([`IMPORT`]) and `bit fetch` ([`FETCH`]): the engine fetches, writes and
 //! reports (`commandInbound*`). Wildcard patterns are listed on their remotes
 //! first, and an import that writes components installs them afterwards
 //! unless `-x` is given.

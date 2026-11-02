@@ -27,6 +27,7 @@ pub(super) struct Prepared {
     pub fork_history: Option<ForkHistory>,
 }
 
+/// Parent lane and historical object counts when exporting a forked lane to a new scope.
 pub(super) struct ForkHistory {
     pub parent: String,
     pub external_count: usize,

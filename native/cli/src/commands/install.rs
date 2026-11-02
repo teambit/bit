@@ -1,7 +1,7 @@
 //! Native `bit install` (`docs/rust/native-install.md`): the `bit-install`
 //! crate runs the command; the `JavaScript` host serves what aspects implement.
 //!
-//! Coordinates [`request`] helpers, [`NodeCli`] and [`Target`] discovery, [`Host`] IPC, and [`confirm`] prompts.
+//! Coordinates [`COMMAND`], [`request`] helpers, [`NodeCli`] and [`Target`] discovery, [`Host`] IPC, and [`confirm`] prompts.
 
 pub(super) mod request;
 

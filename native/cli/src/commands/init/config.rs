@@ -9,6 +9,7 @@ use std::{fs, io, path::Path};
 const WORKSPACE: &str = "teambit.workspace/workspace";
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
+/// Generates a new `workspace.jsonc` byte buffer from the installed template and `options`.
 pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Result<Vec<u8>> {
     let mut document = template(modules)?;
     let name = options.defaults.name

@@ -21,8 +21,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit globals` CLI command.
 pub const COMMAND: Command = Command { name: "globals", aliases: &[], run };
 
+/// Configuration key overriding the default capsules root base directory.
 const CAPSULES_KEY: &str = "capsules_root_base_dir";
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

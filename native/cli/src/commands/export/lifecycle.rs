@@ -15,12 +15,14 @@ use std::{
     sync::Arc,
 };
 
+/// Optional Node.js [`Host`] bridge for pre/post export callbacks and interrupt coordination.
 pub(super) struct Lifecycle {
     host: Option<Arc<Host>>,
     root: PathBuf,
 }
 
 impl Lifecycle {
+    /// Activates both the Node.js host `exportInterrupt` hook (when present) and the native signal [`super::interrupt::Guard`].
     pub(super) fn protect(&self, quiet: bool) -> io::Result<Protection<'_>> {
         if let Some(host) = &self.host {
             host.call("exportInterrupt", &json!({"enabled":true}))?;

@@ -3,12 +3,14 @@
 //! Defines [`AdoptionOptions`], [`DependentsOptions`], and [`Values`] serialized into engine request payloads.
 use serde_json::{Value, json};
 
+/// Flags controlling component directory adoption (`--track-only`, `--write-to-empty-dir`, `--write-deps`).
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct AdoptionOptions {
     pub track_only: bool,
     pub write_to_empty_dir: bool,
     pub write_deps: Option<String>,
 }
+/// Flags controlling dependent component selection (`--dependents`, `--dependents-via`, `--dependents-all`, `--silent`).
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct DependentsOptions {
     pub enabled: bool,
@@ -16,6 +18,7 @@ pub struct DependentsOptions {
     pub all: bool,
     pub silent: bool,
 }
+/// Remaining positional/flag arguments after extracting `--write-deps` and `--dependents-via` values.
 pub(super) struct Values<'a> {
     pub args: Vec<&'a str>,
     pub write_deps: Option<String>,

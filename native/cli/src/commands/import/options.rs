@@ -1,5 +1,5 @@
 //! The native import grammar: `bit fetch -c <ids...>` and `bit import`
-//! with ids or wildcard patterns, with or without installing ([`Options`], [`WriteOptions`], [`AdoptionOptions`], [`DependentsOptions`]).
+//! with ids or wildcard patterns, with or without installing ([`Options`], [`WriteOptions`], [`OutputOptions`], [`SelectionOptions`], [`AdoptionOptions`], [`DependentsOptions`]).
 
 pub use adoption::{AdoptionOptions, DependentsOptions};
 

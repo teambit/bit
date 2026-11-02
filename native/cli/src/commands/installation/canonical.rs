@@ -16,6 +16,7 @@ use std::{
     thread,
 };
 
+/// Result of a single canonical install step: either resume the host promise or return the final receipt.
 enum Continuation {
     Resume(Value),
     Receipt(Value),

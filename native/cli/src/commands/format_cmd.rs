@@ -13,10 +13,12 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the `bit format` CLI command.
 pub const COMMAND: Command = Command { name: "format", aliases: &[], run };
 
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
+/// Parsed CLI options for `bit format`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

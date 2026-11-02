@@ -8,6 +8,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Lists and filters remote scope component IDs matching `options` for `bit fork` or `bit scope fork`.
 pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
     let scope_list = scopes(options);
     let mut result = Vec::new();

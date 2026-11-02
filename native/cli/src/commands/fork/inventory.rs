@@ -4,6 +4,7 @@ use crate::commands::{engine::Engine, workspace_command};
 use bit_install::{config::WorkspaceConfig, workspace::Workspace};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
+/// Loads `.bitmap`, tracking context, and projected [`Workspace`] components for `bit fork`.
 pub(super) fn read(root: &Path) -> io::Result<Value> {
     let bitmap = bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
     let mut engine = Engine::new()?;

@@ -9,12 +9,14 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Single ordered filesystem operation staged inside an init [`Plan`].
 pub(super) enum Action {
     Directory(PathBuf),
     File(PathBuf, Vec<u8>),
     Remove(PathBuf),
     Empty(PathBuf),
 }
+/// Complete write-free `bit init` provisioning plan before filesystem execution.
 pub(super) struct Plan {
     pub root: PathBuf,
     pub created: bool,
@@ -24,6 +26,7 @@ pub(super) struct Plan {
     pub git: bool,
 }
 
+/// Validates target paths and builds the ordered [`Plan`] for `options`.
 pub(super) fn prepare(options: &Options) -> io::Result<Plan> {
     let cwd = std::env::current_dir()?;
     let requested = resolve(&cwd, options.path.as_deref());

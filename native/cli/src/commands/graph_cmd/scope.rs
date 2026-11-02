@@ -14,6 +14,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+/// Builds and renders the dependency [`CompGraph`] for a bare scope directory.
 #[inline]
 pub(super) fn execute_scope_graph(
     scope_dir: &Path,
@@ -24,6 +25,7 @@ pub(super) fn execute_scope_graph(
     render_scope_graph(&graph, options.json, formatter)
 }
 
+/// Builds the bare-scope [`CompGraph`] and local component ID list for `bit insights`.
 pub(crate) fn scope_insight_graph(scope_dir: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
     let scope_name = validate_bare_scope(scope_dir)?;
     let local_components = load_local_scope_components(scope_dir, &scope_name)?;

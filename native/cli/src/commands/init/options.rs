@@ -3,6 +3,7 @@
 //! Defines [`Options`], [`Defaults`], and [`Flags`] and flag parsing from [`OsString`] CLI arguments.
 use std::ffi::OsString;
 
+/// Parsed CLI options for `bit init`.
 #[derive(Default)]
 pub(super) struct Options {
     pub path: Option<String>,
@@ -13,6 +14,7 @@ pub(super) struct Options {
     pub flags: Flags,
     pub agent: Option<String>,
 }
+/// Default workspace name, directory, scope, and generator values configured during `bit init`.
 #[derive(Default)]
 pub(super) struct Defaults {
     pub name: Option<String>,
@@ -20,6 +22,7 @@ pub(super) struct Defaults {
     pub scope: Option<String>,
     pub generator: Option<String>,
 }
+/// Boolean provisioning flags (`--standalone`, `--no-package-json`, `--force`, `--skip-interactive`, `--external-package-manager`).
 #[derive(Default)]
 pub(super) struct Flags {
     pub standalone: bool,
@@ -28,6 +31,7 @@ pub(super) struct Flags {
     pub skip_interactive: bool,
     pub external_pm: bool,
 }
+/// Reset mode flags (`--reset`, `--reset-hard`, `--reset-scope`, `--reset-new`, `--reset-lane-new`).
 #[derive(Default)]
 pub(super) struct Resets {
     pub repair: bool,

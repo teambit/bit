@@ -8,12 +8,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Staged optional AI agent instructions and MCP configuration files for a newly initialized workspace.
 #[derive(Default)]
 pub(super) struct Assets {
     agent: Option<(PathBuf, Vec<u8>)>,
     mcp: Option<(PathBuf, Vec<u8>)>,
 }
 impl Assets {
+    /// Prepares optional agent and MCP files when `plan.created` is true and `--bare` is not set.
     #[inline]
     pub(super) fn prepare(plan: &Plan, options: &Options) -> io::Result<Self> {
         if !plan.created || options.bare.is_some() {

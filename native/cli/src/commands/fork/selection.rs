@@ -6,11 +6,13 @@ use super::{inventory, options::Options};
 use crate::commands::patterns;
 use serde_json::Value;
 use std::{io, path::Path};
+/// Partitioned local and remote component IDs paired with the resolved `target_scope`.
 pub(super) struct Selected {
     pub local: Vec<String>,
     pub remote: Vec<String>,
     pub target_scope: String,
 }
+/// Resolves `options` against local workspace `state` and remote scopes into [`Selected`] targets.
 pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Result<Selected> {
     let scope = options.scope
         .as_deref()

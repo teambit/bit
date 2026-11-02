@@ -1,4 +1,5 @@
 //! Published `ExportCmd` [`Options`], [`Flags`], and [`LifecycleFlags`] selection and separate JSON forwarding behavior.
+/// Parsed CLI options and flags for `bit export`.
 pub(super) struct Options {
     pub ids: Vec<String>,
     pub resume: Option<String>,
@@ -6,12 +7,14 @@ pub(super) struct Options {
     pub lifecycle: LifecycleFlags,
 }
 
+/// Post-export lifecycle flags (`--eject`, `--open-browser`).
 #[derive(Default)]
 pub(super) struct LifecycleFlags {
     pub eject: bool,
     pub open_browser: bool,
 }
 
+/// Boolean CLI flags controlling export scope, version selection, and output format.
 #[derive(Default)]
 pub(super) struct Flags {
     pub all: bool,

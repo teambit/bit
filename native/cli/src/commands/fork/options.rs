@@ -1,5 +1,6 @@
 //! CLI option parsing ([`Options`], [`Flags`], [`parse`]) for `bit fork` and `bit scope fork`.
 
+/// Boolean CLI flags controlling refactoring, installation, config preservation, and linking during `bit fork`.
 #[derive(Default, Clone)]
 pub(super) struct Flags {
     pub refactor: bool,
@@ -9,6 +10,7 @@ pub(super) struct Flags {
     pub no_link: bool,
     pub ast: bool,
 }
+/// Parsed source/target positional arguments and [`Flags`] for `bit fork` or `bit scope fork`.
 #[derive(Default)]
 pub(super) struct Options {
     pub source: String,
@@ -20,6 +22,7 @@ pub(super) struct Options {
     pub pattern: Option<String>,
     pub scope_fork: bool,
 }
+/// Parses `argv` into [`Options`] when they fit the native `bit fork` or `bit scope fork` grammar.
 pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     let mut options = Options { scope_fork, ..Options::default() };
     let mut positions = Vec::new();

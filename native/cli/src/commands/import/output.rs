@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 use workspace_command::results::Report;
 
+/// Runs `work` under the appropriate `--json` or interactive terminal wrapper for `options`.
 #[inline]
 pub(super) fn execute(
     root: &Path,

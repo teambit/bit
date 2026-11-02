@@ -2,6 +2,7 @@
 //! `.bitignore` pattern, made relative to the workspace.
 //!
 //! Exposes [`pattern`] and [`normalize`] for workspace-relative `.gitignore` and `.bitignore` rule rebasing.
+//! Preserves leading `!` negations and trailing `/` directory-only markers.
 
 /// `pattern` from the ignore file in `dir` (a Linux-style relative path).
 #[must_use]

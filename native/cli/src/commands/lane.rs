@@ -24,6 +24,7 @@ use super::{merge::report, workspace_command};
 use crate::{commands::Command, native::Outcome};
 use std::{ffi::OsString, io};
 
+/// Descriptor for the `bit lane` (`bit l`) CLI command.
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
 #[inline]

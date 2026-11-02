@@ -2,6 +2,7 @@
 
 use std::io::{self, Write};
 use windows_sys::Win32::System::Console::{CTRL_C_EVENT, SetConsoleCtrlHandler};
+/// Placeholder state token for the Windows console control handler registration.
 pub(super) type Previous = ();
 
 unsafe extern "system" fn interrupt(kind: u32) -> i32 {

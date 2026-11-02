@@ -6,6 +6,7 @@ use std::{
     process::{Command, Stdio},
 };
 const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
+/// Formats `files` in a single batch by spawning `tool.cjs` against the bundled Prettier package.
 #[inline]
 pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     if files.is_empty() {

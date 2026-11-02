@@ -22,12 +22,14 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+/// Restoration failure distinguishing a missing backup directory from an underlying filesystem error.
 #[derive(Debug)]
 pub(super) enum Error {
     Missing(String),
     Filesystem(io::Error),
 }
 impl Error {
+    /// Formats this [`Error`] into a user-facing [`io::Error`].
     #[inline]
     pub(super) fn report(self, chalk: Chalk) -> io::Error {
         match self {

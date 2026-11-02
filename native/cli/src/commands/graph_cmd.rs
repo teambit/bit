@@ -19,11 +19,13 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the `bit graph` CLI command.
 pub const COMMAND: Command = Command { name: "graph", aliases: &[], run };
 
 const MISSING_REMOTE_OR_ID_ERR: &str = "please specify remote scope name or enter an id";
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
+/// Parsed CLI options for `bit graph`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: Option<String>,

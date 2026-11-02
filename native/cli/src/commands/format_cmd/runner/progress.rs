@@ -2,6 +2,7 @@
 pub(super) use crate::commands::workspace_command::component_service::Progress;
 use bit_install::output::Output;
 impl Progress {
+    /// Emits both the initial loading/total status lines and per-component formatting status lines.
     #[inline]
     pub fn print(&self, output: &Output) {
         self.start(output);
@@ -9,6 +10,7 @@ impl Progress {
             self.component(output, index);
         }
     }
+    /// Emits component-loading counts and the overall `formatting components (total: N)` status line.
     #[inline]
     pub fn start(&self, output: &Output) {
         for count in &self.loads {

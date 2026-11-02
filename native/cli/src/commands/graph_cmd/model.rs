@@ -12,6 +12,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Directed dependency edge between `source_id` and `target_id` in a [`CompGraph`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub(crate) struct GraphEdge {
     pub id: String,
@@ -23,6 +24,7 @@ pub(crate) struct GraphEdge {
     pub bidirectional: bool,
 }
 
+/// Component dependency graph holding ordered `nodes` and [`GraphEdge`]s.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct CompGraph {
     pub(crate) nodes: Vec<String>,

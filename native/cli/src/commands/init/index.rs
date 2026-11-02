@@ -9,6 +9,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Appends an `index.json` rebuild [`Action`] to `plan` when `scope` has objects and needs index creation or repair.
 pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::Result<()> {
     // Pinned Repository.listRefs uses glob(path.join('*', '*')) plus path.sep
     // replacement. Its characterized Windows enumeration is empty, so rebuilding

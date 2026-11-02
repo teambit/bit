@@ -3,6 +3,7 @@ use super::{Value, invalid};
 use crate::commands::workspace_command::component_service::filesystem;
 use std::{fs, io, path::Path};
 
+/// Emits formatting progress or writes formatted component files when `check` is false.
 #[inline]
 pub(super) fn apply(
     check: bool,

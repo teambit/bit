@@ -4,6 +4,7 @@ use crate::commands::engine::Engine;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Compiles a glob-style `*` pattern into an anchored regular expression.
 #[inline]
 fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
     let trimmed = pattern.trim();

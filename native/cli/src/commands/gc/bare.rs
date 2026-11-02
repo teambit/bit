@@ -21,12 +21,14 @@ use repository::{Object, identity, text, unsupported};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, ffi::OsString, fs, io, path::Path};
 
+/// Staged bare-scope garbage collection plan with verbose logs, deleted hashes, and optional index rebuild.
 struct Plan {
     logs: Vec<String>,
     deleted: Vec<String>,
     index: Option<Vec<u8>>,
 }
 
+/// Executes bare-scope `bit gc` against `scope` according to `options`.
 pub(super) fn run(scope: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     if cfg!(windows) {
         return Ok(Outcome::Declined(

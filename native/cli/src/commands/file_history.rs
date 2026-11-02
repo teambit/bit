@@ -2,7 +2,9 @@
 
 mod blame;
 mod log_file;
+/// Descriptor for the `bit blame` CLI command.
 pub(super) const BLAME: super::Command = blame::COMMAND;
+/// Descriptor for the `bit log-file` CLI command.
 pub(super) const LOG_FILE: super::Command = log_file::COMMAND;
 
 use super::{
@@ -17,6 +19,7 @@ use std::{
     path::{Component, Path},
 };
 
+/// Ownership classification of a workspace file path for `bit blame` and `bit log-file`.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Target {
     Versioned { identity: String, file: String, lane: Option<Value> },

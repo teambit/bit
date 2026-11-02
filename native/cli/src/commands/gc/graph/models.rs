@@ -6,12 +6,14 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, fs, path::Path};
 
+/// Indexed `Component` and `Symlink` objects from a [`ScopeInventory`].
 pub(in crate::commands::gc) struct Models {
     identities: HashMap<String, Value>,
     hashes: HashMap<String, Value>,
     aliases: HashMap<String, String>,
 }
 impl Models {
+    /// Indexes all `Component` and `Symlink` objects in `inventory` by identity and hash.
     pub(super) fn new(inventory: &ScopeInventory) -> Self {
         let mut identities = HashMap::new();
         let mut hashes = HashMap::new();

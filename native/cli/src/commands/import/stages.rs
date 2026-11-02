@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 impl Planned {
+    /// Executes the two-phase `--dependents` graph discovery and continuation request in a single [`Engine`] session.
     pub(super) fn plan_graph(
         root: &Path,
         options: &Options,

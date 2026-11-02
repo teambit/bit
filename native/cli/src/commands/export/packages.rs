@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Deserialized per-component package link payload produced by the export engine.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Plan {
@@ -21,6 +22,7 @@ struct Plan {
     version_data: Value,
 }
 
+/// Materializes `node_modules` links and `package.json` manifests for all `staged` exported components.
 pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
     let plans = plans(staged)?;
     let root_components_dir = match staged.get("rootComponentsDir") {

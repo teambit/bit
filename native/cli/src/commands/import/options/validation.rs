@@ -3,6 +3,7 @@
 //! [`args`] verifies supported flags ([`WriteOptions`], [`DependencyOptions`]) and [`valid_pattern`] syntax before workspace execution.
 use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
 
+/// Returns whether all `flags` and `ids` belong to the supported native `bit import` grammar.
 #[inline]
 pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
     valid_import_flags(flags)

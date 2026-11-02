@@ -8,6 +8,7 @@ use crate::{
 };
 use std::{ffi::OsString, io, path::Path, time::Instant};
 
+/// Executes a workspace `bit import` or `bit fetch` operation after CLI option parsing.
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let preflight = match super::preparation::local_preflight(root, options) {
         Ok(preflight) => preflight,

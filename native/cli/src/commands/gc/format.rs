@@ -6,6 +6,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
+/// Serialized dry-run and backup flags included in `bit gc` reports.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct GcRunFlags {
@@ -15,6 +16,7 @@ pub(super) struct GcRunFlags {
     pub backup: bool,
 }
 
+/// Aggregated deleted object count, byte size, and per-type breakdown for `bit gc`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 pub(super) struct GcDeletionStats {
     #[serde(rename = "deletedObjects")]
@@ -25,6 +27,7 @@ pub(super) struct GcDeletionStats {
     pub by_type: BTreeMap<String, DeletedTypeStats>,
 }
 
+/// Stray-file, backup-directory, and retained-directory byte statistics for `bit gc`.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct GcDirSizes {

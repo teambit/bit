@@ -3,6 +3,7 @@
 use super::{Value, invalid};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use std::io;
+/// Renders the human-readable terminal summary for a completed `bit format` run.
 fn render(
     value: &Value,
     chalk: Chalk,

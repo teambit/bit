@@ -8,6 +8,7 @@ use crate::commands::status::js::{decline, text};
 use serde_json::Value;
 use std::io;
 
+/// Parsed component identifier (`scope`, `name`, and optional `version`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Id {
     scope: String,

@@ -21,8 +21,10 @@ static COLOR: AtomicBool = AtomicBool::new(false);
 const PLAIN: &str = "⚠ unable to cancel the export process at this point because the communication with the remote already started\n";
 const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the export process at this point because the communication with the remote already started\u{1b}[39m\n";
 
+/// RAII guard that blocks `SIGINT` / Ctrl+C cancellation while remote export communication is active.
 pub(super) struct Guard(platform::Previous);
 impl Guard {
+    /// Installs the platform Ctrl+C handler and activates the export interrupt guard.
     #[inline]
     pub(super) fn new(quiet: bool) -> io::Result<Self> {
         if ACTIVE.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {

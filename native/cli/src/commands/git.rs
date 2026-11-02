@@ -1,6 +1,6 @@
 //! Native `bit git <sub-command>` (`GitCmd`, `MergeBitmapsCmd`, `SetGitMergeDriverCmd` in `scopes/git/git/`).
 //!
-//! Dispatches bitmap merge ([`COMMAND`]) and git merge driver configuration subcommands into a [`Report`].
+//! Dispatches bitmap merge ([`COMMAND`], [`Parsed`]) and git merge driver configuration subcommands into a [`Report`].
 
 #[cfg(test)]
 mod tests;

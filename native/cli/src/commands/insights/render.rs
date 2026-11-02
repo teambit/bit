@@ -11,6 +11,7 @@ const ARROW: &str = "  ───>  ";
 const ARROW_LEN: usize = 8;
 const MAX_HORIZONTAL_WIDTH: usize = 90;
 
+/// Formats circular dependency `cycles` into horizontal or vertical arrow chains.
 pub(crate) fn cycles(cycles: &[Vec<String>], chalk: Chalk) -> String {
     if cycles.is_empty() {
         return "No circular dependencies found".into();

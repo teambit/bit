@@ -10,6 +10,7 @@ use super::{
 use std::{fs, io, path::Path};
 
 impl Plan {
+    /// Validates batch limits and preflights backup moves before any filesystem mutation occurs.
     pub(in crate::commands::gc) fn validate(&self, scope: &Path) -> io::Result<()> {
         if self.result.deleted.by_type.len() > 1 {
             return Err(io::Error::other(

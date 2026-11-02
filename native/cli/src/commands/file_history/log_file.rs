@@ -24,8 +24,10 @@ use std::{
     path::Path,
 };
 
+/// Descriptor for the `bit log-file` CLI command.
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
+/// Parses `args` into `(file_path, one_line)` when they fit the native `bit log-file` grammar.
 fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     let mut path = None;
     let mut one_line = false;

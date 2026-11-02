@@ -19,6 +19,7 @@ const FS_METADATA_FILES: &[&str] = &[".DS_Store", "Thumbs.db", "desktop.ini"];
 
 type RemoteRefsPair = (HashMap<String, Vec<String>>, HashSet<String>);
 
+/// Single decoded scope object record with hash, kind, byte size, modification time, and JSON value.
 #[derive(Debug, Clone)]
 pub(super) struct ObjectEntry {
     pub hash: String,
@@ -28,6 +29,7 @@ pub(super) struct ObjectEntry {
     pub value: Value,
 }
 
+/// Discovered stray temporary files eligible for cleanup during `bit gc`.
 #[derive(Debug, Default, Clone)]
 pub(super) struct StrayTempFiles {
     pub count: usize,

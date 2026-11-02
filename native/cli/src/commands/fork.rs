@@ -8,11 +8,13 @@ mod selection;
 use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit fork` CLI command.
 pub const COMMAND: Command = Command { name: "fork", aliases: &[], run };
 #[inline]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, false)
 }
+/// Runs `bit scope fork` using the shared [`run_mode`] implementation.
 #[inline]
 pub(in crate::commands) fn run_scope(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, true)

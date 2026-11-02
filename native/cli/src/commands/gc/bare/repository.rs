@@ -5,11 +5,13 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::BTreeMap, fs, io, path::Path};
 
+/// Decoded bare-scope object with its `kind` header and parsed JSON `value`.
 pub(super) struct Object {
     pub kind: String,
     pub value: Value,
 }
 
+/// Reads all content-addressed objects under `directory` into a hash-sorted [`BTreeMap`].
 pub(super) fn read(directory: &Path) -> io::Result<BTreeMap<String, Object>> {
     let mut objects = BTreeMap::new();
     for bucket in entries(directory)? {
