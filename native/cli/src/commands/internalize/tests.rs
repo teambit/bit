@@ -66,6 +66,7 @@ fn detects_internalize_from_component_json() {
     assert!(is_entry_internal(root, &bitmap_val, &bitmap.entries[0]).ok().unwrap());
 }
 
+/// Verifies that [`parse_options`] returns `None` for unrecognized `bit internalize` flags.
 #[test]
 fn rejects_unknown_internalize_flags() {
     assert_eq!(parse_options(&["--unknown"]), None);

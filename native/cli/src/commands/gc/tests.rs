@@ -49,6 +49,7 @@ fn write_json_obj(scope_dir: &Path, kind: &str, hash: &str, val: &Value) {
     write_scope_obj(scope_dir, kind, hash, &bytes);
 }
 
+/// Verifies [`parse_options`], [`parse_keep_versions`], and [`format_bytes`] across byte and kilobyte values.
 #[test]
 fn parses_gc_options_and_keep_versions() {
     assert_eq!(

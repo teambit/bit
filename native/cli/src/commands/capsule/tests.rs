@@ -88,6 +88,7 @@ fn parses_capsule_subcommands() {
     assert!(matches!(parse_subcommand(&["prune"]), Some(Subcommand::Prune(_))));
 }
 
+/// Verifies that [`object_hash_short`] computes the expected 9-character SHA-1 prefix for a path.
 #[test]
 fn matches_object_hash_short_sha1() {
     assert_eq!(object_hash_short("/tmp/test-ws"), "4d90daa1e");

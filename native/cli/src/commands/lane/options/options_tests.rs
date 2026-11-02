@@ -55,6 +55,7 @@ fn other_lane_merges_are_left_to_node() {
     }
 }
 
+/// Verifies `--resolve-unrelated` default `"ours"` resolution and explicit `"ours"` / `"theirs"` values.
 #[test]
 fn unrelated_resolution_defaults_and_both_valued_spellings() {
     for args in

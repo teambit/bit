@@ -23,6 +23,8 @@ fn filters_and_summarizes_diff_rows() {
 }
 
 /// Verifies that [`format`] renders the `there are no modified components to diff` message when empty.
+///
+/// Ensures an empty JSON array produces the canonical non-modified notice.
 #[test]
 fn empty_diff_rows_format_no_modified_components_warning() {
     let options = parse(&[]).unwrap();

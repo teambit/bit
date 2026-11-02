@@ -27,6 +27,7 @@ fn groups_copies_by_version() {
     assert!(rendered.contains("foo@1.0.0 — 2 copies"));
 }
 
+/// Verifies that [`parse_copy`] leaves `peer_suffix` as `None` when no `_` peer suffix is present.
 #[test]
 fn plain_version_without_peer_suffix_parses_with_none_suffix() {
     let copy = parse_copy("2.4.0");

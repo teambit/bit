@@ -23,6 +23,7 @@ fn parses_valid_args() {
     assert!(valid_args(&os_args(&["logout", "--no-color=false"])));
 }
 
+/// Verifies that [`valid_args`] rejects positional arguments and unsupported flags on `bit logout`.
 #[test]
 fn rejects_invalid_args() {
     assert!(!valid_args(&os_args(&["logout", "unexpected"])));

@@ -71,6 +71,7 @@ fn rejects_invalid_scope_and_same_name_as_template() {
     assert_eq!(validate_options(dir.path(), &options), Ok(()));
 }
 
+/// Verifies that [`parse_options`] returns `None` when no template or component arguments are supplied.
 #[test]
 fn empty_create_args_return_none() {
     assert_eq!(parse_options(&[]), None);

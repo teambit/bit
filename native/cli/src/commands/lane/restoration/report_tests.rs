@@ -41,6 +41,7 @@ fn json_keeps_absent_fields_absent_and_explicit_null_snapshot_result() {
     );
 }
 
+/// Canonical `(raw_status, display_label, ansi_color_code)` tuples for lane restoration file statuses.
 const FILE_STATUSES: [(&str, &str, &str); 10] = [
     ("merged", "auto-merged", "32"),
     ("manual", "CONFLICT", "31"),

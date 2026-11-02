@@ -29,6 +29,8 @@ fn parses_format_options_and_detects_missing_host() {
 }
 
 /// Verifies [`parse_options`] handles combined short flags and `--` pattern separators for `bit format`.
+///
+/// Also ensures unrecognized long options return `None`.
 #[test]
 fn parses_combined_short_flags_and_double_dash_format_pattern() {
     assert_eq!(

@@ -31,6 +31,7 @@ fn parses_pattern_and_flags() {
     );
 }
 
+/// Verifies that [`parse_options`] declines missing patterns, local `$` state selectors, and extra positionals.
 #[test]
 fn declines_stateful_or_invalid_arguments() {
     assert_eq!(parse(&["pattern"]), None);

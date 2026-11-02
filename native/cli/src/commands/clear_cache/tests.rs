@@ -34,6 +34,7 @@ fn parses_plain_and_remote_invocations() {
     assert_eq!(parse_args(&args(&["clear-cache", "positional"])), None);
 }
 
+/// Verifies [`format_remote_report`] output for both truthy (`true`) and falsy (`false`) remote responses.
 #[test]
 fn formats_remote_report_for_truthy_and_falsy_responses() {
     let chalk = Chalk::new(false);

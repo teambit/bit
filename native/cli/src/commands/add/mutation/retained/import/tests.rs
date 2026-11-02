@@ -36,6 +36,7 @@ fn exact_owned_content_advances_without_discarding_other_receipts() {
         ],
     );
 }
+/// Verifies that a conflicting preimage receipt aborts `acknowledge_import` without mutating earlier entries.
 #[test]
 fn a_conflicting_preimage_does_not_partially_advance_an_earlier_receipt() {
     let directory = tempfile::tempdir().unwrap();

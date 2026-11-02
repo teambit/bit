@@ -27,6 +27,7 @@ fn parses_ids_like_bit_id() {
     assert!(!latest.same(&Id::parse("s/a@1.0.0").unwrap()));
 }
 
+/// Verifies that [`prettify`] returns an empty string when given an empty input.
 #[test]
 fn prettify_empty_string_returns_empty() {
     assert_eq!(prettify(""), "");

@@ -65,6 +65,7 @@ fn detects_empty_build_workspace() {
     assert!(!is_empty_build_workspace(temp.path(), &list_opts).unwrap());
 }
 
+/// Verifies that `--reuse-capsules` permits both `--rewrite` and `--reinstall` in [`flag_error`].
 #[test]
 fn reuse_capsules_allows_rewrite_and_reinstall_flags() {
     let opts = parse_options(&["--reuse-capsules", "--rewrite", "--reinstall"]).unwrap();

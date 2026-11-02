@@ -11,6 +11,8 @@ fn branch_validation_and_trimming_preserve_the_released_unicode_distinction() {
 }
 
 /// Verifies that empty and whitespace-only branch names are rejected while valid branch names pass.
+///
+/// Covers `""`, ASCII spaces, and a slash-qualified branch name.
 #[test]
 fn empty_and_whitespace_only_branch_names_are_rejected() {
     assert!(!super::valid_branch(""));

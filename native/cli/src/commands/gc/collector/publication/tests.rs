@@ -50,6 +50,7 @@ fn mixed_type_reports_decline_before_stray_cleanup_or_collection() {
     assert_eq!(fs::read(stray).unwrap(), b"keep until planning succeeds");
 }
 
+/// Verifies that an empty [`Plan`] passes [`Plan::validate`] and [`Plan::execute`] without mutating the scope.
 #[test]
 fn empty_plan_validates_and_executes_without_touching_scope() {
     let scope = tempfile::tempdir().unwrap();

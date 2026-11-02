@@ -61,6 +61,7 @@ fn rejects_eject_when_workspace_on_lane() {
     assert!(err.contains("unable to eject when the workspace is on a lane"), "{err}");
 }
 
+/// Verifies [`parse_options`] accepts patterns after `--` and rejects unrecognized short flags.
 #[test]
 fn parses_trailing_double_dash_pattern_and_rejects_unknown_short_flags() {
     let parsed = parse_options(&["-fx", "--", "comp1"]).unwrap();

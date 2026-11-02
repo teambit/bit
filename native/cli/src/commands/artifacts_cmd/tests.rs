@@ -51,6 +51,7 @@ fn detects_empty_workspace_for_artifacts() {
     assert!(is_empty_workspace(temp.path()).unwrap());
 }
 
+/// Verifies [`parse_builder_artifacts`], [`filter_artifacts`], and [`render_artifacts_report`] on builder extension data.
 #[test]
 fn extracts_filters_and_renders_builder_artifacts() {
     let ver_val = json!({

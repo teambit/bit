@@ -61,6 +61,7 @@ fn moves_skipped_components_to_details() {
     );
 }
 
+/// Verifies that [`format`] emits a deprecation warning when `--all` is passed explicitly with `head` or `latest`.
 #[test]
 fn warns_for_deprecated_explicit_all_on_head_and_latest() {
     let result = json!({ "components": [], "failedComponents": [] });

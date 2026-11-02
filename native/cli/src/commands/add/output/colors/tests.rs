@@ -45,6 +45,7 @@ fn empty_directory_keeps_yellow_inside_the_outer_red() {
     );
 }
 
+/// Verifies that [`error`] preserves [`CallbackError`] type and both `startup` and `output` phases.
 #[test]
 fn callback_errors_retain_their_type_and_both_output_phases() {
     let callback = CallbackError::wrap(

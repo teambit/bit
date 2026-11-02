@@ -38,6 +38,8 @@ fn parses_publish_options_and_detects_empty_workspace() {
 }
 
 /// Verifies that [`parse_options`] rejects multiple positional patterns or unknown flags.
+///
+/// Ensures `bit publish` accepts only a single component pattern argument.
 #[test]
 fn rejects_multiple_patterns_or_unknown_publish_flags() {
     assert_eq!(parse_options(&["comp1", "comp2"]), None);

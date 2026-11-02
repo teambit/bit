@@ -77,6 +77,7 @@ fn removes_existing_env_and_versioned_entry_from_config_map() {
     assert!(map.contains_key("teambit.component/forking"));
 }
 
+/// Verifies [`format_envs_list`] and [`render_env_get`] formatting including custom env scripts.
 #[test]
 fn renders_envs_list_and_get_with_scripts() {
     let pairs = vec![

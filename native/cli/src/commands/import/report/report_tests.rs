@@ -39,6 +39,7 @@ fn imported_components_are_listed_with_their_versions() {
     );
 }
 
+/// Verifies [`validate`] counts `"up to date"` components in the `import_report` summary line.
 #[test]
 fn up_to_date_components_are_counted() {
     let current = receipt(

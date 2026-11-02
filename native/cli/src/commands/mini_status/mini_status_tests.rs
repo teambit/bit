@@ -34,6 +34,7 @@ fn reports_the_file_changes() {
     );
 }
 
+/// Verifies that [`quick_report`] formats the clean-workspace message when no components are modified or new.
 #[test]
 fn reports_a_workspace_without_file_changes() {
     assert_eq!(

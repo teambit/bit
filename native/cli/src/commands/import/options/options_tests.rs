@@ -36,6 +36,7 @@ fn imports_that_install_and_wildcard_patterns() {
     assert!(!parse(&["import", "s/a", "-x"]).unwrap().installs());
 }
 
+/// Verifies that `--override` requires component files to be written and rejects `-o` (`--objects`).
 #[test]
 fn override_requires_a_component_write() {
     let options = parse(&["import", "s/a", "--override", "-x"]).unwrap();

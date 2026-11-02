@@ -53,6 +53,7 @@ fn reference(paths: &[PathBuf], expression: &str) -> Vec<PathBuf> {
     assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
     serde_json::from_slice(&result.stdout).unwrap()
 }
+/// Creates a symbolic link at `path` pointing to `target`.
 #[cfg(unix)]
 fn link(target: &Path, path: &Path) {
     std::os::unix::fs::symlink(target, path).unwrap();

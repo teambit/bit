@@ -59,6 +59,7 @@ fn builds_component_json_entry_with_extra_fields() {
     assert_eq!(obj["head"]["hash"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 }
 
+/// Verifies [`build_lane_entry`] populates `Lane`, `_hash`, and component head fields when `--json-extra` is enabled.
 #[test]
 fn builds_lane_json_entry_with_extra_fields() {
     let raw = json!({

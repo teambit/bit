@@ -53,6 +53,7 @@ fn cache_bytes(directory: &Path) -> usize {
         .sum()
 }
 
+/// Verifies that an uncached source file containing `JSDoc` comments is reported as a cache miss.
 #[test]
 fn rich_uncached_cat_source_requires_published_parser() {
     let root = tempfile::tempdir().unwrap();

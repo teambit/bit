@@ -46,6 +46,7 @@ fn parses_cat_component_and_version_history_flags() {
     assert_eq!(parse_single_id(&["my-lane"]), Some("my-lane".to_owned()));
 }
 
+/// Verifies [`diagnose_lane_lookup_error`] and [`diagnose_component_lookup_error`] against scope `index.json` fixtures.
 #[test]
 fn diagnoses_missing_lane_and_component_lookup_errors() {
     let temp = tempfile::tempdir().unwrap();

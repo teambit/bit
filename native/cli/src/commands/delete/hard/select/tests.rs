@@ -14,6 +14,8 @@ fn wildcard_matches_nested_namespaces_without_matching_other_prefixes() {
 }
 
 /// Verifies that an exact component ID and `**` match in [`wildcard`].
+///
+/// Ensures both literal scoped IDs and recursive globs evaluate to `true`.
 #[test]
 fn exact_component_id_matches_itself_in_wildcard_helper() {
     assert!(wildcard("ui/button", "ui/button"));

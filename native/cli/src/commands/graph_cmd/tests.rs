@@ -50,6 +50,7 @@ fn empty_graph_filter_cycles_preserves_empty_nodes_and_edges() {
     assert!(graph.edges.is_empty());
 }
 
+/// Verifies deterministic node/edge sorting and [`CompGraph::filter_cycles`] subgraph extraction.
 #[test]
 fn filters_graph_seeders_local_only_and_cycles() {
     let mut graph = CompGraph::default();

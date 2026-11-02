@@ -28,6 +28,7 @@ fn controls_retain_absence_and_reject_nonregular_or_over_budget_files() {
     assert!(refresh(directory.path()).is_err());
 }
 
+/// Verifies that [`refresh`] rejects a symlinked control file even when its target is a regular file.
 #[cfg(unix)]
 #[test]
 fn a_control_symlink_cannot_replace_a_regular_preimage() {

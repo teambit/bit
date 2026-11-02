@@ -34,6 +34,7 @@ fn different_observations_of_one_path_are_not_deduplicated() {
     assert!(error.to_string().contains("dependency capture changed"), "{error}");
 }
 
+/// Verifies that [`Engine::validate_read_set`] succeeds immediately on empty or null-only proof slices.
 #[test]
 fn empty_and_null_only_proof_slices_succeed_without_engine_roundtrip() {
     let mut engine = Engine::new().unwrap();

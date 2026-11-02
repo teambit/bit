@@ -45,6 +45,7 @@ fn renders_globals_text_and_json_formats() {
     assert_eq!(parsed["Capsules Dir"], "/tmp/bit-globals/capsules");
 }
 
+/// Verifies that [`parse_json_flag`] defaults to `Some(false)` on an empty argument slice.
 #[test]
 fn empty_args_slice_defaults_to_non_json_for_globals() {
     assert_eq!(parse_json_flag(&[]), Some(false));

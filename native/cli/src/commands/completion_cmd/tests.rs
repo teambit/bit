@@ -23,6 +23,8 @@ fn validates_completion_options_and_renders_scripts() {
 }
 
 /// Verifies [`valid_options`] accepts explicit `--no-color=true` and `--no-color=false` flags and rejects positionals.
+///
+/// Ensures positional arguments decline native `bit completion` handling.
 #[test]
 fn valid_options_accepts_explicit_no_color_boolean_values() {
     assert!(valid_options(&["--no-color=true"]));

@@ -33,6 +33,7 @@ fn detects_empty_workspace_for_check_types() {
     assert!(is_empty_workspace(temp.path()).unwrap());
 }
 
+/// Verifies [`check_ts_content`] detects `TypeScript` type mismatches while accepting valid or untyped code.
 #[test]
 fn checks_ts_content_for_type_mismatches() {
     let bad = "const x: number = 'not a number';\nexport default x;\n";

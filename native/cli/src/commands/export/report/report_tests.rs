@@ -33,6 +33,7 @@ fn reads_the_prepared_transfers() {
     assert!(super::prepared(&empty).is_ok(), "an empty lane still has objects to export");
 }
 
+/// Verifies [`published`] validates token and component IDs and [`format_with`] renders `missingScope` warnings.
 #[test]
 fn validates_the_published_ids() {
     let valid = receipt(&["s/a"], &["s/a@0.0.1"]);

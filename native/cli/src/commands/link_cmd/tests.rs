@@ -65,6 +65,7 @@ fn replaces_package_names_in_imports_and_requires() {
     );
 }
 
+/// Verifies [`render_report`] and [`render_json`] formatting on a populated [`LinkSummary`].
 #[test]
 fn renders_report_and_json() {
     let summary = LinkSummary {

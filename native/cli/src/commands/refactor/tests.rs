@@ -37,6 +37,7 @@ fn parses_dependency_name_and_unrecognized_subcommands() {
     assert_eq!(parse(&["refactor", "dependency-name", "only-one"]), None);
 }
 
+/// Verifies that [`extract_version_package_name`] reads `data.packageName` from the dependency-resolver extension.
 #[test]
 fn extracts_package_name_from_version_extensions() {
     let ver = json!({

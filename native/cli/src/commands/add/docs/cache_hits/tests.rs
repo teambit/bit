@@ -30,6 +30,7 @@ fn hit_accepts_arbitrary_metadata_and_exact_timestamp_but_not_fractionally_newer
     assert!(hit(&cache, &path, timestamp + 0.25, true).unwrap().is_none());
 }
 
+/// Verifies that a disabled cache skips opening `cache` even when it is a regular file.
 #[test]
 fn disabled_cache_does_not_even_open_the_cache_path() {
     let directory = tempfile::tempdir().unwrap();

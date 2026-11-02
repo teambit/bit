@@ -70,6 +70,7 @@ fn reports_a_failed_persist_like_persist_failed() {
     assert!(persist_failure("outbound validate failed: conflict", &scopes).is_none());
 }
 
+/// Verifies [`validation_failure`] formats remote validation rejection messages with used scope names.
 #[test]
 fn reports_failed_validation_without_repeating_remote_actions() {
     let scopes = ["a".to_string(), "b".to_string()];

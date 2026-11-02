@@ -19,6 +19,7 @@ fn without_a_proven_blocker_original_error_is_preserved() {
     assert_eq!(actual.raw_os_error(), Some(183));
 }
 
+/// Verifies that scoped package path components join using the host platform separator.
 #[test]
 fn package_segments_use_platform_separators() {
     let path: std::path::PathBuf = Path::new("@scope/second").components().collect();

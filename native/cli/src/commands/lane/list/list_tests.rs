@@ -34,6 +34,7 @@ fn reads_a_lane_without_its_deleted_components() {
     assert!(lane(&row("0.0.0"), &untracked).is_err(), "Node migrates old lanes");
 }
 
+/// Verifies [`report`] formats the active `main` lane header and available lane list.
 #[test]
 fn reports_the_current_lane_and_the_others() {
     let main = LaneData {

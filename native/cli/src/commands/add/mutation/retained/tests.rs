@@ -34,6 +34,7 @@ fn a_conflicting_bitmap_receipt_rejects_the_whole_advance() {
     assert_eq!(retained.read_set, original);
 }
 
+/// Verifies that `advance_bitmap` updates the `.bitmap` control receipt even when `read_set` is empty.
 #[test]
 fn advance_bitmap_updates_controls_even_when_read_set_is_empty() {
     let before = json!({"path":"/workspace/.bitmap","hash":"before"});

@@ -40,6 +40,7 @@ fn rejects_everything_else() {
     assert!(parse(&["-x", "--force-ours"]).is_none());
 }
 
+/// Verifies that [`parse`] accepts a single positional merge pattern following `--`.
 #[test]
 fn double_dash_accepts_single_merge_pattern() {
     let options = parse(&["-x", "--", "remote/one"]).unwrap();

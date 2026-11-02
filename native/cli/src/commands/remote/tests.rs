@@ -31,6 +31,7 @@ fn parses_list_and_default_subcommand() {
     );
 }
 
+/// Verifies `bit remote` CLI parsing for `add` and `del` subcommands with `--global`.
 #[test]
 fn parses_add_and_del_subcommands() {
     assert_eq!(

@@ -30,6 +30,7 @@ fn env_uses_only_the_first_parameter_and_invalid_state_errors_are_canonical() {
     );
 }
 
+/// Verifies that valid single-state and `$env:<id>` selectors pass [`validate`].
 #[test]
 fn valid_single_and_env_state_selectors_pass_validation() {
     for selector in ["$new", "$modified", "$deprecated", "$env:scope/env"] {

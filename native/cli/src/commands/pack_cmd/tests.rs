@@ -58,6 +58,7 @@ fn builds_valid_tgz_archive() {
     assert!(paths.contains(&"package/index.js".to_owned()));
 }
 
+/// Verifies [`parse_options`] accepts an optional second `scope_path` positional and rejects a third.
 #[test]
 fn parses_optional_scope_path_and_rejects_third_positional_argument() {
     let with_scope = parse_options(&["comp1", "my-scope-dir"]).unwrap();

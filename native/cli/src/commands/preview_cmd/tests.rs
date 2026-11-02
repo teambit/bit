@@ -16,6 +16,8 @@ fn parses_generate_and_serve_preview_options() {
 }
 
 /// Verifies that empty argument slices parse to [`GenerateOptions::default`] and [`ServeOptions::default`].
+///
+/// Ensures `bit preview` without flags retains default pattern, name, and port settings.
 #[test]
 fn empty_preview_args_parse_to_defaults() {
     assert_eq!(parse_generate_options(&[]), Some(GenerateOptions::default()));

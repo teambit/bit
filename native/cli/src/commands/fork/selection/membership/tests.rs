@@ -39,6 +39,7 @@ fn different_versions_are_not_equal_component_ids() {
     assert_eq!(remotes, remote);
 }
 
+/// Verifies that [`classify`] returns empty local and remote vectors when all inputs are empty.
 #[test]
 fn empty_local_and_remote_inputs_produce_empty_classifications() {
     let (locals, remotes) = classify(&[], &[], &[]);

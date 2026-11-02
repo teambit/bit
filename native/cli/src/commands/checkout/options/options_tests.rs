@@ -60,6 +60,7 @@ fn accepts_the_native_subset() {
     assert!(parse(&[&"a".repeat(40), "-x"]).is_some());
 }
 
+/// Verifies that [`parse`] rejects duplicate or incompatible `bit checkout` flags and targets.
 #[test]
 fn rejects_everything_else() {
     assert!(!parse(&["head"]).unwrap().execution.skip_install);

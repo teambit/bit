@@ -37,6 +37,7 @@ fn rebase_matches_node() {
     }
 }
 
+/// Verifies that [`join_linux`] preserves a single `"."` path segment without stripping it.
 #[test]
 fn join_linux_with_single_dot_returns_dot() {
     assert_eq!(join_linux(&["."]), ".");

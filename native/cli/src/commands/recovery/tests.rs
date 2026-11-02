@@ -32,6 +32,7 @@ fn component_abort_reports_unversioned_ids() {
     assert!(!report.data.contains("@abc"));
 }
 
+/// Verifies that [`format_component`] declines when an unexpected top-level JSON key is present.
 #[test]
 fn component_abort_with_unexpected_key_declines_formatting() {
     let extra = json!({"abortedComponents": [], "extra": 1});

@@ -40,6 +40,7 @@ fn renders_missing_and_persisted_command_details() {
     );
 }
 
+/// Verifies that [`valid_args`] rejects an empty argument slice lacking the command name.
 #[test]
 fn empty_args_slice_is_rejected_by_valid_args() {
     assert!(!valid_args(&[]));

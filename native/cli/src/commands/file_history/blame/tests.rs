@@ -20,6 +20,7 @@ fn published_posix_absolute_path_becomes_version_relative_path() {
     assert_eq!(published_source_key("/workspace/comp1", "/workspace/comp1/index.js"), "index.js");
 }
 
+/// Verifies [`published_source_key`] strips only the leading component root prefix when repeated in nested subdirectories.
 #[test]
 fn published_prefix_removal_preserves_repeated_prefix_in_nested_file() {
     assert_eq!(

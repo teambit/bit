@@ -18,6 +18,7 @@ fn extended_patterns_keep_bits_split_and_version_quirks() {
     assert_eq!(matching(&ids, "**, !**/button, **/button"), [ids[0], ids[1], ids[2], ids[3]]);
 }
 
+/// Verifies that `{start..end}` sequence braces and `!(...)` negative extglobs follow `minimatch` in [`matching`].
 #[test]
 fn sequence_braces_and_negative_extglobs_follow_minimatch() {
     let ids = ["s/comp01", "s/comp02", "s/comp03", "s/foo", "s/foobar", "s/card"];

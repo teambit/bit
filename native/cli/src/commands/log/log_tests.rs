@@ -56,6 +56,7 @@ fn resolves_local_target_from_root_dir_index_or_user_error() {
     );
 }
 
+/// Verifies that [`render`] preserves full 40-char hashes and multiline messages for `--remote --one-line`.
 #[test]
 fn remote_rows_keep_full_hash_and_message_in_one_line_output() {
     let rows = [json!({

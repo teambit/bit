@@ -49,6 +49,7 @@ fn integrity_inspects_only_local_models_and_reports_the_missing_head() {
             .contains(head),
     );
 }
+/// Verifies that [`object`] fails with an error when reading a corrupted zlib object stream.
 #[test]
 fn invalid_compressed_objects_fail_instead_of_reporting_a_missing_head() {
     let directory = tempfile::tempdir().unwrap();

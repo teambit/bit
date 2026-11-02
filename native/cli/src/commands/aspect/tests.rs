@@ -61,6 +61,7 @@ fn deep_merges_nested_objects() {
     assert_eq!(target, json!({"a": {"x": 1, "y": 20, "z": 30}, "b": 3}));
 }
 
+/// Verifies [`collect_list_results`], [`render_list_table`], [`collect_get_entries`], and [`render_get_text`] on a workspace fixture.
 #[test]
 fn lists_and_gets_component_aspects() {
     let temp = tempfile::tempdir().unwrap();

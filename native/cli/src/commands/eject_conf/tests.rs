@@ -49,6 +49,7 @@ fn parses_eject_conf_flags_and_boolean_values() {
     assert_eq!(parse_options(&[]), None);
 }
 
+/// Verifies [`prepare`] generates `component.json` and updates `.bitmap` for a versioned component from scope objects.
 #[test]
 fn prepares_ejected_config_for_versioned_component_from_scope_objects() {
     let temp = tempdir().unwrap();

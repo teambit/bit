@@ -69,6 +69,7 @@ fn computes_transitive_dependents_and_formats_report() {
     assert!(empty.contains("no dependents found for my-scope/comp3@0.0.1"));
 }
 
+/// Verifies [`DepGraph::dependents_of`] returns an empty vector on an empty [`DepGraph`].
 #[test]
 fn empty_dependency_graph_returns_no_dependents_for_any_id() {
     let graph = DepGraph::default();

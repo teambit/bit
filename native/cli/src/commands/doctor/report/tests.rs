@@ -20,6 +20,7 @@ fn colors_do_not_increase_column_width() {
     assert_eq!(plain.matches("╟").count(), 8);
 }
 
+/// Verifies that ANSI escape stripping preserves incomplete and multiline sequences while stripping valid SGR codes.
 #[test]
 fn debug_log_stripping_preserves_incomplete_and_multiline_escape_sequences() {
     assert_eq!(super::strip("a\u{1b}[31mb\u{1b}[0mc"), "abc");

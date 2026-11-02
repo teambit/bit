@@ -30,6 +30,7 @@ fn parses_component_name_from_scoped_id() {
     assert_eq!(parse_component_name("unscoped"), None);
 }
 
+/// Verifies [`validate_outside_workspace`] rejects non-empty target directories, unscoped lanes, and invalid IDs.
 #[test]
 fn validates_non_empty_dir_and_unscoped_lane() {
     let temp = tempfile::tempdir().unwrap();

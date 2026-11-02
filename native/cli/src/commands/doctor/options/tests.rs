@@ -24,6 +24,7 @@ fn remote_incompatibilities_keep_published_order() {
         "The following flags cannot be used with --remote: --archive, --include-public. Archive-related options are only applicable when running doctor locally.",
     );
 }
+/// Verifies that [`Options::parse`] separates diagnosis names from `--save` file paths and combined short flags.
 #[test]
 fn optional_paths_and_diagnosis_names_are_distinct() {
     let options = Options::parse(&["validate git exec", "--save", "report.txt", "-j"]).unwrap();

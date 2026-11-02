@@ -13,6 +13,7 @@ fn matched(pattern: &str) -> Vec<&'static str> {
     matching(&IDS, &split(pattern)).unwrap()
 }
 
+/// Verifies that [`matched`] matches `*`, `**`, `?`, and version-suffixed patterns like `minimatch`.
 #[test]
 fn globs_match_like_minimatch() {
     assert_eq!(matched("org.scope/ui/*"), ["org.scope/ui/button", "org.scope/ui/card"]);

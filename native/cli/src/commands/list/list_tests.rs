@@ -49,6 +49,7 @@ fn matches_namespaces_like_the_wildcard_regex() {
     assert!(Wildcard::new("**/ui+").is_err());
 }
 
+/// Builds a sample [`Row`] fixture for `identity` with optional scope `version` and workspace `used` version.
 fn row(identity: &str, version: Option<&str>, used: Option<&str>) -> Row {
     Row {
         identity: identity.to_string(),
