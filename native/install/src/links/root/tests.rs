@@ -55,6 +55,7 @@ fn component(root: &Path, scope: &str, name: &str) -> WorkspaceComponent {
     }
 }
 
+/// Formats `path` as a `link:<path>` pnpm dependency specifier.
 fn link(path: &Path) -> String {
     format!("link:{}", path.display())
 }

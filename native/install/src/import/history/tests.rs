@@ -28,6 +28,7 @@ fn history(versions: &Value, complete: &[&str]) -> Value {
     json!({ "name": "comp1", "scope": "remote", "versions": versions, "graphCompleteRefs": complete })
 }
 
+/// Verifies that [`check`] returns [`Completeness::Complete`] when all ancestors exist or [`Completeness::Recorded`] when listed.
 #[test]
 fn a_history_with_every_ancestor_is_complete() {
     let versions = json!([

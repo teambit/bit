@@ -29,7 +29,7 @@ pub struct Scopes {
     pub remote: String,
     pub remote_path: PathBuf,
 }
-/// Per-test workspace and remote scope harness for native CLI E2E tests.
+/// Per-test workspace and remote scope harness ([`Scopes`], [`Run`]) for native CLI E2E tests.
 pub struct Helper {
     _dir: TempDir,
     pub scopes: Scopes,

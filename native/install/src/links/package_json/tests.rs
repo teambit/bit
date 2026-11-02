@@ -40,6 +40,7 @@ fn context(props: Value) -> PackageJsonContext<'static> {
     }
 }
 
+/// Returns the ordered property keys of `manifest` as string slices.
 fn keys(manifest: &Map<String, Value>) -> Vec<&str> {
     manifest
         .keys()

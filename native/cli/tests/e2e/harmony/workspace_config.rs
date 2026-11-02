@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/workspace-config.e2e.ts` ([`comment_preservation_in_workspace_jsonc`]).
+//! End-to-end tests for `e2e/harmony/workspace-config.e2e.ts` ([`comment_preservation_in_workspace_jsonc`], [`adding_a_non_component_key`], [`adding_a_non_existing_component_to_a_variant`]).
 //! Verifies `JSONC` comment preservation in `workspace.jsonc` when updating `defaultScope` via `scope set`.
 
 use crate::helper::{Helper, config};

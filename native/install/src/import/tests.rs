@@ -49,7 +49,7 @@ struct Dependency<'a> {
     version: &'a str,
 }
 
-/// Tag `remote/<name>@0.0.1` in `repo` and return the Version hash.
+/// Tags `remote/<name>@0.0.1` in `repo` and returns the `Version` object hash.
 fn tag(repo: &Repo, name: &str, dependencies: &[Dependency<'_>], graph: bool) -> String {
     let contents = format!("export const {name} = 1;");
     let file = sha1_hex(&contents);

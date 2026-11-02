@@ -50,6 +50,7 @@ fn negation_after_positive_reuses_the_positive_source() {
     assert!(negative.negative);
 }
 
+/// Verifies that [`Ignore::add_ignore`] appends rules from another [`Ignore`] instance in order.
 #[test]
 fn add_ignore_appends_rules_in_order() {
     let mut compiler = Compiler::new();

@@ -30,6 +30,7 @@ fn hoist_pattern_prefers_a_non_default_pnpm_pattern_over_the_bit_default() {
     assert_eq!(hoist_pattern(Some(&patterns(&["*"])), Some(&patterns(&["*"]))), patterns(&["*"]));
 }
 
+/// Verifies that [`enable_global_virtual_store`] checks [`EnvVars`] first, then [`DependencyResolverConfig`], then [`GlobalConfig`].
 #[test]
 fn the_global_virtual_store_follows_env_then_config_then_global_config() {
     let config = DependencyResolverConfig::default();

@@ -28,6 +28,7 @@ fn validates_like_valid_for_old_packages() {
     assert!(!is_valid_package_name(" spaced"));
 }
 
+/// Verifies [`version_with_save_prefix`] across exact versions, custom prefixes, prereleases, and user ranges.
 #[test]
 fn save_prefix_rules() {
     assert_eq!(version_with_save_prefix("1.2.3", None, None).unwrap(), "^1.2.3");

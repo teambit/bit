@@ -27,6 +27,7 @@ fn resolver(dir: &TempDir, body: &str, token: Option<&str>) -> Resolver {
     Resolver::configured(&scope_json, PathBuf::new(), PathBuf::new(), "local", &global).unwrap()
 }
 
+/// Verifies that [`Resolver::configured`] returns `None` when `resolverPath` is absent, empty, or null.
 #[test]
 fn only_a_configured_resolver_path_is_used() {
     let global = GlobalConfig::default();

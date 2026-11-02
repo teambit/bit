@@ -26,6 +26,7 @@ fn preserves_types_aliases_and_duplicate_metadata() {
     );
 }
 
+/// Verifies that `@bit-ignore` and `@bit-no-check` directives inside string literals are not treated as comments.
 #[test]
 fn ignores_only_real_typescript_comments() {
     let result = scan(

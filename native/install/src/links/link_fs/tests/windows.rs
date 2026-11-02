@@ -24,6 +24,7 @@ fn symlink_kind_links_a_file_whether_or_not_symlinks_are_permitted() {
     assert_eq!(fs::read_to_string(&dest).unwrap(), "changed");
 }
 
+/// Verifies that [`LinkKind::Symlink`] links a directory via symlink or junction on Windows.
 #[test]
 fn symlink_kind_links_a_directory() {
     let dir = tempfile::tempdir().unwrap();

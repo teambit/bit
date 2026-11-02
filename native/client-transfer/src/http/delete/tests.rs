@@ -47,6 +47,7 @@ fn request(stream: &TcpStream) -> String {
     text
 }
 
+/// Spawns a test TCP server that records the first HTTP request, optionally sends `reply`, and checks for retries.
 fn serve(reply: Option<&'static str>) -> (String, thread::JoinHandle<(String, bool)>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

@@ -31,6 +31,7 @@ fn graph(packages: serde_json::Value, edges: serde_json::Value) -> serde_json::V
     json!({ "schemaVersion": "2.0", "packages": packages, "edges": edges, "pnpmfileChecksum": "bit-1" })
 }
 
+/// Verifies [`split_peer_ids`] and [`without_peer_suffix`] on nested peer dependency suffixes.
 #[test]
 fn splits_peer_suffixes() {
     assert_eq!(

@@ -21,6 +21,7 @@ fn a_single_range_passes_through() {
     assert_eq!(safe_intersect(["^1.0.0"].into_iter()).as_deref(), Some("^1.0.0"));
 }
 
+/// Verifies that [`safe_intersect`] computes the intersection of compatible semver ranges.
 #[test]
 fn ranges_are_intersected() {
     let intersection = safe_intersect(["^1.0.0", ">=1.2.0"].into_iter()).expect("intersection");

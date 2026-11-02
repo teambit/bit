@@ -69,6 +69,7 @@ fn write(path: &Path, content: &str) {
     fs::write(path, content).unwrap();
 }
 
+/// Decodes `output.stdout` as UTF-8.
 fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).unwrap()
 }

@@ -51,6 +51,7 @@ fn ordinary_commonjs_data_and_literal_dependency_modules_are_empty() {
     }
 }
 
+/// Verifies that `JSDoc` comments and React component exports defer to the full documentation parser.
 #[test]
 fn documentation_and_react_component_shapes_always_defer() {
     for source in [

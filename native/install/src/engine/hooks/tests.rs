@@ -31,6 +31,7 @@ fn legacy_and_harmony_are_removed_unless_linked() {
     );
 }
 
+/// Verifies that `forced_harmony: true` preserves an explicit `@teambit/harmony` version in `dependencies`.
 #[test]
 fn a_forced_harmony_version_is_kept() {
     let hooks = BitHooks { forced_harmony: true, ..hooks() };

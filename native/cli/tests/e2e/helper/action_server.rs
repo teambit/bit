@@ -22,6 +22,7 @@ pub struct Server {
 }
 
 impl Server {
+    /// Starts a non-blocking local TCP server expecting `count` HTTP `POST` action requests.
     pub fn start(
         count: usize,
         mut answer: impl FnMut(&Request) -> (u16, Value) + Send + 'static,

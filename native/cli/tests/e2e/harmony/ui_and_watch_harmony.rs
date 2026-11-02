@@ -26,6 +26,7 @@ fn workspace_ui() {
     assert!(out.contains("start"));
 }
 
+/// Verifies `bit watch --help` and `bit compile` tracking of modified, added, and removed component files.
 #[test]
 fn watch_compiles_modified_and_new_files_and_tracks_add_remove() {
     let helper = Helper::new();

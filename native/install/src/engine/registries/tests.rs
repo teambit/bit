@@ -24,6 +24,7 @@ fn npmjs_config() -> pnpm_config::Config {
     }
 }
 
+/// Verifies that [`bit_cloud_registry`] uses `bit.cloud` by default or `cloud_domain` when configured.
 #[test]
 fn the_cloud_registry_follows_the_configured_domain() {
     assert_eq!(bit_cloud_registry(&GlobalConfig::new()), "https://node-registry.bit.cloud/");

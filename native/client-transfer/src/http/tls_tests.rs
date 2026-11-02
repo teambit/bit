@@ -52,7 +52,7 @@ fn network_certificate_and_legacy_proxy_fallback_authenticate_mutual_tls() {
     }
 }
 
-// Keep production error text canonical; only a failed fixture exposes reqwest's TLS source chain.
+/// Keep production error text canonical; only a failed fixture exposes reqwest's TLS source chain.
 fn action(network: &Network, runtime: &tokio::runtime::Runtime, url: &str) -> serde_json::Value {
     runtime
         .block_on(network.action(url, "ExportValidate", &json!({})))

@@ -35,6 +35,7 @@ fn virtual_store(root: &Path) -> std::path::PathBuf {
     root.join("node_modules").join(".pnpm")
 }
 
+/// Returns the set of entry file names directly under `dir`.
 fn entries(dir: &Path) -> HashSet<String> {
     fs::read_dir(dir)
         .expect("read dir")

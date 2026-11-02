@@ -28,6 +28,7 @@ fn nested_and_repeated_untracked_files_match_node() {
     parity(&helper);
 }
 
+/// Verifies that relative `CommonJS` `require('../baz/qux')` across components matches Node `status --json`.
 #[test]
 fn relative_component_commonjs_matches_node() {
     let helper = Helper::new();

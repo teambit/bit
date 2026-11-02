@@ -41,6 +41,7 @@ fn the_dependency_resolver_proxy_wins() {
     );
 }
 
+/// Verifies that `.npmrc` proxy settings take precedence over [`GlobalConfig`] fallback proxy entries.
 #[test]
 fn the_pnpm_cascade_proxy_comes_before_the_global_one() {
     let mut pnpm = pnpm_config::Config::default();

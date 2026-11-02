@@ -29,6 +29,7 @@ fn an_empty_cache_needs_no_invalidation() {
     assert!(!needs_invalidation(temp.path(), &deps_dir(temp.path())).expect("check"));
 }
 
+/// Verifies that workspace file modifications older than the oldest cache entry preserve the dependency cache.
 #[test]
 fn workspace_changes_before_the_oldest_entry_keep_the_cache() {
     let temp = tempfile::tempdir().expect("tempdir");

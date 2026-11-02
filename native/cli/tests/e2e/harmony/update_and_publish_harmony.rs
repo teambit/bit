@@ -66,6 +66,7 @@ fn updates_selected_patterns_and_preserves_comments() {
     assert_eq!(deps["is-odd"].as_str(), Some("1.0.0"));
 }
 
+/// Verifies `bit update --yes` on policies added via `bit deps set` across `--latest`, `^`, and `~` `savePrefix` modes.
 #[test]
 fn updates_policies_added_by_deps_set_latest_and_compatible() {
     let helper = Helper::new();

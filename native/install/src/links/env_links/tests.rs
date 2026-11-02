@@ -36,6 +36,7 @@ fn from_env(name: &str) -> PolicyEntry {
     PolicyEntry { resolve_from_env: true, ..entry(name, "^1.0.0", Lifecycle::Runtime) }
 }
 
+/// Creates `dir` and writes an empty `package.json` inside it.
 fn package(dir: &Path) {
     fs::create_dir_all(dir).unwrap();
     fs::write(dir.join("package.json"), "{}").unwrap();

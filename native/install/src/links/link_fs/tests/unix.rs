@@ -38,6 +38,7 @@ fn hard_link_kind_hard_links_files_and_symlinks_directories() {
     assert_eq!(fs::read_link(&dir_dest).unwrap(), dir.path().join("injected"));
 }
 
+/// Verifies that [`create_link_or_symlink`] replaces stale destination entries while preserving valid existing links.
 #[test]
 fn replaces_existing_entries_unless_already_valid() {
     let dir = tempfile::tempdir().unwrap();

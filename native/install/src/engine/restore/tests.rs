@@ -45,6 +45,7 @@ fn graph() -> Value {
     })
 }
 
+/// Builds a root workspace [`Project`] fixture at `/ws` with a registry dependency and a `link:` dependency.
 fn root_project() -> Project {
     let manifest =
         object(json!({ "dependencies": { "a": "^1.0.0", "linked": "link:/ws/libs/linked" } }));

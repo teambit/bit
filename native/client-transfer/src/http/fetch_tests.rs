@@ -46,6 +46,7 @@ fn request(socket: &TcpStream) {
     let mut body = vec![0; length];
     reader.read_exact(&mut body).unwrap();
 }
+/// Spawns a single-request HTTP server streaming `body` in 31-byte chunks (or cancelling after 700 bytes).
 fn serve(body: Vec<u8>, cancellation: Option<Cancellation>) -> (String, thread::JoinHandle<()>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

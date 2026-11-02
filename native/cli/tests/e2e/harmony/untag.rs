@@ -31,6 +31,7 @@ fn workspace_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     files
 }
 
+/// Snapshots `scope.json`, `index.json`, and `objects` under bare or workspace scope `root`.
 fn remote_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     let mut files = BTreeMap::new();
     for relative in ["scope.json", "index.json", "objects", ".bit/index.json", ".bit/objects"] {

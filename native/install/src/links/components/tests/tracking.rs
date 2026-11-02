@@ -45,6 +45,7 @@ fn second_transformer_failure_precedes_every_package_and_source_link() {
     }
 }
 
+/// Verifies that a manifest write failure on the second component preserves the first manifest without creating source links.
 #[test]
 fn second_manifest_failure_retains_first_manifest_before_any_source_links() {
     let directory = tempfile::tempdir().unwrap();

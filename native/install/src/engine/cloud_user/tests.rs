@@ -48,6 +48,7 @@ fn global(symphony: &str, token: Option<&str>) -> GlobalConfig {
     global
 }
 
+/// Verifies that [`cloud_username`] queries `GET_ME` with the Bearer token and extracts `data.me.username`.
 #[tokio::test]
 async fn asks_the_cloud_for_the_logged_in_user() {
     let (url, server) = serve_once(r#"{"data":{"me":{"id":"1","username":"zoe"}}}"#);

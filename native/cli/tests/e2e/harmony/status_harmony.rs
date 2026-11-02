@@ -59,6 +59,7 @@ const ISSUE_INDENT: &str = "          ";
 /// `statusFailureMsg`.
 const STATUS_FAILURE_MSG: &str = "issues found";
 
+/// Creates an isolated local workspace populated with `count` chained components.
 fn populated(count: usize) -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);

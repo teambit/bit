@@ -3,6 +3,7 @@
 #[path = "e2e/harmony/scope_rename/installation/startup_progress.rs"]
 mod startup_progress;
 
+/// Spinner startup prefix preceding pnpm installation progress output.
 const MARKER: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 const FRAME: &str =
     "Progress: resolved 1, reused 0, downloaded 0, added 0\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";

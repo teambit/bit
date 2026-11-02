@@ -35,6 +35,7 @@ fn writes_dependencies_into_the_root_package_json() {
     );
 }
 
+/// Verifies that [`write_package_json_dependencies`] creates `package.json` when missing and replaces `null` `dependencies`.
 #[test]
 fn creates_the_package_json_and_its_dependencies() {
     let root = tempfile::tempdir().unwrap();

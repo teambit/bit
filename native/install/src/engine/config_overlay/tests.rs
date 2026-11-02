@@ -60,6 +60,7 @@ fn applies_bits_fixed_install_options() {
     assert_eq!(config.peer_dependency_rules.allow_any, Some(vec!["*".to_string()]));
 }
 
+/// Verifies that `root_components: true` excludes workspace components from hoisting and marks them external.
 #[test]
 fn root_components_are_not_hoisted() {
     let config = DependencyResolverConfig {

@@ -89,6 +89,7 @@ fn component(root: &Path, name: &str, files: &[&str]) -> WorkspaceComponent {
     }
 }
 
+/// Writes each relative file path in `component.files` into `component.dir`.
 fn write_sources(component: &WorkspaceComponent) {
     for file in &component.files {
         let path = component.dir.join(file);

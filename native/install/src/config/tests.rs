@@ -83,6 +83,7 @@ fn loads_workspace_jsonc() {
     assert_eq!(config.root_components_path(dir.path()), dir.path().join("node_modules/.bit_roots"));
 }
 
+/// Verifies that [`WorkspaceConfig::load`] fails with `NotFound` or `InvalidData` when `workspace.jsonc` is missing or malformed.
 #[test]
 fn missing_or_invalid_workspace_jsonc_fails() {
     let dir = tempdir().unwrap();

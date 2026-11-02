@@ -40,6 +40,7 @@ fn request(stream: &TcpStream) -> String {
     headers
 }
 
+/// Verifies that `inventory_with_warning` retries without `includeDeleted` when an older server rejects the argument.
 #[test]
 fn older_server_retries_plain_list_once_and_returns_warning_receipt() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

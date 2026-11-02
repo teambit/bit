@@ -27,6 +27,7 @@ fn the_trusted_list_is_vendored() {
     );
 }
 
+/// Verifies that explicitly configured `allowScripts` entries override the vendored trusted packages list.
 #[test]
 fn trusted_packages_are_allowed_unless_configured() {
     let configured = allow(&[("esbuild", json!(false))]);

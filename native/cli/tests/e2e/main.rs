@@ -7,6 +7,7 @@
 
 /// End-to-end CLI command parity suites.
 mod commands;
+/// End-to-end multi-command workflow parity suites.
 mod flows;
 mod functionalities;
 mod harmony;

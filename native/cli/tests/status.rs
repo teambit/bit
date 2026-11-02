@@ -64,6 +64,7 @@ fn workspace() -> TempDir {
     dir
 }
 
+/// Decodes `output.stdout` as UTF-8.
 fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).unwrap()
 }

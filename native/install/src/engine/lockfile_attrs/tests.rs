@@ -31,6 +31,7 @@ fn object(value: Value) -> Map<String, Value> {
     }
 }
 
+/// Verifies that [`read`] returns `None` when `pnpm-lock.yaml` is absent and parses the `bit:` block when present.
 #[test]
 fn reads_the_bit_block() {
     let dir = tempfile::tempdir().expect("temp dir");

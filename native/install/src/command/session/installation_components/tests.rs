@@ -31,6 +31,7 @@ fn actual_class_order_preserves_native_component_metadata() {
     assert_eq!(result[1].files, ["index.js"]);
 }
 
+/// Verifies that [`ordered`] rejects host component lists with missing, duplicate, or mismatched directories.
 #[test]
 fn directory_receipt_rejects_duplicate_missing_and_changed_members() {
     let root = Path::new("/workspace");

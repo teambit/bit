@@ -5,7 +5,7 @@ use super::{Helper, Run, config, issue_types, parse, strip_ansi};
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
 
-/// `fixtures.fooFixture` default `CommonJS` implementation string.
+/// `fixtures.fooFixture` default `CommonJS` implementation string ([`IS_TYPE_FIXTURE`]).
 pub const FOO_FIXTURE: &str = "module.exports = function foo() { return 'got foo'; }";
 pub const IS_TYPE_FIXTURE: &str = "module.exports = function isType() { return 'got is-type'; };";
 pub const IS_STRING_HARMONY_FIXTURE: &str = "const isType = require('../is-type/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";

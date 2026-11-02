@@ -75,6 +75,7 @@ fn runs_dir() -> PathBuf {
     dir
 }
 
+/// Maximum age before an abandoned `bit-native-e2e` process directory is pruned.
 const STALE_RUN: std::time::Duration = std::time::Duration::from_hours(6);
 
 /// A workspace without a `package.json` (`bit init --no-package-json`) installs into the

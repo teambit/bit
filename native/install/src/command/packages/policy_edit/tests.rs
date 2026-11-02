@@ -49,6 +49,7 @@ fn creates_missing_fields_and_keeps_comments() {
     assert_eq!(policy["peerDependencies"], json!({}));
 }
 
+/// Verifies that [`admits`] handles existing packages according to [`ExistingEntries`] (`Update`, `Skip`, or `Fail`).
 #[test]
 fn existing_entries_update_skip_or_fail_by_name_in_any_lifecycle() {
     let policy = config_entries(&json!({ "peerDependencies": { "react": "18" } }));

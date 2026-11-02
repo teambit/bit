@@ -30,6 +30,7 @@ fn assert_command_parity(helper: &Helper, node_root: &Path, command: &str) -> se
     }
 }
 
+/// Asserts native and Node parity across `status --json`, `status --lanes --json`, `status`, and `status --lanes`.
 fn assert_status_variants(helper: &Helper) {
     let node_root = helper.clone_workspace();
     for command in ["status --json", "status --lanes --json", "status", "status --lanes"] {

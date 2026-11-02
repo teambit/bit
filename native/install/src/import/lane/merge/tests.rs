@@ -48,6 +48,7 @@ fn component(repo: &Repo, name: &str, snaps: &[(&str, &[&str])]) {
     );
 }
 
+/// Builds a `Lane` object JSON payload for `name` with `components` and optional `updateDependents` entries.
 fn lane_object(name: &str, components: &[(&str, &str)], hidden: &[&str]) -> Value {
     let components: Vec<Value> = components
         .iter()

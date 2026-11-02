@@ -43,6 +43,7 @@ fn embedded_bounds_expanded_dependency_metadata() {
     assert_eq!(scan_request(&input, &pool).unwrap()["status"], "invalid_request");
 }
 
+/// Verifies that `scan_source` produces the same file scan result as `scan_request`.
 #[test]
 fn captured_source_entrypoint_preserves_embedded_outcomes() {
     let pool = ThreadPoolBuilder::new()

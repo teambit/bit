@@ -41,6 +41,7 @@ fn hard_link_kind_links_a_directory_that_resolves_to_its_source() {
     assert_eq!(fs::read_to_string(dest.join("index.ts")).unwrap(), "ts");
 }
 
+/// Verifies that [`remove_path`] recursively removes directory trees and succeeds on non-existent paths.
 #[test]
 fn remove_path_deletes_trees_and_ignores_missing_paths() {
     let dir = tempfile::tempdir().unwrap();

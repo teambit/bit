@@ -28,6 +28,7 @@ fn current_schema_requires_a_truthy_end_but_old_streams_do_not() {
     assert!(read(&archive(&[(".BIT.START", start), (".BIT.END", b"null")])).is_err());
     assert!(read(&archive(&[(".BIT.START", start), (".BIT.END", b"{}")])).is_ok());
 }
+/// Verifies that malformed metadata JSON, `.BIT.ERROR` entries, or exceeded byte bounds discard all decoded objects.
 #[test]
 fn malformed_metadata_and_remote_error_never_return_partial_objects() {
     for name in [".BIT.START", ".BIT.END"] {

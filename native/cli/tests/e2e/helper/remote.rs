@@ -55,6 +55,7 @@ pub(crate) fn publish_to(helper: &Helper, remote: &Path) {
 fn seed_selected_at(helper: &Helper, workspace: &Path, identities: &[String]) {
     seed_selected_to(helper, workspace, &helper.scopes.remote_path, identities);
 }
+/// Promotes `workspace` `.bitmap` entries and invokes `publish_objects.js` against `remote`.
 fn seed_selected_to(helper: &Helper, workspace: &Path, remote: &Path, identities: &[String]) {
     let scope = bit_object_import::scope_path(workspace);
     promote_workspace(helper, &scope, workspace, identities);

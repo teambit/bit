@@ -19,6 +19,7 @@ fn parses_package_names_like_parse_package_name() {
     assert_eq!(parse_package_name("pkg/sub@2"), parsed("pkg", "2"));
 }
 
+/// Verifies that [`parse_package_name`] returns `None` for filesystem paths, bare scopes, and empty strings.
 #[test]
 fn rejects_what_is_not_a_package_name() {
     assert_eq!(parse_package_name("/abs/path"), None);

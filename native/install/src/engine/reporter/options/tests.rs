@@ -12,7 +12,7 @@ fn explicit_install_option_overrides_the_default_and_null_restores_it() {
     assert_eq!(throttle(Some(&json!(null))).unwrap(), Some(Duration::from_millis(200)));
     assert_eq!(throttle(Some(&json!(0))).unwrap(), Some(Duration::ZERO));
 }
-/// Verifies that floating-point numbers wrap like N-API `u32` and non-numeric JSON values fail.
+/// Verifies that [`throttle`] wraps floating-point numbers like N-API `u32` and rejects non-numeric JSON values.
 #[test]
 fn numeric_values_follow_napi_unsigned32_conversion_and_non_numbers_are_rejected() {
     assert_eq!(throttle(Some(&json!(4294967297.9))).unwrap(), Some(Duration::from_millis(1)));

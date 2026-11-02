@@ -40,6 +40,7 @@ fn accepts_actual_scalar_package_boundary() {
     assert_eq!(parsed.network.registry_map["default"], "https://registry.npmjs.org/");
 }
 
+/// Verifies that [`Request::new`] declines requests containing unknown package options.
 #[test]
 fn declines_unknown_package_option_before_native_install() {
     let dir = tempfile::tempdir().expect("private root");

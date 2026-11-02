@@ -64,6 +64,7 @@ impl Fixture {
         fixture
     }
 
+    /// Borrows the compile stamp [`Inputs`] for this fixture at `bit_version`.
     fn inputs(&self, bit_version: &'static str) -> Inputs<'_> {
         Inputs { root: &self.root, bit_version, components: &self.components }
     }
