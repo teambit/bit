@@ -1,4 +1,4 @@
-//! Merged source dependency [`Detect`] resolution, [`issues`] filtering, and [`overlay`] projection.
+//! Merged source dependency [`Detect`] and [`Complete`] resolution, [`issues`] filtering, and [`overlay`] projection.
 
 mod issues;
 mod overlay;

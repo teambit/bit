@@ -4,6 +4,7 @@ use super::{all_rows, invalid, staged_rows};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Reads candidate component IDs (`scope/name`) from `index.json` for staged or `--all` exports.
 #[inline]
 pub(super) fn read(root: &Path, all: bool) -> io::Result<Value> {
     let index: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("index.json"))?)?;

@@ -9,6 +9,7 @@ use file_bridge::FileBridge;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Maximum total compressed archive bytes allowed for a single remote outbound batch.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
 /// One lazily started file-remote server-action process per outbound Apply.

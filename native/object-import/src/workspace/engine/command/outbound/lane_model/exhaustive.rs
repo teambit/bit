@@ -4,6 +4,7 @@ use super::{ComponentId, Loaded, MAX_OBJECTS, Prepare, invalid, model};
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path};
 
+/// Combines explicit `components` and parsed `updateDependents` entries from `lane`.
 pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
     let mut entries = lane["components"]
         .as_array()

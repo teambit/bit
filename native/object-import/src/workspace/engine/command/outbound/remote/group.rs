@@ -5,6 +5,7 @@ mod tests;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Resolves the numeric Unix group ID for `config["groupName"]` when configured.
 #[inline]
 pub(super) fn id(config: &Value) -> io::Result<Option<u32>> {
     let Some(name) = name(config)? else { return Ok(None) };

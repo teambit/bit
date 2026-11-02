@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
+/// Verifies that a non-null `readmeComponent` on `lane` has a matching snapped entry in `components`.
 #[inline]
 pub(super) fn validate(lane: &Value, name: &str) -> io::Result<()> {
     let Some(readme) = lane

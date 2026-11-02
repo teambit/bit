@@ -7,6 +7,7 @@ use super::{super::invalid, projection};
 use serde_json::{Value, json};
 use std::io;
 
+/// Invokes `configComponent` three-way aspect merging and reconciles scope policy extensions.
 pub(super) fn merge(
     identity: &str,
     versions: &[Value; 3],

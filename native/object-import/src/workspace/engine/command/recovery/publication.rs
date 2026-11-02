@@ -4,6 +4,7 @@ use super::{Operation, Restore, State, invalid, proof, reset, write_pending};
 use serde_json::{Value, json};
 use std::io;
 
+/// Validates proofs, publishes `last-merged` restoration files, and clears `unmerged.json`.
 pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, Value)> {
     super::super::bitmap::validate_history_file_id(input.file_id.trim())?;
     let token = input.token.trim();

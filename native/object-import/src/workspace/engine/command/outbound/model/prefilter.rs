@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained `VersionHistory` payloads and control file preimages captured during wildcard prefiltering.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in super::super) struct Prepared {
     root: PathBuf,

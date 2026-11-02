@@ -4,6 +4,7 @@ use super::{Prepared, Selected, invalid, planning};
 use serde_json::json;
 use std::{fs, io, path::Path};
 
+/// Component identity and relative directory marked for removal during a merge.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Removed {
     pub(super) identity: String,

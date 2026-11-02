@@ -5,6 +5,7 @@ use crate::export_progress::{self, Event};
 use serde_json::{Value, json};
 use std::io;
 
+/// Executes pending outbound object transfers for the retained export owner in `state`.
 pub(in crate::workspace::engine) fn apply(
     input: &Apply,
     state: &mut State,

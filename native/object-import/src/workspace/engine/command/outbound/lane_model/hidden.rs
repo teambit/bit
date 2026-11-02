@@ -11,6 +11,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::Path};
 
+/// Reconciled exported and local `Lane` JSON payloads after hidden dependent head resolution.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Reconciled {
     pub exported: Value,

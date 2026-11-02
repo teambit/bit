@@ -12,6 +12,7 @@ use crate::workspace::{engine::command::materialization, snapshots};
 use serde_json::json;
 use std::io;
 
+/// Prepares fast-forward materializations, lane head updates, and local model promotions on `prepared`.
 pub(super) fn prepare(
     record: &Record,
     planned: &mut planning::Planned,

@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Prepared `last-merged/main-components` object backups and filenames for `main` restoration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Main {
     directory: PathBuf,

@@ -8,6 +8,7 @@ use super::super::invalid;
 use serde_json::Value;
 use std::{collections::BTreeMap, io};
 
+/// Returns `true` when `current` contains only a `mainFile` entry without full dependency metadata.
 #[inline]
 pub(super) fn incomplete(current: &Value) -> bool {
     current

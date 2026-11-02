@@ -27,6 +27,7 @@ pub(super) const CORES: &[&str] = &[
     "teambit.docs/docs",
 ];
 
+/// Deserialized workspace environment defaults, policy entries, and range prefix for aspect projection.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine::command) struct Defaults {

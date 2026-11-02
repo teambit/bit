@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
+/// Extracts deduplicated `scope/name` identities marked as removed in `staged-config.json` `bytes`.
 #[inline]
 pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     let rows: Vec<Value> = crate::parse_jsonc(bytes)

@@ -4,6 +4,7 @@ use super::{Record, Selected, history, invalid};
 use serde_json::{Value, json};
 use std::io;
 
+/// Populates `unrelatedResolution` facts on `distance` when `noCommon` is true during a lane merge.
 pub(super) fn distance(
     record: &mut Record,
     history: &mut history::State,

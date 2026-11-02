@@ -3,6 +3,7 @@
 use super::{Value, invalid, json};
 use crate::workspace::engine::command::capture::Captured;
 use std::io;
+/// Populates missing `packageName` fields on hidden dependent dependencies from resolver metadata.
 pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_metadata(
     current: &Captured,
     output: &mut Value,

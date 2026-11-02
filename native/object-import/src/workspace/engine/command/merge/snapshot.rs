@@ -9,6 +9,7 @@ use crate::workspace::engine::dependency_graph::proof;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Sentinel version string assigned to pending snapshot dependency graph nodes before hash allocation.
 pub(in crate::workspace::engine::command) const PENDING_GRAPH_VERSION: &str =
     "__bit_pending_snapshot__";
 

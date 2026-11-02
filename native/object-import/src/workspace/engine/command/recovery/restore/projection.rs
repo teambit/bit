@@ -3,6 +3,7 @@
 use super::{Prepared, invalid, proof};
 use std::{collections::BTreeMap, io, path::PathBuf};
 
+/// Expected post-restore control file preimages, backup directory, and removal paths.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in super::super) struct Controls {
     expected: BTreeMap<PathBuf, Option<Vec<u8>>>,

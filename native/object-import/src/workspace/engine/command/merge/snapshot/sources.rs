@@ -10,6 +10,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::Path};
 
+/// Compresses and hashes component `Source` files into `objects` and attaches file entries to `version`.
 pub(super) fn prepare(
     root: &Path,
     input: &Input<'_>,

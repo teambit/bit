@@ -1,4 +1,5 @@
 //! Materialize newly discovered default-scope components into [`Planned`] via [`prepare`].
+//! Rejects duplicate additions already present in `plan.captured`.
 
 use super::{Planned, Record, capture, invalid, prepare_one};
 use crate::workspace::snapshots;

@@ -9,6 +9,7 @@ pub(super) enum Publication {
 }
 
 impl Publication {
+    /// Returns the exported lane name when this publication represents a named-lane export.
     #[inline]
     pub(super) fn lane_name(&self) -> Option<&str> {
         match self {

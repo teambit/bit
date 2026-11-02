@@ -7,6 +7,7 @@ use super::{Prepared, Selected, capture, invalid, merge, planning};
 use serde_json::{Value, json};
 use std::io;
 
+/// Appends fast-forward dependency policy rows onto `prepared` for all materials in `planned`.
 pub(super) fn fast_forward(
     prepared: &mut Prepared,
     planned: &planning::Planned,

@@ -4,6 +4,7 @@ use super::{Prepared, export_staged_config, invalid, object_bytes, read_optional
 use std::{collections::HashSet, fs, io};
 
 impl Prepared {
+    /// Reconciles `.bitmap` and staged configuration updates against acknowledged `exported_ids`.
     pub(super) fn reconcile(&mut self, exported_ids: &[String]) -> io::Result<()> {
         let ids = exported_ids
             .iter()

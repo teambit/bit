@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Planned configuration conflict file path and formatted conflict text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     path: PathBuf,

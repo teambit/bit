@@ -5,6 +5,7 @@ use crate::workspace::engine::{client_status::config, dependency_graph::proof};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Retained package manifest plans, workspace context, cloud domain, and read proofs for export linking.
 #[derive(Default)]
 pub(super) struct Prepared {
     plans: Vec<Value>,

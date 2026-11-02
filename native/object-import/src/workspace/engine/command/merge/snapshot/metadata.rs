@@ -1,4 +1,4 @@
-//! Auto-snap [`version`] metadata, dependency graph, and [`receipt`] validation for [`Input`].
+//! Auto-snap [`version`] metadata, dependency graph, and [`receipt`] validation for [`Input`] snapshots.
 
 use super::{Input, invalid};
 use crate::js_json::Value as Js;

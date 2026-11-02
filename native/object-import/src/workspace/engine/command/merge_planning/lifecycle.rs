@@ -1,4 +1,4 @@
-//! Lifecycle transitions for [`Prepared`] and [`Finalized`] merge plans on [`Record`].
+//! Lifecycle transitions ([`Prepared`], [`Finalized`], [`Record`]) for merge plans and lane finalization.
 
 #[cfg(test)]
 mod tests;

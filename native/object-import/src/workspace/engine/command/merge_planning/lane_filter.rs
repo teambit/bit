@@ -9,6 +9,7 @@ use super::{Action, Record, Selected, invalid, planning};
 use serde_json::{Value, json};
 use std::io;
 
+/// Verifies that every selected lane target has a corresponding entry in `planned.captured`.
 #[inline]
 pub(super) fn validate_captures(record: &Record, planned: &planning::Planned) -> io::Result<()> {
     if record.request.options.lane.is_none() {

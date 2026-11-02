@@ -17,6 +17,7 @@ struct Candidate {
     version: String,
 }
 
+/// Parses and deduplicates `scope_candidates` (`scope/name@version`) from `request.options.scope`.
 fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
     if request.options.scope.scope_candidates.len() > 4096 {
         return Err(invalid("checkout scope candidate limit"));

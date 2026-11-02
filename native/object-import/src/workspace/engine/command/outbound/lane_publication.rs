@@ -1,4 +1,4 @@
-//! Publish a [`Prepared`] lane via [`controls`], [`report`], and [`state`] after acknowledgement.
+//! Publish a [`Prepared`] lane ([`Reported`]) via [`controls`], [`report`], and [`state`] after acknowledgement.
 
 mod controls;
 mod report;

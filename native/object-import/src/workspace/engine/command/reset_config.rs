@@ -12,6 +12,7 @@ use super::{Record, invalid, planning, proof};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
 
+/// Retained read proofs and `component.json` write payloads for a checkout reset.
 pub(super) struct Prepared {
     proofs: Vec<proof::Proof>,
     writes: Vec<(PathBuf, Vec<u8>)>,

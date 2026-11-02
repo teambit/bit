@@ -5,6 +5,7 @@ mod tests;
 use crate::workspace::engine::invalid;
 use std::{collections::BTreeSet, fs, io, path::Path};
 
+/// Returns sorted 40-hex object hashes in `directory` or `overlay` matching `prefix`.
 #[inline]
 pub(super) fn matching(
     directory: &Path,

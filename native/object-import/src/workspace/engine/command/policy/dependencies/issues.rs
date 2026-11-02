@@ -1,4 +1,5 @@
 //! Tag-blocking component issue [`capture`] filtering for merged [`Row`] dependency policies.
+//! Rejects unsupported tag-blocking issue types outside `MissingManuallyConfiguredPackages`.
 
 use super::{super::Row, invalid, projection};
 use serde_json::{Value, json};

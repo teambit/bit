@@ -3,6 +3,7 @@
 use super::{Record, history, invalid};
 use serde_json::Value;
 use std::io;
+/// Replays `VersionHistory` distance stages recorded in `selected["observations"]` onto `histories`.
 #[inline]
 pub(super) fn replay(
     record: &mut Record,

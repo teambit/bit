@@ -23,6 +23,7 @@ use std::{
 const MAX_BYTES: usize = 64 * 1024 * 1024;
 const MAX_FILE: usize = 1024 * 1024;
 
+/// Verifies that `merged` files preserve the [`Captured`] dependency graph and returns read proofs.
 pub(super) fn verify(
     root: &Path,
     home: &Path,

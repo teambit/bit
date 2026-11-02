@@ -1,4 +1,5 @@
 //! Workspace dependency updates via [`prepare`] use the same aggregation as `ConfigMergerMain`.
+//! Filters out fast-forward and `ours`-conflicted rows before computing workspace policy updates.
 
 use super::{Prepared, Record, invalid, projection};
 use serde_json::{Map, Value, json};

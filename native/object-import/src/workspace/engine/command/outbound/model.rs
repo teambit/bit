@@ -1,5 +1,5 @@
 //! Select [`Selected`] main-lane components and freeze their [`ObjectItem`] closure,
-//! or a zero-object [`repeat`] export, via [`selection`], [`candidates`], and [`history`].
+//! or a zero-object [`repeat`] export, via [`selection`], [`candidates`], [`prefilter`], and [`history`].
 pub(super) mod prefilter;
 
 mod all_versions;

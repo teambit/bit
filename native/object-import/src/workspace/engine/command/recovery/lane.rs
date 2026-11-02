@@ -7,6 +7,7 @@ use std::{
     io::{self, Read},
     path::Path,
 };
+/// Prepared `last-merged` lane snapshot restoration and scratch directory for `merge --abort`.
 pub(super) struct Lane {
     snapshot: snapshot::Snapshot,
     _directory: scratch::Directory,

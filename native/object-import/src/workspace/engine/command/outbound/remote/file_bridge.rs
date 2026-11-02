@@ -10,6 +10,7 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
+/// Maximum byte length accepted for a single JSON line reply from the file-scope bridge process.
 const MAX_REPLY_BYTES: usize = 4 * 1024 * 1024;
 const SCRIPT: &str = r"
 const readline = require('node:readline');

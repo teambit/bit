@@ -1,4 +1,4 @@
-//! Component and [`workspace`] `ConfigMerger` [`config`], [`conflicts`], [`graph`], and [`dependencies`].
+//! Component and [`workspace`] `ConfigMerger` [`config`], [`conflicts`], [`graph`], [`projection`], and [`dependencies`] ([`Baseline`], [`Row`]).
 
 pub(in crate::workspace::engine) mod dependencies;
 pub(super) mod graph;

@@ -5,6 +5,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
+/// Input descriptor for native merge status selection across current, incoming, and model versions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct Input<'a> {
     pub(in crate::workspace::engine::command) index: usize,

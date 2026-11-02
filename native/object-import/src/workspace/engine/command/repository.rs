@@ -1,4 +1,4 @@
-//! Cached object [`Repository`] reader, [`proof`] tracker, [`recovery`], and [`short_refs`] resolver.
+//! Cached object [`Repository`] reader, [`proof`] tracker, [`recovery`], and [`short_refs`] resolver ([`Budget`]).
 
 mod recovery;
 mod short_refs;

@@ -1,5 +1,5 @@
 //! Freeze the [`LaneSelected`] current lane, its [`model`] closures, and [`staged`]/[`exhaustive`]
-//! `Version` objects before the export transaction starts.
+//! `Version` objects ([`MAX_BYTES`], [`MAX_OBJECTS`]) before the export transaction starts.
 pub(super) use self::exhaustive::lane_entries;
 mod exhaustive;
 mod hidden;

@@ -1,4 +1,4 @@
-//! Publish [`Selected`] original-scope export batches via [`reconcile`] and [`removed`].
+//! Publish [`Selected`] original-scope export batches ([`Component`]) via [`reconcile`] and [`removed`].
 
 pub(super) use self::reconcile::present as reconcile_present;
 mod reconcile;

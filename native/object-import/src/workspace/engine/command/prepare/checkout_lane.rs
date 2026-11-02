@@ -8,6 +8,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Discovers incoming lane additions, destinations, and tracked targets during lane checkout preparation.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Additions {
     names: Vec<String>,
