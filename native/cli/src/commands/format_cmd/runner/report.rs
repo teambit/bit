@@ -33,6 +33,7 @@ fn render(
     )));
     Ok(Formatter::join(&sections))
 }
+/// Formats the per-component file issue or reformatted-file list for `row`.
 fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<String> {
     let (scope, name) = component_scope_and_name(&row["componentId"])?;
     let files = row["results"].as_array().ok_or_else(|| invalid("formatter file results"))?;

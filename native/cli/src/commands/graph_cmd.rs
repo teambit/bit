@@ -66,6 +66,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("bare scope graph delegated".into()))
 }
 
+/// Emits an immediate pre-loader `bit graph` error within the workspace or bare-scope harness.
 #[inline]
 fn emit_fast_graph_error(cwd: &Path, args: &[OsString], err: &'static str) -> io::Result<Outcome> {
     if let Some(root) = workspace::root(cwd) {

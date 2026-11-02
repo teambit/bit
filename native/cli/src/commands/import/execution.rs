@@ -38,6 +38,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     }
     execute_selected(root, args, options, lifecycle, chalk, &selection)
 }
+/// Maps a non-ready [`super::preparation::Preflight`] into an immediate empty or error [`Outcome`].
 #[inline]
 fn preflight_outcome(
     root: &Path,

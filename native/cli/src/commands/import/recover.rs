@@ -29,6 +29,7 @@ pub(in crate::commands) fn recover_import(
     bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)
 }
 
+/// Probes remote scopes to determine which component `ids` exist remotely during `bit recover`.
 #[inline]
 pub(in crate::commands) fn recover_probe(
     root: &Path,

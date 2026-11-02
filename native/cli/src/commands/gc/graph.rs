@@ -13,6 +13,7 @@ use std::{
     path::Path,
 };
 
+/// Parsed component scope, name, and optional version from `.bitmap`.
 #[derive(Debug, Clone)]
 pub(super) struct CompIdSpec {
     pub scope: Option<String>,

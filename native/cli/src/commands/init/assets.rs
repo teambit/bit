@@ -23,6 +23,7 @@ impl Assets {
         }
         Ok(Self { agent: agent(plan, options)?, mcp: mcp(&plan.root).ok() })
     }
+    /// Writes prepared agent and MCP files under `root` and returns their relative paths when written.
     #[inline]
     pub(super) fn write(self, root: &Path) -> (Option<String>, Option<String>) {
         (write(root, self.agent), write(root, self.mcp))

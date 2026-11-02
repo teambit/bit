@@ -38,6 +38,7 @@ pub(super) fn run(
     }
     Ok(())
 }
+/// Resolves the remote scope registry and HTTP transport for `root`.
 #[inline]
 fn connection(
     root: &Path,

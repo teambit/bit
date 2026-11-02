@@ -35,6 +35,7 @@ impl Lifecycle {
             })?;
         Ok(Protection { guard: Some(guard), host: self.host.as_deref() })
     }
+    /// Bootstraps the optional Node.js [`Host`] when workspace configuration or `force` requires export callbacks.
     pub(super) fn bootstrap(root: &Path, engine: &mut Engine, force: bool) -> io::Result<Self> {
         let context: Value = engine.request(&json!({
             "kind":"statusContext", "root":root, "home":workspace_command::home(), "history":false,

@@ -68,6 +68,7 @@ pub(super) fn preflight(scope: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Restores `deleted-objects` and any interrupted `.restoring-*` directories back into `scope_dir/objects`.
 pub(super) fn run(scope_dir: &Path, overwrite: bool) -> Result<(), Error> {
     let deleted_dir = scope_dir.join("deleted-objects");
     let mut candidates = find_restoring_leftovers(scope_dir);

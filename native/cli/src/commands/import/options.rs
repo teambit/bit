@@ -10,7 +10,7 @@ mod semantic;
 mod validation;
 
 use serde_json::{Value, json};
-
+/// Parsed CLI options for native `bit import` and `bit fetch`.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Options {
     /// `import` or `fetch`.

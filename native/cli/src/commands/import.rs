@@ -32,7 +32,9 @@ use preparation::{prepare_into, prepare_into_with};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path, time::Instant};
 
+/// Descriptor for the `bit import` CLI command.
 pub const IMPORT: Command = Command { name: "import", aliases: &[], run };
+/// Descriptor for the `bit fetch` CLI command.
 pub const FETCH: Command = Command { name: "fetch", aliases: &[], run };
 
 #[inline]

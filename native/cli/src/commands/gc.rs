@@ -35,6 +35,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit gc` CLI command.
 pub const COMMAND: Command = Command { name: "gc", aliases: &[], run };
 
 const NO_SCOPE_ERR: &str = "unable to find a scope. run this command inside a workspace or a scope";

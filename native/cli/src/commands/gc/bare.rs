@@ -49,6 +49,7 @@ pub(super) fn run(scope: &Path, args: &[OsString], options: &Options) -> io::Res
         workspace_command::execute_then_scope(scope, args, "gc", work)
     }
 }
+/// Reads bare-scope objects, computes unreachable hashes, and preflights file moves into a [`Plan`].
 fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     if !startup::supported(None, scope, &Value::Null, false)? {
         return Err(unsupported("configured startup callbacks"));

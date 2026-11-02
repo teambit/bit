@@ -34,6 +34,7 @@ pub(super) struct ForkHistory {
     pub candidate_count: usize,
 }
 
+/// Unique remote scope names and per-scope object counts extracted from a prepare receipt.
 struct Transfers {
     scopes: Vec<String>,
     items: Vec<(String, usize)>,

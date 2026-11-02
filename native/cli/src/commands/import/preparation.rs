@@ -7,7 +7,7 @@ use crate::commands::{
 };
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
-
+/// Outcome of local preflight eligibility inspection before inbound object import.
 pub(super) enum Preflight {
     Ready,
     Empty,

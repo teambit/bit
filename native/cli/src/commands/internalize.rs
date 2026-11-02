@@ -32,6 +32,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit internalize` CLI command.
 pub const COMMAND: Command = Command { name: "internalize", aliases: &[], run };
 
 const INTERNALIZE_ASPECT_ID: &str = "teambit.component/internalize";

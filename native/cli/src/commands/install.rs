@@ -29,7 +29,7 @@ use std::{
     sync::Arc,
     thread,
 };
-
+/// Descriptor for the `bit install` (`bit in`) CLI command.
 pub const COMMAND: Command = Command { name: "install", aliases: &["in"], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

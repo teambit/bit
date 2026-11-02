@@ -27,6 +27,7 @@ use std::{ffi::OsString, io};
 /// Descriptor for the `bit lane` (`bit l`) CLI command.
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
 
+/// Returns whether `arg` is a global `--color` or `--no-color` flag variant.
 #[inline]
 fn is_color_flag(arg: &str) -> bool {
     matches!(

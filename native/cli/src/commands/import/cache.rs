@@ -61,6 +61,7 @@ pub(super) fn prepare(
     Ok(Some(Prepared { engine, context, capture: Some(capture), docs: Vec::new() }))
 }
 
+/// Returns `true` when `options` represent an ordinary non-install workspace import eligible for cache retention.
 #[inline]
 fn eligible(options: &Options, retained: bool) -> bool {
     let writing = options.operation == "import" && !options.objects_only;

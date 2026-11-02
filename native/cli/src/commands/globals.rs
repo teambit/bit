@@ -56,6 +56,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Parses `args` and returns `Some(json)` when only color flags and optional `-j`/`--json` are given.
 #[inline]
 fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     let mut json = false;

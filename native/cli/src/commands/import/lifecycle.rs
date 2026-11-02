@@ -32,6 +32,7 @@ impl Lifecycle {
         let core: Vec<String> = serde_json::from_str(crate::commands::aspect::CORE_ASPECT_IDS)?;
         Ok(root_providers(&config, &core))
     }
+    /// Prepares the [`Lifecycle`] and optional [`ProjectedLinker`] for `options`.
     pub(super) fn bootstrap(
         root: &Path,
         args: &[OsString],

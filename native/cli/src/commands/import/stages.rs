@@ -53,6 +53,7 @@ impl Planned {
         }
         Self::from_prepared(engine, prepared, options, ids, chalk, true)
     }
+    /// Completes the `commandInboundWriteDependencies` and optional checkout policy phases on [`Planned`].
     pub(super) fn write_dependencies(
         &mut self,
         root: &Path,

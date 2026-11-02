@@ -69,6 +69,8 @@ impl Id {
     }
 
     /// `id.scope`.
+    ///
+    /// Returns the component's scope name slice.
     #[inline]
     #[must_use]
     pub fn scope(&self) -> &str {

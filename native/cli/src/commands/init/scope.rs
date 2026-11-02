@@ -44,6 +44,7 @@ fn current(path: &Path, fresh: bool) -> io::Result<Value> {
     }
 }
 
+/// Sanitizes `name` into a valid lowercase scope name or returns an error when empty.
 #[inline]
 pub(super) fn valid_name(name: &str) -> io::Result<String> {
     let mut dot = false;

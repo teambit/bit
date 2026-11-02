@@ -37,6 +37,7 @@ pub(super) struct StrayTempFiles {
     pub paths: Vec<PathBuf>,
 }
 
+/// Root reference collections (remote lane refs, staged snaps, stashed hashes, and unmerged roots) in a scope.
 #[derive(Debug, Default, Clone)]
 pub(super) struct ScopeRootRefs {
     pub remote_refs_per_comp: HashMap<String, Vec<String>>,

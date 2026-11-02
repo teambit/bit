@@ -14,7 +14,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// One component's `importDetails`.
+/// One component's `importDetails` entry from the validated engine [`Receipt`].
 pub struct Details {
     id: String,
     versions: Vec<String>,

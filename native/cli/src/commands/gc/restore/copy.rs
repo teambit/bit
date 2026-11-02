@@ -44,6 +44,7 @@ fn preflight_symlink(
     Ok(())
 }
 
+/// Copies `src` into `dst`, overwriting existing files only when `overwrite` is true.
 #[inline]
 pub(super) fn run(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     let metadata = fs::symlink_metadata(src).map_err(|error| failure(error, "lstat", src))?;

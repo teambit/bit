@@ -25,6 +25,7 @@ pub(super) fn apply(
     }
     Ok(())
 }
+/// Writes formatted output slices for each component in `components` while updating `progress`.
 pub(super) fn publish_components(
     progress: &super::progress::Progress,
     output: &bit_install::output::Output,

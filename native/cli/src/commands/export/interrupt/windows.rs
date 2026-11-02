@@ -17,6 +17,7 @@ unsafe extern "system" fn interrupt(kind: u32) -> i32 {
     }
     1
 }
+/// Registers the Windows console control handler for `bit export`.
 #[inline]
 pub(super) fn install() -> io::Result<Previous> {
     // SAFETY: the console control callback has static lifetime and the documented ABI.

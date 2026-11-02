@@ -68,6 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     )
 }
 
+/// Returns `true` when `cwd` is neither inside a workspace nor inside a bare scope.
 #[inline]
 pub(super) fn is_missing_host(cwd: &Path) -> bool {
     workspace::root(cwd).is_none()

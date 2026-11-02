@@ -32,6 +32,7 @@ impl Plan {
         }
         Ok(())
     }
+    /// Logs each deleted `Version` and `Source` hash to `output` when `--verbose` is active.
     #[inline]
     pub(in crate::commands::gc) fn log(&self, output: &bit_install::output::Output) {
         for (kind, hashes) in [("Version", &self.versions), ("Source", &self.sources)] {

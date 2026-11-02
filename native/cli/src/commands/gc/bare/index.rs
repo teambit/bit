@@ -32,6 +32,7 @@ pub(super) fn prepare(
     Ok(Some(bytes))
 }
 
+/// Formats a `Component` object entry for `index.json`.
 #[inline]
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
     let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;

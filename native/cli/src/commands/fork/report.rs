@@ -26,6 +26,7 @@ pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report 
     }
     Report { data: sections.join("\n\n"), code: 0, details: None }
 }
+/// Formats the single-line summary sentence for `bit fork` or `bit scope fork`.
 #[inline]
 fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
     let source = options.source.trim();

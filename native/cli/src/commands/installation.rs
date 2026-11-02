@@ -50,6 +50,7 @@ pub(super) fn changed_component_ids(result: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+/// Formats a package manager installation failure banner using `chalk`.
 #[inline]
 pub(super) fn error_report(chalk: Chalk, error: &str) -> String {
     let formatter = Formatter::new(chalk);

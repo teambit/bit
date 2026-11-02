@@ -11,6 +11,7 @@ pub(super) fn error(options: &Options) -> Option<String> {
         .map(str::to_owned)
         .or_else(|| dependencies_depth(options))
 }
+/// Checks for mutually exclusive `--write-to-empty-dir` and `--override` or `--path` flags.
 #[inline]
 fn directories(options: &Options) -> Option<&'static str> {
     if !options.write.adoption.write_to_empty_dir {

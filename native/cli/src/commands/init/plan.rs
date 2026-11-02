@@ -57,6 +57,7 @@ pub(super) fn prepare(options: &Options) -> io::Result<Plan> {
     Ok(plan)
 }
 
+/// Stages scope directory, `scope.json`, and `index.json` actions onto `plan`.
 fn plan_scope(
     plan: &mut Plan,
     path: &Path,

@@ -23,7 +23,7 @@ use std::{
     io::{self, Write},
     process::ExitCode,
 };
-
+/// Descriptor for the `bit insights` CLI command.
 pub const COMMAND: Command = Command { name: "insights", aliases: &[], run };
 
 const CORE_INSIGHTS: [&str; 2] = ["circular", "duplicate dependencies"];

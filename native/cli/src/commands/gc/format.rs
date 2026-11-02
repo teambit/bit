@@ -37,6 +37,7 @@ pub(super) struct GcDirSizes {
     pub retained_dirs_size: u64,
 }
 
+/// Complete `bit gc` execution summary serialized for `--json` or formatted for terminal output.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct GcResult {

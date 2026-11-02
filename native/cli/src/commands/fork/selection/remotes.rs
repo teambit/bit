@@ -30,6 +30,7 @@ pub(super) fn ids(root: &Path, options: &Options) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+/// Extracts the literal remote scope prefixes referenced by `options`.
 #[inline]
 fn scopes(options: &Options) -> Vec<String> {
     if options.scope_fork {

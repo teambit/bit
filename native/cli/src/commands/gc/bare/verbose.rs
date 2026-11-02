@@ -18,6 +18,7 @@ pub(super) fn preflight(objects: &BTreeMap<String, Object>, deleted: &[String]) 
     }
     Ok(())
 }
+/// Formats `ref <hash> <constructor> <kind> <id>` lines for all deleted `hashes`.
 #[inline]
 pub(super) fn deleted(
     objects: &BTreeMap<String, Object>,

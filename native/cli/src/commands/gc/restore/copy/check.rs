@@ -23,6 +23,7 @@ pub(super) fn target(
     }
     Ok(())
 }
+/// Verifies that no ancestor of `target` is identical to `source` before copying.
 #[inline]
 pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {

@@ -53,6 +53,7 @@ fn valid_import_flags(flags: &[&str]) -> bool {
             })
 }
 
+/// Validates that `write` options, `ids`, and `--objects` flags form a supported import mode.
 #[inline]
 pub(super) fn mode(
     write: &WriteOptions,

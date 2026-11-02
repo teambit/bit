@@ -26,6 +26,7 @@ use std::{
 /// Descriptor for the `bit init` CLI command.
 pub const COMMAND: Command = Command { name: "init", aliases: &[], run };
 
+/// Entry point for `bit init` that validates flags, prepares the provisioning plan, and executes it.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(mut options) = options::parse(args) else {
         return Ok(Outcome::Declined("init arguments outside native grammar".to_owned()));

@@ -13,6 +13,7 @@ pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
         .collect()
 }
 
+/// Extracts a non-empty string or nested `id`/`identity`/`url`/`name` field from `entry`.
 #[inline]
 fn entry_text(entry: &Value) -> Option<&str> {
     entry

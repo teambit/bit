@@ -20,7 +20,7 @@ use std::{
 const RECENT_WRITE_MARGIN_MS: u64 = 5 * 60 * 1000;
 
 type CompHeadList = Vec<(String, String)>;
-
+/// Staged workspace garbage collection plan containing summary statistics and object/file deletion lists.
 pub(super) struct Plan {
     pub result: GcResult,
     versions: Vec<String>,

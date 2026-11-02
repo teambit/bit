@@ -41,6 +41,7 @@ pub(super) struct Resets {
     pub lane_new: bool,
 }
 
+/// Parses CLI arguments for `bit init` into [`Options`], returning `None` for unsupported syntax.
 pub(super) fn parse(args: &[OsString]) -> Option<Options> {
     let mut options = Options::default();
     let mut args = args

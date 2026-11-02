@@ -46,6 +46,7 @@ impl Models {
         }
         Self { identities, hashes, aliases }
     }
+    /// Returns `true` when `key` matches a direct `Component` identity in `self`.
     #[inline]
     pub(in crate::commands::gc) fn contains_key(&self, key: &str) -> bool {
         self.identities.contains_key(key)

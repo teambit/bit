@@ -29,6 +29,7 @@ pub(super) fn apply(plan: Plan) -> io::Result<()> {
     }
     Ok(())
 }
+/// Removes `path` recursively if a directory or unlinks it if a file or symlink, ignoring missing paths.
 #[inline]
 fn remove(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {

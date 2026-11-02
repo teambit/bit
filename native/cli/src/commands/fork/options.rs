@@ -42,6 +42,7 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
     assign_positions(positions, &mut options)?;
     Some(options)
 }
+/// Assigns parsed positional arguments onto `options.source`, `options.scope`/`target`, and `options.pattern`.
 #[inline]
 fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()> {
     let min = if options.scope_fork { 2 } else { 1 };

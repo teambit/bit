@@ -41,6 +41,7 @@ pub(crate) fn scope_insight_graph(scope_dir: &Path) -> Result<(CompGraph, Vec<St
     Ok((graph, local_ids))
 }
 
+/// Loads local bare-scope components, populates their version dependency graph, and applies `options` filters.
 fn build_scope_graph(scope_dir: &Path, options: &Options) -> Result<CompGraph, Failure> {
     let scope_name = validate_bare_scope(scope_dir)?;
     let local_components = load_local_scope_components(scope_dir, &scope_name)?;

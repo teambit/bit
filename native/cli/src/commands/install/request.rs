@@ -60,6 +60,7 @@ fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Resu
         }))
 }
 
+/// Returns whether the current CLI invocation is a `bit switch` or `bit lane` command.
 #[inline]
 pub(super) fn lane_installation() -> bool {
     let arguments = std::env::args()

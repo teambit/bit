@@ -70,6 +70,7 @@ pub(super) fn validate(prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Extracts the trimmed `"cloudDomain"` string from `value`, or `""` when absent.
 #[inline]
 fn cloud_domain(value: &Value) -> &str {
     value["cloudDomain"]

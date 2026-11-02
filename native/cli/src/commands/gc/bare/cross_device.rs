@@ -28,6 +28,7 @@ pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
     }
     fs::remove_file(source).map_err(|error| failure(error, "unlink", source))
 }
+/// Recreates the symbolic link at `source` under `target`, replacing any existing file at `target`.
 #[inline]
 fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     let link = fs::read_link(source).map_err(|error| failure(error, "readlink", source))?;

@@ -26,6 +26,7 @@ pub(super) fn read(root: &Path) -> io::Result<Value> {
     )?;
     Ok(json!({"bitmap":bitmap,"components":components,"workspace":context["workspace"]}))
 }
+/// Finds the workspace component row in `inventory` matching `source`.
 #[inline]
 pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Value> {
     let source = source.trim();

@@ -35,6 +35,7 @@ pub(crate) fn cycles(cycles: &[Vec<String>], chalk: Chalk) -> String {
     format!("\n{}\n", blocks.join("\n\n"))
 }
 
+/// Common scope, version, and shortened display names across a single dependency cycle.
 struct Shortened {
     names: Vec<String>,
     scope: Option<String>,

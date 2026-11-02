@@ -25,6 +25,7 @@ pub(super) fn persist(
     print!("{}", linker.take_stdout());
     Ok(())
 }
+/// Merges forked dependency `facts` into the existing `workspace.jsonc` `policy` object.
 #[inline]
 fn build_policy(
     config: &Value,
