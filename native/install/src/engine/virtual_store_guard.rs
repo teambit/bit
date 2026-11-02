@@ -60,7 +60,7 @@ pub(super) fn recorded_virtual_store_dir(modules_manifest: &str) -> Option<Strin
     modules_manifest.lines().find_map(yaml_virtual_store_dir)
 }
 
-/// Extract a `virtualStoreDir` string value from a single YAML line in `.modules.yaml`.
+/// Extract a `virtualStoreDir` string value from a single YAML line in `.modules.yaml` for [`recorded_virtual_store_dir`].
 fn yaml_virtual_store_dir(line: &str) -> Option<String> {
     let line = line.trim();
     let rest = line

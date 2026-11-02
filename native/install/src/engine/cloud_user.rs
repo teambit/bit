@@ -14,7 +14,7 @@ use crate::{import::remotes::symphony_url, model::GlobalConfig};
 use serde_json::{Value, json};
 use std::time::Duration;
 
-/// `GraphQL` query (`CloudMain.GET_CURRENT_USER`) for resolving the logged-in Bit Cloud user.
+/// `GraphQL` query (`CloudMain.GET_CURRENT_USER`) for resolving the logged-in Bit Cloud user in [`cloud_username`].
 const GET_CURRENT_USER: &str = "\n    query GET_ME {\n      me {\n        id\n        username\n        image\n        displayName\n      }\n    }\n  ";
 
 /// How long one lookup may take before the install goes on as `anonymous`.

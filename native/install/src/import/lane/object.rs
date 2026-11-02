@@ -55,7 +55,7 @@ pub struct LaneObject {
 }
 
 impl LaneObject {
-    /// `Lane.parse(contents, hash)`.
+    /// `Lane.parse(contents, hash)`: deserialize a [`LaneObject`] from a JSON [`Value`] and `hash`.
     #[must_use]
     pub fn parse(object: &Value, hash: &str) -> Self {
         let update_dependents = object["updateDependents"]

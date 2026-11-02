@@ -7,7 +7,7 @@ use crate::{model::ComponentId, policy::overrides::FieldMaps};
 use indexmap::IndexMap;
 use serde_json::Value;
 
-/// Legacy component dependency record (`Dependency` of `@teambit/legacy.consumer-component`).
+/// Legacy component dependency record (`Dependency` of `@teambit/legacy.consumer-component`) with [`ComponentId`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LegacyDependency {
     pub id: ComponentId,

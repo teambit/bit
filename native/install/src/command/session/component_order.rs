@@ -4,7 +4,7 @@
 use crate::workspace::Workspace;
 use std::{collections::HashMap, io};
 
-/// Reorder [`Workspace`] `entries` and `components` in place to match the host's live `order` list.
+/// Reorder [`Workspace`] `entries` and `components` in place to match the host's live `order` list via [`normalize_order_identity`].
 pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<()> {
     if order.is_empty() {
         return Ok(());

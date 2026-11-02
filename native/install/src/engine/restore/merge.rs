@@ -7,7 +7,7 @@ use super::dep_path::remove_suffix;
 use serde_json::{Map, Value};
 use std::collections::HashSet;
 
-/// Importer dependency fields (`dependencies`, `devDependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
+/// Importer dependency fields (`dependencies`, `devDependencies`, `optionalDependencies`) in `pnpm-lock.yaml` inspected by [`importer_roots`].
 const IMPORTER_DEP_TYPES: [&str; 3] = ["dependencies", "devDependencies", "optionalDependencies"];
 /// Snapshot dependency fields (`dependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
 const SNAPSHOT_DEP_TYPES: [&str; 2] = ["dependencies", "optionalDependencies"];

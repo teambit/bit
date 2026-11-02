@@ -8,7 +8,7 @@ use super::{Loaded, Session};
 use crate::model::WorkspaceComponent;
 use std::{collections::HashMap, io, path::Path};
 
-/// Load and synchronize workspace components with the host for the given install `phase`.
+/// Load and synchronize [`WorkspaceComponent`] entries with the host for the given install `phase` on [`Session`].
 pub(crate) async fn load(
     session: &Session<'_>,
     loaded: &Loaded,

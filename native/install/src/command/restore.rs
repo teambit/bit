@@ -15,7 +15,7 @@ use crate::{engine::RestoreInput, options::InstallOptions, output::Style, policy
 use serde_json::Value;
 use std::io;
 
-/// Expected schema version (`DEPENDENCIES_GRAPH_SCHEMA_VERSION`) for stored component dependency graphs.
+/// Expected schema version (`DEPENDENCIES_GRAPH_SCHEMA_VERSION`) for stored component dependency graphs in [`input`].
 const SCHEMA_VERSION: &str = "2.0";
 /// Warning printed when `--restore` is requested without `rootComponents: true` enabled.
 const NEEDS_ROOT_COMPONENTS: &str = r#"--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install."#;

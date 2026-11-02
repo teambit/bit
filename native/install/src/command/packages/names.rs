@@ -3,7 +3,7 @@
 //!
 //! Strips version specifiers outside [`ALLOWED_PREFIXES`] and validates package names against [`BLOCKLIST`].
 
-/// Protocol prefixes (`https://`, `git:`, `file:`, `link:`, `workspace:`, etc.) preserved verbatim as package specifiers.
+/// Protocol prefixes (`https://`, `git:`, `file:`, `link:`, `workspace:`, etc.) preserved verbatim by [`extract_package_name`].
 const ALLOWED_PREFIXES: [&str; 8] =
     ["https://", "http://", "git:", "git+ssh://", "git+https://", "file:", "link:", "workspace:"];
 /// Reserved npm package names (`node_modules`, `favicon.ico`) rejected by [`is_valid_package_name`].

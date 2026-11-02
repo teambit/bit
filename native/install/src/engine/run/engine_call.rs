@@ -20,7 +20,7 @@ use pnpm_package_manifest::DependencyGroup;
 use serde_json::{Map, Value};
 use std::{io, path::PathBuf, sync::Arc};
 
-/// Summary stats, `depsRequiringBuild`, and store directory produced by a single engine invocation.
+/// Summary stats, `depsRequiringBuild`, and store directory produced by a single [`EngineCall`] invocation.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Outcome {
     pub added: u64,

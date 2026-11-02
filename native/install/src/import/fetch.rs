@@ -25,7 +25,7 @@ pub struct Fetcher<'a> {
     pub concurrency: usize,
 }
 
-/// The objects each remote returned, keyed by the remote scope name.
+/// The [`ObjectItem`] records each remote returned, keyed by the remote scope name in an [`IndexMap`].
 pub type PerRemote = IndexMap<String, Vec<ObjectItem>>;
 
 impl Fetcher<'_> {

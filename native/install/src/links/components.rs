@@ -29,7 +29,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Map of `node_modules/<pkg>` keys to injected copy directories from `node_modules/.modules.yaml`.
+/// Map ([`BTreeMap`]) of `node_modules/<pkg>` keys to injected copy directories from `node_modules/.modules.yaml`.
 type InjectedDeps = BTreeMap<String, Vec<String>>;
 
 /// Inputs of [`link_components`] beyond the components themselves.

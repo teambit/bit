@@ -34,7 +34,7 @@ pub fn merge_and_save(repo: &Repo, remote: &RemoteLane, identity: &Identity) -> 
     save(repo, &merged, save_history, identity)
 }
 
-/// `sources.mergeLane` for an import. Returns the lane to save (`mergeLane`).
+/// `sources.mergeLane` for an import in [`Repo`]. Returns the [`LaneObject`] to save (`mergeLane`).
 fn merge(repo: &Repo, incoming: &LaneObject) -> io::Result<LaneObject> {
     let Some(mut existing) = load_existing(repo, incoming)? else {
         return Ok(incoming.clone());

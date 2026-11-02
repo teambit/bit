@@ -3,7 +3,7 @@
 //!
 //! Recognizes `node:`-prefixed and bare core Node.js module specifiers via [`is_builtin`] during dependency resolution.
 
-/// Canonical list of Node.js built-in module names (`require('module').builtinModules`).
+/// Canonical list of Node.js built-in module names (`require('module').builtinModules`) checked by [`is_builtin`].
 const BUILTINS: [&str; 45] = [
     "assert",
     "sea",

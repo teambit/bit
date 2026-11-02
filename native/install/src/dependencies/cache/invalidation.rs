@@ -18,7 +18,7 @@ use std::{
     time::UNIX_EPOCH,
 };
 
-/// Return `<scope>/cache/components/deps`, the workspace's component dependency cache directory.
+/// Return `<scope>/cache/components/deps`, the workspace's component dependency cache directory ([`PathBuf`]).
 #[inline]
 #[must_use]
 pub fn deps_dir(root: &Path) -> PathBuf {

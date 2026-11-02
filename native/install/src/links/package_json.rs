@@ -9,7 +9,7 @@ use crate::model::{ComponentDependencies, Lifecycle, Manifest, WorkspaceComponen
 use serde_json::{Map, Value, json};
 use std::path::Path;
 
-/// Aspect ID of the dependency resolver (`teambit.dependencies/dependency-resolver`).
+/// Aspect ID of the dependency resolver (`teambit.dependencies/dependency-resolver`) inspected on [`WorkspaceComponent`] aspect maps.
 const DEPENDENCY_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// `SOURCE_DIR_SYMLINK_TO_NM`: the Windows source-dir link inside the package.
 pub(super) const SOURCE_DIR: &str = "_src";

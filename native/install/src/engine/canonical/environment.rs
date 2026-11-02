@@ -18,7 +18,7 @@ thread_local! {
     static CAPTURED: RefCell<Option<Captured>> = const { RefCell::new(None) };
 }
 
-/// Captured environment variable map and working directory for thread-local `pnpm_config` reads.
+/// Captured environment variable [`BTreeMap`] and working directory for thread-local `pnpm_config` reads.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Captured {
     pub(super) vars: BTreeMap<String, String>,

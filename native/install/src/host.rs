@@ -97,7 +97,7 @@ pub struct CoreAspect {
     pub dir: PathBuf,
 }
 
-/// Work handed back to JavaScript after the packages are installed and linked.
+/// Work handed back to `JavaScript` after the packages are installed and linked.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AfterInstall {

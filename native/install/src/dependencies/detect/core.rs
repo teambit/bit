@@ -5,7 +5,7 @@ use super::{Resolver, io};
 use crate::model::WorkspaceComponent;
 use std::path::{Path, PathBuf};
 
-/// Core aspect import entry sorted by component flag and UTF-16 relative path.
+/// Core aspect import entry sorted by component flag and UTF-16 relative path in [`ordered`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Import {
     component: bool,

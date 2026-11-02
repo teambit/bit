@@ -73,7 +73,7 @@ pub struct RetrySettings {
     pub fetch_timeout: Option<u64>,
 }
 
-/// TLS and the local address of outgoing connections.
+/// TLS and the local address of outgoing connections in [`NetworkSettings`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TlsSettings {
     pub strict_ssl: Option<bool>,

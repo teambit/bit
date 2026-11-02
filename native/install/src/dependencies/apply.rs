@@ -12,7 +12,7 @@ use crate::{
 use indexmap::IndexMap;
 use serde_json::Value;
 
-/// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`].
+/// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`] used by [`early`].
 const RUNTIME: usize = 0;
 /// Index (`1`) of the `devDependencies` slot in [`FieldMaps`].
 const DEV: usize = 1;

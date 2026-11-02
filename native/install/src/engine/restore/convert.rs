@@ -29,7 +29,7 @@ const PACKAGE_FIELDS: [&str; 12] = [
     "version",
 ];
 
-/// Extracted `packages`, `edges`, and resolution context fields of a serialized `DependenciesGraph`.
+/// Extracted `packages`, `edges`, and resolution context fields of a serialized `DependenciesGraph` converted by [`to_lockfile`].
 pub(super) struct Graph {
     pub packages: Map<String, Value>,
     pub edges: Vec<Value>,

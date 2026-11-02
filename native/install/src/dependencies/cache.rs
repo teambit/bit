@@ -24,7 +24,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-/// `BIT_FEATURES` entry disabling the filesystem cache (`NO_FS_CACHE_FEATURE`).
+/// `BIT_FEATURES` entry disabling the filesystem cache (`NO_FS_CACHE_FEATURE`) checked by [`disabled`].
 const NO_FS_CACHE: &str = "no-fs-cache";
 
 /// Read the cached [`Detected`] dependency data of `component` from `<scope>/cache/components/deps` when fresh.

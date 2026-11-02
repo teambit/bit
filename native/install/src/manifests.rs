@@ -57,7 +57,7 @@ pub struct ManifestInput<'a> {
     pub context: ManifestContext<'a>,
 }
 
-/// The merged workspace policy and the env policies.
+/// The merged workspace [`PolicyEntry`] slice and the [`EnvPolicy`] map (`envs`).
 #[derive(Debug, Clone, Copy)]
 pub struct Policies<'a> {
     /// The merged root policy (`mergedRootPolicy`), in its final order: merge-config,

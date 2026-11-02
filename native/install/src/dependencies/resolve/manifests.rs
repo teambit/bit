@@ -11,7 +11,7 @@ use std::{
 };
 
 impl Resolver<'_> {
-    /// Resolve `name` from `from` via `resolvePackagePath` and `resolvePackageData`.
+    /// Resolve `name` from `from` via `resolvePackagePath` and [`from_manifest`] (`resolvePackageData`).
     #[inline]
     pub fn package(&mut self, from: &Path, name: &str) -> io::Result<Resolved> {
         let name = name.trim();

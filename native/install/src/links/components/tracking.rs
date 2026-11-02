@@ -81,7 +81,7 @@ pub(super) fn version(
     }
 }
 
-/// Strip `"latest"` or `"head"` version suffixes from `manifest["componentId"]`.
+/// Strip `"latest"` or `"head"` version suffixes from `manifest["componentId"]` on a [`Manifest`].
 #[inline]
 fn strip_component_id_version(manifest: &mut Manifest) {
     let Some(component_id) = manifest.get_mut("componentId") else { return };

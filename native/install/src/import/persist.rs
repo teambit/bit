@@ -27,7 +27,7 @@ pub struct Written {
     pub components: BTreeSet<String>,
 }
 
-/// The Component objects received for one component, per remote.
+/// The Component [`Value`] objects received for one component, keyed per remote in an [`IndexMap`].
 type Received = IndexMap<String, Vec<(String, Value)>>;
 
 /// `showProgress`: every 100 objects handed to the write queue restart the

@@ -5,7 +5,7 @@
 use super::super::data::{Detected, LegacyDependency};
 use serde_json::{Map, Value, json};
 
-/// Component dependency lifecycle keys (`dependencies`, `devDependencies`, `peerDependencies`).
+/// Component dependency lifecycle keys (`dependencies`, `devDependencies`, `peerDependencies`) serialized by [`serialize`].
 const COMPONENT_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 /// Package dependency lifecycle keys (`packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`).
 const PACKAGE_FIELDS: [&str; 3] =

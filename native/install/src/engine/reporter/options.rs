@@ -35,7 +35,7 @@ pub(super) fn throttle(value: Option<&Value>) -> io::Result<Option<Duration>> {
     Ok(Some(Duration::from_millis(u64::from(milliseconds))))
 }
 
-/// Build the N-API type conversion [`io::Error`] when `throttleProgress` [`Value`] `value` is neither nullish nor a number.
+/// Build the N-API type conversion [`io::Error`] in [`throttle`] when `throttleProgress` [`Value`] `value` is neither nullish nor a number.
 #[inline]
 fn invalid_type(value: &Value) -> io::Error {
     let kind = match value {

@@ -21,7 +21,7 @@ pub(super) enum LinkKind {
     HardLinkOrSymlink,
 }
 
-/// Return `true` when `lstat` reports that `path` is a symbolic link.
+/// Return `true` when `lstat` reports that [`Path`] `path` is a symbolic link.
 #[inline]
 pub(super) fn is_symlink(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())

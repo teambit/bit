@@ -17,7 +17,7 @@ pub use components::{
 };
 /// Re-exported `resolveFromEnv` package link resolver ([`resolved_from_env_links`]) and [`EnvLinks`].
 pub use env_links::{EnvLinks, resolved_from_env_links};
-/// Re-exported workspace root `@teambit/bit` and core-aspect linker helpers.
+/// Re-exported workspace root `@teambit/bit` and core-aspect linker helpers ([`LinkOptions`], [`linked_root_deps`], [`link_core_aspects_to_hoisted_store`], [`sync_core_aspect_links_for_envs`]).
 pub use root::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,
     sync_core_aspect_links_for_envs,

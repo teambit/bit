@@ -11,7 +11,7 @@ use crate::manifests::semver;
 use serde_json::{Map, Value};
 use std::collections::{HashMap, HashSet};
 
-/// Root edge identifier (`"."`, `DependenciesGraph.ROOT_EDGE_ID`) in a serialized dependency graph.
+/// Root edge identifier (`"."`, `DependenciesGraph.ROOT_EDGE_ID`) in a serialized dependency graph merged by [`merge`].
 pub const ROOT: &str = ".";
 
 /// `isEmpty()`.

@@ -61,7 +61,7 @@ impl Session {
         })
     }
 
-    /// `Install::new` over this session.
+    /// Construct [`Install::new`] over this session with the given [`DependencyGroup`] slices.
     #[inline]
     pub(super) fn install(
         &self,

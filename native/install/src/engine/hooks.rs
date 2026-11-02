@@ -23,7 +23,7 @@ use std::{
     sync::Arc,
 };
 
-/// Root components directory name (`.bit_roots`).
+/// Root components directory name (`.bit_roots`) checked by [`BitHooks::apply`].
 const BIT_ROOTS_DIR: &str = ".bit_roots";
 
 /// Bit's [`PnpmfileHooks`] chain plus what it needs to transform dependency manifests.

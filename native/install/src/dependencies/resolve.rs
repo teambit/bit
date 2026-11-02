@@ -22,7 +22,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-/// `resolveExtensions` of `lookup-typescript`, in lookup order.
+/// `resolveExtensions` of `lookup-typescript`, in lookup order for [`Resolver`].
 const COMMONJS_EXTENSIONS: [&str; 15] = [
     "js", "json", "cjs", "mjs", "jsx", "ts", "tsx", "cts", "mts", "d.ts", "css", "scss", "sass",
     "styl", "less",

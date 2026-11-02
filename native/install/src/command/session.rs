@@ -24,7 +24,7 @@ use std::{
     time::Instant,
 };
 
-/// Canonical error message (`OutsideWorkspaceError`) when `bit install` runs outside a workspace.
+/// Canonical error message (`OutsideWorkspaceError`) when `bit install` runs outside a workspace in [`find_root`].
 const OUTSIDE_WORKSPACE: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 /// Package manager aspect ID (`teambit.dependencies/yarn`) declined by the native installer.

@@ -8,7 +8,7 @@ mod tests;
 
 use serde_json::{Map, Value, json};
 
-/// Lockfile resolution context keys (`pnpmfileChecksum`, `settings`, `overrides`) compared across graphs.
+/// Lockfile resolution context keys (`pnpmfileChecksum`, `settings`, `overrides`) compared across graphs in [`merge`].
 const KEYS: [&str; 3] = ["pnpmfileChecksum", "settings", "overrides"];
 
 /// Extract normalized lockfile resolution context fields (`pnpmfileChecksum`, `settings`, `overrides`) from `serialized`.

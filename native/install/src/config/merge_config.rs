@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
-/// Filename (`merge-conflict`) of the workspace root config-merge conflict file.
+/// Filename (`merge-conflict`) of the workspace root config-merge conflict file loaded by [`MergeConfig`].
 const FILE_NAME: &str = "merge-conflict";
 /// Section header prefix (`[*]`) separating component entries in `merge-conflict`.
 const ID_PREFIX: &str = "[*]";

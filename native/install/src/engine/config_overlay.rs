@@ -21,7 +21,7 @@ use std::{
     sync::{Arc, Mutex, OnceLock},
 };
 
-/// Per-invocation install overlay applied on top of [`EngineSettings`].
+/// Per-invocation install overlay applied on top of [`EngineSettings`] in [`install_config`].
 #[derive(Debug, Clone)]
 pub(super) struct CallOverlay<'a> {
     /// Package version overrides for the install call.

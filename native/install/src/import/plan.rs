@@ -21,7 +21,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// `importMany`'s reason for `bit install`.
+/// `importMany`'s reason string for `bit install` when fetching missing versions and dependencies.
 const MISSING_REASON: &str = "for getting missing versions and dependencies";
 /// `getExternalMany`'s reason for flattened dependencies without a graph.
 const FLATTENED_REASON: &str =

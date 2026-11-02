@@ -13,7 +13,7 @@ use super::{
 use crate::policy::overrides::{self, FieldMaps};
 use std::io;
 
-/// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`].
+/// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`] used by [`auto_detect`].
 const RUNTIME: usize = 0;
 /// Index (`1`) of the `devDependencies` slot in [`FieldMaps`].
 const DEV: usize = 1;

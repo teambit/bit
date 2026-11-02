@@ -22,7 +22,7 @@ pub mod workspace;
 pub use bit_object_import::jsonc;
 /// Re-exported top-level `bit install` entry points, outcomes, and stored-graph helpers.
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
-/// Re-exported `JavaScript` host trait and process metadata types.
+/// Re-exported `JavaScript` [`Host`] trait and process metadata types ([`HostInfo`], [`DetectRequest`], [`AfterInstall`], [`AfterInstallResult`]).
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};
 /// Re-exported `bit install` CLI option flags ([`InstallOptions`]) and existing-entry policies ([`ExistingEntries`]).
 pub use options::{ExistingEntries, InstallOptions};

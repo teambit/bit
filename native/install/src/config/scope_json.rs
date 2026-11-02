@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// A lane tracked against a remote lane (`scope.json` `lanes.tracking`).
+/// A lane tracked against a remote lane (`scope.json` [`Lanes`] `tracking`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrackLane {

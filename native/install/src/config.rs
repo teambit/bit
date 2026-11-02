@@ -35,7 +35,7 @@ use serde_json::Value;
     )
 )]
 pub struct DependencyResolverConfig {
-    /// `{ dependencies, peerDependencies }`; values are a range or `{ version, preserve }`.
+    /// `{ dependencies, peerDependencies }` policy [`Value`]; values are a range or `{ version, preserve }`.
     #[serde(default)]
     pub policy: Value,
     /// Configured package manager aspect ID (`teambit.dependencies/pnpm` or `teambit.dependencies/yarn`).

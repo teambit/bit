@@ -50,7 +50,7 @@ const ASPECT_ENVS: [&str; 4] = [
     "teambit.harmony/envs/core-aspect-env-jest",
 ];
 
-/// Default dev-file patterns of the tester, compositions, and docs aspects.
+/// Default dev-file patterns of the tester, compositions, and docs aspects ([`DevPatternConfig`]).
 pub const DEFAULT_DEV_PATTERNS: [&str; 4] = [
     "**/*.spec.+(js|ts|jsx|tsx)",
     "**/*.test.+(js|ts|jsx|tsx)",

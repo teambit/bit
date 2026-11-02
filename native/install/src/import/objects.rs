@@ -58,7 +58,7 @@ pub fn compress(kind: &str, hash: &str, content: &[u8]) -> io::Result<Vec<u8>> {
     encoder.finish()
 }
 
-/// Serialize a JSON object like `JSON.stringify` (compact) and compress it.
+/// Serialize a JSON [`Value`] like `JSON.stringify` (compact) and [`compress`] it.
 #[inline]
 pub fn compress_json(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8>> {
     compress(kind, hash, &serde_json::to_vec(value)?)

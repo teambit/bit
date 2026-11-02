@@ -49,7 +49,7 @@ pub fn merge_component(
     Ok(merged.to_object())
 }
 
-/// `ModelComponent.getLocalVersions()`: tags marked `local` in `state.versions`.
+/// `ModelComponent.getLocalVersions()`: tags marked `local` in `state.versions` of a component [`Value`].
 #[inline]
 fn local_versions(component: &Value) -> Vec<String> {
     component["state"]["versions"]

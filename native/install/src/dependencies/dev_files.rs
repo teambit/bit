@@ -17,7 +17,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-/// Aspect ID of the built-in tester aspect (`teambit.defender/tester`).
+/// Aspect ID of the built-in tester aspect (`teambit.defender/tester`) in [`DevPatternConfig`].
 const TESTER: &str = "teambit.defender/tester";
 /// Aspect ID of the built-in docs aspect (`teambit.docs/docs`).
 const DOCS: &str = "teambit.docs/docs";

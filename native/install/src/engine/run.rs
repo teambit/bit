@@ -67,7 +67,7 @@ pub async fn install(
     })
 }
 
-/// Filter empty strings, sort, and deduplicate the `depsRequiringBuild` package list `deps` in place.
+/// Filter empty strings, sort, and deduplicate the `depsRequiringBuild` package list `deps` in place for [`install`].
 #[inline]
 fn normalize_deps_requiring_build(mut deps: Vec<String>) -> Vec<String> {
     deps.retain(|dep| !dep.trim().is_empty());

@@ -13,7 +13,7 @@ use std::collections::HashMap;
 /// Versions per package name, sorted highest first (`collectVersionsByPackageName`).
 type Versions = HashMap<String, Vec<String>>;
 
-/// Rewrite peer provider IDs in `graph` ([`Value`]) to the best version the merged graph has.
+/// Rewrite peer provider IDs in `graph` ([`Value`]) to the best [`SemVer`] version the merged graph has.
 pub fn normalize_peer_provider_versions(graph: &mut Value) {
     let versions = collect_versions(graph);
     let edges_slice = edges(graph);

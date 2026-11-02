@@ -76,7 +76,7 @@ pub enum Completeness {
     Incomplete,
 }
 
-/// `VersionHistory.isGraphCompleteSince`: `getAllHashesFrom(ref)` finds no missing parent.
+/// `VersionHistory.isGraphCompleteSince`: `getAllHashesFrom(ref)` finds no missing parent in `history` [`Value`].
 #[must_use]
 #[inline]
 pub fn check(history: &Value, reference: &str) -> Completeness {

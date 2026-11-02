@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Aspect ID for the `teambit.workspace/workspace` extension in `workspace.jsonc`.
+/// Aspect ID for the `teambit.workspace/workspace` extension in `workspace.jsonc` ([`WorkspaceSettings`]).
 pub const WORKSPACE_ASPECT: &str = "teambit.workspace/workspace";
 /// Aspect ID for the `teambit.dependencies/dependency-resolver` extension in `workspace.jsonc`.
 pub const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";

@@ -15,7 +15,7 @@ use std::{
     path::Path,
 };
 
-/// Workspace configuration filename (`workspace.jsonc`).
+/// Workspace configuration filename (`workspace.jsonc`) edited and backed up by [`edit`].
 const FILE: &str = "workspace.jsonc";
 
 /// Apply `edit` to the [`Document`] at [`FILE`] and write it, recording `reason` in the history.

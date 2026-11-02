@@ -57,7 +57,7 @@ struct Collector {
     pushed: HashSet<String>,
 }
 
-/// A component and the hash of the version to send.
+/// A component [`Value`] and the [`sha1_hex`] hash of the selected version to send.
 struct Selected {
     component: Value,
     hash: String,

@@ -49,7 +49,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::path::PathBuf;
 
-/// The virtual store dir name limit of `@teambit/dependencies.pnpm.dep-path`.
+/// The virtual store dir name limit of `@teambit/dependencies.pnpm.dep-path` used by [`prune_modules`].
 pub const VIRTUAL_STORE_DIR_MAX_LENGTH: usize = if cfg!(windows) { 60 } else { 120 };
 
 /// Recorded as the lockfile's `pnpmfileChecksum`, the same constant `lynx.ts`

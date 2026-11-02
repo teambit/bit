@@ -32,7 +32,7 @@ pub struct Identity {
 }
 
 impl Identity {
-    /// Extract `user.name` and `user.email` from `global` config for lane history log entries.
+    /// Extract `user.name` and `user.email` from [`GlobalConfig`] `global` for `LaneHistory` log entries.
     #[must_use]
     #[inline]
     pub fn from_config(global: &GlobalConfig) -> Self {

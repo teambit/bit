@@ -78,7 +78,7 @@ impl RemoteLane {
         ids
     }
 
-    /// Whether the lane lists the component (`groupByLanes`).
+    /// Whether this [`RemoteLane`] lists the component [`Id`] (`groupByLanes`).
     #[must_use]
     #[inline]
     pub fn contains(&self, id: &Id) -> bool {

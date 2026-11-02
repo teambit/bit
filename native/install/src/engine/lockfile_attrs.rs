@@ -14,7 +14,7 @@ use pnpm_lockfile::{Lockfile, SymlinkedLockfile};
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
-/// Top-level `bit` key in `pnpm-lock.yaml` storing `depsRequiringBuild` and `restoredFromModel`.
+/// Top-level `bit` key in `pnpm-lock.yaml` ([`Lockfile`]) storing `depsRequiringBuild` and `restoredFromModel`.
 const BIT_KEY: &str = "bit";
 
 /// The `bit:` block of the wanted lockfile at `root`, if any. A malformed lockfile fails

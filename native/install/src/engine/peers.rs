@@ -25,8 +25,7 @@ use pnpm_package_manifest::DependencyGroup;
 use pnpm_resolving_deps_resolver::PeerDependencyIssues;
 use std::{io, sync::Arc};
 
-/// Resolve [`Project`] `projects` without writing anything and return the intersected
-/// ranges of the peers the root importer is missing ([`MissingPeers`]).
+/// Resolve [`Project`] `projects` without writing anything and return the intersected ranges of missing root peers ([`MissingPeers`]) on [`EngineSettings`].
 pub async fn missing_peers(
     projects: &[Project],
     overrides: &DependencyMap,

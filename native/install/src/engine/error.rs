@@ -13,7 +13,7 @@ use std::{error::Error, fmt, io};
 pub struct EngineError {
     /// Optional `ERR_PNPM_*` diagnostic code.
     pub code: Option<String>,
-    /// Human-readable error message from the pnpm diagnostic.
+    /// Human-readable error message from the pnpm [`Diagnostic`].
     pub message: String,
     pub hint: Option<String>,
 }

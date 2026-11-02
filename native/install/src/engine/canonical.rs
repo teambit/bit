@@ -20,7 +20,7 @@ use std::io;
 /// package-manager write, so an unsupported request can run the published
 /// package manager once with its original arguments.
 pub struct CanonicalInstall {
-    /// Prepared engine settings for the canonical install invocation.
+    /// Prepared [`EngineSettings`] for the canonical install invocation.
     settings: EngineSettings,
     options: EngineInstallOptions,
     plan: InstallPlan,

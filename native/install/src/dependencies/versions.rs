@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-/// Override and policy maps consulted during component dependency version resolution.
+/// Override and policy [`FieldMaps`] consulted during component dependency version resolution in [`update`].
 #[derive(Debug, Clone)]
 pub struct VersionInputs<'a> {
     /// Forced policy entries (`getDependenciesToAddManually`, `-` excluded by the caller).
