@@ -52,6 +52,8 @@ fn equal_component_names_in_distinct_scopes_keep_distinct_bitmap_entries() {
 }
 
 /// Verifies [`compare`] applies directory variant `defaultScope` even when `--id` specifies a namespace.
+///
+/// Ensures `teambit.workspace/variants` directory entries override workspace-level `defaultScope`.
 #[test]
 fn directory_variant_default_scope_applies_even_with_an_explicit_namespaced_id() {
     let helper = workspace();

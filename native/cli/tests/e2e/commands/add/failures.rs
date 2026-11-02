@@ -42,6 +42,7 @@ fn add_before_init_reports_the_released_workspace_error() {
     assert!(!helper.scopes.local_path.join(".bitmap").exists());
 }
 
+/// Verifies [`super::support::compare_ci`] keeps successful `bit add` runs native under `CI=true`.
 #[test]
 fn ci_success_stays_native_and_preserves_exact_released_output() {
     let helper = workspace();

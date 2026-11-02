@@ -31,6 +31,7 @@ fn sample(separate: bool) -> Snapshot {
 fn baseline() -> Snapshot {
     Snapshot { metadata: Vec::new(), files: BTreeMap::new(), modes: BTreeMap::new() }
 }
+/// Returns a 2-second millisecond timestamp window `(start_ms, end_ms)` anchored at `2026-10-18 12:00:00` local time.
 fn interval() -> (i64, i64) {
     let start = chrono::Local
         .with_ymd_and_hms(2026, 10, 18, 12, 0, 0)

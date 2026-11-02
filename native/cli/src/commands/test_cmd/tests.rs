@@ -91,6 +91,8 @@ fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
 }
 
 /// Verifies that [`parse_options`] parses an empty argument slice into default [`Options`].
+///
+/// Ensures `bit test` without flags defaults `all` and `json` to `false` with an empty pattern list.
 #[test]
 fn empty_test_args_parse_to_default_options() {
     assert_eq!(

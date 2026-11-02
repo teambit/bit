@@ -48,6 +48,7 @@ fn entry_runs_node_with_the_entry_and_all_arguments() {
     assert!(path.to_string_lossy().starts_with("/bvm/nodejs/22.22.0/bin"));
 }
 
+/// Verifies that [`command`] leaves `PATH` unchanged when [`NodeCli::node`] is a bare `"node"` program name.
 #[test]
 fn node_from_path_leaves_path_alone() {
     let command = command(&Target::Entry(cli("node")), &[]);

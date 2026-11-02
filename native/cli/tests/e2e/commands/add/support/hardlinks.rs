@@ -24,6 +24,7 @@ impl Snapshot {
                 .collect(),
         )
     }
+    /// Restores all recorded multi-path hardlink alias groups in `self` under `root`.
     pub(super) fn restore(&self, root: &Path) {
         for group in &self.0 {
             let original = root.join(&group[0]);

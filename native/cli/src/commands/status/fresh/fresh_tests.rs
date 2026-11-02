@@ -25,6 +25,8 @@ fn core_package_names() {
 }
 
 /// Verifies that [`is_dev_file`] returns `false` for an ordinary source file (`src/index.ts`).
+///
+/// Ensures non-test, non-docs, and non-composition source files remain classified as runtime files.
 #[test]
 fn ordinary_source_file_is_not_classified_as_dev_file() {
     assert!(!is_dev_file("src/index.ts"));

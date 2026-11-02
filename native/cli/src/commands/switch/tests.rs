@@ -23,6 +23,8 @@ fn installation_uses_only_materialized_writers_even_when_report_lists_components
 }
 
 /// Verifies that [`writer_ids`] returns `Err` when `switchWriterIds` is not a JSON array.
+///
+/// Ensures malformed `switchWriterIds` payloads fail validation rather than silently skipping installation.
 #[test]
 fn non_array_switch_writer_ids_is_rejected() {
     assert!(writer_ids(&json!({"switchWriterIds": "s/a@abc"})).is_err());

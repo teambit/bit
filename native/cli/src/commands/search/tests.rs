@@ -34,6 +34,7 @@ fn parses_short_flags() {
     assert!(combined.local_only && combined.json && !combined.remote_only);
 }
 
+/// Verifies that [`parse_args`] returns `None` for unsupported `--owners` or unknown flags.
 #[test]
 fn rejects_unsupported_flags() {
     assert!(parse_args(&os_args(&["search", "--owners", "my-org"])).is_none());

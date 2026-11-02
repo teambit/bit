@@ -73,6 +73,7 @@ fn concurrent_identity_requests_run_one_factory_including_cloud_lookup_fallback(
     assert_eq!(calls.load(Ordering::Relaxed), 1);
 }
 
+/// Resolves a fallback [`User`] from `cache` while incrementing `calls` on factory execution.
 fn fallback(cache: &Cache, calls: &AtomicUsize) -> User {
     cache
         .load(|| {

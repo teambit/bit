@@ -77,6 +77,7 @@ fn converted(source: &Value) -> Value {
     serde_json::from_str(&result).unwrap()
 }
 
+/// Verifies that [`converted`] falls back to the component's own importer when the environment root or snapshot is absent.
 #[test]
 fn missing_root_or_snapshot_uses_own_importer_without_unrelated_packages() {
     for missing in ["root", "entry", "snapshot"] {

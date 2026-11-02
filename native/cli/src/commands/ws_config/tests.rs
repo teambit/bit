@@ -92,6 +92,7 @@ fn cleans_only_bit_generated_config_files_and_formats_list() {
     assert!(clean_out.contains("1 config files were deleted"));
 }
 
+/// Verifies [`write_workspace_configs`] and [`format_write_output`] for standard `TypeScript`, `ESLint`, and `Prettier` writers.
 #[test]
 fn writes_standard_workspace_configs_and_formats_output() {
     let temp = tempfile::tempdir().unwrap();

@@ -44,6 +44,8 @@ fn parses_update_options_and_detects_empty_dependencies() {
 }
 
 /// Verifies that [`parse_options`] parses empty `bit update` arguments to [`Options::default`].
+///
+/// Ensures `bit update` with no arguments retains an empty pattern list and interactive defaults.
 #[test]
 fn empty_update_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options::default()));

@@ -32,6 +32,8 @@ fn failed_links_leave_temporary_files_before_consumer_destruction() {
 }
 
 /// Verifies [`compare`] treats blocked `.bit/bitmap-history` writes as best-effort after `.bitTmp` cleanup.
+///
+/// Ensures a non-directory `.bit/bitmap-history` file does not abort `bit add` after component tracking succeeds.
 #[test]
 fn blocked_bitmap_history_is_best_effort_after_temporary_cleanup() {
     let helper = workspace();

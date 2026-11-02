@@ -31,6 +31,8 @@ fn parses_bare_ripple_and_invalid_limit() {
 }
 
 /// Verifies that [`parse_subcommand`] parses `simulate` into [`Subcommand::Simulate`] without a `--lane` flag.
+///
+/// Ensures `bit ripple simulate` defaults `lane` to `None` and `json` to `false`.
 #[test]
 fn parses_simulate_without_lane_flag() {
     assert_eq!(

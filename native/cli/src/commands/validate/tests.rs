@@ -85,6 +85,8 @@ fn classifies_empty_workspace_and_skip_tasks() {
 }
 
 /// Verifies [`check_ts_content`], [`lint_source_content`], and unknown-flag rejection in [`parse_options`].
+///
+/// Ensures `TypeScript` type mismatches and undeclared `JavaScript` identifiers report diagnostics.
 #[test]
 fn checks_ts_types_and_js_lint() {
     assert!(check_ts_content("const x: number = 42;\n").is_empty());

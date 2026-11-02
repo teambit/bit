@@ -87,6 +87,7 @@ fn prepare<const WRITE_COUNT: usize>(
     oracle.validate(&helper.scopes.local_path, started, ended, evidence);
     oracle
 }
+/// Runs `command` on the `Node.js` CLI with `observe.cjs` preloaded to record `.bitmap` writes in `evidence`.
 fn observe(helper: &Helper, command: &str, evidence: &Path, ci: bool) -> Run {
     let script = evidence.join("observe.cjs");
     fs::write(&script, include_str!("history_oracle/observe.cjs")).unwrap();

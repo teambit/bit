@@ -23,6 +23,8 @@ fn policy_values_are_not_component_patterns() {
 }
 
 /// Verifies that [`parse`] returns `None` when `--no-lock-deps` is passed more than once.
+///
+/// Ensures duplicate boolean policy flags decline native parsing.
 #[test]
 fn duplicate_no_lock_deps_is_rejected() {
     assert!(parse(&["--no-lock-deps", "--no-lock-deps"], false).is_none());

@@ -35,6 +35,7 @@ fn replacer() -> Replacer {
     .unwrap()
 }
 
+/// Builds a sample `pnpm` lockfile JSON map with component and environment root importers.
 fn lockfile() -> serde_json::Map<String, Value> {
     let value = json!({
         "importers": {

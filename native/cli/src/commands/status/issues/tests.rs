@@ -41,6 +41,8 @@ fn root_issue_setting_ignores_only_missing_manually_configured_packages() {
 }
 
 /// Verifies that [`collect`] returns `Some(Vec::new())` when given an empty [`Component`] slice.
+///
+/// Ensures empty workspace component sets produce an empty issue list without errors.
 #[test]
 fn collect_with_empty_components_slice_returns_empty_vec() {
     let context = json!({"versions":[],"models":[],"targets":[],"workspace":{},"packageJson":{}});

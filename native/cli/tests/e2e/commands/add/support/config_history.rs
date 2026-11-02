@@ -65,6 +65,7 @@ impl Snapshot {
         );
     }
 }
+/// Normalizes `workspace-config-history` entries under `root` relative to `baseline` into `output`.
 pub(super) fn normalize(root: &Path, baseline: &Snapshot, output: &mut BTreeMap<String, Vec<u8>>) {
     let current = Snapshot::read(root);
     let appended =

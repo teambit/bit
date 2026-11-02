@@ -17,6 +17,8 @@ fn parses_ui_build_options_and_detects_missing_host() {
 }
 
 /// Verifies that [`parse_options`] returns `None` for multiple positional arguments or unknown flags.
+///
+/// Ensures `bit ui-build` accepts at most one UI root positional argument.
 #[test]
 fn declines_extra_positional_and_unknown_flags() {
     assert_eq!(parse_options(&["root-a", "root-b"]), None);

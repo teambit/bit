@@ -66,6 +66,7 @@ fn bitmap_lane_helpers_accept_object_and_string_lane_ids() {
     assert_eq!(super::bitmap_lane_scope_and_name(&str_bitmap), Some(("my.scope", "dev")));
 }
 
+/// Verifies that [`parse_options`] returns `None` when given zero or more than three positional arguments.
 #[test]
 fn rejects_empty_or_excessive_snap_distance_arguments() {
     assert_eq!(parse_options(&[]), None);

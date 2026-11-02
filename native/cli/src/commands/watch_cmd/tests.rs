@@ -43,6 +43,8 @@ fn parses_watch_options_and_validates_check_types() {
 }
 
 /// Verifies that [`parse_options`] parses empty `bit watch` arguments to [`Options::default`].
+///
+/// Ensures `bit watch` with no flags defaults `verbose`, `skip_pre_compilation`, and `generate_types` to `false`.
 #[test]
 fn empty_watch_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options::default()));

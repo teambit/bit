@@ -34,6 +34,8 @@ fn parses_start_options_and_detects_missing_workspace_or_scope() {
 }
 
 /// Verifies that [`parse_options`] parses an empty argument slice with `pattern: None` and default flags.
+///
+/// Ensures `bit start` without arguments defaults `dev` and `rebuild` to `false`.
 #[test]
 fn empty_start_args_parse_with_no_pattern() {
     let opts = parse_options(&[]).unwrap();

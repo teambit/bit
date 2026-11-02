@@ -31,6 +31,7 @@ fn rejects_invalid_args() {
     assert_eq!(parse_target(&os_args(&["use", "a", "b"])), None);
 }
 
+/// Verifies [`is_extension_configured`] matches exact and versioned aspect keys in `workspace.jsonc`.
 #[test]
 fn detects_configured_extension() {
     let doc = json!({

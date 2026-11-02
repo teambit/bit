@@ -58,6 +58,8 @@ fn extracts_stored_schema() {
 }
 
 /// Verifies [`resolve_scope_schema_json`] matches bare-scope components by glob, comma, and negation patterns.
+///
+/// Ensures bare-scope `index.json` entries resolve to their head `Version` `APISchema` objects.
 #[test]
 fn resolves_bare_scope_schemas_by_glob_comma_and_negation_patterns() {
     let temp = tempdir().expect("tempdir");

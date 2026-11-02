@@ -45,6 +45,7 @@ fn existing_component_can_update_main_without_replacing_authored_config() {
     compare(&helper, "add comp1 -i comp1 -m entry.js");
 }
 
+/// Verifies [`compare`] tracks 100 components of 11 files each with bounded native capture frames and valid links.
 #[test]
 fn a_hundred_components_with_eleven_files_keep_native_capture_frames_bounded() {
     let helper = workspace();

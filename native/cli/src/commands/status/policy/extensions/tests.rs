@@ -31,6 +31,8 @@ fn removal_configuration_rejects_unknown_fields_and_corrupt_values() {
 }
 
 /// Verifies that [`validate_removal_config`] accepts an empty removal configuration object (`{}`).
+///
+/// Ensures an empty `teambit.component/remove` config object is treated as a valid no-op removal config.
 #[test]
 fn empty_removal_config_object_is_valid() {
     assert!(validate_removal_config(json!({}).as_object().unwrap()).is_ok());

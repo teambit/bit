@@ -51,6 +51,8 @@ fn parses_show_json_and_unrecognized_subcommands() {
 }
 
 /// Verifies that [`parse_subcommand`] parses `show` with `-s` (`--short-hash`) into [`Subcommand::ShowText`].
+///
+/// Ensures `-s` without `-j` enables 9-character short hashes in text mode.
 #[test]
 fn parses_show_text_with_short_hash_flag() {
     assert_eq!(

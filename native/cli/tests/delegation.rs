@@ -38,6 +38,7 @@ fn bit(cwd: &Path, entry: &Path, args: &[&str], env: &[(&str, &str)]) -> Output 
     command.output().unwrap()
 }
 
+/// Deserializes the JSON argument array echoed to `stdout` by [`STUB`].
 fn echoed(output: &Output) -> Vec<String> {
     serde_json::from_slice(&output.stdout)
         .unwrap_or_else(|error| {

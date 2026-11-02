@@ -23,6 +23,8 @@ fn tooling_flags_preserve_selection_and_release_arguments() {
 }
 
 /// Verifies duplicate flag rejection, default `--editor` (`vim`), and [`Kind`]-specific `--disable-tag-pipeline` handling in [`parse`].
+///
+/// Ensures `--disable-tag-pipeline` is consumed by [`Kind::Tag`] and left as a remaining argument for [`Kind::Snap`].
 #[test]
 fn aliases_duplicates_optional_editor_and_command_specific_flags() {
     assert!(parse(&["-b", "--build"], Kind::Snap).is_none());

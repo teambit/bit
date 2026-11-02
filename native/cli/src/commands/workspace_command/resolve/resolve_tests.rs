@@ -49,6 +49,7 @@ fn preparations_must_select_known_targets() {
     assert!(validate_preparation(&different, Kind::Snap).is_err());
 }
 
+/// Verifies that [`validate_preparation`] rejects [`Kind::Resolve`] when `selectedIds` is empty.
 #[test]
 fn a_resolve_needs_components_in_merge_state() {
     let targets = json!([{ "identity": "s/a" }]);

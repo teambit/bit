@@ -36,6 +36,7 @@ fn declines_unsupported_scope_set_arguments() {
     assert_eq!(parse(&["scope", "set", "org.scope", "comp1", "extra"]), None);
 }
 
+/// Verifies that [`parse`] accepts `--no-color` alongside a workspace scope name.
 #[test]
 fn accepts_no_color_flag_with_scope_set() {
     assert_eq!(

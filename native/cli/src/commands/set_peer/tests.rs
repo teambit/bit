@@ -65,6 +65,8 @@ fn sets_and_unsets_peer_in_bitmap() {
 }
 
 /// Verifies that [`prepare`] updates `component.json` instead of `.bitmap` when `component.json` exists.
+///
+/// Ensures `.bitmap` remains unchanged while `comp_json_edits` records the updated `component.json` payload.
 #[test]
 fn sets_peer_in_component_json_when_present() {
     let dir = tempdir().expect("tempdir");

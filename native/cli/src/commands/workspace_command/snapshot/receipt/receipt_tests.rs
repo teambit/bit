@@ -44,6 +44,7 @@ fn git_config_values_end_at_the_next_equals_sign_and_the_last_wins() {
     assert!(super::parse_git_config("").is_empty());
 }
 
+/// Verifies `node_in_paths` resolves `node.exe` on Windows and respects `PATH` directory precedence.
 #[test]
 fn node_path_lookup_uses_windows_executables_and_preserves_path_precedence() {
     use std::{fs, path::Path};

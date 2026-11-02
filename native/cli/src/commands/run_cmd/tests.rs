@@ -22,6 +22,8 @@ fn parses_run_options() {
 }
 
 /// Verifies that [`parse_options`] parses an empty argument slice into [`Options::default`].
+///
+/// Ensures `bit run` without an app name retains `app_name: None` for single-app auto-selection.
 #[test]
 fn empty_run_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options::default()));

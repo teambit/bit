@@ -96,6 +96,7 @@ export default new EnvWithScripts();
     assert_eq!(logs, vec!["async script executed", "executed for 3 component(s)"]);
 }
 
+/// Verifies [`is_env_allowed`] matches configured env IDs with or without `@version` suffixes.
 #[test]
 fn checks_env_version_matching() {
     let unversioned = vec!["my-scope/my-env".to_owned()];

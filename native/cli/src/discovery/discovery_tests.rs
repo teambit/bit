@@ -48,6 +48,7 @@ fn bvm(root: &Path, node_versions: &[&str]) -> PathBuf {
     bvm
 }
 
+/// Extracts the [`NodeCli`] from a [`Target::Entry`] or panics if a [`Target::Wrapper`] was returned.
 fn entry(target: Target) -> NodeCli {
     match target {
         Target::Entry(cli) => cli,

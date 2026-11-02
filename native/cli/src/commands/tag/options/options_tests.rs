@@ -71,6 +71,7 @@ fn persist_optional_build_argument_and_state_patterns() {
     assert!(parse(&["$modified AND comp*"]).is_some());
 }
 
+/// Verifies that [`parse`] defaults `bit tag` with no arguments to a `"patch"` release with empty pattern selection.
 #[test]
 fn empty_tag_args_parse_to_patch_release_level() {
     let options = parse(&[]).unwrap();

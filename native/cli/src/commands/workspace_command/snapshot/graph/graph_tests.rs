@@ -50,6 +50,8 @@ fn filtered_snapshot_order_follows_pnpm_walker() {
 }
 
 /// Verifies `environment_importer` resolves configured `.bit_roots` paths and prefers unversioned directories when present.
+///
+/// Ensures unversioned `.bit_roots/<env>` directories take precedence over `<env>@<version>` directories.
 #[test]
 fn component_environment_root_uses_configured_base_and_prefers_unversioned_directory() {
     let directory = tempfile::tempdir().unwrap();

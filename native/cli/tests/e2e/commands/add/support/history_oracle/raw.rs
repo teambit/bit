@@ -73,6 +73,7 @@ impl Snapshot {
             thread::sleep(Duration::from_millis(10));
         }
     }
+    /// Writes a diagnostic JSON dump of `self` (`metadata`, `files`, `modes`) into `evidence`.
     pub(super) fn record(&self, evidence: &Path) {
         let record = json!({"metadata":self.metadata,"files":self.files,"modes":self.modes});
         let name = format!(

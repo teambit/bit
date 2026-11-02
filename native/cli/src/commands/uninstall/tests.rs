@@ -27,6 +27,8 @@ fn ignores_empty_package_string() {
 }
 
 /// Verifies that [`parse_arguments`] rejects a flag-like package name following `--`.
+///
+/// Prevents `-`-prefixed tokens from being treated as valid npm package names.
 #[test]
 fn declines_flag_like_trailing_package_after_double_dash() {
     let args = [OsString::from("uninstall"), OsString::from("--"), OsString::from("-bad")];

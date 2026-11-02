@@ -40,6 +40,7 @@ fn squashing_without_snaps_is_left_to_node() {
     );
 }
 
+/// Verifies [`squash_hashes`] and [`other_lane`] extraction and validation on lane merge receipts.
 #[test]
 fn receipt_parts() {
     assert_eq!(squash_hashes(&json!({ "squashMessageHashes": [HASH] })).unwrap(), [HASH]);

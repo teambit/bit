@@ -20,6 +20,8 @@ fn linear_history_orders_heads_first_and_preserves_pointers() {
 }
 
 /// Verifies that [`render`] returns `None` for cyclic or ambiguous short-hash graphs and ignores `orphanedVersions` pointers.
+///
+/// Ensures short-hash prefix collisions and graph cycles fall back to the non-fast-path renderer.
 #[test]
 fn ambiguous_and_cyclic_graphs_decline() {
     let first = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

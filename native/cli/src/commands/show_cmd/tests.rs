@@ -79,6 +79,8 @@ fn write_fixture_workspace(root: &Path) {
 }
 
 /// Verifies [`legacy_json`], [`harmony_json`], and [`text_report`] for a workspace component loaded via [`load_target_outcome`].
+///
+/// Ensures variant `packageJson` properties and optional dependency policies are projected into the output.
 #[test]
 fn renders_legacy_harmony_and_text_for_workspace_component() {
     let temp = tempfile::tempdir().unwrap();

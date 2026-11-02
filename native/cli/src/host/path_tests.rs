@@ -51,6 +51,8 @@ for (const [actual, requested, expected] of cases) {
 }
 
 /// Executes `assertions` against `directory_identity.js` inside a child `node` process.
+///
+/// Fails with captured `stdout` and `stderr` if any `node:assert/strict` check fails.
 fn check(assertions: &str) {
     let program = format!(
         "const path=require('node:path');const assert=require('node:assert/strict');\n{}\n{assertions}",

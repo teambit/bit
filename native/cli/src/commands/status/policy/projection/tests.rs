@@ -37,6 +37,7 @@ fn origin_precedence_matches_aspects_merger() {
     );
 }
 
+/// Verifies that variant specificity, `!` exclusions, and `propagate: false` follow installer variant rules.
 #[test]
 fn variant_specificity_exclusions_and_propagation_share_installer_rules() {
     let target = target();

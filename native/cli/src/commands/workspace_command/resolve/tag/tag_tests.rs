@@ -40,6 +40,8 @@ fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
 }
 
 /// Verifies that [`selections`] preserves target component order and per-pattern version specs for bracket and negation globs.
+///
+/// Ensures `patternIndex` tracks the winning pattern when negated globs override earlier matches.
 #[test]
 fn advanced_globs_preserve_component_order_and_per_pattern_versions() {
     let context =

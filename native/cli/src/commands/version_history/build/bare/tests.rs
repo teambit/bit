@@ -87,6 +87,7 @@ fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {
     assert_eq!(fs::read(temporary).unwrap(), b"collision");
 }
 
+/// Verifies that `trash::move_history` declines symlinked object directories and hardlinked trash destinations.
 #[cfg(unix)]
 #[test]
 fn trash_move_declines_symlinked_directories_and_same_file_targets() {

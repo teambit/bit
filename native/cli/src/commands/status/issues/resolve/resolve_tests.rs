@@ -27,6 +27,7 @@ fn component(identity: &str, dependencies: &[&str]) -> Component {
     }
 }
 
+/// Verifies that [`ordinary_heads`] proves each model head against the receipt and rejects removed or unproven heads.
 #[test]
 fn heads_are_proven_per_model() {
     let context = json!({ "models": [{ "scope": "s", "name": "a", "head": HEAD }, { "scope": "s", "name": "b" }] });

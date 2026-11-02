@@ -75,6 +75,7 @@ fn detects_custom_generator_config_in_workspace() {
     assert!(!can_use_builtin_workspace_templates(root, None));
 }
 
+/// Verifies that [`parse_options`] parses an empty argument slice into default [`Options`].
 #[test]
 fn empty_templates_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options { show_all: false, aspect: None, json: false }));

@@ -37,6 +37,8 @@ fn filesystem_error_strings_match_node_inspection() {
 }
 
 /// Verifies that [`super::quote`] wraps strings containing `'` in double quotes (`"..."`) when no double quotes are present.
+///
+/// Matches `Node.js` `util.inspect` single-quote fallback to double quotes without escaping `'`.
 #[test]
 fn single_quote_only_string_uses_double_quotes() {
     assert_eq!(super::quote("it's"), r#""it's""#);

@@ -55,6 +55,7 @@ fn parses_tokens_and_actions() {
     assert!(parse_action(&["bogus".to_owned()]).is_err());
 }
 
+/// Verifies [`is_valid_pattern`] accepts exact scope names and `<owner>.*` wildcards while rejecting invalid patterns.
 #[test]
 fn validates_scope_trust_patterns() {
     assert!(is_valid_pattern("acme.frontend"));

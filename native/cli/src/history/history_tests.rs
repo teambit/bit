@@ -17,7 +17,9 @@ fn iso_matches_javascript() {
     assert_eq!(iso(951_782_400_000), "2000-02-29T00:00:00.000Z");
 }
 
-/// Verifies that [`History::start`] and [`History::end`] append `started` and `succeeded` lines to `.bit/command-history` in `TempDir`.
+/// Verifies that [`History::start`] and [`History::end`] append `started` and `succeeded` lines to `.bit/command-history` in [`TempDir`].
+///
+/// Ensures the current process ID and CLI arguments appear on both lifecycle log lines.
 #[test]
 fn writes_start_and_end_lines_to_the_scope() {
     let dir = TempDir::new().unwrap();

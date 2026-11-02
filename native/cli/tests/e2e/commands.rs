@@ -7,6 +7,8 @@ pub(crate) mod add;
 /// End-to-end completion and fallback tests for `bit diff`.
 pub(crate) mod diff_completion;
 /// End-to-end parity tests for path-moving commands (`move`, `rename`, `fork`, `remove`, `recover`).
+///
+/// Covers workspace `.bitmap` rewrites, directory moves, and scope history invariants.
 pub(crate) mod move_paths;
 
 mod app;

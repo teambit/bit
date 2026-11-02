@@ -41,6 +41,7 @@ fn already_owned_files_warn_without_creating_a_second_identity() {
     assert!(config::read_jsonc(&helper.scopes.local_path.join(".bitmap")).get("bar/new").is_none());
 }
 
+/// Verifies [`compare`] matches `.gitignore` file exclusions and fully ignored directory errors.
 #[test]
 fn ignored_files_and_fully_ignored_directories_match_node() {
     for ignored in ["bar/foo.js\nbar/foo3.js\n", "bar/*\n"] {

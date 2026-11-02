@@ -27,6 +27,8 @@ fn individual_files_and_missing_or_outside_paths_match_errors() {
     }
 }
 /// Verifies [`compare`] reports the parent component owner when adding a nested subdirectory (`comp1/foo`).
+///
+/// Ensures subdirectories inside an already tracked component root cannot be tracked as separate components.
 #[test]
 fn tracking_inside_an_existing_component_reports_parent_owner() {
     let helper = workspace();

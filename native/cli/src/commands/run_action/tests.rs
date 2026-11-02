@@ -36,6 +36,8 @@ fn formats_action_results_like_command_runner() {
 }
 
 /// Verifies that [`parse_options`] rejects fewer than three positional arguments.
+///
+/// Ensures `bit run-action` requires `action_name`, `remote`, and a JSON `payload`.
 #[test]
 fn rejects_too_few_run_action_positional_arguments() {
     assert_eq!(parse_options(&[]), None);

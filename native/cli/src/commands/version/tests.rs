@@ -20,6 +20,8 @@ fn parses_version_json_flags() {
 }
 
 /// Verifies [`render_version`] in plain-text and JSON modes along with `--json=true` [`parse_json_flag`] parsing.
+///
+/// Ensures JSON output matches `{ "bit": "<version>" }` with pretty indentation.
 #[test]
 fn renders_version_text_and_json() {
     assert_eq!(render_version("1.2.3", false).unwrap(), "1.2.3");

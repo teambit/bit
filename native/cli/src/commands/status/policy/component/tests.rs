@@ -66,6 +66,7 @@ fn array_entries_keep_first_duplicate_and_force_controls_detection() {
     );
 }
 
+/// Verifies that `registeredEnvPolicy` and `envPolicy` precedence in [`Policy::read`] matches `VariantPolicy`.
 #[test]
 fn environment_and_registered_policy_precedence_match_variant_policy() {
     let context = json!({"environmentFacts":{"scope/name":{

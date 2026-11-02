@@ -36,6 +36,8 @@ fn removed_main_can_be_replaced_by_a_new_explicit_main() {
     );
 }
 /// Verifies [`compare`] matches platform case-sensitivity rules when resolving an explicit `-m` main file.
+///
+/// Ensures case-mismatched directory prefixes follow OS filesystem semantics.
 #[test]
 fn platform_case_sensitivity_controls_explicit_main_lookup() {
     let helper = workspace();

@@ -78,6 +78,7 @@ fn context() -> Value {
     })
 }
 
+/// Verifies that [`report`] formats the clean-workspace message with exit code `0` when all sections are empty.
 #[test]
 fn reports_a_clean_workspace() {
     let output =
