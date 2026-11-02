@@ -6,7 +6,7 @@ use bit_install::workspace::{BitmapEntry, ScopeObjects};
 use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{collections::BTreeMap, fs, io, path::Path};
-/// Serialized `componentId` field written into a capsule `package.json` manifest.
+/// Serialized `componentId` object written into a capsule `package.json` manifest.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PackageComponentId<'a> {

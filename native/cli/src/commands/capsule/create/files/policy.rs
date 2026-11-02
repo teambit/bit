@@ -86,6 +86,7 @@ fn insert(map: &mut Map<String, Value>, name: &str, version: &str) {
     map.insert(name.to_owned(), Value::String(version.to_owned()));
 }
 
+/// Returns `true` when `config` contains a non-empty custom configuration object for any builtin environment aspect.
 pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>) -> bool {
     let Some(config) = config else { return false };
     [

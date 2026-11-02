@@ -89,6 +89,7 @@ impl Prepared {
             .collect()
     }
 
+    /// Publishes staged `ComponentFsCache` documentation entries after verifying observed [`Source`]s.
     #[inline]
     pub(in crate::commands) fn publish(self) -> io::Result<()> {
         // Deferred source proofs are consumed before onLoad. Its authorized edits must

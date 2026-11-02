@@ -51,7 +51,7 @@ const BOOLEAN: [&str; 8] = [
     "--include-new-from-scope",
 ];
 
-/// `args` starts after the command name.
+/// `args` starts after the command name; parses into [`Options`].
 #[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let (flags, positionals) = read_checkout(args, false)?;

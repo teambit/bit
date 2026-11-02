@@ -50,7 +50,7 @@ impl ProjectedLinker {
         std::mem::take(&mut self.stdout)
     }
 
-    /// Match a consumer reload while retaining callback spool ownership.
+    /// Match a consumer reload while retaining callback spool ownership on [`retained::Retained`].
     #[inline]
     pub(in crate::commands) fn forget_loaded(&mut self) {
         self.retained.forget_loaded();

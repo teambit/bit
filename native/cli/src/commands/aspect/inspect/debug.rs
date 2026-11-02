@@ -92,6 +92,7 @@ fn collect_debug_report(
     Ok(DebugReport { before, after, final_entries })
 }
 
+/// Merges `raw_origins` for `entry` against `ws_ids`, returning pre-merge [`DebugOrigin`]s and merged [`AspectEntry`]s.
 fn merge_debug_origins(
     entry: &BitmapEntry,
     ws_ids: &[ComponentId],

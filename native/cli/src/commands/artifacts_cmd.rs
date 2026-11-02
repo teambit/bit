@@ -96,6 +96,7 @@ fn finish_artifacts(
     }
 }
 
+/// Executes artifact extraction in bare scope `scope_dir` via [`extract_scope_and_render`] and emits the [`Outcome`].
 fn finish_scope_artifacts(
     scope_dir: &Path,
     args: &[OsString],

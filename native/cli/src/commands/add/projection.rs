@@ -71,6 +71,7 @@ pub(super) fn prepare_loaded(
     Ok(Projection { workspace, context, selected, components, load_error })
 }
 
+/// Builds a `trackingContext` target entry for `component` from `bitmap`, `added`, and `previous` rows.
 fn target(
     component: &WorkspaceComponent,
     bitmap: &Value,

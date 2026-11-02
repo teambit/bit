@@ -16,10 +16,12 @@ use crate::{native::Outcome, workspace};
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Native `bit check-types` command descriptor.
+/// Native `bit check-types` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "check-types", aliases: &[], run };
 
+/// Error message emitted when `bit check-types` is invoked outside a Bit workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Hint message emitted when `bit check-types` finds no candidate components to check.
 const EMPTY_CHECK_TYPES_HINT: &str = "no components found to check.\nuse \"--unmodified\" flag to check all components or specify the ids to check.\notherwise, only new and modified components will be checked";
 
 /// Parsed CLI options and component pattern for `bit check-types`.

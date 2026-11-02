@@ -2,8 +2,11 @@
 //!
 //! Renders and updates `AGENTS.md` sync sections between [`START`] and [`END`] markers.
 use std::{io, path::Path, sync::OnceLock};
+/// Opening HTML comment prefix marking the managed CI sync section in `AGENTS.md`.
 const START: &str = "<!-- bit-ci-sync:start";
+/// Closing HTML comment marker ending the managed CI sync section in `AGENTS.md`.
 const END: &str = "<!-- bit-ci-sync:end -->";
+/// Placeholder repository slug replaced in `AGENTS.md` once a GitHub remote is known.
 pub(super) const UNKNOWN: &str = "<org>/<this-repo>";
 
 /// Renders the `AGENTS.md` CI sync section for `scope`, `repo`, and `branch`.

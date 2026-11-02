@@ -18,12 +18,16 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
-/// Native `bit build` command descriptor.
+/// Native `bit build` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "build", aliases: &[], run };
 
+/// Error message emitted when `bit build` is invoked outside a Bit workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Error message emitted when `--rewrite` is passed without `--reuse-capsules`.
 const REWRITE_ERR: &str = "cannot use --rewrite without --reuse-capsules";
+/// Error message emitted when `--reinstall` is passed without `--reuse-capsules`.
 const REINSTALL_ERR: &str = "cannot use --reinstall without --reuse-capsules";
+/// Hint message emitted when `bit build` finds no candidate components to build.
 const EMPTY_BUILD_HINT: &str = r#"no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built"#;
 
 /// Capsule reuse, rewrite, and reinstall flags for `bit build`.

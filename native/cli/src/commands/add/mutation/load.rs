@@ -84,6 +84,7 @@ pub(super) fn projected(
     Ok((engine, projection))
 }
 
+/// Requests `trackingContext` from `engine` and prepares a [`Projection`] for `identities` via [`selection::prepare`].
 #[inline]
 pub(super) fn projected_with_engine(
     root: &Path,

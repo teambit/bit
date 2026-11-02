@@ -80,6 +80,7 @@ fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
     true
 }
 
+/// Splits `arg` into a flag name and boolean value (`true`/`1` or `false`/`0`).
 #[inline]
 fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
     let Some((flag, raw)) = arg.split_once('=') else {

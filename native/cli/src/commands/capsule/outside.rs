@@ -88,6 +88,7 @@ fn safe_unscoped_id(id: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
 }
 
+/// Returns `true` when `argv` and `args` match a `bit capsule create` form handled natively outside a workspace.
 fn supports_create_outside(argv: &[&str], args: &CreateArgs) -> bool {
     let filtered = argv
         .iter()

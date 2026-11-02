@@ -81,6 +81,7 @@ fn is_safe_artifact_path(relative_path: &str) -> bool {
             .all(|part| matches!(part, std::path::Component::Normal(_)))
 }
 
+/// Sanitizes a component `identity` string into a safe directory name for `--out-dir` output.
 #[inline]
 fn sanitize_component_dir(identity: &str) -> String {
     let sanitized: String = identity

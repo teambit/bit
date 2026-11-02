@@ -29,11 +29,14 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit capsule` command descriptor.
+/// Native `bit capsule` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "capsule", aliases: &[], run };
 
+/// Global/workspace config key overriding the base directory for component build capsules.
 const BUILD_BASE_KEY: &str = "capsules_build_components_base_dir";
+/// Global/workspace config key overriding the base directory for scope aspect capsules.
 const SCOPE_ASPECTS_BASE_KEY: &str = "capsules_scopes_aspects_base_dir";
+/// Global config key overriding the shared global base directory for scope aspect capsules.
 const GLOBAL_SCOPE_ASPECTS_BASE_KEY: &str = "capsules_global_scope_aspects_base_dir";
 
 /// Parsed `bit capsule` subcommand and subcommand-specific options.

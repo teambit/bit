@@ -16,14 +16,23 @@ use std::{
 #[derive(Debug, Clone, Copy)]
 struct Style(&'static str, &'static str);
 
+/// ANSI red foreground [`Style`] (`\x1b[31m` / `\x1b[39m`).
 const RED: Style = Style("\u{1b}[31m", "\u{1b}[39m");
+/// ANSI green foreground [`Style`] (`\x1b[32m` / `\x1b[39m`).
 const GREEN: Style = Style("\u{1b}[32m", "\u{1b}[39m");
+/// ANSI yellow foreground [`Style`] (`\x1b[33m` / `\x1b[39m`).
 const YELLOW: Style = Style("\u{1b}[33m", "\u{1b}[39m");
+/// ANSI cyan foreground [`Style`] (`\x1b[36m` / `\x1b[39m`).
 const CYAN: Style = Style("\u{1b}[36m", "\u{1b}[39m");
+/// ANSI white foreground [`Style`] (`\x1b[37m` / `\x1b[39m`).
 const WHITE: Style = Style("\u{1b}[37m", "\u{1b}[39m");
+/// ANSI bright black / gray foreground [`Style`] (`\x1b[90m` / `\x1b[39m`).
 const GRAY: Style = Style("\u{1b}[90m", "\u{1b}[39m");
+/// ANSI underline attribute [`Style`] (`\x1b[4m` / `\x1b[24m`).
 const UNDERLINE: Style = Style("\u{1b}[4m", "\u{1b}[24m");
+/// ANSI bold intensity [`Style`] (`\x1b[1m` / `\x1b[22m`).
 const BOLD: Style = Style("\u{1b}[1m", "\u{1b}[22m");
+/// ANSI dim intensity [`Style`] (`\x1b[2m` / `\x1b[22m`).
 const DIM: Style = Style("\u{1b}[2m", "\u{1b}[22m");
 
 /// ANSI color wrapper matching `chalk` 4.1.2 behavior in the Node.js CLI.

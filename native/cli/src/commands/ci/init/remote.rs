@@ -32,6 +32,7 @@ fn capture(value: &str, pattern: &str, group: usize) -> Option<String> {
     let found = regress::Regex::with_flags(pattern, "i").ok()?.find(value)?;
     Some(value[found.group(group)?].to_owned())
 }
+/// Extracts the lowercase hostname from an SSH or URL Git `remote` string.
 #[inline]
 pub(super) fn host(remote: &str) -> Option<String> {
     capture(super::trim(remote), r"^(?:[a-z+]+://)?(?:[^@/]+@)?([^:/]+)", 1)

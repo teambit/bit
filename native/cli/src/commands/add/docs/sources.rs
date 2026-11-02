@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
+/// Maximum total byte budget (96 MiB) for observed documentation source files in [`observe`].
 const LIMIT: u64 = 96 * 1024 * 1024;
 
 /// Observed source file bytes and filesystem modification timestamp.

@@ -60,6 +60,7 @@ pub(super) fn unsupported_flag_help(argv: &[&str], chalk: Chalk) -> Option<Strin
     Some(format!("{help}\n{unknown}\n"))
 }
 
+/// Resolves the first unknown-option diagnostic for `args` in `app` or `app list` mode.
 #[inline]
 fn app_option_error(args: &[&str], list: bool) -> Option<String> {
     if let Some(error) = json_color::error(args, list) {

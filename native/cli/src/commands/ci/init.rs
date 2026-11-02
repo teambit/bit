@@ -89,6 +89,7 @@ impl Plan {
         let data = report::Report { target, changes };
         Ok(Report { data: report::render(&data, chalk), code: 0, details: None })
     }
+    /// Resolves the [`report::Target`] repository, remote origin, and default branch for this [`Plan`].
     fn target(&self) -> report::Target {
         let origin = git::origin(&self.cwd);
         let (raw_branch, guessed) = git::default_branch(&self.cwd);

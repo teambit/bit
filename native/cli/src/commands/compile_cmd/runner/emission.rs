@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Compiles `components` via [`tool::compile`] and groups outputs into [`Compiled`] component entries.
+/// Compiles `components` via [`tool::compile`] and [`compile`], grouping outputs into [`Compiled`] component entries.
 pub(super) fn prepare(
     root: &Path,
     components: &[Component],

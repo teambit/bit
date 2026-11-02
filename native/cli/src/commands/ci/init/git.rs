@@ -30,6 +30,7 @@ pub(super) fn repository_root(root: &Path) -> Option<PathBuf> {
 pub(super) fn commits(root: &Path) -> bool {
     run(root, &["rev-parse", "--verify", "--quiet", "HEAD"]).is_some_and(|value| !value.is_empty())
 }
+/// Resolves the repository default branch name (`main`/`master` or remote `HEAD`) and whether it was guessed.
 pub(super) fn default_branch(root: &Path) -> (String, bool) {
     if let Some(branch) = detected_branch(root) {
         return (branch, false);

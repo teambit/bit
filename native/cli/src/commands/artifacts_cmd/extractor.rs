@@ -20,7 +20,7 @@ use crate::{
 use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::Value;
 use std::{fs, path::Path};
-/// Extracted artifact file path and content `SHA-1` hash.
+/// Extracted artifact file relative path and 40-hex content `SHA-1` hash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ArtifactFile {
     pub relative_path: String,

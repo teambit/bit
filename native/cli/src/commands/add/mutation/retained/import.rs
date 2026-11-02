@@ -94,6 +94,7 @@ impl Retained {
         Ok(matched)
     }
 }
+/// Extracts a validated absolute filesystem [`Path`] from `proof["path"]`.
 #[inline]
 fn content_path(proof: &Value) -> io::Result<&Path> {
     proof["path"]

@@ -8,6 +8,7 @@ use crate::commands::patterns;
 use serde_json::Value;
 use std::io;
 
+/// Nine component state selector names recognized by [`validate`].
 const STATES: [&str; 9] = [
     "new",
     "modified",

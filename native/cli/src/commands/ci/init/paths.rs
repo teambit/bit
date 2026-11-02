@@ -9,7 +9,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-/// Resolves symbolic links along `path` up to 64 levels while preserving ordinary component names.
+/// Resolves symbolic links along `path` up to 64 levels via [`resolve_link`] while preserving ordinary component names.
 #[inline]
 pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
     if path.as_os_str().is_empty()

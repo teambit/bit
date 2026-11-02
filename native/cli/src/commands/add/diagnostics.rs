@@ -76,11 +76,13 @@ fn blocked_package(package: &Path) -> io::Result<bool> {
     }
     Ok(false)
 }
+/// Returns `true` when `path` is blocked by an existing directory or symlink instead of a manifest file.
 #[inline]
 fn blocked_manifest(path: &Path) -> io::Result<bool> {
     Ok(metadata(path)?
         .is_some_and(|metadata| metadata.is_dir() || metadata.file_type().is_symlink()))
 }
+/// Queries `symlink_metadata` for `path`, mapping `NotFound` and `NotADirectory` to `Ok(None)`.
 #[inline]
 fn metadata(path: &Path) -> io::Result<Option<fs::Metadata>> {
     match fs::symlink_metadata(path) {

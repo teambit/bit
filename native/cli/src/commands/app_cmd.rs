@@ -33,7 +33,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit app` (alias `apps`) command descriptor.
+/// Native `bit app` (alias `apps`) [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "app", aliases: &["apps"], run };
 
 /// Shared global CLI flag help section rendered by `bit app --help` and subcommands.

@@ -65,6 +65,7 @@ impl Manifests {
                 .collect(),
         )
     }
+    /// Returns `true` when any observed `package.json` manifest was absent or modified on disk.
     #[inline]
     pub(super) fn changed(&self) -> bool {
         self.0
@@ -72,6 +73,7 @@ impl Manifests {
             .any(|(path, before)| before.is_none() || serialized(path).as_ref() != before.as_ref())
     }
 }
+/// Reads and canonicalizes a JSONC manifest at `path` when within the 4 MiB size budget.
 #[inline]
 fn serialized(path: &Path) -> Option<String> {
     if fs::metadata(path).ok()?.len() > 4 * 1024 * 1024 {

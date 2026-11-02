@@ -7,7 +7,9 @@ mod tests;
 use crate::commands::color::Chalk;
 use std::{error::Error, fmt, io};
 
+/// Warning prefix emitted when `bit add` finds no candidate files to track.
 const NO_FILES: &str = "warning: no files to add";
+/// Clause separator preceding the bold list of ignored files in [`NO_FILES`] warnings.
 const IGNORED: &str = ", the following files were ignored: ";
 
 /// Applies inner [`Chalk`] styling to `InvalidInput` tracking errors when colors are enabled.

@@ -94,6 +94,7 @@ fn component_id(component: &Value) -> io::Result<String> {
         .filter(|scope| !scope.is_empty())
         .map_or_else(|| name.to_owned(), |scope| format!("{scope}/{name}")))
 }
+/// Formats ignored-file, already-used, and empty-directory warnings from `value` using `format`.
 fn warning(value: &Value, format: &Formatter) -> io::Result<String> {
     let mut warning = already_used(value, format)?;
     if let Some(empty) = value["emptyDirectory"]

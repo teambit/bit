@@ -54,12 +54,14 @@ impl Retained {
     pub(super) const fn has_started(&self) -> bool {
         self.started
     }
+    /// Marks this [`Retained`] session as started and returns `true` when this is the first capture.
     #[inline]
     pub(super) fn start(&mut self) -> bool {
         let first = !self.started;
         self.started = true;
         first
     }
+    /// Returns trimmed non-empty identities from `identities` that are not yet present in `rows`.
     pub(super) fn missing(&self, identities: &[String]) -> Vec<String> {
         identities
             .iter()

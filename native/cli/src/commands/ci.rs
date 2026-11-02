@@ -25,12 +25,15 @@ use std::{
     process::Command as ProcessCommand,
 };
 
-/// Native `bit ci` command descriptor.
+/// Native `bit ci` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "ci", aliases: &[], run };
 
+/// Error message emitted when `bit ci` subcommands are invoked outside a Bit workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Error message emitted when `--auto-merge-resolve` receives an unrecognized strategy.
 const INVALID_MERGE_RESOLVE_ERR: &str =
     "--auto-merge-resolve must be one of the following: [ours, theirs, manual]";
+/// Error message emitted when `bit ci sync --init` is combined with reconciliation flags.
 const INIT_COMBINED_ERR: &str = "bit ci sync --init cannot be combined with a lane argument, --branch, --all, --main or --dry-run: it only scaffolds onboarding files (workflows + workspace.jsonc config) and exits \u{2014} it never reconciles";
 
 /// Parsed CLI flags for `bit ci sync`.

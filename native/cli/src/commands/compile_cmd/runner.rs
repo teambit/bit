@@ -67,6 +67,7 @@ pub(super) fn try_run(
     .map(Some)
 }
 
+/// Formats a native compilation filesystem `error` using [`workspace_command::filesystem_error::report`].
 #[inline]
 fn format_compile_error(error: &io::Error, args: &[OsString]) -> io::Error {
     workspace_command::filesystem_error::report(error, crate::commands::color::Chalk::detect(args))

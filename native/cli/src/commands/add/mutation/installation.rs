@@ -39,7 +39,7 @@ impl ProjectedLinker {
         self.with_installer(|installer| installer.install_scope_rename(root))
     }
 
-    /// Runs post-fork dependency installation on the retained provider session.
+    /// Runs post-fork dependency installation on the retained provider session via [`Self::with_installer`].
     #[inline]
     pub(in crate::commands) fn install_fork(&mut self, root: &Path) -> io::Result<()> {
         self.finish(Installer::validate_workspace(root))?;

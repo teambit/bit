@@ -89,6 +89,7 @@ fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> Stri
         chalk,
     )
 }
+/// Formats Step 3 (`Make Bit -> Git instant`) for a `GitHub` Enterprise [`Repository`].
 fn enterprise_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
     let scope = scope_or_placeholder(input);
     let api = remote::api(repository.host.trim());

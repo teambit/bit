@@ -95,6 +95,7 @@ impl ProjectedLinker {
         self.restore(host)?;
         linked
     }
+    /// Seeds `identityCachedClasses` on the retained provider session when `rows` is non-empty.
     #[inline]
     fn cached_classes(&mut self, root: &Path, rows: &[Value]) -> io::Result<()> {
         if rows.is_empty() {

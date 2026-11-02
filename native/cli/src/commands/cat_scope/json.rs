@@ -82,6 +82,7 @@ fn non_empty_str(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Extracts a trimmed `(scope, name)` pair from a component reference or `id` object in `val`.
 fn split_scope_name(val: &Value) -> Option<(&str, &str)> {
     let target = val
         .get("id")

@@ -96,6 +96,7 @@ fn text_files(files: &[Value], single: bool) -> io::Result<String> {
         .map(|files| files.join("\n\n"))
 }
 
+/// Extracts a trimmed non-empty relative path from `file["path"]` or `file["relativePath"]`.
 #[inline]
 fn file_path(file: &Value) -> Option<&str> {
     file["path"]

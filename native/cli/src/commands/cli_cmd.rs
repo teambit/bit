@@ -17,7 +17,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit cli` command descriptor.
+/// Native `bit cli` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "cli", aliases: &[], run };
 
 /// Executes `bit cli generate --docs` or reports unknown `--skill` types.

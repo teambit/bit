@@ -81,6 +81,7 @@ fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
     true
 }
 
+/// Parses `true`/`1` or `false`/`0` boolean values from `raw`.
 #[inline]
 fn parse_bool_val(raw: &str) -> Option<bool> {
     let trimmed = raw.trim();

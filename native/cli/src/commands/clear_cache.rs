@@ -22,7 +22,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit clear-cache` (`cc`) command descriptor.
+/// Native `bit clear-cache` (`cc`) [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "clear-cache", aliases: &["cc"], run };
 
 /// Executes `bit clear-cache` locally or against a `--remote` scope.

@@ -23,9 +23,10 @@ use bit_object_import::parse_jsonc;
 use serde_json::Value;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Native `bit compile` command descriptor.
+/// Native `bit compile` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "compile", aliases: &[], run };
 
+/// Error message emitted when `bit compile` is invoked outside a Bit workspace.
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 /// Parsed CLI options and target component names for `bit compile`.

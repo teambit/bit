@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Native `bit clone` command descriptor.
+/// Native `bit clone` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "clone", aliases: &[], run };
 
 /// Parsed CLI options and target component ID for `bit clone`.

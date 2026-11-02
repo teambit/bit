@@ -19,6 +19,7 @@ use bit_install::{
 use serde_json::json;
 use std::{collections::HashSet, ffi::OsString, fs, io, path::Path};
 
+/// Embedded JSON array of core Harmony aspect IDs used when loading [`Workspace`] components.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 

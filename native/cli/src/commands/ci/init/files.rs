@@ -5,6 +5,7 @@ use super::{git, report::File};
 use bit_workspace_config::jsonc::Document;
 use serde_json::json;
 use std::{fs, io, path::Path};
+/// Aspect identifier key under which `sync` onboarding configuration is stored in `workspace.jsonc`.
 const ASPECT: &str = "teambit.git/ci";
 
 /// Scaffolds `.github/workflows/bit-sync.yml` and `.github/workflows/bit-release.yml` under `root`.

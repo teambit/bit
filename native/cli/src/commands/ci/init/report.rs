@@ -36,6 +36,7 @@ pub(super) struct Changes {
     pub ignored: Vec<String>,
 }
 
+/// Renders the complete `bit ci init` onboarding checklist and file summary for `report`.
 pub(super) fn render(report: &Report, chalk: Chalk) -> String {
     let steps = if let Some(repository) = &report.target.repository {
         super::report_github::steps(report, repository, chalk)

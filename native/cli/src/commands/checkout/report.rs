@@ -16,7 +16,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// The checkout report of the engine's result.
+/// The checkout report of the engine's result via [`format_title`].
 #[inline]
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     format_title(result, options, chalk, None)

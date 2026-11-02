@@ -12,7 +12,9 @@ use std::{
     path::Path,
 };
 
+/// Environment-fact key storing retained workspace control read-set proofs in [`Capture`].
 const KEY: &str = "identityControlReadSet";
+/// Maximum byte size (32 MiB) permitted for a single workspace control file in [`refresh`].
 const MAX_CONTROL: u64 = 32 * 1024 * 1024;
 
 /// Validates that the workspace control read-set in `context` remains unchanged on disk.

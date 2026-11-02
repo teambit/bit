@@ -74,7 +74,7 @@ pub(super) fn components(
         .collect()
 }
 
-/// Seeds loaded component classes on `host` and resolves registered environment IDs onto `components`.
+/// Seeds loaded component classes on `host` and resolves registered environment IDs onto `components` via [`extract_registered_env`].
 pub(super) fn seed_environments(
     components: &mut [WorkspaceComponent],
     host: &crate::host::Host,

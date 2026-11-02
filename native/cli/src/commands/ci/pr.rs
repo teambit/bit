@@ -41,6 +41,7 @@ impl WorkspaceSnapshot {
         }
     }
 
+    /// Restores `.bitmap`, `scope.json`, and `index.json` under `root` from this [`WorkspaceSnapshot`].
     fn restore(&self, root: &Path) {
         if root
             .as_os_str()

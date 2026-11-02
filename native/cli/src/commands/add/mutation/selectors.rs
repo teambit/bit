@@ -22,7 +22,7 @@ impl ProjectedLinker {
         let trimmed = pattern.trim();
         !trimmed.is_empty() && selection::stateful(trimmed)
     }
-    /// Prove native context eligibility before any configured provider starts.
+    /// Prove native context eligibility via [`controls::validate`] before any configured provider starts.
     #[inline]
     pub(in crate::commands) fn preflight_selection(root: &Path, bitmap: &Value) -> io::Result<()> {
         let mut engine = Engine::new()?;

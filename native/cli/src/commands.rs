@@ -123,7 +123,9 @@ use std::{ffi::OsString, io};
 
 /// Descriptor for a native CLI command, its aliases, and its entry-point runner.
 pub struct Command {
+    /// Canonical primary CLI command name matched by [`find`].
     pub name: &'static str,
+    /// Short or legacy CLI command aliases matched by [`find`].
     pub aliases: &'static [&'static str],
     /// Receives every argument after the executable, starting with the command name.
     pub run: fn(&[OsString]) -> io::Result<Outcome>,

@@ -10,6 +10,7 @@ use crate::native::Outcome;
 use bit_object_import::parse_jsonc;
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Default Git commit message used by `bit ci merge` when `--commit-message` is not supplied.
 const DEFAULT_COMMIT_MESSAGE: &str = "chore: update .bitmap and lockfiles as needed [skip ci]";
 
 /// Semantic version bump flags for `bit ci merge`.

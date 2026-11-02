@@ -76,6 +76,7 @@ fn consume_value(
     Some(true)
 }
 
+/// Parses inline `=value` flag forms (`--override=`, `-o=`, or string options) into `options`.
 fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>> {
     if let Some(val) = arg
         .strip_prefix("--override=")

@@ -11,12 +11,16 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
+/// Maximum cumulative byte budget (32 MiB) allowed for cached documentation metadata in [`partition`].
 const MAX_METADATA: usize = 32 * 1024 * 1024;
 
 /// Partitioned `ComponentFsCache` documentation hits, misses, and proven cache entries.
 pub(super) struct Plan {
+    /// Cached documentation entries that matched observed [`Source`] modification timestamps.
     pub hits: Vec<Value>,
+    /// Component payloads with uncached or stale files requiring documentation parsing.
     pub misses: Vec<Value>,
+    /// Proven cache write entries retained from cache hits when cache writing is enabled.
     pub proven: Vec<Value>,
 }
 

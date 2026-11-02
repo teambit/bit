@@ -96,6 +96,7 @@ pub(super) fn history(
     commit_history(engine, root, plans)
 }
 
+/// Commits staged `VersionHistory` `plans` through `engine` at `root` for [`history`].
 #[inline]
 fn commit_history(engine: &mut Engine, root: &Path, plans: &[Value]) -> io::Result<()> {
     if plans.is_empty() {

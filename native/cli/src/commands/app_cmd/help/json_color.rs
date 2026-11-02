@@ -4,7 +4,7 @@
 
 use super::is_json_flag;
 
-/// Formats yargs `Unknown argument` / `Unknown arguments` diagnostics for unsupported flags in `args`.
+/// Formats yargs `Unknown argument` / `Unknown arguments` diagnostics for unsupported flags in `args` via [`unknown_names`].
 #[inline]
 pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
     let mut unknown = Vec::with_capacity(3);
