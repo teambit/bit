@@ -1,4 +1,6 @@
-//! Control-JSON recursive merging ([`merge`]) and `.bitmap` publication for batch component renames.
+//! Control-JSON recursive merging ([`merge`]) and `.bitmap` publication ([`write`]) for batch component renames.
+//!
+//! Ensures `.bitmap` preimages match before writing updated workspace control state.
 
 use super::{Value, invalid};
 use std::{fs, io, path::Path};

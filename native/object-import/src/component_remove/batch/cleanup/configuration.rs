@@ -41,11 +41,13 @@ impl Configuration {
     pub(super) fn validate(&self) -> io::Result<()> {
         self.0.validate()
     }
+    /// Back up `workspace.jsonc` under `.bit/workspace-config-history` and write the updated file.
     #[inline]
     pub(super) fn write(&self, root: &Path, file_id: &str) -> io::Result<()> {
         self.backup(root, file_id)?;
         self.0.write()
     }
+    /// Persist the pre-removal `workspace.jsonc` snapshot and history entry for `file_id`.
     fn backup(&self, root: &Path, file_id: &str) -> io::Result<()> {
         crate::component_remove::validate_file_id(file_id)?;
         let file_id = file_id.trim();

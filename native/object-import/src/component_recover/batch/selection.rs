@@ -64,11 +64,13 @@ pub(super) fn key(bitmap: &Value, id: &str) -> io::Result<Option<String>> {
     }
     Ok(matches.first().map(|(key, _)| (*key).clone()))
 }
+/// Strip any `@version` suffix from `id` and return the trimmed bare component identity.
 #[inline]
 pub(super) fn bare(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim())
 }
+/// Select component identities from `.bitmap` and local scope index matching `pattern`.
 pub(super) fn select(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
     if !pattern.contains(['*', '?']) {
         return single(batch, pattern);

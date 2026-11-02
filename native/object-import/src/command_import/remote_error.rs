@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod tests;
 use std::{fmt, io};
-/// Remote scope inflate error paired with the originating scope name.
+/// Remote scope inflate error paired with the originating `scope` name and `cause`.
 #[derive(Debug)]
 struct Failure {
     scope: String,

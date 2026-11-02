@@ -19,7 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// New components are removed together after the stash metadata has been saved.
+/// New components are removed together in a single `.bitmap` transaction after stash metadata has been saved.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NewBatch {
     root: PathBuf,

@@ -67,6 +67,7 @@ pub(super) fn select_lane(
     Ok(lane)
 }
 
+/// Read and validate the loose `Lane` object for `(scope, name)` from `.bit/objects`.
 fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     let (scope, name) = (scope.trim(), name.trim());
     let scope_path = crate::scope_path(root);

@@ -51,6 +51,7 @@ fn write_verified_file(root: &Path, path: &Path, bytes: &[u8]) -> io::Result<()>
     }
     fs::write(path, bytes)
 }
+/// Verify that every existing path component from `root` to `target` is a non-symlink directory (or regular file at `target`).
 pub(super) fn destination(root: &Path, target: &Path) -> io::Result<()> {
     let relative = target.strip_prefix(root).map_err(io::Error::other)?;
     let mut path = root.to_owned();

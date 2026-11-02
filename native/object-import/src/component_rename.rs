@@ -36,7 +36,7 @@ pub struct PreparationContext {
     patterns: Arc<refactor::PatternCache>,
 }
 
-/// Source and target IDs, directories and exported-state policy.
+/// Source and target component IDs, bare names, optional version, directories, and exported-state policy.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Identity {
     pub source: String,

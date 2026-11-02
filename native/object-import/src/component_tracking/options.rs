@@ -6,7 +6,7 @@ use super::error;
 use serde_json::Value;
 use std::io;
 
-/// Published `bit add` inputs; environment resolution supplies `config` metadata.
+/// Published `bit add` CLI inputs; environment resolution supplies `config` metadata.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub paths: Vec<String>,

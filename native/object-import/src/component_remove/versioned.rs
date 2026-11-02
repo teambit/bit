@@ -40,6 +40,7 @@ struct Change {
     after: Option<Vec<u8>>,
 }
 
+/// Scoped component identity and `Component` model object hash selected from `index.json`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct ModelSelection<'a> {
     scope: &'a str,
@@ -48,6 +49,7 @@ struct ModelSelection<'a> {
 }
 
 impl VersionedPlan {
+    /// Prepare a local removal plan for a staged tagged component `name`.
     #[inline]
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
         Self::prepare_kind(root, name, keep_files, RowKind::Staged, false)

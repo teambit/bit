@@ -14,7 +14,7 @@ use bit_client_transfer::{
 use serde_json::Value;
 use std::io;
 
-/// In-memory and temporary-directory capture of remote component sources for `bit fork`.
+/// In-memory and temporary-directory capture of remote component sources and raw objects for `bit fork`.
 #[derive(Debug)]
 pub struct RemoteCapture {
     sources: Vec<Value>,

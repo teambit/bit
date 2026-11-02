@@ -70,6 +70,7 @@ fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 impl PreparedImport {
+    /// Validate and atomically commit all staged scope objects, index rows, and remote refs.
     pub(crate) fn commit(&self) -> io::Result<()> {
         self.validate()?;
         if !self.writes.lane_histories.is_empty() {

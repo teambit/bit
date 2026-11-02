@@ -83,11 +83,13 @@ impl Plan {
     pub fn target_identity(&self) -> &str {
         &self.identity.target
     }
+    /// Return the projected post-fork `.bitmap` JSON [`Value`].
     #[must_use]
     #[inline]
     pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
+    /// Return the `.bitmap` aspect configuration [`Value`] inserted for the forked component.
     #[must_use]
     #[inline]
     pub fn configuration(&self) -> &Value {

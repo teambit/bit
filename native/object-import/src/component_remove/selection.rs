@@ -80,6 +80,7 @@ fn matches(id: &str, parts: &[&str]) -> bool {
             .filter_map(|part| part.strip_prefix('!'))
             .any(matched)
 }
+/// Strip any non-empty `@version` suffix from `value` after trimming whitespace.
 #[inline]
 fn strip_version(value: &str) -> &str {
     let trimmed = value.trim();

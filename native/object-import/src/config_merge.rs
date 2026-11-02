@@ -71,6 +71,7 @@ fn truthy(value: &Value) -> bool {
         _ => true,
     }
 }
+/// Validate `input` and prepare a `config-merge` [`Conflict`] plan and response payload.
 #[inline]
 pub(crate) fn conflict_plan(input: &Value) -> io::Result<(Value, Conflict)> {
     validate::fields(input, &["path", "fallbackPath", "conflicts"])?;
@@ -80,6 +81,7 @@ pub(crate) fn conflict_plan(input: &Value) -> io::Result<(Value, Conflict)> {
     )?;
     conflict::plan(input)
 }
+/// Validate `input` and commit a previously prepared `config-merge` [`Conflict`] `state`.
 #[inline]
 pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io::Result<Value> {
     validate::fields(input, &["token", "path"])?;

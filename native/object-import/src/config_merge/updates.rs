@@ -84,6 +84,7 @@ fn decide(
     }
     Ok(())
 }
+/// Compare two semver ranges (`workspace` vs `component`) and record an update or skip in `plan`.
 fn ranges(
     plan: &mut Plan,
     semver: &Value,

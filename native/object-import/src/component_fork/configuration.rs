@@ -57,6 +57,7 @@ fn forked_from(options: &Options, source: &Value) -> io::Result<Value> {
     }
     Ok(id)
 }
+/// Extract a concrete semver or snap version from `source` when not `"latest"` or `"head"`.
 fn source_version(source: &Value) -> Option<&str> {
     source["version"]
         .as_str()

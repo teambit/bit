@@ -93,6 +93,7 @@ fn other(engine: &mut Engine<'_>) -> io::Result<()> {
     Ok(())
 }
 
+/// Resolve the effective aspect ID for an `other`-side `entry`, skipping local unexported aspects.
 #[inline]
 fn other_id(engine: &Engine<'_>, entry: &Value, id: &str) -> io::Result<Option<String>> {
     if entry["componentId"]["version"]

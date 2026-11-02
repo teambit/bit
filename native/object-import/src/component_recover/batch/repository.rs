@@ -64,6 +64,7 @@ pub(super) fn model(batch: &mut Batch, bare: &str) -> io::Result<Option<Value>> 
     fallback_model(batch, bare, local_name)
 }
 
+/// Split an index `id` [`Value`] (string or `{scope, name}` object) into `(scope, bare_name)`.
 #[inline]
 pub(crate) fn row_id_parts(id: &Value) -> (&str, &str) {
     if let Some(raw) = id.as_str() {

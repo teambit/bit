@@ -1,4 +1,6 @@
 //! `.bitmap` row insertion ([`prepare`]), aspect renaming, and deprecation/removal policy for component renames.
+//!
+//! Updates target `.bitmap` entries, `teambit.component/renaming` config, and `workspace.jsonc` aspect keys.
 
 use super::{Plan, identity, invalid, unsupported};
 use serde_json::{Value, json};

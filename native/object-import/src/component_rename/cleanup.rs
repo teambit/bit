@@ -56,6 +56,7 @@ fn observe(tree: &mut Tree, path: PathBuf, pending: &mut Vec<PathBuf>) -> io::Re
     }
     Ok(())
 }
+/// Read and lexicographically sort UTF-8 entry names in `path`, enforcing the 65,536 entry budget.
 fn entries(path: &Path) -> io::Result<Vec<String>> {
     let mut names = fs::read_dir(path)?
         .map(|entry| {

@@ -75,6 +75,7 @@ fn intersect(value: &mut Value, after: &Value) -> io::Result<()> {
     rows.retain(|row| retained.contains(row));
     Ok(())
 }
+/// Remove all components in `plans` from the shared active `Lane` object and write it to disk.
 fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
     let Some(first) = plans.iter().find_map(|plan| plan.workspace.lane.as_ref()) else {
         return Ok(());

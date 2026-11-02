@@ -77,6 +77,7 @@ fn warning(warnings: &mut Value, name: &str, row: &Value, file: &str) {
     }
 }
 
+/// Return `true` when `file` lies under another non-root component's `root` directory.
 #[inline]
 fn is_owned_by_other(
     (candidate_scope, candidate_name): (&str, &str),

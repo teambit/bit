@@ -1,4 +1,6 @@
 //! Dependency-resolver policy configuration merge ([`merge`]) on [`State`] across `current`, `other`, and `base`.
+//!
+//! Resolves added, removed, and version-conflicted dependency policy entries per lifecycle.
 
 use super::{State, append, field};
 use serde_json::json;

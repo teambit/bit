@@ -37,6 +37,7 @@ fn write(
     *expected = fs::read(&path)?;
     Ok(())
 }
+/// Retire the original component package link, update its `.bitmap` entry, and remove its source directory when not deprecating.
 pub(super) fn finish_original(
     plan: &mut Plan,
     file_id: &str,

@@ -53,6 +53,7 @@ pub(super) struct ContentMatcher {
     cache: Arc<PatternCache>,
 }
 impl ContentMatcher {
+    /// Construct a [`ContentMatcher`] for `source` -> `target` (raw, camelCase, and `PascalCase` forms).
     #[inline]
     pub(super) fn new(source: &str, target: &str, cache: Arc<PatternCache>) -> Self {
         Self {
@@ -61,6 +62,7 @@ impl ContentMatcher {
             cache,
         }
     }
+    /// Apply all three identifier replacements to non-binary `bytes`.
     pub(super) fn apply(&self, bytes: &[u8]) -> io::Result<Vec<u8>> {
         if crate::checkout::eol::binary(bytes) {
             return Ok(bytes.to_vec());

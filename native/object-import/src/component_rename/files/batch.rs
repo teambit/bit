@@ -91,6 +91,7 @@ fn row_identity(row: &Value) -> Option<String> {
     }
 }
 
+/// Apply `matchers` across all source files of a single dependent component `row`.
 fn batch_component(
     plan: &mut Plan,
     row: &Value,

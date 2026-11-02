@@ -78,12 +78,14 @@ fn resolve_main(
         Ok(main.into())
     }
 }
+/// Extract the trimmed `defaultScope` string from `workspace.jsonc`'s `teambit.workspace/workspace` aspect.
 fn default_scope(workspace: &Value) -> Option<&str> {
     crate::component_tracking::identity::workspace_aspect(workspace)["defaultScope"]
         .as_str()
         .map(str::trim)
         .filter(|scope| !scope.is_empty())
 }
+/// Return `true` when `.bitmap` entry `(key, row)` is an active component whose bare name equals `name`.
 fn is_active_named(key: &str, row: &Value, name: &str) -> bool {
     row.is_object()
         && !key.starts_with('$')

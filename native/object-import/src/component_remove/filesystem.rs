@@ -60,6 +60,7 @@ pub(super) fn safe_relative(path: &Path) -> bool {
             .all(|component| matches!(component, Component::Normal(_)))
 }
 
+/// Verify that `path`, if it exists on disk, is a regular directory and not a symlink.
 #[inline]
 pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
     let kind = match fs::symlink_metadata(path) {
@@ -73,6 +74,7 @@ pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Recursively remove `path` if it exists, ignoring `ErrorKind::NotFound`.
 #[inline]
 pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
     match fs::remove_dir_all(path) {

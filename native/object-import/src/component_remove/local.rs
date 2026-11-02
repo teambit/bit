@@ -42,6 +42,7 @@ impl LocalBatch {
     pub fn bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.before)
     }
+    /// Return the canonical identities of all components selected in this batch.
     #[must_use]
     #[inline]
     pub fn identities(&self) -> Vec<String> {
@@ -50,6 +51,7 @@ impl LocalBatch {
             .map(|row| row.identity.clone())
             .collect()
     }
+    /// Return the identities of versioned components removed from the active lane in this batch.
     #[must_use]
     #[inline]
     pub fn lane_identities(&self) -> Vec<String> {

@@ -62,6 +62,7 @@ fn is_envs_extension(entry: &Value) -> bool {
         })
 }
 
+/// Merge the `teambit.envs/envs` aspect across `current`, `other`, and `base` on `engine`.
 pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     let current = &engine.envs[0];
     let other = &engine.envs[1];

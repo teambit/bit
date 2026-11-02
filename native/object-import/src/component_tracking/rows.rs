@@ -59,6 +59,7 @@ pub(super) fn find<'a>(
     }
     Ok(found)
 }
+/// Return `true` when `.bitmap` entry `(key, row)` matches `name` and optional `selected_scope`.
 #[inline]
 fn matches(row: &Value, key: &str, name: &str, selected_scope: Option<&str>) -> bool {
     let name = name.trim();

@@ -13,7 +13,9 @@ const ALWAYS: &[&str] = &[
     "**/component.json",
     "**/node_modules/**",
 ];
+/// Generated package and lockfile glob patterns excluded unless `trackAllFiles` is enabled.
 const GENERATED: &[&str] = &["package.json", "**/package-lock.json", "**/yarn.lock"];
+/// Tooling config files ignored only at the component root directory unless `trackAllFiles` is enabled.
 const ROOT_ONLY: &[&str] = &[
     "tsconfig.json",
     ".eslintrc.json",

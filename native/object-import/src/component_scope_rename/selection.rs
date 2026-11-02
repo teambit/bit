@@ -64,6 +64,7 @@ fn is_skipped_row(trimmed_key: &str, row: &Value) -> bool {
         || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
 }
 
+/// Extract the `(scope, name)` pair from `.bitmap` entry `(key, row)`.
 fn row_scope_and_name<'a>(key: &'a str, row: &'a Value) -> (&'a str, &'a str) {
     let key = key.trim();
     let key_id = key.rsplit_once('@').map_or(key, |(bare, _)| bare.trim());

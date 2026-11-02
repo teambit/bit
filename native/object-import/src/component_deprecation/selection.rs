@@ -76,11 +76,13 @@ pub(crate) fn key<'a>(bitmap: &'a Value, id: &str) -> io::Result<&'a str> {
         })
         .ok_or_else(|| invalid(format!("component {id} was not found")))
 }
+/// Resolve `id` against `bitmap` and return its canonical scoped component [`identity`].
 #[inline]
 pub(crate) fn resolve(bitmap: &Value, id: &str) -> io::Result<String> {
     let key = key(bitmap, id)?;
     identity(key, &bitmap[key]).ok_or_else(|| invalid("component identity"))
 }
+/// Select active workspace component identities in `bitmap` matching `pattern`.
 pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     validate_pattern(pattern)?;

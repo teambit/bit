@@ -1,4 +1,6 @@
 //! Exported rename preflight validation ([`dependent`]) of dependent file reads without retaining discarded writes.
+//!
+//! Supports private temporary callback source overlays ([`overlaid`]) during rename preflight.
 use super::{Plan, refactor, unsupported};
 use serde_json::Value;
 use std::{fs, io, path::Path};

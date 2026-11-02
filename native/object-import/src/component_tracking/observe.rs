@@ -67,6 +67,7 @@ impl Observed {
         self.directories.insert(path.to_owned(), names.clone());
         Ok(names)
     }
+    /// Verify and record canonicalized ancestor directories from `path` up to `root`.
     pub(crate) fn ancestors(&mut self, root: &Path, path: &Path) -> io::Result<()> {
         if !path.starts_with(root) {
             return Err(unsupported("tracking ancestor outside workspace"));

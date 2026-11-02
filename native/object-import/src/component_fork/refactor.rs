@@ -41,10 +41,12 @@ impl Refactor {
         plan.validate()?;
         Ok(plan)
     }
+    /// Re-verify that all observed workspace and source files match their captured preimages.
     #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }
+    /// Return non-binary destination paths and byte buffers for AST-based refactoring.
     #[must_use]
     #[inline]
     pub fn ast_inputs(&self) -> Vec<(PathBuf, Vec<u8>)> {

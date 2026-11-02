@@ -56,11 +56,13 @@ impl Plan {
     pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
+    /// Return the per-component path change descriptors produced by this move plan.
     #[must_use]
     #[inline]
     pub fn changes(&self) -> &[Value] {
         &self.changes
     }
+    /// Return the canonical identities of all components affected by this move plan.
     #[must_use]
     #[inline]
     pub fn identities(&self) -> Vec<String> {

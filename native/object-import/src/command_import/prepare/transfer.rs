@@ -122,6 +122,7 @@ pub(super) fn merge_model(
     plan.overlay.objects.insert(hash, object);
     Ok(())
 }
+/// Populate, merge, and stage the `VersionHistory` object for `incoming` into `plan`.
 fn receive_history(
     plan: &mut PreparedImport,
     directory: &Path,

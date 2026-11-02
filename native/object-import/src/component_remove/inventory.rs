@@ -57,6 +57,7 @@ fn is_removed_row(row: &Value) -> bool {
             .is_some_and(|rem| bit_workspace_config::truthy(&rem["removed"]))
 }
 
+/// Return `true` when `candidate` is a strict subdirectory of `directory`.
 #[inline]
 fn is_nested_root_dir(directory: &str, candidate: &str) -> bool {
     candidate != directory

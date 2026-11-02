@@ -43,6 +43,7 @@ fn identifier(left: &Value, right: &Value) -> io::Result<Ordering> {
         },
     }
 }
+/// Return `true` when `version` satisfies any comparator set of `range` in `input`.
 pub(super) fn satisfies(input: &Value, version: &str, range: &str) -> io::Result<bool> {
     let (version, range) = (version.trim(), range.trim());
     let Some(candidate) = input

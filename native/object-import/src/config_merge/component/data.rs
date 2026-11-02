@@ -61,6 +61,7 @@ fn entry_version(entry: Option<&serde_json::Value>) -> &str {
         .filter(|ver| !ver.is_empty())
         .unwrap_or("undefined")
 }
+/// Determine the conflict reason (if any) for aspect data at `current[index]`, recording data assignments when clean.
 fn reason(
     engine: &mut Engine<'_>,
     index: usize,

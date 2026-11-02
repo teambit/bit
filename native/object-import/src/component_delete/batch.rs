@@ -58,6 +58,7 @@ impl Batch {
     pub fn plans(&self) -> &[Plan] {
         &self.plans
     }
+    /// Parse and return the pre-deletion `.bitmap` JSON [`Value`] captured by this batch.
     #[inline]
     pub fn bitmap(&self) -> io::Result<Value> {
         crate::parse_jsonc(&self.plans[0].bitmap.before)

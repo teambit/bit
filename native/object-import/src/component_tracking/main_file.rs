@@ -67,6 +67,7 @@ fn inferred(directory: &str, files: &[String]) -> Option<String> {
                 .find_map(|name| find(name, clean_dir, files))
         })
 }
+/// Locate `name` in `files` by exact match, `directory`-relative match, or case-insensitive fallback on Windows.
 fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
     let trimmed = name.trim();
     let normalized = if trimmed.contains('\\') {

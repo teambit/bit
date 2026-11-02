@@ -42,6 +42,7 @@ struct BitmapChange {
     after: Vec<u8>,
 }
 
+/// Pre-deletion `index.json`, loose object preimages, and dependency pinning decision.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct RepositorySnapshot {
     index_before: Vec<u8>,
@@ -49,6 +50,7 @@ struct RepositorySnapshot {
     policy: policy::Decision,
 }
 
+/// On-disk loose object path and pre-deletion byte snapshot verified before committing a [`Plan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct FrozenObject {
     path: PathBuf,

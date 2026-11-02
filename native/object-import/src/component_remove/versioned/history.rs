@@ -89,6 +89,7 @@ pub(super) fn validate(root: &Path, state: &HistoryState) -> io::Result<()> {
     }
 }
 
+/// Write the newly encoded `VersionHistory` object when `state.after` is present.
 #[inline]
 pub(super) fn write(state: &HistoryState) -> io::Result<()> {
     if let Some(bytes) = &state.after {

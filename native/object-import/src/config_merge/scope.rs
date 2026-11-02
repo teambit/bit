@@ -74,6 +74,7 @@ fn validate_entry(entry: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Merge a single dependency policy field `merged` with its corresponding `scope` field entry.
 fn one(merged: &Value, scope: Option<&Value>) -> io::Result<Value> {
     let originals = array(merged, "entries")?;
     let entries = scope

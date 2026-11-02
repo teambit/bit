@@ -82,6 +82,7 @@ fn scope<'a>(row: &'a Value, fallback: Option<&'a str>) -> io::Result<&'a str> {
         .ok_or_else(|| invalid("component scope"))
 }
 
+/// Return `true` when `.bitmap` `row` contains only supported fields and flags for `kind`.
 fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
     let allowed = [
         "name",

@@ -34,6 +34,7 @@ pub struct Batch {
     items: Vec<Item>,
     proofs: Observed,
 }
+/// Single component's recovery classification, staged source files, and optional `component.json` edit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Item {
     id: String,
@@ -42,6 +43,7 @@ struct Item {
     files: Vec<File>,
     configuration: Option<Configuration>,
 }
+/// Staged `component.json` path and updated byte contents for a recovered component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Configuration {
     path: PathBuf,

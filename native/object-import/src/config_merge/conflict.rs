@@ -12,6 +12,7 @@ use std::{
 
 /// Maximum byte budget (`32 MiB`) for `config-merge` conflict files.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
+/// Monotonic counter used to disambiguate concurrent temporary directories for `git merge-file`.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Prepared `config-merge` conflict entry with its token, file path, and rendered conflict text.
 #[derive(Debug, Clone, PartialEq, Eq)]

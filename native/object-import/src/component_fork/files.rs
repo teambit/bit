@@ -88,6 +88,7 @@ fn transform(
     let filename = copy_refactor::filename(relative, leaf(name), leaf(&id.name))?;
     Ok((filename, bytes))
 }
+/// Resolve and validate the on-disk source file path for `relative` in `source`, recording its preimage in `observed`.
 pub(super) fn source_path(
     root: &Path,
     source: &Value,

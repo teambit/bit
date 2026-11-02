@@ -70,11 +70,13 @@ impl Plan {
         plan.project(selected, replacement.as_deref(), range, undo)?;
         Ok(plan)
     }
+    /// Return the slice of component IDs whose deprecation metadata changed in this plan.
     #[must_use]
     #[inline]
     pub fn changed(&self) -> &[String] {
         &self.changed
     }
+    /// Return the slice of matched component IDs whose deprecation metadata was already in the target state.
     #[must_use]
     #[inline]
     pub fn unchanged(&self) -> &[String] {

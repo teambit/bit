@@ -36,12 +36,14 @@ impl Change {
         }
         Ok(())
     }
+    /// Write the projected post-removal byte contents `self.after` to `self.path`.
     #[inline]
     pub(super) fn write(&self) -> io::Result<()> {
         fs::write(&self.path, &self.after)
     }
 }
 impl Cleanup {
+    /// Prepare manifest, `workspace.jsonc`, staged-config, and `unmerged.json` edits for `selected`.
     pub(in crate::component_remove) fn prepare(
         root: &Path,
         bitmap: &Value,

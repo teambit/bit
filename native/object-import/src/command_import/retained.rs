@@ -15,6 +15,7 @@ use std::{
 
 /// Map of published filesystem paths to their exact post-publication byte contents.
 type PublishedFiles = HashMap<PathBuf, Vec<u8>>;
+/// Pair of [`PublishedFiles`] and serialized SHA-256 write receipt [`Value`]s.
 type Publication = (PublishedFiles, Vec<Value>);
 
 impl PreparedImport {

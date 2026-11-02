@@ -82,6 +82,7 @@ fn component_identity(component: &Value) -> Option<String> {
         })
 }
 
+/// Format `version` with `prefix` (or `"0.0.0-<hash>"` for 40-hex snap hashes) for dependency policy insertion.
 #[inline]
 fn version_with_prefix(version: &str, prefix: &str) -> io::Result<String> {
     if version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit()) {

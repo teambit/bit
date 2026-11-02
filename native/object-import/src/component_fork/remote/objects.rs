@@ -53,6 +53,7 @@ fn trimmed_str(value: &Value) -> Option<&str> {
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
+/// Return `true` when `index.json` component `row` matches `target_scope` and `target_name` and is not a symlink.
 #[inline]
 fn row_matches_target(row: &Value, target_scope: &str, target_name: &str) -> bool {
     let (row_scope, row_name) =

@@ -96,6 +96,7 @@ fn internal(
     }
     Ok(changes)
 }
+/// Resolve the canonical component identity for `.bitmap` entry `(key, row)`.
 #[inline]
 fn identity(key: &str, row: &Value) -> io::Result<String> {
     let (row_scope, row_name) = crate::reset_lane::bitmap::row_identity(key, row);

@@ -19,7 +19,7 @@ use observe::Observed;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// In-memory `.bitmap` and component inventory plan consumed by the native linker.
+/// In-memory `.bitmap`, warning, and component inventory plan consumed by the native linker.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: std::path::PathBuf,

@@ -76,11 +76,13 @@ impl Batch {
     pub fn len(&self) -> usize {
         self.plans.len()
     }
+    /// Return `true` when this rename batch contains no component [`Plan`]s.
     #[must_use]
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.plans.is_empty()
     }
+    /// Return the current merged `.bitmap` JSON [`Value`] for this batch.
     #[must_use]
     #[inline]
     pub const fn bitmap(&self) -> &Value {

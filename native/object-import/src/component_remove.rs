@@ -85,12 +85,14 @@ impl Plan {
         })
     }
 
+    /// Return the canonical `<scope>/<name>` identity of the component in this removal plan.
     #[must_use]
     #[inline]
     pub fn identity(&self) -> &str {
         &self.identity
     }
 
+    /// Return `true` when the component's `mainFile` existed on disk when the plan was prepared.
     #[must_use]
     #[inline]
     pub const fn main_exists(&self) -> bool {

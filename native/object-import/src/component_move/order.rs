@@ -56,6 +56,7 @@ fn contains_files(files: &HashSet<String>, directory: &str) -> bool {
                 .is_some_and(|rest| rest.starts_with('/'))
         })
 }
+/// Read child paths in `directory`, sorting lexicographically on non-Windows platforms.
 #[inline]
 fn entries(directory: &Path) -> io::Result<Vec<PathBuf>> {
     let mut entries = fs::read_dir(directory)?

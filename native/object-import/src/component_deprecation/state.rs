@@ -79,6 +79,7 @@ fn model_metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     range_state(&mut config, id, &model);
     Ok(config)
 }
+/// Resolve the version hash for component `id` from `model` (`head`, `versions`, `orphanedVersions`, or raw SHA-1).
 fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
     let (_, raw_ver) = id.rsplit_once('@')?;
     let ver = raw_ver.trim();

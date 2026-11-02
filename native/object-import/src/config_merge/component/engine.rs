@@ -44,12 +44,14 @@ impl<'a> Engine<'a> {
         self.log("debug", format!("otherLabel: {}", text(self.input, "otherLabel")?));
         Ok(())
     }
+    /// Append a structured log entry with `level` and `message` to `self.logs`.
     #[inline]
     pub(super) fn log(&mut self, level: &str, message: String) {
         let mut entry = json!({"level":level});
         entry["message"] = Value::String(message);
         self.logs.push(entry);
     }
+    /// Append a structured metadata log entry (`meta` or `metaUndefined`) to `self.logs`.
     #[inline]
     pub(super) fn meta(&mut self, level: &str, message: &str, value: Option<&Value>) {
         self.logs.push(match value {

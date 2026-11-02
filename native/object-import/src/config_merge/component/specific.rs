@@ -53,6 +53,7 @@ fn is_envs_aspect_id(id: &str) -> bool {
     bare == "teambit.envs/envs"
 }
 
+/// Set `"__specific": true` on `merged` when the winning `other` `entry` has `isSpecific` enabled.
 fn preserve(merged: &mut Value, entry: &Value) {
     if !super::super::truthy(&entry["isSpecific"]) {
         return;

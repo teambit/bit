@@ -72,6 +72,7 @@ impl Selection {
         }
         Ok(Self { root: root.into(), before, bitmap, entries, default_scope, key: key.to_owned() })
     }
+    /// Verify that `workspace.jsonc` and `.bitmap` on disk still match their captured preimages.
     pub fn validate(&self) -> io::Result<()> {
         for (path, expected) in [
             (self.root.join("workspace.jsonc"), &self.before),

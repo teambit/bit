@@ -79,6 +79,7 @@ fn tracked_directory(root: &Path, cwd: &Path, path: &Path) -> io::Result<String>
     Ok(relative)
 }
 
+/// Strip `root` from `path` and return a forward-slash relative path (or `"."` for `root`).
 pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
     let relative = path
         .strip_prefix(root)
@@ -94,6 +95,7 @@ pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
         .replace('\\', "/");
     Ok(if relative.is_empty() { ".".into() } else { relative })
 }
+/// Lexically normalize `.` and `..` path components in `path` without touching the filesystem.
 pub(super) fn normalize(path: &Path) -> PathBuf {
     let mut output = PathBuf::new();
     for part in path.components() {
