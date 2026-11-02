@@ -6,6 +6,7 @@ use super::{Input, tests::fixture};
 use serde_json::{Value, json};
 use std::fs;
 
+/// Verifies that build staging persists only `.bit/staged-snaps` before any object or workspace metadata writes.
 #[test]
 fn build_staging_persists_only_snap_ids_before_any_objects_or_other_metadata() {
     let (directory, version) = fixture();

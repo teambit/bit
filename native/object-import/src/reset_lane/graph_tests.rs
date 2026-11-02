@@ -13,6 +13,7 @@ const BASE: &str = "1111111111111111111111111111111111111111";
 const MAIN: &str = "2222222222222222222222222222222222222222";
 const MERGE: &str = "3333333333333333333333333333333333333333";
 
+/// Temporary directory guard for lane reset graph tests.
 #[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Drop for Fixture {

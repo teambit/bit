@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Temporary workspace directory fixture with `.bitmap`, `workspace.jsonc`, and `.bit/staged-config` for [`Recovery`] tests.
 #[derive(Debug)]
 struct Workspace(PathBuf);
 impl Workspace {

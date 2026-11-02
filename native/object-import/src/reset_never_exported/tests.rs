@@ -9,6 +9,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Verifies that [`Plan`] clears only unexported `.bitmap` versions and rejects commits when `.bitmap` is stale.
 #[test]
 fn clears_only_unexported_bitmap_versions_and_rejects_a_stale_plan() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

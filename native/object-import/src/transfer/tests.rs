@@ -16,6 +16,7 @@ use super::{Body, Descriptor, prepare};
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Creates an isolated temporary directory for transfer tests.
 pub(super) fn directory() -> PathBuf {
     let path = std::env::temp_dir()
         .join(format!(

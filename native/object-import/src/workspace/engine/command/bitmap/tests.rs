@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Reads `root/.bitmap` and prepares a `.bitmap` transition via [`prepare_bytes`].
 fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepared> {
     prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates, &[])
 }

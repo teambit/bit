@@ -6,6 +6,7 @@ use super::{Apply, Prepare, Retained, State, apply};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+/// Temporary workspace fixture with `.bit/objects`, `scope.json`, and `index.json` for inbound publication protocol tests.
 #[derive(Debug)]
 struct PublicationFixture {
     _directory: tempfile::TempDir,

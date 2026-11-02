@@ -5,6 +5,7 @@
 use super::Prepared;
 use serde_json::json;
 
+/// Verifies that [`Prepared::switch_lane`] strips `onLanesOnly` and `isAvailableOnCurrentLane` when switching to `main`.
 #[test]
 fn tracked_lane_component_with_a_main_head_loses_lane_only_flags() {
     let original = serde_json::to_vec(&json!({

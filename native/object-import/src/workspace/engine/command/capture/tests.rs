@@ -6,6 +6,7 @@ use super::{all, all_for_checkout, read, snapshots};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+/// Temporary workspace directory fixture for private source capture tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

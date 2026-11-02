@@ -6,6 +6,7 @@ use super::{canonical_relative, validate};
 use crate::workspace::engine::command::scratch::Directory;
 use std::{fs, path::Path};
 
+/// Verifies that [`validate`] accepts existing and new nested component merge files and rejects workspace root escapes.
 #[test]
 fn nested_native_destinations_validate_existing_and_new_merge_files() {
     let root = Directory::create().unwrap();

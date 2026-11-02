@@ -6,7 +6,7 @@ use super::{Input, prepare};
 use crate::workspace::engine::command::scratch::Directory;
 use serde_json::{Value, json};
 use std::{fs, path::Path};
-
+/// Writes `bytes` to `root/name`, creating parent directories as needed.
 fn write(root: &Path, name: &str, bytes: &[u8]) {
     let path = root.join(name);
     fs::create_dir_all(path.parent().unwrap()).unwrap();

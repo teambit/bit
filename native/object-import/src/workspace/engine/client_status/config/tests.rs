@@ -5,6 +5,7 @@
 use super::{extensions, ignored_issues};
 use serde_json::json;
 
+/// Verifies that [`extensions`] accepts default `workspace.jsonc` generator, dependency-resolver, and config-files settings.
 #[test]
 fn accepts_the_settings_bit_writes_by_default() {
     let config = json!({

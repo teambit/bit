@@ -4,6 +4,7 @@
 
 use super::selection;
 use serde_json::json;
+/// Verifies that [`selection`] restore partitioning includes inactive `.bitmap` members and preserves lane history order.
 #[test]
 fn restore_partition_counts_inactive_bitmap_members_and_preserves_history_order() {
     let bitmap = json!({"$schema-version":"17.0.0","a":{"name":"a","scope":"s","version":"old","isAvailableOnCurrentLane":false},"c":{"name":"c","scope":"","defaultScope":"s","version":"old"}});

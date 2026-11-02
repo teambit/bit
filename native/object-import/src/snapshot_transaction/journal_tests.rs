@@ -5,6 +5,7 @@
 use super::State;
 use serde_json::{Value, json};
 
+/// Advances `state` with a successful receipt for `output` and `nextCount: next`.
 fn receipt(state: &mut State, output: &Value, next: usize) -> Value {
     state.receipt(json!({"token":output["token"],"revision":output["revision"],"completed":output["directive"]["count"],"failed":false,"nextCount":next})).unwrap()
 }

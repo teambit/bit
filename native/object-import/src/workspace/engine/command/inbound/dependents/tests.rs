@@ -6,6 +6,7 @@ use super::select;
 use crate::command_import::Target;
 use std::collections::HashMap;
 
+/// Builds a `scope/{name}@{version}` [`Target`] descriptor.
 fn target(name: &str, version: &str) -> Target {
     Target { scope: Some("scope".into()), name: name.into(), version: version.into() }
 }

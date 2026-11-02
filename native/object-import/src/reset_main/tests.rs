@@ -11,6 +11,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Temporary workspace fixture holding `scope/alpha` and optional dependent components on `main`.
 #[derive(Debug)]
 struct Fixture {
     root: PathBuf,

@@ -7,6 +7,7 @@ use crate::workspace::tests::Directory;
 use serde_json::Value;
 use std::{fs, io::Cursor, path::Path};
 
+/// Encodes `(kind, source, destination)` action tuples into a binary opcode-31 request frame.
 fn frame(actions: &[(u32, &Path, Option<&Path>)]) -> Vec<u8> {
     let mut bytes = 31_u32.to_be_bytes().to_vec();
     bytes.extend_from_slice(&(actions.len() as u32).to_be_bytes());

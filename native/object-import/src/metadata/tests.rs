@@ -4,6 +4,7 @@ use super::{MAX_BYTES, inflate};
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;
 
+/// Compresses `bytes` using default zlib compression.
 fn compressed(bytes: &[u8]) -> Vec<u8> {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(bytes).unwrap();

@@ -7,6 +7,7 @@ use flate2::read::ZlibDecoder;
 use serde_json::Value;
 use std::{io::Read, process::Command};
 
+/// Verifies that [`compress`] preserves input order and produces bytes identical to serial [`encode`] across thread pool sizes.
 #[test]
 fn parallel_compression_preserves_order_and_serial_bytes_in_shared_pools() {
     let inputs: Vec<_> = (0_u32..32)

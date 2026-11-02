@@ -5,6 +5,7 @@
 use super::discard_incomplete;
 use serde_json::json;
 
+/// Verifies that [`discard_incomplete`] drops only the in-flight import progress row while keeping completed receipts.
 #[test]
 fn failed_import_omits_only_its_in_flight_row_and_keeps_completed_receipts() {
     let earlier = json!({"ids":["s/earlier@1"],"components":1,"objects":0});

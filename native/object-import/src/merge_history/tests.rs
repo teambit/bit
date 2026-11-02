@@ -1,5 +1,5 @@
 //! Unit tests for merge history DAG traversal, common-ancestor discovery ([`Directory`], [`POOL`]), and
-//! file merge resolution ([`serve`]) in `bit-object-import`.
+//! three-way file merge resolution ([`serve`]) in `bit-object-import`.
 
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};

@@ -3,6 +3,7 @@
 use super::{State, apply};
 use serde_json::{Value, json};
 
+/// Starts a merge transaction in `state` with `mode` and `count` via `mergeTransactionBegin`.
 fn begin(state: &mut State, mode: &str, count: usize) -> Value {
     apply("mergeTransactionBegin", json!({"mode":mode,"count":count}), state).expect("begin")
 }

@@ -5,6 +5,7 @@
 use crate::transfer::{State, apply};
 use serde_json::{Value, json};
 
+/// Initializes a three-scope transfer transaction in `state` with `resuming: resume`.
 fn initialize(state: &mut State, resume: bool) -> Value {
     apply("transferTransactionInitialize",&json!({"scopes":["one.scope","two.scope","three.scope"],"clientId":"same-client","resuming":resume}),state).unwrap()
 }

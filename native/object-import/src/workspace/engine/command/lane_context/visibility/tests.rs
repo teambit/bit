@@ -5,6 +5,7 @@
 use super::{inactive_targets, json, switch_targets, targets};
 use std::collections::HashSet;
 
+/// Verifies that [`switch_targets`] reselects tracked hidden `.bitmap` components only when present on the destination lane or `main`.
 #[test]
 fn switch_reselects_tracked_hidden_components_only_on_their_destination() {
     let row = |name: &str, available| json!({"name":name,"scope":"scope","version":"1.0.0","rootDir":name,"mainFile":"index.js","isAvailableOnCurrentLane":available,"onLanesOnly":true});

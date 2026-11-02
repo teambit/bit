@@ -5,6 +5,7 @@
 use super::objects;
 use serde_json::json;
 
+/// Verifies that updating a hidden lane dependent via [`objects`] moves it to the tail of `updateDependents` without promoting it.
 #[test]
 fn updating_hidden_lane_head_moves_it_to_tail_without_promoting_component() {
     let mut lane = json!({"components":[{"id":{"scope":"scope","name":"visible"},"head":"a".repeat(40)}],"updateDependents":[format!("scope/first@{}","b".repeat(40)),format!("scope/second@{}","c".repeat(40))]});

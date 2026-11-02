@@ -6,6 +6,7 @@ use super::metadata;
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 
+/// Verifies that [`metadata`] squash lane resolution records each component's own `main` scope when diverged.
 #[test]
 fn diverged_squash_records_per_component_main_scope() {
     let model = json!({"scope":"component.scope"});

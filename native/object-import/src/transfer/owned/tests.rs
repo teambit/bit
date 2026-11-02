@@ -12,6 +12,7 @@ use crate::transfer::{
     tests::{directory, source},
 };
 
+/// Encodes `body` as a zlib-compressed Bit object with header `<kind> <hash> <len>\0`.
 fn compressed(kind: &str, hash: &str, body: &Value) -> Vec<u8> {
     let text = body.to_string();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

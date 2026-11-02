@@ -4,6 +4,7 @@ use super::{Fixture, State};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::fs;
+/// Writes `sizes.len()` synthetic `Source` objects and a `Version` manifest into `fixture`.
 fn target(fixture: &Fixture, sizes: &[usize]) -> Value {
     let files = sizes.iter().enumerate().map(|(index, size)| {
         let mut bytes = vec![b'x'; *size];

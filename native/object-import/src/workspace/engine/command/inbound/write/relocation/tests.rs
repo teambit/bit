@@ -5,6 +5,7 @@
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
+/// Prepares retained inbound destination directories for `directories` against existing `.bitmap` `rows`.
 fn prepare(
     root: &Path,
     directories: &mut [String],

@@ -6,6 +6,7 @@ use super::{Repository, from_model, json, snapshots};
 use flate2::{Compression, write::ZlibEncoder};
 use std::{fs, io::Write, path::PathBuf};
 
+/// Temporary directory guard for hidden lane component source capture tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Drop for Fixture {

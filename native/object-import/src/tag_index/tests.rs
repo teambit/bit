@@ -3,6 +3,7 @@
 //! Confirms that normal tagged versions and newest tags take precedence over older or orphan entries across large hash sets.
 
 use super::TagIndex;
+/// Verifies that [`TagIndex`] prefers normal tags over orphaned tags and newer insertions over older ones.
 #[test]
 fn newest_tag_and_normal_versions_take_precedence() {
     let mut index = TagIndex::default();

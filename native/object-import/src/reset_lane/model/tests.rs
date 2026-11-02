@@ -4,6 +4,7 @@ use super::remove_versions;
 use crate::reset_lane::Selection;
 use serde_json::json;
 
+/// Builds a baseline [`Selection`] removing version `"a".repeat(40)` (`1.0.0`) with replacement `"b".repeat(40)`.
 fn selection() -> Selection {
     let mut selection = Selection::new(vec!["a".repeat(40)], Some("b".repeat(40)), false);
     selection.labels = vec!["1.0.0".into()];

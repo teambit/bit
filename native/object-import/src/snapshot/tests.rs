@@ -11,6 +11,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary directory guard that removes its path on drop.
 #[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {

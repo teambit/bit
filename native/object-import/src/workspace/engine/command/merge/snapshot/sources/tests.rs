@@ -7,6 +7,7 @@ use rayon::ThreadPoolBuilder;
 use serde_json::json;
 use std::fs;
 
+/// Verifies that parallel [`capture`] preserves file order and [`digest`] hashes while sharing a single [`Budget`].
 #[test]
 fn parallel_sources_preserve_order_hashes_and_share_one_allocation_budget() {
     let directory = crate::workspace::engine::command::scratch::Directory::create().unwrap();

@@ -6,6 +6,7 @@ use super::{Update, prepare_bytes};
 use serde_json::{Value, json};
 use std::path::Path;
 
+/// Builds a `.bitmap` component row JSON value for `scope`/`name` rooted at `root`.
 fn row(scope: &str, name: &str, root: &str) -> Value {
     json!({"name":name,"scope":scope,"version":"1.0.0","mainFile":"index.js","rootDir":root})
 }

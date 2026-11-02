@@ -10,6 +10,7 @@ use std::{
 };
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory guard for object [`Store`] tests.
 #[derive(Debug)]
 struct Directory(PathBuf);
 impl Directory {

@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use sha1::Digest;
 use std::{io::Write, path::Path};
 
-/// A Bit object as a remote sends it: `<kind> <hash> <size>\0<json>`, zlib compressed.
+/// Encodes a test [`ObjectItem`] as a remote sends it (`<kind> <hash> <size>\0<json>`, zlib-compressed).
 fn object(kind: &str, hash: &str, body: &Value) -> ObjectItem {
     let body = body.to_string();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

@@ -16,6 +16,7 @@ use std::{
     thread,
 };
 
+/// Verifies that [`remote_lane`] and [`lane_list`] keep visible heads while dropping hidden dependent updates.
 #[test]
 fn remote_lane_listing_keeps_visible_heads_and_drops_hidden_updates() {
     let id = lane::Id { scope: "remote.scope".into(), name: "dev".into() };

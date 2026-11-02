@@ -11,6 +11,7 @@ pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::Lazy
         .unwrap()
 });
 
+/// Expands `byte` into a 40-character hexadecimal SHA-1 hash string.
 fn hash_value(byte: char) -> String {
     byte.to_string().repeat(40)
 }

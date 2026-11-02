@@ -14,6 +14,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary workspace fixture initialized with `.bit`, `workspace.jsonc`, and `alpha` component directory.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

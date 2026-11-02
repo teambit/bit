@@ -5,6 +5,7 @@
 use super::workspace;
 use serde_json::{Value, json};
 
+/// Verifies that [`workspace`] sorts dependency entries, preserves `JSONC` comments, and serializes runtime resolver defaults.
 #[test]
 fn workspace_policy_reorders_entries_preserves_comments_and_serializes_runtime_defaults() {
     let source = r#"// workspace sentinel

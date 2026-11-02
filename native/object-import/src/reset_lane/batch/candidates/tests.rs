@@ -11,6 +11,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Verifies that [`ordered`] preserves `index.json` component order rather than lane or alphabetical order.
 #[test]
 fn model_index_order_overrides_lane_and_alphabetical_order() {
     let index = json!({"components":[{"id":{"scope":"scope","name":"zed"}},{"id":{"scope":"scope","name":"alpha"}},{"id":{"scope":"scope","name":"unrelated"}}]});

@@ -6,6 +6,7 @@ use super::replace;
 use crate::workspace::engine::command::scratch;
 use std::fs;
 
+/// Verifies that [`replace`] unlinks existing `package.json` hardlinks before writing updated manifest bytes.
 #[test]
 fn replacing_generated_manifest_preserves_injected_hardlink_contents() {
     let directory = scratch::Directory::create().unwrap();

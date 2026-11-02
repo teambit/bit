@@ -11,6 +11,7 @@ use std::{
 
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+/// Temporary workspace fixture seeded with `.bit/refs/remotes/scope` lane refs.
 #[derive(Debug)]
 struct Scratch(PathBuf);
 impl Scratch {

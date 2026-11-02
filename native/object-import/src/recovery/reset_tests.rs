@@ -2,6 +2,7 @@
 
 use super::{plan, walk};
 use serde_json::{Value, json};
+/// Expands `byte` into a 40-character hexadecimal SHA-1 hash string.
 fn hash(byte: char) -> String {
     std::iter::repeat_n(byte, 40).collect()
 }

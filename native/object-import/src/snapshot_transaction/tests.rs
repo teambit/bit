@@ -11,6 +11,7 @@ use std::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory fixture that removes its root on drop.
 #[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Fixture {

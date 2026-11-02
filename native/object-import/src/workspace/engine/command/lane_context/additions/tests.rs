@@ -4,6 +4,7 @@
 
 use super::{directory, json};
 
+/// Verifies that [`directory`] expands `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholders and rejects invalid paths.
 #[test]
 fn destination_matches_canonical_scope_owner_placeholders() {
     assert_eq!(directory(&json!({}), "owner.scope", "ui/button").unwrap(), "components/ui/button");

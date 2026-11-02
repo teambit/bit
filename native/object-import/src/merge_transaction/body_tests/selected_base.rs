@@ -4,6 +4,7 @@ use super::{Fixture, State, apply};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io};
+/// Writes `raw` to `index.ts` in `fixture` and builds a `mergePrepare` JSON request for `base` and `target`.
 fn request(fixture: &Fixture, base: &Value, target: &Value, raw: &[u8]) -> Value {
     let current = fixture.0.join("index.ts");
     fs::write(&current, raw).unwrap();

@@ -4,6 +4,7 @@
 
 use serde_json::json;
 
+/// Verifies that live `.bitmap` ordering preserves existing component positions and appends only newly added targets.
 #[test]
 fn live_order_preserves_existing_positions_and_appends_only_new_targets() {
     let mut rows = json!({

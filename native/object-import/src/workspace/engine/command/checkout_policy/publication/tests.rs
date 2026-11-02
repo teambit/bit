@@ -6,6 +6,7 @@ use super::Prepared;
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
+/// Temporary directory fixture that cleans up on drop.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

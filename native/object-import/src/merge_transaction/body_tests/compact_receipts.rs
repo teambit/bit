@@ -3,6 +3,7 @@
 use super::{Fixture, State, apply};
 use serde_json::json;
 
+/// Verifies that `mergeApply` with `knownBodies` returns only newly added bodies and rejects stale prefix counts.
 #[test]
 fn compact_apply_returns_only_new_bodies_and_rejects_stale_prefixes() {
     let fixture = Fixture::new();

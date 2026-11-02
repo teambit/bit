@@ -6,6 +6,7 @@ use super::{Captured, Input, Repository, checkout_transition, prepare, snapshots
 use serde_json::json;
 use std::path::Path;
 
+/// Verifies that retained file metadata maps applied `planIndex` entries to plan bodies without copying sources.
 #[test]
 fn retained_metadata_follows_applied_body_indices_without_copying_sources() {
     let plan = json!({"bodies":[

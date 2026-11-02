@@ -4,6 +4,7 @@
 
 use super::{indices_for_ids, json, versions_to_check};
 
+/// Verifies that [`indices_for_ids`] preserves pattern receipt order and rejects duplicate or unknown component IDs.
 #[test]
 fn pattern_receipt_preserves_order_and_rejects_duplicates_or_unknown_ids() {
     let rows = vec![json!({"identity":"scope/a"}), json!({"identity":"scope/b"})];

@@ -8,6 +8,7 @@ use std::{
     fs, io,
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Monotonic counter used by [`Fixture`] to allocate isolated temporary workspace directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 #[test]

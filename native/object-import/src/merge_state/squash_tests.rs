@@ -11,6 +11,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Expands `character` into a 40-character hexadecimal SHA-1 reference string.
 fn reference(character: char) -> String {
     character.to_string().repeat(40)
 }

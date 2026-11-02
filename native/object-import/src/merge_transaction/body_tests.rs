@@ -14,6 +14,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory fixture containing `objects` and `snapshots` subdirectories for merge body tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

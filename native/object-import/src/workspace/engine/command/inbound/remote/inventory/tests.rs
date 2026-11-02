@@ -5,6 +5,7 @@
 use super::{file_component, latest_from_model};
 use serde_json::json;
 
+/// Verifies that [`file_component`] preserves removed, deprecated, and lane readme metadata when requested.
 #[test]
 fn file_inventory_preserves_removed_deprecated_and_readme_metadata() {
     let head = "a".repeat(40);

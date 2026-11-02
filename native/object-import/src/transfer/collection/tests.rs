@@ -13,6 +13,7 @@ use crate::transfer::{
     tests::{directory, source},
 };
 
+/// Compresses and writes a `Version` object referencing `sources` and `artifacts` under `root`.
 fn version(root: &std::path::Path, hash: [u8; 20], sources: &[[u8; 20]], artifacts: &[[u8; 20]]) {
     let text = crate::validate::hexadecimal(&hash);
     let body = json!({"mainFile":"index.js","log":{},"files":sources.iter().map(|hash| json!({"file":crate::validate::hexadecimal(hash)})).collect::<Vec<_>>(),"extensions":[{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":artifacts.iter().map(|hash| json!({"file":crate::validate::hexadecimal(hash),"relativePath":"a"})).collect::<Vec<_>>()}]}}]}).to_string();

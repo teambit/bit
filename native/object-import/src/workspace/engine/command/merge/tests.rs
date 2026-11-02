@@ -5,6 +5,7 @@
 use super::{Input, State};
 use serde_json::{Value, json};
 
+/// Selects the merge action for `distance` and `modified` with `target_as_diverged` disabled via [`select_options`].
 fn select(distance: &Value, modified: bool) -> Value {
     select_options(distance, modified, false)
 }

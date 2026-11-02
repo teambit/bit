@@ -11,6 +11,7 @@ use std::{
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Encodes and writes a loose Bit object (`hash`, `kind`, `value`) into `root/.bit/objects`.
 fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
     let path = object_path(&root.join(".bit/objects"), hash);
     fs::create_dir_all(path.parent().expect("parent")).expect("directory");

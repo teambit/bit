@@ -15,6 +15,7 @@ const DETACHED: &str = "3333333333333333333333333333333333333333";
 const OTHER: &str = "4444444444444444444444444444444444444444";
 const MERGE: &str = "5555555555555555555555555555555555555555";
 
+/// Temporary workspace fixture pre-populated with `Version`, `Component`, `Lane`, and `VersionHistory` objects.
 #[derive(Debug)]
 struct Fixture(tempfile::TempDir);
 impl Fixture {

@@ -4,6 +4,7 @@ use super::{json, prepare_response};
 use flate2::{Compression, write::ZlibEncoder};
 use sha1::{Digest, Sha1};
 use std::{fs, io::Write};
+/// Compresses `body` with a `<kind> <hash> <len>\0` Bit object header using default zlib compression.
 fn packed(kind: &str, hash: &str, body: &[u8]) -> Vec<u8> {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();

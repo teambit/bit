@@ -5,6 +5,7 @@
 use super::prepare;
 use serde_json::json;
 
+/// Verifies that [`prepare`] preserves root policy precedence and key ordering while excluding local workspace components.
 #[test]
 fn root_precedence_ranges_and_local_component_exclusion_preserve_order() {
     let facts = json!({

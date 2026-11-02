@@ -7,6 +7,7 @@ use crate::workspace::engine::command::scratch::Directory;
 use serde_json::json;
 use std::fs;
 
+/// Builds a [`Prepared`] finalization fixture with one staged `node_modules/@scope/alpha/package.json` manifest in `directory`.
 fn prepared(directory: &Directory) -> Prepared {
     let manifest = json!({"name":"@scope/alpha","version":"0.0.1","componentId":{"scope":"scope","name":"alpha","version":"0.0.1"},"dependencies":{},"source":"index.js","_bit_local":true});
     Prepared {
