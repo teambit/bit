@@ -4,6 +4,7 @@ use super::{array, invalid, text};
 use serde_json::Value;
 use std::io;
 
+/// Validates that `input` is a JSON object containing only keys listed in `fields`.
 #[inline]
 pub(super) fn fields(input: &Value, fields: &[&str]) -> io::Result<()> {
     let object = input.as_object().ok_or_else(|| invalid("config request object"))?;

@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 use std::path::PathBuf;
+/// Deserialized `inspectionBegin` request payload describing workspace files to capture.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {

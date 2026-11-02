@@ -1,6 +1,7 @@
 //! `getPlusRangeVersionsUsage` ([`usages`]): collect gated `+^` and `+~` range placeholders in snapshot inputs.
 use serde_json::Value;
 
+/// Collects deduplicated `+^` and `+~` range placeholder usage descriptions in consumer order.
 /// Dependency rows retain consumer order; repeated descriptions appear only once.
 #[must_use]
 pub fn usages(

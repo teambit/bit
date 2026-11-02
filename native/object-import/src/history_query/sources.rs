@@ -11,6 +11,7 @@ use std::{
 };
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Bounded in-memory cache of inflated `Source` object records for a history query session.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Cache {
     records: HashMap<String, crate::checkout::repository::SourceRecord>,

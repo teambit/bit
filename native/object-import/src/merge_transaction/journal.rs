@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
 
+/// Session-scoped merge transaction journal mapping active tokens to phase [`Record`]s.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Record>,

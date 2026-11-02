@@ -10,6 +10,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Deserialized `historyQueryPopulateBegin` request payload (`existing` hashes and `overlays`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

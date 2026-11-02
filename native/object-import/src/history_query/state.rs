@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io, path::PathBuf};
 
+/// Session-scoped registry of active history query plans and their byte budgets.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     plans: HashMap<String, Plan>,

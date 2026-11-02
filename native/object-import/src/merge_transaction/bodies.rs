@@ -5,6 +5,7 @@ mod tests;
 use super::{cache, invalid, journal, reads};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
+/// Retained merge file-body state and active checkout transition bindings.
 #[derive(Default)]
 pub(super) struct State {
     checkout: crate::checkout_transition::State,

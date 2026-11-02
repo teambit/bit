@@ -3,6 +3,7 @@
 use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
+/// Validates stage-grouped component completion ordering and returns the index permutation.
 pub(super) fn permutation(input: &Value, groups: &[Value], count: usize) -> io::Result<Vec<usize>> {
     if count > 4096 {
         return Err(invalid("merge order range"));

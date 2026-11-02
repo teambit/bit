@@ -10,6 +10,7 @@ use std::{
     path::Path,
 };
 
+/// Resolved parent lane name, initial component references, and `forkedFrom` descriptor.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Origin {
     pub parent_name: Option<String>,

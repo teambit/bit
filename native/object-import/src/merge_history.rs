@@ -18,7 +18,7 @@ const MAX_INPUT: usize = 4 * 1024 * 1024;
 const MAX_RAW: usize = 32 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
 
-/// Read a bounded Version ancestry graph for native repository planning.
+/// Reads a bounded `Version` ancestry graph from `objects` starting at `heads`.
 pub(crate) fn read_graph(objects: &Path, heads: &[String]) -> io::Result<Value> {
     count(heads.len())?;
     let request = serde_json::from_value(serde_json::json!({

@@ -9,6 +9,7 @@ use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
+/// Looks up property `key` on a `UTF-16` [`Js`] object, returning `Js::Undefined` when absent.
 pub(super) fn get<'a>(value: &'a Js, key: &str) -> &'a Js {
     static MISSING: Js = Js::Undefined;
     if let Js::Object(fields) = value {

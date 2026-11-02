@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
+/// Deserialized `inspectionCompare` request payload (`left`, `right`, `workspaceRoot`, `mode`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

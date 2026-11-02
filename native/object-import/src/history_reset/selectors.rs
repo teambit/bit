@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io};
+/// Deserialized `historyResetCandidates` request (`components` and `removed` lists).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Candidates {

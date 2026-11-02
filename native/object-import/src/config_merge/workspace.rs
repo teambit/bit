@@ -6,6 +6,7 @@ use std::io;
 
 const FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 type Groups = Vec<(String, Vec<(String, String)>)>;
+/// Accumulated workspace `workspace.jsonc` dependency policy changes, updates, and conflicts.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Plan {
     changes: Vec<Value>,

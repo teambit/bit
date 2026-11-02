@@ -28,7 +28,7 @@ pub mod reset_soft;
 pub mod stash_store;
 
 pub use bit_workspace_config::jsonc;
-/// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
+/// Bit's JSONC reader (comments and trailing commas), used for `.bitmap` and `workspace.jsonc`.
 pub use bit_workspace_config::parse_jsonc;
 pub use command_import::lane::resolve_lane_identity;
 pub use json_stringify::stringify_json;

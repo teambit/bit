@@ -4,6 +4,7 @@
 use super::{count, hash, invalid};
 use serde_json::Value;
 use std::io;
+/// Validates that a `Version` JSON `value` satisfies native history and merge schema invariants.
 pub(crate) fn validate(value: &Value) -> io::Result<()> {
     if value
         .get("mainFile")

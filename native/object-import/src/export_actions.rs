@@ -11,6 +11,7 @@ type Callback = dyn Fn(&Path, &str, &Value) -> io::Result<Value> + Send + Sync;
 #[derive(Clone)]
 pub struct Handler(Arc<Callback>);
 impl Handler {
+    /// Wraps a thread-safe file-remote action `callback` in a reusable [`Handler`].
     #[must_use]
     #[inline]
     pub fn new(

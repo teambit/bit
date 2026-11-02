@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained component `ModelComponent` and `VersionHistory` object updates when moving local snaps to a new lane.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Moved {
     pub components: Vec<Value>,

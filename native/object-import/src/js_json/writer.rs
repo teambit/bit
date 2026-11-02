@@ -7,6 +7,7 @@ use super::{Value, invalid, number, object, string};
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_NODES: usize = 262_144;
 
+/// Bounded byte-buffer accumulator tracking node count and indentation for [`Value`] serialization.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Writer {
     output: Vec<u8>,

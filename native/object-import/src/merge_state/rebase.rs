@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
+/// Incoming `VersionHistory` entry (`hash`, `parents`, `unrelated`, `squashed`) for rebase planning.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {

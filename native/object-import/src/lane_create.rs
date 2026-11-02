@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained `Lane`, `LaneHistory`, `index.json`, and `.bitmap` publication plan for `bit lane create`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

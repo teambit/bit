@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
+/// Validates `teambit.pipelines/builder` artifact entries in a `Version` JSON `value`.
 pub(super) fn validate(value: &Value) -> io::Result<()> {
     let Some(entries) = value.get("extensions").and_then(Value::as_array) else {
         return Ok(());

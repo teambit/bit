@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::PathBuf};
 
+/// Deserialized `historyQueryDiff` request payload for a single relative file path.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

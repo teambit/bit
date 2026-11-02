@@ -8,6 +8,7 @@ use std::{
     io,
     path::PathBuf,
 };
+/// Single `Version` node (`hash`, `parents`, `unrelated`, `squashed`) in a component ancestry graph.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {

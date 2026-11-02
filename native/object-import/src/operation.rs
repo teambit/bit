@@ -8,6 +8,7 @@ use std::{
 
 type Tags = Vec<[String; 2]>;
 
+/// Deserialized import merge operation variant (`Version`, `VersionHistory`, or `Component`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum Operation {

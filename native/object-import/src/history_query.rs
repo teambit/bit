@@ -17,6 +17,7 @@ mod tests;
 use serde_json::Value;
 use std::io;
 
+/// Dispatches a read-only repository history query (`kind`) against session `state`.
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind.trim() {
         "historyQueryToposort" => show::toposort(input),

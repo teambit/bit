@@ -4,6 +4,7 @@ use super::squash::references_valid;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Reads ordered `log.message` strings for `references` from the `Version` store at `directory`.
 pub(super) fn read(directory: &Path, references: &[String]) -> io::Result<Value> {
     crate::merge_history::path(directory)?;
     references_valid(references)?;

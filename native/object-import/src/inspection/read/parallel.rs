@@ -5,6 +5,7 @@ use crate::read_budget::Budget;
 use rayon::prelude::*;
 use std::io;
 
+/// Captures workspace files in `request` in parallel within `maximum` bytes, falling back serially.
 pub(super) fn capture(
     request: &wire::Begin,
     maximum: usize,

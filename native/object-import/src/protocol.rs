@@ -4,6 +4,7 @@ use rayon::ThreadPool;
 use serde::Serialize;
 use std::io::{self, Read, Write};
 
+/// Maximum serialized byte size (128 MiB) permitted for a single session protocol frame.
 pub(crate) const MAX_BATCH_BYTES: usize = 128 * 1024 * 1024;
 
 #[inline]

@@ -7,6 +7,7 @@ use std::{
     collections::{HashMap, HashSet},
     io,
 };
+/// Deserialized `historyResetDependents` request payload (`rows`, `queries`, `exclude`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {

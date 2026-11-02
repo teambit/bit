@@ -11,6 +11,7 @@ use serde::{
 };
 use std::fmt;
 
+/// Tagged `{ kind, value }` wire representation of [`Value`] for `serde` deserialization.
 // The tagged form remains accepted and serialized for existing callers and responses.
 #[derive(Deserialize)]
 #[serde(

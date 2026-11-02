@@ -13,6 +13,7 @@ use std::{
     process::{Child, Command, Stdio},
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Borrowed `current`, `base`, and `other` file byte slices passed to `git merge-file`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct MergeBytes<'a> {
     pub(super) current: &'a [u8],

@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Requested local lane identity mutation (`Rename` of lane name or `Scope` of lane remote scope).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Change<'a> {
     Rename(&'a str),

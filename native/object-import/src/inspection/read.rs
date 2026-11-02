@@ -15,6 +15,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Captured workspace file bytes, hashes (`raw`, `snapshot`, `linux`), and spool path.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) relative_path: String,

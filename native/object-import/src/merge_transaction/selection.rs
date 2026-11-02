@@ -3,6 +3,7 @@
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;
+/// Extracts a bounded array slice for `field` from `input` (at most 4,096 selection rows).
 #[inline]
 fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     let values = input[field]

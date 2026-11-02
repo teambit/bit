@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::io;
 
+/// Session-wide state holding sub-operation registries and `unmerged.json` transaction state.
 #[derive(Default)]
 pub(crate) struct State {
     pub(crate) operations: Operations,

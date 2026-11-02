@@ -5,6 +5,7 @@ use rayon::prelude::*;
 use serde_json::Value;
 use std::io;
 
+/// Classifies all current files in `execution` serially or in parallel across the `Rayon` pool.
 pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> {
     if execution.request.current.is_empty() {
         return Ok(Vec::new());

@@ -4,6 +4,7 @@ use super::{bound, invalid, text};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
+/// Deserialized `historyResetLocalAppend` request combining `sourceOnly` and `mainOnly` refs.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Append {

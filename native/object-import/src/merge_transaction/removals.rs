@@ -3,6 +3,7 @@
 use super::{decision::boolean, invalid};
 use serde_json::{Value, json};
 use std::io;
+/// Extracts and validates the non-empty relative path from a current component `file` descriptor.
 #[inline]
 fn relative_path(file: &Value) -> io::Result<&str> {
     file.as_str()

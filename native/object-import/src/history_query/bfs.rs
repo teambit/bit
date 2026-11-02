@@ -9,6 +9,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Deserialized BFS history traversal parameters (`objectsDirectory`, `start`, `stopAt`, `overlays`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Fields {

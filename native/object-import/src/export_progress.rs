@@ -4,6 +4,7 @@ mod tests;
 
 use std::{cell::RefCell, sync::mpsc::SyncSender};
 
+/// Metadata-only progress event emitted during native export phases.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
     Transfer { scope: String, objects: usize },

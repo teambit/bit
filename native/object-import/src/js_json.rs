@@ -26,6 +26,7 @@ pub enum Value {
 }
 
 impl Value {
+    /// Encodes a `UTF-8` string slice as a `UTF-16` [`Value::String`].
     #[inline]
     #[must_use]
     pub fn text(text: &str) -> Self {

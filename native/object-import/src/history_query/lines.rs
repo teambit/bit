@@ -2,6 +2,7 @@
 use super::invalid;
 use std::{collections::HashMap, io};
 
+/// Contiguous run of equal, added, or removed lines along a Myers diff path.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Run {
     kind: u8,

@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+/// Writes `contents` to `path` after verifying regular-file identity and truncating in place.
 #[inline]
 pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
     commit_metadata(path, contents, None, false)

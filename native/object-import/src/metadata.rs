@@ -5,6 +5,7 @@ mod tests;
 
 use flate2::{Decompress, FlushDecompress, Status};
 
+/// Maximum inflated byte size (256 KiB) allowed for inline metadata object streams.
 pub(crate) const MAX_BYTES: usize = 256 * 1024;
 
 // Only losslessly decoded, completely terminated streams can bypass Node inflation.

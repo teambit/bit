@@ -3,7 +3,7 @@
 use crate::js_json::{Value, stringify};
 use std::io;
 
-/// Serialize JSON data with `JavaScript` property ordering and `binary64` numbers.
+/// Serializes JSON `value` with `JavaScript` property ordering and `binary64` number formatting.
 #[inline]
 pub fn stringify_json(value: &serde_json::Value, pretty: bool) -> io::Result<String> {
     let bytes = stringify(&convert(value)?, pretty)?

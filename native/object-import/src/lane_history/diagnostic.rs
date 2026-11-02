@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-/// Return whether CI must delegate before providers to preserve published error stacks.
+/// Returns whether CI must delegate before providers to preserve published error stacks.
 /// Cached keys and keys proved by an ordinary file remote remain native. HTTP
 /// misses are not fetched here: the authoritative command owns its only fetch.
 pub fn ci_requires_published_diagnostic(

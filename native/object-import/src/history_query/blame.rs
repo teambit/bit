@@ -12,6 +12,7 @@ use std::{
     path::PathBuf,
 };
 
+/// Deserialized `historyQueryBlame` request payload.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

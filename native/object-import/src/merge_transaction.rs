@@ -17,6 +17,7 @@ mod tests;
 
 use serde_json::{Value, json};
 use std::io;
+/// Session-scoped merge transaction state combining `journal`, `status`, and file `bodies`.
 #[derive(Default)]
 pub(crate) struct State {
     journal: journal::State,

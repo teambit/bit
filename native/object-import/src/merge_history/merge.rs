@@ -20,6 +20,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 use workers::classify_all;
+/// Deserialized three-way file merge request (`objectsDirectory`, `labels`, `base`, `other`, `current`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

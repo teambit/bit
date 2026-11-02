@@ -5,6 +5,7 @@ use crate::js_json;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
+/// Deserialized `historyResetLaneHistory` request payload (`fields` and pruned `keys`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {

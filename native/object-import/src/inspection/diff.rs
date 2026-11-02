@@ -10,6 +10,7 @@ use std::{
     io,
     path::PathBuf,
 };
+/// Deserialized `inspectionDiff` request payload against retained workspace file snapshots.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

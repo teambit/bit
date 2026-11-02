@@ -3,6 +3,7 @@
 use super::{MAX_RAW, Prepared, Request, count, execute, hash, invalid, path, text};
 use serde_json::Value;
 use std::{collections::HashSet, io};
+/// Executes a three-way file merge over pre-verified `Source` and workspace byte slices in `prepared`.
 /// Inputs have already passed checkout manifest, Source identity and workspace snapshot verification.
 pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;

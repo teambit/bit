@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained local lane deletion plan moving `Lane` objects to scope trash and updating `index.json`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

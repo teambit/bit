@@ -15,6 +15,7 @@ mod tests;
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Plans `.bitmap` and component-directory recovery actions for `bit reset` from `input`.
 #[inline]
 pub(crate) fn reset(input: &Value) -> io::Result<Value> {
     reset::plan(input)
