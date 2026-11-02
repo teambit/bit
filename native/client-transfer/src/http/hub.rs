@@ -83,6 +83,7 @@ impl Network {
     }
 }
 
+/// Streams the NDJSON progress response from `Http.pushToCentralHub`, invoking `observe` on loader events.
 async fn read(
     response: Response,
     cancellation: &crate::Cancellation,

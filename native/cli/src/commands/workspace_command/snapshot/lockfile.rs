@@ -83,7 +83,7 @@ pub(in crate::commands::workspace_command) fn graphs(
     Ok(result)
 }
 
-/// The dependency graph of each visible component the snap writes.
+/// Computes the dependency [`graph`] of each visible component the snap writes.
 fn visible_graphs(
     root: &Path,
     context: &Value,

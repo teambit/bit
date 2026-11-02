@@ -86,6 +86,7 @@ fn package_options(
     Ok(options)
 }
 
+/// Moves non-null subscriber-relevant dependency-resolver keys from `raw` into `options`.
 #[inline]
 fn copy_config(raw: &mut Value, options: &mut Value) {
     for key in [

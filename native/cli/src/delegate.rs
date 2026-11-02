@@ -61,6 +61,7 @@ fn entry_command(cli: &NodeCli, args: &[OsString]) -> Command {
     command
 }
 
+/// Prepends `dir` to `path` unless `dir` is blank or already the first non-empty entry on `path`.
 #[must_use]
 pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
     let is_blank = |os: &OsStr| os.to_string_lossy().trim().is_empty();

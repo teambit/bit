@@ -79,6 +79,7 @@ pub fn js_replace(
     output
 }
 
+/// Builds the [`Found`] callback arguments for regex match `found` in `text` of UTF-16 `length`.
 #[inline]
 fn arguments<'text>(text: &'text str, found: &Match, length: usize) -> Found<'text> {
     let range = found.range();

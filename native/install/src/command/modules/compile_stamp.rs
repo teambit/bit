@@ -110,7 +110,7 @@ fn current_outputs(stored: &Stamp) -> io::Result<Option<HashMap<PathBuf, Output>
     Ok(all_recorded.then_some(current))
 }
 
-/// The recorded files that are intact (by content) and those that are not.
+/// Partitioned [`Output`] files that are intact (by SHA-256 content) and those that are damaged or missing.
 struct Sorted<'a> {
     intact: HashMap<&'a str, &'a Path>,
     damaged: Vec<(&'a Path, &'a str)>,

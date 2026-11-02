@@ -89,6 +89,7 @@ impl Remotes {
             .transpose()
     }
 
+    /// Loads [`Remotes`] from `scope_json`, `global-remotes.json`, and `global` config settings.
     #[inline]
     pub fn load(
         scope_json: &Value,

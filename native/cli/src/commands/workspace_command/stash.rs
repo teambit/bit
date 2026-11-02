@@ -96,6 +96,7 @@ fn identities(value: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+/// Verifies that `value` carries the expected stash session `token` without an engine error.
 #[inline]
 fn check(value: &Value, token: &str) -> io::Result<()> {
     if value["token"].as_str().map(str::trim) == Some(token.trim()) {

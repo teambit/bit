@@ -72,6 +72,7 @@ pub struct Environment {
     pub path: Option<OsString>,
 }
 
+/// Error message returned when no Node.js Bit CLI [`Target`] can be discovered.
 const NOT_FOUND: &str = "the Node.js Bit CLI was not found. Set BIT_NODE_CLI to the path of @teambit/bit's bin/bit (or a checkout's bin/bit.js), install bit with bvm, or put the Node.js bit on PATH";
 const ENTRY_IN_PACKAGE: &str = "node_modules/@teambit/bit/bin/bit";
 

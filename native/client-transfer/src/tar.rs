@@ -19,6 +19,7 @@ const END: &str = ".BIT.END";
 const ERROR: &str = ".BIT.ERROR";
 /// `OBJECT_LIST_CURRENT_SCHEMA`.
 const SCHEMA: &str = "1.0.0";
+/// Maximum total byte size (`512 MiB`) permitted for a remote object tar archive.
 pub const MAX_ARCHIVE_BYTES: usize = 512 * 1024 * 1024;
 const MAX_OBJECT_BYTES: usize = 128 * 1024 * 1024;
 const MAX_OBJECTS: usize = 16384;

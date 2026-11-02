@@ -53,6 +53,7 @@ pub(super) fn capture_retained(
     capture_reader(root, request, startup, reader)
 }
 
+/// Selects checkout/merge targets, loads docs and source files, and commits dependency caches via `reader`.
 fn capture_reader(
     root: &Path,
     request: &Request<'_>,

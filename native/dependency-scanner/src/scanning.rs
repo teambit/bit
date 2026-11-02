@@ -95,6 +95,7 @@ fn extract_source(file: &File, source: &str, ts: bool, program: &Program<'_>) ->
         diagnostics: vec![],
     }
 }
+/// Returns `true` when `name` is an ECMAScript array index (`0` or a canonical `u32` below `u32::MAX`).
 #[inline]
 fn is_array_index(name: &str) -> bool {
     (name == "0" || (!name.starts_with('0') && name.bytes().all(|byte| byte.is_ascii_digit())))

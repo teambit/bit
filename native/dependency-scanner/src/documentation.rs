@@ -124,6 +124,7 @@ impl<'a> Visit<'a> for Proof {
         self.accepted = false;
     }
 }
+/// Returns `true` when `expression` is a side-effect-free data expression or literal `require` / `console.log` call.
 #[inline]
 fn data_expression(expression: &Expression<'_>) -> bool {
     match expression {

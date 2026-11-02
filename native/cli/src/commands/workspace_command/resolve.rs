@@ -75,7 +75,7 @@ pub struct ResolveRequest<'r> {
     pub selection: Selection<'r>,
 }
 
-/// Plan snapshot tooling around the native transaction and retain all publication state.
+/// Plan snapshot tooling around the native transaction and retain all publication state in [`Planned`].
 #[inline]
 pub fn plan_snapshot(
     root: &Path,

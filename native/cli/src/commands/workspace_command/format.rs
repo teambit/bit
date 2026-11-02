@@ -24,8 +24,7 @@ impl Formatter {
         self.chalk.green(if cfg!(windows) { "\u{2713}" } else { "\u{2714}" })
     }
 
-    /// `warnSymbol`.
-    /// `errorSymbol`.
+    /// Returns the red `errorSymbol` (`✖`).
     #[must_use]
     #[inline]
     pub fn error_symbol(&self) -> String {

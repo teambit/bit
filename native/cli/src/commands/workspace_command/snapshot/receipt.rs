@@ -190,6 +190,7 @@ fn parse_git_config(text: &str) -> HashMap<String, String> {
         .collect()
 }
 
+/// Current UTC Unix timestamp in milliseconds since [`UNIX_EPOCH`].
 #[inline]
 fn now_millis() -> u128 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis())

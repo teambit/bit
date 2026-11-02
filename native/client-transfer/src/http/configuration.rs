@@ -100,6 +100,7 @@ fn strict_bool(value: &Value) -> Option<bool> {
     }
 }
 
+/// Reads a trimmed, non-empty string setting for `key` from `global`.
 #[inline]
 pub(super) fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
     global

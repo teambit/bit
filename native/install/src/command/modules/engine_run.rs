@@ -111,6 +111,7 @@ fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (Stri
     found
 }
 
+/// Records `dep_id` in `found` when it is a non-local snap version mentioned in `lower_message`.
 fn record_unpublished_dep(
     found: &mut IndexMap<String, (String, Vec<String>)>,
     dependent: &str,

@@ -32,6 +32,7 @@ pub(crate) fn is_hash(value: &str) -> bool {
     value.len() == 40 && value.bytes().all(is_lowercase_hex_byte)
 }
 
+/// Returns `true` when `byte` is an ASCII digit (`0..=9`) or lowercase hex letter (`a..=f`).
 #[inline]
 const fn is_lowercase_hex_byte(byte: u8) -> bool {
     matches!(byte, b'0'..=b'9' | b'a'..=b'f')

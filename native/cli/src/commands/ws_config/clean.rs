@@ -41,6 +41,7 @@ pub(super) fn format_list_output(env_ids: &[String], chalk: Chalk) -> String {
         .join("\n\n")
 }
 
+/// Serializes `env_ids` and their [`STANDARD_WRITERS`] metadata as pretty-printed JSON for `bit ws-config list --json`.
 pub(super) fn format_list_json(env_ids: &[String]) -> io::Result<String> {
     let writers: Vec<Value> = STANDARD_WRITERS
         .iter()

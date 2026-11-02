@@ -127,6 +127,7 @@ pub fn version_with_save_prefix(
     Ok(with_prefix)
 }
 
+/// Constructs an [`io::ErrorKind::InvalidInput`] error with `message`.
 #[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, message)

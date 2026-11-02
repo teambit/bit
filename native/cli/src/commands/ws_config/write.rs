@@ -21,6 +21,7 @@ const TS_RAW_HASH: &str = "8a8e26913a6191740f6dc8052f5cd46e8179d403";
 const ASSET_DTS_HASH: &str = "567ee21978cbce56ebd1a166885c6d74665e7d8f";
 /// Precomputed SHA-1 content hash of the standard `style.d.ts` template.
 const STYLE_DTS_HASH: &str = "b31200bf25de0be451df15ad5c78e4e81a227cae";
+/// Precomputed SHA-1 content hash of the standard `.prettierrc.cjs` template.
 const PRETTIER_HASH: &str = "e4882af8861bcf5b0147891d8b70b40a10428881";
 
 const ASSET_DTS_CONTENT: &str = "declare module '*.png' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.svg' {\n  import type { FunctionComponent, SVGProps } from 'react';\n\n  export const ReactComponent: FunctionComponent<\n    SVGProps<SVGSVGElement> & { title?: string }\n  >;\n  const src: string;\n  export default src;\n}\n\n// @TODO Gilad\ndeclare module '*.jpg' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.jpeg' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.gif' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.bmp' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.otf' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.woff' {\n  const value: any;\n  export = value;\n}\ndeclare module '*.woff2' {\n  const value: any;\n  export = value;\n}\n";

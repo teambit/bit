@@ -80,6 +80,7 @@ impl Progress {
     }
 }
 
+/// Renders inbound [`Import`] progress rows into `output`, tracking the latest-heads request.
 fn render_rows(rows: &[Import], output: &Output, wildcard: bool, on_lane: bool) {
     let mut requested = rows.iter().find(|row| latest_request(row));
     for row in rows {

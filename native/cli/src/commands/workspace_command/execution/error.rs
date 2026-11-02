@@ -14,6 +14,7 @@ struct WithDetails {
     details: String,
 }
 impl fmt::Display for WithDetails {
+    /// Formats the inner [`io::Error`] message without diagnostic details.
     #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.error.fmt(formatter)

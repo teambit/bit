@@ -61,6 +61,7 @@ fn workflow_alias(raw: &str) -> &str {
     if raw == "-b" { "--build" } else { raw }
 }
 
+/// Returns `true` when `flag` is a recognized snapshot tooling flag for `kind`.
 #[inline]
 fn tooling_flag(flag: &str, kind: Kind) -> bool {
     matches!(

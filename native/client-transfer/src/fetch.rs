@@ -134,7 +134,7 @@ impl FetchOptions {
     }
 }
 
-/// `CONCURRENT_FETCH_LIMIT`.
+/// Default concurrent remote fetch limit (`CONCURRENT_FETCH_LIMIT`).
 const DEFAULT_CONCURRENCY: usize = 15;
 
 /// `concurrentFetchLimit()`: `concurrency.fetch` from the bit config, else 15.

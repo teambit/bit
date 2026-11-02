@@ -79,7 +79,7 @@ pub async fn link_components(
     Ok(())
 }
 
-/// Collects deduplicated non-empty unversioned component IDs from `components` in order.
+/// Collects deduplicated non-empty unversioned component IDs from [`WorkspaceComponent`] `components` in order.
 #[inline]
 fn unique_component_ids(components: &[WorkspaceComponent]) -> Vec<String> {
     let mut ids = Vec::with_capacity(components.len());

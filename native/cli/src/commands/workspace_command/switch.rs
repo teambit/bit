@@ -31,7 +31,7 @@ pub(in crate::commands) fn complete(planned: &mut Planned, receipt: &Value) -> i
     Ok(())
 }
 
-/// Verifies that `receipt` is an error-free object with a truthy `flag_key` and matching `expected_token`.
+/// Verifies that `receipt` is an error-free JSON object with a truthy `flag_key` and matching `expected_token`.
 #[inline]
 fn valid_switch_receipt(receipt: &Value, flag_key: &str, expected_token: &str) -> bool {
     let flag_val = &receipt[flag_key];

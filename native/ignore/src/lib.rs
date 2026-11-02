@@ -91,6 +91,7 @@ impl Ignore {
     }
 }
 
+/// Returns the process-wide [`Compiler`] mutex used by [`Ignore::add`].
 #[inline]
 fn process_compiler() -> &'static Mutex<Compiler> {
     static COMPILER: OnceLock<Mutex<Compiler>> = OnceLock::new();

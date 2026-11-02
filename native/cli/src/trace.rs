@@ -24,7 +24,7 @@ fn is_active_trace_value(value: &std::ffi::OsStr) -> bool {
             .any(|word| trimmed.eq_ignore_ascii_case(word))
 }
 
-/// Prints `bit-native: <message>` to stderr when [`enabled`] is `true`.
+/// Prints `bit-native: <message>` to `stderr` when [`enabled`] is `true`.
 #[inline]
 pub fn log(message: impl Display) {
     if enabled() {

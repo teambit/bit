@@ -67,6 +67,7 @@ struct Dependency {
     #[serde(skip_serializing_if = "Option::is_none")]
     is_type_import: Option<bool>,
 }
+/// Imported or re-exported symbol specifier attached to a [`Dependency`].
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Specifier {

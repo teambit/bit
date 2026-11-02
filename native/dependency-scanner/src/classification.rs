@@ -84,6 +84,7 @@ fn classify_call(callee: &Expression<'_>, arguments: &[Argument<'_>]) -> Classif
         _ => Classification::None,
     }
 }
+/// Runs [`Classifier`] over `program` and returns its module [`Classification`].
 #[inline]
 pub(crate) fn classify(program: &Program<'_>) -> Classification {
     let mut classifier = Classifier::default();

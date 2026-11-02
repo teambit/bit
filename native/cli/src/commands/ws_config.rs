@@ -33,7 +33,7 @@ use std::{
 };
 /// Descriptor for the native `bit ws-config` (`workspace-config`) command.
 pub const COMMAND: Command = Command { name: "ws-config", aliases: &["workspace-config"], run };
-/// Parsed CLI options for `bit ws-config write`.
+/// Parsed CLI options for `bit ws-config write` including [`DryRunMode`] and writer filters.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct WriteOptions {
     pub clean: bool,

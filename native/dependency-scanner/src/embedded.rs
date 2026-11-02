@@ -68,6 +68,7 @@ fn bounded(
     Ok(Some(serde_json::to_value(outcome)?))
 }
 
+/// Atomically subtracts `bytes` from `remaining`, returning `false` and zeroing the budget on overflow.
 #[inline]
 fn reserve(remaining: &AtomicUsize, bytes: usize) -> bool {
     let mut budget = remaining.load(Ordering::Relaxed);

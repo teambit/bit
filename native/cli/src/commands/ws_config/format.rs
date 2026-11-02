@@ -40,6 +40,7 @@ pub(super) struct OneConfigWriterIdResult {
     pub skipped_paths: Vec<String>,
 }
 
+/// Environment IDs and the [`WrittenConfigFile`] generated for those environments.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct EnvsWrittenRealConfigFile {

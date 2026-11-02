@@ -16,7 +16,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{cmp::Reverse, collections::HashSet, fmt::Write, io};
 
-/// Validated engine snap or tag result ready for [`Formatter`] rendering.
+/// Validated engine snap or tag result hydrated via [`hydrate`] and ready for [`Formatter`] rendering.
 struct Versioned<'l> {
     labels: &'l Labels,
     selected: Vec<Id>,

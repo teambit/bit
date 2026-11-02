@@ -57,6 +57,7 @@ impl Progress {
         Self::parse_for(value, true)
     }
 
+    /// Parses a command (`snap == false`) or snap (`snap == true`) progress receipt from `value`.
     fn parse_for(value: Option<&Value>, snap: bool) -> io::Result<Option<Self>> {
         let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(None) };
         let bitmap_count = value.get("bitmapCount").and_then(Value::as_u64);

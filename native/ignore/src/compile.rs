@@ -35,6 +35,7 @@ const PROTOTYPE_KEYS: &[&str] = &[
 pub struct UnsupportedPattern(pub String);
 
 impl fmt::Display for UnsupportedPattern {
+    /// Formats the unsupported ignore pattern error message.
     #[inline]
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(formatter, "unsupported ignore pattern {:?}", self.0)

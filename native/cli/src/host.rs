@@ -70,6 +70,7 @@ pub struct Host {
     failed_stdout: Mutex<String>,
 }
 
+/// Active Node.js child process session managed by [`Host`].
 struct Session {
     child: Child,
     stdin: Option<ChildStdin>,

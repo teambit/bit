@@ -60,6 +60,7 @@ fn is_policy_flag(flag: &str, tag: bool) -> bool {
 }
 
 impl Policy {
+    /// Consumes a single policy argument `raw` (and optional `next` value), rejecting duplicate flags in `seen`.
     fn consume_arg<'a>(
         &mut self,
         raw: &'a str,

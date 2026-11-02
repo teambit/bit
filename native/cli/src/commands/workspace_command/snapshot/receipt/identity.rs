@@ -22,6 +22,7 @@ struct Cache {
     value: OnceLock<Result<User, Failure>>,
 }
 
+/// Cached initialization error kind and trimmed message for [`Cache`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Failure {
     kind: io::ErrorKind,

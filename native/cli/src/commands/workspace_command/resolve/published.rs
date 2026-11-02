@@ -78,6 +78,7 @@ fn candidates(session: &Session<'_>, plan: &Value) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Builds a single npm registry version lookup candidate for `id` when not explicitly versioned in `selected`.
 fn candidate(
     session: &Session<'_>,
     plan: &Value,

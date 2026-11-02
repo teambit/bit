@@ -50,6 +50,7 @@ pub(super) async fn resolve(
     resolve_initialized(session, loaded, components, false).await
 }
 
+/// Resolves environment policies, workspace root policy, and component dependencies after host preparation.
 pub(super) async fn resolve_initialized(
     session: &Session<'_>,
     loaded: &Loaded,

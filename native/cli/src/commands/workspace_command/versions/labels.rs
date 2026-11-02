@@ -59,6 +59,7 @@ pub const TAG: Labels = Labels {
     tag: true,
 };
 
+/// Report label preset for `bit tag --soft`.
 pub const SOFT_TAG: Labels = Labels {
     verb: "soft-tagged",
     explanation: "(use \"bit tag --persist\" to persist the soft-tagged changes as a fully tagged version)\n(use \"bit reset --soft\" to remove the soft-tags)",

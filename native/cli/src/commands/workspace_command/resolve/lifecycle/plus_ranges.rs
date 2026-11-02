@@ -72,6 +72,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Extracts the unversioned `<scope>/<name>` identity from a `selectedIds` or `needsSnap` `value`.
 #[inline]
 fn plan_identity(value: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(value).or_else(|| non_empty_str(&value["id"])) {

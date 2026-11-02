@@ -30,7 +30,7 @@ const PACKAGE_FIELDS: [&str; 12] = [
     "version",
 ];
 
-/// `convertLockfileToGraph(lockfile, { pkgName, componentRootDir, componentRelativeDir })`.
+/// `convertLockfileToGraph(lockfile, { pkgName, componentRootDir, componentRelativeDir })` into a serialized [`Value`].
 pub fn convert(
     lockfile: Map<String, Value>,
     importer: &str,

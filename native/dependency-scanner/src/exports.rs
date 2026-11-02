@@ -33,6 +33,7 @@ fn module_exports(expression: &Expression<'_>) -> bool {
         _ => false,
     }
 }
+/// Returns `true` when `object` is `exports` or `module.exports`.
 #[inline]
 fn attached(object: &Expression<'_>) -> bool {
     identifier(object, "exports") || module_exports(object)

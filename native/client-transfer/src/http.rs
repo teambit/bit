@@ -92,7 +92,7 @@ impl Listed {
     }
 }
 
-/// `Http.getNetworkConfig()` retry defaults.
+/// `Http.getNetworkConfig()` retry policy parameters (`retries`, `factor`, and timeout bounds).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Retry {
     pub retries: u32,

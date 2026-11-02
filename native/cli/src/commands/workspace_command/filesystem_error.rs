@@ -20,6 +20,7 @@ struct Failure {
     destination: Option<String>,
 }
 impl Failure {
+    /// Formats `<code>: <message>, <operation> '<path>' [-> '<destination>']`.
     #[inline]
     fn description(&self) -> String {
         let mut message =

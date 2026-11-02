@@ -23,7 +23,7 @@ pub struct Prepared {
 }
 
 impl Steps<'_> {
-    /// Prepares the command policy of the planned merge and resolves its dependency states.
+    /// Prepares the command policy of the planned merge and resolves its dependency states into [`Prepared`].
     pub(super) fn prepare_policy(
         &mut self,
         mut plan: Value,

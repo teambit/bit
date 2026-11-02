@@ -92,6 +92,7 @@ pub fn action_conflict(error: &io::Error) -> Option<&Value> {
         .map(|error| &error.0)
 }
 
+/// Wrapper carrying the raw JSON payload of a remote `ActionConflict` (`code == 131`) error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ActionConflict(Value);
 

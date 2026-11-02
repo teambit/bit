@@ -57,6 +57,7 @@ impl History {
         Self { file: scope.join("command-history"), command: Self::format_command(args) }
     }
 
+    /// Joins `args` into a single-line command string with control characters replaced by spaces.
     #[must_use]
     #[inline]
     fn format_command(args: &[OsString]) -> String {

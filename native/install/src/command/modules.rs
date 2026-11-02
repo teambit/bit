@@ -113,7 +113,7 @@ async fn run_cycles(
     Ok(calculated.non_loaded_envs())
 }
 
-/// What every engine run of the installation shares.
+/// Shared [`Loaded`] workspace, root [`DependencyMap`] links, and lockfile [`engine::RestoreInput`] for each cycle.
 struct CycleContext<'a> {
     loaded: &'a Loaded,
     links: &'a DependencyMap,

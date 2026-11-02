@@ -92,6 +92,7 @@ fn validate_changes(values: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Extracts a trimmed, non-empty directory path string slice from `val`.
 #[inline]
 fn non_empty_dir(val: &Value) -> Option<&str> {
     val.as_str()

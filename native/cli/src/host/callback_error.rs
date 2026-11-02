@@ -50,6 +50,7 @@ impl fmt::Display for CallbackError {
 }
 
 impl Error for CallbackError {
+    /// Returns the wrapped [`io::Error`] cause of this [`CallbackError`].
     #[inline]
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         Some(&self.cause)

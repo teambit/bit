@@ -35,6 +35,7 @@ fn fallback_error(error: &io::Error) -> io::Error {
 
 /// `GraphQL` query (`list`) including `includeDeleted` and `teambit.component/remove` aspect data.
 const LIST_DELETED_QUERY: &str = r#"query list($namespaces: [String!], $includeDeleted: Boolean) { scope { components(namespaces: $namespaces, includeDeleted: $includeDeleted) { id { scope version name } aspects(include: ["teambit.component/remove"]) { id config } deprecation { isDeprecate } } } }"#;
+/// `GraphQL` query (`getLatestVersions`) for resolving the latest version of each component ID.
 const LATEST_VERSIONS_QUERY: &str =
     "query getLatestVersions($ids: [String]!) { scope { _legacyLatestVersions(ids: $ids) } }";
 const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;

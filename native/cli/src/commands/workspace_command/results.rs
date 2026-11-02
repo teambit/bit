@@ -85,6 +85,7 @@ impl Status {
         })
     }
 
+    /// Formats the colored file status label (`auto-merged`, `CONFLICT`, `updated`, etc.) using `chalk`.
     #[must_use]
     #[inline]
     pub fn label(self, chalk: Chalk) -> String {
