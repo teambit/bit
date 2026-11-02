@@ -87,6 +87,7 @@ pub(super) struct Token {
     pub(super) token: String,
 }
 
+/// Return `true` when `ch` is whitespace or NUL (`\0`) to trim from wire tokens.
 #[inline]
 const fn is_token_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch == '\0'

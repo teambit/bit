@@ -69,6 +69,7 @@ fn append_parents(version: &Value, pending: &mut Vec<String>) -> io::Result<()> 
     Ok(())
 }
 
+/// Extract a non-empty version hash string from `value` (either a string or `{ ref | hash }`).
 #[inline]
 fn ref_str(value: &Value) -> Option<&str> {
     value

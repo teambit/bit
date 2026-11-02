@@ -32,7 +32,7 @@ pub(super) fn load(files: &[wire::Current], total: &mut usize) -> io::Result<Vec
         .collect())
 }
 
-/// Changed files retry sequentially without publishing any partially prepared plan.
+/// Changed files retry sequentially via [`read`] without publishing any partially prepared plan.
 #[inline]
 fn serial(files: &[wire::Current], mut total: usize) -> io::Result<Vec<(Loaded, usize)>> {
     files

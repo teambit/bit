@@ -90,6 +90,7 @@ fn plan(existing: &Value, incoming: &Value, origin: bool) -> io::Result<MergePla
     }
     Ok(MergePlan { plan, tags, heads, deleted, local })
 }
+/// Apply tag merge actions from `plan` onto `result["versions"]` and `result["orphanedVersions"]`.
 fn apply_tags(result: &mut Value, tags: &[Vec<[String; 2]>; 3], plan: &Value) -> io::Result<()> {
     for action in plan["actions"].as_array().ok_or_else(|| invalid("import model actions"))? {
         let side = usize::try_from(action[1].as_u64().ok_or_else(|| invalid("import model side"))?)

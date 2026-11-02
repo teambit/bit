@@ -24,6 +24,7 @@ pub(in crate::checkout_transition) fn load_with_overlay(
     overlay::files(directory, &version.files, total, compressed, overlay)
 }
 
+/// Load and verify `Source` file bodies for `manifests` from `directory` in parallel or sequentially.
 fn load_files(
     directory: &Path,
     manifests: &[wire::Manifest],

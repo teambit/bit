@@ -97,7 +97,7 @@ pub enum ExistingEntries {
     /// `updateExisting`: the new entry replaces it. `bit install` always updates.
     #[default]
     Update,
-    /// `skipIfExisting`: the existing entry stays.
+    /// `skipIfExisting`: the existing entry in the workspace policy stays unchanged.
     Skip,
     /// Neither: `EntryAlreadyExist`.
     Fail,

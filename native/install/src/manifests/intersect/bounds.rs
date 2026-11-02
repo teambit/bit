@@ -64,7 +64,9 @@ pub(super) fn strip_operator(comparator: &Comparator) -> io::Result<Comparator> 
 /// Which end of a range a bound limits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum End {
+    /// Lower interval bound (`>` or `>=`).
     Lower,
+    /// Upper interval bound (`<` or `<=`).
     Upper,
 }
 

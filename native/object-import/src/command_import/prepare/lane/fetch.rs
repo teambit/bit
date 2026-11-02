@@ -45,6 +45,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         self.fetch_lane_with_policy(id, supplied_hash, false, delta)
     }
+    /// Fetch the remote [`Record`] for `id` (at `supplied_hash` or head) preferring the dependency graph closure.
     #[inline]
     pub(crate) fn fetch_lane_components_at_hash(
         &mut self,

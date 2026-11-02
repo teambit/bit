@@ -51,7 +51,7 @@ pub(crate) fn valid_range(range: &str) -> Option<String> {
     Some(formatted)
 }
 
-/// `semver.satisfies(version, range)` of semver 7.
+/// `semver.satisfies(version, range)` of `semver` 7 using [`SemVer`] and [`Range`].
 #[inline]
 pub(crate) fn satisfies(version: &str, range: &str) -> bool {
     SemVer::parse(version.trim())

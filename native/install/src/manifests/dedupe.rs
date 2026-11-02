@@ -13,9 +13,11 @@ use indexmap::IndexMap;
 /// Single component's version requirement for a package (`PackageNameIndexComponentItem`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Item {
+    /// Semver range or snap version requested by `origin`.
     pub(super) range: String,
     /// The component package name.
     pub(super) origin: String,
+    /// Target manifest dependency field (`Dependencies`, `DevDependencies`, etc.).
     pub(super) field: Field,
 }
 

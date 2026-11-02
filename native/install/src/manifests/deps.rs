@@ -57,7 +57,9 @@ impl Field {
 /// The four dependency fields plus `peerDependenciesMeta`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct DepsObject {
+    /// Per-field `[dependencies, optionalDependencies, devDependencies, peerDependencies]` maps.
     fields: [DependencyMap; 4],
+    /// Optional peer dependency metadata flags (`peerDependenciesMeta.<pkg>.optional`).
     pub(super) peer_meta: IndexMap<String, bool>,
 }
 

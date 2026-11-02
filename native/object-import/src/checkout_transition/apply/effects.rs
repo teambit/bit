@@ -72,7 +72,7 @@ fn effect(
         _ => Err(invalid("checkout unsupported merge effect")),
     }
 }
-/// Apply a `modifiedFiles` merge row onto the matching target [`File`] and `status` map.
+/// Apply a `modifiedFiles` merge row from [`plan::Plan`] onto the matching target [`File`] and `status` map.
 fn modified(
     plan: &plan::Plan,
     row: &Value,

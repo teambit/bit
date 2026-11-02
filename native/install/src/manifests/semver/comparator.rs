@@ -12,7 +12,9 @@ use std::{cmp::Ordering, io};
 /// One `<op><version>` comparator. `semver` is `None` for `ANY` (an empty comparator).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Comparator {
+    /// Comparison operator (`""`, `">"`, `">="`, `"<"`, or `"<="`).
     pub(crate) operator: String,
+    /// Target [`SemVer`] version, or `None` for the universal `ANY` comparator.
     pub(crate) semver: Option<SemVer>,
     /// `operator + semver.version`, or `""` for `ANY`.
     pub(crate) value: String,

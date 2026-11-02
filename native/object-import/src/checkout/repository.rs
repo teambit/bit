@@ -31,8 +31,11 @@ pub(crate) fn source(
 /// Verified `Source` object body along with its raw compressed bytes and inflated byte size.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SourceRecord {
+    /// Verified raw `Source` payload after stripping the `<type> <hash> <size>\0` header.
     pub(crate) body: Vec<u8>,
+    /// Raw zlib-compressed loose object bytes read from disk.
     pub(crate) compressed: Vec<u8>,
+    /// Total inflated byte length (including the object header).
     pub(crate) inflated_size: usize,
 }
 /// Inflate, verify, and record the `Source` object at `hash` in the active merge receipt trace.

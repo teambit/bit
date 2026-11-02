@@ -58,6 +58,7 @@ pub(super) fn plain_tag(tag: &str) -> bool {
         && build.is_none_or(|value| identifiers(value, false))
 }
 
+/// Return `true` when `value` is a non-leading-zero decimal integer within `Number.MAX_SAFE_INTEGER`.
 #[inline]
 fn numeric_segment(value: &str) -> bool {
     !value.is_empty()

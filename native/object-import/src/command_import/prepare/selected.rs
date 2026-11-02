@@ -86,6 +86,7 @@ impl PreparedImport {
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)
     }
+    /// Prepare explicit target versions for a lane switch without switching existing local versions.
     #[inline]
     pub(crate) fn prepare_switch_versions(
         &mut self,

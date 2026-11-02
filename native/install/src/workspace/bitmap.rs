@@ -26,8 +26,11 @@ pub const WORKSPACE_ROOT_DIR: &str = ".";
 /// The lane the workspace is on (`_bit_lane`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneInfo {
+    /// Remote scope name owning the lane.
     pub scope: String,
+    /// Lane name within `scope`.
     pub name: String,
+    /// Whether the lane has been exported to its remote scope.
     pub exported: bool,
 }
 

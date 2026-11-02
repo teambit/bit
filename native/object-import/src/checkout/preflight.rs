@@ -26,7 +26,7 @@ pub(super) fn load(
     // the canonical read-only retry before any workspace writes.
     sequential_preflight(request, state, use_cache)
 }
-/// Read and normalize all `request.files` in parallel using `pool` within `MAX_BYTES` budgets.
+/// Read and normalize all `request.files` in parallel using `pool` within [`MAX_BYTES`] budgets.
 fn parallel(
     request: &Request,
     state: &mut cache::State,

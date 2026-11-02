@@ -15,7 +15,9 @@ use std::{
 /// Raw and LF-normalized byte buffers of a current workspace file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Loaded {
+    /// Raw on-disk file bytes (prior to BOM stripping or `.bitmap` normalization).
     pub(super) raw: Vec<u8>,
+    /// Canonical LF-normalized file bytes used for three-way merge comparison.
     pub(super) normalized: Vec<u8>,
 }
 /// Load and verify current workspace `files` using optional retained `snapshots` and import `overlay`.

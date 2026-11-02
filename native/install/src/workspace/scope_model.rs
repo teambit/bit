@@ -39,7 +39,7 @@ pub struct ModelData {
 }
 
 impl ModelData {
-    /// The `teambit.envs/envs` data of the Version, where the env descriptor
+    /// The [`ENVS_ASPECT`] (`teambit.envs/envs`) data of the `Version`, where the env descriptor
     /// (`type`, `id`) is stored at tag time.
     #[inline]
     fn envs_data(&self) -> Option<&Value> {

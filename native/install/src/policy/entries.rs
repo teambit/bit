@@ -20,6 +20,7 @@ pub struct VariantOptions {
     pub source: Option<&'static str>,
     /// Default `force` flag applied when an entry does not specify its own `force` property.
     pub force: Option<bool>,
+    /// Default `hidden` flag applied when an entry does not specify its own `hidden` property.
     pub hidden: Option<bool>,
 }
 

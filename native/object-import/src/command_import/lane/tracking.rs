@@ -12,8 +12,11 @@ use std::{fs, io, path::PathBuf};
 /// Staged `scope.json` lane tracking update with pre-write and post-write byte proofs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SwitchTracking {
+    /// Absolute path to the workspace scope's `scope.json`.
     path: PathBuf,
+    /// Pre-write `scope.json` byte contents verified before publication.
     before: Vec<u8>,
+    /// Post-write `scope.json` byte contents with the newly tracked lane alias.
     after: Vec<u8>,
 }
 impl SwitchTracking {

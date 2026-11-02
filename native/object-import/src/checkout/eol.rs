@@ -64,6 +64,7 @@ fn utf8_sequence(bytes: &[u8], index: &mut usize) -> bool {
     false
 }
 
+/// Return `true` when `bytes` begins with a recognized UTF-8, UTF-16, UTF-32, or GB-18030 text BOM.
 #[inline]
 fn text_bom(bytes: &[u8]) -> bool {
     [

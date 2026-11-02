@@ -12,9 +12,10 @@ use super::{
 use indexmap::IndexMap;
 use std::io;
 
-/// A parsed range: OR-ed sets of AND-ed comparators.
+/// A parsed range: OR-ed sets of AND-ed [`Comparator`]s.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Range {
+    /// Disjunction (`||`) of conjunctions (` `) of [`Comparator`]s.
     pub(crate) set: Vec<Vec<Comparator>>,
 }
 

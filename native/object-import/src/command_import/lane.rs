@@ -19,7 +19,9 @@ use tracking::{component_identity_with_scope, hidden_entry};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Id {
+    /// Remote scope name owning the lane.
     pub(crate) scope: String,
+    /// Lane name within `scope`.
     pub(crate) name: String,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

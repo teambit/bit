@@ -24,7 +24,9 @@ pub(super) struct Dep<'a> {
     pub(super) package_name: &'a str,
     /// Resolved version range or component snap/tag version.
     pub(super) version: String,
+    /// Dependency lifecycle (`Runtime`, `Dev`, or `Peer`).
     pub(super) lifecycle: Lifecycle,
+    /// Whether this dependency is marked as optional.
     pub(super) optional: bool,
     /// Set for component dependencies.
     pub(super) component: Option<&'a ComponentId>,

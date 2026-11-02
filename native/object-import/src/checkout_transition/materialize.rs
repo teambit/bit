@@ -32,7 +32,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     }
     Ok(json!({"completed":completed,"skipped":skipped,"failed":completed!=request.files.len()}))
 }
-/// Validate destination paths and normalize prepared file bodies from `plan` for `request`.
+/// Validate destination paths and normalize prepared file bodies from [`plan::Plan`] for [`wire::Materialize`].
 #[inline]
 fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
     if request.files.len() > 4096 {

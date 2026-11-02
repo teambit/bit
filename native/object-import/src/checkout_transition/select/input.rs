@@ -8,8 +8,11 @@ use std::io;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {
+    /// Target component identity and current workspace presence flags.
     pub(super) component: Component,
+    /// Optional local scope model metadata for the component.
     pub(super) model: Option<Model>,
+    /// Checkout command flags and requested version overrides.
     pub(super) options: Options,
 }
 /// Component metadata descriptor in a checkout selection request.

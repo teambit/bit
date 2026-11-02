@@ -48,7 +48,7 @@ fn env_components<'c>(
         .collect()
 }
 
-/// Retain only the first occurrence of each component in `order`.
+/// Retain only the first occurrence of each [`WorkspaceComponent`] in `order`.
 #[inline]
 fn first_places(mut order: Vec<&WorkspaceComponent>) -> Vec<&WorkspaceComponent> {
     let mut seen = HashSet::with_capacity(order.len());

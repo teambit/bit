@@ -15,8 +15,11 @@ use super::MAX_BYTES;
 /// metadata-only growth without shrinking the 32 MiB raw Source budget.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
+    /// Cached `Source` object payloads keyed by `(canonical_objects_dir, sha1_hash)`.
     sources: HashMap<(PathBuf, [u8; 20]), Vec<u8>>,
+    /// Total byte weight of all retained `Source` bodies in `sources`.
     bytes: usize,
+    /// Total byte weight of all directory and hash keys in `sources`.
     key_bytes: usize,
 }
 /// Maximum total key byte budget (`4 MiB`) for cached `Source` object entries.

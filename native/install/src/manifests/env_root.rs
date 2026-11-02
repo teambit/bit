@@ -13,8 +13,11 @@ use indexmap::{IndexMap, IndexSet};
 /// Per package: version → envs requiring it, plus the `workspaceSingleton` and `override` flags.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct PeerVersions {
+    /// Required version specifier → ordered set of environment IDs requesting it.
     versions: IndexMap<String, IndexSet<String>>,
+    /// Whether any environment policy marks this peer as `workspaceSingleton`.
     singleton: bool,
+    /// Whether any environment policy marks this peer with `override: true`.
     r#override: bool,
 }
 

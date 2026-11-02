@@ -71,7 +71,7 @@ impl PreparedImport {
     }
 }
 
-/// Validate and merge `incoming` `LaneHistory` entries into `existing` for `lane_hash`.
+/// Validate and merge `incoming` `LaneHistory` [`Value`] entries into `existing` for `lane_hash`.
 #[inline]
 fn merge_history(
     existing: Option<Value>,

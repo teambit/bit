@@ -72,6 +72,7 @@ fn has_conflicts(rows: &[Value]) -> bool {
     rows.iter()
         .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true)
 }
+/// Deserialize and validate a [`wire::Prepare`] request from `input`.
 #[inline]
 fn parse_request(input: &Value) -> io::Result<wire::Prepare> {
     let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;

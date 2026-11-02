@@ -96,6 +96,7 @@ fn versioned(items: [&Comparator; 2]) -> impl Iterator<Item = Comparator> + '_ {
         .cloned()
 }
 
+/// Return `true` when `semver` carries a non-empty prerelease identifier list.
 #[inline]
 fn is_pre(semver: &SemVer) -> bool {
     !semver.prerelease.is_empty()

@@ -72,6 +72,7 @@ fn record_main_refresh(
     Ok(())
 }
 
+/// Append `target`'s identity and `scope`'s `ScopeMeta` hash to the current refresh [`Progress`] entry.
 #[inline]
 fn record_request(plan: &mut PreparedImport, target: &Target, scope: &str) -> io::Result<()> {
     let progress = plan.progress.last_mut().ok_or_else(|| invalid("import refresh progress"))?;

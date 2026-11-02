@@ -92,6 +92,7 @@ fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<P
         .collect()
 }
 
+/// Parse a single [`PolicyEntry`] item from `config[key]` according to `options`.
 fn key_entry(item: &Value, key: &str, options: &KeyOptions) -> io::Result<PolicyEntry> {
     let fallback_key =
         if options.version_key == "supportedRange" { "version" } else { "supportedRange" };

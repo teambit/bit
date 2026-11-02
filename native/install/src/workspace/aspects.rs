@@ -22,9 +22,11 @@ pub const DEFAULT_ENV: &str = "teambit.harmony/node";
 pub struct AspectEntry {
     /// `stringId`: the component id with version, or the core aspect name.
     pub id: String,
+    /// Whether this aspect is a built-in core aspect.
     pub core: bool,
     /// The config, or `"-"` for a removed aspect.
     pub config: Value,
+    /// Stored aspect extension data payload from the component's `Version` object.
     pub data: Value,
 }
 

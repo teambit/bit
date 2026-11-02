@@ -12,7 +12,9 @@ use std::{collections::HashMap, io, sync::OnceLock};
 /// Single compiled `node-ignore` regular expression rule and its negation flag.
 #[derive(Debug, Clone)]
 struct Rule {
+    /// Compiled `ECMAScript` regular expression for this ignore pattern.
     regex: Regex,
+    /// Whether the pattern starts with `!` (un-ignoring matching paths).
     negative: bool,
 }
 

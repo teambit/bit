@@ -84,7 +84,7 @@ pub fn component_package_name(
     format!("{prefix}/{without_prefix}")
 }
 
-/// Extract a non-empty `teambit.pkg/pkg` `packageJson.name` template from `aspects`, if configured.
+/// Extract a non-empty [`PKG_ASPECT`] (`teambit.pkg/pkg`) `packageJson.name` template from `aspects`, if configured.
 #[inline]
 fn configured_package_name(aspects: &Map<String, Value>) -> Option<&str> {
     aspects

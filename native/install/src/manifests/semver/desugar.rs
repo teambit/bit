@@ -29,9 +29,13 @@ fn next(id: Option<&str>) -> u64 {
 /// `^…` and `~…` share the `[M, m, p, pr]` capture layout.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Parts<'a> {
+    /// Major version token (`"0"`, `"1"`, `"x"`, `"*"`, etc.).
     major: &'a str,
+    /// Optional minor version token.
     minor: Option<&'a str>,
+    /// Optional patch version token.
     patch: Option<&'a str>,
+    /// Optional prerelease suffix following `-`.
     pre: Option<&'a str>,
 }
 

@@ -57,6 +57,7 @@ impl Multi {
         ))
     }
 
+    /// Format this [`Multi`] union as a `||`-joined range string, or `"*"` when empty.
     #[inline]
     fn format(&self) -> String {
         let mut parts: Vec<String> = Vec::with_capacity(self.0.len());

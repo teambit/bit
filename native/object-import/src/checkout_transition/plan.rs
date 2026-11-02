@@ -12,7 +12,9 @@ use std::{
 /// Active checkout plans keyed by token alongside a monotonic sequence counter.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
+    /// Retained [`Plan`] entries keyed by their hex checkout token.
     pub(super) plans: HashMap<String, Plan>,
+    /// Monotonic counter used to mint unique checkout plan tokens.
     sequence: u64,
 }
 /// Prepared checkout plan holding spooled bodies, target manifests, current snapshots, and merge rows.

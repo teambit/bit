@@ -14,9 +14,13 @@ const MAX_SAFE_INTEGER: u64 = 9_007_199_254_740_991;
 /// identifiers compare numerically, like `JavaScript`'s `compareIdentifiers`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct SemVer {
+    /// Major version number (`M`).
     pub(crate) major: u64,
+    /// Minor version number (`m`).
     pub(crate) minor: u64,
+    /// Patch version number (`p`).
     pub(crate) patch: u64,
+    /// Dot-separated prerelease identifiers in source text form.
     pub(crate) prerelease: Vec<String>,
 }
 

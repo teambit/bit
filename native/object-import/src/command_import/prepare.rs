@@ -39,8 +39,11 @@ pub(crate) fn prepare(
 /// Pre-fetched remote scope directory and raw loose objects supplied to [`prepare_with_virtual`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VirtualRemote {
+    /// Remote scope name represented by this virtual remote.
     pub(crate) scope: String,
+    /// Temporary or local scope directory backing this virtual remote.
     pub(crate) path: std::path::PathBuf,
+    /// Pre-fetched `(sha1_hash, compressed_bytes)` loose object pairs.
     pub(crate) objects: Vec<(String, Vec<u8>)>,
 }
 

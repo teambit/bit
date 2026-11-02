@@ -72,7 +72,7 @@ pub fn candidates(
     Ok(ids)
 }
 
-/// Return `true` when `id` is neither a core aspect nor an environment plugin (`*.bit-env.*`) for `component`.
+/// Return `true` when `id` is neither a core aspect nor an environment plugin (`*.bit-env.*`) for [`WorkspaceComponent`].
 #[inline]
 fn may_register(
     id: &str,

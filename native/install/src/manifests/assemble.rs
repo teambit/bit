@@ -83,7 +83,7 @@ fn resolve_plus(peers: &DependencyMap, root: &DepsObject) -> DependencyMap {
         .collect()
 }
 
-/// `WorkspaceManifest.toJson`: env peers are defaults the root's own entries override.
+/// `WorkspaceManifest.toJson`: env peers in [`EnvRoot`] are defaults the root's own entries override.
 pub(super) fn root_manifest(
     input: &ManifestInput<'_>,
     root: &DepsObject,

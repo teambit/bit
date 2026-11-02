@@ -48,6 +48,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
 fn strategy_eq(strategy: Option<&str>, expected: &str) -> bool {
     strategy.is_some_and(|strat| strat.eq_ignore_ascii_case(expected))
 }
+/// Build the initial target [`File`] list, file status map, and untargeted removal set for `plan`.
 fn initial(
     plan: &plan::Plan,
     request: &wire::Apply,

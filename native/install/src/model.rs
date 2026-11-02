@@ -24,6 +24,7 @@ pub struct ComponentId {
     pub default_scope: Option<String>,
     /// Component name within its scope (may include `/` namespaces).
     pub name: String,
+    /// Optional component tag or snap version hash.
     pub version: Option<String>,
 }
 

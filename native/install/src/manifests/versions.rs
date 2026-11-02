@@ -95,7 +95,7 @@ pub(super) fn without_version(id: &str) -> &str {
     }
 }
 
-/// `id@version` → `version`.
+/// Extract the trailing `@version` suffix from `id` (`id@version` → `Some(version)`).
 #[inline]
 pub(super) fn version_of(id: &str) -> Option<&str> {
     let trimmed = id.trim();

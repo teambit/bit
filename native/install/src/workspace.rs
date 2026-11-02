@@ -56,9 +56,11 @@ pub(super) const ENV_OF_ENVS: &str = "teambit.envs/env";
 /// Loaded workspace state combining `.bitmap` entries, resolved [`WorkspaceComponent`]s, root `package.json`, and [`MergeConfig`].
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Workspace {
+    /// Absolute workspace root directory path.
     pub root: PathBuf,
     /// The local scope (`.bit` or `.git/bit`).
     pub scope_path: PathBuf,
+    /// Active lane metadata from `.bitmap` (`_bit_lane`), if checked out on a lane.
     pub lane: Option<LaneInfo>,
     /// `.bitmap` entries, parallel to `components`.
     pub entries: Vec<BitmapEntry>,

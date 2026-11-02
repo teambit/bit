@@ -65,6 +65,7 @@ fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
     })
 }
 
+/// Map each retained body's SHA-1 hash in `plan` to its first body index.
 #[inline]
 fn retained_indices(plan: &plan::Plan) -> HashMap<&str, usize> {
     let mut indices = HashMap::with_capacity(plan.bodies.len());

@@ -56,7 +56,9 @@ pub type Sink = Arc<dyn Fn(&str) + Send + Sync>;
 
 /// The terminal Bit writes to.
 pub struct Output {
+    /// Whether ANSI color sequences are emitted.
     color: bool,
+    /// Whether the target output stream is an interactive TTY.
     tty: bool,
     /// Bit's loader exists (`loader.isStarted`): status and success lines print.
     /// The package manager step turns it on (`logger.on()` in `PnpmPackageManager`).

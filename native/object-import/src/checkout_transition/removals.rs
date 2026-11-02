@@ -8,8 +8,11 @@ use std::io;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
+    /// Checkout plan token identifying the prepared plan in [`plan::State`].
     token: String,
+    /// Whether tracked files absent from the target manifest should be scheduled for removal.
     tracked: bool,
+    /// Whether the component owns the workspace root directory (preserving `.bitmap`).
     workspace_root: bool,
 }
 /// Compute removed file statuses and absolute removal paths for a prepared checkout plan.

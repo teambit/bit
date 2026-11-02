@@ -8,7 +8,7 @@ use std::{
     io::{self, BufWriter, Write},
     path::Path,
 };
-/// Assign packed `.checkout-pack` file paths and byte offsets to `bodies`.
+/// Assign packed `.checkout-pack` file paths and byte offsets to [`Body`] entries.
 #[inline]
 pub(super) fn assign(bodies: &mut [Body], directory: &Path, token: &str, first: usize) {
     if bodies.is_empty() {

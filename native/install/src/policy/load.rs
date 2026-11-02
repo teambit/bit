@@ -74,7 +74,7 @@ pub async fn load_env_policies(
     Ok(policies)
 }
 
-/// Resolve the [`EnvPolicy`] of `env_id` from `env.jsonc` via `reader` or by querying `host`.
+/// Resolve the [`EnvPolicy`] of `env_id` from `env.jsonc` via [`EnvJsoncReader`] or by querying [`Host`].
 pub async fn env_policy(
     reader: &EnvJsoncReader<'_>,
     env_id: &str,

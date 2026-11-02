@@ -43,6 +43,7 @@ const SKIPPED_DIRS: [&str; 4] = ["node_modules", ".bit", ".git", ".bitTmp"];
 /// Maximum directory recursion depth (`128`) when walking component files.
 const MAX_DEPTH: usize = 128;
 
+/// Return the default Bit ignore glob list, including [`BIT_GENERATED_IGNORE_LIST`] unless `track_all_files` is set.
 #[inline]
 fn bit_list(track_all_files: bool) -> Vec<&'static str> {
     let mut list = ALWAYS_IGNORE_LIST.to_vec();

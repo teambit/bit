@@ -44,8 +44,8 @@ pub fn auto_detect(policy: &[PolicyEntry]) -> FieldMaps {
     result
 }
 
-/// Forced entries: dependencies added manually. A name is taken once across
-/// fields unless the value is `-`.
+/// Forced [`PolicyEntry`] items (`toLegacyDepsOverrides`): dependencies added manually. A name is taken once across
+/// fields unless the value is [`REMOVE`].
 #[must_use]
 #[inline]
 pub fn deps(policy: &[PolicyEntry]) -> FieldMaps {

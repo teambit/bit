@@ -15,8 +15,11 @@ use std::{collections::HashMap, io};
 /// Active component version selection records keyed by selection token.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
+    /// Active selection [`Record`]s keyed by their hex selection token.
     records: HashMap<String, Record>,
+    /// Monotonic counter used to mint unique selection tokens.
     sequence: u64,
+    /// Total estimated byte weight of all active records in `records`.
     bytes: usize,
 }
 /// Stage in the multi-step component version selection state machine.

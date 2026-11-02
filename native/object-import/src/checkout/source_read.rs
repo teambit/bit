@@ -10,8 +10,11 @@ use std::io::{self, Read, Write};
 /// Verified `Source` object payload along with its compressed and inflated byte sizes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Record {
+    /// Verified raw `Source` object body bytes.
     body: Vec<u8>,
+    /// Compressed loose object byte size on disk.
     compressed: usize,
+    /// Total inflated loose object byte size.
     inflated: usize,
 }
 /// Framed response payload summarizing total binary bytes and per-file `[offset, len, compressed, inflated]` spans.

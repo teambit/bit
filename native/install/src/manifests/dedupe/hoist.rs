@@ -93,7 +93,7 @@ fn handle_peers_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::R
     Ok(false)
 }
 
-/// `getLifecycleType`: runtime when any component needs it at runtime, else dev.
+/// `getLifecycleType`: [`Field::Dependencies`] when any component needs it at runtime, else [`Field::DevDependencies`].
 #[inline]
 fn lifecycle_field(items: &[Item]) -> Field {
     if items

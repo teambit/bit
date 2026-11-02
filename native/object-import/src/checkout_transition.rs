@@ -17,7 +17,9 @@ use std::io;
 /// Per-helper checkout transition state owning active selection records and prepared plans.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
+    /// Active multi-step component version selection state machine.
     select: select::State,
+    /// Prepared checkout plans retained by plan token.
     plans: plan::State,
 }
 /// Dispatch a checkout transition operation (`kind`) against `state`.

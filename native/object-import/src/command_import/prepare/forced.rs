@@ -63,6 +63,7 @@ fn has_matching_phase_id(ids: &[String], identities: &HashSet<String>) -> bool {
         .any(|id| identities.contains(without_version(id)))
 }
 
+/// Strip any trailing `@version` suffix from `id`, returning the bare component identity.
 #[inline]
 fn without_version(id: &str) -> &str {
     let id = id.trim();

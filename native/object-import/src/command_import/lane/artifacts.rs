@@ -74,6 +74,7 @@ fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     collect_builder_references(artifacts)
 }
 
+/// Collect and validate SHA-1 `Source` references across all builder `artifacts` entries.
 #[inline]
 fn collect_builder_references(artifacts: &Value) -> io::Result<Vec<String>> {
     let mut references = Vec::new();

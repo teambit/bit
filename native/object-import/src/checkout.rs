@@ -33,9 +33,13 @@ const MAX_PATH: usize = 32_768;
 /// Single file checkout entry pairing a 20-byte `Source` SHA-1 hash with its workspace destination.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Input {
+    /// Raw 20-byte SHA-1 digest of the `Source` object.
     hash: [u8; 20],
+    /// Absolute destination path in the workspace.
     destination: PathBuf,
+    /// Whether to apply platform EOL normalization before writing.
     normalize: bool,
+    /// Whether to consult [`cache::State`] even on preflight-only reads.
     prefer_cached: bool,
 }
 impl Input {

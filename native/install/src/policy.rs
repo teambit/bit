@@ -13,6 +13,7 @@ pub(crate) mod tests;
 
 /// Re-exported variant policy options and multi-layer policy merge helper.
 pub use entries::{VariantOptions, merge};
+/// Re-exported environment policy loader, core environment constants, and version-splitting helper.
 pub use load::{CORE_ENVS, EnvJsoncReader, is_core_env, load_env_policies, split_version};
 
 use crate::{

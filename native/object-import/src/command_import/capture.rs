@@ -25,10 +25,15 @@ const MAX_RECORDS: usize = 131_072;
 /// Captured loose scope object with its kind, raw bytes, parsed JSON [`Value`], or raw `Source` body.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Object {
+    /// Loose object header type (`"Component"`, `"Version"`, `"VersionHistory"`, `"Lane"`, `"Source"`, etc.).
     pub(super) kind: String,
+    /// Raw zlib-compressed loose object bytes.
     pub(super) bytes: Vec<u8>,
+    /// Parsed JSON payload for metadata objects (`None` for `"Source"` blobs).
     pub(super) value: Option<Value>,
+    /// Verified raw file body for `"Source"` objects (`None` for metadata objects).
     pub(super) source: Option<Vec<u8>>,
+    /// Total inflated byte length (including the `<type> <hash> <size>\0` header).
     pub(super) inflated_size: usize,
 }
 /// Read-only import capture state tracking SHA-256 file proofs, virtual files, and byte budgets.

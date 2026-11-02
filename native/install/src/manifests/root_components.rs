@@ -86,6 +86,7 @@ fn hoisting_limits() -> Value {
     json!({ "hoistingLimits": "workspaces" })
 }
 
+/// Build `.bit_roots/<env>` [`Manifest`]s for every distinct environment used by `input.components`.
 fn env_manifests(
     input: &ManifestInput<'_>,
     workspace_deps: &DependencyMap,

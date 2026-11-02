@@ -56,6 +56,7 @@ fn is_non_main_lane(current: &Value) -> bool {
         !short.is_empty() && short != "main"
     })
 }
+/// Resolve the remote scope directory for `name` and stage its `ScopeMeta` object into `plan.overlay`.
 pub(super) fn remote(
     plan: &mut PreparedImport,
     remotes: &Value,

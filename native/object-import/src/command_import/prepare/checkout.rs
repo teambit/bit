@@ -81,7 +81,7 @@ impl PreparedImport {
         Ok(targets)
     }
 
-    /// Refresh and stage workspace `.bitmap` targets that are not present on `lane`.
+    /// Refresh and stage workspace `.bitmap` [`Target`]s that are not present on `lane`.
     fn checkout_off_lane(
         &mut self,
         targets: &[Target],

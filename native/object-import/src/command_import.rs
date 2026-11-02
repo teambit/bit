@@ -34,7 +34,9 @@ use std::{collections::HashMap, io, path::PathBuf};
 pub(crate) struct Target {
     /// Bitmap scope, before defaultScope is substituted for unexported IDs.
     pub(crate) scope: Option<String>,
+    /// Component name within its scope.
     pub(crate) name: String,
+    /// Requested version tag, snap hash, `"latest"`, or `"head"`.
     pub(crate) version: String,
 }
 /// In-memory overlay of staged scope [`Object`]s, remote refs, and lane refs for a prepared import.
