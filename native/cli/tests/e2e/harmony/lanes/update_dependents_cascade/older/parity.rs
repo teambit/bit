@@ -32,6 +32,7 @@ fn direct_hidden_cascade_matches_released_output_and_object_metadata() {
     assert_eq!(actual, expected);
 }
 
+/// Captures normalized lane, `.bitmap`, and version state along with the snap hashes for `comp3` and `comp2`.
 fn state(helper: &Helper) -> (Value, Vec<String>) {
     let lane = parse(&helper.native("cat-lane dev"));
     let ids = [

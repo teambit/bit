@@ -5,6 +5,9 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 
+/// Shared lane name hosting two identically named components from different scopes.
+const LANE_A: &str = "lane-a";
+
 /// Verifies that two components with the same name from different scopes coexist on a lane with distinct root directories.
 #[test]
 fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
@@ -13,7 +16,7 @@ fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
     let (another_remote, another_remote_path) = helper.new_bare_scope();
 
     helper.populate_components(2, true, "");
-    helper.native("lane create lane-a");
+    helper.native(&format!("lane create {LANE_A}"));
     helper.native("snap -m s1");
     helper.native("export");
 

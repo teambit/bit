@@ -14,6 +14,8 @@ pub(super) fn workspace() -> Helper {
     helper.tag_without_build("comp1", "--message initial");
     helper
 }
+
+/// Runs `command` natively in `helper` and via Node in `oracle`, asserting identical output, history, and `.bitmap`.
 pub(super) fn command(helper: &Helper, oracle: &Path, command: &str) {
     let actual = helper.native_run(command);
     let expected = node(oracle, command);

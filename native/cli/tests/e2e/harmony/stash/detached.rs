@@ -53,6 +53,7 @@ fn stash_graph_keeps_current_ids_and_omits_unpublished_graph_sources() {
     }
 }
 
+/// Verifies that `bit stash save` and `stash load` preserve binary and CRLF source files byte-for-byte.
 #[test]
 fn stash_binary_and_crlf_sources_match_published_storage_and_restoration() {
     let helper = workspace();

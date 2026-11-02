@@ -12,6 +12,8 @@ pub(super) fn node(helper: &Helper, command: &str) {
     );
     assert!(run.status.success(), "{command}: {} {}", run.stdout, run.stderr);
 }
+
+/// Creates a workspace with `bar/foo` configured with the custom `env/merge` callback aspect.
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

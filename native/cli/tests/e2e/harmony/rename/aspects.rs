@@ -32,6 +32,8 @@ fn workspace(exported: bool) -> Helper {
     }
     helper
 }
+
+/// Verifies that renaming a new aspect updates its directory, filenames, and class names unless `--preserve` is passed.
 #[test]
 fn new_aspect_rename_changes_directory_filenames_and_classes_unless_preserved() {
     for (flag, directory, class, old_directory, old_class) in [

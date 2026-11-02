@@ -15,6 +15,7 @@ fn node(helper: &Helper, command: &str) {
     assert!(run.status.success(), "{command}: {} {}", run.stdout, run.stderr);
 }
 
+/// Creates a workspace in a manual merge-pending state with the callback hook aspect configured.
 pub(super) fn pending() -> Helper {
     pending_with(false)
 }

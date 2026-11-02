@@ -17,6 +17,7 @@ fn component_merge_retains_one_provider_through_native_continuation() {
     compare(&helper, "merge bar/foo --auto-merge-resolve theirs -m merged -x", true, false);
 }
 
+/// Verifies that `bit lane merge` retains a single compiled provider session through snapshot creation.
 #[test]
 fn lane_merge_retains_one_compiled_provider_through_snapshot() {
     qualify("lane merge dev --auto-merge-resolve theirs -m merged -x", false, false);

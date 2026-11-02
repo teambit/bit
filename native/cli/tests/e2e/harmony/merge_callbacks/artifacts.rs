@@ -40,6 +40,8 @@ pub(super) fn normalize(root: &Path, version: &mut Value) {
         }
     }
 }
+
+/// Reads and inflates the raw payload of a `Source` object by `hash` from `root`'s scope.
 fn source(root: &Path, hash: &str) -> Vec<u8> {
     let file = bit_object_import::scope_path(root)
         .join("objects")

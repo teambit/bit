@@ -23,6 +23,7 @@ fn configure_root_components(helper: &Helper, pm: &str, extra: &Value) {
     );
 }
 
+/// Populates `bar` and `precision-range` with `rootComponents: true` under package manager `pm`.
 fn setup_bar_and_precision_range(helper: &Helper, pm: &str) {
     helper.set_workspace_with_remote_scope();
     configure_root_components(

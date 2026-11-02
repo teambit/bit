@@ -3,6 +3,9 @@
 
 use crate::helper::Helper;
 
+/// Warning substring emitted by `bit add` when a component ID already exists on the remote scope.
+const REMOTE_COLLISION_WARNING: &str = "already exist on the remote scope";
+
 /// Verifies that `bit add` warns non-blockingly when a new component's ID already exists on the remote scope.
 #[test]
 fn new_component_id_exists_on_remote_warning_and_non_collision() {
@@ -18,7 +21,7 @@ fn new_component_id_exists_on_remote_warning_and_non_collision() {
     helper.add_remote_scope();
     helper.output_file("comp1/index.js", "module.exports = () => 'unrelated';");
     let add_out = helper.native("add comp1");
-    assert!(add_out.contains("already exist on the remote scope"), "{add_out}");
+    assert!(add_out.contains(REMOTE_COLLISION_WARNING), "{add_out}");
     assert!(add_out.contains("bit import"), "{add_out}");
     assert!(add_out.contains("bit rename"), "{add_out}");
     let bm = helper.read_bit_map();

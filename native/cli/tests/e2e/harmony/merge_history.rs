@@ -14,6 +14,7 @@ fn node(helper: &Helper, command: &str) {
     assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
 }
 
+/// Creates a workspace with two unrelated exported lanes (`left` and `right`) containing `bar/foo`.
 pub(super) fn unrelated() -> (Helper, PathBuf) {
     unrelated_with(crate::helper::remote::publish)
 }

@@ -33,6 +33,7 @@ class BuildEnv {
 }
 module.exports={default:BuildEnv};";
 
+/// Creates a workspace configured with [`BUILD_ENV`] and optional builder failure injection.
 fn build_workspace(fail: bool) -> Helper {
     build_workspace_with(fail, false)
 }

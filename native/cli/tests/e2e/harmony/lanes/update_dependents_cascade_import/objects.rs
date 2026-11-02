@@ -29,6 +29,7 @@ fn no_id_lane_import_matches_released_output_and_keeps_workspace_versions() {
     compare_json_failure(&helper, &baseline, &remote);
 }
 
+/// Compares native and Node execution of `command` on a cloned lane workspace and remote scope.
 fn compare(helper: &Helper, baseline: &Path, remote: &Path, head: &str, command: &str, ci: bool) {
     helper.get_cloned_workspace(baseline);
     helper.restore_remote_scope(remote);

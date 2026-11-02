@@ -4,6 +4,9 @@
 
 use crate::helper::{Helper, parse};
 
+/// Component moved to a separate origin scope before testing cross-scope hidden `updateDependents` merge.
+const CROSS_SCOPE_COMP: &str = "comp2";
+
 /// Verifies that merging a lane with cross-scope hidden `updateDependents` fetches origin `main` history first.
 #[test]
 fn merging_cross_scope_hidden_updates_into_main_fetches_origin_history() {
@@ -11,7 +14,7 @@ fn merging_cross_scope_hidden_updates_into_main_fetches_origin_history() {
     helper.set_workspace_with_remote_scope();
     let (origin, origin_path) = helper.new_bare_scope_connected();
     helper.populate_components(3, false, "");
-    helper.native(&format!("scope set {origin} comp2"));
+    helper.native(&format!("scope set {origin} {CROSS_SCOPE_COMP}"));
     helper.link("--rewire");
     helper.run("compile");
     helper.native("tag --skip-tests");

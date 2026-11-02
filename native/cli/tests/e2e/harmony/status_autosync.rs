@@ -25,6 +25,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Enables `bitmapAutoSync: true` in `workspace.jsonc` and initializes a quiescent Git repository.
 fn enable(helper: &Helper) {
     let root = &helper.scopes.local_path;
     let config = read_jsonc(&root.join("workspace.jsonc"));

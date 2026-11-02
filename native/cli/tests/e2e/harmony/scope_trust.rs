@@ -4,6 +4,9 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
+/// `workspace.jsonc` key listing external scopes trusted to execute environment/aspect code.
+const TRUSTED_SCOPES_KEY: &str = "trustedScopes";
+
 /// Verifies `trustedScopes` enforcement and `bit scope trust` / `bit scope untrust` CLI commands.
 #[test]
 fn workspace_scope_trust_gate_and_cli_commands() {
@@ -30,7 +33,7 @@ fn workspace_scope_trust_gate_and_cli_commands() {
         "defaultScope",
         json!("other-owner.app"),
     );
-    config::set_workspace_aspect_key(&helper.scopes.local_path, "trustedScopes", json!([]));
+    config::set_workspace_aspect_key(&helper.scopes.local_path, TRUSTED_SCOPES_KEY, json!([]));
     helper.add_remote(&comp_remote.scope_path);
 
     let list_empty = helper.native("scope trust list");

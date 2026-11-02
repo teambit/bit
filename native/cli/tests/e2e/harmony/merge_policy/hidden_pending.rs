@@ -41,6 +41,7 @@ fn workspace() -> Helper {
     helper
 }
 
+/// Reads the first `updateDependents` reference from `cat-lane hidden-policy` in the remote scope.
 fn hidden_head(helper: &Helper) -> String {
     let lane = Helper::cmd_in_with(
         &helper.scopes.remote_path,

@@ -28,6 +28,7 @@ fn divergent(mixed: bool) -> Helper {
     helper
 }
 
+/// Writes incoming lane edits to `comp1/index.js` and `comp2/index.js`.
 fn incoming(helper: &Helper, mixed: bool) {
     for component in ["comp1", "comp2"] {
         if mixed && component == "comp2" {

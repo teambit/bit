@@ -26,6 +26,8 @@ fn ordinary_scope_rename_runs_real_installation_and_then_compilation() {
         .is_ok(),
     );
 }
+
+/// Normalizes completion duration tokens and startup progress frames in `text`.
 fn durations(text: &str) -> String {
     let durations = text
         .split_inclusive('\n')

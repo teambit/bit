@@ -39,6 +39,8 @@ fn scope_rename_changes_the_workspace_default_and_all_matching_new_components() 
     assert!(package.is_dir());
     assert!(package.join("dist").is_dir());
 }
+
+/// Verifies that `bit scope rename-owner` updates component scopes across multiple scopes while keeping root directories.
 #[test]
 fn owner_rename_keeps_component_directories_across_multiple_scopes() {
     let helper = support::workspace(2, false);

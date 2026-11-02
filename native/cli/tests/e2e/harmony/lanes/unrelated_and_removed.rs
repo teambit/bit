@@ -5,6 +5,9 @@
 use crate::helper::{Helper, parse};
 use std::fs;
 
+/// Component ID deleted on `lane-b` before merging `lane-a` with `--resolve-unrelated`.
+const COMP1: &str = "comp1";
+
 /// Verifies that `bit lane merge --resolve-unrelated` adopts the incoming component when deleted on the current lane.
 #[test]
 fn removed_on_current_lane_merge_unrelated_takes_theirs_and_populates_unrelated() {
@@ -14,7 +17,7 @@ fn removed_on_current_lane_merge_unrelated_takes_theirs_and_populates_unrelated(
     helper.populate_components(1, false, "lane-a");
     helper.run("snap -m s1");
     helper.run("export");
-    let head_on_lane_a = helper.head_of_lane("lane-a", "comp1");
+    let head_on_lane_a = helper.head_of_lane("lane-a", COMP1);
 
     helper.re_init_workspace();
     helper.add_remote_scope();

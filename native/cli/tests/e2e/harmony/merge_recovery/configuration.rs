@@ -4,6 +4,9 @@ use super::{compare, pending};
 use crate::helper::config;
 use std::fs;
 
+/// Workspace-root filename holding per-component configuration merge conflicts.
+const MERGE_CONFLICT_FILE: &str = "merge-conflict";
+
 /// Verifies that `bit merge --resolve` snapshots resolved per-component config and removes `merge-conflict`.
 #[test]
 fn resolved_configuration_is_snapshotted_and_conflict_document_is_consumed() {
@@ -11,7 +14,7 @@ fn resolved_configuration_is_snapshotted_and_conflict_document_is_consumed() {
     helper.output_file("bar/foo.js", "module.exports = 'resolved';");
     let identity = format!("{}/bar/foo", helper.scopes.remote);
     helper.output_file(
-        "merge-conflict",
+        MERGE_CONFLICT_FILE,
         &format!(
             "[*] {identity}\n{}",
             serde_json::json!({"teambit.pkg/pkg":{"packageJson":{"mergeResolved":true}}}),

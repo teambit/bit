@@ -8,6 +8,7 @@ fn workspace() -> Helper {
     workspace_in_scope(false)
 }
 
+/// Creates a workspace (optionally connected to a remote scope) with three components tagged twice.
 fn workspace_in_scope(with_remote: bool) -> Helper {
     let helper = Helper::new();
     if with_remote {

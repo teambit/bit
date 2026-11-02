@@ -41,6 +41,7 @@ pub(super) fn compare(helper: &Helper, oracle: &Path, visible_head: &str) {
     assert_eq!(actual, expected);
 }
 
+/// Extracts the version hash from the first `updateDependents` entry in `lane`.
 fn hidden_head(lane: &Value) -> &str {
     lane["updateDependents"][0]
         .as_str()

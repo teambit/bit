@@ -32,6 +32,7 @@ pub(super) fn compare_log(helper: &Helper) {
     }
 }
 
+/// Verifies that `bit log` on divergent lanes matches Node across `--json`, default, `--parents`, and `--one-line`.
 #[test]
 fn divergent_lane_logs_match_all_published_views() {
     let helper = versions();

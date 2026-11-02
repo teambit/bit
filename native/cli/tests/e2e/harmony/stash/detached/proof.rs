@@ -46,6 +46,8 @@ fn a_source_changed_after_stash_planning_cannot_publish_any_detached_objects() {
     assert_eq!(controls(root), control);
     assert!(!bit_object_import::scope_path(root).join("stash").exists());
 }
+
+/// Verifies that `commandStashStageHistory` with `prepareOnly: true` writes no objects and rejects duplicate calls.
 #[test]
 fn prepared_stash_histories_write_nothing_and_reject_duplicate_preparation() {
     let helper = workspace();

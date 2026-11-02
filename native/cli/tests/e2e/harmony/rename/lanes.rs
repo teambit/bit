@@ -41,6 +41,7 @@ fn lane_rename_removal_merges_to_main_only_when_the_source_exists_on_main() {
     }
 }
 
+/// Creates a two-component workspace with the lane-delay provider installed, optionally tagged on `main`.
 fn workspace(main_exists: bool) -> Helper {
     let helper = support::workspace(2, false);
     install_delay(&helper);

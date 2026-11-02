@@ -3,6 +3,9 @@
 
 use crate::helper::{Helper, config};
 
+/// Component ID tested for `.bitmap` and local scope version synchronization.
+const BAR_FOO_ID: &str = "bar/foo";
+
 /// Verifies `.bitmap` and scope reconciliation when workspace and local scope component states are out of sync.
 #[test]
 fn out_of_sync_components_between_scope_and_consumer() {
@@ -22,7 +25,7 @@ fn out_of_sync_components_between_scope_and_consumer() {
     let scope_out_of_sync = helper.clone_workspace();
 
     // 1. bit tag tags to next version of what scope has
-    let tag_out = helper.run("tag bar/foo --unmodified --patch --skip-tests");
+    let tag_out = helper.run(&format!("tag {BAR_FOO_ID} --unmodified --patch --skip-tests"));
     assert!(tag_out.contains("0.0.2"), "{tag_out}");
 
     // 2. bit status syncs .bitmap according to scope

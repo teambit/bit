@@ -13,6 +13,7 @@ fn node(helper: &Helper, command: &str) {
     assert!(run.status.success(), "{command}: {} {}", run.stdout, run.stderr);
 }
 
+/// Creates a workspace where `main` and exported lane `dev` have diverged on `bar/foo`.
 fn divergent() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

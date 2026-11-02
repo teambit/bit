@@ -210,6 +210,7 @@ fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane(
     assert!(status.status.success(), "{status:?}");
 }
 
+/// Verifies `bit lane merge` and `bit import` when an unrelated component exists on a forked cross-scope lane.
 #[test]
 fn multiple_scopes_when_a_component_in_the_origin_is_different_than_on_the_lane_and_the_lane_is_forked()
  {

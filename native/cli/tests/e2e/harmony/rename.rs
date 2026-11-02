@@ -32,6 +32,8 @@ fn new_component_rename_replaces_the_identity_and_retains_one_component() {
     identities.retain(|id| *id != provider);
     assert_eq!(identities, vec![format!("{}/comp2", helper.scopes.remote)]);
 }
+
+/// Verifies that `bit rename` respects `--scope`, namespaces, and non-default source scopes on new components.
 #[test]
 fn new_component_scope_namespace_and_nondefault_source_scope_are_respected() {
     for (before, command, name, scope) in [

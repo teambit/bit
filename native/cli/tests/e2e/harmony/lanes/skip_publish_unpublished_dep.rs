@@ -4,6 +4,9 @@
 
 use crate::helper::Helper;
 
+/// Snap message passed when snapping `comp1` with an unpublished lane dependency.
+const SNAP_MSG: &str = "snap-message";
+
 /// Verifies snapping a dependent component on a lane when its unmodified dependency has not been published as a package.
 #[test]
 fn snap_dependent_of_unmodified_unpublished_dependency() {
@@ -14,6 +17,6 @@ fn snap_dependent_of_unmodified_unpublished_dependency() {
     helper.native("snap --skip-tests");
     helper.native("export");
 
-    let output = helper.native("snap comp1 --unmodified --skip-tests -m snap-message");
+    let output = helper.native(&format!("snap comp1 --unmodified --skip-tests -m {SNAP_MSG}"));
     assert!(output.contains("component(s) snapped"), "{output}");
 }

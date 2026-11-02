@@ -14,6 +14,8 @@ fn workspace() -> Helper {
     remote::publish(&helper);
     helper
 }
+
+/// Verifies that `bit rename --deprecate` on an exported component records `newId` and `renamedFrom` metadata.
 #[test]
 fn exported_deprecating_rename_creates_new_identity_and_bidirectional_provenance() {
     let helper = workspace();

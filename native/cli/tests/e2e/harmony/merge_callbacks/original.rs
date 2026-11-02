@@ -27,6 +27,8 @@ fn component_merge_with_valid_cache_matches_at_the_original_workspace_path() {
     let actual = helper.native_run(command);
     compare_results(&helper, &oracle, &actual, &expected, true, false);
 }
+
+/// Copies directory tree `from` to `to` while preserving file modification timestamps.
 fn copy(from: &Path, to: &Path) {
     setup::copy_dir(from, to);
     timestamps(from, to);

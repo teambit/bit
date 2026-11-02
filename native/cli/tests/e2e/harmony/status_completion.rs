@@ -28,6 +28,7 @@ fn compare(helper: &Helper, command: &str, environment: &[(&str, &OsStr)]) {
     }
 }
 
+/// Verifies `--check-circular-dependencies` (`-c`), `--strict`, and `--ignore-circular-dependencies` against Node.
 #[test]
 fn circular_dependency_flags_match_node() {
     let helper = Helper::new();

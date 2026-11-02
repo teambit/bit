@@ -4,6 +4,10 @@ use crate::{
     commands::move_paths::support::setup,
     helper::{Helper, config},
 };
+
+/// Scoped component ID of the delay environment aspect used to separate second-resolution backups.
+const SCOPE_DELAY_ENV: &str = "fixture.tools/env/scope-delay";
+
 /// Registers and assigns the `fixture.tools/env/scope-delay` environment aspect to `names`.
 pub(super) fn delay(helper: &Helper, names: &[&str]) {
     let source = include_str!("fixture.cjs");
@@ -15,7 +19,7 @@ pub(super) fn delay(helper: &Helper, names: &[&str]) {
     helper.output_file("scope-delay/dist/index.js", source);
     setup(helper, "tag env/scope-delay --ignore-issues * --message delay");
     for name in names {
-        config::set_component_env(&helper.scopes.local_path, name, "fixture.tools/env/scope-delay");
+        config::set_component_env(&helper.scopes.local_path, name, SCOPE_DELAY_ENV);
     }
     setup(helper, "link");
 }

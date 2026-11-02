@@ -28,6 +28,8 @@ fn configured(exported: bool) -> Helper {
     helper.output_file("rename-load-active", "active");
     helper
 }
+
+/// Verifies that renaming an exported component writes in-memory `onLoad` mutations to the new root without altering the old root.
 #[test]
 fn exported_rename_materializes_in_memory_source_changes_without_touching_original() {
     let helper = configured(true);

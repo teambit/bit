@@ -13,6 +13,7 @@ fn run(root: &Path, line: &str, node: bool) -> Run {
     Helper::cmd_in_with(root, line, &env)
 }
 
+/// Returns the `.bit/cache/components/deps` directory path under `root`.
 fn cache(root: &Path) -> std::path::PathBuf {
     root.join(".bit/cache/components/deps")
 }

@@ -2,6 +2,7 @@
 //!
 //! Verifies that hidden entries pointing at older lane snaps still cascade to the new head.
 
+/// Node CLI parity assertions for direct hidden dependent cascades.
 mod parity;
 
 use crate::helper::{Helper, parse};

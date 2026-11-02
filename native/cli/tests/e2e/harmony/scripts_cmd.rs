@@ -4,6 +4,9 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
+/// Fixture extension directory defining custom scripts (`test-script`, `another-script`, `async-script`).
+const SCRIPTS_ENV_NAME: &str = "env-with-scripts";
+
 /// Verifies `bit script --list`, script execution, `bit env get` script display, and env version mismatch guards.
 #[test]
 fn script_command_list_execute_env_get_and_version_mismatch() {
@@ -18,7 +21,7 @@ fn script_command_list_execute_env_get_and_version_mismatch() {
     assert!(no_config_out.contains(r#""envs""#), "{no_config_out}");
 
     // 2. Custom env with scripts defined
-    let env_name = "env-with-scripts";
+    let env_name = SCRIPTS_ENV_NAME;
     helper.copy_fixture_extensions(env_name);
     helper.add_component(env_name, "");
     helper.add_extension_to_variant(env_name, "teambit.envs/env", json!({}));

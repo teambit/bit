@@ -8,7 +8,7 @@ use std::{
     io::{Read, Write},
     path::Path,
 };
-
+/// Marks all `Version` objects under `objects_dir` as `buildStatus: "succeed"`.
 fn mark_versions_built(objects_dir: &Path) {
     let Ok(buckets) = fs::read_dir(objects_dir) else { return };
     for bucket in buckets.flatten() {
@@ -18,7 +18,7 @@ fn mark_versions_built(objects_dir: &Path) {
         }
     }
 }
-
+/// Rewrites a single `Version` object at `obj_path` from `"buildStatus":"pending"` to `"succeed"`.
 fn mark_version_object_built(obj_path: &Path) {
     let Ok(compressed) = fs::read(obj_path) else { return };
     let mut raw = Vec::new();

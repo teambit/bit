@@ -38,6 +38,7 @@ fn interactive_abort_confirmation_precedes_providers_and_restoration() {
     }
 }
 
+/// Spawns `bit lane merge-abort -x` in `root`, pipes `answer` to stdin, and returns the captured [`Run`].
 fn run(root: &Path, node: bool, answer: &str) -> Run {
     let mut command = helper::setup::bit_command(helper::setup::shared(), root);
     command

@@ -3,6 +3,9 @@
 
 use crate::helper::{Helper, parse};
 
+/// Error class name reported in `invalidComponents` when a component directory or its files are missing.
+const MISSING_IN_PATH_ERR: &str = "ComponentNotFoundInPath";
+
 /// Verifies `bit list` and `bit status` when a component's files or directory are deleted or `.gitignore`d.
 #[test]
 fn component_files_or_directory_missing_or_gitignored() {
@@ -25,7 +28,7 @@ fn component_files_or_directory_missing_or_gitignored() {
     );
     assert_eq!(
         status1["invalidComponents"][0]["error"]["name"].as_str(),
-        Some("ComponentNotFoundInPath"),
+        Some(MISSING_IN_PATH_ERR),
     );
     let status1_again = parse(&helper.native("status --json"));
     assert_eq!(

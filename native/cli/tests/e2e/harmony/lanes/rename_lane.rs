@@ -4,18 +4,21 @@
 
 use crate::helper::{Helper, config};
 
+/// Target lane name used when testing `bit lane rename` on an unexported local lane.
+const RENAMED_LANE: &str = "new-dev";
+
 /// Verifies that renaming a local lane and switching to `main` and back preserves `_bit_lane.exported == false`.
 #[test]
 fn rename_local_lane_switch_to_main_and_switch_back() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.native("lane create dev");
-    helper.native("lane rename new-dev");
+    helper.native(&format!("lane rename {RENAMED_LANE}"));
     helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
     helper.run("add comp1");
     helper.run("snap --message s1");
     helper.native("switch main");
-    helper.native("switch new-dev");
+    helper.native(&format!("switch {RENAMED_LANE}"));
     helper.run("import");
 
     let bitmap = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));

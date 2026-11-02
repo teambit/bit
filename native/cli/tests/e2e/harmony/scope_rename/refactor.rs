@@ -47,6 +47,7 @@ fn mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key() 
     assert_mixed_results(&helper, &map, &old);
 }
 
+/// Compiles the workspace and asserts that `status --json` reports zero `componentsWithIssues`.
 fn compile_mixed_baseline(helper: &crate::helper::Helper) {
     // Scope rename compiles replacement IDs, not the deprecated original. Its
     // baseline must therefore contain genuine compiler output for the old ID.

@@ -4,6 +4,9 @@
 
 use crate::helper::{Helper, parse};
 
+/// Custom environment ID applied to `comp1` before testing `bit lane merge main`.
+const EMPTY_ENV: &str = "empty-env";
+
 /// Verifies that `bit lane merge main` succeeds without false config conflicts when a component uses an external env policy.
 #[test]
 fn lane_merge_main_with_custom_env_policy() {
@@ -12,7 +15,7 @@ fn lane_merge_main_with_custom_env_policy() {
     helper.output_file("comp1/index.js", r#"module.exports = () => "v1";"#);
     helper.add_component("comp1", "");
     helper.set_empty_env();
-    helper.native("env set comp1 empty-env");
+    helper.native(&format!("env set comp1 {EMPTY_ENV}"));
     helper.link("");
     helper.compile();
     helper.run("tag --skip-tests");

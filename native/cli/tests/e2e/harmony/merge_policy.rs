@@ -20,6 +20,7 @@ fn removed_lane() -> Helper {
     helper
 }
 
+/// Replaces completion durations on `(completed in ...)` lines with `(completed in <duration>)`.
 fn stable(text: &str) -> String {
     text.lines()
         .map(|line| {

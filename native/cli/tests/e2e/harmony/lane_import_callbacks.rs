@@ -36,5 +36,5 @@ fn active_lane_import_with_configured_provider_matches_released_node() {
     let native = support::compare_with_stdout(&helper, "lane import dev", str::to_owned);
     assert!(native.status.success(), "{} {}", native.stdout, native.stderr);
     assert_eq!(native.stdout.matches("fixture provider startup").count(), 1);
-    assert_eq!(fs::read(helper.scopes.local_path.join(STARTUP_MARKER_FILE)).unwrap(), b"x",);
+    assert_eq!(fs::read(helper.scopes.local_path.join(STARTUP_MARKER_FILE)).unwrap(), b"x");
 }

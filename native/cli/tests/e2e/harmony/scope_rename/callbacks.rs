@@ -36,6 +36,8 @@ fn configured(environment: bool) -> Helper {
     helper.output_file("scope-lifecycle-active", "active");
     helper
 }
+
+/// Verifies that `bit scope rename` loads all originals before adding replacements and invokes `onAdd` callbacks.
 #[test]
 fn batch_loads_all_originals_before_adding_and_invokes_real_registered_onadd_callbacks() {
     let helper = configured(true);

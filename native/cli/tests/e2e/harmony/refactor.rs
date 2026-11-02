@@ -9,6 +9,7 @@ fn read_comp1(helper: &Helper) -> String {
     fs::read_to_string(helper.scopes.local_path.join("comp1/index.js")).unwrap()
 }
 
+/// Verifies `bit refactor dependency-name` input validation and package import specifier rewriting.
 #[test]
 fn refactoring_with_refactor_command() {
     let helper = Helper::new();

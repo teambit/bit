@@ -25,6 +25,8 @@ fn scope_fork_reports_every_copy_and_preserves_original_scope_and_name() {
     );
     fork::assert_origins(&helper, &["comp1", "comp2", "comp3"]);
 }
+
+/// Verifies that `bit scope fork` filters components by partial patterns when an explicit target scope is passed.
 #[test]
 fn scope_fork_filters_partial_patterns_with_an_explicit_target_scope() {
     let helper = fork::remote_workspace(3);
