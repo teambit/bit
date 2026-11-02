@@ -67,6 +67,7 @@ pub struct EngineSettings {
     /// The pnpm config cascade resolved at `root`, before Bit's overlay.
     base: pnpm_config::Config,
     pub registry: RegistrySettings,
+    /// Store and cache directory settings for the engine.
     pub store: StoreSettings,
     pub layout: LayoutSettings,
     pub resolution: ResolutionSettings,

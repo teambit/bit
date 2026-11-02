@@ -19,6 +19,7 @@ use std::io;
 pub struct Fetcher<'a> {
     /// Configured remote scopes and hub resolver.
     pub remotes: &'a Remotes,
+    /// HTTP network client used to query remote scopes.
     pub network: &'a Network,
     /// How many remotes are fetched at the same time (`concurrentFetchLimit`).
     pub concurrency: usize,

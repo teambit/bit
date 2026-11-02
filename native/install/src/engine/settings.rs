@@ -97,6 +97,7 @@ fn registry_settings(
     })
 }
 
+/// Build [`LayoutSettings`] from the base [`Config`], `dependency-resolver` config, [`HostInfo`], and global virtual-store flag.
 fn layout_settings(
     base: &Config,
     config: &DependencyResolverConfig,

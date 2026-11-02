@@ -49,6 +49,7 @@ pub(super) fn ordered(imports: &mut [Import]) -> Vec<String> {
     ids
 }
 
+/// Computes a forward-slash relative path from `from` to `to`.
 #[inline]
 fn relative(from: &Path, to: &Path) -> String {
     let from: Vec<_> = from

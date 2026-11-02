@@ -119,6 +119,7 @@ async fn resolve_spec(spec: &str, settings: &EngineSettings) -> io::Result<Resol
     })
 }
 
+/// Resolves `wanted` against `settings` using `pnpm`'s standalone resolver chain.
 async fn resolve(
     wanted: &WantedDependency,
     settings: &EngineSettings,

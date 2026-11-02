@@ -94,7 +94,7 @@ fn detached(component: &Value, key: &str) -> Vec<String> {
         .collect()
 }
 
-/// `MergeConflict` for import.
+/// Format a `MergeConflict` [`io::Error`] for component import tag conflicts.
 fn merge_conflict(component: &Value, conflicts: &[Value]) -> io::Error {
     let id = format!(
         "{}/{}",

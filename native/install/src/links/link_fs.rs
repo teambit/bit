@@ -50,7 +50,7 @@ pub(super) fn remove_path(path: &Path) -> io::Result<()> {
     fs::remove_file(path).or_else(|error| remove_dir_link(path, error))
 }
 
-/// Remove a directory symlink or junction on Windows using `fs::remove_dir`.
+/// Remove a directory symlink or junction on Windows using [`fs::remove_dir`].
 #[inline]
 fn remove_dir_link(path: &Path, error: io::Error) -> io::Result<()> {
     if cfg!(windows) { fs::remove_dir(path) } else { Err(error) }

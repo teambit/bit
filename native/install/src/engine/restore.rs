@@ -111,6 +111,7 @@ async fn restore(
     save(settings, lockfile)
 }
 
+/// Returns `true` when `package` has a non-empty `"resolution"` object in `pnpm-lock.yaml`.
 #[inline]
 fn has_resolution(package: &Value) -> bool {
     package

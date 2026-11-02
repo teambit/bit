@@ -113,7 +113,7 @@ pub(super) fn resolve(
     registries
 }
 
-/// The default registry is npmjs or unset, so Bit's registry proxies it.
+/// Returns `true` when `uri` is empty or matches [`NPM_REGISTRY`] (so Bit's cloud registry proxies it).
 #[inline]
 fn is_npmjs(uri: &str) -> bool {
     let trimmed = uri.trim().trim_end_matches('/');

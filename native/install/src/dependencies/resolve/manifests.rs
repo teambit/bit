@@ -117,6 +117,7 @@ pub(super) fn from_manifest(manifest: &Value, name: &str) -> Resolved {
     }
 }
 
+/// Builds a [`ResolvedComponent`] from a component package `manifest` and its `concrete` version.
 fn component_package(
     manifest: &Value,
     package_name: &str,

@@ -156,6 +156,7 @@ impl<'a> Resolver<'a> {
         }))
     }
 
+    /// Resolves a relative import `specifier` from `file` inside `component` (using `TypeScript` lookup when `typescript` is `true`).
     fn relative(
         &self,
         component: &WorkspaceComponent,

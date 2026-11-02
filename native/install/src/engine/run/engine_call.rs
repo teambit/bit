@@ -114,6 +114,7 @@ impl EngineCall {
         projects
     }
 
+    /// Builds the [`BitHooks`] manifest transformation chain for `projects`.
     fn hooks(&self, projects: &[Project]) -> BitHooks {
         BitHooks {
             root: self.settings.root.clone(),

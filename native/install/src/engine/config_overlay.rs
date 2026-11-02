@@ -28,6 +28,7 @@ pub(super) struct CallOverlay<'a> {
     pub overrides: &'a DependencyMap,
     /// Optional forced `@teambit/harmony` version to preserve in dependency manifests.
     pub forced_harmony_version: Option<&'a str>,
+    /// Non-root project package names treated as external dependencies when `rootComponents` is enabled.
     pub external_dependencies: &'a [String],
     pub update_all: bool,
 }

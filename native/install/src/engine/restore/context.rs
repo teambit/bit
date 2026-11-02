@@ -74,6 +74,7 @@ pub(super) fn merge(
     }
 }
 
+/// Returns `true` when `lockfile` contains at least one entry in `"packages"` or `"snapshots"`.
 #[inline]
 fn has_resolutions(lockfile: &Map<String, Value>) -> bool {
     ["packages", "snapshots"]

@@ -39,6 +39,7 @@ pub struct DevPatternConfig {
 }
 
 impl Default for DevPatternConfig {
+    /// Returns the default tester, docs, and compositions glob patterns.
     fn default() -> Self {
         Self {
             tests: strings_of(&["**/*.spec.+(js|ts|jsx|tsx)", "**/*.test.+(js|ts|jsx|tsx)"]),

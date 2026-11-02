@@ -151,6 +151,7 @@ fn parse(entry: &Value) -> CustomDetection {
     CustomDetection { specifiers: scan::dedupe(specifiers), typescript, lookups }
 }
 
+/// Extracts a trimmed, non-empty module specifier string from `value`.
 #[inline]
 fn specifier_str(value: &Value) -> Option<&str> {
     non_empty_str(value)

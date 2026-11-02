@@ -76,7 +76,7 @@ pub async fn import_current_objects(
     Ok(summary)
 }
 
-/// Load `.bitmap` and `scope.json`, connect to remotes, and import missing lane and component objects.
+/// Load `.bitmap` and `scope.json`, connect to remotes, and import missing lane and component objects into [`ImportSummary`].
 async fn import(
     root: &Path,
     scope_dir: &Path,

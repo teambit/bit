@@ -35,6 +35,7 @@ pub(super) struct Network<'a> {
 }
 
 impl<'a> Request<'a> {
+    /// Validates and constructs a [`Request`] from the raw canonical install `payload`.
     pub(super) fn new(payload: &'a Value) -> Option<Self> {
         let options = payload.get("options")?.as_object()?;
         if !supported_options(options) {

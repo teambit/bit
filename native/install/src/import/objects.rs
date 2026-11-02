@@ -64,6 +64,7 @@ pub fn compress_json(kind: &str, hash: &str, value: &Value) -> io::Result<Vec<u8
     compress(kind, hash, &serde_json::to_vec(value)?)
 }
 
+/// Compute the lowercase 40-character hex [`Sha1`] digest of `text`.
 #[must_use]
 #[inline]
 pub fn sha1_hex(text: &str) -> String {

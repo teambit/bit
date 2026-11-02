@@ -123,6 +123,7 @@ fn resolve_extension_id(
     versions::resolve(workspace, subject, inputs, &id, Lifecycle::Dev, None).unwrap_or(id)
 }
 
+/// Parses a non-core aspect configuration `key` into a [`ComponentId`].
 #[inline]
 fn extension_id(workspace: &Workspace<'_>, key: &str) -> Option<ComponentId> {
     let key = key.trim();

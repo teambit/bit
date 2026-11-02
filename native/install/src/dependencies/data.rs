@@ -124,6 +124,7 @@ pub fn legacy_dependencies(value: &Value) -> Vec<LegacyDependency> {
         .unwrap_or_default()
 }
 
+/// Parses a single [`LegacyDependency`] from a serialized JSON `Dependency` entry.
 #[inline]
 fn legacy_dependency(value: &Value) -> Option<LegacyDependency> {
     Some(LegacyDependency {

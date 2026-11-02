@@ -71,7 +71,7 @@ pub fn resolved_from_env_links(
     result
 }
 
-/// Resolve the environment package directory (`aspectPath`) for `env_id` from core aspects, workspace components, or `node_modules`.
+/// Resolve the environment package directory (`aspectPath`) into a [`PathBuf`] for `env_id` from core aspects, workspace components, or `node_modules`.
 fn env_dir(
     root: &Path,
     info: &HostInfo,

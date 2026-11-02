@@ -52,7 +52,7 @@ const BUILTINS: [&str; 45] = [
     "zlib",
 ];
 
-/// Return `true` when `specifier` names a built-in module in [`BUILTINS`] or a `node:`-prefixed module.
+/// Return `true` when `specifier` names a built-in Node.js module in [`BUILTINS`] or a `node:`-prefixed module.
 #[inline]
 #[must_use]
 pub fn is_builtin(specifier: &str) -> bool {

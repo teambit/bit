@@ -102,6 +102,7 @@ fn entry_times(cache: &Path) -> io::Result<Vec<f64>> {
     Ok(times)
 }
 
+/// Reads the non-deleted entry timestamps from a single `cacache` index bucket `file`.
 #[inline]
 fn file_times(file: &Path) -> io::Result<Vec<f64>> {
     match fs::read(file) {

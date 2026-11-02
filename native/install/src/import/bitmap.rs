@@ -12,7 +12,9 @@ const LANE_KEY: &str = "_bit_lane";
 /// An exported component id with its `.bitmap` version.
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id {
+    /// Remote scope name owning the component.
     pub scope: String,
+    /// Component name within `scope` (may include `/` namespaces).
     pub name: String,
     /// Tag or snap hash; `None` asks for the head.
     pub version: Option<String>,

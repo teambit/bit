@@ -27,6 +27,7 @@ pub fn history_hash(lane_hash: &str) -> String {
 pub struct Identity {
     /// Configured `user.name` from Bit's global config.
     pub username: Option<String>,
+    /// Configured `user.email` from Bit's global config.
     pub email: Option<String>,
 }
 

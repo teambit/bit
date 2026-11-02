@@ -96,7 +96,7 @@ fn base(component: &WorkspaceComponent, context: &PackageJsonContext<'_>) -> Man
     manifest
 }
 
-/// `ComponentID.serialize()`: `{ scope, name, version }`; an unexported id appends its default scope.
+/// `ComponentID.serialize()`: `{ scope, name, version }` [`Value`]; an unexported id appends its default scope.
 fn serialized_id(component: &WorkspaceComponent) -> Value {
     let id = &component.id;
     let exported_scope = id.scope

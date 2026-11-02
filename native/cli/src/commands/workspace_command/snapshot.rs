@@ -83,7 +83,7 @@ impl Steps<'_> {
         Ok(())
     }
 
-    /// Runs `commandSnapshotReceipt` and `commandFinalize` over `needs_snap` and `capture` to produce the finalized plan [`Value`].
+    /// Runs `commandSnapshotReceipt` and `commandFinalize` over [`needs_snap`] and `capture` to produce the finalized plan [`Value`].
     fn finalize(&mut self, needs_snap: &[String], capture: &Capture) -> io::Result<Value> {
         let hashes = receipt::new_snap_hashes(needs_snap.len())?;
         let graphs = graphs(self.root, self.context, needs_snap, &hashes, capture)?;

@@ -61,6 +61,7 @@ fn read(path: &Path) -> io::Result<Option<String>> {
         }))
 }
 
+/// Scans a `JavaScript` or `TypeScript` file with [`bit_dependency_scanner`], falling back to [`lexical`] on unsupported syntax.
 fn script(path: &Path, source: String) -> Vec<String> {
     let lexical_fallback = lexical(&source);
     let Ok(result) =

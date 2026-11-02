@@ -73,7 +73,7 @@ impl ComponentModel {
             .unwrap_or_default()
     }
 
-    /// The raw `Version` object.
+    /// The raw serialized `Version` JSON [`Value`], if present.
     #[inline]
     #[must_use]
     pub const fn raw(&self) -> Option<&Value> {

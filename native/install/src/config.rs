@@ -42,6 +42,7 @@ pub struct DependencyResolverConfig {
     pub package_manager: Option<String>,
     /// Outbound HTTP proxy URL configured in `dependency-resolver`.
     pub proxy: Option<String>,
+    /// Outbound HTTPS proxy URL configured in `dependency-resolver`.
     pub https_proxy: Option<String>,
     pub ca: Option<String>,
     pub cafile: Option<String>,

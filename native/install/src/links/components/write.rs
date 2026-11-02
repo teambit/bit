@@ -52,6 +52,7 @@ fn write(path: &Path, manifest: &Manifest, tracking: bool) -> io::Result<bool> {
     }
     Ok(changed)
 }
+/// Normalize platform-specific directory rename errors (`EPERM` on Windows, `EISDIR` on Unix) to match Node.js `libuv`.
 #[inline]
 fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
     // Node 22.22.0 libuv win/fs.c forwards MoveFileExW's error unchanged;

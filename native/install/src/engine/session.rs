@@ -25,7 +25,9 @@ pub(super) struct Session {
     config: &'static Config,
     /// Shared throttled HTTP client for registry requests.
     client: Arc<ThrottledClient>,
+    /// Deferred or disabled wanted lockfile loader for the workspace root.
     lockfile: LazyLockfile,
+    /// Absolute path to the workspace wanted lockfile (`pnpm-lock.yaml`).
     pub lockfile_path: PathBuf,
     resolved_packages: ResolvedPackages,
     /// The root importer's manifest.

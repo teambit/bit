@@ -97,7 +97,7 @@ fn same_direct(left: &Value, right: &Value) -> bool {
     }
 }
 
-/// `isWildcardSpecifier`.
+/// Returns `true` when `specifier` is `null`, `""`, or `"*"` (`isWildcardSpecifier`).
 #[inline]
 fn is_wildcard(specifier: &Value) -> bool {
     specifier.is_null() || matches!(specifier.as_str().map(str::trim), Some("" | "*"))

@@ -69,7 +69,7 @@ fn another_install_required(
     Some(output.paint(Style::Yellow, &format!("{first}{suggestion}\n{envs}\n{DOCS}")))
 }
 
-/// `(end - start) / 1000` printed as a JavaScript number.
+/// Formats `elapsed` in seconds (`(end - start) / 1000`) as a `JavaScript` number string.
 #[inline]
 fn seconds(elapsed: Duration) -> String {
     let millis = elapsed.as_millis();

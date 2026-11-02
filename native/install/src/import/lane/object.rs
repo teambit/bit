@@ -14,8 +14,11 @@ pub const OLD_LANE_SCHEMA: &str = "0.0.0";
 pub struct LaneComponent {
     /// Component scope name.
     pub scope: String,
+    /// Component name within `scope`.
     pub name: String,
+    /// Snap hash of the component head on this lane.
     pub head: String,
+    /// Whether the component is marked as deleted on this lane.
     pub is_deleted: bool,
 }
 

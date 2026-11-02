@@ -148,6 +148,7 @@ fn issues(detected: &Detected) -> Vec<Value> {
     issues
 }
 
+/// Formats a single serialized issue entry (`{ type: kind, data: "<json>" }`).
 #[inline]
 fn issue(kind: &str, data: &Value) -> Value {
     json!({ "type": kind, "data": data.to_string() })

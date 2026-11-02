@@ -142,7 +142,7 @@ pub fn default_package_name(id: &ComponentId) -> String {
     }
 }
 
-/// One component being computed.
+/// One [`WorkspaceComponent`] being computed, together with its [`ComponentModel`] and dev-file metadata.
 pub struct Subject<'a> {
     pub component: &'a WorkspaceComponent,
     pub model: ComponentModel,

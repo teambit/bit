@@ -22,6 +22,7 @@ pub struct ProxySettings {
     pub http_proxy: Option<String>,
     /// Outgoing HTTPS proxy URL, if configured.
     pub https_proxy: Option<String>,
+    /// Optional `noProxy` boolean or comma-separated host bypass list.
     pub no_proxy: Option<Value>,
 }
 

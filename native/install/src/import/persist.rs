@@ -34,8 +34,11 @@ type Received = IndexMap<String, Vec<(String, Value)>>;
 /// loader with `<importing ...>. downloaded N objects.` (skipped on CI).
 #[derive(Clone)]
 pub struct Progress<'a> {
+    /// Shared command [`Output`] sink receiving periodic status updates.
     output: &'a Output,
+    /// Prefix message prepended to `. downloaded N objects.` status lines.
     message: String,
+    /// Running count of objects processed in the current fetch batch.
     added: Cell<usize>,
 }
 

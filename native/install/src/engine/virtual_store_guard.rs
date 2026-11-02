@@ -92,7 +92,7 @@ fn yaml_virtual_store_dir(line: &str) -> Option<String> {
     (!value.is_empty() && !value.contains(['"', '\''])).then(|| value.to_string())
 }
 
-/// Canonicalize `path` on disk, falling back to lexical normalization when the path does not exist.
+/// Canonicalize `path` on disk into a [`PathBuf`], falling back to lexical normalization when the path does not exist.
 #[inline]
 fn realpath(path: &Path) -> PathBuf {
     fs::canonicalize(path).unwrap_or_else(|_| super::hooks::normalize(path))

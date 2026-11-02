@@ -86,6 +86,7 @@ pub struct ManifestContext<'a> {
 /// their components only have packages when a configured registry serves the scope.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct RemoteFilter {
+    /// Remote scope names configured in `scope.json` or global remotes.
     pub local_remotes: Vec<String>,
     /// Registry scopes without the `@` (`bit`, `my-org`).
     pub registry_scopes: Vec<String>,

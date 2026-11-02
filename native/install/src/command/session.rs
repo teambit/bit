@@ -126,7 +126,7 @@ impl Loaded {
         Ok(Self { config, global, effective, workspace, engine })
     }
 
-    /// Yarn is a JavaScript package manager: such workspaces keep the TypeScript command.
+    /// Returns `true` when the workspace is configured to use [`YARN`] (`teambit.dependencies/yarn`).
     #[inline]
     pub fn uses_yarn(&self) -> bool {
         self.config.dependency_resolver.package_manager.as_deref().map(str::trim) == Some(YARN)

@@ -105,6 +105,7 @@ fn read_workspace_package(manifest: &mut Map<String, Value>) {
     manifest.insert("dependencies".to_string(), Value::Object(dependencies.into_iter().collect()));
 }
 
+/// Clones the key-value entries of `value` when it is a JSON object, or returns an empty [`IndexMap`].
 #[inline]
 fn object_entries(value: Option<&Value>) -> IndexMap<String, Value> {
     value

@@ -120,6 +120,7 @@ fn from_overrides(
     valid_component_version(found)
 }
 
+/// Resolves a valid component version for `package` from the last matching field of `merge_config`.
 #[inline]
 fn from_merge_config(merge_config: &FieldMaps, package: &str) -> Option<String> {
     let package = package.trim();

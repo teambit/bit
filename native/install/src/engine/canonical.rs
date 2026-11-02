@@ -76,5 +76,5 @@ impl CanonicalInstall {
     }
 }
 
-/// Validated tuple of [`EngineSettings`], [`EngineInstallOptions`], and [`InstallPlan`] ready before `run::install` begins effects.
+/// Validated tuple of [`EngineSettings`], [`EngineInstallOptions`], and [`InstallPlan`] ready before [`run::install`] begins effects.
 type Prepared = (super::EngineSettings, EngineInstallOptions, InstallPlan);

@@ -75,6 +75,7 @@ impl MergeConfig {
         Self { conflicts, unmerged: IndexMap::new() }
     }
 
+    /// Returns `true` when both `merge-conflict` and `<scope>/unmerged.json` have no entries.
     #[inline]
     #[must_use]
     pub fn is_empty(&self) -> bool {

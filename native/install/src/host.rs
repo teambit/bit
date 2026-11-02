@@ -35,6 +35,7 @@ pub struct HostInfo {
     pub bit_version: String,
     /// Terminal columns, when stdout is a TTY.
     pub columns: Option<u32>,
+    /// Whether ANSI color output is enabled on the host terminal.
     pub color: bool,
     /// Bit's loader is on (`BIT_DISABLE_SPINNER` unset). Without it, status and
     /// success lines are not printed until the package manager step turns it on.

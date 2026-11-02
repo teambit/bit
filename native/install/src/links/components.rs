@@ -64,6 +64,7 @@ pub struct FileLink {
 pub struct ComponentLinks {
     /// Component identifier without version (`scope/name`).
     pub id: String,
+    /// Materialized source file symlinks inside the component's `node_modules` package.
     pub links: Vec<FileLink>,
 }
 

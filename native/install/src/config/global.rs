@@ -10,6 +10,7 @@ pub mod keys {
     pub const REGISTRY_URL: &str = "registry";
     /// Global config key (`user.token`) storing the Bit Cloud authentication token.
     pub const USER_TOKEN: &str = "user.token";
+    /// Global config key (`user.name`) storing the user's display name.
     pub const USER_NAME: &str = "user.name";
     pub const USER_EMAIL: &str = "user.email";
     pub const ENABLE_GLOBAL_VIRTUAL_STORE: &str = "enable_global_virtual_store";

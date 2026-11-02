@@ -102,8 +102,8 @@ pub fn stored_graphs(
     Ok(merged)
 }
 
-/// `getDependenciesGraphByComponentId`: the Version's `dependenciesGraphRef` Source,
-/// when its schema is supported and it is not empty.
+/// `getDependenciesGraphByComponentId`: reads the `Version`'s `dependenciesGraphRef` `Source`
+/// when its schema matches [`SCHEMA_VERSION`] and it is not empty.
 fn stored_graph(scope: &Scope, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {
     let id = id.trim();
     if id.is_empty() {

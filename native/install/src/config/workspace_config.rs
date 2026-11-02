@@ -101,6 +101,7 @@ impl WorkspaceConfig {
         Self::from_value(path, value)
     }
 
+    /// Constructs a [`WorkspaceConfig`] from a parsed `workspace.jsonc` JSON `value` at `path`.
     pub fn from_value(path: PathBuf, value: Value) -> io::Result<Self> {
         let Value::Object(raw) = value else {
             return Err(io::Error::new(

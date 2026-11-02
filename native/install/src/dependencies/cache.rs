@@ -144,6 +144,7 @@ pub fn remove_entry(cache: &Path, key: &str) -> io::Result<()> {
     append_index_entry(cache, key, &entry)
 }
 
+/// Appends `entry` (`\n<sha1>\t<json>`) to the `index-v5` bucket for `key` under `cache`.
 fn append_index_entry(cache: &Path, key: &str, entry: &str) -> io::Result<()> {
     let bucket = segmented(&cache.join("index-v5"), &hex(&Sha256::digest(key.as_bytes())));
     fs::create_dir_all(bucket.parent().unwrap_or(cache))?;

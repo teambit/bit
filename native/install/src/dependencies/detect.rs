@@ -31,7 +31,7 @@ struct FileTree {
     core_aspects: Vec<core::Import>,
 }
 
-/// Detect the dependencies of every file of `subject`.
+/// Detect the dependencies of every file of `subject` using `workspace` and `resolver`.
 pub fn detect(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,

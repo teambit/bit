@@ -153,7 +153,7 @@ fn config_entries(policy: &Value) -> Vec<Entry> {
     entries
 }
 
-/// `entry.value.preserve ? entry.value : entry.value.version`.
+/// Normalizes a policy entry value (`entry.value.preserve ? entry.value : entry.value.version`).
 #[inline]
 fn entry_value(value: &Value) -> Value {
     let Value::Object(object) = value else { return value.clone() };

@@ -29,6 +29,7 @@ pub struct RemoteLane {
     pub hash: String,
     /// Raw zlib-compressed loose object bytes for the lane.
     pub compressed: Vec<u8>,
+    /// Parsed JSON representation of the remote lane object.
     pub object: Value,
 }
 
