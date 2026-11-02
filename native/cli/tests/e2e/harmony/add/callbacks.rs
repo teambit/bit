@@ -9,6 +9,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::fs;
 
+/// Creates a workspace with a tagged custom environment aspect (`env/add`) and active callback marker file.
 fn configured() -> (Helper, String) {
     let helper = workspace();
     let id = format!("{}/env/add", helper.scopes.remote);

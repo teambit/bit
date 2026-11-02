@@ -4,8 +4,10 @@
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 
+/// Deeply nested multi-level component ID used across dynamic namespace tests.
 const VERY_LONG_NAME: &str = "this/is/a/very/large/name/for/a/component";
 
+/// Initializes a workspace with `bar/foo.js` added and tagged under [`VERY_LONG_NAME`].
 fn setup_multi_level() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

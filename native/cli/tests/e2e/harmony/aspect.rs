@@ -5,9 +5,7 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 
-/// - `aspect › run bit aspect set then generate component.json › should write the aspect into the component.json file`
-/// - `aspect › run bit aspect set then generate component.json › should remove the "config" from the .bitmap file`
-/// - `aspect › run bit aspect set then generate component.json › run bit aspect unset › should remove the aspect from the component.json file`
+/// Verifies `bit aspect set`, `eject-conf`, `aspect unset`, and `aspect list-core` on `component.json` and `.bitmap`.
 #[test]
 fn aspect_set_eject_conf_and_unset_on_component_json() {
     let helper = Helper::new();

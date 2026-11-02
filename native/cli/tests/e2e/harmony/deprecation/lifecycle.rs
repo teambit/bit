@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, remote},
 };
 
+/// Creates a three-component workspace with `comp2` deprecated, tagged, and exported to the remote scope.
 fn exported() -> Helper {
     let helper = support::workspace(3, true);
     successful(&helper, "deprecate comp2");

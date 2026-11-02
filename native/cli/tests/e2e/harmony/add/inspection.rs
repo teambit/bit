@@ -5,6 +5,7 @@
 use crate::{commands::add::support::node, helper::Helper};
 use serde_json::Value;
 
+/// Runs `bit show <id> --json` via Node and returns the parsed JSON array.
 pub(super) fn show(helper: &Helper, id: &str) -> Value {
     let result = node(&helper.scopes.local_path, &format!("show {id} --json"));
     assert!(result.status.success(), "{}", result.stderr);

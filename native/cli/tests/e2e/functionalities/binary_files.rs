@@ -5,6 +5,7 @@
 use crate::helper::{Helper, remote};
 use std::{fs, path::Path};
 
+/// Loads the shared PNG fixture bytes from `e2e/fixtures/png_fixture.png`.
 fn png_fixture_bytes() -> Vec<u8> {
     let fixture =
         Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../e2e/fixtures/png_fixture.png"));

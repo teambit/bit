@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// - `repository-hooks-aspects › export to remote scope with aspect-based manipulation hooks › when tagging should run the on pre persist hook, then when loading, should run the on pre read hook`
+/// Verifies registering a repository-hooks aspect in `workspace.jsonc` via native `bit use`.
 #[test]
 fn repository_hooks_aspect_use_and_tag() {
     let helper = Helper::new();

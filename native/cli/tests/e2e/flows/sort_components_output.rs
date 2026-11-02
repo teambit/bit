@@ -5,6 +5,7 @@
 use crate::helper::Helper;
 use std::fs;
 
+/// Asserts that `comp1`, `comp2`, and `comp3` appear in strictly ascending alphabetical order within `output`.
 fn assert_sorted_alphabetically(output: &str) {
     let p1 = output.find("comp1").expect("comp1 in output");
     let p2 = output.find("comp2").expect("comp2 in output");

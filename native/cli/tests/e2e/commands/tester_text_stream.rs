@@ -4,6 +4,7 @@
 
 use super::{move_paths::support, tester_text_summary::without_duration};
 
+/// Validates and replaces Jest `Time:` and per-test duration tokens in stderr output.
 fn jest_times(output: &str) -> String {
     let time =
         regex::Regex::new(r"(?m)^Time:        ([0-9]+(?:\.[0-9]+)?) s(?:, estimated ([0-9]+) s)?$")

@@ -7,6 +7,7 @@ mod pending_import;
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
+/// Asserts that native and Node `bit status --json` produce identical exit code, stderr, and JSON payload.
 fn parity(helper: &Helper) -> serde_json::Value {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status --json");

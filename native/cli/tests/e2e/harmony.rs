@@ -1,6 +1,6 @@
 //! End-to-end tests for `e2e/harmony/` covering workspace, scope, lane, and merge workflows ([`add`], [`bit_ignore`], [`delete`], [`deprecation`], [`fork`], [`lanes`], [`refactor`], [`rename`]).
 //!
-//! Groups Harmony aspect, status, checkout, export, import, lane, merge, and dependency suites.
+//! Groups Harmony aspect, status, checkout, export, import, lane, merge, and dependency end-to-end suites.
 
 mod add;
 mod add_harmony;

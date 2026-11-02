@@ -9,12 +9,15 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Warning substring emitted when `bit ci sync` runs without a configured git host provider.
 pub const NO_GIT_HOST_WARNING: &str = "no git host provider is configured";
 
+/// Formats `comp1/index.js` source text embedding `marker`.
 pub fn comp1_src(marker: &str) -> String {
     format!("module.exports = () => 'comp1: {marker}';\n")
 }
 
+/// Formats `comp2/index.js` source text embedding `marker`.
 pub fn comp2_src(marker: &str) -> String {
     format!("module.exports = () => 'comp2: {marker}';\n")
 }

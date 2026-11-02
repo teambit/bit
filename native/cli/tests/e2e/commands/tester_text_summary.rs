@@ -4,6 +4,7 @@
 
 use super::move_paths::support;
 
+/// Validates and replaces the `Finished. (<duration>s)` suffix in `bit test` text output.
 pub(super) fn without_duration(output: &str) -> String {
     let (prefix, tail) = output.rsplit_once("Finished. (").expect("finished timing");
     let (duration, suffix) = tail.split_once("s)").expect("seconds suffix");

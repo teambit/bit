@@ -14,6 +14,7 @@ use super::support::{
 use crate::helper::Helper;
 use serde_json::json;
 
+/// Verifies that `close-pr` only deletes branches owned by the synced lane (`Bit-Lane-Head` trailer match).
 #[test]
 fn ci_sync_branch_ownership_decides_what_close_pr_may_delete() {
     let helper = Helper::new();

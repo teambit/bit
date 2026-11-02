@@ -5,6 +5,7 @@
 use super::soft::{bitmap, compare_command};
 use crate::helper::Helper;
 
+/// Verifies `local-only` components are excluded from `bit snap`, `bit tag --soft`, and `bit tag --persist`.
 #[test]
 fn local_only_components_stay_out_of_snap_soft_tag_and_persist() {
     let helper = Helper::new();

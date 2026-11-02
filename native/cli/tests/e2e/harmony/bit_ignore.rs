@@ -5,11 +5,13 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 
+/// Writes `comp1/index.js` and tracks `comp1` in the workspace.
 fn populate_comp1(helper: &Helper) {
     helper.output_file("comp1/index.js", "module.exports = () => 'comp1';");
     helper.run("add comp1");
 }
 
+/// Returns the tracked relative file paths of `comp1` from `bit cat comp1 --json`.
 fn component_files(helper: &Helper) -> Vec<String> {
     let cat = parse(&helper.native("cat comp1 --json"));
     cat["files"]

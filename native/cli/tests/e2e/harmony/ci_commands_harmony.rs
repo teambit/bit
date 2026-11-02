@@ -1,4 +1,4 @@
-//! Ported cases from `e2e/harmony/ci-commands.e2e.ts` for `bit ci pr`, `bit ci merge`, and `bit ci verify` command parity ([`setup_git_remote`], [`populate_fast`]).
+//! Ported cases from `e2e/harmony/ci-commands.e2e.ts` for `bit ci pr`, `bit ci merge`, and `bit ci verify` command parity ([`setup_git_remote`], [`populate_fast`]) across Git remotes.
 
 use crate::helper::Helper;
 use std::path::PathBuf;

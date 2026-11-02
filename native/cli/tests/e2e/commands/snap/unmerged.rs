@@ -5,6 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
+/// Canonical `bit snap --unmerged` command string used in unmerged config tests.
 const COMMAND: &str = "snap --unmerged --ignore-issues * --message merge";
 
 #[test]

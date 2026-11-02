@@ -5,11 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
-/// - `peer-dependencies functionality › when a package is a regular dependency and a peer dependency › should save the peer dependencies in the model`
-/// - `peer-dependencies functionality › when a package is a regular dependency and a peer dependency › should not save the peer-dependency as a package-dependency nor as a dev-package-dependency`
-/// - `peer-dependencies functionality › when a package is a regular dependency and a peer dependency › bit show should display the peer dependencies`
-/// - `peer-dependencies functionality › when a package is a regular dependency and a peer dependency › when the component is imported › should not be shown as modified`
-/// - `peer-dependencies functionality › when a package is only a peer dependency but not required in the code › should not save the peer dependencies in the model`
+/// Verifies that used peer dependencies are saved only in `peerPackageDependencies` while unused ones are omitted.
 #[test]
 fn peer_dependencies_regular_and_unused_in_code() {
     let helper = Helper::new();

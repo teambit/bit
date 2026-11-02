@@ -2,6 +2,7 @@
 //!
 //! Groups cross-command flow integration tests ported from the upstream `e2e/flows/` suite.
 
+/// End-to-end CRLF large-file tracking and tagging flow tests.
 mod big_file;
 mod bitmap_deleted;
 mod cyclic_dependencies;

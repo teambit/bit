@@ -5,14 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 
-/// - `component config › eject config › eject for new component › expect to output the path of the config`
-/// - `component config › eject config › eject for new component › component json content › expect to have the component id`
-/// - `component config › eject config › eject for new component › component json content › expect to have the propagate false by default`
-/// - `component config › eject config › eject for new component › component json content › expect to write a component json with no extensions`
-/// - `component config › eject config › eject for new component › using propagate true flag › expect to have the propagate true`
-/// - `component config › eject config › eject for new component › when file already existing › should throw error if override not used`
-/// - `component config › eject config › eject for new component › when file already existing › should success if override used`
-/// - `component config › eject config › eject for new component › when there are variant extensions defined › should not have extensions from models in component.json`
+/// Verifies `bit eject-conf` output path, `component.json` contents, `--propagate`, and `--override` on a new component.
 #[test]
 fn eject_config_for_new_component() {
     let helper = Helper::new();

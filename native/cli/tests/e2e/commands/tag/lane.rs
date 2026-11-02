@@ -7,6 +7,7 @@ use crate::helper::{FOO_FIXTURE, Helper};
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs};
 
+/// Verifies `bit tag --soft` on a lane populates `VersionHistory` once and matches `Node.js` full state.
 #[test]
 fn soft_tag_populates_missing_lane_history_once_with_released_full_state() {
     let helper = Helper::new();

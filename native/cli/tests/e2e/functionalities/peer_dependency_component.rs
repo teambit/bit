@@ -5,24 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
-/// - `set-peer › a component is a peer dependency › should save the peer dependency in the model`
-/// - `set-peer › a component is a peer dependency › adds peer dependency to the generated package.json`
-/// - `set-peer › a component is a peer dependency › peer dependency is not broken after snap › should save the peer dependency in the model`
-/// - `set-peer › a component is a peer dependency › peer dependency is not broken after snap › should save the peer dependency in the scope data`
-/// - `set-peer › a component is a peer dependency › peer dependency is not broken after snap › should save the always peer fields in the scope data`
-/// - `set-peer › a component is a peer dependency › peer dependency is not broken after snap › adds peer dependency to the generated package.json`
-/// - `set-peer › a component is a peer dependency › peer dependency is not broken after snap › always peer config fields are preserved when setting new dependencies › should readd always peer config fields to bitmap`
-/// - `set-peer › a component is a peer dependency › unset-peer › should remove the always peer fields from the scope data`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › should save the peer dependency in the model`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › adds peer dependency to the generated package.json`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › peer dependency is not broken after snap › should save the peer dependency in the model`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › peer dependency is not broken after snap › should save the peer dependency in the scope data`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › peer dependency is not broken after snap › should save the always peer fields in the scope data`
-/// - `set-peer using just the version range prefix › a component is a peer dependency › peer dependency is not broken after snap › adds peer dependency to the generated package.json`
-/// - `set-peer for existing component › a component is a peer dependency › should save the peer dependency in the model`
-/// - `set-peer for existing component › a component is a peer dependency › adds peer dependency to the generated package.json`
-/// - `unset-peer for existing component › a component peer status is removed after snap › should not have comp2 as a peer dependency in the model`
-/// - `unset-peer for existing component › a component peer status is removed after snap › should have comp2 as a runtime dependency`
+/// Verifies `bit set-peer` and `bit unset-peer` component peer dependency persistence across `.bitmap`, model, and `package.json`.
 #[test]
 fn set_peer_and_unset_peer_component_workflows() {
     let helper = Helper::new();

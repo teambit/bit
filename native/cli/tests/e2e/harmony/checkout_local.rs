@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
-/// Reset restores the locally tagged version even without a remote mapping.
+/// Verifies that `bit checkout reset` restores the locally tagged version even without a remote mapping.
 #[test]
 fn checkout_reset_uses_local_history_without_a_remote_mapping() {
     let helper = Helper::new();

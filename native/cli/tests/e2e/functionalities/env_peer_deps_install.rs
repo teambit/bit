@@ -4,8 +4,7 @@
 
 use crate::helper::Helper;
 
-/// - `env peer dependencies should be installed for created components › bit create react and then check-types › should install env peer deps like @types/react in node_modules`
-/// - `env peer dependencies should be installed for created components › bit create react and then check-types › bit check-types should pass without errors`
+/// Verifies that `bit create react` installs environment peer dependencies (`@types/react`) so `bit check-types` succeeds.
 #[test]
 fn create_react_and_check_types() {
     let helper = Helper::new();

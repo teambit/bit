@@ -5,8 +5,11 @@
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;
 
+/// Fixture source for `utils/is-type` version 1.
 const IS_TYPE_V1: &str = "module.exports = function isType() { return 'got is-type v1'; };";
+/// Fixture source for `utils/is-type` version 2.
 const IS_TYPE_V2: &str = "module.exports = function isType() { return 'got is-type v2'; };";
+/// Fixture source for `utils/is-type` version 3.
 const IS_TYPE_V3: &str = "module.exports = function isType() { return 'got is-type v3'; };";
 
 /// merge functionality › re-exporting/importing an existing version

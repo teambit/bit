@@ -9,6 +9,7 @@ use crate::helper::{Helper, Run};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
+/// Compares multi-component `bit test --junit` runs against `Node.js` with [`project`] XML validation.
 fn compare(helper: &Helper, command: &str, summary: bool) -> Run {
     let remote = move_paths::support::tree(&helper.scopes.remote_path);
     let normalize = if summary { summary_order } else { detail_order };

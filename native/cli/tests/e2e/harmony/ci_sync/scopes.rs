@@ -15,6 +15,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::{collections::BTreeMap, fs};
 
+/// Queries `bit lane list --remote <remote> --json` and returns component head hashes for `lane_name`.
 fn remote_lane_heads(helper: &Helper, lane_name: &str) -> BTreeMap<String, String> {
     let parsed =
         parse(&helper.native(&format!("lane list --remote {} --json", helper.scopes.remote)));

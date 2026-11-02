@@ -5,12 +5,7 @@
 use crate::helper::Helper;
 use serde_json::{Value, json};
 
-/// - `bit debug-load command › component with an env set via workspace variants › human output › should print all four sections`
-/// - `bit debug-load command › component with an env set via workspace variants › human output › should attribute the env to the variants source`
-/// - `bit debug-load command › component with an env set via workspace variants › human output › should show load stages with cache info`
-/// - `bit debug-load command › component with an env set via workspace variants › json output › should emit a valid trace tree with durations`
-/// - `bit debug-load command › component with an env set via workspace variants › json output › should emit extension sources, env resolution and issues`
-/// - `bit debug-load command › component with an env set via workspace variants › unknown component id › should fail with a clear error and no stack trace`
+/// Verifies human and `--json` output of `bit debug-load` as well as unknown-component error reporting.
 #[test]
 fn debug_load_command_human_json_and_unknown_component() {
     let helper = Helper::new();

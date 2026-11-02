@@ -6,6 +6,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
 
+/// Configures `comp1` with `environment` and returns `--require` `NODE_OPTIONS` for offline built-in env capsule tests.
 pub(super) fn prepare(helper: &Helper, environment: &str) -> Option<String> {
     if environment == "teambit.harmony/bit-custom-aspect" {
         let assign = Helper::cmd_in_with(

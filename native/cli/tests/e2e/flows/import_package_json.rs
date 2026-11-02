@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// component with package.json as a file of the component › bit version >= 14.8.0 should ignore package.json files altogether › should not track the package.json file
+/// Verifies `bit add` ignores `package.json` inside a component directory by default.
 #[test]
 fn should_not_track_the_package_json_file() {
     let helper = Helper::new();

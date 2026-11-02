@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, remote},
 };
 
+/// Creates a two-component workspace tagged at both `0.0.1` and `0.0.2`.
 fn two_versions() -> Helper {
     let helper = support::workspace(2, true);
     helper.append_file("comp1/index.js", "\n// second\n");

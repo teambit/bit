@@ -4,6 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
+/// Verifies dev-dependency deduplication and recording when components include spec files and test packages.
 #[test]
 fn environment_with_compiler_and_tester() {
     let helper = Helper::new();

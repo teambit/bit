@@ -8,9 +8,13 @@ mod extra;
 use crate::helper::Helper;
 use std::path::Path;
 
+/// Fixture source for `bar/foo.js` version 1.
 const BAR_FOO_V1: &str = "module.exports = function foo() { return 'got foo'; };";
+/// Fixture source for `bar/foo.js` version 2.
 const BAR_FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; };";
+/// Fixture source for `bar/foo.js` version 3.
 const BAR_FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; };";
+/// Substring expected in `bit checkout` success output.
 const SUCCESS_OUTPUT: &str = "successfully switched";
 
 #[test]

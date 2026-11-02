@@ -5,6 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::{ffi::OsStr, path::Path};
 
+/// Reads and parses `root/.bitmap` as JSONC.
 pub(super) fn bitmap(root: &Path) -> serde_json::Value {
     config::read_jsonc(&root.join(".bitmap"))
 }

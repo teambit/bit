@@ -15,6 +15,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::fs;
 
+/// Verifies the full lane-to-branch and branch-to-lane reconciliation cycle in `bit ci sync`.
 #[test]
 fn ci_sync_lane_branch_reconcile_cycle() {
     let helper = Helper::new();

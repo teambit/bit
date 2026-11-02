@@ -5,6 +5,7 @@
 use super::{move_paths::support, tester::timings, tester_multi_junit};
 use crate::helper::Helper;
 
+/// Creates a two-component workspace with `index.spec.js` and `excluded.spec.js` files.
 fn fixture() -> Helper {
     let helper = support::workspace(2, true);
     for name in ["comp1", "comp2"] {

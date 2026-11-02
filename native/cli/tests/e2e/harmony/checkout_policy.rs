@@ -6,6 +6,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs, path::PathBuf};
 
+/// Executes `command` via the Node CLI (`BIT_NATIVE=off`) and asserts a zero exit status.
 fn node(helper: &Helper, command: &str) {
     let result = Helper::cmd_in_with(
         &helper.scopes.local_path,

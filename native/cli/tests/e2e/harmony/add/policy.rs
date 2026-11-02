@@ -8,6 +8,7 @@ use crate::{
 };
 use serde_json::json;
 
+/// Verifies that `bit add --root` sets `teambit.harmony/empty-env` while regular components keep the default variant env.
 #[test]
 fn root_env_is_explicit_empty_while_regular_component_keeps_default_env() {
     let helper = workspace();

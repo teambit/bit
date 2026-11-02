@@ -5,6 +5,7 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
+/// Verifies that `bit checkout head --include-new-from-scope` imports newly published default-scope components like Node.
 #[test]
 fn checkout_head_includes_new_components_from_the_default_scope() {
     let helper = Helper::new();

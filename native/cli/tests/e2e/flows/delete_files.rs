@@ -4,7 +4,7 @@
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 
-/// delete files from a component › after adding it › bit status should not throw an error and should show it as a new component
+/// Verifies deleting a tracked file from a new component still reports it under `new components` in `bit status`.
 #[test]
 fn after_adding_it() {
     let helper = Helper::new();

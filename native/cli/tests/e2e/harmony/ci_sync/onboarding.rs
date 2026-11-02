@@ -8,6 +8,7 @@ use super::support::{run_bit, setup_sync_workspace};
 use crate::helper::{Helper, strip_ansi};
 use std::{ffi::OsStr, fs};
 
+/// Verifies that repeated `bit ci sync --init` calls report staging commands until the scaffolding is committed.
 #[test]
 fn existing_uncommitted_scaffolding_is_staged_until_committed() {
     let helper = Helper::new();

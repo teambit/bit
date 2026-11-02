@@ -7,6 +7,7 @@ mod license;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
+/// Creates a two-version `bar/foo` workspace containing CRLF text and binary files across versions.
 fn versions() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);

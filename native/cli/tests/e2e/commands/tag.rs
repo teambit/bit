@@ -2,6 +2,7 @@
 //!
 //! Exercises semantic version bumps, pre-release tags, auto-tagged dependents, and lane restrictions.
 
+/// End-to-end tests for lane-level soft tagging (`bit tag --soft`) and non-soft lane tag rejection.
 mod lane;
 mod registry;
 mod root;
