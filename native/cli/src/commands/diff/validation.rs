@@ -102,6 +102,7 @@ fn git_missing(root: &Path) -> bool {
 }
 
 /// Validate `--parent` arity and that requested tags exist on each selected component model.
+/// Validates explicit `from` and `to` version arguments before running `bit diff`.
 pub(super) fn validate_requested_versions(
     context: &Value,
     selected: &[Value],

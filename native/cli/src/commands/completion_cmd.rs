@@ -69,6 +69,7 @@ compdef _bit_yargs_completions bit
 ###-end-bit-completions-###
 "#;
 
+/// Executes `bit completion` and prints the shell-appropriate `yargs` completion script.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("completion arguments are not UTF-8".into()));

@@ -48,7 +48,7 @@ pub(super) fn run_dependents_query(
         chalk,
     ))
 }
-
+/// Loads `.bitmap` with the default scope from `workspace.jsonc`, declining when `bitmapAutoSync` is enabled.
 fn load_workspace_bitmap(root: &Path) -> Result<Bitmap, Failure> {
     let ws_bytes =
         fs::read(root.join("workspace.jsonc")).map_err(|err| Failure::Declined(err.to_string()))?;

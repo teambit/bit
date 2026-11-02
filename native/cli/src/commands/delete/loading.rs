@@ -53,6 +53,7 @@ fn is_safe_rel_path(file: &str) -> bool {
             .any(|part| matches!(part, std::path::Component::ParentDir))
 }
 
+/// Formats the missing-component-directory error message for `bit delete`.
 #[inline]
 fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
     io::Error::other(format!(

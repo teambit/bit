@@ -55,6 +55,7 @@ impl Diagnosis {
     pub fn listing(&self) -> Value {
         json!({"name":self.name,"description":self.description,"category":self.category})
     }
+    /// Wraps `bare` diagnosis output with metadata, symptoms, and manual treatment instructions.
     #[inline]
     pub fn result(&self, bare: Value, symptoms: &str, treatment: &str) -> Value {
         let valid = is_valid(&bare);

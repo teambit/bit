@@ -43,6 +43,7 @@ fn filter_one(row: &Value, options: &Options) -> io::Result<Value> {
     Ok(row)
 }
 
+/// Filters `files` to entries matching `options.output.files` when `--file` filters are present.
 fn selected_files(files: &[Value], options: &Options) -> Vec<Value> {
     if options.output.files.is_empty() {
         return files.to_vec();

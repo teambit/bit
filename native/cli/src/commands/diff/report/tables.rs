@@ -53,6 +53,7 @@ fn render(name: &str, diff: &str, colors: bool, chalk: Chalk) -> io::Result<Stri
     Ok(format!("\n{title}\n{}", table::render(&["name", "diff", left, right], &rows, colors)))
 }
 
+/// Extracts the version label from a `--- <name> <label>` or `+++ <name> <label>` diff header line.
 #[inline]
 fn label<'a>(line: Option<&'a str>, prefix: &str, suffix: &str) -> io::Result<&'a str> {
     let label = line

@@ -66,6 +66,7 @@ fn append_results(
     )?;
     Ok(())
 }
+/// Appends a single regular file entry `name` with `bytes` to the GNU TAR `builder`.
 #[inline]
 fn append(builder: &mut tar::Builder<fs::File>, name: &str, bytes: &[u8]) -> io::Result<()> {
     let mut header = tar::Header::new_gnu();

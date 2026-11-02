@@ -96,6 +96,7 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
     push_positional(options, arg)
 }
 
+/// Appends a positional pattern or version range boundary (`from`, `to`) onto `options`.
 #[inline]
 fn push_positional(options: &mut Options, arg: &str) -> Option<()> {
     let trimmed = arg.trim();

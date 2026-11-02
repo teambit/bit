@@ -41,6 +41,7 @@ fn get(stores: &Stores, key: &str) -> String {
     if matches!(key, "user.name" | "user.email") { git(key) } else { String::new() }
 }
 
+/// Queries `git config --list` for `key` (`user.name` or `user.email`) when absent from Bit [`Stores`].
 fn git(key: &str) -> String {
     let key = key.trim();
     if key.is_empty() {

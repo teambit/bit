@@ -76,6 +76,7 @@ impl Engine {
         })
     }
 
+    /// Encodes `input` into a `BWS1` frame, sends it to `self.session`, and decodes the [`Response`].
     fn request_owned<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let body = serde_json::to_vec(input)?;
         if body.len() > MAX_REQUEST {

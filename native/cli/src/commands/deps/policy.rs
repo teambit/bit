@@ -58,6 +58,7 @@ impl WorkspaceDepsContext {
         self.apply_resolved_policy_entry((dep_id, ver, lifecycle), identity, deps);
     }
 
+    /// Applies matching `variants` dependency-resolver policies from `workspace.jsonc` onto `deps`.
     pub(super) fn apply_variants(
         &self,
         entry: &BitmapEntry,

@@ -72,6 +72,7 @@ fn are_version_files_modified(scope_dir: &Path, comp_dir: &Path, ver_val: &Value
     Some(false)
 }
 
+/// Ejects lane components `ids` back to their `main` version in `.bitmap` and removes workspace directories.
 pub(in crate::commands) fn eject_from_lane(
     root: &Path,
     args: &[OsString],

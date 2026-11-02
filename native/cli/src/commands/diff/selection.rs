@@ -72,6 +72,7 @@ fn literal(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     Ok(selected)
 }
 
+/// Extracts the trimmed string slice stored at `key` on `target`, or `""` when absent.
 #[inline]
 fn field<'v>(target: &'v Value, key: &str) -> &'v str {
     target

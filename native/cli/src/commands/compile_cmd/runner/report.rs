@@ -46,6 +46,7 @@ fn json_rows(rows: &[Compiled]) -> Vec<Value> {
         .collect()
 }
 
+/// Formats the human-readable compilation report for `rows` with `verbose` file lists and `elapsed` timing.
 fn text(
     rows: &[Compiled],
     verbose: bool,

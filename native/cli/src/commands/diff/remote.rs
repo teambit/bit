@@ -1,4 +1,6 @@
 //! Retain `scopeImporter.importWithoutDeps({cache:true,reason:"to show diff"})` ([`prepare`]) via [`Options`] and [`Engine`].
+//!
+//! Returns `Ok(None)` when no exported comparison versions require remote fetching.
 
 use super::{options::Options, progress};
 use crate::commands::{

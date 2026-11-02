@@ -27,7 +27,7 @@ pub(in crate::commands) fn load_cat_component(
     let (v_kind, ver_val) = bit_object_import::read_scope_object(scope_dir, &ver_hash).ok()??;
     (v_kind == "Version").then_some(ver_val)
 }
-
+/// Splits `raw_id` into `(bare_id, version)` around the last `@` separator.
 #[inline]
 fn split_cat_id(raw_id: &str) -> Option<(&str, Option<&str>)> {
     let raw_id = raw_id.trim();

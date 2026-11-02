@@ -83,6 +83,7 @@ fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failu
     Ok(PackageReport { package_name: package, pnpm_dirs })
 }
 
+/// Lists pnpm virtual-store entry names from disk or falls back to `pnpm-lock.yaml`.
 #[inline]
 pub(super) fn entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
     let dirs = physical_entries(virtual_store)?;

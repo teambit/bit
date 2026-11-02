@@ -108,6 +108,7 @@ pub(super) fn one(
     Ok(output)
 }
 
+/// Looks up the captured target manifest entry in `capture` whose `"identity"` matches `identity`.
 #[inline]
 fn find_captured_target<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
     let identity = identity.trim();

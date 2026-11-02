@@ -43,6 +43,7 @@ impl Host for Builtin {
     }
 }
 
+/// Returns `true` when `env_id` refers to a supported built-in `teambit.harmony/node` or `teambit.react/react` environment.
 #[inline]
 fn is_supported_builtin_env(env_id: &str) -> bool {
     let trimmed = env_id.trim();

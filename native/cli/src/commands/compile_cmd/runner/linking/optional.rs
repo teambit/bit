@@ -46,6 +46,7 @@ fn optional(entries: &[PolicyEntry], name: &str) -> bool {
             .find(|entry| entry.name.trim() == name)
             .is_some_and(|entry| entry.optional)
 }
+/// Appends optional component dependencies from `state` onto `list` for each [`Lifecycle`] group.
 fn append(
     list: &mut ComponentDependencies,
     state: &Value,

@@ -55,6 +55,7 @@ fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
         || duplicate_plus
 }
 
+/// Returns `true` when `manual` uses a supported combination of explicit entries and `+` version placeholders.
 #[inline]
 fn supported_plus_mix(manual: &ManualPolicy) -> bool {
     let supported_runtime_mix = !manual.runtime.is_empty()

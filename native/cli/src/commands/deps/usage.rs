@@ -28,7 +28,7 @@ pub(super) enum NodeId {
 }
 
 type ReverseMap = HashMap<NodeId, Vec<(NodeId, String)>>;
-
+/// Labeled node in the `archy`-rendered reverse dependency tree.
 pub(super) struct TreeNode {
     pub label: String,
     pub children: Vec<TreeNode>,

@@ -74,6 +74,7 @@ impl Links {
             })
             .collect()
     }
+    /// Links compiled component packages into `node_modules` and invalidates dependency caches on `package.json` changes.
     pub(super) fn publish(&self, root: &Path) -> io::Result<()> {
         let options = ComponentLinkOptions {
             has_root_components: self.has_roots,

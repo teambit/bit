@@ -54,6 +54,7 @@ impl Options {
         Some(())
     }
 
+    /// Applies a single flag or positional argument token at `cursor` in `args`.
     #[inline]
     fn apply_arg(&mut self, args: &[&str], cursor: &mut usize, arg: &str) -> bool {
         if self.apply_boolean(arg) || self.apply_inline_valued(arg) {

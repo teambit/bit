@@ -38,7 +38,7 @@ pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand>
         }
     }
 }
-
+/// Extracts the single non-flag positional token from `rest`, returning `None` if zero or multiple exist.
 #[inline]
 fn single_dep_token<'a>(rest: &[&'a str]) -> Option<&'a str> {
     let tokens = crate::commands::scope_set::collect_non_flag_tokens(rest)?;

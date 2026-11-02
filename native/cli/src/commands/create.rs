@@ -28,6 +28,7 @@ pub(super) struct Options {
     pub namespace: Option<String>,
 }
 
+/// Executes `bit create`, validating workspace presence and option syntax before delegating template generation.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("create arguments are not UTF-8".into()));

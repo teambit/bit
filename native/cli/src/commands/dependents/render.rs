@@ -52,6 +52,7 @@ impl DepGraph {
         }
     }
 
+    /// Traverses reverse edges in breadth-first order to collect all [`DependentInfo`] rows for `target_id`.
     pub(super) fn dependents_of(&self, target_id: &str) -> Vec<DependentInfo> {
         let target_id = target_id.trim();
         let mut visited: HashSet<String> = HashSet::from([target_id.to_owned()]);

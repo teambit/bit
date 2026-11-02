@@ -32,6 +32,7 @@ impl Prepared {
         let policy = prepare_policy(root, &plan);
         Ok(Self { plan, policy })
     }
+    /// Prepares a [`Prepared`] soft-delete plan enriched with captured component dependency `rows`.
     pub(super) fn with_rows(
         root: &Path,
         options: &Options<'_>,

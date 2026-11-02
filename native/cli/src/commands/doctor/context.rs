@@ -66,6 +66,7 @@ impl Context {
             "userDetails": format!("{}<{}>", self.setting("user.name", ""), self.setting("user.email", "")),
         }))
     }
+    /// Looks up trimmed string configuration `key` in `self.config`, returning `default` when absent.
     #[inline]
     pub fn setting<'a>(&'a self, key: &str, default: &'a str) -> &'a str {
         self.config[key.trim()]

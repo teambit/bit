@@ -36,6 +36,7 @@ fn parse_hard_flag(trimmed: &str) -> Option<bool> {
     }
 }
 
+/// Returns `true` when the effective `--hard` flag in `args` before `--` is enabled.
 #[inline]
 fn is_hard_delete(args: &[&str]) -> bool {
     let mut hard = false;

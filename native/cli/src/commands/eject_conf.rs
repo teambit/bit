@@ -31,7 +31,7 @@ use std::{
 
 /// Descriptor for the `bit eject-conf` CLI command.
 pub const COMMAND: Command = Command { name: "eject-conf", aliases: &[], run };
-
+/// Parsed CLI options and component pattern for `bit eject-conf`.
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Options {
     pattern: String,

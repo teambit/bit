@@ -54,6 +54,7 @@ pub(super) fn results(
         .map_or_else(String::new, |path| format!("File written to {path}"));
     format!("{}\n\n{}\n{full}\n{written}", metadata(meta), table(&rows))
 }
+/// Returns `true` when `row["bareResult"]` reports a passing diagnosis status.
 #[inline]
 fn is_passed(row: &Value) -> bool {
     let bare = &row["bareResult"];

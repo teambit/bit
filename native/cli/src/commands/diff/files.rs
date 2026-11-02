@@ -109,6 +109,7 @@ pub fn diff_texts(left: &str, right: &str) -> io::Result<String> {
     Ok(stdout)
 }
 
+/// Temporary directory guard that removes its path on drop.
 struct TempDir(PathBuf);
 
 impl TempDir {

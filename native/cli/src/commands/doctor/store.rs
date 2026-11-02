@@ -24,6 +24,7 @@ fn path(scope: &Path, hash: &str) -> PathBuf {
         .join(&hash[..2])
         .join(&hash[2..])
 }
+/// Verifies that every local component in `scope` has its `head` version object present in the store.
 pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<Value> {
     let Some(scope) = scope else {
         return Ok(diagnosis.result(json!({"valid":true}), "", ""));

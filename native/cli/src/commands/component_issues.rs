@@ -18,6 +18,7 @@ use std::{
 /// Descriptor for the `bit component-issues` CLI command.
 pub const COMMAND: Command = Command { name: "component-issues", aliases: &[], run };
 
+/// Aspect ID for `@teambit/component-issues` (`teambit.component/issues`).
 const ISSUES_ASPECT_ID: &str = "teambit.component/issues";
 const DIVIDER_LINE: &str =
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";

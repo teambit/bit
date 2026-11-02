@@ -91,6 +91,7 @@ fn selected_identities(
         .collect()
 }
 
+/// Computes the diff between `identity@version` and its first meaningful parent version.
 fn one_parent(
     engine: &mut Engine,
     root: &Path,

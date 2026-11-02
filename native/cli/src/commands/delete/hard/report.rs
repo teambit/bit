@@ -34,6 +34,7 @@ fn component(receipt: &Value, format: &Formatter) -> String {
     Formatter::join(&[dependent, removed, lane, missing])
 }
 
+/// Formats the `dependentBits` blocker section of a remote hard-delete `receipt`.
 fn dependents(receipt: &Value, format: &Formatter) -> String {
     let Some(rows) = receipt["dependentBits"].as_object() else { return String::new() };
     rows.iter()

@@ -33,6 +33,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+/// Executes `bit dependents`, validating workspace presence and new-component status before querying [`run_dependents_query`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("dependents arguments are not UTF-8".into()));

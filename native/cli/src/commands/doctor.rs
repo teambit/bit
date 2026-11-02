@@ -21,6 +21,7 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 /// Descriptor for the `bit doctor` CLI command.
 pub const COMMAND: Command = Command { name: "doctor", aliases: &[], run };
+/// Executes `bit doctor` across local or `--remote` scopes and renders the report or archive.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("doctor arguments are not UTF-8".into()));

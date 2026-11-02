@@ -46,6 +46,7 @@ pub(super) enum Subcommand {
     Update { env_id: Option<String>, pattern: Option<String> },
 }
 
+/// Executes `bit envs` (`bit env`) in a workspace or bare scope.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("envs arguments are not UTF-8".into()));

@@ -139,6 +139,7 @@ fn print_value(value: &Value) -> io::Result<String> {
 
 /// `prettifyFieldName`: `mainFile` becomes `Main File`.
 #[inline]
+/// Formats a single metadata field name (`mainFile` -> `"Main File"`, etc.) for diff headers.
 fn prettify(field: &str) -> String {
     let trimmed = field.trim();
     let mut chars = trimmed.chars();

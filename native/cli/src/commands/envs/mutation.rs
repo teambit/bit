@@ -41,7 +41,7 @@ pub(super) enum Prepared {
     Replace { env_display_id: String, batch: EnvBatch },
     Update(EnvUpdatePlan),
 }
-
+/// Loaded `.bitmap` state and raw bytes used to stage `bit envs` mutations.
 pub(super) struct BitmapContext {
     pub root: PathBuf,
     pub bitmap: Bitmap,

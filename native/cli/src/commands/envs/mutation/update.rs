@@ -42,6 +42,7 @@ struct TargetEnv {
 }
 
 impl EnvUpdatePlan {
+    /// Flushes staged `component.json` and `.bitmap` environment updates and formats the summary report.
     pub(super) fn commit(
         self,
         formatter: &Formatter,

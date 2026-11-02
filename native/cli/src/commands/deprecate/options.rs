@@ -34,6 +34,7 @@ fn consume_trailing_pattern<'a>(rest: &[&'a str], pattern: &mut Option<&'a str>)
     Some(())
 }
 
+/// Consumes a single flag or positional argument at `index` in `args` and returns the next cursor index.
 fn apply_arg<'a>(
     args: &[&'a str],
     index: usize,

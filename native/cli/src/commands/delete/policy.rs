@@ -63,6 +63,7 @@ impl Policy {
         }
         Ok(())
     }
+    /// Commits the staged `workspace.jsonc` dependency policy edit via [`edit_workspace_config`].
     #[inline]
     pub(super) fn commit(&self, root: &Path, file_id: &str) -> io::Result<()> {
         edit_workspace_config(

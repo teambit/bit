@@ -48,6 +48,7 @@ fn sections(
     ])
 }
 
+/// Formats each non-empty component ID in `ids` as an indented report item.
 #[inline]
 fn format_items(ids: &[String], format: &Formatter) -> Vec<String> {
     ids.iter()

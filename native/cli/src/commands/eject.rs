@@ -23,7 +23,7 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 
 /// Descriptor for the `bit eject` (`bit E`) CLI command.
 pub const COMMAND: Command = Command { name: "eject", aliases: &["E"], run };
-
+/// Parsed CLI flags and component pattern for `bit eject`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: String,

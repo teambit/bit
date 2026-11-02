@@ -127,6 +127,7 @@ pub(super) fn component_dependencies(
 }
 
 /// `formatDepsDiffAsPlainText`.
+/// Formats `changes` into the `--- <field>` / `+++ <field>` plain-text dependency diff block.
 fn plain_text(changes: &[Change], field: &str, labels: &Labels, chalk: Chalk) -> Option<String> {
     if changes.is_empty() {
         return None;

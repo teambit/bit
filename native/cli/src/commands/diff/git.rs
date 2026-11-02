@@ -1,4 +1,6 @@
 //! `getGitExecutablePath` ([`executable`], [`ScopeJson`]): the [`EffectiveConfig`] `git_path`, or `git`.
+//!
+//! Falls back to `"git"` when no non-empty non-flag path is configured.
 
 use crate::commands::status::cache::cache_root;
 use bit_install::config::{

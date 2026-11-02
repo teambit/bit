@@ -80,6 +80,7 @@ fn build_remotes_and_network(
     Ok((remotes, network))
 }
 
+/// Builds the effective [`GlobalConfig`] map from `context.config`.
 #[inline]
 fn global(context: &Context) -> GlobalConfig {
     let global: GlobalConfig = context.config
