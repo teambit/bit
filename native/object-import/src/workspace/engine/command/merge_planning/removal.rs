@@ -48,6 +48,7 @@ fn validate_one(root: &Path, directory: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates and removes all component directories listed in `removed` under `root`.
 pub(super) fn remove(root: &Path, removed: &[Removed]) -> io::Result<()> {
     validate(root, removed)?;
     for row in removed {

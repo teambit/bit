@@ -23,6 +23,7 @@ impl File {
         }
         Ok(())
     }
+    /// Validates and writes the formatted `merge-conflict` file to `self.path`.
     #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         self.validate()?;

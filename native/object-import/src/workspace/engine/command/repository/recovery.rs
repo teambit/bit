@@ -1,4 +1,4 @@
-//! Project retained model [`proof`] records on [`Repository`] after restoring `main`'s objects.
+//! Project retained model [`proof`] records on [`Repository`] via [`Repository::accept_recovery_objects`] after restoring `main`'s objects.
 
 use super::{Repository, proof};
 use std::{io, path::Path};

@@ -80,6 +80,7 @@ fn report(plan: &Value) -> io::Result<Value> {
     Ok(report)
 }
 
+/// Removes package conflicts resolved at the workspace level from per-component `configRows`.
 #[inline]
 fn remove_conflicts(prepared: &mut Prepared, removed: &Value) -> io::Result<()> {
     let removed = projection::array(removed)?;

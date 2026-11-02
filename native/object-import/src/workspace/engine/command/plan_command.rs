@@ -93,6 +93,7 @@ fn plan_operation(
     })
 }
 
+/// Builds optional [`checkout_policy::Prepared`] state when the planned checkout or switch updates component versions.
 fn prepare_checkout_policy(
     record: &Record,
     planned: &planning::Planned,

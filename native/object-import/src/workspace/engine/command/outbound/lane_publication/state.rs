@@ -78,6 +78,7 @@ impl Prepared {
                 == self.staged.config.as_ref().map(|config| config.before.as_slice()))
     }
 
+    /// Returns `true` when `index.json`, the lane object, and `LaneHistory` match their captured preimages.
     fn validate_objects(&self) -> io::Result<bool> {
         let root = &self.workspace.root;
         Ok(fs::read(crate::scope_path(root).join("index.json"))? == self.objects.index

@@ -51,6 +51,7 @@ pub(super) fn metadata(
     status_context::metadata_with_targets(input, pool, &settings, visible)
 }
 
+/// Attaches `context["lane"]` metadata, inactive targets, and incoming lane additions during checkout.
 pub(super) fn attach(
     request: &Prepare,
     context: &mut Value,

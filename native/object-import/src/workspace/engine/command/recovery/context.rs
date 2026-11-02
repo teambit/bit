@@ -94,6 +94,7 @@ fn validate(request: &Prepare) -> io::Result<()> {
     }
     Ok(())
 }
+/// Captures read proofs for workspace and scope control files inspected during recovery preparation.
 fn controls(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::with_capacity(7);
     for name in [".bitmap", "workspace.jsonc", "package.json", "merge-conflict"] {

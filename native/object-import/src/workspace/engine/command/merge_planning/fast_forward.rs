@@ -74,6 +74,7 @@ fn persist_models(
     Ok(())
 }
 
+/// Prepares fast-forward [`materialization`] and pushes the resulting prepared item and scratch directory onto `planned`.
 fn add_material(
     record: &Record,
     planned: &mut planning::Planned,

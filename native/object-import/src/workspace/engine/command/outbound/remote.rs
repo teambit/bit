@@ -58,6 +58,7 @@ impl Actions {
     }
 }
 
+/// Resolves the remote host URL for `scope` and validates local directory structure for `file://` remotes.
 #[inline]
 pub(super) fn host(input: &Prepare, scope: &str) -> io::Result<String> {
     let host = configured_host(input, scope)?;

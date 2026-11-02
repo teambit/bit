@@ -78,6 +78,7 @@ pub(super) fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
         .ok_or_else(|| invalid("command config source entry"))
 }
 
+/// Reconciles the merged dependency-resolver `policy` map against `current` scope-level policy fields.
 fn scope_policy(merged: &mut Value, current: &Value) -> io::Result<()> {
     let Some(policy) = merged
         .get_mut(projection::RESOLVER)

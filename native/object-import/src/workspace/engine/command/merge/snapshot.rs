@@ -30,6 +30,7 @@ pub(in crate::workspace::engine::command) struct Snapshot {
     pub staged_objects: Vec<Value>,
 }
 
+/// Validates that `files` contain no unsupported application files before snapshotting.
 #[inline]
 pub(in crate::workspace::engine::command) fn validate_application_files(
     files: &[Value],

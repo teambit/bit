@@ -58,6 +58,7 @@ pub(super) fn verify(
     proof::verify(&proofs)?;
     Ok(proofs)
 }
+/// Parsed dependency grammar configuration (`builtins`, `detectors`, and `typescript` flag).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Grammar<'a> {
     builtins: HashSet<&'a str>,

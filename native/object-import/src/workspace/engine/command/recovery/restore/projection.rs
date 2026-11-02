@@ -61,6 +61,7 @@ impl Prepared {
     }
 }
 impl Controls {
+    /// Validates that any proof in `rows` touching restored controls, `last-merged`, or removals is restorable.
     pub(in super::super) fn validate(&self, rows: &[proof::Proof]) -> io::Result<()> {
         for row in rows {
             if self.expected.contains_key(&row.path)

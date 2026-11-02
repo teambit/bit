@@ -1,4 +1,4 @@
-//! Retain one merge capture via [`run`] and [`Request`] while deferring its snapshot.
+//! Retain one merge capture via [`run`] and [`Request`] on [`State`] while deferring its snapshot.
 
 use super::{State, input::Operation, invalid, proof};
 use serde::Deserialize;

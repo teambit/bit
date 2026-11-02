@@ -79,6 +79,7 @@ fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
     Ok(row)
 }
 
+/// Validates and normalizes an array of parent `Version` references into a JSON array of hash strings.
 fn refs(value: &Value) -> io::Result<Value> {
     let parents = value.as_array().ok_or_else(|| invalid("outbound Version parent list"))?;
     let mut list = Vec::with_capacity(parents.len());

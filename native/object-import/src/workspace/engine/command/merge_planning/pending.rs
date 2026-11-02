@@ -41,6 +41,7 @@ fn model_field(model: &Value, key: &str) -> Value {
         .map_or_else(|| model[key].clone(), |text| json!(text.trim()))
 }
 
+/// Parses a non-`main` `{ scope, name }` lane identifier from `other`, if valid.
 #[inline]
 fn other_lane(other: &Value) -> Option<Value> {
     if let Some(raw) = other.as_str().map(str::trim) {

@@ -71,6 +71,7 @@ fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(Strin
     let value: Value = crate::parse_jsonc(&raw[nul + 1..]).map_err(io::Error::other)?;
     Ok((hash, value))
 }
+/// Verifies that `index.json` contains a lane entry for `scope/name` matching `hash`.
 fn validate_index(
     root: &Path,
     hash: &str,

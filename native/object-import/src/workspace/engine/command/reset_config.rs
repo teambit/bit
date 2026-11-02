@@ -50,6 +50,7 @@ pub(super) fn validate_target(target: &Value) -> io::Result<()> {
 pub(super) fn prepare(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, false)
 }
+/// Prepares `component.json` reset writes for an ordinary checkout or switch operation.
 #[inline]
 pub(super) fn checkout(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, true)

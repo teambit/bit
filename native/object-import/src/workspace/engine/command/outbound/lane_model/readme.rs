@@ -1,4 +1,4 @@
-//! [`validate`] the canonical lane readme snap precondition.
+//! [`validate`] the canonical lane readme snap precondition via [`entry_head`] and [`id_pair`].
 
 use super::invalid;
 use serde_json::Value;

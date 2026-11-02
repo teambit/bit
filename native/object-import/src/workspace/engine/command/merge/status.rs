@@ -60,6 +60,7 @@ pub(super) fn select(
     Err(invalid("command merge status limit"))
 }
 
+/// Extracts the bare `identity` and versioned `full_id` strings from `target`.
 #[inline]
 fn target_ids(target: &Value) -> io::Result<(&str, String)> {
     let identity = target["identity"]

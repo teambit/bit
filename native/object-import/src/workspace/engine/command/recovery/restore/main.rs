@@ -51,6 +51,7 @@ impl Main {
         }
         Ok(())
     }
+    /// Writes all restored `main` `Component` objects to the scope object store under `root`.
     #[inline]
     pub(super) fn publish(&self, root: &Path) -> io::Result<()> {
         let store = crate::store::Store::new(crate::scope_path(root).join("objects"), None)?;

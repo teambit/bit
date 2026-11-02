@@ -1,4 +1,4 @@
-//! Validate JSON aspect facts returned by published callbacks via [`extensions`].
+//! Validate JSON aspect facts returned by published callbacks via [`extensions`], [`identity`], and [`object_identity`].
 
 use super::{array, invalid};
 use serde_json::Value;

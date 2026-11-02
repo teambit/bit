@@ -1,4 +1,4 @@
-//! Flattened dependency graph and edge [`project`] helpers with [`previous`] graph validation.
+//! Flattened dependency graph and [`direct`] edge [`project`] helpers with [`previous`] graph validation.
 
 mod previous;
 #[cfg(test)]

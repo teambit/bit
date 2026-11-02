@@ -46,6 +46,7 @@ fn validate_snapshot(config: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Strips any leading `./` and trailing `/` from `dir`, returning `"."` when empty.
 #[inline]
 fn normalize_root_dir(dir: &str) -> &str {
     let stripped = dir

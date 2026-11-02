@@ -66,6 +66,7 @@ fn cloud_domain(input: &Prepare) -> io::Result<String> {
         .to_owned())
 }
 
+/// Resolves the `.bit_roots` directory path when `rootComponents` is enabled on `workspace`.
 fn roots(input: &Prepare, workspace: &Value) -> io::Result<Option<std::path::PathBuf>> {
     let has_root_components = workspace
         .as_object()

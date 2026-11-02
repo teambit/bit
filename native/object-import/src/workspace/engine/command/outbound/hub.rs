@@ -78,6 +78,7 @@ pub(super) fn push(retained: &mut Retained) -> io::Result<Vec<String>> {
         })
 }
 
+/// Sends the outbound archive for `retained` to the central hub `plan` and acknowledges exported IDs.
 fn execute(retained: &mut Retained) -> io::Result<Vec<String>> {
     let plan = retained.transfer.hub.as_ref().ok_or_else(|| invalid("outbound hub plan"))?;
     let reply = send(retained, plan)?;

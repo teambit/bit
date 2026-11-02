@@ -1,4 +1,4 @@
-//! Reset [`plan`] execution against a retained, potentially restored [`Record`] context.
+//! Reset [`plan`], [`validate`], and [`publish`] execution against a retained, potentially restored [`Record`] context.
 //! Recovery validates the live controls before restoring metadata; `.bitmap` commit
 //! subsequently requires the exact projected bytes, never the old live `.bitmap`.
 

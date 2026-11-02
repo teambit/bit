@@ -92,6 +92,7 @@ pub(super) fn options(
     })
 }
 
+/// Prepares missing merge gap history objects and computes ancestor distance for each active `selected` component.
 pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> {
     let gap = lane_filter::gap_targets(record.context.get("lane"), selected)?;
     record.repository.prepare_merge_gap(&gap)?;

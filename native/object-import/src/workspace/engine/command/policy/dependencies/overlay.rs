@@ -80,6 +80,7 @@ fn overlay_files<'a>(
         .ok_or_else(|| invalid("command merge overlay"))
 }
 
+/// Returns `true` when `output` describes the component with bare identity `identity`.
 #[inline]
 fn matches_material_identity(output: &Value, identity: &str) -> bool {
     let identity = identity.trim();

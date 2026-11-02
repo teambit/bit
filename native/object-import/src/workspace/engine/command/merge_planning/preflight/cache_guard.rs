@@ -88,6 +88,7 @@ fn incoming_files(target: &Value) -> io::Result<BTreeSet<&str>> {
     Ok(set)
 }
 
+/// Validates that `target["extensions"]` preserve `current` extension aspect data and use supported environments.
 fn validate_extensions(current: &Value, target: &Value) -> io::Result<()> {
     let rows = target["extensions"]
         .as_array()

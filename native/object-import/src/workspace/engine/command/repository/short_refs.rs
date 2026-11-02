@@ -70,6 +70,7 @@ fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> i
     Ok(())
 }
 
+/// Returns the sole matching 40-hex hash in `refs` for `prefix`, or a canonical missing/ambiguous error.
 #[inline]
 pub(super) fn unique(prefix: &str, refs: &[String]) -> io::Result<String> {
     let prefix = prefix.trim();

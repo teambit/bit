@@ -40,6 +40,7 @@ struct Publication {
     fast_forward: Option<merge::snapshot::Snapshot>,
     removed: Vec<Removed>,
 }
+/// Pending component identity, directory, model, and remote head queued for autosnap finalization.
 struct Pending {
     identity: String,
     directory: String,

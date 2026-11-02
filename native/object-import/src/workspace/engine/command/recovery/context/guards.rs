@@ -1,4 +1,4 @@
-//! Extension identity uniqueness guards via [`extensions`] for recovered `Version` objects.
+//! Extension identity uniqueness guards via [`extensions`] and [`extension_identity`] for recovered `Version` objects.
 
 use super::{Value, invalid, io};
 /// Verifies that every recovered `Version` in `context["versions"]` has unique extension identities.

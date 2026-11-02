@@ -15,6 +15,7 @@ use std::{collections::HashSet, io};
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
 /// Aspect ID for the component removal core aspect (`teambit.component/remove`).
 pub(super) const REMOVAL: &str = "teambit.component/remove";
+/// Aspect ID for the pipeline builder core aspect (`teambit.pipelines/builder`).
 const BUILDER: &str = "teambit.pipelines/builder";
 
 pub(super) const RESOLVER: &str = "teambit.dependencies/dependency-resolver";

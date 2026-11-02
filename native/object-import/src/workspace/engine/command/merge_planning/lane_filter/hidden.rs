@@ -54,6 +54,7 @@ fn same_component_id(left: &Value, right: &Value) -> bool {
         || component_id_key(left).is_some_and(|left_key| Some(left_key) == component_id_key(right))
 }
 
+/// Extracts the normalized `(scope, name, version)` tuple from a string or object component identifier `value`.
 fn component_id_key(value: &Value) -> Option<(&str, &str, &str)> {
     if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, version) = raw

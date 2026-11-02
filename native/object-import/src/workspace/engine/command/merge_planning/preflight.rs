@@ -83,6 +83,7 @@ fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<
     Ok(())
 }
 
+/// Extracts the bare `scope/name` component identity from a string or object dependency `id`.
 #[inline]
 fn dependency_identity(id: &Value) -> std::borrow::Cow<'_, str> {
     if let Some(raw) = id.as_str().map(str::trim) {

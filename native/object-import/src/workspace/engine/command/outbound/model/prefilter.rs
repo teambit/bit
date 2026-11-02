@@ -59,6 +59,7 @@ impl Prepared {
         self.preimages.insert(path, before);
         Ok(())
     }
+    /// Captures the `ModelComponent` and `VersionHistory` object preimages for a non-symlink index `row`.
     fn capture_component(&mut self, objects: &Path, row: &Value) -> io::Result<()> {
         if row["isSymlink"] == true {
             return Ok(());

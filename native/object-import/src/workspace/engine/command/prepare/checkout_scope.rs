@@ -1,4 +1,4 @@
-//! Default-scope [`Candidate`] components listed by the native inbound transport for `checkout head`.
+//! Default-scope [`Candidate`] components ([`candidates`], [`attach`]) listed by the native inbound transport for `checkout head`.
 
 use super::{Prepare, config, invalid};
 use crate::{

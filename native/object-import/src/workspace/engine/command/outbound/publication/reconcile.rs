@@ -73,6 +73,7 @@ fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
         && (row_scope.is_empty() || row_scope == scope)
 }
 
+/// Filters `selected` down to deduplicated `(scope, name)` pairs acknowledged in `acknowledged`.
 fn resume_promotions(
     selected: &[(String, String, String)],
     acknowledged: &HashSet<String>,

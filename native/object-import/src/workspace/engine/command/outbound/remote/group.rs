@@ -59,6 +59,7 @@ pub(super) fn owner(scope: &Path, pending: &Path) -> io::Result<Option<(u32, u32
     }
 }
 
+/// Parses the non-zero numeric GID for group `name` from `/etc/group` text `groups`.
 #[cfg(unix)]
 fn parse(groups: &str, name: &str) -> io::Result<Option<u32>> {
     let name = name.trim();

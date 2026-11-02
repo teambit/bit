@@ -41,6 +41,7 @@ struct Mutations {
     permissions: Vec<(PathBuf, std::fs::Permissions)>,
     staged_bytes: Vec<Option<Vec<u8>>>,
 }
+/// Prepares `last-merged` backup bytes, file mutations, and object restorations for `operation` under `root`.
 #[inline]
 pub(super) fn prepare(
     root: &Path,

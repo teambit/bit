@@ -40,6 +40,7 @@ impl Resolution {
     pub(in super::super) fn preflight(&self) -> bool {
         self.preflight_only
     }
+    /// Returns the filesystem path to the global remotes configuration file.
     #[inline]
     pub(in super::super) fn globals_path(&self) -> &Path {
         &self.global_remotes_file

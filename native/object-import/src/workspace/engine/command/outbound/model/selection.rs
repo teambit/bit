@@ -63,6 +63,7 @@ fn validate_label(label: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Returns `true` when `model["state"]["versions"]` contains at least one entry marked `local == true`.
 #[inline]
 pub(super) fn has_staged(model: &Value) -> bool {
     model["state"]["versions"]

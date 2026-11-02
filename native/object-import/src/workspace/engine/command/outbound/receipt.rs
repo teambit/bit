@@ -1,4 +1,4 @@
-//! The [`prepare`] receipt returned to the native CLI for [`Pending`] outbound exports.
+//! The [`prepare`] receipt returned to the native CLI for [`Pending`] and [`ForkHistory`] outbound exports.
 
 use super::{Pending, lane_model::ForkHistory};
 use serde_json::{Value, json};

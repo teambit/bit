@@ -56,6 +56,7 @@ pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
     ))
 }
 
+/// Extracts the bare `scope/name` component identity from `target` without any `@version` suffix.
 #[inline]
 fn target_identity(target: &Value) -> Option<std::borrow::Cow<'_, str>> {
     if let Some(bare) = ["identity", "id"]

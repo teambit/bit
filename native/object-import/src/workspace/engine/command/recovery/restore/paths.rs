@@ -60,6 +60,7 @@ fn normalize_directory(dir: &str) -> Option<&str> {
         .trim_end_matches(['/', '\\']);
     (!stripped.is_empty()).then_some(stripped)
 }
+/// Validates that `directory` is a normal relative path inside `root` that does not overlap retained components.
 #[inline]
 fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     if Path::new(directory)

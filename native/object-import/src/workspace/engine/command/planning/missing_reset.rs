@@ -94,6 +94,7 @@ fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<
     Ok(())
 }
 
+/// Returns `true` when `path` does not exist on disk (`ErrorKind::NotFound`).
 #[inline]
 fn missing(path: &Path) -> io::Result<bool> {
     match path.symlink_metadata() {

@@ -88,6 +88,7 @@ fn restore_models(
     Ok(())
 }
 
+/// Extracts the normalized `scope/name` identity from a context `model` entry.
 #[inline]
 fn model_identity(model: &Value) -> io::Result<String> {
     if let Some(identity) = model["identity"]
