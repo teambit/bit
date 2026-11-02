@@ -33,6 +33,7 @@ fn parses_the_report_flags() {
     }
 }
 
+/// Builds a full status result JSON object with default empty arrays for unspecified status sections.
 fn result(fields: &Value) -> Value {
     let mut result = json!({"currentLaneId": "remote/main", "forkedLaneId": null});
     for field in [

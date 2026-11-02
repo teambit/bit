@@ -31,6 +31,7 @@ fn reports_an_empty_switch() {
     );
 }
 
+/// Verifies that [`format`] describes switching to the remote head when `skip_fetch` is `false`.
 #[test]
 fn reports_fetched_head() {
     let report = format(

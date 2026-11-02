@@ -4,6 +4,7 @@
 
 /// End-to-end parity tests for `bit add`.
 pub(crate) mod add;
+/// End-to-end completion and fallback tests for `bit diff`.
 pub(crate) mod diff_completion;
 pub(crate) mod move_paths;
 

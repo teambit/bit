@@ -18,6 +18,7 @@ fn proves_complete_parents_and_respects_recorded_complete_heads() {
     assert_eq!(complete(&recorded, "second"), Some(true));
 }
 
+/// Verifies that [`complete`] handles cyclic parent graphs without recursion and rejects duplicate version rows.
 #[test]
 fn handles_cycles_without_recursion_and_rejects_ambiguous_rows() {
     let cycle = json!({"versions":[{"hash":"first","parents":["second"]},{"hash":"second","parents":["first"]}],"graphCompleteRefs":[]});

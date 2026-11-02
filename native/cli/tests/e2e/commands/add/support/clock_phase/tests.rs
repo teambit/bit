@@ -22,6 +22,7 @@ fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
         assert!(!multiple_bitmap_writes(command), "{command}");
     }
 }
+/// Verifies that [`delay`] treats [`START`]..[`END`] as a half-open interval within [`SECOND`].
 #[test]
 fn launch_window_is_inclusive_at_start_and_exclusive_at_end() {
     assert_eq!(delay(START), 0);

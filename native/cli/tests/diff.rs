@@ -42,6 +42,7 @@ fn workspace() -> TempDir {
     dir
 }
 
+/// Runs the compiled `bit` binary in `cwd` with `BIT_NATIVE_TRACE=1` and custom `env` pairs.
 fn bit(dir: &TempDir, cwd: &Path, args: &[&str], env: &[(&str, &str)]) -> Output {
     let home = dir.path().join("home");
     let mut command = Command::new(env!("CARGO_BIN_EXE_bit"));

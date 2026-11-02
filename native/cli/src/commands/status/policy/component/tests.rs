@@ -15,6 +15,7 @@ fn policy(config: &Value) -> Policy {
     .unwrap()
 }
 
+/// Verifies that forced component dependency [`policy`] entries override environment defaults and retain `-` removals.
 #[test]
 fn forced_component_policy_overrides_environment_and_keeps_removals() {
     let policy = policy(&json!({

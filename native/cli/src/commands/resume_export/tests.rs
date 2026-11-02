@@ -30,6 +30,7 @@ fn parses_resume_export_options() {
     );
 }
 
+/// Verifies that [`parse_options`] returns `None` when given an empty argument slice.
 #[test]
 fn empty_resume_export_args_return_none() {
     assert_eq!(parse_options(&[]), None);

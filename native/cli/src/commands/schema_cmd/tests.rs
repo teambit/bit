@@ -35,6 +35,7 @@ fn parses_schema_options_and_detects_missing_host() {
     assert!(!is_missing_host(temp.path(), &remote_opts));
 }
 
+/// Verifies [`extract_stored_schema`] and [`is_entry_modified_on_disk`] on a stored `APISchema` extension.
 #[test]
 fn extracts_stored_schema() {
     let temp = tempdir().expect("tempdir");

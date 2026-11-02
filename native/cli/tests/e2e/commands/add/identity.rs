@@ -33,6 +33,7 @@ fn exported_component_readd_keeps_its_scope_after_default_scope_changes() {
     assert_eq!(row["version"], "0.0.1");
 }
 
+/// Verifies that components with identical names in distinct scopes retain separate `.bitmap` entries.
 #[test]
 fn equal_component_names_in_distinct_scopes_keep_distinct_bitmap_entries() {
     let helper = workspace();

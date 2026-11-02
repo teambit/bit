@@ -15,6 +15,7 @@ process.stdout.write(JSON.stringify(process.argv.slice(2)));
 process.exit(Number(process.env.STUB_EXIT_CODE ?? 0));
 ";
 
+/// Writes [`STUB`] to `<dir>/bin/bit.js` and returns the script path.
 fn stub(dir: &Path) -> PathBuf {
     let entry = dir.join("bin").join("bit.js");
     fs::create_dir_all(entry.parent().unwrap()).unwrap();

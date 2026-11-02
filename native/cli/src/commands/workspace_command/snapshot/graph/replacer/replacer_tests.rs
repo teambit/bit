@@ -17,6 +17,7 @@ fn replacer() -> Replacer {
     .unwrap()
 }
 
+/// Verifies that [`Replacer::replace`] rewrites `@scope/pkg@file:...` specifiers to component versions and preserves registry packages.
 #[test]
 fn file_versions_become_component_versions() {
     let replacer = replacer();

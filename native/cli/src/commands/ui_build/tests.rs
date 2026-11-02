@@ -16,6 +16,7 @@ fn parses_ui_build_options_and_detects_missing_host() {
     assert!(is_outside_workspace_and_scope(temp.path()));
 }
 
+/// Verifies that [`parse_options`] rejects multiple positional arguments or unknown flags.
 #[test]
 fn declines_extra_positional_and_unknown_flags() {
     assert_eq!(parse_options(&["root-a", "root-b"]), None);

@@ -18,6 +18,7 @@ fn extracts_positional_package_names() {
     assert_eq!(packages, vec!["is-positive", "is-negative"]);
 }
 
+/// Verifies that [`parse_arguments`] returns `None` when given an empty package string.
 #[test]
 fn ignores_empty_package_string() {
     let args = [OsString::from("uninstall"), OsString::from("")];

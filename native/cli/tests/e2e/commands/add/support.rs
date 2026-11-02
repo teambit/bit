@@ -13,7 +13,7 @@ mod timestamps;
 use self::output::Comparison;
 use crate::helper::{Helper, Run};
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
-
+/// Creates and initializes a fresh workspace [`Helper`] for end-to-end replay tests.
 pub(crate) fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

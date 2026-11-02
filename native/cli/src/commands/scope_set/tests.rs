@@ -14,6 +14,7 @@ fn parse(words: &[&str]) -> Option<Options> {
     parse_options(&args)
 }
 
+/// Verifies [`parse_options`] for workspace-wide and component-specific `bit scope set` invocations.
 #[test]
 fn parses_workspace_and_component_scope_set() {
     assert_eq!(

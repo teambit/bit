@@ -28,6 +28,7 @@ fn parses_one_two_or_three_positional_arguments() {
     );
 }
 
+/// Verifies [`compute_snap_distance`] parent-graph traversal and common-ancestor identification.
 #[test]
 fn computes_distance_and_common_ancestor() {
     let base = "0000000000000000000000000000000000000000";

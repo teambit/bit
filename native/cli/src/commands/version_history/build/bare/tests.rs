@@ -27,6 +27,7 @@ fn existing_temporary_file_is_not_deleted_after_failed_creation() {
     assert!(!path.exists());
 }
 
+/// Verifies that a second publication failure preserves the previously published history object on disk.
 #[cfg(unix)]
 #[test]
 fn later_publication_failure_keeps_the_first_history() {

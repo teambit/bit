@@ -28,6 +28,7 @@ fn parses_set_and_unset_peer_arguments() {
     assert_eq!(parse_unset_args(&["comp1", "extra"]), None);
 }
 
+/// Verifies [`prepare`] and commit lifecycle for setting and unsetting [`DEP_RESOLVER_ID`] peer config in `.bitmap`.
 #[test]
 fn sets_and_unsets_peer_in_bitmap() {
     let dir = tempdir().expect("tempdir");

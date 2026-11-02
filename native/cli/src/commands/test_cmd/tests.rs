@@ -36,6 +36,7 @@ fn parses_test_arguments_and_options() {
     );
 }
 
+/// Verifies [`classify_workspace`] for empty workspaces, mixed file/component patterns, and unowned test files.
 #[test]
 fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
     let dir = tempdir().expect("tempdir");

@@ -15,6 +15,7 @@ pub(super) struct Snapshot {
     files: BTreeMap<String, Backup>,
 }
 impl Snapshot {
+    /// Reads and validates `workspace-config-history` backups and `metadata.txt` under `root`.
     pub(super) fn read(root: &Path) -> Self {
         let directory = bit_object_import::scope_path(root).join("workspace-config-history");
         validate_layout(&directory);

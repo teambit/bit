@@ -26,6 +26,7 @@ fn ordinary_snaps() {
     );
 }
 
+/// Verifies that unsupported `bit snap` flags or duplicate arguments return `None`.
 #[test]
 fn everything_else_is_left_to_node() {
     assert!(parse(&["--build"]).is_none());

@@ -41,3 +41,9 @@ fn parses_watch_options_and_validates_check_types() {
     assert!(parse_options(&["--verbose=true", "--import=false"]).unwrap().verbose);
     assert_eq!(check_types_error(&parse_options(&["--check-types", "file"]).unwrap()), None);
 }
+
+/// Verifies that empty `bit watch` arguments parse to [`Options::default`].
+#[test]
+fn empty_watch_args_parse_to_default_options() {
+    assert_eq!(parse_options(&[]), Some(Options::default()));
+}

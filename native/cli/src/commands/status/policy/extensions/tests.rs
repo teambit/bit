@@ -17,6 +17,7 @@ fn removal_configuration_accepts_published_range_snaps_and_false() {
         assert!(validate_removal_config(config.as_object().unwrap()).is_ok());
     }
 }
+/// Verifies that [`validate_removal_config`] rejects unknown keys and non-conforming field types.
 #[test]
 fn removal_configuration_rejects_unknown_fields_and_corrupt_values() {
     for config in [

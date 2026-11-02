@@ -40,6 +40,7 @@ fn accepts_complete_switches_without_dependency_installation() {
     assert_eq!(inline.adoption.alias.as_deref(), Some("my-alias"));
 }
 
+/// Verifies that `bit switch` adoption flags populate `lane` fields while `-r` populates top-level `strategy`.
 #[test]
 fn switch_adoption_values_are_lane_scoped_and_strategy_is_checkout_scoped() {
     let options = parse(&[

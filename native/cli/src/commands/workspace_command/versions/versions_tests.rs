@@ -8,6 +8,7 @@ use serde_json::json;
 
 /// Primary snapped component ID fixture used in [`format`] report tests.
 const ONE: &str = "s/a@0123456789abcdef0123456789abcdef01234567";
+/// Secondary snapped component ID fixture used in [`format`] auto-dependent report tests.
 const TWO: &str = "s/b@1123456789abcdef0123456789abcdef01234567";
 
 #[test]

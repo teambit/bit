@@ -18,6 +18,7 @@ fn write(path: &Path, content: &str) {
     fs::write(path, content).unwrap();
 }
 
+/// Runs the compiled `bit` binary in `cwd` with `BIT_NODE_CLI` pointing to the stub in `dir`.
 fn bit(dir: &TempDir, cwd: &Path, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_bit"))
         .current_dir(cwd)

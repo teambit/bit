@@ -18,6 +18,7 @@ fn comments_defaults_duplicates_and_exact_component_names() {
     }
 }
 
+/// Verifies that a version plan containing only comments and whitespace parses to empty `entries`.
 #[test]
 fn comment_and_blank_only_version_file_parses_to_empty_entries() {
     let parsed = parse("# comment only\n\n  \n").unwrap();

@@ -12,6 +12,7 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies that [`parse_args`] accepts `whoami` with optional `--token` and `--no-color` flags.
 #[test]
 fn parses_valid_args() {
     assert_eq!(parse_args(&os_args(&["whoami"])), Some(None));

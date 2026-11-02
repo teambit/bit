@@ -27,6 +27,7 @@ fn patterns_select_the_matching_targets() {
     }
 }
 
+/// Verifies that [`Versions::visit`] collects deduplicated version strings from nested objects and `@version` identities.
 #[test]
 fn versions_are_collected_from_nested_versions_and_identities() {
     let mut versions = Versions::default();

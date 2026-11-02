@@ -49,3 +49,12 @@ fn parses_show_json_and_unrecognized_subcommands() {
     );
     assert_eq!(parse_subcommand(&[]), None);
 }
+
+/// Verifies that `show` with `-s` (`--short-hash`) enables short-hash text rendering.
+#[test]
+fn parses_show_text_with_short_hash_flag() {
+    assert_eq!(
+        parse_subcommand(&["show", "comp1", "-s"]),
+        Some(Subcommand::ShowText("comp1".into(), true)),
+    );
+}

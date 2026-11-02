@@ -17,6 +17,7 @@ fn successful_and_no_added_tracking_clean_workspace_temporary_files() {
     assert!(!helper.scopes.local_path.join(".bitTmp").exists());
 }
 
+/// Verifies that failed package links leave `.bitTmp` intact prior to consumer destruction.
 #[test]
 fn failed_links_leave_temporary_files_before_consumer_destruction() {
     let helper = workspace();

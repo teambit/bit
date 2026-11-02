@@ -21,6 +21,7 @@ fn multiple_paths_globs_scope_env_and_json_match_published_add() {
         compare(&helper, command);
     }
 }
+/// Verifies that `trackAllFiles: true` retains authored `package.json` and `tsconfig.json` files.
 #[test]
 fn track_all_files_retains_authored_manifests_and_tsconfig() {
     let helper = workspace();

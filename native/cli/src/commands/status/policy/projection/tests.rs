@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 /// Canonical aspect ID for `teambit.dependencies/dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
+/// Builds a sample component target JSON fixture for aspect configuration projection tests.
 fn target() -> Value {
     json!({"identity":"scope/ui/button","directory":"comps/ui/button","version":"1.0.0"})
 }

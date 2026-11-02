@@ -14,6 +14,7 @@ fn transitions() -> Vec<Value> {
         json!({"reason":"recover","preimage_hex":"62","mode":420}),
     ]
 }
+/// Builds a two-entry [`Snapshot`] with either separate-second or same-second backup timestamps.
 fn sample(separate: bool) -> Snapshot {
     let second = if separate { "2026-10-18-12-0-1" } else { "2026-10-18-12-0-0" };
     let transitions = transitions();

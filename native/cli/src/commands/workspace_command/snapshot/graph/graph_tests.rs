@@ -27,6 +27,7 @@ fn other_workspace_packages_are_removed_unless_injected_into_the_component() {
     assert_eq!(registry, json!({ "dependencies": {} }));
 }
 
+/// Verifies that [`snapshot_order`] traverses reachable lockfile snapshots in `pnpm` depth-first walker order.
 #[test]
 fn filtered_snapshot_order_follows_pnpm_walker() {
     let lockfile = json!({

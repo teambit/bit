@@ -16,6 +16,7 @@ fn renders_failure_and_skipped_cases_with_xml_escaping() {
     );
 }
 
+/// Verifies that `write_failure` translates Windows directory `PermissionDenied` errors into `EISDIR` without masking file permission failures.
 #[test]
 fn windows_directory_error_uses_node_directory_error_without_masking_permission_failures() {
     let directory = tempfile::tempdir().unwrap();

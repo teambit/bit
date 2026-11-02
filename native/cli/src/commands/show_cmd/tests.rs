@@ -46,6 +46,7 @@ fn parses_show_options_and_detects_missing_host_errors() {
     );
 }
 
+/// Writes a sample `workspace.jsonc` and `.bitmap` fixture for `bit show` unit tests.
 fn write_fixture_workspace(root: &Path) {
     let ws_json = json!({
         "teambit.workspace/workspace": { "defaultScope": "my-scope" },

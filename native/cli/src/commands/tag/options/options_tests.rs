@@ -43,6 +43,7 @@ fn release_types_and_versions() {
     assert_eq!(parse(&["--persist=skip-build"]).unwrap().mode, Mode::Persist);
 }
 
+/// Verifies that unsupported or conflicting `bit tag` flags return `None`.
 #[test]
 fn invalid_or_canonical_flags_are_left_to_node() {
     for args in [

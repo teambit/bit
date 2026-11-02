@@ -23,6 +23,7 @@ pub(super) struct Snapshot {
     modes: BTreeMap<String, u32>,
 }
 impl Snapshot {
+    /// Reads `.bit/bitmap-history` backup files, modes, and `bitmap-history-metadata.txt` from `root`.
     pub(super) fn read(root: &Path) -> Self {
         let scope = bit_object_import::scope_path(root);
         let mut files = BTreeMap::new();

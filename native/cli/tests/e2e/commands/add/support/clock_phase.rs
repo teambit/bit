@@ -10,6 +10,7 @@ use std::{
 };
 /// Number of nanoseconds in one wall-clock second (`1_000_000_000`).
 const SECOND: u128 = 1_000_000_000;
+/// Inclusive lower bound (`50_000_000` ns) of the sub-second launch window.
 const START: u128 = 50_000_000;
 const END: u128 = 100_000_000;
 pub(super) fn align(command: &str) {

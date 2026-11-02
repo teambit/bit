@@ -11,6 +11,7 @@ use tempfile::TempDir;
 
 /// Relative path to the `@teambit/bit` CLI entry script inside a BVM installation.
 const ENTRY: &str = "node_modules/@teambit/bit/bin/bit";
+/// Platform-specific relative path to the `Node.js` binary inside a BVM `nodejs/<version>` directory.
 const NODE: &str = if cfg!(windows) { "node.exe" } else { "bin/node" };
 
 fn write(path: &Path, content: &str) {

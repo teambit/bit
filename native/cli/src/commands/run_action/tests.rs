@@ -20,6 +20,7 @@ fn parses_and_validates_run_action_json() {
     );
 }
 
+/// Verifies that [`report`] formats falsy, string, plain-object, and structured `{ data, code }` payloads.
 #[test]
 fn formats_action_results_like_command_runner() {
     for falsy in [json!(null), json!(false), json!(0), json!("")] {

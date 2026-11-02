@@ -36,6 +36,7 @@ fn resolved_identity_is_stable_and_logs_keep_independent_messages() {
     );
 }
 
+/// Verifies that [`Cache::load`] retains an initial factory error across subsequent calls without re-invoking the closure.
 #[test]
 fn initialization_failure_is_retained_like_a_rejected_identity_promise() {
     let cache = Cache::new();

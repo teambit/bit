@@ -25,6 +25,7 @@ fn parses_validate_options() {
     );
 }
 
+/// Verifies [`classify_workspace`] for empty workspaces, `--unmodified`, and `--skip-tasks`.
 #[test]
 fn classifies_empty_workspace_and_skip_tasks() {
     let temp = tempfile::tempdir().unwrap();

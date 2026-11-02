@@ -33,6 +33,7 @@ fn parses_start_options_and_detects_missing_workspace_or_scope() {
     assert!(is_outside_workspace_and_scope(temp.path()));
 }
 
+/// Verifies that an empty argument slice parses with `pattern: None` and default flags.
 #[test]
 fn empty_start_args_parse_with_no_pattern() {
     let opts = parse_options(&[]).unwrap();

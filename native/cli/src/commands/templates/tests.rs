@@ -22,6 +22,7 @@ fn parses_templates_options() {
     assert_eq!(parse_options(&["--no-json"]), None);
 }
 
+/// Verifies [`select_templates`], [`format_templates_report`], and [`friendly_aspect_name`] across workspace and component catalogs.
 #[test]
 fn selects_and_formats_workspace_and_component_templates() {
     let ws_tpls = select_templates(false, false, None);

@@ -15,6 +15,7 @@ fn app_files() {
     assert!(!app_file("index.ts"));
 }
 
+/// Builds a minimal component dependency [`crate::commands::status::policy::Policy`] with a `^` range prefix.
 fn policy() -> crate::commands::status::policy::Policy {
     crate::commands::status::policy::Policy {
         merge_conflict: false,

@@ -20,6 +20,7 @@ fn cli(node: &str) -> NodeCli {
     }
 }
 
+/// Collects the command-line arguments configured on `command` as [`OsString`] values.
 fn args(command: &std::process::Command) -> Vec<OsString> {
     command
         .get_args()

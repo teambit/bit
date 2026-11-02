@@ -35,3 +35,9 @@ fn filesystem_error_strings_match_node_inspection() {
     assert_eq!(actual, expected);
     assert_eq!(super::quote(""), "''");
 }
+
+/// Verifies that [`super::quote`] wraps strings containing single quotes in double quotes when no double quotes are present.
+#[test]
+fn single_quote_only_string_uses_double_quotes() {
+    assert_eq!(super::quote("it's"), r#""it's""#);
+}

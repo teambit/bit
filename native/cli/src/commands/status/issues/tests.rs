@@ -40,6 +40,7 @@ fn root_issue_setting_ignores_only_missing_manually_configured_packages() {
     assert!(ignored_issues.iter().all(Value::is_object));
 }
 
+/// Verifies that [`collect`] returns an empty issue list when given an empty [`Component`] slice.
 #[test]
 fn collect_with_empty_components_slice_returns_empty_vec() {
     let context = json!({"versions":[],"models":[],"targets":[],"workspace":{},"packageJson":{}});

@@ -14,6 +14,7 @@ fn package_name_matches_component_id_to_package_name() {
     assert_eq!(package_name("scope/a", None), "@scope/a");
 }
 
+/// Verifies that pending component extension configuration is projected alongside stored version extensions.
 #[test]
 fn pending_component_configuration_is_projected_by_origin() {
     let version =

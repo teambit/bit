@@ -16,6 +16,7 @@ fn dev_files_match_minimatch() {
     }
 }
 
+/// Verifies that [`core_package_name`] converts `teambit.*` aspect IDs into `@teambit/*` package names.
 #[test]
 fn core_package_names() {
     assert_eq!(core_package_name("teambit.workspace/workspace"), "@teambit/workspace");

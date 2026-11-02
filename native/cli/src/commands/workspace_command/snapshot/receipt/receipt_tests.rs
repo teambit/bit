@@ -21,6 +21,7 @@ fn uuids_are_version_4() {
     assert_ne!(uuid, uuid_v4().unwrap());
 }
 
+/// Verifies that [`new_snap_hash`] produces a 40-character lowercase hexadecimal SHA-1 string.
 #[test]
 fn snap_hashes_are_sha1_hex() {
     let hash = new_snap_hash().unwrap();

@@ -18,6 +18,7 @@ fn package_link_failure_keeps_bitmap_and_source_bytes_unchanged() {
         "module.exports=1;\n",
     );
 }
+/// Verifies that sibling directories sharing a path prefix (`foo` and `foobar`) do not transfer tracked files.
 #[test]
 fn path_prefix_siblings_do_not_transfer_tracked_files() {
     let helper = workspace();

@@ -13,6 +13,7 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies `bit search` CLI flag parsing for `--local-only` and `--json`.
 #[test]
 fn parses_search_flags() {
     let parsed = parse_args(&os_args(&["search", "foo", "bar", "--local-only", "--json"])).unwrap();
