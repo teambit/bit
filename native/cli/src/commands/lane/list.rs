@@ -1,6 +1,6 @@
 //! Native lane inspection (`list`, `current`, `show`): the
 //! lanes of the local scope (`getLanes({ showDefaultLane: true })`), then
-//! main with the workspace's components via [`Tracking`], [`components_report`], [`merged`], and [`remote`].
+//! main with the workspace's components via [`LaneData`], [`Tracking`], [`components_report`], [`merged`], and [`remote`].
 //!
 //! HTTP remotes and lanes Node would migrate to the schema that records
 //! deleted components run on the Node.js CLI.

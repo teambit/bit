@@ -9,8 +9,10 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
+/// Maximum serialized JSON payload byte length accepted over stdio with the external `ESLint` process.
 const LIMIT: u64 = 16 * 1024 * 1024;
 
+/// Active Node.js `ESLint` worker [`Child`] process session communicating over line-delimited JSON stdio.
 pub(super) struct Session {
     child: Child,
     input: ChildStdin,

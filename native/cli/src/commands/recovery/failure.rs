@@ -6,6 +6,7 @@ use crate::commands::status::autosync::Startup;
 use serde_json::Value;
 use std::{fmt, io};
 
+/// Runs a preflight recovery preparation check via [`Engine`] before executing a merge abort.
 pub(super) fn preflight(request: &Value) -> io::Result<()> {
     let mut engine = Engine::new()?;
     let result = engine.request::<Value>(request);

@@ -21,7 +21,7 @@ use std::io;
 /// `compHasBeenRemovedMsg`.
 const REMOVED: &str = "component has been removed";
 
-/// Which result the report sees.
+/// Presentation mode controlling whether [`format`] renders a component merge or full lane merge report.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Mode {
     pub verbose: bool,
@@ -29,6 +29,7 @@ pub struct Mode {
     pub lane: bool,
 }
 
+/// Formats a merge or lane-merge engine `result` [`Value`] into a human-readable [`Report`].
 pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
     let workspace = if mode.lane {

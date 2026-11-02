@@ -22,8 +22,10 @@ use std::{
 };
 use stores::Failure;
 
+/// Descriptor for the native `bit remote` command.
 pub const COMMAND: Command = Command { name: "remote", aliases: &[], run };
 
+/// Entry point for `bit remote`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = Options::parse(args) else {
         return Ok(Outcome::Declined("arguments outside the native `remote` grammar".to_owned()));

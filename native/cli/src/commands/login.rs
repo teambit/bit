@@ -9,11 +9,14 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
 
+/// Descriptor for the native `bit login` command.
 pub const COMMAND: Command = Command { name: "login", aliases: &[], run };
 
+/// Error message when both `--default-cloud-domain` and `--cloud-domain` are supplied.
 const CONFLICTING_DOMAIN_ERR: &str =
     "use either --default-cloud-domain or --cloud-domain, not both";
 
+/// Parsed command-line options for `bit login`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub cloud_domain: Option<String>,

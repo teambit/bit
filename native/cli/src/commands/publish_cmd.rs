@@ -30,8 +30,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit publish` command.
 pub const COMMAND: Command = Command { name: "publish", aliases: &[], run };
 
+/// Message reported when no workspace components match the publish selection.
 const NO_CANDIDATES_MSG: &str = "no component candidates found to publish";
 
 #[derive(Debug, Clone, PartialEq, Eq)]

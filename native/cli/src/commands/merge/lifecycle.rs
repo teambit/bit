@@ -20,6 +20,7 @@ use bit_install::{HostInfo, output::Output};
 use serde_json::Value;
 use std::{ffi::OsString, io, path::Path, sync::Arc};
 
+/// Execution parameters for a retained merge or lane-merge lifecycle.
 pub(in crate::commands) struct Options {
     pub request: Value,
     pub mode: report::Mode,

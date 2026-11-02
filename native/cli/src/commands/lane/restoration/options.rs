@@ -2,6 +2,7 @@
 //!
 //! Defines [`Options`] (`parse`) for `bit lane checkout` and `bit lane revert` invocations.
 
+/// Parsed CLI options for `bit lane checkout` and `bit lane revert`.
 pub(super) struct Options {
     pub id: String,
     pub revert: bool,
@@ -11,6 +12,7 @@ pub(super) struct Options {
 }
 
 impl Options {
+    /// Parses `args` into [`Options`] when they fit the native `bit lane checkout` or `bit lane revert` grammar.
     #[must_use]
     #[inline]
     pub fn parse(args: &[&str]) -> Option<Self> {

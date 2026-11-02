@@ -14,6 +14,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::HashMap, env, fs, io, path::Path};
 
+/// Resolved local component target classification for `bit log`.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum LocalTarget {
     NewComponent,
@@ -21,6 +22,7 @@ pub(super) enum LocalTarget {
     UserError(String),
 }
 
+/// Resolves `raw_id` against `.bitmap` ([`bitmap::Bitmap`]) and scope objects into a [`LocalTarget`].
 pub(super) fn resolve_local_target(
     root: &Path,
     bitmap: &bitmap::Bitmap,

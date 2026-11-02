@@ -14,8 +14,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit npmrc` command.
 pub const COMMAND: Command = Command { name: "npmrc", aliases: &[], run };
 
+/// Entry point for `bit npmrc`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(args) else {
         return Ok(Outcome::Declined("arguments outside the native `npmrc` grammar".to_owned()));

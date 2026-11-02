@@ -5,8 +5,10 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{fmt::Write as _, io};
 
+/// `object-hash` prefix emitted for plain `JavaScript` `Object` constructor roots.
 const FUNCTION: &str = "fn:string:8:[native]string:20:function-name:Object";
 
+/// Computes the `object-hash` [`Sha1`] hex digest for a JSON object [`Value`].
 #[inline]
 pub(super) fn hash(value: &Value) -> io::Result<String> {
     if !value.is_object() {

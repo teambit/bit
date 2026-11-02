@@ -2,7 +2,7 @@
 //!
 //! Defines [`Options`] and [`parse`] command-line flag validation for `bit list`.
 
-/// The flags `ListCmd` takes that run natively.
+/// Parsed command-line flags that `ListCmd` supports natively.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct Options {
     pub(super) ids: bool,

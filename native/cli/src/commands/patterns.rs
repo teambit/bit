@@ -15,8 +15,7 @@ mod patterns_tests;
 use super::status::js::decline;
 use std::io;
 
-/// `splitComponentPatterns(pattern)`: comma-separated, trimmed; when every
-/// part is negated, `**` comes first.
+/// Splits `pattern` (`splitComponentPatterns(pattern)`) on commas, trims each part, and prepends `**` when every part is negated.
 #[must_use]
 #[inline]
 pub fn split(pattern: &str) -> Vec<String> {

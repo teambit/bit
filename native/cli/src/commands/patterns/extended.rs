@@ -10,8 +10,7 @@ mod tests;
 use bit_install::dependencies::glob;
 use std::io;
 
-/// `multimatch` visits ids before patterns, preserving input order. The last
-/// matching include/exclude decides whether each id remains in the result.
+/// Filters `identities` against `patterns` using `multimatch` evaluation order (ids outer, patterns inner, last matching clause wins).
 pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<Vec<&'i str>> {
     let compiled = patterns
         .iter()

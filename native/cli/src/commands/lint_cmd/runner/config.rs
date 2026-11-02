@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Staged temporary `tsconfig-{hash}.json` file path and serialized JSON bytes for `ESLint`.
 pub(super) struct Config {
     pub path: PathBuf,
     bytes: Vec<u8>,
@@ -19,6 +20,7 @@ pub(super) struct Config {
 }
 
 impl Config {
+    /// Returns whether the hashed `tsconfig` file already exists in the workspace cache.
     #[must_use]
     #[inline]
     pub(super) const fn exists(&self) -> bool {

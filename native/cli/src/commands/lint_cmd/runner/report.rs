@@ -8,6 +8,7 @@ use crate::commands::{
 };
 use std::{ffi::OsString, io};
 
+/// Builds the human-readable or `--json` [`Report`] from aggregated lint [`Value`] results and [`Progress`].
 #[inline]
 pub(super) fn create(
     result: &Value,

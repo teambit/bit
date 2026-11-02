@@ -24,6 +24,7 @@ fn request(root: Option<&Path>, mode: &str) -> io::Result<Value> {
     }))
 }
 
+/// Lists components from a remote scope via [`Session`] and maps the response into [`Row`] entries.
 pub(super) fn list(
     root: Option<&Path>,
     options: &Options,

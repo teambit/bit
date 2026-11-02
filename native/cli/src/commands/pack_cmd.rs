@@ -10,10 +10,13 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit pack` command.
 pub const COMMAND: Command = Command { name: "pack", aliases: &[], run };
 
+/// Error message emitted when the target scope cannot be located.
 const SCOPE_NOT_FOUND_ERR: &str = "scope not found";
 
+/// Parsed command-line options for `bit pack`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub comp_id: String,

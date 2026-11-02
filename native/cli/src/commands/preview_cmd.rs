@@ -17,8 +17,10 @@ use bit_install::{config::WorkspaceConfig, workspace::Bitmap};
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit generate-preview` command.
 pub const GENERATE_PREVIEW: Command =
     Command { name: "generate-preview", aliases: &[], run: run_generate };
+/// Descriptor for the native `bit serve-preview` command.
 pub const SERVE_PREVIEW: Command = Command { name: "serve-preview", aliases: &[], run: run_serve };
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

@@ -18,6 +18,7 @@ use bit_install::output::Output;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io};
 
+/// Executes `bit lane import <lane>` either by switching on `main` or fetching lane objects on a feature lane.
 pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = argv
         .get(2..)

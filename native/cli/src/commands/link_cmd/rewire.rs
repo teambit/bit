@@ -17,12 +17,14 @@ const COMMONJS_LOOKUP_EXTS: [&str; 15] = [
     "styl", "less",
 ];
 
+/// Files modified for a single component `id` during `bit link --rewire`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct CodemodResult {
     pub id: String,
     pub changed_files: Vec<String>,
 }
 
+/// Rewrites cross-component relative imports to package specifiers across all `selected` components.
 pub(super) fn rewire_components(
     ws: &Workspace,
     selected: &[&WorkspaceComponent],

@@ -16,8 +16,10 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit new` command.
 pub const COMMAND: Command = Command { name: "new", aliases: &[], run };
 
+/// Parsed CLI options for `bit new <template-name> <workspace-name>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub template_name: String,

@@ -15,6 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Source (`from`) and destination (`to`) paths for a single package linked into `--target`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct LinkDetail {
     pub package_name: String,
@@ -22,12 +23,14 @@ pub(super) struct LinkDetail {
     pub to: String,
 }
 
+/// Per-component or peer-package link entry returned by [`link_to_target`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct LinkToDirResult {
     pub component_id: String,
     pub links_detail: LinkDetail,
 }
 
+/// Symlinks `selected` component packages (and optional `--peers` packages) into `target_dir/node_modules`.
 pub(super) fn link_to_target(
     root: &Path,
     target_dir: &Path,

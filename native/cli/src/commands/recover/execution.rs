@@ -10,6 +10,7 @@ use bit_install::output::Output;
 use bit_object_import::component_recover::Batch;
 use std::path::Path;
 
+/// Executes the component recovery [`Batch`] plan for `options.pattern`, importing missing objects and relinking via [`ProjectedLinker`].
 pub(super) fn execute(
     root: &Path,
     args: &[OsString],

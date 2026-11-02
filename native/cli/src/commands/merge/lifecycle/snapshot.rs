@@ -16,6 +16,7 @@ use std::{
     path::Path,
 };
 
+/// Runs the post-merge auto-snap or tag continuation against `materialized` and records errors into `result`.
 #[inline]
 pub(super) fn run(
     root: &Path,

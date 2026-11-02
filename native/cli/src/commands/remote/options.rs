@@ -4,6 +4,7 @@
 
 use std::ffi::OsString;
 
+/// Subcommand action for `bit remote` (`list`, `add <url>`, or `del <name>`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Action {
     List,
@@ -11,6 +12,7 @@ pub(super) enum Action {
     Del(String),
 }
 
+/// Validated command-line options for `bit remote`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub(super) command: &'static str,

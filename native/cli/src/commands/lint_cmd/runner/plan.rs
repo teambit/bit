@@ -8,6 +8,7 @@ use crate::commands::{
 };
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Prepared lint execution plan pairing [`Loaded`] workspace state with [`Session`] workers and cached results.
 pub(super) struct Plan {
     pub loaded: Loaded,
     components: Vec<Component>,

@@ -13,7 +13,9 @@ use super::{
 };
 use crate::{commands::Command, native::Outcome};
 use std::{ffi::OsString, io, path::Path};
+/// Descriptor for the native `bit remove` (`rm`) command.
 pub const COMMAND: Command = Command { name: "remove", aliases: &["rm"], run };
+/// Entry point for `bit remove`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));

@@ -7,6 +7,7 @@ use super::{
     object, text, workspace_command,
 };
 
+/// Extracts the sorted, deduplicated component IDs requiring dependency installation after a [`Kind`] abort.
 pub(super) fn install_ids(result: &Value, kind: Kind) -> io::Result<Vec<String>> {
     if kind == Kind::Lane {
         return installation::component_ids(&result["checkoutResults"]);

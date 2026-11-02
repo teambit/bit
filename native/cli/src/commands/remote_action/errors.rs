@@ -5,6 +5,7 @@ use crate::commands::color::Chalk;
 use serde_json::Value;
 use std::{env, io};
 
+/// Formats a structured `MergeConflictOnRemote` HTTP action error with [`Chalk`] colors when present.
 pub(super) fn format(error: io::Error) -> io::Error {
     let Some(value) = bit_client_transfer::http::action_conflict(&error) else { return error };
     let chalk = Chalk::detect(&env::args_os().skip(1).collect::<Vec<_>>());

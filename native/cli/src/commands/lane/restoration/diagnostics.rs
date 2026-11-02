@@ -4,6 +4,7 @@
 use crate::commands::status::cache::cache_root;
 use std::{env, path::Path};
 
+/// Returns whether CI is active and `history` triggers a diagnostic that requires the Node.js runtime.
 #[inline]
 pub(super) fn requires_node(root: &Path, history: &str) -> bool {
     if !is_ci_enabled() {

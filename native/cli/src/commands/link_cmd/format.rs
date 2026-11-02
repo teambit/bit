@@ -6,6 +6,7 @@ use super::{Options, rewire::CodemodResult, target::LinkToDirResult};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::{Value, json};
 
+/// Single file or directory symlink created inside a component's `node_modules` package.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct BoundLink {
     pub from: String,
@@ -13,6 +14,7 @@ pub(super) struct BoundLink {
     pub exists_before: bool,
 }
 
+/// Summary of `node_modules` links created for a single workspace component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct ComponentLinkItem {
     pub id: String,
@@ -20,6 +22,7 @@ pub(super) struct ComponentLinkItem {
     pub bound: Vec<BoundLink>,
 }
 
+/// Aggregated component links, `--rewire` codemod results, and `--target` directory links for `bit link`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct LinkSummary {
     pub workspace_name: String,

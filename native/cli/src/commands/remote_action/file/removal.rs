@@ -3,6 +3,7 @@
 //! [`remove`] deletes staged pending directories and files (`PendingDirStatus`, `RemovePendingDir`) with Node-compatible error semantics.
 use std::{fs, io, path::Path};
 
+/// Recursively removes `path` (file, symlink, or directory) with Node.js-compatible `rm` error semantics.
 pub(super) fn remove(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {
         return Ok(());

@@ -14,10 +14,13 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Filename for the global remotes store under the global config directory.
 const GLOBAL_REMOTES_FILE: &str = "global-remotes.json";
+/// Recognized top-level property keys in `scope.json`.
 const SCOPE_KEYS: [&str; 8] =
     ["name", "remotes", "resolverPath", "license", "groupName", "version", "lanes", "config"];
 
+/// Error classification distinguishing declined remote actions from user-facing errors.
 pub(super) enum Failure {
     Declined(String),
     User(String),

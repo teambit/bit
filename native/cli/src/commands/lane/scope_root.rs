@@ -12,11 +12,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Discovered workspace root or bare-scope directory (`bare == true`).
 pub(crate) struct ScopeRoot {
     pub(crate) path: PathBuf,
     pub(crate) bare: bool,
 }
 
+/// Locates the enclosing workspace or bare scope starting from the current working directory.
 #[inline]
 pub(crate) fn discover() -> io::Result<Option<ScopeRoot>> {
     let cwd = env::current_dir()?;

@@ -5,8 +5,10 @@
 use crate::commands::status::js::decline;
 use std::io;
 
+/// Maximum pattern length and expanded alternative count accepted before declining.
 const LIMIT: usize = 4096;
 
+/// Expands numeric and alphabetic `{start..end}` brace sequences in `pattern` up to [`LIMIT`].
 pub(super) fn expand(pattern: &str) -> io::Result<Vec<String>> {
     if pattern.len() > LIMIT {
         return Err(decline("component pattern expansion limit"));

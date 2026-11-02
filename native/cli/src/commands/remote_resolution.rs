@@ -17,6 +17,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Maximum byte size accepted when reading `scope.json` during read-only remote resolution.
 const MAX_SCOPE_CONFIG: u64 = 1024 * 1024;
 
 /// One CLI command's resolver callbacks and their observable output.

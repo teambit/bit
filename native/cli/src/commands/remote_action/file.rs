@@ -10,11 +10,13 @@ use std::{
     time::Duration,
 };
 
+/// Returns `true` when `name` is `"PendingDirStatus"` or `"RemovePendingDir"`.
 #[inline]
 pub(super) fn supports(name: &str) -> bool {
     matches!(name.trim(), "PendingDirStatus" | "RemovePendingDir")
 }
 
+/// Resolves and validates the local file-remote scope directory at `path`.
 pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {
     let absolute = std::path::absolute(path)?;
     let scope = crate::workspace::root(&absolute)

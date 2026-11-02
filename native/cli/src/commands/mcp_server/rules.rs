@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Supported editor names for `bit mcp-server rules`.
 const RULES_EDITORS: &[&str] = &["vscode", "cursor", "roo", "cline", "claude-code"];
 
 const TEMPLATE_CONSUMER: &str =

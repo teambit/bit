@@ -8,6 +8,7 @@ use super::{
 use crate::commands::install::confirm;
 use std::{ffi::OsString, io, path::Path};
 
+/// Prompts for interactive confirmation via [`confirm`] and runs the merge-abort recovery plan.
 pub(super) fn run(
     root: &Path,
     args: &[OsString],

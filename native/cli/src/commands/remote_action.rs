@@ -21,6 +21,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Prepared remote action execution plan holding the scope/workspace root, [`Target`], and concurrency.
 pub(super) struct Plan {
     root: PathBuf,
     workspace: bool,
@@ -28,6 +29,7 @@ pub(super) struct Plan {
     pub(super) concurrency: usize,
 }
 
+/// Returns `true` when `name` names a built-in pending-directory action supported on file remotes.
 #[inline]
 pub(super) fn supports_file(name: &str) -> bool {
     file::supports(name.trim())

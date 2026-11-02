@@ -23,8 +23,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit mini-status` (`ms`) command.
 pub const COMMAND: Command = Command { name: "mini-status", aliases: &["ms"], run };
 
+/// Maximum workspace component count accepted before declining to the Node.js CLI.
 const MAX_COMPONENTS: usize = 4096;
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

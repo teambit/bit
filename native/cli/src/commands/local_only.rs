@@ -21,8 +21,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Descriptor for the native `bit local-only` command.
 pub const COMMAND: Command = Command { name: "local-only", aliases: &[], run };
 
+/// Parsed subcommand variant for `bit local-only <set|unset|list>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Subcommand {
     Set(String),

@@ -7,7 +7,7 @@ use super::decline;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// A component of the bitmap.
+/// A component entry parsed from `.bitmap` for `bit list`.
 #[derive(Debug, PartialEq, Eq)]
 pub(in crate::commands) struct Entry {
     /// `scope/name`, with the default scope for a component not exported.

@@ -2,6 +2,7 @@
 //!
 //! Defines [`Options`] and [`parse`] to validate CLI flags before reading local or remote history.
 
+/// Parsed CLI flags and target component identifier for `bit log`.
 #[derive(Default)]
 pub(super) struct Options<'a> {
     pub(super) id: Option<&'a str>,

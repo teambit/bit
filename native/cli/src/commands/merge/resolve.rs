@@ -26,8 +26,7 @@ use std::{
     path::Path,
 };
 
-/// `--resolve` with an optional pattern,
-/// `--message` and `-x`.
+/// Parsed CLI options for `bit merge [component-pattern] --resolve` (`--message` and `-x`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub build: bool,

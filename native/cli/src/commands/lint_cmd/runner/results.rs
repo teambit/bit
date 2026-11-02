@@ -4,6 +4,7 @@
 use super::{Value, invalid, json};
 use std::io;
 
+/// `ESLint` diagnostic counter tuples `(file_key, total_key, component_count_key, summary_key)`.
 pub(super) const COUNTS: [(&str, &str, &str, &str); 5] = [
     ("errorCount", "totalErrorCount", "totalComponentsWithErrorCount", "Errors"),
     (

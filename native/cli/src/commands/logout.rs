@@ -21,8 +21,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit logout` command.
 pub const COMMAND: Command = Command { name: "logout", aliases: &[], run };
 
+/// Entry point for `bit logout`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     if !valid_args(args) {
         return Ok(Outcome::Declined("arguments outside the native `logout` grammar".to_owned()));

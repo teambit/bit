@@ -17,6 +17,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Formats the terminal or `--json` [`Report`] for a finished `bit lane checkout` or `bit lane revert`.
 pub(super) fn render(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     if options.json {
         return Ok(Report {

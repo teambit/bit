@@ -15,6 +15,7 @@ use crate::{
 use options::Options;
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Executes `bit lane checkout <history-id>` or `bit lane revert <history-id>`.
 pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = Options::parse(argv) else {
         return Ok(Outcome::Declined("outside the native lane history restoration grammar".into()));

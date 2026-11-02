@@ -17,6 +17,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Parsed CLI options for `bit lane create`.
 struct Options<'a> {
     name: &'a str,
     scope: Option<&'a str>,
@@ -24,6 +25,7 @@ struct Options<'a> {
     fork_lane_new_scope: bool,
 }
 
+/// Parses `args` into [`Options`] when they fit the native `bit lane create` grammar.
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { name: "", scope: None, alias: None, fork_lane_new_scope: false };
     let mut rest = args.iter().copied();

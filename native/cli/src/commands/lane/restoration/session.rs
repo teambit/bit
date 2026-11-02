@@ -17,6 +17,7 @@ use bit_install::{HostInfo, output::Output};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 
+/// Stateful lane-history checkout/revert session owning the [`Engine`], [`Environments`], and staged [`Planned`] partitions.
 pub(super) struct Session {
     engine: Option<Engine>,
     environment: Option<Environments>,
@@ -26,6 +27,7 @@ pub(super) struct Session {
 }
 
 impl Session {
+    /// Initializes a restoration [`Session`] and prepares its first checkout partition.
     pub fn start(
         root: &Path,
         argv: &[&str],

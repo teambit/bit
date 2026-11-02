@@ -9,6 +9,7 @@ use std::io;
 pub(in crate::commands::lane) struct Tracking(pub(in crate::commands::lane) Vec<Value>);
 
 impl Tracking {
+    /// Extracts the `lanes.tracking` array from a parsed `scope.json` [`Value`].
     #[inline]
     pub(in crate::commands::lane) fn read(scope: &Value) -> Self {
         Self(

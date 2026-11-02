@@ -1,6 +1,6 @@
 //! Native `bit lane current`: read the bitmap and local lane tracking.
 //!
-//! [`current`] resolves the active lane from `.bitmap` ([`bitmap`]) and [`Tracking`] state into [`Outcome`].
+//! [`current`] and [`read_current`] resolve the active lane from `.bitmap` ([`bitmap`]) and [`Tracking`] state into [`Outcome`].
 
 use super::list::Tracking;
 use crate::{

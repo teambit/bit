@@ -19,12 +19,14 @@ use std::{
     process::ExitCode,
 };
 
+/// Parsed CLI options (`lane`, `--id`, `--json`) for `bit lane history`.
 struct Options<'a> {
     lane: Option<&'a str>,
     id: Option<&'a str>,
     json: bool,
 }
 
+/// Parses `args` into [`Options`] when they fit the native `bit lane history` grammar.
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { lane: None, id: None, json: false };
     let mut iter = args.iter().copied();
