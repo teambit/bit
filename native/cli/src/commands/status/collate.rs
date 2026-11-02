@@ -10,7 +10,7 @@ mod collate_tests;
 
 use std::{cmp::Ordering, env};
 
-/// Languages whose collation equals the root collation for `[A-Za-z0-9._/@+-]`.
+/// Languages whose collation equals the ICU root collation for `[A-Za-z0-9._/@+-]`.
 const ROOT_LANGUAGES: &[&str] = &[
     "", "c", "posix", "en", "de", "fr", "it", "pt", "nl", "es", "ja", "zh", "ko", "ru", "uk", "pl",
 ];

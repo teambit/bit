@@ -23,7 +23,7 @@ use std::{env, ffi::OsString, io, path::Path};
 
 /// Descriptor for the native `bit stash` command.
 pub const COMMAND: Command = Command { name: "stash", aliases: &[], run };
-/// Entry point for `bit stash`.
+/// Entry point for `bit stash` that parses [`Options`] and runs [`prepare`] and [`execute`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("stash arguments are not UTF-8".to_owned()));

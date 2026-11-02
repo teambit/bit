@@ -18,7 +18,7 @@ use std::{env, ffi::OsString, io, path::Path};
 
 /// Descriptor for the native `bit reset` CLI command (`ResetCmd`).
 pub const COMMAND: Command = Command { name: "reset", aliases: &[], run };
-/// Parsed command-line options for `bit reset`.
+/// Parsed command-line options for `bit reset` (`pattern`, `--head`, `--force`, `--soft`, `--silent`, `--never-exported`).
 #[derive(Default)]
 struct Options<'a> {
     pattern: Option<&'a str>,

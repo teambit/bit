@@ -15,7 +15,7 @@ pub struct Options {
     pub skip_auto_snap: bool,
 }
 
-/// `args` starts after the command name.
+/// Parses `bit snap` arguments (`args` starts after the command name) into [`Options`].
 #[must_use]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

@@ -51,7 +51,7 @@ pub(super) fn render(
         section("refactored components", &changed, format),
     ]))
 }
-/// Formats a titled report section with item count when `rows` is non-empty.
+/// Formats a titled report section with item count when `rows` is non-empty using `format` ([`Formatter`]).
 #[inline]
 fn section(name: &str, rows: &[String], format: &Formatter) -> String {
     let name = name.trim();

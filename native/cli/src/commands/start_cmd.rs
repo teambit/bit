@@ -28,7 +28,7 @@ pub(super) struct Options {
     pub ui_root_name: Option<String>,
 }
 
-/// Entry point for `bit start`.
+/// Entry point for `bit start` (`c`) that validates [`Options`] and checks [`is_outside_workspace_and_scope`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("start arguments are not UTF-8".into()));

@@ -82,6 +82,7 @@ pub(super) fn status_invalid(
     Ok(true)
 }
 
+/// Records `IgnoredDirectory` or `ComponentNotFoundInPath` in `captured` ([`Capture`]) when `files` is empty.
 pub(super) fn status_invalid_files(
     root: &Path,
     target: &Value,

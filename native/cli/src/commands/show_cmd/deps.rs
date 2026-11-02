@@ -17,7 +17,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-/// Resolved component or package dependency entry for `bit show`.
+/// Resolved component or package dependency entry (`id`, `package_name`, `version`, `lifecycle`, `dep_type`) for `bit show`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct DepEntry {
     pub id: String,

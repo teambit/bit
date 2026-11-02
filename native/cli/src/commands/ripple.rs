@@ -35,7 +35,7 @@ pub(super) enum Subcommand {
     Simulate { lane: Option<String>, json: bool },
     NoArgJobOp { sub: &'static str, json: bool },
 }
-/// Entry point for `bit ripple` handling bare, invalid-limit, simulate, and no-arg job subcommands.
+/// Entry point for `bit ripple` handling [`Subcommand`] variants (`Bare`, `ListInvalidLimit`, `Simulate`, `NoArgJobOp`).
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("ripple arguments are not UTF-8".into()));

@@ -29,7 +29,7 @@ fn names() -> &'static [Regex] {
     })
 }
 
-/// The default dev pattern groups, in `NAMES` order.
+/// The default dev pattern groups, in [`NAMES`] order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Group {
     /// `defaultTestPatterns()`: `*.spec.*` and `*.test.*`.

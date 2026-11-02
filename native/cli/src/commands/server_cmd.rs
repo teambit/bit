@@ -19,7 +19,7 @@ pub(super) struct Options {
     pub compile: bool,
 }
 
-/// Entry point for `bit server`.
+/// Entry point for `bit server` that validates [`Options`] and checks for a workspace.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("server arguments are not UTF-8".into()));

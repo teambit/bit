@@ -64,6 +64,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     Some(Options { export_id: export_id?, remotes, delete, force })
 }
 
+/// Consumes post-`--` positional `export-id` and remote tokens into `export_id` and `remotes`.
 #[inline]
 fn consume_trailing_resume_args<'a>(
     iter: impl Iterator<Item = &'a str>,

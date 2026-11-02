@@ -44,6 +44,7 @@ impl Reader {
             .ok()
             .flatten()
     }
+    /// Evaluates whether `identity` has local source or policy modifications relative to its stored version.
     fn status_checked(
         &mut self,
         root: &Path,

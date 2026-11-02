@@ -6,7 +6,7 @@
 use node_semver::npm::{self, Identifier};
 use serde_json::{Map, Value, json};
 
-/// Computes `snapshotSemverGrammar(values)`: canonical version text and parsed parts for each valid version.
+/// Computes `snapshotSemverGrammar(values)`: canonical version text and parsed parts ([`snapshot_entry`]) for each valid version.
 pub fn snapshot<'v>(values: impl IntoIterator<Item = &'v str>) -> Option<Value> {
     let mut result = Map::new();
     for text in values {

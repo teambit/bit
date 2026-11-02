@@ -88,6 +88,7 @@ fn apply_arg<'a>(
     Some(())
 }
 
+/// Applies a `bit scope rename`-specific flag (`-p`/`--preserve`, `-d`/`--deprecate`, `-x`) onto `options` ([`Options`]).
 #[inline]
 fn apply_scope_rename_flag(arg: &str, options: &mut Options) -> Option<()> {
     match arg {

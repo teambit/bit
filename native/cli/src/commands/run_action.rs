@@ -27,7 +27,7 @@ pub(super) struct Options {
     pub payload: Value,
 }
 
-/// Entry point for `bit run-action`.
+/// Entry point for `bit run-action` that parses [`Options`] and runs the remote action via [`remote_action`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run-action arguments are not UTF-8".into()));

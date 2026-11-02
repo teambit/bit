@@ -48,7 +48,7 @@ pub(super) fn initial(
     }
     Ok(())
 }
-/// Captures component rows from `linker` when `added` matches `requested`.
+/// Captures component rows from `linker` ([`ProjectedLinker`]) when `added` matches `requested`.
 #[inline]
 fn load_added(
     root: &Path,

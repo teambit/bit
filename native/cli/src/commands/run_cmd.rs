@@ -82,6 +82,7 @@ pub(super) fn unsupported_help(command: &str, unknown: &str, chalk: Chalk) -> St
     format!("{}\n{unknown}\n", command_help(command, chalk))
 }
 
+/// Formats the `bit run` or `bit start` `--help` usage text styled with `chalk` ([`Chalk`]).
 pub(super) fn command_help(command: &str, chalk: Chalk) -> String {
     let global = GLOBAL_HELP;
     let description = chalk.bold("start an application component locally");

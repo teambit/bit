@@ -89,6 +89,7 @@ impl Environments {
         Self { builtin_services: Services::Compiler, ..Self::new() }
     }
 
+    /// Validates that every target in `targets` qualifies for built-in [`Services`] without spawning a host.
     pub(in crate::commands) fn require_service(
         root: &Path,
         context: &Value,

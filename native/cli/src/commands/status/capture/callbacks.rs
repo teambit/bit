@@ -46,6 +46,7 @@ impl CacheWrites {
         self.callbacks.host = host;
     }
 
+    /// Appends unique read proofs from `proofs` onto `self.environment_reads`.
     #[inline]
     pub(in crate::commands::status) fn retain_callback_proofs(&mut self, proofs: &[Value]) {
         self.environment_reads.reserve(proofs.len());

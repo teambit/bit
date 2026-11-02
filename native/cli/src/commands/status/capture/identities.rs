@@ -77,7 +77,7 @@ pub(super) fn dependency_identities(dependencies: &Value) -> io::Result<Vec<Stri
     Ok(identities)
 }
 
-/// Resolves the non-empty component identity at `index` within `entries`.
+/// Resolves the non-empty component identity at `index` within `entries` ([`Value`]).
 #[inline]
 fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
     let entry = index

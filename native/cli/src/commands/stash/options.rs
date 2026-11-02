@@ -3,7 +3,7 @@
 //! Defines [`Options`] and [`parse`] for `bit stash [save|list|load]` and serializes checkout [`Value`] options.
 use serde_json::{Value, json};
 
-/// Parsed subcommand and flags for `bit stash <save|list|load>`.
+/// Parsed subcommand and flags (`Save`, `List`, `Load`) for `bit stash <save|list|load>`.
 pub(super) enum Options {
     Save { include_new: bool, message: Option<String> },
     List,

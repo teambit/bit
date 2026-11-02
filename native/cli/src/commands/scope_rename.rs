@@ -79,6 +79,7 @@ fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Ou
     }
 }
 
+/// Returns `Some(subcommand)` when `args` specifies an unknown `bit scope` subcommand.
 pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<String> {
     let filtered = args
         .iter()

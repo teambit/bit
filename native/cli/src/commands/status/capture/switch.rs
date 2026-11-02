@@ -92,6 +92,7 @@ impl Session<'_> {
         Ok(Some(order))
     }
 
+    /// Captures each target in `targets` sequentially into `capture` ([`Capture`]) without ordered callbacks.
     #[inline]
     fn plain(&mut self, targets: &[Value], capture: &mut Capture) -> io::Result<()> {
         for target in targets {

@@ -54,7 +54,7 @@ pub(super) fn run(
         details: None,
     })
 }
-/// Prepares component rename plans and hydrates provider facts for every entry in `selection`.
+/// Prepares component rename plans and hydrates provider facts for every entry in `selection` ([`Selection`]).
 fn prepare(
     root: &Path,
     selection: &Selection,

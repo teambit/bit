@@ -31,7 +31,7 @@ pub(super) fn has_special_state(targets: &[Value]) -> bool {
         })
 }
 
-/// Appends `target`'s identity to `captured.remotely_removed` when `extensions` marks it removed.
+/// Appends `target`'s identity to `captured.remotely_removed` ([`Capture`]) when `extensions` marks it removed.
 pub(super) fn record_remote(
     enabled: bool,
     target: &Value,

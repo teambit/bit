@@ -84,6 +84,7 @@ fn apply_legacy_pkg_dep(
     );
 }
 
+/// Upserts a single legacy component dependency entry (`item`, `lifecycle`) onto `deps` ([`DepEntry`]).
 fn apply_legacy_comp_dep(
     item: &Value,
     lifecycle: &'static str,

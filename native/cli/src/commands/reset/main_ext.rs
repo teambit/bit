@@ -55,7 +55,7 @@ pub(super) fn dependent_error(root: &Path, identity: &str, head_only: bool) -> O
     None
 }
 
-/// Collect `(version_hash, "scope/name@version")` across all indexed components.
+/// Collect `(version_hash, "scope/name@version")` across all indexed components via [`read_scope_object`].
 fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
     let index = parse_jsonc(&fs::read(scope.join("index.json"))?)?;
     let rows = index["components"]

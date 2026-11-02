@@ -57,6 +57,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    /// Resumes the ordered switch callback stream on the active [`Host`] via [`callbacks::switch_resume`].
     #[inline]
     pub(in crate::commands::status) fn switch_resume(
         &self,

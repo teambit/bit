@@ -30,7 +30,7 @@ const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 /// Diagnostic message emitted when `.bitmap` references component versions absent from local scope objects.
 const IMPORT_PENDING: &str = r#"your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope."#;
-/// Loaded workspace or scope component metadata, resolved dependencies, and aspect extensions for `bit show`.
+/// Loaded workspace or scope component metadata, resolved [`DepEntry`] dependencies, and aspect extensions for `bit show`.
 pub(super) struct LoadedComponent {
     pub entry: BitmapEntry,
     pub component: WorkspaceComponent,

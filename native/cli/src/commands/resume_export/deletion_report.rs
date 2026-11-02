@@ -61,6 +61,7 @@ pub(super) fn nothing(formatter: &Formatter, export_id: &str, probe: &Answers) -
     ])
 }
 
+/// Formats the pre-deletion probe report listing `to_clear`, absent, unknown, and failed scopes.
 pub(super) fn probe(
     formatter: &Formatter,
     export_id: &str,

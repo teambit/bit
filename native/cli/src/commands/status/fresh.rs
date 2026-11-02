@@ -40,7 +40,7 @@ pub struct Pending {
 }
 
 impl Pending {
-    /// A `dependencyCaches` entry of the engine.
+    /// Constructs a [`Pending`] cache entry from a `dependencyCaches` entry of the [`Engine`].
     pub fn from_cache(cache: &Value) -> io::Result<Self> {
         let raw_data = cache.get("rawData").and_then(Value::as_str);
         let cacheable = cache.get("cacheable").and_then(Value::as_bool);

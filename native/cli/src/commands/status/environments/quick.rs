@@ -6,7 +6,7 @@ use super::{Environments, root_aspects};
 use serde_json::json;
 use std::{io, path::Path};
 
-/// Loads root workspace aspect providers for `bit status --quick` without hydrating component hooks.
+/// Loads root workspace aspect providers ([`root_aspects`]) for `bit status --quick` without hydrating component hooks.
 pub(in crate::commands) fn run(
     root: &Path,
     home: &Path,

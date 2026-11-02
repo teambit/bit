@@ -47,6 +47,7 @@ impl From<io::Error> for Failure {
     }
 }
 
+/// Parsed `workspace.jsonc` trust state (`default_scope`, `opted_in`, and `configured` patterns).
 struct WorkspaceTrust {
     root: PathBuf,
     ws_key: String,

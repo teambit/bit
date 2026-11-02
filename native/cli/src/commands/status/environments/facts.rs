@@ -89,6 +89,7 @@ fn provider_fact(provider: &Value, name: &str) -> io::Result<Value> {
         .ok_or_else(|| io::Error::other(format!("provider facts omitted {name}")))
 }
 
+/// Validates that the resolved `env_id` string is non-empty after trimming.
 #[inline]
 fn validate_selected_env(env_id: &str) -> io::Result<()> {
     if env_id.trim().is_empty() {

@@ -25,7 +25,7 @@ pub(super) struct Answers {
     pub failed: IndexMap<String, String>,
 }
 
-/// Probes and removes pending export directories across `plans` for `options.export_id`.
+/// Probes and removes pending export directories across `plans` ([`Plan`]) for `options.export_id` ([`Options`]).
 pub(super) async fn run(
     plans: &[Arc<Plan>],
     names: &[String],

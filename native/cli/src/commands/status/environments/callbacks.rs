@@ -87,6 +87,7 @@ pub(in crate::commands::status) struct SwitchStage {
     pub(super) issues: bool,
 }
 
+/// Begins an ordered switch callback stage on `host` ([`Host`]) when `onLoad` or `classLoad` is active.
 pub(super) fn switch_begin(
     host: &Host,
     context: &Value,

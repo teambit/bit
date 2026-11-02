@@ -82,7 +82,7 @@ pub(super) fn batch_report<'a>(
     }
 }
 
-/// Formats the summary [`Report`] for `bit reset --never-exported` across `labels`.
+/// Formats the summary [`Report`] for `bit reset --never-exported` across `labels` using [`Formatter`].
 pub(super) fn never_exported_report(args: &[OsString], labels: &[String]) -> Report {
     let formatter = Formatter::new(Chalk::detect(args));
     let items = labels

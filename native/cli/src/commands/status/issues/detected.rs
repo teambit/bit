@@ -96,6 +96,7 @@ impl Issue {
         }
     }
 
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for runtime [`Issue`] variants.
     #[inline]
     const fn runtime_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

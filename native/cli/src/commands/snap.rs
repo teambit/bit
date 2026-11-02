@@ -24,7 +24,7 @@ pub const COMMAND: Command = Command { name: "snap", aliases: &[], run };
 /// The warning `bit snap` prints without `--message`.
 const MESSAGE_WARNING: &str = "--message will be mandatory in the next few releases. make sure to add a message with your snap, will be displayed in the version history";
 
-/// Entry point for `bit snap`.
+/// Entry point for `bit snap` that parses [`options::Options`] and dispatches [`run_workspace`] or [`outside_workspace_snap`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

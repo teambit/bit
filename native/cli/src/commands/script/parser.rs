@@ -61,6 +61,7 @@ fn file_sort_key(path: &Path) -> (u8, String, String) {
     (priority, name.to_owned(), path.to_string_lossy().into_owned())
 }
 
+/// Recursively collects TypeScript and JavaScript source files under `dir`.
 fn collect_source_files(dir: &Path) -> Vec<PathBuf> {
     let Ok(entries) = fs::read_dir(dir) else {
         return Vec::new();

@@ -55,6 +55,7 @@ pub(super) enum ParsedCommand {
     Diff(DiffOptions),
 }
 
+/// Returns `true` when `CI` is set to a non-empty, non-falsy environment value.
 #[inline]
 fn ci_active() -> bool {
     env::var_os("CI")

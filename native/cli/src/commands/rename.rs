@@ -11,7 +11,7 @@ use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
 
-/// Descriptor for the native `bit rename` command.
+/// Descriptor for the native `bit rename` command (`RenameCmd`).
 pub const COMMAND: Command = Command { name: "rename", aliases: &[], run };
 /// Entry point for `bit rename` that prepares [`ProjectedLinker`] and runs [`execution::run`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {

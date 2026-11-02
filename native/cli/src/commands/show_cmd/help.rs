@@ -81,6 +81,7 @@ fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
     argument_error(id, flags).map(|error| (ExitCode::FAILURE, Some(error)))
 }
 
+/// Returns the missing-argument or unknown-flag diagnostic string for `bit show` when `id` or `flags` is invalid.
 #[inline]
 fn argument_error(id: bool, flags: &[&str]) -> Option<&'static str> {
     if !id {

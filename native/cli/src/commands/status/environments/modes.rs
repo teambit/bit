@@ -53,6 +53,7 @@ impl Environments {
         self
     }
 
+    /// Returns `true` when this [`Environments`] session is running in snapshot mode.
     #[inline]
     pub(in crate::commands::status) fn is_snapshot(&self) -> bool {
         self.snapshot

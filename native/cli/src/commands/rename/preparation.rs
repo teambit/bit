@@ -83,7 +83,7 @@ fn validate_inventory(engine: &mut Engine, facts: &Value) -> io::Result<()> {
     engine.validate_read_set(reads, "rename inventory controls changed before component loading")
 }
 
-/// Populates `facts["sourcePackage"]` and `facts["targetPackage"]` for `options` from `workspace`.
+/// Populates `facts["sourcePackage"]` and `facts["targetPackage"]` for `options` ([`Options`]) from `workspace` ([`Workspace`]).
 fn packages(workspace: &Workspace, options: &Options, facts: &mut Value) -> io::Result<()> {
     let source = options.source.trim();
     let bare = source

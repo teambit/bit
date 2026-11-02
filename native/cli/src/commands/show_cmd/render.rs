@@ -60,7 +60,7 @@ pub(super) fn harmony_json(loaded: &LoadedComponent) -> Value {
     ])
 }
 
-/// Formats `loaded` as the human-readable plain-text report for `bit show`.
+/// Formats `loaded` ([`LoadedComponent`]) as the human-readable plain-text report for `bit show`.
 pub(super) fn text_report(loaded: &LoadedComponent) -> String {
     let mut lines = vec![
         format!("id: {}", loaded.full_id()),

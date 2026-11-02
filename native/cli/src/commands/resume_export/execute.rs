@@ -70,7 +70,7 @@ fn report(
     Ok(Report { data, code: 0, details: None })
 }
 
-/// Validates and persists pending export objects for `options.export_id` across `plans`.
+/// Validates and persists pending export objects for `options.export_id` ([`Options`]) across `plans` ([`Plan`]).
 async fn persist(
     plans: &[Arc<Plan>],
     names: &[String],

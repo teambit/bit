@@ -54,6 +54,7 @@ pub(in crate::commands) fn loadable(
         })
         .collect()
 }
+/// Collects all non-removed component identities available on the current lane in `bitmap`.
 pub(in crate::commands) fn all(bitmap: &Value) -> Vec<String> {
     bitmap
         .as_object()

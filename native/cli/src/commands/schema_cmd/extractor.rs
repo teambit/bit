@@ -52,7 +52,7 @@ pub(super) fn resolve_workspace_schema(
     }
     WorkspaceSchemaOutcome::Schemas(schemas)
 }
-/// Diagnoses pattern match errors or multi-component ambiguity for `bit schema diff` in a workspace.
+/// Diagnoses pattern match errors or multi-component ambiguity for `bit schema diff` in a workspace via [`resolve_pattern_entries`].
 pub(super) fn diagnose_workspace_diff_error(
     root: &Path,
     pattern: &str,

@@ -56,6 +56,7 @@ fn promote_bit_env_plugin_components(ws: &mut Workspace, core_ids: &[String]) {
     }
 }
 
+/// Collects environment component IDs across `ws` ([`Workspace`]), marking `.bit-env.` components as `is_env = true`.
 fn collect_plugin_env_ids(ws: &mut Workspace) -> Vec<String> {
     let mut plugin_envs = Vec::new();
     for comp in &mut ws.components {

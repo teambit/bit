@@ -34,7 +34,7 @@ struct SearchArgs {
     json: bool,
 }
 
-/// Entry point for `bit search`.
+/// Entry point for `bit search` that parses [`SearchArgs`] and runs [`execute_local_search`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(parsed) = parse_args(args) else {
         return Ok(Outcome::Declined("arguments outside the native `search` grammar".to_owned()));
