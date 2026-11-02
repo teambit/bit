@@ -66,6 +66,7 @@ fn consumer_with_a_tagged_component_and_scope_with_the_same_component_as_exporte
     assert_eq!(bitmap["bar/foo"]["scope"].as_str().unwrap(), helper.scopes.remote);
 }
 
+/// Verifies `show`, `export`, and `add` when `.bitmap` has no components but the local scope has staged or exported ones.
 #[test]
 fn consumer_with_no_components_and_scope_with_staged_or_exported_components() {
     let helper = Helper::new();

@@ -29,6 +29,7 @@ fn text_summary_pass_fail_pending_and_repeated_execution_match_node() {
     assert_eq!(result.status.code(), Some(1));
 }
 
+/// Verifies `bit test --unmodified --summary` matches `Node.js` across two-component workspaces.
 #[test]
 fn text_summary_no_tests_and_multiple_components_match_node() {
     let helper = support::workspace(2, true);

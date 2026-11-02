@@ -39,6 +39,7 @@ fn aspect_set_eject_conf_and_unset_on_component_json() {
     );
 }
 
+/// Verifies descriptive aspect loading errors and `--log=error` stack traces across commands.
 /// - `aspect › aspect loading failures › commands with loaders should show a descriptive error`
 /// - `aspect › aspect loading failures › commands without loaders should not show the entire stacktrace`
 /// - `aspect › aspect loading failures › using --log=error it should show the stacktrace`

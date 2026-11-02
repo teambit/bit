@@ -22,6 +22,7 @@ fn setup_populated_workspace() -> Helper {
     helper
 }
 
+/// Verifies `bit status` lists newly added components under `new components`.
 /// basic flow with dependencies › after adding components › bit status › should show all of them under new components
 #[test]
 fn after_adding_components_status_new() {

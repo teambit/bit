@@ -12,6 +12,7 @@
 mod branch_ownership;
 /// End-to-end `bit ci sync` convergence, push-race, and conflict-policy tests.
 mod convergence;
+/// End-to-end `bit ci sync` lane/branch reconciliation cycle tests.
 mod lane_cycle;
 mod main_scope;
 mod onboarding;

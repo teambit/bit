@@ -40,7 +40,7 @@ fn remote_lane_heads(helper: &Helper, lane_name: &str) -> BTreeMap<String, Strin
     heads
 }
 
-/// Verifies `bit ci sync` reconciles a lane spanning two scopes while ignoring foreign-only lanes.
+/// Verifies `bit ci sync` reconciles a lane spanning two scopes while ignoring foreign-only lanes ([`remote_lane_heads`]).
 #[test]
 fn ci_sync_lane_spanning_two_scopes() {
     let helper = Helper::new();

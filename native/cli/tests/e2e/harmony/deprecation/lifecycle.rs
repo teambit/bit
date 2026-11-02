@@ -38,6 +38,7 @@ fn exported_deprecation_clears_bitmap_config_and_is_reported_by_remote_list_and_
     );
     assert_eq!(aspect(&helper, "comp2", DEPRECATION).unwrap()["deprecate"], true);
 }
+/// Verifies wildcard `bit import <scope>/*` excludes deprecated components unless `--include-deprecated` is passed.
 #[test]
 fn wildcard_import_excludes_deprecated_components_unless_requested() {
     for include in [false, true] {

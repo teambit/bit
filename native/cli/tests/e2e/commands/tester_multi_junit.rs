@@ -27,6 +27,7 @@ pub(super) fn compare_file_order(helper: &Helper, command: &str, summary: bool) 
     result
 }
 
+/// Normalizes suite-level `errors` entries in multi-component `bit test --json` output.
 fn detail_error_order(output: &str) -> String {
     let mut data: Value = serde_json::from_str(&detail_order(output)).unwrap();
     let errors = data[0]["data"]["errors"].as_array().unwrap();

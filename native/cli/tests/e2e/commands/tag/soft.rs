@@ -29,6 +29,7 @@ pub(super) fn compare_command(helper: &Helper, node_workspace: &Path, command: &
     assert_eq!(bitmap(&helper.scopes.local_path), bitmap(node_workspace));
 }
 
+/// Verifies `bit tag --soft` followed by `bit tag --persist=skip-build` matches `Node.js` `.bitmap` and status.
 #[test]
 fn soft_tag_then_persist_matches_node() {
     let helper = Helper::new();

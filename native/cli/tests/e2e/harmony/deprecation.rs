@@ -37,6 +37,7 @@ fn tagged_deprecation_marks_the_component_modified_and_survives_tagging() {
     assert!(bitmap(&helper)["comp2"].get("config").is_none());
     assert_eq!(listed(&helper, "comp2")["deprecated"], true);
 }
+/// Verifies wildcard `bit deprecate "**"` and `bit undeprecate "**"` update every matched component.
 #[test]
 fn wildcard_deprecation_and_undeprecation_change_every_matched_component() {
     let helper = support::workspace(3, true);

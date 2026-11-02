@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Verifies that tagging a leaf component automatically bumps direct and transitive dependent versions.
+/// Verifies that tagging a leaf component automatically bumps direct and transitive dependent versions ([`parse`]).
 #[test]
 fn with_dependencies_of_dependencies() {
     let helper = Helper::new();

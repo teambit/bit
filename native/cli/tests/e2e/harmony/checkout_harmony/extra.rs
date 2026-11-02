@@ -87,6 +87,7 @@ fn assert_latest_without_tag_and_missing_local_version(helper: &Helper) {
     helper.checkout_version("0.0.1", &format!("{remote}/comp1"), "");
 }
 
+/// Verifies `bit checkout` without conflicts, `checkout reset`, short snap hashes, and lane checkouts.
 #[test]
 fn modified_without_conflicts_and_reset_and_short_hash_and_lanes() {
     let helper = Helper::new();

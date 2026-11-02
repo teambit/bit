@@ -23,6 +23,7 @@ fn compare(helper: &Helper, command: &str) {
     compare_with(helper, command, true);
 }
 
+/// Runs `command` via [`compare_owned`] with optional `CI=1` and asserts native ownership.
 fn compare_with(helper: &Helper, command: &str, ci: bool) -> crate::helper::Run {
     compare_owned(helper, command, ci, true)
 }

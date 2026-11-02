@@ -15,7 +15,7 @@ use crate::{
 };
 use serde_json::json;
 
-/// Verifies custom env dependency injection, dynamic imports, peer detection, `deps write`, and `--add-missing-deps`.
+/// Verifies custom env dependency injection, dynamic imports, peer detection, `deps write`, and `--add-missing-deps` ([`parse`]).
 #[test]
 fn dependencies_env_component_and_missing_dist_and_auto_detect_peers() -> KnownResult<()> {
     let helper = Helper::new();

@@ -28,6 +28,7 @@ fn existing_uncommitted_scaffolding_is_staged_until_committed() {
     assert!(output.contains("git push -u origin HEAD"));
 }
 
+/// Initializes a fresh Git repository and Bit workspace without any initial commits.
 fn empty_repository() -> Helper {
     let helper = Helper::new();
     fs::create_dir_all(&helper.scopes.local_path).unwrap();

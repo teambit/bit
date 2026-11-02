@@ -32,6 +32,7 @@ fn component_timings(results: &mut Value) {
         }
     }
 }
+/// Validates that `value` is null or an unsigned integer duration and zeroes non-null values.
 fn duration(value: &mut Value) {
     if value.is_null() {
         return;

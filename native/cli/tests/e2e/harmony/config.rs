@@ -46,6 +46,7 @@ fn compare_files(helper: &Helper, oracle: &Path, command: &str, actual: &Path, e
     );
 }
 
+/// Parses `.bit/command-history` and returns the command portion of each log entry after validating timestamps and PIDs.
 fn history(root: &Path) -> Option<Vec<String>> {
     let bytes = fs::read(root.join(".bit/command-history")).ok()?;
     let text = String::from_utf8(bytes).unwrap();

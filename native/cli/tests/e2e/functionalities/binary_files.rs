@@ -12,6 +12,7 @@ fn png_fixture_bytes() -> Vec<u8> {
     fs::read(fixture).unwrap()
 }
 
+/// Verifies exporting and importing a component containing both a PNG file and a `.js` file.
 /// binary files › exporting a PNG file in addition to a .js file
 #[test]
 fn exporting_a_png_file_in_addition_to_a_js_file() {

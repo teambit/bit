@@ -19,6 +19,7 @@ fn after_adding_it() {
     assert!(status_output.contains("bar/foo"), "{status_output}");
 }
 
+/// Verifies deleting a tracked file from a tagged component marks it as modified in `bit status`.
 /// delete files from a component › tag and then delete a file › bit status should show the component as modified
 #[test]
 fn tag_and_then_delete_a_file() {

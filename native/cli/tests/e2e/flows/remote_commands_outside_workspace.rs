@@ -26,6 +26,7 @@ fn cmd_with_globals(helper: &Helper, globals: &Path, line: &str) -> Run {
     cmd_with_globals_and_env(helper, globals, line, &[])
 }
 
+/// Runs `bit <line>` with `BIT_GLOBALS_DIR=globals` and additional `extra_env` variables.
 fn cmd_with_globals_and_env(
     helper: &Helper,
     globals: &Path,

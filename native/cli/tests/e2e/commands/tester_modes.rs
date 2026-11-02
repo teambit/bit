@@ -29,6 +29,7 @@ fn builtin_test_summary_without_test_files_and_without_selected_components_match
     support::compare(&helper, "test --unmodified --json --summary");
 }
 
+/// Verifies `bit test --coverage` reports coverage metrics in JSON output and cleans up `coverage/`.
 #[test]
 fn builtin_test_coverage_collection_reports_metrics_and_removes_artifacts() {
     let helper = support::workspace(1, true);

@@ -36,6 +36,7 @@ fn compare(helper: &Helper, node_workspace: &Path, command: &str) {
     );
 }
 
+/// Verifies `bit tag` on an unlinked component recreates its `node_modules` package and matches `Node.js`.
 #[test]
 fn tag_unlinked_component_matches_node() {
     let helper = Helper::new();

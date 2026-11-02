@@ -15,7 +15,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::{fs, io::Write};
 
-/// Verifies that a rejected sync commit push due to a concurrent winner is reported as a benign race.
+/// Verifies that a rejected sync commit push due to a concurrent winner is reported as a benign race ([`arm_pre_push_hook`]).
 #[test]
 fn ci_sync_rejected_sync_commit_push_reports_benign_race() {
     let helper = Helper::new();

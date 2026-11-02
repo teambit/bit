@@ -6,6 +6,7 @@
 mod big_file;
 /// End-to-end `bit init` and `bit init --force` tests when `.bitmap` is deleted.
 mod bitmap_deleted;
+/// End-to-end circular dependency analysis (`bit deps circular`, `bit insights circular`) and tagging tests.
 mod cyclic_dependencies;
 mod delete_files;
 mod id_with_wildcard;

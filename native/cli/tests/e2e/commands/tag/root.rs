@@ -34,6 +34,7 @@ fn provenance(helper: &Helper, component: &str) -> serde_json::Value {
         .clone()
 }
 
+/// Verifies explicit `--ver 1.0.0` on a member bumps a modified `--root` component by its own patch (`0.0.2`).
 #[test]
 fn explicit_member_version_brings_modified_root_with_its_own_patch() {
     let helper = workspace();

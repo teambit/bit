@@ -7,7 +7,7 @@ use crate::helper::Helper;
 /// Command line used to scaffold a React `button` component when testing peer dependency installation.
 const CREATE_REACT_BUTTON: &str = "create react button";
 
-/// Verifies that `bit create react` installs environment peer dependencies (`@types/react`) so `bit check-types` succeeds.
+/// Verifies that [`CREATE_REACT_BUTTON`] installs environment peer dependencies (`@types/react`) so `bit check-types` succeeds.
 #[test]
 fn create_react_and_check_types() {
     let helper = Helper::new();

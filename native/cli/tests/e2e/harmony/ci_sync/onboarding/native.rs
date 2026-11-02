@@ -51,6 +51,7 @@ fn onboarding_preserves_front_matter_comments_and_existing_workflows() {
     assert_eq!(generated(&helper), before);
 }
 
+/// Verifies `bit ci sync --init` preserves unrelated staged changes and force-adds only ignored outputs.
 #[test]
 fn onboarding_keeps_unrelated_staged_changes_and_force_adds_only_ignored_outputs() {
     let helper = super::empty_repository();

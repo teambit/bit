@@ -71,6 +71,7 @@ fn after_import_should_create_the_directories() {
     assert!(file.is_file(), "expected file at {}", file.display());
 }
 
+/// Initializes a workspace where a local component shares the same scope-qualified ID as a remote component.
 fn setup_conflict() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

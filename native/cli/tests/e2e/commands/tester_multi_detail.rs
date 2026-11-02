@@ -45,6 +45,7 @@ fn builtin_test_multi_details_group_pass_and_failure_by_component() {
     assert_eq!(result.status.code(), Some(1));
 }
 
+/// Verifies multi-component `bit test --coverage` collects per-component coverage metrics and removes `coverage/`.
 #[test]
 fn builtin_test_multi_details_collect_coverage_per_component() {
     let helper = support::workspace(2, true);

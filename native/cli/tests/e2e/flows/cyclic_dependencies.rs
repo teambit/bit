@@ -2,7 +2,7 @@
 
 use crate::helper::{Helper, parse};
 use std::ffi::OsStr;
-/// Verifies `bit insights circular` and `bit deps circular` report two workspace cycles identically to `Node.js`.
+/// Verifies `bit insights circular` and `bit deps circular` report two workspace cycles identically to `Node.js` ([`parse`]).
 #[test]
 fn insights_circular_two_workspace_cycles_match_node() {
     let helper = Helper::new();

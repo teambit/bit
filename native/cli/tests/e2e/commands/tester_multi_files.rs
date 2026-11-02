@@ -23,6 +23,7 @@ fn assert_effects(helper: &Helper) {
     assert!(!helper.scopes.local_path.join("excluded-effect").exists());
 }
 
+/// Verifies explicit test file arguments run only the requested spec files and deduplicate duplicate paths.
 #[test]
 fn multi_test_files_select_only_requested_paths_and_deduplicate() {
     let helper = fixture();

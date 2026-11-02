@@ -32,6 +32,7 @@ fn text_single_explicit_test_preserves_failure_and_direct_stream_writes() {
     assert_eq!(result.status.code(), Some(1));
 }
 
+/// Verifies `bit test comp1/index.spec.js` streams passing Jest reports to stderr and summary to stdout.
 #[test]
 fn text_single_explicit_test_streams_jest_report() {
     let helper = support::workspace(1, true);

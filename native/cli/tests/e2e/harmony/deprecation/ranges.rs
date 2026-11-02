@@ -27,6 +27,7 @@ fn unstaged_ranges_are_reflected_in_log_and_undeprecation_clears_them() {
     successful(&helper, "undeprecate comp1");
     assert_log(&helper, "0.0.1", false);
 }
+/// Asserts that `tag` in `bit log comp1 --json` has `"deprecated"` equal to `deprecated`.
 fn assert_log(helper: &Helper, tag: &str, deprecated: bool) {
     let log = json(helper, "log comp1 --json");
     let version = log

@@ -18,6 +18,7 @@ const BAR_FOO_V3: &str = "module.exports = function foo() { return 'got foo v3';
 /// Substring expected in `bit checkout` success output.
 const SUCCESS_OUTPUT: &str = "successfully switched";
 
+/// Verifies `bit checkout` diagnostics on missing/new components and version switching after tagging.
 #[test]
 fn non_existing_and_after_component_created() {
     let helper = Helper::new();

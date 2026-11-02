@@ -41,6 +41,7 @@ fn checkout_writes_scope_license_verbatim_like_node() {
     );
 }
 
+/// Verifies `bit checkout` ignores `ScopeMeta` license objects from unrelated local scopes.
 #[test]
 fn checkout_ignores_license_from_an_unrelated_local_scope() {
     let helper = versions();

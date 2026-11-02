@@ -6,6 +6,7 @@
 mod lane;
 /// End-to-end tests for npm registry version conflict checks during `bit tag`.
 mod registry;
+/// End-to-end tests for `--root` workspace component version bump isolation during `bit tag`.
 mod root;
 mod soft;
 mod states;

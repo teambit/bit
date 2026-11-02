@@ -26,6 +26,7 @@ fn setup_big_file(helper: &Helper) -> String {
     helper.native("tag bar/text --ignore-issues *")
 }
 
+/// Verifies tagging a component with a Windows-formatted (`\r\n`) big file succeeds without errors.
 /// big text file › Windows format (\\r\\n) › tagging the component should not throw any error
 #[test]
 fn tagging_the_component_should_not_throw_any_error() {

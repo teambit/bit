@@ -51,6 +51,7 @@ fn assert_loaded_root_sources(helper: &crate::helper::Helper) {
     );
 }
 
+/// Verifies that adding a nested component transfers file ownership from an existing `--root` component.
 #[test]
 fn a_nested_new_component_can_take_files_previously_owned_by_the_root() {
     let helper = workspace();

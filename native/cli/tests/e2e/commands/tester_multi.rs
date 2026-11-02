@@ -29,6 +29,7 @@ fn sort_component_pair(value: &mut Value, objects: bool) {
     rows.sort_by_key(name);
 }
 
+/// Verifies multi-component `bit test --summary` aggregates passing and failing components and exits with `1`.
 #[test]
 fn builtin_test_multi_summary_aggregates_passing_and_failing_components() {
     let helper = support::workspace(2, true);

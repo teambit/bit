@@ -47,6 +47,7 @@ impl Drop for Registry {
     }
 }
 
+/// Accepts nonblocking connections on `listener` and responds until `stop` is set.
 fn serve(listener: &TcpListener, stop: &AtomicBool, always_taken: bool) {
     while !stop.load(Ordering::Relaxed) {
         if let Ok((mut connection, _)) = listener.accept() {

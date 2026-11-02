@@ -6,6 +6,7 @@
 mod auto_tagging;
 /// End-to-end binary file tracking and export tests.
 mod binary_files;
+/// End-to-end `.bit/index.json` maintenance and recovery tests.
 mod components_index;
 mod dev_dependencies;
 mod dynamic_namespaces;

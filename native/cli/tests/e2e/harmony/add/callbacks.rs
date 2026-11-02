@@ -48,6 +48,7 @@ fn explicit_identity_onload_and_package_callbacks_observe_canonical_class_versio
     assert!(events.contains(r#""phase":"package""#));
 }
 
+/// Verifies package extension callback failures abort `bit add` before linking or writing `.bitmap`.
 #[test]
 fn package_callback_failure_precedes_link_and_bitmap_publication() {
     let (helper, env) = configured();

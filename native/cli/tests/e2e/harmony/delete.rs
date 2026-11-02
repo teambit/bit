@@ -29,6 +29,7 @@ fn import_a_scope_with_deleted_components() {
     assert!(list_after.contains("comp1"));
 }
 
+/// Verifies `bit checkout reset` clears soft-deletion status after a local `bit delete`.
 /// bit delete command › bit checkout reset after local delete
 #[test]
 fn checkout_reset_after_local_delete() {

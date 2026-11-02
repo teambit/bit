@@ -24,6 +24,7 @@ fn versions() -> Helper {
     helper
 }
 
+/// Clones `helper`, executes `command` under `Node.js` and Rust (`CI=1`), and asserts output and file parity.
 fn compare(helper: &Helper, command: &str) -> PathBuf {
     let baseline = helper.clone_workspace();
     let node = Helper::cmd_in_with(

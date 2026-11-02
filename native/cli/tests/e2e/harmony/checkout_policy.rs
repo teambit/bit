@@ -39,6 +39,7 @@ fn source() -> (Helper, PathBuf) {
     (helper, before)
 }
 
+/// Sets the workspace `lodash.get` policy to `version` and prepends a leading `JSONC` comment.
 fn set_policy(helper: &Helper, version: &str) {
     config::set_workspace_key(
         &helper.scopes.local_path,

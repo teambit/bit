@@ -41,6 +41,7 @@ pub(super) fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started:
         .into_bytes();
 }
 
+/// Verifies `--junit` reports pass, fail, skip, todo, and suite-level errors accurately.
 #[test]
 fn junit_reports_pass_fail_skip_todo_and_suite_errors() {
     let helper = move_paths::support::workspace(1, true);

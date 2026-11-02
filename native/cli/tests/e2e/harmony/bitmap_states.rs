@@ -20,6 +20,7 @@ fn parity(helper: &Helper) -> serde_json::Value {
     native_json
 }
 
+/// Asserts that native and `Node.js` `bit status` text output and exit code match.
 fn text_parity(helper: &Helper) {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status");

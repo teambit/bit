@@ -62,6 +62,7 @@ fn compare(helper: &Helper, oracle: &std::path::Path, command: &str, success: bo
     );
 }
 
+/// Strips variable `(completed in ...)` duration suffixes from `output` lines.
 pub(super) fn stable_output(output: &str) -> String {
     output
         .lines()

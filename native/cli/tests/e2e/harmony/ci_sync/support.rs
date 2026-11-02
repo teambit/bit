@@ -22,6 +22,7 @@ pub fn comp2_src(marker: &str) -> String {
     format!("module.exports = () => 'comp2: {marker}';\n")
 }
 
+/// Creates a bare Git remote repository and registers it as `origin` on `helper`.
 pub fn setup_git_remote(helper: &Helper) -> PathBuf {
     let (_, scope_path) = helper.new_bare_scope();
     let bare_repo_path = helper.scopes.e2e_dir.join(format!(

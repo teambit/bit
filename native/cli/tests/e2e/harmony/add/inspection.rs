@@ -22,6 +22,7 @@ pub(super) fn fragment<'a>(show: &'a Value, title: &str) -> &'a Value {
         .unwrap()["json"]
 }
 
+/// Returns the list of environment-sourced dependency IDs from `show`'s `configuration` section.
 pub(super) fn policy(show: &Value) -> Vec<String> {
     fragment(show, "configuration")
         .as_array()

@@ -6,6 +6,7 @@
 mod add;
 /// End-to-end Harmony workspace-root tracking and cloning tests.
 mod add_harmony;
+/// End-to-end Harmony `bit aspect` command parity tests.
 mod aspect;
 mod bit_ignore;
 mod bitmap_states;

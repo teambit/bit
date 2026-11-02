@@ -27,6 +27,7 @@ fn component_files(helper: &Helper) -> Vec<String> {
         .collect()
 }
 
+/// Verifies that a component-level `.bitignore` excludes matching files while tracking `.bitignore` itself.
 /// Bit Ignore functionality › adding .bitignore in a comp dir › should respect the .bitignore file and ignore according to the pattern
 #[test]
 fn adding_bitignore_in_a_comp_dir() {
