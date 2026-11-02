@@ -20,6 +20,7 @@ use std::{
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: u64 = 64 * 1024 * 1024;
 
+/// Executes a parallel AST dependency scan request via [`bit_dependency_scanner::scan_request`].
 pub(super) fn scan_request(
     request: &Value,
     pool: &rayon::ThreadPool,

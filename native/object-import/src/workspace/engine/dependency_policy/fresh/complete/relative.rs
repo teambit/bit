@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
+/// Validates serialized relative or untracked dependency issue `data` for `kind`.
 pub(super) fn validate(kind: &str, data: &str) -> io::Result<()> {
     let fields: serde_json::Map<String, Value> =
         serde_json::from_str(data).map_err(io::Error::other)?;

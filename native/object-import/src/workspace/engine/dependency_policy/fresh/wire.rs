@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
+/// Three-bucket (`dependencies`, `devDependencies`, `peerDependencies`) package policy map array.
 pub(super) type Packages = [Map<String, Value>; 3];
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

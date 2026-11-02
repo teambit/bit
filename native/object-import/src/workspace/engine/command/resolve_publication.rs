@@ -1,4 +1,4 @@
-//! Filesystem [`Prepared`] publication via [`bitmap`], [`finalization`], and [`controls`].
+//! Filesystem [`Prepared`] and [`Options`] publication via [`bitmap`], [`finalization`], and [`controls`].
 
 mod controls;
 use super::{bitmap, invalid, merge::finalization, resolve_snapshot};

@@ -8,6 +8,7 @@ use crate::command_import::lane::Entry;
 use serde_json::Value;
 use std::io;
 
+/// Filters `lane` entries by `--pattern` and `--workspace-only` options on `request`.
 pub(super) fn chosen(
     request: &Prepare,
     bitmap: &Value,

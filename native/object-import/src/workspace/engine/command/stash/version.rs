@@ -12,6 +12,7 @@ use serde_json::{Map, Value, json};
 use sha1::{Digest, Sha1};
 use std::io;
 
+/// Allowed top-level `Version` object field names retained in detached stash snapshots.
 const FIELDS: &[&str] = &[
     "mainFile",
     "bindingPrefix",

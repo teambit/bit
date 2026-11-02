@@ -6,6 +6,7 @@ use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
 
+/// End-to-end dependency policy pipeline request combining initial state, finish, and resolution inputs.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

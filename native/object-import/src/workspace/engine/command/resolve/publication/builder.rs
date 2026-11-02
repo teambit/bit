@@ -13,6 +13,7 @@ pub(in crate::workspace::engine) struct StageBuild {
     token: String,
 }
 
+/// Deserialized builder finalization payload carrying built `Version` extensions and artifact records.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct BuildFinalize {

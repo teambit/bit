@@ -6,6 +6,7 @@ use super::{invalid, wire::Complete};
 use serde_json::Value;
 use std::io;
 
+/// Validates fresh dependency detection output and applies resolved component versions for `request`.
 pub(super) fn detected(request: &Complete) -> io::Result<Value> {
     if request.finish["selfIdentity"].as_str().map(str::trim)
         != Some(request.capture.identity.trim())

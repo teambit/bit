@@ -15,6 +15,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Atomic byte counters enforcing total source and output budgets across parallel file scans.
 #[derive(Debug, Default)]
 pub(super) struct ScanBudget {
     source_bytes: AtomicUsize,

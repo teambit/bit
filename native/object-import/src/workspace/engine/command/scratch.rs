@@ -6,6 +6,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+/// Owned temporary directory path that removes its contents when dropped.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {

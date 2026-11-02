@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained post-install `.bitmap` and `scope.json` lane tracking state for a `switch` command.
 pub(super) struct Retained {
     root: PathBuf,
     bitmap: bitmap::Prepared,

@@ -7,6 +7,7 @@ use super::{
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Validates file count limits, builtin/extension bounds, and normalized paths on `request`.
 pub(super) fn validate(request: &Request) -> io::Result<()> {
     path(&request.root)?;
     if request.files.len() > MAX_FILES

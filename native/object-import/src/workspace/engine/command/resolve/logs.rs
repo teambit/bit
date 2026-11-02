@@ -1,4 +1,5 @@
 //! Resolve per-component editor and pending soft-tag logs via [`apply`] on [`Retained`].
+//! Populates default `"bump dependencies versions"` messages on auto-snapped dependents.
 
 use super::{Retained, invalid};
 use serde_json::{Map, Value, json};

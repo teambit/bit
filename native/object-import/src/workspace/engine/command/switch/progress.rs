@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Computes the total component import count for a lane switch from `context` and `targets`.
 pub(in crate::workspace::engine::command) fn import_count(
     _root: &Path,
     context: &Value,

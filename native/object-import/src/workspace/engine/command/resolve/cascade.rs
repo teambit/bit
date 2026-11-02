@@ -1,4 +1,5 @@
 //! Dependent auto-tag cascade [`reports`] computation for workspace `snap` and `tag` commands.
+//! Preserves candidate ordering ahead of selected ordering to match `workspace.getAutoTagInfo`.
 
 #[cfg(test)]
 mod tests;

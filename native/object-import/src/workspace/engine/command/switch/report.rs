@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
+/// Appends skipped lane-only components to `result["failedComponents"]` after switch planning.
 pub(in super::super) fn append_skipped(
     context: &Value,
     targets: &[Value],

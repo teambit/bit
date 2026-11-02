@@ -14,6 +14,7 @@ use crate::workspace::engine::{resolve_dependencies::normalize, source_overlay::
 use serde_json::{Map, Value, json};
 use std::{io, path::Path};
 
+/// Projects raw dependency `graph` edges and `overlay` manifests into fresh detection output.
 pub(super) fn project(
     request: &Detect,
     graph: &Value,

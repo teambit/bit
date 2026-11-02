@@ -11,6 +11,7 @@ use std::{
     io,
 };
 
+/// Projects flattened dependency graphs onto stashed `components`, returning any unversioned-dependency error message.
 pub(super) fn project(
     components: &mut [Component],
     repository: &mut Repository,

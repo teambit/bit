@@ -30,6 +30,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
+/// Deserialized preparation request for a native workspace `snap`, `tag`, or `merge --resolve` command.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {

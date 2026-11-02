@@ -1,4 +1,4 @@
-//! Workspace [`status_context`], lane validation, and [`proof`] capture into [`Retained`].
+//! Workspace [`status_context`], lane validation, and [`proof`] capture into [`Retained`] via [`prepare`].
 
 #[cfg(test)]
 mod tests;

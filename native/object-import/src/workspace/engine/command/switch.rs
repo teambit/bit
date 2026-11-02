@@ -1,4 +1,4 @@
-//! Local, ordinary lane switches reuse [`capture`], [`planning`], and `.bitmap` publication.
+//! Local, ordinary lane switches ([`LaneSelection`]) reuse [`capture`], [`planning`], and `.bitmap` publication.
 //! Resolve [`selection`], [`load_order`], and [`validation`] before retaining a writable plan.
 
 pub(super) mod progress;

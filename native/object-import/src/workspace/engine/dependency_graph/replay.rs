@@ -28,6 +28,7 @@ struct Diagnostics {
     missing_packages: Map<String, Value>,
     errors: Map<String, Value>,
 }
+/// Replays scanned file rows in deterministic order to produce the final dependency graph payload.
 pub(super) fn finish(
     request: &Request,
     rows: &HashMap<String, Row>,

@@ -7,6 +7,7 @@ use super::{
 use serde_json::Value;
 use std::io;
 
+/// Projects a detached `Version` object for stashing from `stored`, `current`, `files`, and `receipt`.
 pub(super) fn version(
     stored: &Value,
     current: &Value,

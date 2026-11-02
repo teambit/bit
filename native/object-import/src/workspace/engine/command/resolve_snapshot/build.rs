@@ -14,6 +14,7 @@ use std::{
 
 const BUILDER: &str = "teambit.pipelines/builder";
 
+/// Applies builder pipeline tasks, `buildStatus`, and built aspect extensions from `allocation` onto `version`.
 pub(super) fn metadata(version: &mut Value, allocation: &Value) -> io::Result<()> {
     planned_tasks(version, allocation)?;
     let Some(data) = allocation.get("buildData") else { return Ok(()) };

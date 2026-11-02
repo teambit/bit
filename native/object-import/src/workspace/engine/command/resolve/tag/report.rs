@@ -4,6 +4,7 @@ use super::{Material, Retained, invalid};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
+/// Builds the `tag` command result report with tagged, auto-tagged, new, and warning entries.
 #[inline]
 pub(in super::super) fn report(
     retained: &Retained,

@@ -1,4 +1,5 @@
 //! [`preflight`] [`Material`], graph, and file budget validation for resolved snapshots.
+//! Enforces unique component identities, valid projections, and total source byte budgets.
 
 use super::{Material, invalid, snapshot};
 use crate::workspace::snapshots;

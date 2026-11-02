@@ -8,6 +8,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Captures file content proofs for all source files across `current` [`Captured`] components.
 #[inline]
 pub(in crate::workspace::engine::command) fn capture(
     current: &[Captured],

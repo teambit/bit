@@ -3,6 +3,7 @@
 use super::Package;
 use serde_json::{Value, json};
 
+/// Computes the `bit.peer` and `bit.defaultPeerRange` peer version range for `package` when configured.
 #[inline]
 pub(super) fn range(package: &Package) -> Option<Value> {
     if !truthy(&package.manifest["bit"]["peer"]) {

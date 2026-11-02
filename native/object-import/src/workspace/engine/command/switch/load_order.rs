@@ -7,6 +7,7 @@ use std::{
     io,
 };
 
+/// Orders `context["targets"]` and records `switchStatusLoadOrder` from `.bitmap` and `lane` entries.
 #[inline]
 pub(super) fn apply(context: &mut Value, lane: &[command_import::lane::Entry]) -> io::Result<()> {
     let order = status_load_order(context, lane)?;

@@ -1,4 +1,5 @@
 //! The workspace-root joins changed members via [`include`] without becoming a dependency.
+//! Uses `teambit.workspace/workspace-root` aspect detection and `snapshotAutoAddedWorkspaceRoot`.
 
 use super::{
     super::{capture, resolve_snapshot::Material},

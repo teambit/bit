@@ -7,6 +7,7 @@ use std::{collections::HashSet, io};
 const MISSING: &str = "MissingPackagesDependenciesOnFs";
 const MANUAL: &str = "MissingManuallyConfiguredPackages";
 
+/// Extracts missing filesystem package records from cached `issues`.
 pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
     let mut seen = HashSet::new();
     let mut missing = Vec::new();

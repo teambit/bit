@@ -1,4 +1,5 @@
 //! Model and lane head `Version` [`capture`] from [`Repository`] for component issue inspection.
+//! Records missing head objects as `Value::Null` rather than silently omitting the head entry.
 
 #[cfg(test)]
 mod tests;

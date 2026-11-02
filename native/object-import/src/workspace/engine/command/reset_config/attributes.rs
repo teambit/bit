@@ -8,6 +8,7 @@ use std::{
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+/// Validates that `path` has no non-`SELinux` extended attributes and matches parent directory inheritance.
 #[inline]
 pub(super) fn validate(path: &Path) -> io::Result<()> {
     let meta = fs::symlink_metadata(path)?;

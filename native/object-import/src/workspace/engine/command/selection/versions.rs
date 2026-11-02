@@ -4,6 +4,7 @@ use super::{Options, Repository, Selection, invalid};
 use serde_json::{Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};
 
+/// Resolves the target version string (`head`, `latest`, `reset`, `main`, or explicit ref) for `selection`.
 pub(super) fn resolve(
     options: &Options,
     selection: &Selection<'_>,

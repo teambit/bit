@@ -11,6 +11,7 @@ use crate::workspace::engine::status_models::{comparison, versions};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
+/// Selects candidate component identities for `snap` according to `retained.snap` options and `pattern`.
 pub(super) fn select(
     retained: &mut Retained,
     captured: &[capture::Captured],

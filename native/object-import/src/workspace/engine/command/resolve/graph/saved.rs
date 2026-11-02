@@ -4,6 +4,7 @@ use super::{Material, Repository, invalid, key};
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
+/// Adjacency map of saved flattened dependency edges keyed by source component identity.
 pub(super) type Graph = HashMap<String, Vec<Value>>;
 
 #[inline]

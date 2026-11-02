@@ -11,6 +11,7 @@ use std::{
     io,
 };
 
+/// Projects flattened dependency graphs onto `materials`, reusing saved edges from prior `Version` objects.
 #[inline]
 pub(super) fn project(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
     project_with_saved(materials, repository, true)
