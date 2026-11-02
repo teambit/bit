@@ -13,6 +13,7 @@ pub(super) struct Import {
     id: String,
 }
 
+/// Build a core aspect [`Import`] record for `specifier` relative to `component.dir`.
 #[inline]
 pub(super) fn import(
     resolver: &mut Resolver<'_>,

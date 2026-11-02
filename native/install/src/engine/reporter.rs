@@ -51,6 +51,7 @@ pub struct ReporterSettings {
 }
 
 impl ReporterSettings {
+    /// Construct default [`ReporterSettings`] from the host terminal width and color support in `info`.
     #[must_use]
     #[inline]
     pub fn new(info: &HostInfo) -> Self {

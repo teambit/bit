@@ -15,7 +15,9 @@ use std::io;
 
 /// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`].
 const RUNTIME: usize = 0;
+/// Index (`1`) of the `devDependencies` slot in [`FieldMaps`].
 const DEV: usize = 1;
+/// Index (`2`) of the `peerDependencies` slot in [`FieldMaps`].
 const PEER: usize = 2;
 
 /// `applyAutoDetectOverridesOnComponent`: non-forced policy entries apply to

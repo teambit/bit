@@ -23,7 +23,9 @@ use std::io;
 /// Fetched remote lane object with its [`LaneId`], SHA-1 hash, compressed payload, and parsed JSON [`Value`].
 #[derive(Debug, Clone, PartialEq)]
 pub struct RemoteLane {
+    /// Remote lane scope and name identifier.
     pub id: LaneId,
+    /// SHA-1 object hash of the lane object.
     pub hash: String,
     pub compressed: Vec<u8>,
     pub object: Value,

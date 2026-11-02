@@ -20,6 +20,7 @@ const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 /// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.
 type Entry = (usize, String, Value);
 
+/// Return the top-level `teambit.dependencies/dependency-resolver` key (with optional `@version`) in `document`.
 #[inline]
 fn resolver_key(document: &Document) -> String {
     document

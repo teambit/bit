@@ -4,7 +4,9 @@
 
 /// Global `bit config` key constants read during workspace installation (`@teambit/legacy.constants`).
 pub mod keys {
+    /// Global config key (`cloud_domain`) overriding the Bit Cloud domain.
     pub const CLOUD_DOMAIN: &str = "cloud_domain";
+    /// Global config key (`registry`) overriding the default package registry URL.
     pub const REGISTRY_URL: &str = "registry";
     pub const USER_TOKEN: &str = "user.token";
     pub const USER_NAME: &str = "user.name";

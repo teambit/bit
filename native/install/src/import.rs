@@ -5,6 +5,7 @@
 //!
 //! Coordinates HTTP/file remote transports ([`FetchOptions`]), lane merges ([`local_update_dependents`]), and scope object persistence ([`Repo`]).
 
+/// Re-exported remote scope registry and Symphony URL helpers from `bit_client_transfer`.
 pub(crate) mod remotes {
     pub use bit_client_transfer::remotes::*;
 }

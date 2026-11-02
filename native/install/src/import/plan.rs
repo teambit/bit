@@ -30,7 +30,9 @@ const FLATTENED_REASON: &str =
 /// Pre-install scope object importer coordinating multi-round remote fetches into [`Repo`].
 #[derive(Clone, Copy)]
 pub struct Importer<'a> {
+    /// Target local scope object repository.
     pub repo: &'a Repo,
+    /// Multi-remote object fetcher.
     pub fetcher: &'a Fetcher<'a>,
     /// The workspace scope name: ids of this scope are local, never fetched.
     pub local_scope: &'a str,

@@ -17,7 +17,7 @@ use crate::{
 pub struct VersionInputs<'a> {
     /// Forced policy entries (`getDependenciesToAddManually`, `-` excluded by the caller).
     pub deps: &'a FieldMaps,
-    /// Non-forced policy entries.
+    /// Non-forced policy entries (`getAutoDetectOverrides`).
     pub auto_detect: &'a FieldMaps,
     /// Non-forced merge-config entries.
     pub merge_config: &'a FieldMaps,

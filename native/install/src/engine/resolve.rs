@@ -54,6 +54,7 @@ pub async fn resolve_remote_version(
     receiver.await.map_err(|_| io::Error::other("the resolve thread panicked"))?
 }
 
+/// Run a single-threaded Tokio runtime to resolve `spec` or `parsed` (`(name, version)`) against `settings`.
 fn resolve_blocking(
     spec: &str,
     parsed: Option<(String, String)>,

@@ -56,6 +56,7 @@ impl Resolver<'_> {
         Ok((false, from.join("node_modules").join(name)))
     }
 
+    /// Read and cache the parsed JSON or `JSONC` manifest at `path`, returning `None` when absent.
     pub(super) fn read(&mut self, path: &Path) -> io::Result<Option<Value>> {
         if let Some(cached) = self.manifests.get(path) {
             return Ok(cached.clone());

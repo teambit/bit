@@ -38,6 +38,7 @@ pub struct DependencyResolverConfig {
     /// `{ dependencies, peerDependencies }`; values are a range or `{ version, preserve }`.
     #[serde(default)]
     pub policy: Value,
+    /// Configured package manager aspect ID (`teambit.dependencies/pnpm` or `teambit.dependencies/yarn`).
     pub package_manager: Option<String>,
     pub proxy: Option<String>,
     pub https_proxy: Option<String>,

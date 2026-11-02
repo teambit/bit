@@ -70,6 +70,7 @@ pub fn build(
     list
 }
 
+/// Construct a [`ComponentDependency`] with normalized version and package metadata.
 #[inline]
 fn component(
     id: ComponentId,

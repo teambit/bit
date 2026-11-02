@@ -9,7 +9,7 @@ use std::{
     io,
     path::{Component, Path, PathBuf},
 };
-
+/// Root edge identifier (`"."`) in a serialized `DependenciesGraph`.
 const ROOT_EDGE_ID: &str = ".";
 const SCHEMA_VERSION: &str = "2.0";
 

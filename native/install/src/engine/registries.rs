@@ -19,7 +19,9 @@ const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";
 /// One registry and the `Authorization` header sent to it.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Registry {
+    /// Registry endpoint URI.
     pub uri: String,
+    /// Whether credentials must be sent on every request (`always-auth`).
     pub always_auth: bool,
     /// Empty when there is no credential.
     pub auth_header_value: String,

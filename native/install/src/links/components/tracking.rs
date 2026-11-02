@@ -35,6 +35,7 @@ pub(super) async fn prepare(
     Ok(manifests)
 }
 
+/// Persist pre-evaluated `manifests` into `node_modules/<pkg>/package.json` for tracked `components`.
 pub(super) fn persist(
     root: &Path,
     components: &[&WorkspaceComponent],

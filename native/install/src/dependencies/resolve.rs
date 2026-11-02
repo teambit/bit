@@ -68,7 +68,9 @@ pub enum Resolved {
 /// A component found through its package (`ResolvedPackageData` with `componentId`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolvedComponent {
+    /// Component identifier parsed from the package's `componentId` field.
     pub id: ComponentId,
+    /// Package name as resolved in `node_modules`.
     pub package_name: String,
     /// `concreteVersion`.
     pub version: Option<String>,

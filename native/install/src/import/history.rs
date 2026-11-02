@@ -65,12 +65,14 @@ pub fn incomplete(repo: &Repo, ids: &[Id]) -> io::Result<Vec<Id>> {
     Ok(incomplete)
 }
 
+/// Completeness state of a component's local `VersionHistory` graph relative to a target version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Completeness {
     /// `graphCompleteRefs` already lists the version.
     Recorded,
     /// Every ancestor is in the history; not recorded yet.
     Complete,
+    /// At least one ancestor is missing from the local `VersionHistory` object.
     Incomplete,
 }
 

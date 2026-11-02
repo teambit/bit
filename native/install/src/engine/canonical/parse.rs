@@ -16,6 +16,7 @@ pub(super) struct Request<'a> {
     pub(super) environment: Captured,
 }
 
+/// Validated absolute workspace, store, cache, and `.bit` directory paths.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Paths {
     pub(super) root: PathBuf,

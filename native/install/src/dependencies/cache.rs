@@ -27,7 +27,7 @@ use std::{
 /// `BIT_FEATURES` entry disabling the filesystem cache (`NO_FS_CACHE_FEATURE`).
 const NO_FS_CACHE: &str = "no-fs-cache";
 
-/// Read the cached dependency detection of `component` from `<scope>/cache/components/deps` when fresh.
+/// Read the cached [`Detected`] dependency data of `component` from `<scope>/cache/components/deps` when fresh.
 pub fn read(
     scope: &Scope,
     component: &WorkspaceComponent,

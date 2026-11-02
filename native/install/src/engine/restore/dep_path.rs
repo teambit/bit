@@ -35,6 +35,7 @@ impl DependencyPath {
     }
 }
 
+/// Parse a lockfile dependency path (`name@version(patch_hash=…)(peers)`) into a [`DependencyPath`].
 pub(super) fn parse(dep_path: &str) -> DependencyPath {
     let dep_path = dep_path.trim();
     let Some((name, mut version)) = dep_path

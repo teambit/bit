@@ -55,7 +55,9 @@ pub struct Detected {
     pub core_aspects: Vec<String>,
 }
 
+/// Component dependency lifecycle keys (`dependencies`, `devDependencies`, `peerDependencies`).
 const COMPONENT_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
+/// Package dependency lifecycle keys (`packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`).
 const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 

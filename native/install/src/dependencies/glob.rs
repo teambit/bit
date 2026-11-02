@@ -9,6 +9,7 @@ pub fn match_patterns(path: &str, patterns: &[String]) -> bool {
     !patterns.is_empty() && bit_workspace_config::glob::match_patterns(path, patterns)
 }
 
+/// Return `true` when `path` matches the single non-empty glob `pattern`.
 #[inline]
 #[must_use]
 pub fn matches(path: &str, pattern: &str) -> bool {

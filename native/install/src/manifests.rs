@@ -49,6 +49,7 @@ pub struct ManifestInput<'a> {
     pub components: &'a [WorkspaceComponent],
     /// Per component, keyed by the component ID without version.
     pub dependencies: &'a IndexMap<String, ComponentDependencies>,
+    /// Merged workspace and environment dependency policies.
     pub policies: Policies<'a>,
     pub config: &'a DependencyResolverConfig,
     pub options: &'a ManifestOptions,

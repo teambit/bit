@@ -19,6 +19,7 @@ pub struct Id {
 }
 
 impl Id {
+    /// Return `scope/name` without any `@version` suffix.
     #[must_use]
     #[inline]
     pub fn without_version(&self) -> String {

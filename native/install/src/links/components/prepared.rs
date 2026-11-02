@@ -63,6 +63,7 @@ pub fn link_prepared_component(
     Ok(ComponentLinks { id: component.id.to_string_without_version(), links })
 }
 
+/// Materialize source file symlinks (and the Windows `_src` directory link) inside `package`.
 #[inline]
 fn source_links(
     root: &Path,

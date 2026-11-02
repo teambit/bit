@@ -71,6 +71,7 @@ pub(super) async fn write_lockfile(
     receiver.await.map_err(|_| io::Error::other("the restore thread panicked"))?
 }
 
+/// Convert `serialized` into a lockfile, resolve missing registry packages, and merge into `pnpm-lock.yaml`.
 async fn restore(
     serialized: &Value,
     projects: &[Project],

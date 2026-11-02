@@ -33,7 +33,7 @@ pub struct ScriptPolicy {
     pub never_build_package_names: Vec<String>,
 }
 
-/// The trusted package names.
+/// The trusted package names parsed once from [`TRUSTED_DEPS_JSON`].
 #[inline]
 pub(super) fn trusted_package_names() -> &'static [String] {
     static NAMES: OnceLock<Vec<String>> = OnceLock::new();

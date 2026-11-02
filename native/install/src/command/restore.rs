@@ -17,7 +17,9 @@ use std::io;
 
 /// Expected schema version (`DEPENDENCIES_GRAPH_SCHEMA_VERSION`) for stored component dependency graphs.
 const SCHEMA_VERSION: &str = "2.0";
+/// Warning printed when `--restore` is requested without `rootComponents: true` enabled.
 const NEEDS_ROOT_COMPONENTS: &str = r#"--restore requires "rootComponents: true" in the dependency-resolver config; falling back to a regular install."#;
+/// Warning printed when `--restore` is requested but no workspace component has a stored dependency graph.
 const NO_GRAPH: &str = "--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.";
 
 /// The graph to restore the lockfile from, or `None` (with the canonical warning)

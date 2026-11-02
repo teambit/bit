@@ -21,6 +21,7 @@ use std::{
 
 /// Per-invocation engine session owning the HTTP client, [`LazyLockfile`], and multi-thread runtime.
 pub(super) struct Session {
+    /// Interned static engine configuration for this invocation.
     config: &'static Config,
     client: Arc<ThrottledClient>,
     lockfile: LazyLockfile,

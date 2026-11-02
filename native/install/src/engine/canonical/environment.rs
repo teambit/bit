@@ -26,6 +26,7 @@ pub(super) struct Captured {
 }
 
 impl Captured {
+    /// Parse the environment map and absolute working directory from `payload`.
     pub(super) fn parse(payload: &Value) -> Option<Self> {
         let mut vars = BTreeMap::new();
         for (key, value) in payload.get("environment")?.as_object()? {

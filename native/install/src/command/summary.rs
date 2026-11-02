@@ -34,6 +34,7 @@ pub fn format(
     }
 }
 
+/// Format the warning block when non-loaded legacy environments require another `bit install` pass.
 fn another_install_required(
     output: &Output,
     recurring: bool,

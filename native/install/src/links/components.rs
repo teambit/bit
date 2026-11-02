@@ -52,7 +52,9 @@ pub struct ComponentLinkOptions<'a> {
 /// One link of a component file into its package.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct FileLink {
+    /// Source file path in the workspace component directory.
     pub from: PathBuf,
+    /// Destination symlink path inside `node_modules/<pkg>`.
     pub to: PathBuf,
     /// A symlink was already there and was kept.
     pub existed_before: bool,

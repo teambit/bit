@@ -63,12 +63,14 @@ pub struct HostInfo {
 }
 
 impl HostInfo {
+    /// Return whether console status lines should be printed (`write_to_console` or `loader`).
     #[must_use]
     #[inline]
     pub fn should_write_to_console(&self) -> bool {
         self.write_to_console.unwrap_or(self.loader)
     }
 
+    /// Return the normalized `--token` bearer credential when present and non-empty.
     #[must_use]
     #[inline]
     pub fn bearer_token(&self) -> Option<&str> {

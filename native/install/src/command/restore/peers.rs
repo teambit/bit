@@ -32,6 +32,7 @@ pub fn normalize_peer_provider_versions(graph: &mut Value) {
     graph["edges"] = Value::Array(by_id.into_values().collect());
 }
 
+/// Graph edge rewriter that normalizes peer provider node IDs against highest available [`Versions`].
 #[derive(Debug, Clone)]
 struct Rewriter<'a> {
     versions: &'a Versions,

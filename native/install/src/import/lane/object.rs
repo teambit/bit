@@ -19,6 +19,7 @@ pub struct LaneComponent {
 }
 
 impl LaneComponent {
+    /// Return `true` when this lane component matches `scope` and `name` after trimming whitespace.
     #[inline]
     fn same_id(&self, scope: &str, name: &str) -> bool {
         self.scope.trim() == scope.trim() && self.name.trim() == name.trim()

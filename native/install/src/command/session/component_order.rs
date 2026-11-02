@@ -42,6 +42,7 @@ pub(super) fn apply(workspace: &mut Workspace, order: &[String]) -> io::Result<(
     Ok(())
 }
 
+/// Strip surrounding slashes and any trailing `@version` suffix from a component identity string.
 #[inline]
 fn normalize_order_identity(identity: &str) -> &str {
     let trimmed = identity.trim().trim_matches('/');

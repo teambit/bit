@@ -18,6 +18,7 @@ use std::{fs, io, path::Path};
 /// comma-separated host list.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ProxySettings {
+    /// Outgoing HTTP proxy URL, if configured.
     pub http_proxy: Option<String>,
     pub https_proxy: Option<String>,
     pub no_proxy: Option<Value>,

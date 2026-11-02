@@ -49,6 +49,7 @@ pub fn component_package_copies(
     Ok(directories)
 }
 
+/// Look up non-empty injected copy directories for `key` or `root_dir` in `injected`.
 #[inline]
 fn injected_copy_paths<'a>(
     injected: &'a std::collections::BTreeMap<String, Vec<String>>,

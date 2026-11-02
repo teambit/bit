@@ -16,11 +16,17 @@ use std::{
 
 /// Aspect ID for the `teambit.workspace/workspace` extension in `workspace.jsonc`.
 pub const WORKSPACE_ASPECT: &str = "teambit.workspace/workspace";
+/// Aspect ID for the `teambit.dependencies/dependency-resolver` extension in `workspace.jsonc`.
 pub const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
+/// Aspect ID for the `teambit.workspace/variants` extension in `workspace.jsonc`.
 pub const VARIANTS_ASPECT: &str = "teambit.workspace/variants";
+/// Aspect ID for the `teambit.generator/generator` extension in `workspace.jsonc`.
 pub const GENERATOR_ASPECT: &str = "teambit.generator/generator";
+/// Aspect ID for the `teambit.workspace/workspace-config-files` extension in `workspace.jsonc`.
 pub const WORKSPACE_CONFIG_FILES_ASPECT: &str = "teambit.workspace/workspace-config-files";
+/// Aspect ID for the `teambit.harmony/config-store` extension in `workspace.jsonc`.
 pub const CONFIG_STORE_ASPECT: &str = "teambit.harmony/config-store";
+/// Aspect ID for the `teambit.envs/envs` extension in `workspace.jsonc`.
 pub const ENVS_ASPECT: &str = "teambit.envs/envs";
 
 /// Top-level `workspace.jsonc` keys that are not aspects (`INTERNAL_CONFIG_PROPS`).

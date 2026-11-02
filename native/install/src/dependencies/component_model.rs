@@ -15,12 +15,14 @@ pub struct ComponentModel {
 }
 
 impl ComponentModel {
+    /// Construct a [`ComponentModel`] from an optional serialized `Version` JSON object.
     #[inline]
     #[must_use]
     pub const fn new(version: Option<Value>) -> Self {
         Self { version }
     }
 
+    /// Return `true` when the component has a stored `Version` object in the local scope.
     #[inline]
     #[must_use]
     pub const fn exists(&self) -> bool {

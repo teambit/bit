@@ -13,6 +13,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic counter used to disambiguate temporary loose-object filenames before atomic rename.
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
 /// Inflated loose Bit object containing its header `kind` and raw payload `content`.

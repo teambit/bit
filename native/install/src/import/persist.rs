@@ -21,6 +21,7 @@ pub const MAIN: &str = "main";
 /// What one fetch added to the scope.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Written {
+    /// Count of non-component loose objects written.
     pub objects: usize,
     /// Hashes of the Component objects received.
     pub components: BTreeSet<String>,

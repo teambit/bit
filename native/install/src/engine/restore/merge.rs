@@ -9,6 +9,7 @@ use std::collections::HashSet;
 
 /// Importer dependency fields (`dependencies`, `devDependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
 const IMPORTER_DEP_TYPES: [&str; 3] = ["dependencies", "devDependencies", "optionalDependencies"];
+/// Snapshot dependency fields (`dependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
 const SNAPSHOT_DEP_TYPES: [&str; 2] = ["dependencies", "optionalDependencies"];
 
 #[inline]

@@ -63,6 +63,7 @@ fn local_versions(component: &Value) -> Vec<String> {
         .collect()
 }
 
+/// Extract non-empty `[tag, hash]` pairs from a Component object's `versions` or `orphanedVersions` map.
 #[inline]
 fn tags(versions: &Value) -> Vec<[String; 2]> {
     versions

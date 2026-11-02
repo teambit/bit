@@ -52,7 +52,7 @@ const BUILTINS: [&str; 45] = [
     "zlib",
 ];
 
-/// Whether `specifier` names a built-in module or one of its subpaths (`fs/promises`).
+/// Whether `specifier` names a built-in module or one of its subpaths (`fs/promises`), including `node:`-prefixed specifiers.
 #[inline]
 #[must_use]
 pub fn is_builtin(specifier: &str) -> bool {

@@ -10,6 +10,7 @@
 //! authoring the core aspects needs.
 //! Exposes component package copies ([`component_package_copies`]), prepared manifests ([`prepared_package_manifest`]), and environment link resolvers ([`EnvLinks`]).
 
+/// Re-exported workspace component `node_modules` linker types and entry points.
 pub use components::{
     ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, component_package_copies,
     link_components, link_prepared_component, link_tracking_components, prepared_package_manifest,

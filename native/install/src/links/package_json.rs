@@ -17,6 +17,7 @@ pub(super) const SOURCE_DIR: &str = "_src";
 /// What the generated manifest depends on besides the component itself.
 #[derive(Debug, Clone)]
 pub(super) struct PackageJsonContext<'a> {
+    /// Resolved component and package dependencies for the component, if any.
     pub dependencies: Option<&'a ComponentDependencies>,
     /// `getCloudDomain()`, for `homepage`.
     pub cloud_domain: &'a str,

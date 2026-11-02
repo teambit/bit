@@ -19,6 +19,7 @@ use std::{
 const MAIN_ASPECT_ID: &str = "teambit.harmony/bit";
 /// Package name (`@teambit/bit`) of the main Bit aspect.
 const MAIN_ASPECT_PACKAGE: &str = "@teambit/bit";
+/// Prefix (`link:`) used for local directory link specifiers in root manifests.
 const LINK_PREFIX: &str = "link:";
 
 /// The `LinkingOptions` `bit install` passes to `calculateLinks`.

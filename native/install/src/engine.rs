@@ -62,6 +62,7 @@ pub const READ_PACKAGE_HOOKS_CHECKSUM: &str = "bit-1";
 /// cascade (`.npmrc`, `pnpm-workspace.yaml`) and the environment.
 #[derive(Debug, Clone)]
 pub struct EngineSettings {
+    /// Workspace root directory.
     pub root: PathBuf,
     /// The pnpm config cascade resolved at `root`, before Bit's overlay.
     base: pnpm_config::Config,

@@ -50,7 +50,7 @@ pub fn fetch(path: &Path, ids: &[String], options: &FetchOptions) -> io::Result<
     }
     Ok(collector.items)
 }
-
+/// Deduplicating loose-object collector reading directly from a bare scope [`Repo`].
 struct Collector {
     repo: Repo,
     items: Vec<ObjectItem>,

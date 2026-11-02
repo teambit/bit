@@ -19,8 +19,11 @@ use std::{collections::HashMap, io};
 
 /// Aspect ID of the built-in tester aspect (`teambit.defender/tester`).
 const TESTER: &str = "teambit.defender/tester";
+/// Aspect ID of the built-in docs aspect (`teambit.docs/docs`).
 const DOCS: &str = "teambit.docs/docs";
+/// Aspect ID of the built-in compositions aspect (`teambit.compositions/compositions`).
 const COMPOSITIONS: &str = "teambit.compositions/compositions";
+/// Aspect ID of the built-in dev-files aspect (`teambit.component/dev-files`).
 const DEV_FILES: &str = "teambit.component/dev-files";
 
 /// The workspace configuration of the dev-pattern registrars (`workspace.jsonc`

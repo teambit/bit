@@ -6,6 +6,7 @@
 /// Protocol prefixes (`https://`, `git:`, `file:`, `link:`, `workspace:`, etc.) preserved verbatim as package specifiers.
 const ALLOWED_PREFIXES: [&str; 8] =
     ["https://", "http://", "git:", "git+ssh://", "git+https://", "file:", "link:", "workspace:"];
+/// Reserved npm package names (`node_modules`, `favicon.ico`) rejected by [`is_valid_package_name`].
 const BLOCKLIST: [&str; 2] = ["node_modules", "favicon.ico"];
 
 /// The package name of an install argument, without its version or tag.

@@ -61,7 +61,7 @@ const LINK_ATTEMPTS: u32 = 5;
 /// `EEXIST_RETRY_DELAY_MS`, multiplied by the attempt number.
 const LINK_RETRY_DELAY: Duration = Duration::from_millis(50);
 
-/// `createLinkOrSymlink`: replace `dest` with a link to `src`.
+/// `createLinkOrSymlink`: replace `dest` with a link to `src`, retrying on transient `EEXIST` races.
 pub(super) fn create_link_or_symlink(
     src: &Path,
     dest: &Path,

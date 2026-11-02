@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 use pnpm_config::{Config, NodeLinker};
 use serde_json::{Map, Value, json};
 use std::path::PathBuf;
-
+/// Prepare validated [`EngineSettings`], [`EngineInstallOptions`], and [`InstallPlan`] from `request` and `info`.
 pub(super) fn prepare(request: &Request<'_>, info: &HostInfo) -> Option<Prepared> {
     let mut base = request.environment.with(|| {
         Config::default().current::<CapturedHost>(&request.paths.root).ok()

@@ -11,6 +11,7 @@ use serde_json::{Map, Value, json};
 /// Lockfile resolution context keys (`pnpmfileChecksum`, `settings`, `overrides`) compared across graphs.
 const KEYS: [&str; 3] = ["pnpmfileChecksum", "settings", "overrides"];
 
+/// Extract normalized lockfile resolution context fields (`pnpmfileChecksum`, `settings`, `overrides`) from `serialized`.
 #[inline]
 pub(super) fn graph(serialized: &Value) -> Map<String, Value> {
     let mut context = Map::new();

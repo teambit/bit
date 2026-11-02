@@ -29,7 +29,7 @@ pub fn deps_dir(root: &Path) -> PathBuf {
 }
 
 /// `deleteAllDependenciesDataCache` of the dependency cache at `cache` when
-/// [`needs_invalidation`]; whether it did.
+/// [`needs_invalidation`] returns `true`; returns whether the cache directory was removed.
 pub fn invalidate(root: &Path, cache: &Path) -> io::Result<bool> {
     if !needs_invalidation(root, cache)? {
         return Ok(false);

@@ -9,6 +9,7 @@ use std::{fs, io, path::Path};
 pub(super) fn package(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, false)
 }
+/// Atomically write a component `package.json` [`Manifest`] at `path` using tracking temp-file naming.
 #[inline]
 pub(super) fn tracking(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, true)

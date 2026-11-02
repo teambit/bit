@@ -51,6 +51,7 @@ impl EngineError {
         error.get_ref().and_then(|inner| inner.downcast_ref::<Self>())
     }
 
+    /// Wrap this [`EngineError`] into an [`io::Error`].
     #[must_use]
     #[inline]
     pub fn into_io(self) -> io::Error {

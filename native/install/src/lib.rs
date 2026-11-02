@@ -18,6 +18,7 @@ pub mod output;
 pub mod policy;
 pub mod workspace;
 
+/// Re-exported comment-preserving `JSONC` parser and editor from `bit_object_import`.
 pub use bit_object_import::jsonc;
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};

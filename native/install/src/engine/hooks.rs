@@ -70,6 +70,7 @@ impl BitHooks {
         self.remove_never_built_scripts(manifest)
     }
 
+    /// Strip `scripts` from `manifest` when its package name is listed in `self.never_build`.
     fn remove_never_built_scripts(&self, mut manifest: Value) -> Value {
         if let Some(object) = manifest.as_object_mut()
             && let Some(name) = object

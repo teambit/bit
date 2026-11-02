@@ -41,7 +41,7 @@ pub fn prune_modules(root: &Path, keep: &HashSet<String>) -> io::Result<()> {
     Ok(())
 }
 
-/// `fs.remove`: a directory tree, or a file or symlink.
+/// `fs.remove`: remove a directory tree, file, or symlink at `path`, ignoring `NotFound`.
 #[inline]
 fn remove(path: &Path) -> io::Result<()> {
     let meta = match fs::symlink_metadata(path) {

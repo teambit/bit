@@ -9,8 +9,11 @@ use std::{fs, io, path::Path};
 
 /// Filename (`merge-conflict`) of the workspace root config-merge conflict file.
 const FILE_NAME: &str = "merge-conflict";
+/// Section header prefix (`[*]`) separating component entries in `merge-conflict`.
 const ID_PREFIX: &str = "[*]";
+/// Deprecated workspace-level section identifier (`WORKSPACE`) in `merge-conflict`.
 const WORKSPACE_ID: &str = "WORKSPACE";
+/// Dependency policy field keys (`dependencies`, `devDependencies`, `peerDependencies`).
 const POLICY_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 
 /// The config-merge file a lane merge leaves at the workspace root

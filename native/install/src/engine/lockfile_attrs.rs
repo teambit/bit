@@ -17,7 +17,7 @@ use std::{fs, io, path::Path};
 /// Top-level `bit` key in `pnpm-lock.yaml` storing `depsRequiringBuild` and `restoredFromModel`.
 const BIT_KEY: &str = "bit";
 
-/// The `bit:` block of the wanted lockfile, if any. A malformed lockfile fails
+/// The `bit:` block of the wanted lockfile at `root`, if any. A malformed lockfile fails
 /// the install itself later with a proper error.
 #[inline]
 pub(super) fn read(root: &Path) -> Option<Map<String, Value>> {

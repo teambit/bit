@@ -107,6 +107,7 @@ impl Workspace<'_> {
         self.is_core_aspect_id(&id.to_string_without_version())
     }
 
+    /// Whether `id` (without version) is a Bit core aspect or built-in core environment.
     #[must_use]
     #[inline]
     pub fn is_core_aspect_id(&self, id: &str) -> bool {

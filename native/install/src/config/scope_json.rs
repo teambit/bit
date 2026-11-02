@@ -45,6 +45,7 @@ pub struct ScopeJson {
     pub config: IndexMap<String, String>,
 }
 
+/// Deserialize an optional JSON map into trimmed `String` key-value pairs via [`super::workspace_config::config_string`].
 fn strings<'de, Source: serde::Deserializer<'de>>(
     deserializer: Source,
 ) -> Result<IndexMap<String, String>, Source::Error> {

@@ -54,7 +54,7 @@ pub async fn cloud_username(global: &GlobalConfig, timeout: Duration) -> Option<
         .map(str::to_string)
 }
 
-/// Name the cloud user in the user agent, unless the pnpm config sets one.
+/// Name the cloud user in `settings.registry.network.user_agent`, unless the pnpm config sets one.
 #[inline]
 pub fn apply_cloud_username(settings: &mut EngineSettings, username: &str) {
     let username = username.trim();

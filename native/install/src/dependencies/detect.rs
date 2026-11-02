@@ -46,6 +46,7 @@ pub fn detect(
     Ok(detected)
 }
 
+/// Scan and resolve all imports in a single component `file` into a [`FileTree`].
 fn file_tree(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,
