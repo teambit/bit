@@ -51,7 +51,7 @@ impl LocalBatch {
             .map(|row| row.identity.clone())
             .collect()
     }
-    /// Return the identities of versioned components removed from the active lane in this batch.
+    /// Return the identities of [`VersionedPlan`] components removed from the active lane in this batch.
     #[must_use]
     #[inline]
     pub fn lane_identities(&self) -> Vec<String> {

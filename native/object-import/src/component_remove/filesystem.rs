@@ -51,7 +51,7 @@ pub(crate) fn validate_ancestors(root: &Path, relative: &Path) -> io::Result<()>
     Ok(())
 }
 
-/// Return `true` when `path` is non-empty and consists solely of normal path components.
+/// Return `true` when `path` is non-empty and consists solely of [`Component::Normal`] path components.
 #[inline]
 pub(super) fn safe_relative(path: &Path) -> bool {
     !path.as_os_str().is_empty()

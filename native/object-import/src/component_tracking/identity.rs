@@ -87,7 +87,7 @@ fn explicit(
     Ok((name.into(), false, existing.and_then(rows::scope).map(str::to_owned)))
 }
 
-/// Resolve and validate the target component scope for `directory` and `name` from `options` or `facts`.
+/// Resolve and validate the target component scope for `directory` and `name` from [`Options`] or `facts`.
 pub(super) fn scope(
     facts: &Value,
     directory: &str,

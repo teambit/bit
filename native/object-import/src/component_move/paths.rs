@@ -85,7 +85,7 @@ pub(super) fn relative(root: &Path, path: &Path) -> io::Result<String> {
     };
     Ok(normalized.trim_matches('/').to_owned())
 }
-/// Walk `path` under `root`, rejecting symlinks and recording directory and file preimages in `observed`.
+/// Walk `path` under `root`, rejecting symlinks and recording directory and file preimages in [`Observed`].
 pub(super) fn observe_tree(root: &Path, path: &Path, observed: &mut Observed) -> io::Result<()> {
     observed.ancestors(root, path)?;
     let mut pending = vec![path.to_owned()];

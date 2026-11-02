@@ -78,7 +78,7 @@ fn tracked_head(batch: &mut Batch, id: &str, model: Option<&Value>) -> io::Resul
         },
     )
 }
-/// Return `true` when a `teambit.component/remove` `config` object records active soft-deletion state.
+/// Return `true` when a [`REMOVE`] `config` object records active soft-deletion state.
 #[inline]
 pub(super) fn has_remove_info(config: &Value) -> bool {
     config["removed"] == true

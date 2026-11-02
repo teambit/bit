@@ -79,7 +79,7 @@ pub(super) fn finish_original(
     }
     Ok(())
 }
-/// Remove `path` recursively when it is a non-symlink directory, or unlink it when it is a file/symlink.
+/// Remove `path` [`Path`] recursively when it is a non-symlink directory, or unlink it when it is a file/symlink.
 #[inline]
 fn remove(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {

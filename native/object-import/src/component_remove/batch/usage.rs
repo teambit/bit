@@ -59,7 +59,7 @@ fn used_removed_aspect<'a>(identities: &'a [String], extensions: &[Value]) -> Op
         })
         .map(|removed| removed.trim())
 }
-/// Extract the bare `<scope>/<name>` or `<name>` aspect identifier from an extension entry `value`.
+/// Extract the bare `<scope>/<name>` or `<name>` aspect identifier from an extension entry [`Value`].
 fn extension_id(value: &Value) -> Option<String> {
     if let Some(id) = value
         .as_str()

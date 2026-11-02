@@ -58,7 +58,7 @@ impl RemoteCapture {
             })?;
         Ok(capture)
     }
-    /// Scope forks use one immutable fetch per remote scope, before copying any component.
+    /// Scope forks use one immutable [`Remote`] fetch per remote scope, before copying any component.
     pub fn fetch_many(ids: &[String], remotes: &Remotes, network: &Network) -> io::Result<Self> {
         if ids.len() > 4096 {
             return Err(unsupported("fork remote component budget"));

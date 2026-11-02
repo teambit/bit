@@ -22,7 +22,7 @@ pub(super) struct Change {
     before: Vec<u8>,
     writer: eol::Writer,
 }
-/// Prepare refactored source file [`Change`]s and dependent component file edits for `plan`.
+/// Prepare refactored source file [`Change`]s and dependent component file edits for [`Plan`].
 pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     let component = facts["components"]
         .as_array()

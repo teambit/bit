@@ -58,7 +58,7 @@ impl Options {
         Ok(())
     }
 }
-/// Return `true` when `bitmap` already contains an active component rooted at `"."`.
+/// Return `true` when `bitmap` [`Value`] already contains an active component rooted at `"."`.
 #[inline]
 fn existing_root(bitmap: &Value) -> bool {
     bitmap

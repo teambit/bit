@@ -74,7 +74,7 @@ fn entries(path: &Path) -> io::Result<Vec<String>> {
     names.sort();
     Ok(names)
 }
-/// Verify that all observed files and directory entry lists in `plan.cleanup` match their captured preimages.
+/// Verify that all [`Observed`] files and directory entry lists in `plan.cleanup` match their captured preimages.
 pub(super) fn validate(plan: &Plan) -> io::Result<()> {
     let Some(tree) = &plan.cleanup else { return Ok(()) };
     tree.observed.validate()?;

@@ -46,7 +46,7 @@ fn row_matches_identity(row: &Value, identity: &str) -> bool {
         .is_some_and(|raw| selection::bare(raw) == identity)
 }
 
-/// Look up the effective `teambit.component/remove` aspect configuration or data in `extensions`.
+/// Look up the effective [`REMOVE`] aspect configuration or data in `extensions`.
 #[inline]
 fn remove_extension_config(extensions: &[Value]) -> Option<&Value> {
     extensions

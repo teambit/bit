@@ -34,7 +34,7 @@ pub struct Batch {
     items: Vec<Item>,
     proofs: Observed,
 }
-/// Single component's recovery classification, staged source files, and optional `component.json` edit.
+/// Single component's recovery [`Action`] classification, staged [`File`]s, and optional [`Configuration`] edit.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Item {
     id: String,

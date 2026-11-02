@@ -81,7 +81,7 @@ fn initial_scope(
     }
 }
 
-/// Shorten generated `<namespace>/<leaf>` names to `<leaf>` when no active or batch name collision exists.
+/// Shorten generated `<namespace>/<leaf>` [`Candidate`] names to `<leaf>` when no active or batch name collision exists.
 fn shorten(
     candidates: &mut [Candidate],
     bitmap: &Value,

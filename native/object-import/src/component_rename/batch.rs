@@ -88,7 +88,7 @@ impl Batch {
     pub const fn bitmap(&self) -> &Value {
         &self.bitmap
     }
-    /// Return a shared reference to the component rename [`Plan`] at `index`.
+    /// Return a shared reference to the component rename [`Plan`] at `index` in this [`Batch`].
     #[inline]
     pub fn plan(&self, index: usize) -> io::Result<&Plan> {
         self.plans.get(index).ok_or_else(|| invalid("scope rename plan index"))

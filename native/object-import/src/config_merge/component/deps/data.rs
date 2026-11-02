@@ -70,7 +70,7 @@ fn log_side_data(state: &mut State<'_, '_>, index: usize, side: &str) {
     }
     state.engine.log("debug", message);
 }
-/// Merge a single auto-detected dependency `id` across `current`, `other`, and `base` in `state`.
+/// Merge a single auto-detected dependency `id` across `current`, `other`, and `base` in [`State`].
 fn one(state: &mut State<'_, '_>, id: &str) -> io::Result<()> {
     state.engine.log("trace", format!("depData.id, {id}"));
     if state.engine.envs[..2]

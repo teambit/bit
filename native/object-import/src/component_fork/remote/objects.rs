@@ -63,7 +63,7 @@ fn row_matches_target(row: &Value, target_scope: &str, target_name: &str) -> boo
         && row_name == target_name
         && (row_scope == target_scope || row_scope.is_empty())
 }
-/// Locate the non-symlink `index.json` component row matching `id`.
+/// Locate the non-symlink `index.json` component row [`Value`] matching `id`.
 fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
     let trimmed = id.trim();
     let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());

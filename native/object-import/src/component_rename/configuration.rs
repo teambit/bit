@@ -81,7 +81,7 @@ fn target_row(plan: &Plan, source: &Value, facts: &Value) -> io::Result<Value> {
     }
     Ok(target)
 }
-/// Populate `teambit.component/renaming` and copied aspect configuration for an exported rename target.
+/// Populate `teambit.component/renaming` and copied aspect configuration for an exported rename [`Plan`] target.
 fn exported_config(plan: &Plan, target: &mut Value, facts: &Value) -> io::Result<()> {
     // Tracker creates a fresh ComponentMap rather than inheriting the source lane membership.
     if let Some(row) = target.as_object_mut() {

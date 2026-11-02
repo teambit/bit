@@ -45,7 +45,7 @@ pub(super) fn merge(
     state.finish();
     Ok(())
 }
-/// Append `row` to the array at `policy[field]`, creating the array if absent.
+/// Append `row` [`Value`] to the array at `policy[field]`, creating the array if absent.
 #[inline]
 fn append(policy: &mut Value, field: &str, row: Value) {
     let Some(map) = policy.as_object_mut() else {

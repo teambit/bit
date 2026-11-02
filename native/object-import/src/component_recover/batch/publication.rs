@@ -74,7 +74,7 @@ pub(super) fn destination(root: &Path, target: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-/// Validate `target` and record ancestor directory proofs from `batch.root` down to the nearest existing parent.
+/// Validate [`destination`] and record ancestor directory proofs from `batch.root` down to the nearest existing parent.
 #[inline]
 pub(super) fn existing_ancestors(batch: &mut Batch, target: &Path) -> io::Result<()> {
     destination(&batch.root, target)?;

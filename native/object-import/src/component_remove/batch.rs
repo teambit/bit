@@ -61,7 +61,7 @@ impl NewBatch {
             cleanup,
         })
     }
-    /// Check all controls and filesystem destinations before the first removal.
+    /// Check all [`Cleanup`] controls and filesystem destinations before the first removal.
     pub fn validate(&self) -> io::Result<()> {
         if fs::read(self.root.join(".bitmap"))? != self.bitmap.before {
             return Err(invalid("component bitmap changed before removal"));

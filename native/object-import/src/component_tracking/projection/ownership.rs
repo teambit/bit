@@ -73,7 +73,7 @@ fn root_owner(
     Ok(())
 }
 
-/// Return `true` when the workspace-root component's `mainFile` resides inside `directory`.
+/// Return `true` when the workspace-root component's `mainFile` in `row` [`Value`] resides inside `directory`.
 #[inline]
 fn contains_root_main_file(row: &Value, directory: &str) -> bool {
     let dir = directory

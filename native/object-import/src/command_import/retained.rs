@@ -43,7 +43,7 @@ impl PreparedImport {
         self.capture.accept_published(&files)?;
         Ok(files)
     }
-    /// Record published `files` in the underlying capture store as verified post-publication preimages.
+    /// Record published `files` in the underlying capture store as verified post-publication [`PathBuf`] preimages.
     #[inline]
     pub(crate) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
         self.capture.accept_published(files)

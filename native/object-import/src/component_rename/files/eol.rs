@@ -18,7 +18,7 @@ impl Writer {
     pub(super) const fn target(exported: bool, preserve: bool) -> Self {
         if exported || preserve { Self::Workspace } else { Self::Component }
     }
-    /// Normalize `bytes` according to `self` (`Component` auto-EOL vs raw `Workspace` write).
+    /// Normalize `bytes` according to [`Writer`] (`Component` auto-EOL vs raw `Workspace` write).
     #[must_use]
     #[inline]
     pub(super) fn contents(self, bytes: Vec<u8>, windows: bool) -> Vec<u8> {

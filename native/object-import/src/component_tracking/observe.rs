@@ -92,7 +92,7 @@ impl Observed {
         }
         Ok(())
     }
-    /// Re-verify all recorded ancestor paths, directory listings, and file SHA-256 digests on disk.
+    /// Re-verify all recorded ancestor paths, directory listings, and file [`Sha256`] digests on disk.
     pub(crate) fn validate(&self) -> io::Result<()> {
         for (path, real) in &self.ancestors {
             if ancestor(path)? != *real {

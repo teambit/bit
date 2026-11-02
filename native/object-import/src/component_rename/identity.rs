@@ -81,7 +81,7 @@ fn extract_source_version(key: &str, source: &Value) -> Option<String> {
 pub(super) fn selected<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
     select_row(bitmap, id, false)
 }
-/// Locate any `.bitmap` entry `(key, row)` matching `id`, including soft-removed entries.
+/// Locate any `.bitmap` [`Value`] entry `(key, row)` matching `id`, including soft-removed entries.
 #[inline]
 pub(super) fn selected_any<'a>(bitmap: &'a Value, id: &str) -> io::Result<(&'a str, &'a Value)> {
     select_row(bitmap, id, true)

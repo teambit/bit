@@ -71,7 +71,7 @@ impl Plan {
             .filter_map(change_identity)
             .collect()
     }
-    /// Re-verify that all observed `.bitmap`, directory, and file preimages remain unchanged.
+    /// Re-verify that all [`Observed`] `.bitmap`, directory, and file preimages remain unchanged.
     #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()

@@ -92,7 +92,7 @@ impl Plan {
         &self.identity
     }
 
-    /// Return `true` when the component's `mainFile` existed on disk when the plan was prepared.
+    /// Return `true` when the component's `mainFile` existed on disk when the [`Plan`] was prepared.
     #[must_use]
     #[inline]
     pub const fn main_exists(&self) -> bool {

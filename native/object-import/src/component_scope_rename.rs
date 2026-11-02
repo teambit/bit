@@ -89,7 +89,7 @@ impl Selection {
         }
         Ok(())
     }
-    /// Validate preimages and publish the updated `defaultScope` in `workspace.jsonc` when changed.
+    /// Validate [`Selection`] preimages and publish the updated `defaultScope` in `workspace.jsonc` when changed.
     #[inline]
     pub fn publish_default(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;

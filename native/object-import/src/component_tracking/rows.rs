@@ -81,7 +81,7 @@ fn matches(row: &Value, key: &str, name: &str, selected_scope: Option<&str>) -> 
             .is_none_or(|selected| row_scope == Some(selected))
 }
 
-/// Insert or replace `row` in `bitmap` under its `<scope>/<name>` key and normalize key disambiguation.
+/// Insert or replace `row` in `bitmap` under its `<scope>/<name>` key via [`scope`] and normalize key disambiguation.
 pub(super) fn publish(bitmap: &mut Value, row: Value) -> io::Result<()> {
     let name = row["name"]
         .as_str()

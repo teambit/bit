@@ -80,7 +80,7 @@ impl Plan {
     pub const fn warnings(&self) -> &Value {
         &self.warnings
     }
-    /// Reject changes to retained files and directory entries before publication.
+    /// Reject changes to retained [`Observed`] files and directory entries before publication.
     #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()

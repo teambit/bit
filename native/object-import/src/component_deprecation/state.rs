@@ -93,7 +93,7 @@ fn resolve_model_version<'a>(model: &'a Value, id: &'a str) -> Option<&'a str> {
         })
 }
 
-/// Extract a trimmed non-empty string slice from `value`.
+/// Extract a trimmed non-empty string slice from a JSON [`Value`].
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

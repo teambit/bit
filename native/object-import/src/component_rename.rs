@@ -83,7 +83,7 @@ struct Controls {
     workspace_published: bool,
 }
 impl Plan {
-    /// Read filesystem sources in Rust and retain every source/control preimage.
+    /// Read filesystem sources in Rust and retain every [`Plan`] source/control preimage.
     #[inline]
     pub fn prepare(root: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
         Self::prepare_with_context(root, options, facts, &PreparationContext::default())

@@ -37,7 +37,7 @@ fn normalize_dir(dir: &str) -> std::borrow::Cow<'_, str> {
     }
 }
 
-/// Return `true` when `.bitmap` `row` is marked as soft-removed in its `config`.
+/// Return `true` when `.bitmap` `row` [`Value`] is marked as soft-removed in its `config`.
 #[inline]
 fn is_removed_row(row: &Value) -> bool {
     crate::workspace::engine::client_status::config::is_config_removed(&row["config"])

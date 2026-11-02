@@ -43,7 +43,7 @@ pub(super) fn choose(
     inferred(directory, files).ok_or_else(|| missing(id))
 }
 
-/// Infer a component main file (`index.*`, `<leaf>.*`, or `public-api.ts`) from `files` in `directory`.
+/// Infer a component main file (`index.*`, `<leaf>.*`, or `public-api.ts`) using [`EXTENSIONS`] from `files` in `directory`.
 fn inferred(directory: &str, files: &[String]) -> Option<String> {
     let clean_dir = directory
         .trim()

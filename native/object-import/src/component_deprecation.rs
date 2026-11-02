@@ -76,7 +76,7 @@ impl Plan {
     pub fn changed(&self) -> &[String] {
         &self.changed
     }
-    /// Return the slice of matched component IDs whose deprecation metadata was already in the target state.
+    /// Return the slice of matched component IDs whose deprecation metadata was already in the target [`Plan`] state.
     #[must_use]
     #[inline]
     pub fn unchanged(&self) -> &[String] {

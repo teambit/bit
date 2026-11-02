@@ -77,7 +77,7 @@ pub(super) fn plan(
     })
 }
 
-/// Return `true` when `selected`'s local `Version` object marks the component as a Bit environment (`teambit.envs/envs`).
+/// Return `true` when `selected`'s local `Version` object marks the [`Selected`] component as a Bit environment (`teambit.envs/envs`).
 fn is_env(root: &Path, selected: &Selected) -> io::Result<bool> {
     let version = outbound::read_object(
         &crate::scope_path(root).join("objects"),

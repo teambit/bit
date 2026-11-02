@@ -26,7 +26,7 @@ pub(super) struct Change {
 impl Change {
     /// Verify that the on-disk file at `self.path` is a regular file matching `self.before`.
     #[inline]
-    /// Verify that all staged manifest, `workspace.jsonc`, staged-config, and `unmerged.json` preimages remain unchanged.
+    /// Verify that all staged manifest, [`Configuration`], staged-config, and `unmerged.json` preimages remain unchanged.
     pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
         let metadata = fs::symlink_metadata(&self.path)?;
         if !metadata.is_file()
@@ -67,7 +67,7 @@ impl Cleanup {
             pending: pending::prepare(root, selected)?,
         })
     }
-    /// Verify that all staged manifest, `workspace.jsonc`, staged-config, and `unmerged.json` preimages remain unchanged.
+    /// Verify that all staged manifest, [`Configuration`], staged-config, and `unmerged.json` preimages remain unchanged.
     pub(in crate::component_remove) fn validate(&self) -> io::Result<()> {
         for change in [self.manifest.as_ref(), self.staged.as_ref(), self.pending.as_ref()]
             .into_iter()

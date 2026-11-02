@@ -87,7 +87,7 @@ pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io
     validate::fields(input, &["token", "path"])?;
     conflict::commit(input, state)
 }
-/// Render `workspace.jsonc` dependency conflict markers into `contents` from `conflicts`.
+/// Render `workspace.jsonc` dependency conflict markers into `contents` from `conflicts` via [`conflict::render`].
 #[inline]
 pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io::Result<String> {
     if contents.len() > 32 * 1024 * 1024 || contents.as_bytes().contains(&0) {

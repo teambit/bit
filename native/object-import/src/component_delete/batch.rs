@@ -92,7 +92,7 @@ impl Batch {
         }
         Ok(())
     }
-    /// Validate all plans in the batch, remove deleted files/packages, and write the merged `.bitmap`.
+    /// Validate all [`Plan`]s in the batch, remove deleted files/packages, and write the merged `.bitmap`.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         for plan in &self.plans {
             plan.validate(file_id)?;

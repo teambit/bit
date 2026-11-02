@@ -81,7 +81,7 @@ fn read_indexed_remote_model(
     let (_, model) = crate::read_scope_object(scope, comp_hash)?.ok_or_else(|| missing(id))?;
     Ok(Some(model))
 }
-/// Validate that all `Source` objects referenced by `version["files"]` exist in `scope/objects` within the 32 MiB budget.
+/// Validate that all `Source` objects referenced by `version["files"]` exist in `scope/objects` via [`repository::source`] within the 32 MiB budget.
 fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
     let objects_dir = scope.join("objects");
     let mut total = 0;

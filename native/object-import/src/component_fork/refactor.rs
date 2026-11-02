@@ -57,7 +57,7 @@ impl Refactor {
             .map(|file| (file.destination.clone(), file.bytes.clone()))
             .collect()
     }
-    /// Replace the staged bytes of `path` with AST-transformed `bytes` and re-check the aggregate byte budget.
+    /// Replace the staged bytes of `path` with AST-transformed `bytes` and re-check the aggregate [`Refactor`] byte budget.
     pub fn transformed(&mut self, path: &Path, bytes: Vec<u8>) -> io::Result<()> {
         if bytes.len() > 32 * 1024 * 1024 {
             return Err(unsupported("fork refactor transformed bytes"));

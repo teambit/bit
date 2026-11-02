@@ -40,7 +40,7 @@ fn merge_entry(
     Ok(())
 }
 
-/// Validate the on-disk `.bitmap` against `expected` and write the updated `bitmap` with backup history.
+/// Validate the on-disk `.bitmap` against `expected` and write the updated `bitmap` [`Value`] with backup history.
 pub(super) fn write(
     root: &Path,
     expected: &mut Vec<u8>,

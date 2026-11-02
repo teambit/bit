@@ -59,7 +59,7 @@ impl<'a, 'b> State<'a, 'b> {
                 .as_ref()
                 .map(|entry| &entry["configJson"])
     }
-    /// Append `dep` to `self.merged` unless it is a local workspace component or already satisfied by `current`.
+    /// Append `dep` [`Value`] to `self.merged` unless it is a local workspace component or already satisfied by `current`.
     pub(super) fn add_policy(&mut self, dep: &Value) -> io::Result<()> {
         let name = dep["dependencyId"]
             .as_str()
