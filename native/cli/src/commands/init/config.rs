@@ -1,6 +1,6 @@
 //! `WorkspaceConfig.create`: the installed template and native comment-preserving edits.
 //!
-//! [`create`] loads or synthesizes a `JSONC` [`Document`] for [`Options`].
+//! [`create`] loads or synthesizes a `JSONC` [`Document`] ([`WORKSPACE`], [`RESOLVER`]) for [`Options`].
 use super::options::Options;
 use bit_workspace_config::jsonc::Document;
 use serde_json::{Value, json};

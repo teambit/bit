@@ -1,6 +1,6 @@
 //! Component ID graph model, filtering, and SVG serialization for `bit graph`.
 //!
-//! Traverses reachability queues ([`VecDeque`], [`HashSet`]) and formats graphviz or JSON payloads.
+//! Traverses reachability queues ([`CompGraph`], [`GraphEdge`], [`VecDeque`], [`HashSet`]) and formats graphviz or JSON payloads.
 
 use crate::commands::scope_set::Failure;
 use serde::Serialize;

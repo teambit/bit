@@ -1,4 +1,4 @@
-//! Published warning, eject, and cloud build [`Formatter`] sections ([`ids`]) around exported components.
+//! Published warning, eject, and cloud build [`Formatter`] sections ([`ids`], [`missing`]) around exported components.
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 

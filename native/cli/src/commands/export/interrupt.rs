@@ -1,4 +1,4 @@
-//! `ExportMain` protects remote communication ([`Guard`]) from Ctrl+C, then restores the prior handler.
+//! `ExportMain` protects remote communication ([`Guard`], [`ACTIVE`], [`ENABLED`]) from Ctrl+C, then restores the prior handler.
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]

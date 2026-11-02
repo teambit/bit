@@ -1,6 +1,6 @@
 //! External target directory linking (`bit link --target <dir> [--peers]`).
 //!
-//! Links [`WorkspaceComponent`] packages and peer dependencies from [`Workspace`] into an external directory.
+//! Links [`WorkspaceComponent`] packages and peer dependencies from [`Workspace`] into [`LinkToDirResult`] and [`LinkDetail`].
 
 use super::runner::format_component_id;
 use crate::discovery::{self, Target};

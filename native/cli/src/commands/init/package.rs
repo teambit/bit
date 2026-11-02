@@ -1,6 +1,6 @@
 //! Preserve package formatting through the shared published package-json kernel.
 //!
-//! [`render`] formats `package.json` [`Value`] payloads while preserving indent and newline style.
+//! [`render`] formats `package.json` [`Value`] payloads via [`stringify_package`] while preserving indent and newline style.
 use bit_workspace_config::package_json::{detect_indent, detect_newline, stringify_package};
 use serde_json::Value;
 use std::io;

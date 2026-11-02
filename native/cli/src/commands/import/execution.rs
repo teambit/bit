@@ -1,6 +1,6 @@
 //! Pre-effect declines stop before providers; later failures belong to the retained import.
 //!
-//! [`run`] drives preflight, [`Lifecycle`] execution, [`cache`] reconciliation, and [`output`] formatting.
+//! [`run`] drives preflight, [`Lifecycle`] execution, [`cache`] reconciliation, and [`output`] formatting ([`Report`]).
 use super::{Planned, cache, lifecycle::Lifecycle, options::Options, output, patterns};
 use crate::{
     commands::{color::Chalk, workspace_command::results::Report},

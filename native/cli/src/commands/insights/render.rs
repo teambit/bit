@@ -1,6 +1,6 @@
 //! `renderCycles` and `DuplicateDependencies` formatting for `bit insights`.
 //!
-//! Renders cycle chains and duplicate dependency diagnostics over [`CompGraph`] with [`Chalk`].
+//! Renders [`cycles`] chains and duplicate dependency diagnostics over [`CompGraph`] with [`Chalk`].
 
 use crate::commands::{color::Chalk, graph_cmd::model::CompGraph};
 use serde::Serialize;

@@ -1,4 +1,4 @@
-//! Copy, track, and refactor forked components (`bit fork`, [`execution`], [`options`]) while retaining published extension classes.
+//! Copy, track, and refactor forked components (`bit fork`, [`COMMAND`], [`execution`], [`options`]) while retaining published extension classes.
 mod execution;
 mod inventory;
 mod options;

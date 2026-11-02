@@ -1,4 +1,4 @@
-//! Keep published [`Environments`] providers and export callbacks in one [`Engine`] session around native publication.
+//! Keep published [`Environments`] providers and export callbacks ([`Lifecycle`]) in one [`Engine`] session around native publication.
 use crate::{
     commands::{
         engine::Engine,

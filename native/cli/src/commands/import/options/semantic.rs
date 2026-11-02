@@ -1,6 +1,6 @@
 //! `ImportCmd.importComponents` validates these known modes after provider startup.
 //!
-//! [`error`] returns the first incompatible flag combination diagnostic for [`Options`].
+//! [`error`] returns the first incompatible flag combination diagnostic ([`directories`], [`missing_ids`], [`dependencies_depth`]) for [`Options`].
 use super::Options;
 
 #[inline]

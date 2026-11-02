@@ -1,4 +1,4 @@
-//! Workspace component dependency graph builder for `bit graph` via [`CompGraph`] and [`Options`].
+//! Workspace component dependency graph builder ([`execute_workspace_graph`]) for `bit graph` via [`CompGraph`] and [`Options`].
 
 use super::{
     Options,

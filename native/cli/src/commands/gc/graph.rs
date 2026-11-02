@@ -1,6 +1,6 @@
 //! Version reachability graph and dependency expansion for `bit gc`.
 //!
-//! Builds the reachability closure from [`ScopeInventory`] and [`models`] helpers.
+//! Builds the [`GcGraph`] reachability closure ([`CompIdSpec`]) from [`ScopeInventory`] and [`models`] helpers.
 
 pub(super) mod models;
 

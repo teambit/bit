@@ -1,4 +1,4 @@
-//! Fork execution orchestration ([`copy`], [`remote`], [`transform`]) on [`ProjectedLinker`] and [`RemoteCapture`].
+//! Fork execution orchestration ([`run`], [`copy`], [`remote`], [`transform`]) on [`ProjectedLinker`] and [`RemoteCapture`].
 
 mod copy;
 mod remote;

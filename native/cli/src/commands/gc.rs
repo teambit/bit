@@ -1,4 +1,4 @@
-//! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`, [`bare`], [`collector`], [`restore`]).
+//! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`, [`COMMAND`], [`bare`], [`collector`], [`restore`]).
 
 mod bare;
 mod collector;

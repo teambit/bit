@@ -1,4 +1,4 @@
-//! CLI option parsing ([`Options`], [`Flags`], [`Target`]) for `bit fork`.
+//! CLI option parsing ([`Options`], [`Flags`], [`parse`]) for `bit fork` and `bit scope fork`.
 
 #[derive(Default, Clone)]
 pub(super) struct Flags {

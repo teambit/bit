@@ -1,6 +1,6 @@
 //! Native linter selection, cache publication, fixes and reports around external `ESLint`.
 //!
-//! Coordinates [`plan`], [`config`], [`tool`], [`results`], and [`report`] for [`Options`].
+//! [`run`] coordinates [`plan`], [`config`], [`tool`], [`results`], and [`report`] for [`Options`].
 mod config;
 mod plan;
 mod report;

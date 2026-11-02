@@ -1,4 +1,4 @@
-//! Component pattern matching ([`membership`], [`remotes`], [`Options`]) for `bit fork`.
+//! Component pattern matching ([`Selected`], [`select`], [`membership`], [`remotes`], [`Options`]) for `bit fork`.
 
 mod membership;
 mod remotes;

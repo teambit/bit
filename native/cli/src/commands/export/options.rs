@@ -1,4 +1,4 @@
-//! Published `ExportCmd` [`Options`] and [`LifecycleFlags`] selection and separate JSON forwarding behavior.
+//! Published `ExportCmd` [`Options`], [`Flags`], and [`LifecycleFlags`] selection and separate JSON forwarding behavior.
 pub(super) struct Options {
     pub ids: Vec<String>,
     pub resume: Option<String>,

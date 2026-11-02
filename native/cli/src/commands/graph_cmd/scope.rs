@@ -1,6 +1,6 @@
 //! Bare-scope component dependency graph builder for `bit graph`.
 //!
-//! Assembles [`CompGraph`] from bare-scope objects for [`Options`] and writes optional SVG output.
+//! Assembles [`CompGraph`] ([`execute_scope_graph`], [`scope_insight_graph`]) from bare-scope objects for [`Options`] and writes optional SVG output.
 
 use super::{
     Options,

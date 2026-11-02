@@ -1,6 +1,6 @@
 //! Best-effort agent instructions and Cloud MCP files written only for new workspaces.
 //!
-//! [`Assets`] stages auxiliary agent files into [`Plan`] according to [`Options`].
+//! [`Assets`] (`prepare`, [`write`]) stages auxiliary agent files into [`Plan`] according to [`Options`].
 use super::{options::Options, plan::Plan};
 use serde_json::{Value, json};
 use std::{

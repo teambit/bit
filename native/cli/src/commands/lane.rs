@@ -3,7 +3,7 @@
 //! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
 //! left to the Node.js CLI.
 //!
-//! Exposes [`scope_root`] and dispatches lane subcommands (`alias`, `create`, `current`, `diff`, `history`, `import`, `list`, `manage`, `remove`, `show`).
+//! Exposes [`COMMAND`] and [`scope_root`] and dispatches [`alias`], [`create`], [`current`], [`diff`], [`history`], [`import`], [`list`], [`manage`], [`remove`], [`restoration`], and [`show`].
 
 pub(crate) mod scope_root;
 

@@ -1,6 +1,6 @@
 //! Native workspace `bit link` execution (`scopes/workspace/install/link/link.cmd.ts`).
 //!
-//! Executes component, core-aspect, [`rewire`], and [`target`] linking into [`LinkSummary`].
+//! Executes component, core-aspect, [`rewire`], and [`target`] linking into [`LinkSummary`], [`render_report`], and [`render_json`].
 
 use super::{
     Options,

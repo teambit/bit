@@ -1,6 +1,6 @@
 //! Once collection starts, every failure belongs to this invocation; versions precede sources.
 //!
-//! Publishes the [`Plan`] filesystem moves and deletions after preflight validation succeeds.
+//! Publishes the [`Plan`] filesystem moves ([`files`]) and deletions after preflight validation succeeds.
 #[cfg(test)]
 mod tests;
 use super::{

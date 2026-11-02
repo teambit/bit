@@ -1,4 +1,4 @@
-//! Rust owns built-in formatting selection ([`Options`]) and [`report`]s; Prettier ([`tool`]) is an external tool.
+//! Rust owns built-in formatting selection ([`run`], [`Options`]) and [`report`]s; Prettier ([`tool`]) is an external tool.
 mod progress;
 mod report;
 mod tool;

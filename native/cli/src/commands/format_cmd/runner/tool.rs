@@ -1,4 +1,4 @@
-//! Invoke only the external Prettier API ([`Target`]), without loading Bit runtime modules.
+//! Invoke only the external Prettier API ([`format`], [`Target`], [`MAX_TOOL_BYTES`]), without loading Bit runtime modules.
 use super::{Value, invalid};
 use crate::discovery::{self, Target};
 use std::{

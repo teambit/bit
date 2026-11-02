@@ -1,6 +1,6 @@
 //! `createConsumer`, bitmap repair/reset and package-json provisioning.
 //!
-//! [`prepare`] stages consumer [`config`], `.bitmap` [`backup`], and `package.json` [`Action`] items on [`Plan`].
+//! [`prepare`] stages consumer [`config`], `.bitmap` [`backup`], and `package.json` [`Action`] items on [`Plan`] for [`Options`].
 use super::{
     config,
     options::Options,

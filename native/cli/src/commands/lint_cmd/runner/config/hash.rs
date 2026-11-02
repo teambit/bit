@@ -1,6 +1,6 @@
 //! `object-hash` serialization for the generated plain-object `TypeScript` configuration.
 //!
-//! [`hash`] computes the [`Sha1`] digest of a JSON [`Value`] object matching `object-hash`.
+//! [`hash`] computes the [`Sha1`] digest of a JSON [`Value`] object ([`FUNCTION`]) matching `object-hash`.
 use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{fmt::Write as _, io};

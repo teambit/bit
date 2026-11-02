@@ -1,6 +1,6 @@
 //! fs-extra checks entry identity and directory conflicts before skipping existing files.
 //!
-//! [`target`] inspects source and destination [`fs::Metadata`] for conflict parity.
+//! [`target`] and [`parents`] inspect source and destination [`fs::Metadata`] for conflict parity.
 use super::failure;
 use std::{fs, io, path::Path};
 

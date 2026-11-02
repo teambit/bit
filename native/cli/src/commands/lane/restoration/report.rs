@@ -1,6 +1,6 @@
 //! The released lane revert JSON projection and alternative checkout title.
 //!
-//! Formats lane restoration results for [`Options`] using [`checkout`] and [`Chalk`].
+//! [`render`] formats lane restoration results ([`Report`]) for [`Options`] using [`checkout`] and [`Chalk`].
 #[cfg(test)]
 #[path = "report_tests.rs"]
 mod tests;

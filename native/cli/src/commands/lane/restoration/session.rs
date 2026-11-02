@@ -1,6 +1,6 @@
 //! Native lane history ownership spans both checkout partitions and their callbacks.
 //!
-//! Drives [`Engine`], [`Installer`], and [`Environments`] across [`Options`] and formats via [`report`].
+//! [`Session`] drives [`Engine`], [`Installer`], and [`Environments`] across [`Options`] and formats via [`report`].
 use super::{installation, options::Options, report};
 use crate::commands::{
     color::Chalk,

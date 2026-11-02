@@ -1,4 +1,4 @@
-//! Native `bit format [component-pattern]` (`scopes/defender/formatter/format.cmd.ts`, `--changed`, `--check`, `--json`).
+//! Native `bit format [component-pattern]` (`scopes/defender/formatter/format.cmd.ts`, [`COMMAND`], [`Options`], `--changed`, `--check`, `--json`).
 
 mod runner;
 #[cfg(test)]

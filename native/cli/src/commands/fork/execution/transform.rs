@@ -1,4 +1,4 @@
-//! Source import [`Refactor`] and `.bitmap` projection ([`Plan`], [`ProjectedLinker`]) during `bit fork`.
+//! Source import [`Refactor`] and `.bitmap` projection ([`source`], [`Plan`], [`ProjectedLinker`]) during `bit fork`.
 
 use super::{Results, bitmap};
 use crate::commands::{

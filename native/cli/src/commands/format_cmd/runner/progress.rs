@@ -1,4 +1,4 @@
-//! Formatter component-loading and per-component [`Progress`] on [`Output`] in released order.
+//! Formatter component-loading and per-component [`Progress`] (`print`, `start`, `component`) on [`Output`] in released order.
 pub(super) use crate::commands::workspace_command::component_service::Progress;
 use bit_install::output::Output;
 impl Progress {

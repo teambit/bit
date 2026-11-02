@@ -1,4 +1,4 @@
-//! Remote component fetching ([`RemoteCapture`]) and [`copy`] materialization during `bit fork`.
+//! Remote component fetching ([`run`], [`RemoteCapture`]) and [`copy`] materialization during `bit fork`.
 
 use super::{Results, copy, source_facts};
 use crate::commands::{

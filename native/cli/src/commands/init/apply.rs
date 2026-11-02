@@ -1,6 +1,6 @@
 //! Init owns errors after its first filesystem effect; it never delegates a partial workspace.
 //!
-//! [`apply`] executes ordered [`Action`] entries from [`Plan`] on disk.
+//! [`apply`] executes ordered [`Action`] entries (`Directory`, `File`, `Remove`, `Empty`) from [`Plan`] on disk.
 use super::plan::{Action, Plan};
 use std::{fs, io, path::Path};
 

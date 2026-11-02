@@ -1,6 +1,6 @@
 //! `ImportCmd.json` and its quiet command-owned execution.
 //!
-//! [`execute`] formats `--json` payloads or delegates human-readable [`Report`] rendering.
+//! [`execute`] and [`json_report`] format `--json` payloads or delegate human-readable [`Report`] rendering.
 use super::{options::Options, workspace_command};
 use crate::native::Outcome;
 use bit_install::output::Output;

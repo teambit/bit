@@ -1,4 +1,4 @@
-//! The engine's outbound receipts ([`extra`]) and
+//! The engine's outbound receipts ([`Prepared`], [`ForkHistory`], [`extra`]) and
 //! `ExportCmd.report` for the exports that run natively: components and lanes,
 //! without ejecting or ripple jobs.
 

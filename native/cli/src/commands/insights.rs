@@ -1,6 +1,6 @@
 //! Native insight listing and `bit insights [names...]` (`scopes/explorer/insights/insights.cmd.ts`).
 //!
-//! Builds a [`CompGraph`] via [`insight_graph`] or [`scope_insight_graph`] and formats results via [`render`].
+//! Builds a [`CompGraph`] ([`COMMAND`], [`CORE_INSIGHTS`]) via [`insight_graph`] or [`scope_insight_graph`] and formats results via [`render`].
 
 pub(super) mod render;
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! Source-file line attribution ([`Target`], [`classify_target`], [`read`]) from validated local Version history.
+//! Source-file line attribution ([`COMMAND`], [`Target`], [`classify_target`], [`read`]) from validated local Version history.
 
 #[cfg(test)]
 mod tests;

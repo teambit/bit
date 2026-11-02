@@ -1,4 +1,4 @@
-//! Native default [`WorkspaceComponent`] package linking ([`link_prepared_component`]) after scope publication, before `.bitmap` promotion.
+//! Native default [`WorkspaceComponent`] package linking ([`link`], [`link_prepared_component`]) after scope publication, before `.bitmap` promotion.
 use bit_install::{
     links::{link_prepared_component, prepared_package_manifest},
     model::{ComponentDependencies, WorkspaceComponent},

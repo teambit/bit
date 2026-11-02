@@ -1,4 +1,4 @@
-//! Remote wildcard pattern resolution ([`Options`], [`Engine`], [`matched`]) for `bit fork`.
+//! Remote wildcard pattern resolution ([`ids`], [`Options`], [`Engine`], [`matched`]) for `bit fork`.
 
 use super::{invalid, matched};
 use crate::commands::{

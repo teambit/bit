@@ -1,6 +1,6 @@
 //! The lane merge grammar native planning accepts.
 //!
-//! Defines [`Options`] and serializes lane merge parameters into JSON [`Value`] payloads.
+//! Defines [`Options`] and [`BOOLEANS`] and serializes lane merge parameters into JSON [`Value`] payloads.
 
 #[cfg(test)]
 mod options_tests;

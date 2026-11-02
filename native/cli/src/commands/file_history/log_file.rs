@@ -1,4 +1,4 @@
-//! The source CLI's `getFileLog` selection ([`Target`], [`classify_target`], [`read`]) and `log-file` report.
+//! The source CLI's `getFileLog` selection ([`COMMAND`], [`Target`], [`classify_target`], [`read`]) and `log-file` report.
 
 use super::{Target, classify_target, read};
 use crate::{

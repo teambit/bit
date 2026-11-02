@@ -1,6 +1,6 @@
 //! Local `bit lane history` backed by the native `LaneHistory` object reader.
 //!
-//! Coordinates [`Session`], [`Engine`], and [`History`] to inspect or import lane history into a [`Report`].
+//! Coordinates [`Options`], [`Session`], [`Engine`], and [`History`] to inspect or import lane history into a [`Report`].
 use crate::{
     commands::{
         engine::Engine,

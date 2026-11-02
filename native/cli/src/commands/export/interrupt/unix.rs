@@ -1,4 +1,4 @@
-//! Unix `SIGINT` signal handler installation ([`Previous`]) and restoration during `bit export`.
+//! Unix `SIGINT` signal handler installation ([`install`], [`Previous`]) and restoration during `bit export`.
 
 use std::{io, mem::MaybeUninit};
 pub(super) type Previous = libc::sigaction;

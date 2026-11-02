@@ -1,4 +1,4 @@
-//! Local and remote component file copying ([`Plan`]) and [`transform`] dispatch during `bit fork`.
+//! Local and remote component file copying ([`run`], [`Plan`]) and [`transform`] dispatch during `bit fork`.
 
 use super::transform;
 use crate::commands::{

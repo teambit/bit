@@ -1,4 +1,4 @@
-//! Output formatting ([`Report`], [`Formatter`], [`Options`]) for `bit fork`.
+//! Output formatting ([`render`], [`Report`], [`Formatter`], [`Options`]) for `bit fork`.
 
 use super::options::Options;
 use crate::commands::{

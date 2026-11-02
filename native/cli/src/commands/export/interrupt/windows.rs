@@ -1,4 +1,4 @@
-//! Windows console control handler installation ([`Previous`], [`CTRL_C_EVENT`]) and restoration during `bit export`.
+//! Windows console control handler installation ([`install`], [`restore`], [`Previous`], [`CTRL_C_EVENT`]) and restoration during `bit export`.
 
 use std::io::{self, Write};
 use windows_sys::Win32::System::Console::{CTRL_C_EVENT, SetConsoleCtrlHandler};
