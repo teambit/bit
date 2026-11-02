@@ -29,6 +29,7 @@ fn row(fast_forward: bool) -> Row {
     }
 }
 
+/// Verifies that [`capture_issues`] skips issue types listed in the ignored issues slice.
 #[test]
 fn an_ignored_issue_does_not_block_the_snap() {
     let issues = json!([

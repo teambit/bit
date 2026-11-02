@@ -10,6 +10,7 @@ use std::io::Cursor;
 fn raw(value: &Value) -> (Value, Vec<u8>) {
     raw_with(value, &mut crate::workspace::snapshots::State::default())
 }
+/// Executes a binary `read` request against `snapshots` via [`serve`] and splits the JSON header from raw payload bytes.
 fn raw_with(value: &Value, snapshots: &mut crate::workspace::snapshots::State) -> (Value, Vec<u8>) {
     let mut output = Vec::new();
     serve(&mut Cursor::new(frame(value)), &mut output, &POOL, snapshots).unwrap();

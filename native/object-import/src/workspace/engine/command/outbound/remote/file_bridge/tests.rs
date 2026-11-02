@@ -13,6 +13,7 @@ use std::{
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary bridge directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
+/// Temporary directory fixture containing a stub `@teambit/legacy.scope-api` module for [`FileBridge`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 

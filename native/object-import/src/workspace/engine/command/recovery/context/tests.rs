@@ -8,6 +8,7 @@ use serde_json::json;
 fn request(pattern: Option<&str>) -> Prepare {
     serde_json::from_value(json!({"root":"/workspace","home":"/home/test","globalRemotesFile":"/remotes","operation":"componentAbort","options":{"pattern":pattern,"skipDependencyInstallation":true}})).unwrap()
 }
+/// Verifies that [`select`] returns only the matched pending component target and retains unselected pending records.
 #[test]
 fn abort_selection_preserves_unselected_pending_records() {
     let context = json!({"targets":[{"identity":"scope/first","directory":"first"},{"identity":"scope/second","directory":"second"}]});

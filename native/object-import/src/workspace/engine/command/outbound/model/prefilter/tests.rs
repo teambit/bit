@@ -12,6 +12,7 @@ use std::{
 /// Monotonic counter used by [`Scratch`] to create isolated temporary export prefilter directories.
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+/// Temporary workspace directory fixture that removes its root on drop.
 #[derive(Debug)]
 struct Scratch(PathBuf);
 impl Scratch {

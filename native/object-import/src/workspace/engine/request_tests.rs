@@ -17,6 +17,7 @@ fn component_log_request_decodes_on_main_and_lane() {
     }
 }
 
+/// Builds a valid baseline `commandOutboundPrepare` [`Request`] JSON fixture.
 fn outbound_prepare() -> serde_json::Value {
     serde_json::json!({
         "kind":"commandOutboundPrepare","root":"/workspace","home":"/home",

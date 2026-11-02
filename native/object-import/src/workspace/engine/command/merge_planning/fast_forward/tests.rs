@@ -44,6 +44,7 @@ fn fast_forward_stages_only_model_and_defers_publication() {
     assert!(!root.0.join(".bit/staged-snaps.json").exists());
 }
 
+/// Verifies that [`model`] marks the fast-forward target hash local while preserving existing state metadata and version tags.
 #[test]
 fn fast_forward_marks_hash_and_preserves_existing_local_metadata_and_tags() {
     let head = "b".repeat(40);

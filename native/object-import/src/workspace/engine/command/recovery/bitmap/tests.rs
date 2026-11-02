@@ -13,6 +13,7 @@ fn keeps_bitmap_policy_separate_from_structural_target() {
     assert_eq!(configs["component"], original["component"]["config"]);
     assert!(original["component"].get("config").is_some());
 }
+/// Verifies that [`project`] rejects custom providers and removed aspects while [`project_snapshot`] preserves `-` aspect removals.
 #[test]
 fn rejects_custom_providers_and_removed_aspects_while_snapshot_accepts_removed() {
     for config in [

@@ -18,6 +18,7 @@ fn defaults() -> Defaults {
             {"id":"teambit.docs/docs","data":{},"undefinedKeys":["doc"]}]})).unwrap()
 }
 
+/// Verifies that [`configured_entries`] preserves the stored extension version when workspace aspect configuration omits a version.
 #[test]
 fn unversioned_workspace_aspect_keeps_stored_version_for_merge_identity() {
     let stored = json!([{"extensionId":{"scope":"scope","name":"env/provider","version":"0.0.1"},

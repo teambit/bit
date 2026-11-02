@@ -19,6 +19,7 @@ fn scope_consumer_package_names_match_exact_resolver_identity() {
     assert_eq!(version["devDependencies"][1]["packageName"], "@scope/a");
 }
 
+/// Verifies that [`reports`] preserves lane order and original trigger versions across transitive dependents.
 #[test]
 fn older_snapshot_and_transitive_dependents_keep_lane_order_and_original_triggers() {
     let candidates = [

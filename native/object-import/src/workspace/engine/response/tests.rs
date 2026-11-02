@@ -19,6 +19,7 @@ fn canonical_failure_retains_actual_progress_without_changing_message_or_class()
     assert!(failure_data(&unsupported).is_none());
 }
 
+/// Verifies that a plain [`canonical`] error without [`with_progress`] returns `None` from [`failure_data`].
 #[test]
 fn plain_canonical_error_without_progress_has_no_failure_data() {
     let error = canonical("simple failure".into());

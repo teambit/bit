@@ -27,6 +27,7 @@ fn harmony_projection_normalizes_old_ids_without_mutating_stored_objects() {
     assert_eq!(normalized["docs"], json!([]));
 }
 
+/// Verifies that [`validate`] and [`project`] reject unsupported schemas and unscoped dependency aliases.
 #[test]
 fn legacy_and_historical_unscoped_aliases_do_not_enter_harmony_projection() {
     for schema in [json!("0.0.0"), json!("3.0.0"), json!(null)] {

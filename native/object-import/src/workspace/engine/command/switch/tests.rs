@@ -25,6 +25,7 @@ fn forked_lane_provenance_does_not_change_checkout_eligibility() {
     assert!(validate_lane(&id, Some(&lane)).is_err());
 }
 
+/// Verifies that [`lane_only`] retains `.bitmap` rows marked `onLanesOnly` even when `isAvailableOnCurrentLane` is `false`.
 #[test]
 fn unavailable_lane_only_bitmap_rows_remain_tracked_for_later_switches() {
     let ids = lane_only(

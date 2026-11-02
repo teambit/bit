@@ -41,6 +41,7 @@ fn restored(root: &Path, captured: proof::Proof) -> State {
         ..State::default()
     }
 }
+/// Verifies that [`apply`] after restore rejects stale source proofs for normal commits while allowing an authenticated `checkoutError` receipt without writes.
 #[test]
 fn stale_source_after_restore_allows_only_authenticated_no_write_error_receipt() {
     let directory = scratch::Directory::create().unwrap();

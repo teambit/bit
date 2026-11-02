@@ -12,6 +12,7 @@ use std::{
 
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary status context workspaces.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary workspace directory fixture for status context [`read`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

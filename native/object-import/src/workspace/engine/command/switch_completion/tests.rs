@@ -28,6 +28,7 @@ fn prepare(root: &Path, publish_checkout: bool) -> (bitmap::Prepared, Retained) 
     let retained = Retained { root: root.to_owned(), bitmap, tracking: None, applied: false };
     (first, retained)
 }
+/// Reads and parses the `.bitmap` JSONC file from `root`.
 fn read(root: &Path) -> Value {
     crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).unwrap()).unwrap()
 }

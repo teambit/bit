@@ -25,6 +25,7 @@ fn cross_component_graph_uses_existing_versions_instead_of_new_snapshot_markers(
     assert!(!directory.0.join(".bit/objects").exists());
 }
 
+/// Verifies that [`traverse`] returns empty flattened dependency and graph lists for an isolated component without dependencies.
 #[test]
 fn isolated_component_without_dependencies_produces_empty_flattened_list_and_graph() {
     let first = json!({"scope":"scope","name":"first","version":"1.0.0"});

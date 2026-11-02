@@ -30,6 +30,7 @@ fn short_refs_include_all_object_names_and_deduplicate_retained_objects() {
     );
 }
 
+/// Verifies that [`matching_for_separator`] with a Windows backslash separator matches no loose objects and [`unique`] reports a missing short hash.
 #[test]
 fn published_windows_glob_finds_no_short_refs_even_when_objects_exist() {
     let root = Directory::create().unwrap();

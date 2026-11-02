@@ -14,6 +14,7 @@ fn file_history_paths_cannot_escape_a_component() {
     }
 }
 
+/// Verifies that [`file_hash`] declines when a `Version` object contains duplicate entries for the same `relativePath`.
 #[test]
 fn duplicate_version_file_paths_decline() {
     let hash = "a".repeat(40);

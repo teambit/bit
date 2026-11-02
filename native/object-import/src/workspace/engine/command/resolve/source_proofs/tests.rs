@@ -30,6 +30,7 @@ fn captured_bom_source_remains_bound_until_publication() {
     assert!(proof::verify(&[retained]).is_err());
 }
 
+/// Verifies that [`retain`] rejects mismatched `rawHash` values or unknown observation `readToken` IDs.
 #[test]
 fn mismatched_raw_hash_or_missing_token_is_rejected_during_retain() {
     let root = crate::workspace::engine::command::scratch::Directory::create().unwrap();

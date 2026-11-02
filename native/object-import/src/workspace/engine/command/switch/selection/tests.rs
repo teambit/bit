@@ -8,6 +8,7 @@ use super::{Entry, filter};
 fn entry(identity: &str) -> Entry {
     Entry { identity: identity.into(), head: "a".repeat(40), hidden: false }
 }
+/// Verifies that [`filter`] preserves multimatch inclusion, negation, and re-inclusion order while ignoring `@version` suffixes.
 #[test]
 fn switch_patterns_preserve_multimatch_order_exclusion_reinclusion_and_ignore_versions() {
     let entries = [entry("scope/alpha"), entry("scope/beta"), entry("scope/nested/alpha")];

@@ -41,6 +41,7 @@ fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
     assert!(read(&request, vec![source()], None, &budgets, None).is_err());
 }
 
+/// Verifies that [`read`] with an empty [`File`] batch and zero [`Budgets`] succeeds immediately without invoking `git`.
 #[test]
 fn empty_file_batch_with_zero_output_budget_succeeds_without_git() {
     let request = Request {

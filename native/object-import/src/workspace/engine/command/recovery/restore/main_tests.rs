@@ -34,6 +34,7 @@ fn main_backups_require_unique_models_and_a_matching_index_before_publication() 
     );
 }
 
+/// Verifies that [`Main::prepare`] returns `None` when `.bit/last-merged` does not contain a `main-components` backup directory.
 #[test]
 fn old_backups_without_main_models_remain_compatible() {
     let root = tempfile::tempdir().unwrap();

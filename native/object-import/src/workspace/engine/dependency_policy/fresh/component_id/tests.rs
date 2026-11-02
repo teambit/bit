@@ -21,6 +21,7 @@ fn scoped_and_default_scope_serialization_match_actual_constructor_order() {
         );
     }
 }
+/// Verifies that [`set_version`] inserts or updates `version` before an appended default `scope` without altering scoped key order.
 #[test]
 fn resolved_versions_precede_appended_default_scope_without_changing_scoped_order() {
     let raw = json!({"name":"comp00","scope":"fork-benchmark"});

@@ -21,6 +21,7 @@ fn pattern_selection_preserves_new_before_modified_and_declines_empty_modified_m
     assert!(filter_pattern(candidates, &known, &[unchanged], &options).is_err());
 }
 
+/// Verifies that [`filter_pattern`] declines a single negation pattern rather than expanding it into a glob selection.
 #[test]
 fn single_negation_cannot_turn_canonical_literal_resolution_into_glob_selection() {
     let known = vec!["scope/one".to_owned(), "scope/two".to_owned()];

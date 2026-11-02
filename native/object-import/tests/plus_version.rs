@@ -42,6 +42,7 @@ process.stdout.write(JSON.stringify(rows));
     }
 }
 
+/// Verifies that native plus-range usage detection matches `@teambit/snapping` `getPlusRangeVersionsUsage`.
 #[test]
 fn snapshot_range_usage_matches_released_component_guard() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else { return };

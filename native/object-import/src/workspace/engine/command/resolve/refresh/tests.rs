@@ -24,6 +24,7 @@ fn callbacks_can_replace_only_their_validated_source_and_cannot_reset_other_proo
     assert!(replace_owned_proofs(&mut proofs, &[], &[]).is_err());
 }
 
+/// Verifies that [`replace_owned_proofs`] rejects unowned sources, mismatched content hashes, and duplicate [`SourceChange`] entries.
 #[test]
 fn unowned_sources_wrong_hashes_and_duplicate_changes_are_rejected() {
     let directory = Directory::create().unwrap();

@@ -23,6 +23,7 @@ fn store(root: &Path, hash: &str, value: &Value) {
     fs::write(file, encoder.finish().unwrap()).unwrap();
 }
 
+/// Verifies that [`project`] rebuilds depth-first `flattenedDependencies` and `flattenedEdges` with [`Repository`] proofs when lifecycles or imports change.
 #[test]
 fn changed_lifecycles_and_deleted_imports_rebuild_depth_first_edges_with_repository_proofs() {
     let directory = scratch::Directory::create().unwrap();

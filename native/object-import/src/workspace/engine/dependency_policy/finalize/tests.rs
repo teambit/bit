@@ -15,6 +15,7 @@ fn input() -> Value {
             "modelComponents": [], "modelPackages": {}}
     })
 }
+/// Deserializes `value` as a [`Request`] and returns the [`apply`] output JSON payload.
 fn finish(value: Value) -> Value {
     let request: Request = serde_json::from_value(value).unwrap();
     apply(&request).unwrap().1

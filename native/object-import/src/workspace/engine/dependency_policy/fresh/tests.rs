@@ -11,6 +11,7 @@ use std::{
 };
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary fresh-dependency directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary workspace directory fixture for fresh dependency [`detect`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

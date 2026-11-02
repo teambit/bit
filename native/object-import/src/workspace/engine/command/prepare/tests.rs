@@ -13,6 +13,7 @@ fn request(pattern: &str) -> Prepare {
     .unwrap()
 }
 
+/// Verifies that [`selected`] preserves `.bitmap` target order for `**` and relative directory patterns while rejecting single-star globs or empty workspaces.
 #[test]
 fn explicit_all_merge_preserves_bitmap_order_and_scoped_nested_names() {
     let context = json!({"targets":[

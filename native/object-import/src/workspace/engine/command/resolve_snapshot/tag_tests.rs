@@ -37,6 +37,7 @@ fn tag_model_keeps_object_identity_distinct_from_semantic_identity() {
     assert!(object::local_model(&duplicate, new).is_err());
 }
 
+/// Verifies that [`object::local_model`] updates `head` on a snap without mutating existing tag entries in `versions`.
 #[test]
 fn snap_model_updates_head_without_mutating_existing_tag_versions() {
     let old = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

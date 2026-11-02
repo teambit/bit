@@ -13,6 +13,7 @@ fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {
     )
 }
 
+/// Verifies that [`requested`] resolves both scoped and unscoped staged component IDs and rejects unknown versions.
 #[test]
 fn resolves_scoped_and_unscoped_staged_ids() {
     let rows = vec![staged("scope.one", "one", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")];

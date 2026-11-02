@@ -13,6 +13,7 @@ fn request(input: &Value, owner: &mut State) -> Value {
     serve(&mut Cursor::new(frame(input)), &mut output, &POOL, owner).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+/// Starts an `inventoryBegin` session for `directory` using `owner` via [`request`].
 fn begin(directory: &Directory, owner: &mut State) -> Value {
     request(
         &json!({"kind":"inventoryBegin","root":directory.0,"workspace":directory.0,

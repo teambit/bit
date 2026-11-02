@@ -42,6 +42,7 @@ fn detached_version_preserves_consumer_log_builder_and_old_graph_identity() {
     assert_eq!(objects[0]["type"], "Version");
 }
 
+/// Verifies that [`prepare`] declines when an [`Allocation`] log attempts to override a preserved consumer log.
 #[test]
 fn a_preserved_consumer_log_cannot_be_overridden_by_allocation() {
     let component = Component {

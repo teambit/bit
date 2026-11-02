@@ -16,6 +16,7 @@ fn snapshot(bytes: usize) -> Observation {
     }
 }
 
+/// Verifies that [`State::get`] requires an exact match on the read token, file path, and raw disk hash.
 #[test]
 fn ownership_requires_the_exact_read_token_path_and_disk_identity() {
     let original = snapshot(7);

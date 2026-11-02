@@ -29,6 +29,7 @@ fn round_trips_match_comment_json() {
     }
 }
 
+/// Verifies that [`Document::replace_entries`] preserves inline comments and sorts dependency policy keys alphabetically.
 #[test]
 fn policy_update_keeps_entry_comments_and_sorts() {
     let (_, input, ..) = golden::CASES

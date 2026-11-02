@@ -24,6 +24,7 @@ fn matches_the_first_exact_group_and_preserves_zero_without_an_override() {
     );
 }
 
+/// Verifies that [`name`] accepts string or falsy `groupName` configurations and declines unsupported truthy non-string values.
 #[test]
 fn unsupported_truthy_configuration_declines_before_pending_objects() {
     for value in

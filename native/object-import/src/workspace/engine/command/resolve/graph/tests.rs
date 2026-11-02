@@ -23,6 +23,7 @@ fn aspect_edges_override_lifecycle_without_reordering_existing_dependency() {
     );
 }
 
+/// Verifies that [`edges`] declines when a component aspect extension entry lacks a `version` field.
 #[test]
 fn malformed_component_aspect_identity_is_not_silently_dropped() {
     let root = json!({"scope":"scope","name":"root","version":"old"});

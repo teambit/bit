@@ -13,6 +13,7 @@ fn receipt(root: &Path, file: &Path) -> Value {
         "versions":[{"identity":"scope/alpha","buildData":{"extensions":[{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"__native_artifact_pending__"}]}]}}]}}]})
 }
 
+/// Verifies that [`artifacts`] hashes raw artifact bytes without EOL or BOM normalization and records read [`proof`]s.
 #[test]
 fn artifact_bytes_are_hashed_without_source_normalization_and_retained_as_read_proofs() {
     let directory = Directory::create().unwrap();

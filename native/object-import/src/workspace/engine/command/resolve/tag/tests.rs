@@ -25,6 +25,7 @@ fn patterns_preserve_candidate_and_outer_order_with_overlap() {
     );
 }
 
+/// Verifies that [`pattern_order`] requires every wildcard pattern to match at least one eligible candidate component.
 #[test]
 fn each_wildcard_must_match_an_eligible_component() {
     let candidates = vec!["scope/changed".into()];

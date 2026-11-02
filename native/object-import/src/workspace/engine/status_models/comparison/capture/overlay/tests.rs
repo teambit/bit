@@ -36,6 +36,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Verifies that [`capture::validate`] rejects unknown overlay paths and duplicate component file entries.
 #[test]
 fn overlay_manifest_rejects_unknown_and_duplicate_entries() {
     let fixture = Fixture::new();

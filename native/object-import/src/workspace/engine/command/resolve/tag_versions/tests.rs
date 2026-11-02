@@ -20,6 +20,7 @@ fn material(identity: &str, automatic: bool, tags: &Value) -> Material {
     }
 }
 
+/// Verifies that [`plan`] allocates the requested `major` bump for selected components and a `patch` bump for auto-tagged dependents.
 #[test]
 fn selected_major_and_automatic_patch_keep_separate_semantic_allocations() {
     let mut materials = [

@@ -28,6 +28,7 @@ fn selected(scope: &str, name: &str, head: &str) -> Selected {
     }
 }
 
+/// Verifies that [`prepare_refs`] serializes remote head ref updates independently for each target scope.
 #[test]
 fn prepares_remote_refs_independently_per_scope() {
     let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];

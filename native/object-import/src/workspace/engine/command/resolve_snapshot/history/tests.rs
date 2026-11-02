@@ -21,6 +21,7 @@ use std::{
 
 /// Monotonic counter used by [`Fixture`] to create isolated temporary object store directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary workspace directory fixture with a `.bit/objects` store that cleans up on drop.
 #[derive(Debug)]
 struct Fixture(std::path::PathBuf);
 impl Fixture {

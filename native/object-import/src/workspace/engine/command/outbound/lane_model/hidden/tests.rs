@@ -11,6 +11,7 @@ use std::path::Path;
 fn row(name: &str, hash: &str) -> String {
     format!("example.scope/{name}@{hash}")
 }
+/// Builds a synthetic [`model::HistoryBytes`] fixture for `id` with `old` as the parent of `new`.
 fn history(id: &str, old: &str, new: &str) -> model::HistoryBytes {
     let hash = crate::validate::hexadecimal(&Sha1::digest(format!("{id}:VersionHistory")));
     let value = json!({"versions":[{"hash":new,"parents":[old]},{"hash":old,"parents":[]}]});

@@ -22,6 +22,7 @@ fn normal_tags_take_precedence_over_orphaned_labels() {
     );
 }
 
+/// Verifies that [`tags`] selects the newest `orphanedVersions` label when no normal `versions` entry matches.
 #[test]
 fn newest_orphaned_tag_wins_when_no_normal_tag_exists() {
     let hash = "a".repeat(40);

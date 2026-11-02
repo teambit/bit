@@ -21,6 +21,7 @@ fn context_includes_dependency_heads_once_and_rejects_invalid_heads() {
     assert!(include_heads(&[json!({"deprecated":true})], &mut Vec::new()).is_ok());
 }
 
+/// Verifies that [`include_heads`] leaves `references` unchanged when given an empty model slice.
 #[test]
 fn empty_model_slice_leaves_existing_references_unchanged() {
     let existing = "a".repeat(40);

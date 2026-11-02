@@ -14,6 +14,7 @@ use std::{
 
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary status history workspaces.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary workspace directory fixture for status history [`validate`] and [`commit`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

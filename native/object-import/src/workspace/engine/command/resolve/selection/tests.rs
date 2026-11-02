@@ -18,6 +18,7 @@ fn pending_order_and_explicit_workspace_order_are_distinct() {
     );
 }
 
+/// Verifies that [`select`] declines duplicate pending entries, unknown explicit IDs, and empty pending selections.
 #[test]
 fn missing_and_duplicate_pending_selections_decline() {
     let targets = vec![json!({"identity":"s/a"})];

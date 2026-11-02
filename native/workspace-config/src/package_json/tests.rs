@@ -15,6 +15,7 @@ fn detects_indentation_like_detect_indent() {
     assert_eq!(detect_indent("a\n  b\n  c\n  d\n      e\nf\n"), "  ");
 }
 
+/// Verifies that [`detect_newline`] matches `detect-newline` across single-line, CRLF, and LF-majority inputs.
 #[test]
 fn detects_newlines_like_detect_newline() {
     assert_eq!(detect_newline("{}"), None);

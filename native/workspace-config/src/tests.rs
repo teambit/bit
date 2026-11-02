@@ -18,6 +18,7 @@ fn later_origins_replace_values_without_reordering_keys_or_discarding_empty_valu
     );
 }
 
+/// Verifies that [`environment_key`] preserves hyphens in config keys and [`parse_jsonc`] preserves `/*...*/` inside URL strings.
 #[test]
 fn environment_names_preserve_hyphens_and_jsonc_preserves_url_strings() {
     assert_eq!(environment_key("network.strict-ssl"), "BIT_CONFIG_NETWORK_STRICT-SSL");

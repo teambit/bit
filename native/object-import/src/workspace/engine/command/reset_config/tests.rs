@@ -11,6 +11,7 @@ use std::{
 };
 /// Monotonic counter used by [`Fixture`] to create isolated temporary reset-config directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary directory fixture that cleans up its root on drop.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

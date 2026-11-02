@@ -16,6 +16,7 @@ use super::serve;
 /// Monotonic counter used by [`Directory`] to allocate isolated temporary workspace directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
+/// Temporary workspace directory fixture that removes its root on drop.
 #[derive(Debug)]
 pub(super) struct Directory(pub(super) PathBuf);
 

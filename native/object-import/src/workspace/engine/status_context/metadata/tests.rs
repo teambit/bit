@@ -23,6 +23,7 @@ fn environment_shapes_are_admitted_but_invalid_callbacks_decline() {
     assert!(configuration(&unknown, true).is_ok());
 }
 
+/// Verifies that [`component_id_matches`] accepts both object and versioned string `componentId` representations.
 #[test]
 fn component_id_matches_accepts_object_and_string_ids() {
     let object_id = json!({"componentId":{"scope":"scope.test","name":"comp"}});

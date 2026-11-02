@@ -25,6 +25,7 @@ fn reads_deprecation_and_lane_readmes_from_core_extensions() {
     assert!(lane_readme_of(&invalid).is_err());
 }
 
+/// Verifies that [`parse_lane_heads`] extracts visible component heads from both object and string IDs while skipping hidden entries.
 #[test]
 fn parse_lane_heads_supports_string_and_object_component_ids() {
     let hash_a = "a".repeat(40);

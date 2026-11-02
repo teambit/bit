@@ -11,6 +11,7 @@ fn options(to: &str) -> Options {
     serde_json::from_value(json!({"to":to,"skipDependencyInstallation":true})).unwrap()
 }
 
+/// Evaluates [`select`] for an unmodified `scope/alpha` [`Selection`] at `version` targeting `to`.
 fn skipped(to: &str, model: Option<&Value>, version: &str, semver: &Value) -> Value {
     let target = json!({"identity":"scope/alpha","version":version});
     let selection = Selection {

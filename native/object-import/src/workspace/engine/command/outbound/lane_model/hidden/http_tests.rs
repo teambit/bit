@@ -49,6 +49,7 @@ fn serve(status: &str, body: Vec<u8>) -> (String, thread::JoinHandle<String>) {
     });
     (url, worker)
 }
+/// Constructs a test [`Network`] client configured with default [`GlobalConfig`] settings.
 fn network() -> Network {
     Network::new(&GlobalConfig::new(), "2.2.94", Some("local.scope"), None).unwrap()
 }

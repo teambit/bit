@@ -59,6 +59,7 @@ fn lane_model_loading_does_not_require_unrelated_main_version() {
             .exists(),
     );
 }
+/// Writes a zlib-compressed loose object of `kind` and `hash` with JSON `value` into `directory`.
 fn object(directory: &Path, hash: &str, kind: &str, value: &Value) {
     let body = serde_json::to_vec(&value).unwrap();
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());

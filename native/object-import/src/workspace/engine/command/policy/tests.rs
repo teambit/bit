@@ -26,6 +26,7 @@ fn row(identity: &str, ours_conflict: bool) -> Row {
     }
 }
 
+/// Verifies that [`activate_inactive`] promotes written inactive and added targets into active targets while skipping excluded or `ours_conflict` rows.
 #[test]
 fn projected_workspace_activates_written_inactive_targets_without_excluded_or_keep_ours_rows() {
     let mut context = json!({"targets":[{"identity":"scope/active"}],"lane":{"inactiveTargets":[

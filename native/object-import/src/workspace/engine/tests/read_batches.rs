@@ -34,6 +34,7 @@ fn parallel_reads_match_serial_order_bytes_and_three_hashes() {
     assert_eq!(output["data"]["files"][1]["snapshotHash"], super::super::hash(b"text\r\n"));
     assert_eq!(output["data"]["files"][1]["linuxHash"], super::super::hash(b"text\n"));
 }
+/// Verifies that a single large file within the shared aggregate request budget succeeds via [`response`].
 #[test]
 fn large_single_file_can_use_the_shared_request_budget() {
     let directory = Directory::new();

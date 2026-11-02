@@ -18,6 +18,7 @@ fn fixture() -> Value {
         {"identity":"scope/beta","remoteHead":"bbb","status":{"sourceOnly":[],"targetOnly":[],"noCommon":false},"merge":{"sourceOnly":[],"targetOnly":[],"noCommon":false}}
     ],"semver":{"1.0.0":{"version":{"major":1,"minor":0,"patch":0,"prerelease":[]}},"aaa":{},"bbb":{}}})
 }
+/// Deserializes `value` as a status result [`Request`] and returns the [`read`] JSON payload.
 fn result(value: Value) -> Value {
     let request: Request = serde_json::from_value(value).unwrap();
     read(&request).unwrap().1

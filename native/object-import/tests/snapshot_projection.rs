@@ -58,6 +58,7 @@ process.stdout.write(JSON.stringify(rows));
     }
 }
 
+/// Verifies that [`snapshot_projection::identity`] requires preallocated hashes for `Version` and `Lane` and derives distinct hashes for `Component` and `VersionHistory`.
 #[test]
 fn identities_preserve_preallocated_version_and_lane_hashes() {
     let fields = Value::Object(vec![

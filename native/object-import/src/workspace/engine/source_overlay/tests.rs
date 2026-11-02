@@ -15,6 +15,7 @@ use std::{
 };
 /// Monotonic counter used by [`Fixture`] to allocate isolated temporary source overlay directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary directory fixture for [`SourceOverlay`] and [`Budget`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

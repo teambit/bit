@@ -27,6 +27,7 @@ fn byte_equality_preserves_eol_binary_and_missing_file_semantics() {
     }
 }
 
+/// Verifies that [`frozen`] preserves batch order across worker counts without invoking `git` when all files are unchanged.
 #[test]
 fn unchanged_batches_preserve_order_on_the_configured_workers_without_running_git() {
     for threads in [1, 2, 8] {

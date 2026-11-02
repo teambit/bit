@@ -20,6 +20,7 @@ fn next(seed: &mut u64) -> u64 {
     *seed
 }
 
+/// Evaluates Node `JSON.stringify` on `values` with optional `pretty` formatting as the differential oracle.
 fn oracle(values: &[Value], pretty: bool) -> Vec<Option<String>> {
     let script = r"
 const fs=require('node:fs');

@@ -19,6 +19,7 @@ fn file_status_preserves_first_matches_target_order_and_raw_content_identity() {
     assert_eq!(result["data"]["unchanged"], json!([false, false, true, true]));
 }
 
+/// Verifies that `fileStatus` [`response`] rejects malformed hashes and batches exceeding 4,096 targets.
 #[test]
 fn file_status_rejects_invalid_hashes_and_oversized_batches_without_a_prefix() {
     let file = json!({"relativePath":"file.js","hash":"a".repeat(40)});
