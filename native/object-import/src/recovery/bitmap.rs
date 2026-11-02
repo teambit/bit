@@ -67,6 +67,7 @@ fn roots(value: &Value) -> io::Result<HashSet<&str>> {
     lane(value)?;
     Ok(roots)
 }
+/// Extracts and validates the relative `rootDir` (defaulting to `"."`) from `.bitmap` `component`.
 fn root(component: &Value) -> io::Result<&str> {
     let root = match component.get("rootDir") {
         Some(Value::String(root)) if !root.trim().is_empty() => root.trim(),

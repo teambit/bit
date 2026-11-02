@@ -24,6 +24,7 @@ pub(crate) fn inflate(compressed: &[u8]) -> Option<String> {
     String::from_utf8(output).ok()
 }
 
+/// Performs a single zlib decompression step into `chunk` and appends to `output` within [`MAX_BYTES`].
 #[inline]
 fn inflate_step(
     decoder: &mut Decompress,

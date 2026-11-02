@@ -21,6 +21,7 @@ struct Plan {
     bytes: usize,
     sources: Cache,
 }
+/// Deserialized `historyQueryFinish` request payload containing the session `token`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Token {

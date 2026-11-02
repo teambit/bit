@@ -25,6 +25,7 @@ pub(super) struct Input {
     pub(super) read_token: Option<u64>,
     pub(super) snapshot_hash: Option<String>,
 }
+/// Deserialized `inspectionFinish` request payload containing the session `token`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Token {

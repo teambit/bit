@@ -26,6 +26,7 @@ pub(crate) fn reset(input: &Value) -> io::Result<Value> {
 pub(crate) fn bitmap(path: &Path, current: &[String]) -> io::Result<Value> {
     bitmap::plan(path, current)
 }
+/// Constructs an `InvalidData` I/O error with `message`.
 #[inline]
 pub(crate) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

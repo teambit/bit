@@ -21,6 +21,7 @@ struct Version {
     unrelated: Option<String>,
     squashed: Option<Vec<String>>,
 }
+/// Graph node entry pairing a formatted `Version` hash `id` with its latest table `index`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Node {
     id: String,

@@ -28,6 +28,7 @@ pub(crate) struct Operations {
     pub(crate) checkout_transition: crate::checkout_transition::State,
     pub(crate) transfer: crate::transfer::State,
 }
+/// Requested mutation (`Add`, `Remove`, or `RemoveAll`) on `unmerged.json` state entries.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub(super) enum Action {

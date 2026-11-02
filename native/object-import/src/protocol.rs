@@ -15,6 +15,7 @@ pub(crate) fn word(reader: &mut impl Read) -> io::Result<u32> {
     Ok(u32::from_be_bytes(bytes))
 }
 
+/// Serializes `response` as a newline-terminated JSON frame into `writer` within [`MAX_BATCH_BYTES`].
 pub(crate) fn respond(writer: &mut impl Write, response: &impl Serialize) -> io::Result<()> {
     let mut bytes = Vec::with_capacity(128);
     serde_json::to_writer(&mut bytes, response).map_err(io::Error::other)?;

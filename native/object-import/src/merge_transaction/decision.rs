@@ -28,6 +28,7 @@ pub(super) fn apply(input: &Value) -> io::Result<Value> {
     head_policy(input, has_merge, unrelated, &mut output)?;
     Ok(output)
 }
+/// Populates `headUpdate`, `requiresLane`, and `pending` fields on `output` from `input`.
 fn head_policy(
     input: &Value,
     has_merge: bool,

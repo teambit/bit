@@ -76,6 +76,7 @@ impl<'de> Deserialize<'de> for Value {
     }
 }
 
+/// Transparent `UTF-16` code-unit buffer deserialized from either a string or `u16` array.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[repr(transparent)]
 struct Utf16(Vec<u16>);

@@ -1,4 +1,4 @@
-//! Session-scoped merge, checkout, snapshot, inspection, and transfer [`Request`] dispatcher ([`State`], [`write`]).
+//! Session-scoped merge, checkout, snapshot, inspection, and transfer [`Request`] dispatcher ([`State`], [`write`], [`MAX_JSON`]).
 
 pub(crate) mod write;
 

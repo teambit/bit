@@ -40,6 +40,7 @@ pub(crate) fn read_at(directory: &Path, lane_hash: &str) -> io::Result<Value> {
     Ok(value)
 }
 
+/// Returns `true` when `value` is a JSON array whose elements are all non-blank strings.
 fn is_non_empty_string_array(value: &Value) -> bool {
     value
         .as_array()

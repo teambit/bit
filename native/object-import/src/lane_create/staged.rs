@@ -19,6 +19,7 @@ pub(super) struct Moved {
 }
 
 impl Moved {
+    /// Reads `path` within the `32 MiB` byte budget and records the pre-read snapshot for [`Self::validate`].
     fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
         let bytes = match fs::read(path) {
             Ok(bytes) => Some(bytes),

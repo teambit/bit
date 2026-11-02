@@ -55,6 +55,7 @@ fn local_contains(root: &Path, lane_hash: &str, history_id: &str) -> io::Result<
     }
 }
 
+/// Returns `true` when `scope` resolves to a `file://` remote in local `scope.json` or `global` remotes.
 fn file_remote(root: &Path, global: &Path, scope: &str) -> io::Result<bool> {
     let local = document(&crate::scope_path(root).join("scope.json"))?;
     if let Some(host) = local["remotes"]

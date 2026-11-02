@@ -79,6 +79,7 @@ mod transfer;
 mod validate;
 mod workspace;
 
+/// Returns `true` when `ver` is not a non-blank JSON string.
 #[inline]
 fn blank_string(ver: &serde_json::Value) -> bool {
     ver.as_str()

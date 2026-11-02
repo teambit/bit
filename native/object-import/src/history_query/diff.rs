@@ -64,6 +64,7 @@ pub(super) fn diff(mut request: Request, cache: &mut Cache) -> io::Result<Value>
     sources.response(&mut result);
     Ok(result)
 }
+/// Computes the lowercase hexadecimal SHA-1 digest of `bytes` after LF newline normalization.
 #[inline]
 fn linux_hash(bytes: &[u8]) -> String {
     let digest = if bytes.contains(&b'\r') {

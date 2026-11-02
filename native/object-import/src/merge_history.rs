@@ -45,6 +45,7 @@ enum Request {
     },
     MergeFiles(merge::Request),
 }
+/// Serialized merge-history wire response framing completion counts and optional `data`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,

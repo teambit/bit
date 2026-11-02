@@ -25,7 +25,7 @@ pub struct Plan {
     objects: Objects,
     documents: Documents,
 }
-
+/// Original local lane `name` and `scope` before applying [`Change`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Original {
     name: String,

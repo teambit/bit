@@ -30,6 +30,7 @@ struct Lane {
     #[serde(rename = "removed")]
     _removed: bool,
 }
+/// Lane head detachment and override flags (`detachHead` and `overrideHead`) for [`Plan`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Options {

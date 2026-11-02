@@ -28,6 +28,7 @@ pub(super) fn semver(input: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates a single `SemVer` range descriptor entry (`version`, `range`, `minimum`, `minimumText`).
 fn semver_entry(input: &Value) -> io::Result<()> {
     fields(input, &["version", "range", "minimum", "minimumText"])?;
     if input

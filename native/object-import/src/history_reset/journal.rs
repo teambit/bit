@@ -22,6 +22,7 @@ struct Record {
     forked: bool,
     remaining: usize,
 }
+/// Deserialized `historyResetBegin` request payload specifying reset mode and flags.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Begin {

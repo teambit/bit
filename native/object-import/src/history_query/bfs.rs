@@ -33,6 +33,7 @@ struct Labels {
     orphaned: Vec<Tag>,
     last_found_tag: Option<String>,
 }
+/// Deserialized tag or orphaned-tag label and target `Version` hash pair.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Tag {

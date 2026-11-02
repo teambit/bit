@@ -31,6 +31,7 @@ impl File {
     pub(super) fn summary(&self) -> Value {
         json!({"relativePath":self.relative_path,"rawHash":self.raw_hash,"linuxHash":self.linux_hash,"snapshotHash":self.snapshot_hash,"snapshotPath":self.snapshot_path,"bytes":self.contents.len()})
     }
+    /// Exclusively writes `self.contents` to `self.snapshot_path`, removing partial files on error.
     pub(super) fn spool(&self) -> io::Result<()> {
         let mut file = OpenOptions::new()
             .write(true)

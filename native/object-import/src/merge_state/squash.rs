@@ -18,6 +18,7 @@ pub(super) struct Policy {
     #[serde(flatten)]
     model: Model,
 }
+/// Component model schema and `main`-head metadata for [`Policy`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Model {

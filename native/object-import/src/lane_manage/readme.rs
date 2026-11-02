@@ -25,6 +25,7 @@ pub struct ReadmeRemoval {
 }
 
 impl ReadmeRemoval {
+    /// Returns the display label of the lane whose `readmeComponent` was removed.
     #[inline]
     #[must_use]
     pub fn label(&self) -> &str {

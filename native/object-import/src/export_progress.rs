@@ -21,6 +21,7 @@ pub enum Event {
 thread_local! {
     static CURRENT: RefCell<Option<SyncSender<Event>>> = const { RefCell::new(None) };
 }
+/// RAII guard restoring the previous thread-local [`Event`] sender on drop.
 struct Restore(Option<SyncSender<Event>>);
 impl Drop for Restore {
     fn drop(&mut self) {

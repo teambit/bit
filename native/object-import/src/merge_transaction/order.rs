@@ -59,6 +59,7 @@ fn apply_stage(
     Ok(())
 }
 
+/// Extracts bounded `usize` row indices from `value` (reading `row["row"]` when `loads` is `true`).
 #[inline]
 fn indices(value: &Value, loads: bool) -> io::Result<Vec<usize>> {
     value

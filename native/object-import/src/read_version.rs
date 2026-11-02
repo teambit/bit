@@ -40,6 +40,7 @@ impl<'a> Reader<'a> {
         reader.query = true;
         Ok(reader)
     }
+    /// Creates a bounded `Version` object reader that validates `teambit.pipelines/builder` artifacts.
     #[inline]
     pub(crate) fn history_with_artifacts(directory: &'a Path) -> io::Result<Self> {
         let mut reader = Self::new(directory)?;

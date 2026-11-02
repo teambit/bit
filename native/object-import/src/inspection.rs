@@ -45,6 +45,7 @@ pub(crate) struct State {
     memory_snapshots: bool,
     retained: Vec<Weak<[read::File]>>,
 }
+/// Dispatches a workspace inspection operation (`kind`) against session `state`.
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind.trim() {
         "inspectionBegin" => begin(&input, state, None),

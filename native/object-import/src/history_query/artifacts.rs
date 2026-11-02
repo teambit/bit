@@ -45,6 +45,7 @@ fn validate_artifacts(artifacts: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates a single builder artifact file entry (`file` hash, safe `relativePath`, and `url`).
 fn validate_file(file: &Value) -> io::Result<()> {
     let reference = file
         .get("file")

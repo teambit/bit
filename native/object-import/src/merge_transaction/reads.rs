@@ -21,6 +21,7 @@ pub(super) struct Receipt {
     pub(super) compressed_size: usize,
     pub(super) inflated_size: usize,
 }
+/// RAII guard installing a thread-local [`Trace`] and restoring the previous trace on drop.
 #[derive(Debug)]
 pub(super) struct Scope {
     previous: Option<Trace>,

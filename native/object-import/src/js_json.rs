@@ -59,6 +59,7 @@ impl Value {
         })
     }
 
+    /// Validates collection/string budgets on `self` and returns `true` when `self` is empty or primitive.
     pub fn empty(&self) -> io::Result<bool> {
         Ok(match self {
             Self::Array(value) => {

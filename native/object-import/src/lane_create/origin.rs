@@ -43,6 +43,7 @@ impl Origin {
         Ok(Self { parent_name: None, components: Vec::new(), forked_from: None })
     }
 
+    /// Resolves origin state by loading the active parent `Lane` object referenced in `.bitmap` and `index.json`.
     fn from_parent(
         root: &Path,
         index: &Value,

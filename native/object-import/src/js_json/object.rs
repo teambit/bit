@@ -52,6 +52,7 @@ fn validate_key<'a>(key: &'a [u16], seen: &mut HashSet<&'a [u16]>) -> io::Result
     Ok(())
 }
 
+/// Parses `UTF-16` property `key` as a canonical `ECMAScript` array index (`0..u32::MAX`).
 #[inline]
 fn index(key: &[u16]) -> Option<u32> {
     if key.is_empty() || key.len() > 10 || (key.len() > 1 && key[0] == u16::from(b'0')) {

@@ -23,6 +23,7 @@ impl Writer {
         Self { output: Vec::with_capacity(256), nodes: 0, pretty, spaces: 2 }
     }
 
+    /// Configures the number of indentation `spaces` per nesting level.
     #[inline]
     pub(super) fn spacing(&mut self, spaces: usize) {
         self.spaces = spaces;

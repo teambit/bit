@@ -33,6 +33,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
         json!({"changes":plan.changes,"updates":plan.updates,"conflicts":plan.conflicts,"unchanged":plan.unchanged,"removePackages":plan.remove_packages,"debug":plan.debug}),
     )
 }
+/// Aggregates component dependency uses for `field` across `records` and sorts versions.
 fn aggregate(records: &[Value], field: &str) -> io::Result<Groups> {
     let mut groups: Groups = Vec::new();
     for record in records {

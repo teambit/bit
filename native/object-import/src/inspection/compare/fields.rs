@@ -44,6 +44,7 @@ pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
     }
     Ok(())
 }
+/// Clones the `UTF-16` code units of `Js::String` `value` (up to `32768` code units).
 #[inline]
 pub(super) fn text(value: &Js) -> io::Result<Vec<u16>> {
     text_slice(value).map(<[u16]>::to_vec)

@@ -31,6 +31,7 @@ impl Capsules {
             if let Some(&index) = self.seen.get(raw_hash) { index } else { self.retain(raw_hash)? };
         Ok(json!({"source":source,"ref":{"side":side,"index":index}}))
     }
+    /// Retains or spools the `Source` body for `hash` and returns its index in `self.sources`.
     fn retain(&mut self, hash: &str) -> io::Result<usize> {
         let record =
             self.trace.records.get(hash).ok_or_else(|| invalid("merge Source receipt missing"))?;

@@ -23,6 +23,7 @@ struct Record {
     revision: u32,
     parent: Option<String>,
 }
+/// Deserialized `mergeTransactionBegin` request payload specifying `mode` and component `count`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Begin {

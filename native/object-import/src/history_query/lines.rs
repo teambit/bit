@@ -8,6 +8,7 @@ struct Run {
     kind: u8,
     count: usize,
 }
+/// Active Myers diff diagonal state tracking the furthest `old` index and [`Run`] sequence.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Path {
     old: isize,

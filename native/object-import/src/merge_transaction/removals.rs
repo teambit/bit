@@ -13,6 +13,7 @@ fn relative_path(file: &Value) -> io::Result<&str> {
         .filter(|value| !value.is_empty() && value.len() <= 32768 && !value.contains('\0'))
         .ok_or_else(|| invalid("merge current relative path"))
 }
+/// Returns the removal path JSON string (`file["path"]` when non-empty, or `path`).
 #[inline]
 fn removed_entry(file: &Value, path: &str) -> Value {
     let entry = file["path"]

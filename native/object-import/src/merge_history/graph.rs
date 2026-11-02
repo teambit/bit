@@ -31,6 +31,7 @@ pub(super) struct Load {
     #[serde(default)]
     stop_at: Vec<String>,
 }
+/// Validates `versions` count, unique SHA-1 `hash` keys, and non-self parent/squashed/unrelated edges.
 pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
     count(versions.len())?;
     let mut seen = HashSet::with_capacity(versions.len());

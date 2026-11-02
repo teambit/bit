@@ -22,6 +22,7 @@ struct Identity {
     has_consumer: bool,
     has_workspace: bool,
 }
+/// Tracked removal flags (`marked`, `other_lane`, `on_main`) accumulated during status evaluation.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Removed {
     marked: bool,

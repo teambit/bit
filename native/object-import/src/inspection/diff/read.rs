@@ -66,6 +66,7 @@ fn parallel(
         })
         .collect()
 }
+/// Reads `Source` records for `files` sequentially within `budget` `(raw, compressed)` bytes.
 #[inline]
 fn serial(
     directory: &Path,

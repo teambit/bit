@@ -32,6 +32,7 @@ pub(super) fn append(input: Value) -> io::Result<Value> {
     bound(combined.len())?;
     Ok(json!({"sourceAppend":source_append,"combined":combined}))
 }
+/// Deserialized `historyResetLocalVersions` request payload for local-only snap/tag selection.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Select {

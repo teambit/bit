@@ -40,6 +40,7 @@ pub(super) fn load_shared(
     Ok((snapshot.contents.to_vec(), snapshot.raw_bytes, snapshot.raw_hash.clone()))
 }
 
+/// Looks up and verifies a retained workspace [`Observation`] for `file` within `maximum` bytes.
 fn observed<'a>(
     file: &wire::Input,
     maximum: usize,

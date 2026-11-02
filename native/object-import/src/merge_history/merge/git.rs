@@ -20,6 +20,7 @@ pub(super) struct MergeBytes<'a> {
     pub(super) base: &'a [u8],
     pub(super) other: &'a [u8],
 }
+/// RAII wrapper around a spawned `git merge-file` [`Child`] that kills and reaps it on drop.
 #[derive(Debug)]
 struct Process(Child);
 impl Drop for Process {

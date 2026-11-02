@@ -41,6 +41,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
+/// Rejects collection lengths exceeding the `4096`-record `bit reset` safety budget.
 #[inline]
 fn bound(count: usize) -> io::Result<()> {
     if count > 4096 {

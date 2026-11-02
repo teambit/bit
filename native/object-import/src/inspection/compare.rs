@@ -30,6 +30,7 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
     }
 }
 
+/// Compares `left` and `right` `Version` objects semantically and returns hashes and mutations.
 pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io::Result<Value> {
     let mut alignment = fields::align(&left, &mut right)?;
     let mut left_mutations = sort::all(&mut left)?;

@@ -90,6 +90,7 @@ fn populate(
     Ok(())
 }
 
+/// Validates a populated `Version` row (`hash`, `parents`, `unrelated`, `squashed`) and records its read.
 #[inline]
 fn added_record(moved: &mut Moved, directory: &Path, row: &Value) -> io::Result<Value> {
     let reference = row["hash"]

@@ -58,6 +58,7 @@ fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()>
     Ok(())
 }
 
+/// Normalizes a relative component file `path` to forward slashes, returning empty on traversal/reserved segments.
 #[inline]
 fn normalize_path(path: &str) -> String {
     let trimmed = path.trim();

@@ -23,6 +23,7 @@ pub struct Plan {
     moved: staged::Moved,
 }
 
+/// Prepared `Lane` and `LaneHistory` JSON objects and their SHA-1 hashes for a new lane.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Objects {
     lane_hash: String,

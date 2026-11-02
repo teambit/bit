@@ -60,6 +60,7 @@ fn validate_files(value: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Returns `true` when JSON `value` is neither `null`, `false`, nor a blank string.
 #[inline]
 fn truthy(value: &Value) -> bool {
     !value.is_null()

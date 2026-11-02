@@ -55,6 +55,7 @@ fn dependency_usage(dependency: &Value) -> Option<String> {
         Some(format!(r#"{}/{}: "{range}""#, text(&target["scope"]), text(&target["name"])))
     }
 }
+/// Appends `+^` and `+~` policy version usages from the `teambit.dependencies/dependency-resolver` extension.
 fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
     let Some(resolver) = extensions
         .iter()

@@ -38,6 +38,7 @@ impl Handler {
     }
 }
 thread_local! {
+    /// Thread-local file-remote server action [`Handler`] bound for the active export operation.
     static CURRENT: RefCell<Option<Handler>> = const { RefCell::new(None) };
 }
 /// Restore the caller's prior adapter when this operation binding ends.

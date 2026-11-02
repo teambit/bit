@@ -24,6 +24,7 @@ struct Entry {
     unrelated: Option<Unrelated>,
     should_squash: Option<bool>,
 }
+/// Legacy boolean or current [`Relation`] representation of an `unmerged.json` `unrelated` field.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(untagged)]
 enum Unrelated {

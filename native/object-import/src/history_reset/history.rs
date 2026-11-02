@@ -36,6 +36,7 @@ fn history_entries(fields: &js_json::Value) -> io::Result<Vec<(Vec<u16>, js_json
     }
     Ok(entries)
 }
+/// Returns `true` when `UTF-16` `key` is empty, exceeds `32768` code units, or is blank/control.
 #[inline]
 fn invalid_key(key: &[u16]) -> bool {
     if key.is_empty() || key.len() > 32768 {
