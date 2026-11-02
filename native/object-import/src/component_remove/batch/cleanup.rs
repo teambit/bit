@@ -1,4 +1,4 @@
-//! Retained package manifest, workspace-aspect, and staged-configuration cleanup for component removal.
+//! Retained package manifest, workspace-aspect, and staged-configuration [`Cleanup`] for component removal.
 mod configuration;
 mod pending;
 use super::super::{Selected, invalid};

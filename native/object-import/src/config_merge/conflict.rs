@@ -1,4 +1,4 @@
-//! `config-merge` conflict file formatting, parsing, and `git merge-file` invocation.
+//! `config-merge` [`Conflict`] file formatting, parsing, and `git merge-file` invocation.
 
 use super::{array, invalid, text};
 use serde_json::{Value, json};

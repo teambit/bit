@@ -1,4 +1,4 @@
-//! Target `.bitmap` row and aspect configuration assembly for component forks.
+//! Target `.bitmap` row ([`insert`]) and aspect configuration assembly for component forks.
 
 use super::{
     Options,

@@ -1,4 +1,4 @@
-//! `VersionHistory` object population and ancestor graph traversal during command import.
+//! `VersionHistory` object population ([`populate`]) and ancestor graph traversal during command import.
 
 #[cfg(test)]
 mod tests;

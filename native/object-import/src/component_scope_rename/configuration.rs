@@ -1,4 +1,4 @@
-//! `WorkspaceConfig.write` backup and default-scope update for `workspace.jsonc`.
+//! `WorkspaceConfig.write` backup and default-scope update ([`publish`]) for `workspace.jsonc`.
 use std::{
     fs,
     io::{self, Write},

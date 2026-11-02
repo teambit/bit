@@ -1,4 +1,4 @@
-//! Component identity extraction and pattern selection across `.bitmap` and local scope index.
+//! Component [`identity`] extraction and pattern selection across `.bitmap` and local scope index.
 
 use super::{Batch, Value, invalid, repository};
 use std::io;

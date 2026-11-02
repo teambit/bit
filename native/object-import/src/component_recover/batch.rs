@@ -1,4 +1,4 @@
-//! Retain the five published recovery classifications and publish their `.bitmap` once.
+//! Retain the five published recovery [`Action`] classifications in [`Batch`] and publish their `.bitmap` once.
 pub(super) mod repository;
 
 mod classification;

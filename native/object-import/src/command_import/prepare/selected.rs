@@ -1,4 +1,4 @@
-//! Unexported component synchronization and explicit version import preparation.
+//! Unexported component synchronization and explicit version import preparation on [`PreparedImport`].
 
 use super::{
     PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,

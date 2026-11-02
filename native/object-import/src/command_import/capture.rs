@@ -1,7 +1,7 @@
 //! Read-only import capture. Every mutable remote and local input is revalidated
 //! before the owner publishes any part of the prepared refresh.
 //!
-//! Records SHA-256 file proofs and enforces memory budgets on retained and inflated objects.
+//! Records SHA-256 file proofs and enforces memory budgets ([`MAX_BYTES`]) on retained and inflated [`Object`]s.
 #[cfg(test)]
 mod tests;
 

@@ -1,4 +1,4 @@
-//! `Scope.getRemoteComponent` immutable object fetching without publishing a local scope import.
+//! `Scope.getRemoteComponent` immutable object fetching ([`RemoteCapture`]) without publishing a local scope import.
 mod objects;
 #[cfg(test)]
 mod tests;

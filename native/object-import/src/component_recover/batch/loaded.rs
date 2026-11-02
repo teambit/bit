@@ -1,4 +1,4 @@
-//! Callback-visible aspect configuration refinement for workspace-loaded recovery classifications.
+//! Callback-visible aspect configuration refinement ([`refresh`]) for workspace-loaded recovery [`Batch`] classifications.
 use super::{Action, Batch, REMOVE, Value, configuration, invalid, selection};
 use std::io;
 

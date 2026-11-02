@@ -1,4 +1,4 @@
-//! `.bitmap` component selection and scope/owner prefix matching for `bit scope rename`.
+//! `.bitmap` component selection ([`entries_with_default`]) and [`scope`]/owner prefix matching for `bit scope rename`.
 
 use super::{Options, Value};
 use std::io;

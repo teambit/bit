@@ -1,4 +1,4 @@
-//! Workspace path normalization, symlink guards, and tree observation for component moves.
+//! Workspace path normalization ([`locations`]), symlink guards, and tree observation for component moves.
 
 use super::{Observed, invalid, unsupported};
 use std::{

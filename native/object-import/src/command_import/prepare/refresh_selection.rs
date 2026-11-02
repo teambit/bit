@@ -1,6 +1,6 @@
 //! Refresh main heads and optional parent closure before dependency transfer.
 //!
-//! Resolves remote scope directories and records latest `main` head updates per target.
+//! Resolves remote scope directories and records latest `main` head updates per [`Target`] via [`refresh_all`].
 use super::{
     PreparedImport, Target, ancestors, identity, invalid, object_hash, read_model, receive, remote,
 };

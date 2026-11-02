@@ -1,4 +1,4 @@
-//! Three-way aspect configuration, dependency-resolver, and workspace-policy merge engine.
+//! Three-way aspect configuration ([`component`]), dependency-resolver, and workspace-policy merge engine ([`apply`]).
 
 pub(crate) use conflict::Conflict;
 

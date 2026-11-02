@@ -1,6 +1,6 @@
 //! Cached graph imports never refetch an already available unbuilt seeder.
 //!
-//! Identifies missing graph versions and prepares dependency-graph imports from virtual remotes.
+//! Identifies missing graph versions on [`PreparedImport`] and prepares dependency-graph imports from [`VirtualRemote`]s.
 use super::{PreparedImport, Target, VirtualRemote, read_model, read_version, version_ref};
 use std::{io, path::Path};
 

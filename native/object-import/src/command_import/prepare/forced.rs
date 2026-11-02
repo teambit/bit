@@ -1,6 +1,6 @@
 //! `ObjectFetcher` streams cached dependency objects before their first consumer-side cache read.
 //!
-//! Collects and stages missing flattened dependencies when `fetchAllDependencies` is forced.
+//! Collects and stages missing flattened dependencies ([`finish`]) when `fetchAllDependencies` is forced.
 use super::{PreparedImport, Target, dependencies::dependency_target, identity, invalid};
 use std::{collections::HashSet, io};
 

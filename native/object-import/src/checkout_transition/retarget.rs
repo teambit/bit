@@ -1,4 +1,4 @@
-//! Checkout plan retargeting to a new `Version` manifest and spool directory.
+//! Checkout [`plan`] retargeting ([`apply_with_overlay`]) to a new `Version` manifest and spool directory.
 
 #[cfg(test)]
 mod tests;

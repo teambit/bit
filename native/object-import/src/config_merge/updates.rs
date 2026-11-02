@@ -1,4 +1,4 @@
-//! Workspace dependency update planning (`configWorkspaceUpdates`) for merged components.
+//! Workspace dependency update planning ([`plan`], `configWorkspaceUpdates`) for merged components.
 
 use super::{array, invalid, semver, text};
 use serde_json::{Value, json};

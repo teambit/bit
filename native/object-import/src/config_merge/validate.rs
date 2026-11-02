@@ -1,4 +1,4 @@
-//! Input schema validation for component, workspace-update, and workspace-merge config requests.
+//! Input schema validation ([`fields`], [`semver`]) for component, workspace-update, and workspace-merge config requests.
 
 use super::{array, invalid, text};
 use serde_json::Value;

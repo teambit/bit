@@ -1,4 +1,4 @@
-//! Source and target component identity, scope, directory, and main-file resolution for renames.
+//! Source and target component [`Identity`], scope, directory, and main-file resolution ([`prepare`]) for renames.
 
 use super::{Identity, Options, invalid, unsupported};
 use serde_json::Value;

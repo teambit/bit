@@ -1,4 +1,4 @@
-//! Local scope index, `Component`, `Version`, and `Source` object reading for component recovery.
+//! Local scope [`index`], `Component`, `Version`, and `Source` [`object`] reading for component recovery.
 
 use super::{Batch, REMOVE, Value, invalid, required, unsupported};
 use std::{collections::HashSet, io};

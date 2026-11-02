@@ -1,4 +1,4 @@
-//! Tracked `.bitmap` and scope-head classification for component recovery batches.
+//! Tracked `.bitmap` and scope-head classification ([`classify`]) for component recovery [`Batch`]es.
 
 use super::{Action, Batch, Item, REMOVE, Value, invalid, repository, selection};
 use std::io;

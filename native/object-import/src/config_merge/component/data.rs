@@ -1,4 +1,4 @@
-//! Three-way aspect data merge and conflict detection for non-dependency-resolver aspects.
+//! Three-way aspect data merge ([`merge`]) and conflict detection on [`Engine`] for non-dependency-resolver aspects.
 
 #[cfg(test)]
 #[path = "data_tests.rs"]

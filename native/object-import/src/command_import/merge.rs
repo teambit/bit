@@ -1,6 +1,6 @@
 //! Apply the same import decisions used by the canonical mutable-object writer.
 //!
-//! Merges incoming `Component`, `Version`, and `VersionHistory` objects with local scope state.
+//! Merges incoming `Component` ([`model_from`]), `Version`, and `VersionHistory` objects with local scope state.
 #[cfg(test)]
 mod tests;
 use super::invalid;

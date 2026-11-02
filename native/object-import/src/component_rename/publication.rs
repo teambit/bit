@@ -1,4 +1,4 @@
-//! Canonical intermediate `.bitmap` writes and source-package retirement for component renames.
+//! Canonical intermediate ([`initial`]) and final ([`final_bitmap`]) `.bitmap` writes and source-package retirement for component renames.
 use super::{Plan, invalid};
 use std::{fs, io, path::Path};
 

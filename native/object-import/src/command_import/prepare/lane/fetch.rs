@@ -1,6 +1,6 @@
 //! Capture remote Lane metadata and its graph-selected component closure.
 //!
-//! Fetches lane objects at explicit or head hashes and stages component closures into the import overlay.
+//! Fetches lane [`Record`]s at explicit or head hashes and stages component closures into [`PreparedImport`].
 use super::{
     Id, PreparedImport, Record, Target, entries, invalid, receive_closure, receive_prefer_graph,
     remote, remote_lane_hash,

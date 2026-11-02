@@ -1,4 +1,4 @@
-//! Nested component directory and workspace-root ownership validation for `bit add`.
+//! Nested component directory and workspace-root ownership validation ([`validate`]) for `bit add`.
 
 use super::{Plan, error};
 use serde_json::Value;

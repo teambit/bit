@@ -1,4 +1,4 @@
-//! Remote-into-local `Lane` object merging and `LaneHistory` entry generation.
+//! Remote-into-local `Lane` object merging ([`merge`]) and `LaneHistory` entry generation.
 
 #[cfg(test)]
 mod tests;

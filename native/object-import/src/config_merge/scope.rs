@@ -1,4 +1,4 @@
-//! Scope-level dependency policy merge (`configScopePolicy`) across merged and scope entries.
+//! Scope-level dependency policy merge ([`plan`], `configScopePolicy`) across merged and scope entries.
 
 use super::{array, invalid, text, validate};
 use serde_json::{Value, json};

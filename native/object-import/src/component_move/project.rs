@@ -1,4 +1,4 @@
-//! `.bitmap` root directory and internal path projection for component moves.
+//! `.bitmap` root directory and internal path projection ([`apply`]) for component moves.
 
 #[cfg(test)]
 mod tests;

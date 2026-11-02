@@ -1,6 +1,6 @@
 //! Revalidate exact import-owned writes before retaining a post-publication command phase.
 //!
-//! Commits prepared import files and records before/after SHA-256 write receipts.
+//! Commits [`PreparedImport`] files and records before/after SHA-256 [`write_receipt`]s.
 
 #[cfg(test)]
 mod tests;

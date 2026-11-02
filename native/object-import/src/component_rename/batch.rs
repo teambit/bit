@@ -1,4 +1,4 @@
-//! Retained `.bitmap` and configuration transaction around a published `renameMultiple` batch.
+//! Retained `.bitmap` and configuration transaction ([`Batch`]) around a published `renameMultiple` batch.
 mod publication;
 #[cfg(test)]
 mod tests;

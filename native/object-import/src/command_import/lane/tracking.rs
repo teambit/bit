@@ -1,6 +1,6 @@
 //! A fetched switch adds a local alias only when that remote lane is not already tracked.
 //!
-//! Stages and commits `scope.json` lane tracking updates with pre-write proof validation.
+//! Stages and commits `scope.json` lane tracking updates ([`SwitchTracking`]) with pre-write proof validation.
 
 #[cfg(test)]
 mod tests;

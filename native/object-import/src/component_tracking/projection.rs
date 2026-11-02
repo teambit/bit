@@ -1,4 +1,4 @@
-//! Candidate projection, ownership checks, and `.bitmap` row assembly for `bit add`.
+//! [`Candidate`] projection ([`prepare`]), [`ownership`] checks, and `.bitmap` row assembly for `bit add`.
 
 mod ownership;
 mod usage;

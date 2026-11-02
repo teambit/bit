@@ -1,4 +1,4 @@
-//! Three-way `teambit.dependencies/dependency-resolver` configuration and data merge strategy.
+//! Three-way `teambit.dependencies/dependency-resolver` configuration and data merge strategy ([`merge`], [`State`]).
 
 pub(super) use model::State;
 

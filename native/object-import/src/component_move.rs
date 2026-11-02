@@ -1,4 +1,4 @@
-//! Retained component path relocation with link updates preceding `.bitmap` publication.
+//! Retained component path relocation ([`Plan`]) with link updates preceding `.bitmap` publication.
 mod order;
 mod paths;
 mod project;

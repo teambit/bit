@@ -1,4 +1,4 @@
-//! `RemoveMain.getDeletedDepsToPinToMain` for a captured workspace-only dependency graph.
+//! `RemoveMain.getDeletedDepsToPinToMain` ([`Pin`]) for a captured workspace-only [`DependencyComponent`] graph.
 
 #[cfg(test)]
 mod tests;

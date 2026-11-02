@@ -1,4 +1,4 @@
-//! Verified source file, `component.json`, and `.bitmap` publication for component recovery batches.
+//! Verified source file, `component.json`, and `.bitmap` publication ([`commit`]) for component recovery [`Batch`]es.
 
 use super::{Action, Batch, invalid};
 use std::{fs, io, path::Path};

@@ -1,4 +1,4 @@
-//! Compose independent scope removals against one retained index and lane preimage.
+//! Compose independent scope removals ([`publish`]) against one retained index and lane preimage.
 
 use super::{Change, VersionedPlan, history, invalid, outbound};
 use serde_json::Value;

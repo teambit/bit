@@ -1,4 +1,4 @@
-//! Control-JSON recursive merging and `.bitmap` publication for batch component renames.
+//! Control-JSON recursive merging ([`merge`]) and `.bitmap` publication for batch component renames.
 
 use super::{Value, invalid};
 use std::{fs, io, path::Path};

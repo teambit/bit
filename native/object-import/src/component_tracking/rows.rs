@@ -1,4 +1,4 @@
-//! `.bitmap` key disambiguation for equal component names without changing their component names.
+//! `.bitmap` key disambiguation ([`row_name`], [`scope`]) for equal component names without changing their component names.
 use super::unsupported;
 use serde_json::{Map, Value};
 use std::io;

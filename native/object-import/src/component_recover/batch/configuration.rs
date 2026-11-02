@@ -1,4 +1,4 @@
-//! `ComponentConfigFile` replacement of the remove aspect while preserving detected JSON formatting.
+//! `ComponentConfigFile` replacement ([`prepare`]) of the [`REMOVE`] aspect while preserving detected JSON formatting.
 use super::{Action, Batch, Configuration, Item, REMOVE, Value, invalid, selection};
 use bit_workspace_config::package_json::{detect_indent, detect_newline, stringify_package};
 use std::io;

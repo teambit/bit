@@ -1,4 +1,4 @@
-//! Local `.bitmap` and model metadata inspection for component deprecation state.
+//! Local `.bitmap` and model [`metadata`] inspection for component deprecation [`Plan`] state.
 
 use super::{ASPECT, Plan, Value, invalid, selection};
 use std::io;

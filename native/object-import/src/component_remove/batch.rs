@@ -1,4 +1,4 @@
-//! Single `.bitmap` publication for `StashMain` removal of new components.
+//! Single `.bitmap` publication ([`NewBatch`]) for `StashMain` removal of new components.
 pub(super) mod cleanup;
 pub(super) mod usage;
 

@@ -1,4 +1,4 @@
-//! Semver version comparison and prerelease identifier ordering for `config-merge`.
+//! Semver version comparison ([`compare`]) and prerelease identifier ordering for `config-merge`.
 
 use super::{array, invalid};
 use serde_json::Value;

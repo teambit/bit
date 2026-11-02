@@ -1,4 +1,4 @@
-//! Main-file selection and inference for newly tracked or re-tracked workspace components.
+//! Main-file selection and inference ([`choose`], [`EXTENSIONS`]) for newly tracked or re-tracked workspace components.
 
 use super::{error, paths, unsupported};
 use std::{io, path::Path};

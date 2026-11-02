@@ -1,4 +1,4 @@
-//! Source file inventory validation and byte preparation for component forks.
+//! Source file inventory validation and byte preparation ([`prepare`], [`Copy`]) for component forks.
 
 use super::{
     Options,

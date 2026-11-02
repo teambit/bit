@@ -1,4 +1,4 @@
-//! `.bitmap` row insertion, aspect renaming, and deprecation/removal policy for component renames.
+//! `.bitmap` row insertion ([`prepare`]), aspect renaming, and deprecation/removal policy for component renames.
 
 use super::{Plan, identity, invalid, unsupported};
 use serde_json::{Value, json};

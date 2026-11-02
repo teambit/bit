@@ -1,6 +1,6 @@
 //! `collectParents` imports the parent Versions and their immutable source closure.
 //!
-//! Walks parent hashes of imported component heads and stages their `Version` and `Source` objects.
+//! Walks parent hashes of imported component heads ([`collect`]) and stages their `Version` and `Source` objects.
 use super::{PreparedImport, Target, invalid, read_model, receive};
 use crate::command_import::lane::Id;
 use serde_json::Value;

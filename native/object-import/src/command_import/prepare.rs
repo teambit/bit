@@ -1,4 +1,4 @@
-//! Read-only import preparation across local scopes, `file://` remotes, and virtual HTTP remotes.
+//! Read-only import preparation ([`prepare`]) across local scopes, `file://` remotes, and virtual HTTP remotes.
 
 pub(super) mod options;
 

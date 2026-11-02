@@ -1,6 +1,6 @@
 //! A remote Source decode failure carries its real scope and original inflate cause.
 //!
-//! Formats remote scope zlib inflation errors with the canonical `--all-history` hint.
+//! Formats remote scope zlib inflation errors ([`mark`]) with the canonical `--all-history` hint.
 #[cfg(test)]
 mod tests;
 use std::{fmt, io};

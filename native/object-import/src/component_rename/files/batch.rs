@@ -1,4 +1,4 @@
-//! Multi-package string replacement across renamed component files and dependent components.
+//! Multi-package string replacement ([`packages_all`], [`batch_dependents`]) across renamed component files and dependent components.
 
 use super::{Change, Plan, Value, dependent_file, refactor, unsupported};
 use std::io;

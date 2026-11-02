@@ -1,4 +1,4 @@
-//! Artifact `Source` object collection and import staging for lane components.
+//! Artifact `Source` object collection and import staging for lane components on [`PreparedImport`].
 
 use super::{PreparedImport, invalid};
 use serde_json::Value;

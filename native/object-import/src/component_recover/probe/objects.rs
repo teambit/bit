@@ -1,4 +1,4 @@
-//! File-scope and HTTP-tar `Component` and `Version` object inspection for remote recovery probes.
+//! File-scope ([`file`]) and HTTP-tar `Component` and `Version` object inspection for remote recovery probes.
 
 use crate::{
     checkout::repository,

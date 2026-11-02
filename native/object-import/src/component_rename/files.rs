@@ -1,4 +1,4 @@
-//! Source file inventory transformation and dependent refactoring for component renames.
+//! Source file inventory transformation ([`Change`], [`prepare`]) and dependent refactoring for component renames.
 
 pub(super) mod batch;
 mod eol;

@@ -1,4 +1,4 @@
-//! `teambit.envs/envs` aspect resolution and three-way environment configuration merge.
+//! `teambit.envs/envs` aspect resolution ([`populate`]) and three-way environment configuration merge on [`Engine`].
 
 use super::{
     super::{array, invalid, semver},

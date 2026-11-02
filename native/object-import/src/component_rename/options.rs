@@ -1,4 +1,4 @@
-//! Published component-rename options and flag normalization, independent of CLI parsing.
+//! Published component-rename [`Options`] and flag normalization, independent of CLI parsing.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,

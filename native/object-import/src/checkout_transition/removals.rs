@@ -1,4 +1,4 @@
-//! Untargeted tracked file removal calculation for checkout plans.
+//! Untargeted tracked file removal calculation ([`apply`]) for checkout [`plan`]s.
 
 use super::{invalid, plan};
 use serde::Deserialize;

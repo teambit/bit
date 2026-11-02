@@ -1,4 +1,4 @@
-//! Validate linear lane ancestry and `Node.js` status-populated `VersionHistory` objects.
+//! Validate linear lane [`ancestry`] and `Node.js` status-populated `VersionHistory` objects.
 
 #[cfg(all(test, unix))]
 mod tests;

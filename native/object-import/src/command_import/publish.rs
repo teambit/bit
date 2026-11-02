@@ -1,4 +1,4 @@
-//! Zlib-compressed loose object encoding and atomic scope publication for prepared imports.
+//! Zlib-compressed loose [`Object`] encoding ([`object`]) and atomic scope publication for [`PreparedImport`].
 
 #[cfg(test)]
 mod tests;

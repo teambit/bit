@@ -1,4 +1,4 @@
-//! Packed checkout plan body spooling into temporary `.checkout-pack` files.
+//! Packed checkout plan [`Body`] spooling ([`assign`], [`write`]) into temporary `.checkout-pack` files.
 
 use super::plan::Body;
 use std::{

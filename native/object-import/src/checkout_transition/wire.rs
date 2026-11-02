@@ -1,4 +1,4 @@
-//! JSON wire schemas for checkout transition requests (`Prepare`, `Apply`, `Materialize`, and `Token`).
+//! JSON wire schemas for checkout transition requests ([`Prepare`], `Apply`, `Materialize`, and `Token`).
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;

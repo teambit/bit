@@ -1,4 +1,4 @@
-//! Scope settings validation and `file://` / virtual remote directory resolution for command import.
+//! Scope [`settings`] validation and `file://` / virtual remote directory resolution for [`PreparedImport`].
 
 use super::{PreparedImport, invalid, object_hash};
 use serde_json::{Value, json};

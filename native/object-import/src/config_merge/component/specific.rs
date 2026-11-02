@@ -1,4 +1,4 @@
-//! `keepSpecificOfOther`: preserve incoming component-specific configuration precedence.
+//! `keepSpecificOfOther`: preserve incoming component-specific configuration precedence ([`retain`]) on [`Engine`].
 use super::{Engine, array, invalid};
 use serde_json::{Value, json};
 use std::io;

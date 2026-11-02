@@ -1,4 +1,4 @@
-//! Dependency-resolver auto-detected dependency data merge across `current`, `other`, and `base`.
+//! Dependency-resolver auto-detected dependency data merge ([`merge`]) on [`State`] across `current`, `other`, and `base`.
 
 use super::{State, append, field, model::version};
 use serde_json::{Value, json};

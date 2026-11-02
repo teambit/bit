@@ -1,4 +1,4 @@
-//! Shared dependency-resolver merge state, policy normalization, and semver version selection.
+//! Shared dependency-resolver merge [`State`], policy normalization, and [`semver`] version selection.
 
 use super::{
     super::{

@@ -1,6 +1,6 @@
 //! `importLanes(includeLaneHistory: true)` merges persisted history only.
 //!
-//! Refreshes and merges remote `LaneHistory` records into the local scope overlay.
+//! Refreshes and merges remote `LaneHistory` [`Record`]s into the [`PreparedImport`] scope overlay.
 #[cfg(test)]
 mod tests;
 use super::{Id, PreparedImport, Record, invalid, remote_lane_hash};

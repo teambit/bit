@@ -1,4 +1,4 @@
-//! Wire request types and validation for checkout selection transitions.
+//! Wire request types ([`Begin`], [`Component`], [`Options`]) and validation for checkout selection transitions.
 
 use super::invalid;
 use serde::Deserialize;
