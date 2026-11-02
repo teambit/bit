@@ -756,6 +756,18 @@ export class AutoDetectDeps {
 }
 
 /**
+ * a policy (e.g. an env) can set the range of a component peer. a version that satisfies the range is kept, so this
+ * returns undefined. otherwise, it returns the version of the range (a snap is not in any semver range).
+ * it returns undefined also when the range has no such version, e.g. "<2.0.0" is coerced to "2.0.0".
+ */
+export function getVersionInRangeIfOutOfIt(version: string, range: string): string | undefined {
+  if (!semver.validRange(range)) return undefined;
+  if (semver.valid(version) && semver.satisfies(version, range)) return undefined;
+  const { version: versionInRange } = getValidComponentVersion(range);
+  return versionInRange && semver.satisfies(versionInRange, range) ? versionInRange : undefined;
+}
+
+/**
  * this is not necessarily a valid semver version. in case of a snap, it returns the hash only, not a valid semver.
  * this is for the ComponentID.version.
  */
