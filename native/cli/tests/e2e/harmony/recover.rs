@@ -3,7 +3,7 @@
 
 use crate::helper::{Helper, config, parse, remote};
 
-/// bit recover command › recover before snapping
+/// Verifies that `bit recover` restores a locally soft-deleted component before snapping.
 #[test]
 fn recover_before_snapping() {
     let helper = Helper::new();

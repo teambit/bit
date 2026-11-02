@@ -6,6 +6,7 @@ mod hidden_pending;
 use crate::helper::{Helper, config};
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
 
+/// Creates a workspace on `main` with an `incoming-removal` lane that soft-deleted `comp1 --update-main`.
 fn removed_lane() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

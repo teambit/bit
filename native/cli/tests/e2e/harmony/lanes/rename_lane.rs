@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, config};
 
-/// rename lanes › rename local lane, switch to main and then switch back to the lane
+/// Verifies that renaming a local lane and switching to `main` and back preserves `_bit_lane.exported == false`.
 #[test]
 fn rename_local_lane_switch_to_main_and_switch_back() {
     let helper = Helper::new();

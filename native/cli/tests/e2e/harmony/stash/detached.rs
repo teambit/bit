@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Verifies that detached stash `Version` objects record current dependency IDs without publishing new heads.
 #[test]
 fn stash_graph_keeps_current_ids_and_omits_unpublished_graph_sources() {
     let helper = workspace();

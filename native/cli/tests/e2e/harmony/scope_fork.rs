@@ -5,6 +5,7 @@ use crate::{
     harmony::fork,
     helper::remote,
 };
+/// Verifies that `bit scope fork` copies all remote scope components into the target scope with `forkedFrom` provenance.
 #[test]
 fn scope_fork_reports_every_copy_and_preserves_original_scope_and_name() {
     let helper = fork::remote_workspace(3);

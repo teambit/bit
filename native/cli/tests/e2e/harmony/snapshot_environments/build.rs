@@ -4,6 +4,7 @@ use super::workspace;
 use crate::helper::{Helper, config, parse};
 use std::ffi::OsStr;
 
+/// Custom environment aspect source template exercising `modifyPackageJson` and `getBuildPipe` during snapshots.
 const BUILD_ENV: &str = r"// @ts-nocheck
 const {EnvsAspect}=require('@teambit/envs');
 const {NodeAspect}=require('@teambit/node');

@@ -4,6 +4,7 @@ use super::support::{command, compare_stashes, node, workspace};
 use crate::helper::config;
 use std::fs;
 
+/// Verifies `bit stash save --include-new` and `stash load` in an embedded `.git/bit` scope layout.
 #[test]
 fn embedded_scope_restores_new_components_without_creating_model_heads() {
     let helper = workspace();

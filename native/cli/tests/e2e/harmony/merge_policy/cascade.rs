@@ -4,6 +4,7 @@ use crate::helper::{Helper, config, parse};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Creates a two-component workspace where `cascade` and `main` diverge with either clean or mixed conflicts.
 fn divergent(mixed: bool) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

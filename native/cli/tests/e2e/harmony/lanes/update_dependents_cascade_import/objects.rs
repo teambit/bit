@@ -6,6 +6,7 @@ use crate::helper::{Helper, Run, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Verifies that no-ID `bit import` on a lane matches Node CLI output and preserves `.bitmap` versions.
 #[test]
 fn no_id_lane_import_matches_released_output_and_keeps_workspace_versions() {
     let helper = Helper::new();

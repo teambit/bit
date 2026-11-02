@@ -4,6 +4,7 @@ mod cascade;
 use crate::helper::{Helper, config, parse};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Prepares a workspace on `hidden-policy` with a hidden `comp1` dependent and visible `comp2` branch.
 fn workspace() -> Helper {
     let (helper, main) = super::hidden_workspace();
     let hidden = hidden_head(&helper);

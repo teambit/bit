@@ -3,6 +3,7 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
+/// Runs `command` via the Node CLI (`BIT_NATIVE=off`) and asserts success.
 fn node(helper: &Helper, command: &str) {
     let run = Helper::cmd_in_with(
         &helper.scopes.local_path,

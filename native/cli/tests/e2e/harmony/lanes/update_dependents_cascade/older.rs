@@ -7,8 +7,7 @@ mod parity;
 use crate::helper::{Helper, parse};
 use serde_json::Value;
 
-/// - `local snap cascades updateDependents on the lane › scenario 22: cascade into a hidden entry that depends on an older version of the snapped component › should snap the hidden entry`
-/// - `local snap cascades updateDependents on the lane › scenario 22: cascade into a hidden entry that depends on an older version of the snapped component › the hidden entry should depend on the new head of the snapped component`
+/// Verifies that a hidden `updateDependents` entry pointing at an older snap still cascades to the new lane head.
 #[test]
 fn older_hidden_dependency_cascades_to_the_new_lane_head() {
     let helper = fixture(false);

@@ -5,6 +5,7 @@ use crate::helper::{Helper, config};
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, io::Read, path::Path};
 
+/// Creates a workspace with `comp1` tagged at `0.0.1` for stash parity tests.
 pub(super) fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

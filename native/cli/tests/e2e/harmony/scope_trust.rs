@@ -4,10 +4,7 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
-/// - `workspace scope-trust gate around aspect loading › does not load the env from a scope outside the trust list`
-/// - `workspace scope-trust gate around aspect loading › surfaces a refusal message naming the scope that isn't on the trust list`
-/// - `workspace scope-trust gate: trusted env in a different scope than the consumer › imports successfully (no error about untrusted scopes)`
-/// - `workspace scope-trust gate: trusted env in a different scope than the consumer › loads the env from the trusted scope`
+/// Verifies `trustedScopes` enforcement and `bit scope trust` / `bit scope untrust` CLI commands.
 #[test]
 fn workspace_scope_trust_gate_and_cli_commands() {
     let helper = Helper::new();

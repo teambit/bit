@@ -10,6 +10,7 @@ mod package;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
+/// Verifies that `bit merge` retains a single provider session across native merge continuation.
 #[test]
 fn component_merge_retains_one_provider_through_native_continuation() {
     let helper = fixture::component();

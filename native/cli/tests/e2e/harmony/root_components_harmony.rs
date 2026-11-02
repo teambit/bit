@@ -5,6 +5,7 @@ use crate::helper::{Helper, config};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+/// Sets `rootComponents: true` and `packageManager` in `workspace.jsonc` dependency-resolver policy.
 fn configure_root_components(helper: &Helper, pm: &str, extra: &Value) {
     let mut policy = json!({
         "packageManager": format!("teambit.dependencies/{pm}"),

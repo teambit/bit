@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, len, parse, remote};
 
-/// remove lanes › switching to a new lane and snapping
+/// Verifies `bit lane remove` guards for active, default, and unmerged lanes as well as `--force` removal.
 #[test]
 fn remove_local_lanes() {
     let helper = Helper::new();

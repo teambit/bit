@@ -4,6 +4,7 @@ use crate::{
     commands::move_paths::support::setup,
     helper::{Helper, config},
 };
+/// Registers and assigns the `fixture.tools/env/scope-delay` environment aspect to `names`.
 pub(super) fn delay(helper: &Helper, names: &[&str]) {
     let source = include_str!("fixture.cjs");
     helper.output_file("scope-delay/index.js", source);

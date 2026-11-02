@@ -5,10 +5,12 @@
 use crate::helper::{Helper, parse};
 use sha1::{Digest, Sha1};
 
+/// Formats the relative `.bit/objects` path for a 40-char hex `hash`.
 fn object_rel_path(hash: &str) -> String {
     format!(".bit/objects/{}/{}", &hash[..2], &hash[2..])
 }
 
+/// Computes the lowercase hex SHA-1 digest of `input`.
 fn sha1_hex(input: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(input.as_bytes());

@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-main.e2e.ts` for merging `main` into lanes and lanes into `main` ([`merging_main_retains_the_types_package_added_by_the_incoming_side`]).
+//! Port of `e2e/harmony/lanes/merge-lanes-main.e2e.ts` for merging `main` into lanes and lanes into `main` ([`merging_main_retains_the_types_package_added_by_the_incoming_side`]) across workspaces.
 //! Covers dependency policy preservation, deleted components, and head updates during `bit lane merge`.
 
 use crate::helper::{Helper, parse};

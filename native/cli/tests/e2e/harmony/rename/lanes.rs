@@ -5,6 +5,7 @@ use crate::{
     commands::move_paths::support::{self, aspect, json, setup, successful},
     helper::{Helper, config, remote},
 };
+/// Verifies that merging a lane rename to `main` propagates source removal only when the source existed on `main`.
 #[test]
 fn lane_rename_removal_merges_to_main_only_when_the_source_exists_on_main() {
     for main_exists in [true, false] {

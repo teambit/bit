@@ -8,6 +8,7 @@ use crate::helper::{
 use serde_json::json;
 use std::{ffi::OsStr, fs, process::Command};
 
+/// Creates a Git-backed workspace with `bitmapAutoSync: true` lagging one remote tag behind `origin`.
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

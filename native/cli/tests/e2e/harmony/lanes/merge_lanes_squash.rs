@@ -4,8 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// merge lanes - squash functionality › merge with squash › when the lane is ahead by only 1 snap, so there is nothing to squash
-/// merge lanes - squash functionality › merge with squash › when the lane is ahead by 3 snaps
+/// Verifies `bit lane merge` squash behavior when a lane is ahead by one snap versus three snaps.
 #[test]
 fn merge_with_squash_one_snap_and_three_snaps() {
     let helper = Helper::new();

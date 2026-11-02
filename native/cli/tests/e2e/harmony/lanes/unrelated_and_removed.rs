@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use std::fs;
 
-/// current lane a comp is removed, merging a lane that has this comp with different history
+/// Verifies that `bit lane merge --resolve-unrelated` adopts the incoming component when deleted on the current lane.
 #[test]
 fn removed_on_current_lane_merge_unrelated_takes_theirs_and_populates_unrelated() {
     let helper = Helper::new();

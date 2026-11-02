@@ -11,6 +11,7 @@ use crate::{
 };
 use std::fs;
 
+/// Verifies that renaming a new component replaces its `.bitmap` entry and retains a single tracked identity.
 #[test]
 fn new_component_rename_replaces_the_identity_and_retains_one_component() {
     let helper = support::workspace(1, false);

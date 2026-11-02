@@ -5,7 +5,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::fs;
 
-/// set default owner and scope › author components
+/// Verifies authoring, exporting, and importing components when `defaultScope` includes an owner prefix (`owner.scope`).
 #[test]
 fn set_default_owner_and_scope_author_export_import() {
     let helper = Helper::new();

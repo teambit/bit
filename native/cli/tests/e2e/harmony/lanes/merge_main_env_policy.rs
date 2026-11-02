@@ -4,9 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// - `lane merge main when the comp env with deps policy is a package and not in the workspace › bit status should not show the component as modified before the merge`
-/// - `lane merge main when the comp env with deps policy is a package and not in the workspace › bit lane merge main › should not fail with a "config changes" false positive`
-/// - `lane merge main when the comp env with deps policy is a package and not in the workspace › bit lane merge main › should snap the diverged component`
+/// Verifies that `bit lane merge main` succeeds without false config conflicts when a component uses an external env policy.
 #[test]
 fn lane_merge_main_with_custom_env_policy() {
     let helper = Helper::new();

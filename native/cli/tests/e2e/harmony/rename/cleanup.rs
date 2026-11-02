@@ -3,6 +3,7 @@
 use crate::commands::move_paths::support::{self, bitmap, successful};
 use std::fs;
 
+/// Verifies that relocating a new component removes ignored files and empty directories unless `--preserve` is passed.
 #[test]
 fn relocated_new_component_removes_ignored_files_and_nested_empty_directories() {
     for flag in ["", "--preserve"] {

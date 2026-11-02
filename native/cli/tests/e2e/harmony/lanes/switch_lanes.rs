@@ -5,10 +5,12 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse, strip_ansi};
 use std::fs;
 
+/// Fixture source for `bar/foo.js` version 2 on a lane.
 const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; };";
+/// Fixture source for `bar/foo.js` version 3 on a lane.
 const FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; };";
 
-/// bit lane command › switching lanes › importing the lane objects and switching to that lane
+/// Verifies switching to a remote lane, diffing, snapping, and switching with `--alias`.
 #[test]
 fn switch_to_remote_lane_diff_snap_alias_and_local_lane() {
     let helper = Helper::new();

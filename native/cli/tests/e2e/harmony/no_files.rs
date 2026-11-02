@@ -3,12 +3,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// - `component files are missing › component directory were deleted › bit list should not throw an error`
-/// - `component files are missing › component directory were deleted › bit status should show the issue without throwing an error`
-/// - `component files are missing › component files were deleted › bit list should not throw an error`
-/// - `component files are missing › component files were deleted › bit status should show the issue without throwing an error`
-/// - `component files are missing › component directory is ignored by .gitignore › bit list should not throw an error`
-/// - `component files are missing › component directory is ignored by .gitignore › bit status should show the issue without throwing an error`
+/// Verifies `bit list` and `bit status` when a component's files or directory are deleted or `.gitignore`d.
 #[test]
 fn component_files_or_directory_missing_or_gitignored() {
     let helper = Helper::new();

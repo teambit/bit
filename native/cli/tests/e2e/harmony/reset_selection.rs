@@ -3,6 +3,7 @@
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;
 
+/// Creates a local workspace with three independent components tagged at `0.0.1` and `0.0.2`.
 fn workspace() -> Helper {
     workspace_in_scope(false)
 }

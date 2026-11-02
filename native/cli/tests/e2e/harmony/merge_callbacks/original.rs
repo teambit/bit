@@ -5,6 +5,7 @@ use super::{compare_results, fixture};
 use crate::helper::{Helper, setup};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Verifies that `bit merge` with a warm filesystem cache matches Node at the original workspace path.
 #[test]
 fn component_merge_with_valid_cache_matches_at_the_original_workspace_path() {
     let helper = fixture::component_original();

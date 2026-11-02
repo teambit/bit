@@ -4,6 +4,7 @@
 use crate::helper::{Helper, remote};
 use std::fs;
 
+/// Reads `comp1/index.js` from the local workspace.
 fn read_comp1(helper: &Helper) -> String {
     fs::read_to_string(helper.scopes.local_path.join("comp1/index.js")).unwrap()
 }

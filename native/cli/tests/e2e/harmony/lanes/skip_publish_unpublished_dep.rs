@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// - `snap+build a dependent of an unmodified, built-but-unpublished dependency › builds the unpublished dependency from source instead of failing to install it`
+/// Verifies snapping a dependent component on a lane when its unmodified dependency has not been published as a package.
 #[test]
 fn snap_dependent_of_unmodified_unpublished_dependency() {
     let helper = Helper::new();

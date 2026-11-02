@@ -6,6 +6,7 @@ use crate::{
 };
 use serde_json::json;
 use std::fs;
+/// Creates a workspace with a custom `env/rename` aspect that mutates component files in memory during `onLoad`.
 fn configured(exported: bool) -> Helper {
     let helper = support::workspace(1, false);
     let source = include_str!("onload.cjs");

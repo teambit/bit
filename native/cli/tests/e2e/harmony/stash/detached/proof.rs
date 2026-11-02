@@ -6,6 +6,7 @@ use bit_object_import::WorkspaceSession;
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, fs, path::Path};
 
+/// Verifies that a concurrent source file modification after `commandStashPrepare` aborts detached object publication.
 #[test]
 fn a_source_changed_after_stash_planning_cannot_publish_any_detached_objects() {
     let helper = workspace();

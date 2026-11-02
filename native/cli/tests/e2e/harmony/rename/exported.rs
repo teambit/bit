@@ -6,6 +6,7 @@ use crate::{
     helper::{Helper, config, remote},
 };
 use std::fs;
+/// Creates an exported single-component workspace with the lane-delay provider installed.
 fn workspace() -> Helper {
     let helper = support::workspace(1, false);
     super::lanes::install_delay(&helper);

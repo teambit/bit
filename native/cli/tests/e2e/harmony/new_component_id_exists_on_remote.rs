@@ -3,12 +3,7 @@
 
 use crate::helper::Helper;
 
-/// - `creating a new component whose id already exists on the remote › bit add of a component with the same id as an existing remote component (unrelated history) › should warn that the component already exists on the remote scope`
-/// - `creating a new component whose id already exists on the remote › bit add of a component with the same id as an existing remote component (unrelated history) › should suggest "bit import" to adopt the existing component`
-/// - `creating a new component whose id already exists on the remote › bit add of a component with the same id as an existing remote component (unrelated history) › should suggest "bit rename" to keep it as a separate component`
-/// - `creating a new component whose id already exists on the remote › bit add of a component with the same id as an existing remote component (unrelated history) › should still track the component (the warning is non-blocking)`
-/// - `creating a new component whose id already exists on the remote › bit add when the id does not legitimately collide › should not warn for an already-exported component`
-/// - `creating a new component whose id already exists on the remote › bit add when the id does not legitimately collide › should not warn for a brand new id that does not exist on the remote`
+/// Verifies that `bit add` warns non-blockingly when a new component's ID already exists on the remote scope.
 #[test]
 fn new_component_id_exists_on_remote_warning_and_non_collision() {
     let helper = Helper::new();

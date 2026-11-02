@@ -4,6 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
+/// Verifies that merging a lane with cross-scope hidden `updateDependents` fetches origin `main` history first.
 #[test]
 fn merging_cross_scope_hidden_updates_into_main_fetches_origin_history() {
     let helper = Helper::new();

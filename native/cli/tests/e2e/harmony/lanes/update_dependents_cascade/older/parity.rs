@@ -7,6 +7,7 @@ use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 use std::ffi::OsStr;
 
+/// Verifies that native direct hidden dependent cascade matches Node CLI stdout, stderr, and stored version metadata.
 #[test]
 fn direct_hidden_cascade_matches_released_output_and_object_metadata() {
     let helper = fixture(false);

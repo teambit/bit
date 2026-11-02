@@ -6,6 +6,7 @@ use crate::{
     helper::{Helper, remote},
 };
 use std::fs;
+/// Creates a workspace containing a `my-aspect` component configured with `teambit.harmony/aspect`.
 fn workspace(exported: bool) -> Helper {
     let helper = support::workspace(0, false);
     let directory = format!("{}/my-aspect", helper.scopes.remote);

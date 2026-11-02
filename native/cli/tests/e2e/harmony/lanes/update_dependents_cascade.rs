@@ -6,17 +6,7 @@ mod older;
 
 use crate::helper::{Helper, parse};
 
-/// - `local snap cascades updateDependents on the lane › comp2 (B) enters lane.updateDependents`
-/// - `local snap cascades updateDependents on the lane › comp1 (A) on the lane should be re-snapped with its comp2 dep pointing at the new updateDependent`
-/// - `local snap cascades updateDependents on the lane › comp1 stays in lane.components (it was never a hidden updateDependent)`
-/// - `local snap cascades updateDependents on the lane › scenario 5: transitive cascade inside updateDependents › both comp1 and comp2 are cascaded to new hashes in updateDependents`
-/// - `local snap cascades updateDependents on the lane › scenario 5: transitive cascade inside updateDependents › cascaded comp2 depends on the new comp3 head`
-/// - `local snap cascades updateDependents on the lane › scenario 5: transitive cascade inside updateDependents › cascaded comp1 depends on the cascaded comp2 (not the old updDep comp2)`
-/// - `local snap cascades updateDependents on the lane › scenario 5: transitive cascade inside updateDependents › the cascaded components should NOT appear in the workspace bitmap (still hidden updateDependents)`
-/// - `local snap cascades updateDependents on the lane › scenario 6: promote-on-import — importing an updateDependent then snapping it moves it to lane.components › comp2 should be in lane.components with a fresh snap`
-/// - `local snap cascades updateDependents on the lane › scenario 6: promote-on-import — importing an updateDependent then snapping it moves it to lane.components › comp2 should NOT appear in lane.updateDependents (the stale entry must be cleared)`
-/// - `local snap cascades updateDependents on the lane › scenario 3: divergence — two users snap the same lane concurrently › user A's export should advance the comp2 entry in updateDependents past the initial state`
-/// - `local snap cascades updateDependents on the lane › scenario 3: divergence — two users snap the same lane concurrently › user B's export should be rejected because the lane is diverged`
+/// Verifies transitive `updateDependents` cascade, promotion on import, and concurrent export divergence rejection.
 #[test]
 fn scenarios_3_4_5_6_local_snap_cascades_update_dependents() {
     let helper = Helper::new();

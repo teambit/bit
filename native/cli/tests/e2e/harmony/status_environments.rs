@@ -5,6 +5,7 @@ use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::{Value, json};
 use std::ffi::OsStr;
 
+/// Creates a workspace with `bar/foo` tracked for environment policy and dev-file status tests.
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

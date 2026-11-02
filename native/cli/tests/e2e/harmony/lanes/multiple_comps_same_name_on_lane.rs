@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 
-/// lane with multiple components with the same name but different scope-name
+/// Verifies that two components with the same name from different scopes coexist on a lane with distinct root directories.
 #[test]
 fn multiple_components_with_same_name_on_lane_keep_both_and_import() {
     let helper = Helper::new();

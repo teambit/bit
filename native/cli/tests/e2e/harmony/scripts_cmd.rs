@@ -4,23 +4,7 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
-/// - `script command › custom env with scripts defined › bit script --list › should list all available scripts`
-/// - `script command › custom env with scripts defined › bit script --list › should show the environment id`
-/// - `script command › custom env with scripts defined › bit script --list › should show the script names`
-/// - `script command › custom env with scripts defined › bit script --list › should show the script commands`
-/// - `script command › custom env with scripts defined › bit script test-script › should run the script successfully`
-/// - `script command › custom env with scripts defined › bit script test-script › should show the script output`
-/// - `script command › custom env with scripts defined › bit script test-script › should mention the env in the output`
-/// - `script command › custom env with scripts defined › bit script async-script › should run the async script successfully`
-/// - `script command › custom env with scripts defined › bit script async-script › should show the async script output`
-/// - `script command › custom env with scripts defined › bit script async-script › should show the component count in the context`
-/// - `script command › custom env with scripts defined › bit script async-script › should show success message`
-/// - `script command › custom env with scripts defined › bit env get should show scripts › should show scripts section`
-/// - `script command › custom env with scripts defined › bit env get should show scripts › should list the scripts`
-/// - `script command › custom env with scripts defined › running non-existent script › should throw an error`
-/// - `script command › environment without scripts config › bit script --list without config › should show config warning`
-/// - `script command › env version mismatch › bit script --list with version mismatch › should not list scripts from env with different version`
-/// - `script command › env version mismatch › bit script test-script with version mismatch › should not run scripts`
+/// Verifies `bit script --list`, script execution, `bit env get` script display, and env version mismatch guards.
 #[test]
 fn script_command_list_execute_env_get_and_version_mismatch() {
     let helper = Helper::new();

@@ -4,6 +4,7 @@ use super::support::{command, compare_stashes};
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
+/// Creates a callback workspace that records provider startups to `stash-provider-startups`.
 fn fixture() -> Helper {
     let helper = super::super::snapshot_environments::callback_workspace(false);
     let paths = [

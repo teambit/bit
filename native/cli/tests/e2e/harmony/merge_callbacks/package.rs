@@ -5,6 +5,7 @@ use super::fixture;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Verifies that a failing package callback during `bit lane merge` preserves published objects and cleared unmerged state.
 #[test]
 fn failed_package_callback_preserves_the_published_objects_and_cleared_pending_prefix() {
     let helper = fixture::lane();

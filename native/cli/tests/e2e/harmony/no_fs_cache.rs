@@ -4,6 +4,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Runs `line` in `root` with `BIT_FEATURES=no-fs-cache` enabled (and `BIT_NATIVE=off` when `node` is true).
 fn run(root: &Path, line: &str, node: bool) -> Run {
     let mut env = vec![("BIT_FEATURES", OsStr::new("no-fs-cache")), ("CI", OsStr::new("1"))];
     if node {

@@ -9,6 +9,7 @@ use crate::{
     helper::{config, remote},
 };
 use serde_json::json;
+/// Verifies that `bit scope rename --preserve` updates `workspace.jsonc` `defaultScope` and all matching new components.
 #[test]
 fn scope_rename_changes_the_workspace_default_and_all_matching_new_components() {
     let helper = support::workspace(2, false);

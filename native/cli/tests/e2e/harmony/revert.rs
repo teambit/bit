@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// `bitMap.read()`: `.bitmap` without its leading comment.
+/// Parses `.bitmap` JSON after stripping its leading comment header.
 fn read_bitmap(helper: &Helper) -> Value {
     let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     crate::helper::parse(&text[text.find('{').unwrap()..])

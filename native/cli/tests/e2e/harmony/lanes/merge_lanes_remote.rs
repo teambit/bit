@@ -5,6 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::path::PathBuf;
 
+/// Creates a three-component workspace with an exported `dev` lane snap and returns a cloned author workspace.
 fn setup_exported_dev_lane() -> (Helper, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

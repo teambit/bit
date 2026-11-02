@@ -7,6 +7,7 @@ use flate2::read::{GzDecoder, ZlibDecoder};
 use serde_json::{Value, json};
 use std::{fs, io::Read as _, path::Path};
 
+/// Strips volatile task timings and normalizes package tarball digests in `teambit.pipelines/builder` data.
 pub(super) fn normalize(root: &Path, version: &mut Value) {
     let Some(builder) = version["extensions"]
         .as_array_mut()

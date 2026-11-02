@@ -5,6 +5,7 @@ use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 use std::path::Path;
 
+/// Asserts that the cascaded hidden `comp1` `Version` in `helper` matches `oracle` updated for `visible_head`.
 pub(super) fn compare(helper: &Helper, oracle: &Path, visible_head: &str) {
     let id = format!("{}/comp1", helper.scopes.remote);
     let current_lane = parse(&helper.native("cat-lane hidden-policy"));

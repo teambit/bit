@@ -1,4 +1,4 @@
-//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases.e2e.ts` for diverged lane merge edge cases ([`merge_a_diverged_lane_into_main_with_tag`]).
+//! Port of `e2e/harmony/lanes/merge-lanes-edge-cases.e2e.ts` for diverged lane merge edge cases ([`merge_a_diverged_lane_into_main_with_tag`], [`auto_snap_during_merge_when_the_snap_is_failing_and_merge_to_empty_lane`]).
 //!
 //! Covers `--tag` merges, failed auto-snap rollback, and empty lane merges.
 

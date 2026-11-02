@@ -4,6 +4,7 @@
 use crate::helper::{Helper, parse};
 use std::{ffi::OsStr, fs};
 
+/// Runs `command` via native and Node (`BIT_NATIVE=off`) and asserts identical exit code, output, and `.bitTmp` cleanup.
 fn compare(helper: &Helper, command: &str, environment: &[(&str, &OsStr)]) {
     let copy = helper.clone_workspace();
     let native = Helper::cmd_in_with(&helper.scopes.local_path, command, environment);

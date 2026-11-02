@@ -3,13 +3,7 @@
 
 use crate::helper::{Helper, config};
 
-/// - `components that are not synced between the scope and the consumer › consumer with a new component and scope with the same component as exported with defaultScope configured › bit tag › should tag the component to the next version of what the scope has`
-/// - `components that are not synced between the scope and the consumer › consumer with a new component and scope with the same component as exported with defaultScope configured › bit status › should sync .bitmap according to the scope`
-/// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit status › should show the component as new`
-/// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit show › should not show the component with the version`
-/// - `components that are not synced between the scope and the consumer › consumer with a tagged exported component and scope with no components › bit import should not throw`
-/// - `components that are not synced between the scope and the consumer › consumer with a tagged exported component and scope with no components › bit import followed by bit status should sync .bitmap`
-/// - `components that are not synced between the scope and the consumer › new lane got deleted › should recrate the lane`
+/// Verifies `.bitmap` and scope reconciliation when workspace and local scope component states are out of sync.
 #[test]
 fn out_of_sync_components_between_scope_and_consumer() {
     let helper = Helper::new();

@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// logging with global --log flag › should log successfully
+/// Verifies that passing the global `--log` flag prints command startup log entries to stdout.
 #[test]
 fn the_global_log_flag_logs() {
     let helper = Helper::new();

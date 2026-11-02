@@ -4,6 +4,7 @@ use super::node;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
+/// Compares native and Node `bit log bar/foo` across `--json`, default, `--parents`, and `--one-line` views.
 pub(super) fn compare_log(helper: &Helper) {
     let baseline = helper.clone_workspace();
     for color in ["0", "1"] {

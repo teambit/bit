@@ -6,6 +6,7 @@ use crate::{
     helper::{Helper, config, remote},
 };
 use serde_json::json;
+/// Creates an exported two-component workspace with a `fixture.tools/env/scope-lifecycle` callback aspect.
 fn configured(environment: bool) -> Helper {
     let helper = support::workspace(2, true);
     remote::publish(&helper);
