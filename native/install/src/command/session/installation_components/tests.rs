@@ -1,4 +1,4 @@
-//! Unit tests for host component ordering ([`ordered`]) and directory validation in
+//! Unit tests for host component ordering ([`ordered`], [`component`]) and directory validation in
 //! `bit-install` session initialization.
 
 use super::ordered;

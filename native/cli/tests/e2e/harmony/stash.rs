@@ -1,5 +1,5 @@
 //! Published `bit stash` save/list/load state and detached repository-object
-//! parity across modified and restored workspace component sources.
+//! parity across modified and restored workspace component sources ([`checkout_edges`], [`cleanup`], [`detached`], [`error_startup`], [`flags`], [`support`]).
 mod checkout_edges;
 mod cleanup;
 mod detached;

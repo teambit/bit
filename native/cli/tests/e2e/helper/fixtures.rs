@@ -1,4 +1,4 @@
-//! `e2e-fixtures-helper.ts` and the command shortcuts ported E2E cases use for workspace setup.
+//! `e2e-fixtures-helper.ts` ([`FOO_FIXTURE`], [`BareScopeEnv`]) and the command shortcuts ported E2E cases use for workspace setup.
 //! Setup runs on either CLI: only the command a case checks must execute natively.
 
 use super::{Helper, Run, config, issue_types, parse, strip_ansi};

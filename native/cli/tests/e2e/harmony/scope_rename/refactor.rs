@@ -1,4 +1,4 @@
-//! Scope rename refactoring across mixed exported, new, and aspect components.
+//! Scope rename refactoring across mixed exported, new, and aspect components ([`mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key`]).
 //! Verifies `--refactor` and `--deprecate` import chain and aspect configuration key rewrites.
 
 use crate::{

@@ -1,5 +1,5 @@
 //! Exercises the retained stash protocol between capture and its first
-//! persistent phase (`commandStashPrepare` token validation).
+//! persistent phase (`commandStashPrepare` token validation, [`a_source_changed_after_stash_planning_cannot_publish_any_detached_objects`]).
 use super::{controls, workspace};
 use crate::helper::setup;
 use bit_object_import::WorkspaceSession;

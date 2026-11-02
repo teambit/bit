@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/use.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/use.e2e.ts` ([`create_aspect`], [`when_the_aspect_is_new_should_not_throw_an_error`]).
 //! Verifies that `bit use` registers new local aspects in `workspace.jsonc` without throwing errors.
 
 use crate::helper::Helper;

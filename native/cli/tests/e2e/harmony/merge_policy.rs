@@ -1,5 +1,5 @@
 //! `MergeStatusProvider` removal policy and hidden lane publication match Bit
-//! 2.2.94 across deleted components ([`removed_lane`], [`stable`]) and hidden `updateDependents` ([`cascade`], [`hidden_pending`]).
+//! 2.2.94 across deleted components ([`removed_lane`], [`stable`]) and hidden `updateDependents` ([`cascade`], [`hidden_pending`]) merges.
 mod cascade;
 mod hidden_pending;
 

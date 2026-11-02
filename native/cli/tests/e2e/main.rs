@@ -1,4 +1,4 @@
-//! The cases of `e2e/` ported to the native CLI, mirrored by path: `e2e/commands/list.e2e.ts`
+//! The cases of `e2e/` ported to the native CLI ([`commands`], [`flows`], [`functionalities`], [`harmony`], [`helper`], [`known_failure`]), mirrored by path: `e2e/commands/list.e2e.ts`
 //! is `commands/list.rs`. `native/plans/TEST_PORTING.md` tracks which suites are ported.
 //!
 //! Each case runs the `bit` binary in a workspace of its own, with the Node.js CLI of

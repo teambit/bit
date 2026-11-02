@@ -1,5 +1,5 @@
 //! Unit tests for embedded dependency scanner request bounds ([`scan_request`], [`limits`]) in
-//! `bit-dependency-scanner` IPC payloads.
+//! `bit-dependency-scanner` IPC payloads ([`embedded_declines_invalid_or_unbounded_requests`]).
 
 use crate::{limits, scan_request};
 use rayon::ThreadPoolBuilder;

@@ -1,4 +1,4 @@
-//! Restores remote children without deleting a running scope server's current
+//! Restores remote children ([`contents`]) without deleting a running scope server's current
 //! working directory before test replay.
 use super::{Path, fs, io, remove};
 

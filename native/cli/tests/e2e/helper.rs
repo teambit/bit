@@ -1,5 +1,5 @@
 //! [`Helper`] of `@teambit/legacy.e2e-helper` for native CLI E2E tests: each case gets its own
-//! directory holding the local workspace and the remote scopes, and runs `bit` from
+//! directory holding the local workspace and the remote scopes ([`action_server`], [`config`], [`remote`], [`setup`]), and runs `bit` from
 //! `native/` with the Node.js CLI behind it for delegation.
 
 pub(crate) mod action_server;

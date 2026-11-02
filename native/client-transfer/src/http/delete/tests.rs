@@ -1,4 +1,4 @@
-//! Unit tests for HTTP remote deletion requests and retry behavior on [`Network`] in
+//! Unit tests for HTTP remote deletion requests and retry behavior on [`Network`] ([`network`]) in
 //! `bit-client-transfer` remote operations.
 
 use super::super::Network;

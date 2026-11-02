@@ -1,4 +1,4 @@
-//! Remote fixtures remain independent of the pinned Windows pending-object glob
+//! Remote fixtures ([`publish`], [`seed_after_node_export`], [`publish_selected`]) remain independent of the pinned Windows pending-object glob
 //! bug when publishing local exports to bare remote scopes.
 use super::{Helper, config, setup};
 use serde_json::Value;

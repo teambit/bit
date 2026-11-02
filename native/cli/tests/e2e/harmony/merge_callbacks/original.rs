@@ -1,5 +1,5 @@
 //! Cache hits ([`copy`]) are compared at the same absolute workspace path, preserving file timestamps.
-//! Verifies that `merge` with a warm filesystem cache matches the released CLI at the original path.
+//! Verifies that `merge` with a warm filesystem cache matches the released CLI at the original path ([`component_merge_with_valid_cache_matches_at_the_original_workspace_path`]).
 
 use super::{compare_results, fixture};
 use crate::helper::{Helper, setup};

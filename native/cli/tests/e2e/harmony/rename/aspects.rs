@@ -1,4 +1,4 @@
-//! Aspect-specific rename behavior across workspace and exported components.
+//! Aspect-specific rename behavior across workspace and exported components ([`workspace`]).
 //! Verifies aspect ID rewriting inside `*.aspect.ts` and `workspace.jsonc` configuration updates.
 
 use crate::{

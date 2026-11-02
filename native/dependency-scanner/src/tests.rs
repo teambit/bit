@@ -1,4 +1,4 @@
-//! Unit tests for single-file `TypeScript` and `JavaScript` dependency scanning ([`scan`], [`File`])
+//! Unit tests for single-file `TypeScript` and `JavaScript` dependency scanning ([`scan`], [`File`], [`fixture`])
 //! in `bit-dependency-scanner`. Covers type imports, specifier aliases, and comment filtering.
 
 use super::{File, scan};

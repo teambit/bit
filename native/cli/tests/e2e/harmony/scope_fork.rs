@@ -1,5 +1,5 @@
 //! Scope fork keeps remote sources immutable while publishing independent
-//! copies with `forkedFrom` provenance and target scope pattern filtering.
+//! copies with `forkedFrom` provenance and target scope pattern filtering ([`scope_fork_reports_every_copy_and_preserves_original_scope_and_name`]).
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},
     harmony::fork,

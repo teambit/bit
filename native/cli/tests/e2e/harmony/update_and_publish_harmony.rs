@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/update-cmd.e2e.ts` and `e2e/harmony/publish.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/update-cmd.e2e.ts` and `e2e/harmony/publish.e2e.ts` ([`updates_policies_added_by_user_to_latest_versions`]).
 //! Covers `bit update` dependency policy upgrades and npm package publishing workflows.
 
 use crate::helper::{Helper, config};

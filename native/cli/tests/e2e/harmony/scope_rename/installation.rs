@@ -1,4 +1,4 @@
-//! Scope rename real package installation and compilation parity tests.
+//! Scope rename real package installation and compilation parity tests ([`startup_progress`], [`ordinary_scope_rename_runs_real_installation_and_then_compilation`]).
 //! Verifies that `scope rename` triggers `node_modules` package linking and component compilation.
 mod startup_progress;
 

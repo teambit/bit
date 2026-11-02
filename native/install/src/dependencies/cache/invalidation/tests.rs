@@ -1,4 +1,4 @@
-//! Unit tests for dependency cache invalidation ([`invalidate`], [`needs_invalidation`]) based on workspace modification
+//! Unit tests for dependency cache invalidation ([`invalidate`], [`needs_invalidation`], [`deps_dir`]) based on workspace modification
 //! timestamps in `bit-install`.
 
 use super::{deps_dir, invalidate, needs_invalidation};

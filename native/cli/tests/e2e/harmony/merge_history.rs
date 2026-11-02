@@ -1,5 +1,5 @@
 //! Unrelated lane histories ([`unrelated`], [`unrelated_with`], [`reading`]) retain their published source and ancestry choices
-//! across merge history end-to-end scenarios and `--resolve-unrelated` merges.
+//! across merge history end-to-end scenarios and `--resolve-unrelated` merges ([`node`]).
 mod reading;
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::PathBuf};

@@ -1,4 +1,4 @@
-//! Real environment hooks separate the published second-resolution mutation
+//! Real environment hooks ([`delay`]) separate the published second-resolution mutation
 //! backups for `scope rename` end-to-end tests.
 use crate::{
     commands::move_paths::support::setup,

@@ -1,5 +1,5 @@
 //! A recording HTTP action endpoint ([`Server`] and [`Request`]) for released and native protocol
-//! payload comparisons.
+//! payload comparisons in end-to-end remote scope tests.
 use serde_json::Value;
 use std::{
     io::{BufRead, BufReader, Read, Write},

@@ -1,4 +1,4 @@
-//! One optional wall-clock sampled redraw before pnpm's first package banner
+//! One optional wall-clock sampled redraw ([`MARKER`], [`FRAME`], [`BANNER`], [`project`]) before pnpm's first package banner
 //! during `scope rename` installation output normalization.
 
 const MARKER: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";

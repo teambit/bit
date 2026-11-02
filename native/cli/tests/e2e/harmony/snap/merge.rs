@@ -1,4 +1,4 @@
-//! End-to-end tests for the `local and remote do not have the same head` section of `e2e/harmony/snap.e2e.ts`.
+//! End-to-end tests for the `local and remote do not have the same head` section of `e2e/harmony/snap.e2e.ts` ([`DivergedSetup`], [`setup_diverged`]).
 //! Covers diverged `main` snap merges, conflict resolution, and pre-export guards.
 
 use super::remote_ref_head;

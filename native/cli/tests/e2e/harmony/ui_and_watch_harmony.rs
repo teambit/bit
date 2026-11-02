@@ -1,4 +1,4 @@
-//! End-to-end tests for Harmony UI (`bit start`) and file watching (`bit watch`).
+//! End-to-end tests for Harmony UI (`bit start`, [`scope_ui_on_bare_scope`], [`workspace_ui`]) and file watching (`bit watch`).
 //! Covers CLI help output and watch-mode compilation and file tracking flows.
 
 use crate::helper::Helper;

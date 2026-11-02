@@ -1,4 +1,4 @@
-//! Unit tests for custom scope [`Resolver`] execution in `bit-client-transfer`.
+//! Unit tests for custom scope [`Resolver`] execution ([`resolver`], [`runtime`]) in `bit-client-transfer`.
 //! Covers `resolverPath` script invocation and token forwarding.
 
 use super::Resolver;

@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/revert.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/revert.e2e.ts` ([`read_bitmap`], [`read_file`]).
 //! Covers `bit revert` file restoration while keeping the current `.bitmap` component version.
 
 use crate::{

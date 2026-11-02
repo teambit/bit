@@ -1,4 +1,4 @@
-//! Exported component rename provenance, deprecation, and refactoring contracts.
+//! Exported component rename provenance, deprecation, and refactoring contracts ([`workspace`], [`exported_deprecating_rename_creates_new_identity_and_bidirectional_provenance`]).
 //! Covers `--deprecate`, `--refactor`, and `renamedFrom` / `newId` aspect metadata links.
 
 use crate::{

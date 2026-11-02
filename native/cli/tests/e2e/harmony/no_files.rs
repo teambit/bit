@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/no-files.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/no-files.e2e.ts` ([`component_files_or_directory_missing_or_gitignored`]).
 //! Verifies `list` and `status` resilience when component files or directories are deleted or ignored in `.gitignore`.
 
 use crate::helper::{Helper, parse};

@@ -1,4 +1,4 @@
-//! Shared workspace fixtures and stash comparison helpers for stash tests.
+//! Shared workspace fixtures and stash comparison helpers for stash tests ([`workspace`], [`command`]).
 //! Compares `.bit/stash` files, `.bitmap`, and `VersionHistory` objects against Node output.
 
 use crate::helper::{Helper, config};

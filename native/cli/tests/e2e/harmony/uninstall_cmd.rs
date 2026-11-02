@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/uninstall-cmd.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/uninstall-cmd.e2e.ts` ([`should_remove_packages_from_node_modules_that_were_uninstalled`]).
 //! Verifies that `bit uninstall` removes uninstalled packages from `node_modules` while keeping remaining packages.
 
 use crate::helper::Helper;

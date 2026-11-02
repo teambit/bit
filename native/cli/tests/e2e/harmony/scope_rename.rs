@@ -1,5 +1,5 @@
 //! Scope-wide operations compare complete same-path state and retained mutation
-//! prefixes across `scope rename` and `scope set` CLI workflows.
+//! prefixes across `scope rename` and `scope set` CLI workflows ([`callbacks`], [`fixture`], [`installation`], [`refactor`]).
 mod callbacks;
 mod fixture;
 mod installation;

@@ -1,4 +1,4 @@
-//! Native `bit mini-status --json` on a workspace the Rust status engine owns,
+//! Native `bit mini-status --json` on a workspace ([`Workspace`], [`STUB`]) the Rust status engine owns,
 //! and its declines to the Node.js CLI when unsupported flags or configurations are present.
 
 use std::{

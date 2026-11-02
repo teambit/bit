@@ -1,4 +1,4 @@
-//! Scope rename lifecycle callback invocation and workspace config updates.
+//! Scope rename lifecycle callback invocation and workspace config updates ([`configured`]).
 //! Verifies custom aspect callback execution and `workspace.jsonc` key updates during `scope rename`.
 
 use crate::{

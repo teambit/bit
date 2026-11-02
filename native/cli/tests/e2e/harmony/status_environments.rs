@@ -1,5 +1,5 @@
 //! Environment policies, dev-file callbacks, and diagnostics retain Node
-//! parity across `bit status` and `bit show` commands.
+//! parity across `bit status` and `bit show` commands ([`workspace`], [`configure`], [`set_env`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::{Value, json};

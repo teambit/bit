@@ -1,4 +1,4 @@
-//! Status command options and workspace configuration precedence parity tests.
+//! Status command options and workspace configuration precedence parity tests ([`compare`]).
 //! Covers `--strict`, `--warnings`, `--lanes`, and circular dependency check flags.
 
 use crate::helper::{Helper, parse};

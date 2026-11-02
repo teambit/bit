@@ -1,5 +1,5 @@
 //! Unit tests for hub streaming JSON-line replies ([`HubReply`], [`line`], [`finish`]) in `bit-client-transfer`.
-//! Verifies wire message ordering and terminal result extraction.
+//! Verifies wire message ordering and terminal result extraction ([`streamed_messages_keep_wire_order_and_last_terminal_result`]).
 
 use super::{HubReply, StatusCode, finish, line};
 use serde_json::{Value, json};

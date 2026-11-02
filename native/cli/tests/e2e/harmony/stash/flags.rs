@@ -1,4 +1,4 @@
-//! Stash aliases, messages, explicit IDs, and merge strategies parity tests.
+//! Stash aliases, messages, explicit IDs, and merge strategies parity tests ([`aliases_messages_explicit_ids_and_empty_operations_match_node`]).
 //! Covers `stash s`, `stash pop`, `--force-ours`, `--force-theirs`, and `-r` flags.
 use super::support::{command, compare_stashes, workspace, write_both};
 use std::fs;

@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/scripts.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/scripts.e2e.ts` ([`script_command_list_execute_env_get_and_version_mismatch`]).
 //! Covers `bit script --list`, script execution, `env get` script display, and env version mismatch guards.
 
 use crate::helper::{Helper, config};

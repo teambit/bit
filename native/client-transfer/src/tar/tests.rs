@@ -1,4 +1,4 @@
-//! Unit tests for bounded tar object stream decoding ([`read`], [`read_bounded`]) in `bit-client-transfer`.
+//! Unit tests for bounded tar object stream decoding ([`read`], [`read_bounded`], [`archive`]) in `bit-client-transfer`.
 //! Covers `.BIT.START` and `.BIT.END` schema checks and malformed entry handling.
 
 use super::{read, read_bounded};

@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/updates-from-main-and-lane.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/updates-from-main-and-lane.e2e.ts` ([`updates_available_from_both_main_and_lane`]).
 //! Covers pending update reporting and `checkout head` / `lane merge main` when both branches advance.
 
 use crate::helper::{Helper, parse};

@@ -1,4 +1,4 @@
-//! Restored fixtures must not retain outputs when a command leaves read-only
+//! Restored fixtures ([`remove`], [`writable_directories`], [`remote`]) must not retain outputs when a command leaves read-only
 //! directories on disk after execution.
 pub(super) mod remote;
 

@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/root-components-harmony.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/root-components-harmony.e2e.ts` ([`configure_root_components`], [`setup_bar_and_precision_range`]).
 //! Covers `rootComponents` workspace installation and isolated component root `node_modules` directories.
 
 use crate::helper::{Helper, config};

@@ -1,4 +1,4 @@
-//! Unit tests for dependency detection ([`detect`]), resolution ([`Resolver`]), and computation ([`compute`])
+//! Unit tests for dependency detection ([`detect`], [`Detected`]), resolution ([`Resolver`], [`Resolved`]), and computation ([`compute`])
 //! across workspace components in `bit-install`.
 
 use super::{

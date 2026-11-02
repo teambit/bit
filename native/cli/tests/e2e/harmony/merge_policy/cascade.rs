@@ -1,5 +1,5 @@
 //! Related merged components ([`divergent`], [`incoming`]) are resolved together by the retained snapshot
-//! lifecycle across clean and mixed-conflict dependent graphs.
+//! lifecycle across clean and mixed-conflict dependent graphs during lane merges.
 use crate::helper::{Helper, config, parse};
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};

@@ -1,4 +1,4 @@
-//! The `workspace.jsonc` and `scope.json` edits of `e2e-workspace-jsonc-helper.ts` and
+//! The `workspace.jsonc` and `scope.json` edits ([`read_jsonc`], [`write_json`], [`set_component_env`]) of `e2e-workspace-jsonc-helper.ts` and
 //! `e2e-setup-template.ts` for E2E tests, plus `.bitmap` environment configuration helpers.
 
 use serde_json::{Map, Value};

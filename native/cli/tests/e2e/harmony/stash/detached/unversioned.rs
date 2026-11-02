@@ -1,5 +1,5 @@
 //! A new aspect dependency reaches the published graph error before detached
-//! object persistence during `stash save --include-new`.
+//! object persistence during `stash save --include-new` ([`tracked_component_using_a_new_aspect_keeps_the_exact_pre_persistence_failure`]).
 use super::{compare_command, controls, workspace};
 use crate::helper::{Helper, config};
 use serde_json::json;

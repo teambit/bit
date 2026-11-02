@@ -1,4 +1,4 @@
-//! Reset component patterns publish a single coherent selected batch across
+//! Reset component patterns ([`workspace`], [`workspace_in_scope`]) publish a single coherent selected batch across
 //! reset selection scenarios (`--head`, `--soft`, and multi-pattern component selectors).
 use crate::helper::{Helper, config};
 use std::ffi::OsStr;

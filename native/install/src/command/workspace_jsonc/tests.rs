@@ -1,5 +1,5 @@
 //! Unit tests for comment-preserving `workspace.jsonc` edits ([`edit`]) and backup
-//! history persistence in `bit-install`.
+//! history persistence in `bit-install` ([`edits_keep_comments_and_back_up_the_previous_file`]).
 
 use super::edit;
 use serde_json::json;

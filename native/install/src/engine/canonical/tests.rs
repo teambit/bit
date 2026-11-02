@@ -1,4 +1,4 @@
-//! Unit tests for canonical package manager engine request validation ([`CanonicalInstall`], [`Request`]) in
+//! Unit tests for canonical package manager engine request validation ([`CanonicalInstall`], [`Request`], [`Captured`], [`CapturedHost`]) in
 //! `bit-install` pnpm engine invocations.
 
 use super::{

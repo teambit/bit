@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/snap.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/snap.e2e.ts` ([`merge`], [`snap_before_tag_and_untag_a_snap`]).
 //! Covers `bit snap` creation, auto-snap, `reset`, and diverged local/remote head resolution.
 
 mod merge;

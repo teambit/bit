@@ -1,5 +1,5 @@
 //! Detached stash metadata and bytes remain independent of model/head
-//! publication across modified dependencies and unexported workspace components.
+//! publication across modified dependencies and unexported workspace components ([`history`], [`proof`], [`unversioned`]).
 mod history;
 mod proof;
 mod unversioned;

@@ -1,4 +1,4 @@
-//! Actual builder artifacts and failure publication boundaries during snapshot
+//! Actual builder artifacts and failure publication boundaries ([`BUILD_ENV`]) during snapshot
 //! creation (`--build`, custom `modifyPackageJson`, and build artifact persistence).
 use super::workspace;
 use crate::helper::{Helper, config, parse};

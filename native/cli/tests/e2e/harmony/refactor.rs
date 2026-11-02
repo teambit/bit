@@ -1,4 +1,4 @@
-//! End-to-end tests for `e2e/harmony/refactor.e2e.ts`.
+//! End-to-end tests for `e2e/harmony/refactor.e2e.ts` ([`refactoring_with_refactor_command`], [`read_comp1`]).
 //! Covers `bit refactor dependency-name` validation and source import path rewriting.
 
 use crate::helper::{Helper, remote};

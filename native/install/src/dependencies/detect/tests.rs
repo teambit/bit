@@ -1,4 +1,4 @@
-//! Unit tests for core aspect detection order ([`detect`], [`CoreAspect`]) across source and compiled files
+//! Unit tests for core aspect detection order ([`detect`], [`CoreAspect`], [`Resolver`]) across source and compiled files
 //! in `bit-install` dependency resolution.
 
 use super::{Resolver, Subject, Workspace, detect};
