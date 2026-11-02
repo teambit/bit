@@ -536,7 +536,7 @@ importers:
         specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ~0.0.6
+        specifier: ~0.0.7
         version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
@@ -16249,7 +16249,7 @@ importers:
         specifier: 1.2.5
         version: 1.2.5
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ~0.0.6
+        specifier: ~0.0.7
         version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
