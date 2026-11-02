@@ -1,6 +1,5 @@
 import type { Component } from './component';
 import type { EnvContext, EnvHandler } from './env-handler';
-import { getTsconfig } from 'get-tsconfig';
 import { SCOPE_ASPECT_ID, TYPESCRIPT_ASPECT_ID, WORKSPACE_ASPECT_ID } from './aspect-ids';
 import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 
@@ -100,8 +99,10 @@ export function typescriptSchemaExtractor(options: TypescriptSchemaExtractorOpti
     if (!typescript) throw new Error('typescriptSchemaExtractor() needs the typescript aspect, which is not loaded');
     if (typescript.createSchemaExtractorFromOptions)
       return typescript.createSchemaExtractorFromOptions(options, context);
-    // older Bit versions. the same as `TypeScriptExtractor.from()`, apart from the logger name.
-    const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
+    // older Bit versions. the same as `TypeScriptExtractor.from()`, apart from the logger name. the extractor keeps
+    // the tsconfig but doesn't read it, so the contract doesn't parse the file (this module is also bundled for
+    // the browser, where the tsconfig parser can't run).
+    const tsconfig = { compilerOptions: options.compilerOptions };
     const rootPath =
       context.getAspect<{ path: string }>(WORKSPACE_ASPECT_ID)?.path ||
       context.getAspect<{ path: string }>(SCOPE_ASPECT_ID)?.path ||
