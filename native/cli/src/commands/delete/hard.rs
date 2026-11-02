@@ -38,6 +38,7 @@ struct Context {
     hub_url: String,
 }
 
+/// Executes `bit delete --hard` against configured remotes after non-interactive guard validation.
 pub(super) fn run(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = parse(argv) else {
         return Ok(Outcome::Declined("outside the native remote hard-delete grammar".into()));

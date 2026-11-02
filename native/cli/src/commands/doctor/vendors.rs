@@ -17,7 +17,7 @@ pub(super) fn version(command: &str, argument: &str, clean_stderr: bool) -> Opti
     let trimmed = raw.trim();
     (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }
-/// Strips trailing `\r` and `\n` bytes from `bytes`.
+/// Strips any trailing `\r` and `\n` newline bytes from `bytes`.
 #[inline]
 fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     while let Some(stripped) = bytes

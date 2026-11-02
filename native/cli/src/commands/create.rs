@@ -74,6 +74,7 @@ fn parse_scope_from_component_id_str(raw: &str) -> (Option<&str>, &str) {
     (None, raw)
 }
 
+/// Validates `--scope` naming and checks that no component name collides with `options.template_name`.
 pub(super) fn validate_options(_root: &Path, options: &Options) -> Result<(), String> {
     if let Some(scope) = options.scope.as_deref().map(str::trim)
         && !scope_set::selection::valid_scope_str(scope)

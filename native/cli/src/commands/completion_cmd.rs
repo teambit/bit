@@ -88,6 +88,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Returns `true` when `args` contains only supported global color flags and an optional trailing `--`.
 #[inline]
 pub(super) fn valid_options(args: &[&str]) -> bool {
     for (idx, &arg) in args.iter().enumerate() {

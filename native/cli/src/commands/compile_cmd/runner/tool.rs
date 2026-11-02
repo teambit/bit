@@ -67,7 +67,7 @@ fn resolve_compiler_tool() -> io::Result<(std::path::PathBuf, std::path::PathBuf
     Ok((cli.node, package))
 }
 
-/// Writes the JSON compilation `request` payload to `child`'s stdin and flushes the stream.
+/// Sends the JSON compilation `request` payload to `child`'s stdin and flushes the stream.
 #[inline]
 fn write_compiler_request(child: &mut std::process::Child, request: &[u8]) -> io::Result<()> {
     let mut stdin = child.stdin.take().ok_or_else(|| io::Error::other("compiler tool stdin"))?;

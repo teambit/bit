@@ -94,6 +94,7 @@ impl Links {
     }
 }
 
+/// Returns `true` when `identity` matches `component`'s unversioned or full component ID.
 #[inline]
 fn matches_component_identity(identity: &str, component: &WorkspaceComponent) -> bool {
     let trimmed = identity.trim();

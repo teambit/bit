@@ -8,6 +8,7 @@ use serde::{Deserialize, de::DeserializeOwned};
 use serde_json::Value;
 use std::{io, thread};
 
+/// Maximum serialized byte size (4 MiB) of a single `BWS1` request payload.
 const MAX_REQUEST: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 

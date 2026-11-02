@@ -50,6 +50,7 @@ impl Prepared {
         let policy = prepare_policy(root, &plan);
         Ok(Self { plan, policy })
     }
+    /// Validates any staged `workspace.jsonc` [`policy::Policy`] edit before committing the delete.
     #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         if let Some(policy) = &self.policy {

@@ -61,6 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, args, &options)
 }
 
+/// Validates [`options::Options`], captures workspace diff data, and renders text or `--json` output.
 fn run_workspace(
     root: &Path,
     args: &[OsString],

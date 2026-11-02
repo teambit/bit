@@ -67,6 +67,7 @@ fn apply_arg<'a>(
     }
 }
 
+/// Assigns `val` to `slot` unless `slot` already holds a different value.
 #[inline]
 fn set_non_conflicting<'a>(slot: &mut Option<&'a str>, val: &'a str) -> Option<()> {
     if slot.is_some_and(|prev| prev != val) {

@@ -76,6 +76,7 @@ impl DepGraph {
     }
 }
 
+/// Formats the workspace and scope dependents sections for `bit dependents`.
 #[inline]
 pub(super) fn render_dependents_report(
     target_id: &str,

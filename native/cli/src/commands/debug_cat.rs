@@ -48,7 +48,7 @@ struct ObjectOptions {
     stringify: bool,
     headers: bool,
 }
-/// Parses `args` into [`ObjectOptions`] when given a 40-hex SHA-1 object hash and supported flags.
+/// Parses `args` into [`ObjectOptions`] when given a 40-hex SHA-1 object hash and supported CLI flags.
 fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
     let mut opts = ObjectOptions::default();
     let mut iter = args.iter().copied();

@@ -7,6 +7,7 @@ use crate::commands::{
 use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, io};
 
+/// Aspect ID of `@teambit/dependencies.dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// Package dependency field names extracted into [`Side::packages`].
 pub(super) const PACKAGE_FIELDS: [&str; 3] =

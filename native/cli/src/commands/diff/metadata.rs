@@ -58,7 +58,7 @@ fn dependency_fields(
     Ok(output)
 }
 
-/// Left and right version header labels used when formatting metadata and dependency diffs.
+/// Left and right version header labels used when rendering metadata and dependency diffs.
 struct Labels {
     left: String,
     right: String,

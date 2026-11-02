@@ -52,6 +52,7 @@ fn valid_args(args: &[OsString]) -> bool {
     true
 }
 
+/// Reads and formats the cached `last-command-details` content and `meta.json` header under `dir`.
 fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
     let content_path = dir.join("content");
     if !content_path.is_file() {

@@ -76,6 +76,7 @@ impl Context {
             .unwrap_or(default)
     }
 }
+/// Resolves the active `.bit`, `.git/bit`, or ancestor bare-scope directory for `root`.
 #[inline]
 fn scope(root: &Path) -> Option<PathBuf> {
     let scope = bit_workspace_config::scope_path(root);

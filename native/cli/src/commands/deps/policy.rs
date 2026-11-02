@@ -81,6 +81,7 @@ impl WorkspaceDepsContext {
         }
     }
 
+    /// Applies dependency-resolver policy entries from `dir/component.json` onto `deps`.
     pub(super) fn apply_component_json(
         &self,
         dir: &Path,

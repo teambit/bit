@@ -80,6 +80,7 @@ fn run_workspace(
     })
 }
 
+/// Returns the CLI command name (`"deprecate"` or `"undeprecate"`) for `undo`.
 #[inline]
 const fn command_name(undo: bool) -> &'static str {
     if undo { "undeprecate" } else { "deprecate" }

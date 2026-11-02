@@ -82,6 +82,7 @@ fn literal(pattern: &str) -> io::Result<Vec<String>> {
     Ok(vec![format!("{scope}/{name}")])
 }
 
+/// Lists component IDs from `remote` (file scope or HTTP/hub remote) for wildcard matching against `name`.
 fn inventory(
     context: &Context,
     runtime: &tokio::runtime::Runtime,

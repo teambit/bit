@@ -83,6 +83,7 @@ fn apply_replace_to_entry(
     Ok(())
 }
 
+/// Returns a user-facing error listing `available_envs` when no component matched `old_env`.
 #[inline]
 fn ensure_replaced_components(
     ids: &[String],

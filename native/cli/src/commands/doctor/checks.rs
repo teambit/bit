@@ -33,6 +33,7 @@ fn workspace(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     let bare = if valid { json!({"valid":true}) } else { json!({"valid":false,"data":{}}) };
     Ok(diagnosis.result(bare,"invalid workspace.jsonc: undefined is not a valid JSON file.","manually fix the workspace.jsonc or consider running bit init --reset to recreate the file"))
 }
+/// Evaluates the `validate bit version` diagnosis against the latest published BVM release.
 fn latest(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     let latest = latest_fact(context)?;
     let package =

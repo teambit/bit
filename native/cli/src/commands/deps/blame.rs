@@ -87,7 +87,7 @@ fn inspect(root: &Path, component: &str, dependency: &str) -> Result<Vec<BlameRo
     Ok(rows)
 }
 
-/// Resolves the version of `dependency` recorded on `component` at the snapshot `row`.
+/// Extracts the version of `dependency` recorded on `component` at the snapshot `row`.
 fn version_from_log(
     ctx: &WorkspaceDepsContext,
     component: (&ComponentId, &WorkspaceComponent),

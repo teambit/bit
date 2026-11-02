@@ -82,6 +82,7 @@ fn field<'v>(target: &'v Value, key: &str) -> &'v str {
         .unwrap_or_default()
 }
 
+/// Clones all elements of `targets` that satisfy predicate `keep`.
 #[inline]
 fn matching(targets: &[Value], keep: impl Fn(&Value) -> bool) -> Vec<Value> {
     targets

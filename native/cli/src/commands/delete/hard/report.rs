@@ -46,6 +46,7 @@ fn dependents(receipt: &Value, format: &Formatter) -> String {
         .join("\n\n")
 }
 
+/// Formats a single dependent-blocker block for `id` and its blocking `dependencies`.
 fn dependent_row(id: &str, dependencies: &[String], format: &Formatter) -> String {
     let id = strip_latest_or_head(id);
     let symbol = format.error_symbol();

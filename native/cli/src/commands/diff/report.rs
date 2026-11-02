@@ -63,6 +63,7 @@ fn selected_files(files: &[Value], options: &Options) -> Vec<Value> {
         .collect()
 }
 
+/// Strips `diffOutput` and attaches `additions`/`deletions` counts when `--stat` or `--name-only` is set.
 fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
     if options.output.stat {
         let (additions, deletions) = counts(file["diffOutput"].as_str().unwrap_or(""));

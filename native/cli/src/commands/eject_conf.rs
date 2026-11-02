@@ -40,6 +40,7 @@ struct Options {
     json: bool,
 }
 
+/// Staged `component.json` file path and serialized payload bytes for `bit eject-conf`.
 struct EjectedFile {
     abs_path: PathBuf,
     rel_path: String,

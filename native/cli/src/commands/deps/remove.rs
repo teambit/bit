@@ -54,7 +54,7 @@ pub(super) fn prepare_remove(
     Ok((mutation, removed_by_comp, spec.remove_only_if_exists))
 }
 
-/// Removes matching package policy entries for a single [`BitmapEntry`] and records removed package names.
+/// Removes matching package policy entries for one [`BitmapEntry`] and returns removed `<name>@<ver>` specs.
 fn remove_for_entry(
     mutation: &mut BitmapMutation,
     ctx: &WorkspaceDepsContext,

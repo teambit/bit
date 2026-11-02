@@ -68,6 +68,7 @@ fn label<'a>(line: Option<&'a str>, prefix: &str, suffix: &str) -> io::Result<&'
     Ok(stripped)
 }
 
+/// Parses plain-text dependency diff body `lines` into `[name, diff, left, right]` table rows.
 fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
     let mut rows = Vec::new();
     let mut index = 0;

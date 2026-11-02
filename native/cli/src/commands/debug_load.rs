@@ -70,6 +70,7 @@ fn emit_debug_load_error(
     workspace_command::execute_then(root, args, "debug-load", |_| Err(io::Error::other(err_msg)))
 }
 
+/// Parses CLI `args` into [`Options`] when they fit the native `bit debug-load` grammar.
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut id = None;
     let mut json = false;

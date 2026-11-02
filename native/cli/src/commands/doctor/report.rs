@@ -60,6 +60,7 @@ fn is_passed(row: &Value) -> bool {
     let bare = &row["bareResult"];
     bare["valid"] == true || bare["pass"] == true || bare["passed"] == true
 }
+/// Returns the trimmed string slice stored in `value`, or `""` when not a string.
 #[inline]
 fn text(value: &Value) -> &str {
     value

@@ -51,7 +51,7 @@ fn combine_versioned_policies(
     merge_special(&mut bitmap, saved, &names)?;
     Ok(bitmap)
 }
-/// Merges `+` version placeholders and ignored dependency names from `saved` into `bitmap`.
+/// Combines `+` version placeholders and ignored dependency names from `saved` into `bitmap`.
 fn merge_special(
     bitmap: &mut ManualPolicy,
     saved: ManualPolicy,

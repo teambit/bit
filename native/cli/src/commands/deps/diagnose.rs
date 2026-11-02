@@ -93,6 +93,7 @@ pub(super) fn entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
     lockfile_entries(virtual_store)
 }
 
+/// Reads package directory names directly from `node_modules/.pnpm` (`virtual_store`).
 fn physical_entries(virtual_store: &Path) -> Result<Vec<String>, Failure> {
     let mut dirs = Vec::new();
     for entry in fs::read_dir(virtual_store).map_err(|error| Failure::Declined(error.to_string()))?

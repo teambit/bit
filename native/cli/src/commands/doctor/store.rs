@@ -60,6 +60,7 @@ pub(super) fn heads(diagnosis: &Diagnosis, scope: Option<&Path>) -> io::Result<V
     let symptoms = missing_head_symptoms(&missing);
     Ok(diagnosis.result(json!({"valid":missing.is_empty(),"data":{"componentsWithMissingHeads":missing,"totalComponents":total}}),&symptoms,"The missing objects need to be restored from backups or re-exported from workspaces that have these components."))
 }
+/// Formats the `formattedSymptoms` text listing components with missing `head` objects.
 fn missing_head_symptoms(missing: &[Value]) -> String {
     format!(
         "the following components have missing head version objects:\n{}",

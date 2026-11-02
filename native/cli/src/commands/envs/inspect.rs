@@ -50,7 +50,7 @@ pub(super) fn run_list(
     })
     .map_err(|err| Failure::Declined(err.to_string()))
 }
-/// Collects `(component_id, env_id)` pairs for all active components in `ws`.
+/// Gathers `(component_id, env_id)` pairs for all active components in `ws`.
 #[inline]
 fn collect_component_envs(ws: &Workspace) -> Vec<(String, String)> {
     ws.active()

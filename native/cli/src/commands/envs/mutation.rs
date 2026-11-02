@@ -51,6 +51,7 @@ pub(super) struct BitmapContext {
 }
 
 impl BitmapContext {
+    /// Loads `workspace.jsonc` and `.bitmap` from `root` to initialize [`BitmapContext`].
     #[inline]
     fn load(root: &Path, chalk: Chalk) -> Result<Self, Failure> {
         let workspace_bytes = fs::read(root.join("workspace.jsonc"))?;

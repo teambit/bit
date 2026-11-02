@@ -83,6 +83,7 @@ enum Prepared {
 }
 
 impl Subcommand {
+    /// Returns the progress loader label displayed while executing `self`.
     #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {

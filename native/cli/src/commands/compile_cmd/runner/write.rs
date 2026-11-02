@@ -74,6 +74,7 @@ pub(super) fn publish(files: &[Emitted], batch_size: usize) -> io::Result<()> {
     }
     Ok(())
 }
+/// Writes `content` to `opened` after normalizing line endings for the target platform.
 #[inline]
 fn write_emitted_content(opened: &mut fs::File, content: &str) -> io::Result<()> {
     if !cfg!(windows) && !content.contains('\r') {

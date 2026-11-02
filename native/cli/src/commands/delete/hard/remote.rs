@@ -78,6 +78,7 @@ fn unversioned(id: &str) -> &str {
     }
 }
 
+/// Groups canonical `<scope>/<name>` remote IDs by their leading `scope` while preserving first-seen order.
 fn group(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
     let mut grouped: Vec<(String, Vec<String>)> = Vec::new();
     for id in ids {

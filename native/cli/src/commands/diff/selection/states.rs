@@ -91,7 +91,7 @@ fn select_states(
     Ok((selected, loads))
 }
 
-/// Prunes `capture.captured` and `capture.comparisons` to entries present in `selected`.
+/// Filters `capture.captured` and `capture.comparisons` down to entries present in `selected`.
 fn retain_capture(capture: &mut Capture, selected: &[Value]) {
     let ids: HashSet<_> = selected
         .iter()

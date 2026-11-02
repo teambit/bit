@@ -63,6 +63,7 @@ impl Options {
         self.apply_valued_or_name(args, cursor, arg)
     }
 
+    /// Parses inline `--remote=<val>`, `--save=<val>`, or `--archive=<val>` flags into `self`.
     fn apply_inline_valued(&mut self, arg: &str) -> bool {
         if let Some(val) = arg
             .strip_prefix("--remote=")

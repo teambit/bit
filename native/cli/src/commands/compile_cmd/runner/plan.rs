@@ -78,7 +78,7 @@ impl Plan {
         self.links.publish(root)
     }
 }
-/// Ensures multi-component diagnostic ordering can be reproduced natively before committing compilation.
+/// Verifies that multi-component diagnostic ordering can be reproduced natively before committing compilation.
 fn validate_order(root: &Path, compiled: &[Compiled], options: &Options) -> io::Result<()> {
     let errors = compiled
         .iter()

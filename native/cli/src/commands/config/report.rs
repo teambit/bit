@@ -60,6 +60,7 @@ fn git(key: &str) -> String {
     parse_git_config(&text, key)
 }
 
+/// Extracts the last value assigned to `key` (case-insensitively) from `git config --list` output `text`.
 #[inline]
 fn parse_git_config(text: &str, key: &str) -> String {
     text.lines()
