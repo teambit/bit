@@ -5,6 +5,7 @@
 use super::{Allocation, Component, prepare, snapshots};
 use serde_json::json;
 
+/// Verifies that [`prepare`] preserves consumer log metadata, builder extension data, and flattened edges on detached stash versions.
 #[test]
 fn detached_version_preserves_consumer_log_builder_and_old_graph_identity() {
     let component = Component {

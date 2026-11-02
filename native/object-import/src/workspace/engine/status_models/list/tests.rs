@@ -5,6 +5,7 @@
 use super::{deprecated, lane_readme_of, parse_lane_heads};
 use serde_json::json;
 
+/// Verifies that [`deprecated`] and [`lane_readme_of`] extract flags and lane names only from core extension configs.
 #[test]
 fn reads_deprecation_and_lane_readmes_from_core_extensions() {
     let version = json!({"extensions": [

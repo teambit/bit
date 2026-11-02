@@ -5,6 +5,7 @@
 use super::{project, validate};
 use serde_json::json;
 
+/// Verifies that [`project`] normalizes legacy string dependency IDs without mutating the stored `Version` JSON.
 #[test]
 fn harmony_projection_normalizes_old_ids_without_mutating_stored_objects() {
     let stored = json!({"schema":"1.0.0", "dependencies":[{"id":{"scope":"scope","name":"dep","version":"1.0.0"},"relativePaths":[]}],

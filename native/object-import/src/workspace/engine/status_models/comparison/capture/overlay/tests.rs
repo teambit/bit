@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Temporary workspace fixture with a spooled callback overlay file for [`capture`] tests.
 #[derive(Debug)]
 struct Fixture(PathBuf);
 impl Fixture {

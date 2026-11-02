@@ -5,6 +5,7 @@
 use super::{Options, filter_pattern};
 use serde_json::json;
 
+/// Verifies that [`filter_pattern`] preserves new-before-modified candidate order and declines when no modified component matches.
 #[test]
 fn pattern_selection_preserves_new_before_modified_and_declines_empty_modified_match() {
     let existing = "scope/existing".to_owned();

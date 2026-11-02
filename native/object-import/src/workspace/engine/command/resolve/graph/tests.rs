@@ -5,6 +5,7 @@
 use super::edges;
 use serde_json::json;
 
+/// Verifies that [`edges`] upgrades aspect dependencies to `ext` edge type without reordering existing dependencies.
 #[test]
 fn aspect_edges_override_lifecycle_without_reordering_existing_dependency() {
     let root = json!({"scope":"scope","name":"root","version":"old"});

@@ -4,6 +4,7 @@
 
 use super::{Entry, filter};
 
+/// Builds a visible lane [`Entry`] fixture for `identity` with a synthetic 40-hex head.
 fn entry(identity: &str) -> Entry {
     Entry { identity: identity.into(), head: "a".repeat(40), hidden: false }
 }

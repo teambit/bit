@@ -6,6 +6,7 @@ use super::{enrich_packages, reports};
 use crate::command_import::lane::Entry;
 use serde_json::{Value, json};
 
+/// Verifies that [`enrich_packages`] populates `packageName` only for dependencies matching an exact resolver entry.
 #[test]
 fn scope_consumer_package_names_match_exact_resolver_identity() {
     let mut version = json!({"dependencies":[{"id":{"scope":"scope","name":"a","version":"1.0.0"},"relativePaths":[]},{"id":{"scope":"scope","name":"a","version":"2.0.0"},"relativePaths":[]}],"devDependencies":[{"id":{"scope":"scope","name":"a","version":"1.0.0"},"packageName":"preserved"},{"id":"scope/a@1.0.0","relativePaths":[]}],"extensions":[{"name":"teambit.dependencies/dependency-resolver","data":{"dependencies":[{"id":"scope/a@1.0.0","packageName":"@scope/a"}]}}]});

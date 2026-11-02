@@ -6,6 +6,7 @@ use super::{model, staged::lane_versions};
 use serde_json::{Value, json};
 use std::{fs, path::Path, time::SystemTime};
 
+/// Encodes and writes a `Version` object for `hash` and `value` into the loose object store under `dir`.
 fn write_version(dir: &Path, hash: &str, value: &Value) {
     fs::create_dir_all(dir.join(&hash[..2])).unwrap();
     fs::write(

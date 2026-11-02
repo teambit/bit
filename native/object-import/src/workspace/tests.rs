@@ -13,6 +13,7 @@ use serde_json::Value;
 
 use super::serve;
 
+/// Monotonic counter used by [`Directory`] to allocate isolated temporary workspace directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug)]

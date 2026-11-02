@@ -6,6 +6,7 @@ use super::{Directory, POOL, frame, serve};
 use serde_json::{Value, json};
 use std::io::Cursor;
 
+/// Executes a binary `read` request with a fresh snapshot state via [`raw_with`].
 fn raw(value: &Value) -> (Value, Vec<u8>) {
     raw_with(value, &mut crate::workspace::snapshots::State::default())
 }

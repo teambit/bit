@@ -5,6 +5,7 @@
 use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};
 
+/// Builds a synthetic staged index entry and component model pair for `scope/name` at `hash`.
 fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {
     (
         json!({"id":{"scope":scope,"name":name},"hash":hash}),

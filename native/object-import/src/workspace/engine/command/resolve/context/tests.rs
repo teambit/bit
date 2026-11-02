@@ -6,6 +6,7 @@ use super::{Prepare, load_models};
 use serde_json::{Value, json};
 use std::{io::Write, path::Path};
 
+/// Verifies that [`load_models`] loads lane component versions without requiring an unrelated `main` branch version object.
 #[test]
 fn lane_model_loading_does_not_require_unrelated_main_version() {
     let root = crate::workspace::engine::command::scratch::Directory::create().unwrap();

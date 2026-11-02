@@ -5,6 +5,7 @@
 use super::{Material, Participation, VersionState, object};
 use serde_json::json;
 
+/// Verifies that [`object`] local model updates record new tag versions, clear matching `orphanedVersions`, and mark local state.
 #[test]
 fn tag_model_keeps_object_identity_distinct_from_semantic_identity() {
     let old = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

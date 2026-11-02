@@ -4,6 +4,7 @@
 
 use super::{Prepare, checkout_lane::bitmap_identities, json, selected, validate};
 
+/// Builds a [`Prepare`] merge request fixture for the given component `pattern`.
 fn request(pattern: &str) -> Prepare {
     serde_json::from_value(json!({
         "root":"/workspace", "home":"/home", "globalRemotesFile":"/remotes",

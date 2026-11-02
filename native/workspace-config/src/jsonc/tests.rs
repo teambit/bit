@@ -9,6 +9,7 @@ use indexmap::IndexMap;
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 
+/// Verifies that [`Document::parse`] and [`Document::to_string`] match `comment-json` across all [`golden`] cases.
 #[test]
 fn round_trips_match_comment_json() {
     for (name, input, expected, second) in golden::CASES {

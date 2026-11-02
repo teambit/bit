@@ -7,6 +7,7 @@ use crate::workspace::engine::command::scratch;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
+/// Verifies that [`external`] computes complete adjacency lists and records [`Repository`] absence proofs for missing models.
 #[test]
 fn external_adjacency_is_complete_and_absent_models_remain_proven() {
     let directory = scratch::Directory::create().unwrap();

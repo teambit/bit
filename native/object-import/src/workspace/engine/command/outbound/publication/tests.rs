@@ -7,6 +7,7 @@ use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelByte
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+/// Builds a synthetic [`Selected`] component export entry for `scope/name` with `head`.
 fn selected(scope: &str, name: &str, head: &str) -> Selected {
     Selected {
         scope: scope.to_owned(),

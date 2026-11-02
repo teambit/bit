@@ -5,6 +5,7 @@
 use super::include_heads;
 use serde_json::json;
 
+/// Verifies that [`include_heads`] appends unique 40-hex dependency heads once and rejects malformed hashes.
 #[test]
 fn context_includes_dependency_heads_once_and_rejects_invalid_heads() {
     let tracked = "a".repeat(40);

@@ -5,6 +5,7 @@
 use super::{Baseline, Prepared, Row, activate_inactive, workspace_id};
 use serde_json::{Value, json};
 
+/// Builds a synthetic [`Row`] fixture for `identity` with `ours_conflict`.
 fn row(identity: &str, ours_conflict: bool) -> Row {
     Row {
         identity: identity.into(),

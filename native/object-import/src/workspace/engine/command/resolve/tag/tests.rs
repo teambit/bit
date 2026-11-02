@@ -5,6 +5,7 @@
 use super::pattern_order;
 use serde_json::json;
 
+/// Verifies that [`pattern_order`] preserves candidate and outer pattern order across overlapping patterns without duplicates.
 #[test]
 fn patterns_preserve_candidate_and_outer_order_with_overlap() {
     let candidates = vec!["scope/new".into(), "scope/old".into()];

@@ -7,6 +7,7 @@ use crate::workspace::engine::{command::scratch::Directory, dependency_graph::pr
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+/// Builds a synthetic builder artifact receipt JSON payload for `root` and `file`.
 fn receipt(root: &Path, file: &Path) -> Value {
     json!({"artifactRoot":root,"artifacts":[{"identity":"scope/alpha","artifactIndex":0,"fileIndex":0,"relativePath":"dist/index.js","path":file}],
         "versions":[{"identity":"scope/alpha","buildData":{"extensions":[{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"__native_artifact_pending__"}]}]}}]}}]})

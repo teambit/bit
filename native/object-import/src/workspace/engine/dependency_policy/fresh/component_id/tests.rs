@@ -4,6 +4,7 @@
 
 use super::{serialize, set_version};
 use serde_json::json;
+/// Verifies that [`serialize`] preserves canonical key ordering for scoped and default-scope component IDs.
 #[test]
 fn scoped_and_default_scope_serialization_match_actual_constructor_order() {
     for raw in [

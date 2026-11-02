@@ -12,6 +12,7 @@ use std::{
 
 use js_json::{Value, stringify};
 
+/// Advances the xorshift64 pseudo-random `seed` and returns the next deterministic `u64` value.
 fn next(seed: &mut u64) -> u64 {
     *seed ^= *seed << 13;
     *seed ^= *seed >> 7;

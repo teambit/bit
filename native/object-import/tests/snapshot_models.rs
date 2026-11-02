@@ -9,6 +9,7 @@ pub mod snapshot_projection;
 
 use std::process::Command;
 
+/// Verifies that native `Component`, `Lane`, and `VersionHistory` serialization via [`snapshot_projection`] matches `@teambit/objects`.
 #[test]
 fn real_component_lane_and_history_serializers_and_ids_match() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

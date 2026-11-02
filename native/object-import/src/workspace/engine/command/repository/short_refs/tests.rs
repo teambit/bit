@@ -6,6 +6,7 @@ use super::{matching_for_separator, unique};
 use crate::workspace::engine::command::scratch::Directory;
 use std::fs;
 
+/// Verifies that [`matching_for_separator`] and [`unique`] deduplicate retained objects and report ambiguous or missing short hashes.
 #[test]
 fn short_refs_include_all_object_names_and_deduplicate_retained_objects() {
     let root = Directory::create().unwrap();

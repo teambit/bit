@@ -11,6 +11,7 @@ use super::{
 use serde_json::json;
 use std::path::Path;
 
+/// Verifies that [`validate_lane`] accepts `forkedFrom` lane provenance while rejecting non-empty `updateDependents`.
 #[test]
 fn forked_lane_provenance_does_not_change_checkout_eligibility() {
     let id = Id { scope: "scope".into(), name: "child".into() };

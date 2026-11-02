@@ -4,6 +4,7 @@
 
 use super::{Prepare, select};
 use serde_json::json;
+/// Builds a [`Prepare`] `componentAbort` request fixture with optional `pattern`.
 fn request(pattern: Option<&str>) -> Prepare {
     serde_json::from_value(json!({"root":"/workspace","home":"/home/test","globalRemotesFile":"/remotes","operation":"componentAbort","options":{"pattern":pattern,"skipDependencyInstallation":true}})).unwrap()
 }

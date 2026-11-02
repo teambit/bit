@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter used by [`Scratch`] to create isolated temporary export prefilter directories.
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
 #[derive(Debug)]

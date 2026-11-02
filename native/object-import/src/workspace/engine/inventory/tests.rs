@@ -3,6 +3,7 @@
 //! Confirms that excessive path nesting or directory prefix counts decline before policy evaluation while root-level files pass.
 
 use super::validate_prefixes;
+/// Verifies that [`validate_prefixes`] enforces maximum directory depth and prefix count limits before policy evaluation.
 #[test]
 fn parent_budget_declines_before_recursive_policy_evaluation() {
     assert!(validate_prefixes(&[format!("{}file", "a/".repeat(129))]).is_err());

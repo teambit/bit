@@ -5,6 +5,7 @@
 use super::select;
 use serde_json::json;
 
+/// Verifies that [`select`] distinguishes implicit pending insertion order from explicit workspace target order.
 #[test]
 fn pending_order_and_explicit_workspace_order_are_distinct() {
     let targets = vec![json!({"identity":"s/a"}), json!({"identity":"s/b"})];

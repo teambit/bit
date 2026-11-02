@@ -6,6 +6,7 @@ use super::{Retained, bitmap};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+/// Prepares a two-phase `.bitmap` checkout and [`Retained`] lane switch continuation fixture in `root`.
 fn prepare(root: &Path, publish_checkout: bool) -> (bitmap::Prepared, Retained) {
     fs::create_dir_all(root.join(".bit")).unwrap();
     let original = serde_json::to_vec(&json!({"a":{"name":"a","scope":"s",

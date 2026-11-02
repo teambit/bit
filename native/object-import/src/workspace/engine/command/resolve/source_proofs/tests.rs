@@ -5,6 +5,7 @@
 use super::{proof, retain, snapshots};
 use serde_json::json;
 
+/// Verifies that [`retain`] binds BOM-stripped source observations in [`snapshots`] to their raw on-disk hash until commit.
 #[test]
 fn captured_bom_source_remains_bound_until_publication() {
     let root = crate::workspace::engine::command::scratch::Directory::create().unwrap();

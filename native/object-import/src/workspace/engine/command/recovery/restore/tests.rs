@@ -4,6 +4,7 @@
 
 use super::{Operation, prepare, proof};
 use crate::workspace::engine::command::scratch;
+/// Verifies that [`Operation::LaneAbort`] [`prepare`] removes only newly added component roots and validates backup permissions.
 #[test]
 #[cfg(target_os = "linux")]
 fn restore_removes_only_new_roots_and_preserves_backup_bytes() {

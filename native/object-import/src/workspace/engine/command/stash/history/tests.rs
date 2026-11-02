@@ -7,6 +7,7 @@ use crate::read_budget::Budget;
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;
 
+/// Verifies that [`verify_published`] accepts matching zlib-compressed `VersionHistory` bytes and rejects mutated payloads.
 #[test]
 fn replaced_history_cannot_become_an_accepted_published_proof() {
     let expected = b"VersionHistory abc 2\0{}";

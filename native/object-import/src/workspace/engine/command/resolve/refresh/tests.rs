@@ -6,6 +6,7 @@ use super::{SourceChange, replace_owned_proofs};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};
 use std::fs;
 
+/// Verifies that [`replace_owned_proofs`] updates only callback-owned [`SourceChange`] proofs and rejects unowned mutations.
 #[test]
 fn callbacks_can_replace_only_their_validated_source_and_cannot_reset_other_proofs() {
     let directory = Directory::create().unwrap();

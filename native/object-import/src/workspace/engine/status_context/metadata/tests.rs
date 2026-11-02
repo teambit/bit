@@ -5,6 +5,7 @@
 use super::{component_id_matches, configuration};
 use serde_json::json;
 
+/// Verifies that [`configuration`] admits valid environment shapes and declines non-string `env` values.
 #[test]
 fn environment_shapes_are_admitted_but_invalid_callbacks_decline() {
     let value = json!({"componentId":{"scope":"scope.test","name":"component"},"propagate":false,"extensions":{"teambit.envs/envs":{},"teambit.semantics/schema":{},"teambit.dependencies/dependency-resolver":{}}});

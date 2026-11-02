@@ -5,6 +5,7 @@
 use super::{MAX_BYTES, MAX_FILES, MAX_TOKEN, Observation, State};
 use std::path::PathBuf;
 
+/// Builds a synthetic [`Observation`] fixture of `bytes` zero bytes for `workspace/file`.
 fn snapshot(bytes: usize) -> Observation {
     Observation {
         path: PathBuf::from("workspace/file"),

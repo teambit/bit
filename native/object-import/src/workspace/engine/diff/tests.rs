@@ -4,6 +4,7 @@
 
 use super::{equivalent, frozen};
 
+/// Verifies that [`equivalent`] matches canonical normalized file hash equality across EOL, binary, and missing files.
 #[test]
 fn byte_equality_preserves_eol_binary_and_missing_file_semantics() {
     let cases: &[Option<&[u8]>] = &[

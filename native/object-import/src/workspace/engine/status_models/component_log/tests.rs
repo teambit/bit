@@ -5,6 +5,7 @@
 use super::{row, tags};
 use serde_json::json;
 
+/// Verifies that [`tags`] gives normal `versions` entries precedence over `orphanedVersions` labels.
 #[test]
 fn normal_tags_take_precedence_over_orphaned_labels() {
     let hash = "a".repeat(40);

@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter used by [`Fixture`] to allocate isolated temporary dependency graph directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 #[derive(Debug)]
 struct Fixture(PathBuf);

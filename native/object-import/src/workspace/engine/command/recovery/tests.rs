@@ -8,6 +8,7 @@ use super::{
 };
 use serde_json::json;
 use std::{fs, path::Path};
+/// Builds a retained [`State`] recovery fixture for `root` with `captured` proof.
 fn restored(root: &Path, captured: proof::Proof) -> State {
     let bitmap = fs::read(root.join(".bitmap")).unwrap();
     let mut restore = restore::prepare(root, Operation::ComponentAbort, &mut Vec::new()).unwrap();

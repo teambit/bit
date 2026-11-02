@@ -19,6 +19,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter used by [`Fixture`] to create isolated temporary object store directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Fixture(std::path::PathBuf);

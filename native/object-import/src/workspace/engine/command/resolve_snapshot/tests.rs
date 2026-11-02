@@ -5,6 +5,7 @@
 use super::{Material, Participation, VersionState, allocations};
 use serde_json::json;
 
+/// Verifies that [`allocations`] rejects receipts where two distinct [`Material`] components share the same snapshot hash.
 #[test]
 fn distinct_components_cannot_share_a_snapshot_hash() {
     let material = |identity: &str| Material {

@@ -5,6 +5,7 @@
 use super::{Request, read};
 use serde_json::{Value, json};
 
+/// Builds a baseline status result [`Request`] JSON fixture with `scope/alpha` and dependent `scope/beta`.
 fn fixture() -> Value {
     json!({"currentLaneId":"scope/main","targets":[
         {"identity":"scope/alpha","version":"1.0.0","modified":false,"issues":[],"dependencies":[]},

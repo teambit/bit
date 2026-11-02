@@ -5,6 +5,7 @@
 use super::tag_data;
 use serde_json::{Value, json};
 
+/// Verifies that [`tag_data`] resolves first-match explicit `--versions-file` entries, prerelease IDs, and default release types.
 #[test]
 fn explicit_first_match_and_default_cover_selected_and_automatic_components() {
     let file = json!({"entries":[{"identity":"remote/foo","version":"2.0.0-beta.1"},{"identity":"remote/foo","version":"3.0.0"}],"default":"minor"});

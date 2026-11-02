@@ -5,6 +5,7 @@
 use super::{Request, apply};
 use serde_json::{Value, json};
 
+/// Builds a baseline dependency policy finalization JSON request payload.
 fn input() -> Value {
     json!({
         "state": {"entries": [], "packages": [{}, {}, {}], "components": [[], [], []]},

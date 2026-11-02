@@ -11,6 +11,7 @@ use std::process::Command;
 
 use js_json::Value;
 
+/// Verifies that native canonical `Version` projection and semantic hashing via [`snapshot_projection`] match `@teambit/objects`.
 #[test]
 fn real_default_versions_match_native_canonical_projection() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

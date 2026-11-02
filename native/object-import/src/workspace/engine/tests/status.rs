@@ -6,6 +6,7 @@ use serde_json::json;
 
 use super::response;
 
+/// Verifies that `fileStatus` [`response`] preserves target ordering and matches first-seen current file hashes.
 #[test]
 fn file_status_preserves_first_matches_target_order_and_raw_content_identity() {
     let first = json!({"relativePath":"same.js","hash":"a".repeat(40)});

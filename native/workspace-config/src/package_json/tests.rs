@@ -4,6 +4,7 @@
 
 use super::{detect_indent, detect_newline};
 
+/// Verifies that [`detect_indent`] matches `detect-indent` across space, tab, single-line, and tie-break inputs.
 #[test]
 fn detects_indentation_like_detect_indent() {
     assert_eq!(detect_indent("{\n  \"a\": {\n    \"b\": 1\n  }\n}\n"), "  ");

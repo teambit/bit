@@ -8,6 +8,7 @@ use super::{
 };
 use serde_json::{Value, json};
 
+/// Builds a synthetic [`Row`] fixture with `fast_forward` for [`capture_issues`] tests.
 fn row(fast_forward: bool) -> Row {
     Row {
         identity: "scope/component".into(),

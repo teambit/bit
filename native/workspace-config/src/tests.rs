@@ -5,6 +5,7 @@
 use super::{environment_key, merge_layers, parse_jsonc};
 use serde_json::{Value, json};
 
+/// Verifies that [`merge_layers`] replaces values from later origins while preserving key order and empty/null values.
 #[test]
 fn later_origins_replace_values_without_reordering_keys_or_discarding_empty_values() {
     let global = json!({"first":"global","empty":"old","null":true});

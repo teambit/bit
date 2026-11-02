@@ -4,6 +4,7 @@
 
 use super::{Directory, response};
 use serde_json::json;
+/// Verifies that parallel file batch reads via [`response`] preserve file order, raw hashes, and normalized hashes.
 #[test]
 fn parallel_reads_match_serial_order_bytes_and_three_hashes() {
     let directory = Directory::new();

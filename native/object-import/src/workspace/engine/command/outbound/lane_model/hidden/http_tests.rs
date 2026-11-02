@@ -15,6 +15,7 @@ use std::{
     thread,
 };
 
+/// Spawns a single-request local HTTP test server returning `status` and `body`, capturing the request payload.
 fn serve(status: &str, body: Vec<u8>) -> (String, thread::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

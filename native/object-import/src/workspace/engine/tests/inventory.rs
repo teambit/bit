@@ -7,6 +7,7 @@ use crate::workspace::{engine::serve, snapshots::State};
 use serde_json::{Value, json};
 use std::io::Cursor;
 
+/// Sends a framed JSON `input` request through [`serve`] using `owner` and returns the parsed JSON response.
 fn request(input: &Value, owner: &mut State) -> Value {
     let mut output = Vec::new();
     serve(&mut Cursor::new(frame(input)), &mut output, &POOL, owner).unwrap();

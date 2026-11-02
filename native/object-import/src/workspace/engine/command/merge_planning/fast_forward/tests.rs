@@ -5,6 +5,7 @@
 use super::{model, selection};
 use serde_json::json;
 
+/// Verifies that fast-forward merge staging via [`model`] defers object store writes until publication commit.
 #[test]
 fn fast_forward_stages_only_model_and_defers_publication() {
     use std::{fs, io::Read};

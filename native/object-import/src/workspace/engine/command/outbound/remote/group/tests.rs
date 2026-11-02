@@ -4,6 +4,7 @@
 
 use super::{name, parse};
 use serde_json::json;
+/// Verifies that [`parse`] matches the first exact `/etc/group` entry, ignores GID `0`, and reports missing or malformed groups.
 #[test]
 fn matches_the_first_exact_group_and_preserves_zero_without_an_override() {
     let groups = "root:x:0:\nfoo-extra:x:42:\nfoo:x:43:\nfoo:x:44:";

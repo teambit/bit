@@ -6,6 +6,7 @@ use super::{canonical, failure_data, is_canonical, with_progress};
 use serde_json::json;
 use std::io;
 
+/// Verifies that [`with_progress`] attaches progress data to [`canonical`] errors without changing their message or class.
 #[test]
 fn canonical_failure_retains_actual_progress_without_changing_message_or_class() {
     let progress = json!({"bitmapCount":2,"imports":[{"ids":["scope/comp"]}]});

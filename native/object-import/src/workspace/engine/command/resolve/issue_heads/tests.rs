@@ -5,6 +5,7 @@
 use super::{Repository, capture};
 use serde_json::json;
 
+/// Verifies that [`capture`] records absence proofs for missing issue heads and rejects corrupt existing objects.
 #[test]
 fn missing_issue_head_is_proven_and_corrupt_existing_head_is_not_absence() {
     let root = crate::workspace::engine::command::scratch::Directory::create().unwrap();

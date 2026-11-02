@@ -5,6 +5,7 @@
 use bit_object_import::plus_version::{is_plus, resolve};
 use std::process::Command;
 
+/// Verifies that [`is_plus`] and [`resolve`] match `@teambit/dependency-resolver` across placeholder and semver inputs.
 #[test]
 fn placeholders_match_released_dependency_resolver() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

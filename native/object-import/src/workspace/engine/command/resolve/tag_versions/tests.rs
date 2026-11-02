@@ -6,6 +6,7 @@ use super::{Material, plan};
 use crate::workspace::engine::command::resolve_snapshot::{Participation, VersionState};
 use serde_json::{Value, json};
 
+/// Builds a synthetic [`Material`] fixture for `identity` with `automatic` participation and `tags` version map.
 fn material(identity: &str, automatic: bool, tags: &Value) -> Material {
     Material {
         identity: identity.into(),

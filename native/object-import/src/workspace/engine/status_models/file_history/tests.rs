@@ -5,6 +5,7 @@
 use super::{file_hash, validate_file};
 use serde_json::json;
 
+/// Verifies that [`validate_file`] rejects parent traversal, absolute paths, backslashes, and empty strings.
 #[test]
 fn file_history_paths_cannot_escape_a_component() {
     assert!(validate_file("src/index.ts").is_ok());

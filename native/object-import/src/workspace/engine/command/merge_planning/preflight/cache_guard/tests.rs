@@ -4,6 +4,7 @@
 
 use serde_json::json;
 
+/// Verifies that preflight cache rekeying requires identical file classification, `mainFile`, extensions, and package dependencies.
 #[test]
 fn cache_rekey_requires_same_file_classification_and_component_policy() {
     let current = json!({"mainFile":"index.js","bindingPrefix":"@scope","dependencies":[],

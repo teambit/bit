@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter used by [`Fixture`] to allocate isolated temporary status context workspaces.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Fixture(PathBuf);

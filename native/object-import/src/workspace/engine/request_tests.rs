@@ -4,6 +4,7 @@
 
 use super::Request;
 
+/// Verifies that `componentLog` [`Request`] payloads deserialize cleanly both on `main` and on named lanes.
 #[test]
 fn component_log_request_decodes_on_main_and_lane() {
     for input in [

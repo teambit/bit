@@ -5,6 +5,7 @@
 use super::{HashMap, Repository, key, traverse};
 use serde_json::json;
 
+/// Verifies that [`traverse`] builds flattened dependencies and graph edges using existing component versions.
 #[test]
 fn cross_component_graph_uses_existing_versions_instead_of_new_snapshot_markers() {
     let first = json!({"scope":"scope","name":"first","version":"1.0.0"});

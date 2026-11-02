@@ -13,6 +13,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Monotonic counter used by [`Fixture`] to allocate isolated temporary source overlay directories.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Fixture(PathBuf);

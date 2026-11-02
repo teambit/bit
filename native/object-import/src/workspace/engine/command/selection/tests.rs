@@ -6,6 +6,7 @@ use super::{Options, Repository, Selection, select};
 use serde_json::{Value, json};
 use std::path::Path;
 
+/// Builds checkout [`Options`] for target `to` with dependency installation skipped.
 fn options(to: &str) -> Options {
     serde_json::from_value(json!({"to":to,"skipDependencyInstallation":true})).unwrap()
 }

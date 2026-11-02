@@ -7,6 +7,7 @@ use crate::workspace::engine::command::{policy::Row, scratch};
 use serde_json::{Value, json};
 use std::{fs, io::Write, path::Path};
 
+/// Writes a zlib-compressed `Version` object with `hash` and JSON `value` under `root/.bit/objects`.
 fn store(root: &Path, hash: &str, value: &Value) {
     let bytes = serde_json::to_vec(value).unwrap();
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());

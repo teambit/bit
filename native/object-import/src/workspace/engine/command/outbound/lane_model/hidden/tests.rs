@@ -7,6 +7,7 @@ use serde_json::json;
 use sha1::{Digest, Sha1};
 use std::path::Path;
 
+/// Formats a synthetic `example.scope/<name>@<hash>` dependent entry string.
 fn row(name: &str, hash: &str) -> String {
     format!("example.scope/{name}@{hash}")
 }

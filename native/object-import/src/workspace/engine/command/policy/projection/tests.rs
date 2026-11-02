@@ -5,6 +5,7 @@
 use super::{Defaults, configured_entries, dependencies, extensions};
 use serde_json::{Value, json};
 
+/// Returns default node aspect [`Defaults`] fixture data for policy projection tests.
 fn defaults() -> Defaults {
     serde_json::from_value(json!({"env":{"id":"teambit.harmony/node","data":{"type":"node","id":"teambit.harmony/node","icon":"node.svg"}},
         "policyEntries":[{"dependencyId":"@types/node","source":"env","hidden":false,"force":true,"lifecycleType":"dev","value":{"version":"22.10.5"}}],
