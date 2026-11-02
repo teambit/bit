@@ -1,4 +1,4 @@
-//! Workspace dependency diagnosis text report ([`entries`], [`locale_number`], [`table`]).
+//! Workspace dependency diagnosis text report ([`entries`], [`locale_number`], [`table`], [`WorkspaceDepsContext`]).
 
 use super::{entries, locale_number, table};
 use crate::{

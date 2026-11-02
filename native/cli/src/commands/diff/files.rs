@@ -1,4 +1,4 @@
-//! The file diffs of `bit diff` ([`format`], [`diff`]): `formatFileDiff` of
+//! The file diffs of `bit diff` ([`format`], [`diff`], `files.ts`): `formatFileDiff` of
 //! `@teambit/legacy.component-diff`, and `diffFiles`, which runs
 //! `git diff --no-index --color` on two files.
 

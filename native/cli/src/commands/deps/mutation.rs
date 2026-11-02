@@ -1,4 +1,4 @@
-//! `.bitmap` and `component.json` [`Subcommand`] mutation helpers ([`BitmapMutation`], [`apply_dep_resolver_config`]) for `bit deps`.
+//! `.bitmap` and `component.json` [`Subcommand`] mutation helpers ([`BitmapMutation`], [`apply_dep_resolver_config`]) for `bit deps` (`bit dependencies`).
 
 use super::Subcommand;
 use crate::{

@@ -1,4 +1,6 @@
 //! Atomic output file writing ([`Emitted`]) and [`failure`] reporting for `bit compile`.
+//!
+//! Validates source files via [`validate_sources`] and writes compiled dist artifacts.
 
 use super::Emitted;
 use crate::commands::workspace_command::filesystem_error::failure;

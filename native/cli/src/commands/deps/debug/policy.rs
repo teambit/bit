@@ -1,4 +1,4 @@
-//! Supported [`ManualPolicy`] workspace policy shapes ([`manual_version`]) for dependency debug output.
+//! Supported [`ManualPolicy`] workspace policy shapes ([`parse_manual_fields`], [`manual_version`]) for dependency debug output.
 
 use super::{ManualPolicy, NODE_DEV, manual_version};
 use crate::commands::scope_set::Failure;

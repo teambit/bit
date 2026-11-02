@@ -1,4 +1,4 @@
-//! The dependency sections ([`Labels`]) of `diffMetadata`: `packageDependenciesOutput`,
+//! The dependency sections ([`Labels`], [`Id`]) of `diffMetadata`: `packageDependenciesOutput`,
 //! `componentDependenciesOutput`, and `formatDepsDiffAsPlainText`.
 
 use super::{

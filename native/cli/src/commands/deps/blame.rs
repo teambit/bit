@@ -1,4 +1,4 @@
-//! Local version history ([`WorkspaceDepsContext`], [`ResolvedDep`]) for `bit deps blame <component> <dependency>`.
+//! Local version history ([`run`], [`WorkspaceDepsContext`], [`ResolvedDep`]) for `bit deps blame <component> <dependency>`.
 
 use super::resolve::{Identity, ResolvedDep, WorkspaceDepsContext};
 use crate::{

@@ -1,4 +1,6 @@
 //! Native `bit cli generate --docs` with `--metadata`, `--skill`, and `--json` options (`cli.cmd.ts`).
+//!
+//! Validates `--skill` arguments and runs [`NodeCli`] doc generation when required.
 
 #[cfg(test)]
 mod tests;

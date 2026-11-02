@@ -1,4 +1,4 @@
-//! Workspace component dependency resolution ([`WorkspaceDepsContext`], [`ResolvedDep`]) for `bit deps`.
+//! Workspace component dependency resolution ([`WorkspaceDepsContext`], [`ResolvedDep`], [`CORE_ASPECT_IDS`]) for `bit deps`.
 
 use crate::commands::scope_set::Failure;
 use bit_install::{

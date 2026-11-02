@@ -1,4 +1,6 @@
 //! `CatCmd.report` and `CatCmd.json` ([`Options`]) presentation of native Source bodies.
+//!
+//! Renders file contents and component configuration via [`render`].
 
 use super::Options;
 use crate::commands::status::js::decline;

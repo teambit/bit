@@ -1,4 +1,6 @@
 //! JSON entry builders ([`build_component_json_obj`]) for `bit cat-scope [-j|--json] [-e|--json-extra]`.
+//!
+//! Projects stored `ModelComponent` objects into `toObject()` and `id`-enriched JSON maps.
 
 use serde_json::{Map, Value, json};
 

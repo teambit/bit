@@ -1,4 +1,6 @@
 //! Compiler output [`Emitted`] file collection and [`Diagnostic`] mapping for [`Component`]s.
+//!
+//! Invokes [`tool::compile`] via [`prepare`] and groups results into [`Compiled`] component entries.
 
 use super::{Compiled, Diagnostic, Emitted, tool};
 use crate::commands::workspace_command::component_service::Component;

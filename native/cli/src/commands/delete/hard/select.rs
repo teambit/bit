@@ -1,4 +1,6 @@
 //! `getRemoteBitIdsToRemove` ([`Context`]): literal IDs or a remote wildcard inventory.
+//!
+//! Exposes [`components`] to resolve remote component IDs matching a literal or glob pattern.
 
 #[cfg(test)]
 mod tests;

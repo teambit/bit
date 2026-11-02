@@ -1,4 +1,4 @@
-//! `getGitExecutablePath` ([`executable`]): the [`EffectiveConfig`] `git_path`, or `git`.
+//! `getGitExecutablePath` ([`executable`], [`ScopeJson`]): the [`EffectiveConfig`] `git_path`, or `git`.
 
 use crate::commands::status::cache::cache_root;
 use bit_install::config::{

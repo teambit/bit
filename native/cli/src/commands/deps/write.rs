@@ -1,4 +1,4 @@
-//! `bit deps write [--target=workspace.jsonc|package.json]` ([`WriteTarget`], [`WorkspaceDepsContext`]) implementation.
+//! `bit deps write [--target=workspace.jsonc|package.json]` ([`WriteTarget`], [`WorkspaceDepsContext`]) implementation (`dependencies-cmd.ts`).
 
 use super::resolve::WorkspaceDepsContext;
 use crate::{

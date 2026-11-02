@@ -1,4 +1,6 @@
 //! Group all [`ScopeGuard`] scopes, choose the direct or hub [`Remote`] route, and drain every launched [`Plan`] delete.
+//!
+//! Exposes [`Prepared`] and [`prepare`] for executing remote hard-delete requests.
 
 use super::Context;
 use bit_client_transfer::{http::Network, remotes::Remote};

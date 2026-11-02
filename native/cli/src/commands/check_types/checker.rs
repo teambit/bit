@@ -1,4 +1,6 @@
 //! Native `TypeScript` type checking ([`Options`], [`emit_empty_check_types`]) for workspace components.
+//!
+//! Runs [`try_run`] over matching [`WorkspaceComponent`] entries and formats diagnostics.
 
 use super::{Options, emit_empty_check_types};
 use crate::{

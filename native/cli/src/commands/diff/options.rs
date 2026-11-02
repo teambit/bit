@@ -1,4 +1,4 @@
-//! The workspace diff [`Options`] and [`Range`] arguments whose selection and output are owned here.
+//! The workspace diff [`Options`], [`Output`], and [`Range`] arguments whose selection and output are owned here.
 
 #[derive(Default)]
 pub(super) struct Options {

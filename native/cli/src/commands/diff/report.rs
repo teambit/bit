@@ -1,4 +1,4 @@
-//! `filterDiffResults` and `outputDiffResultsFormatted` ([`tables`]) of component-diff.
+//! `filterDiffResults` ([`filtered`]) and `outputDiffResultsFormatted` ([`tables`]) of component-diff.
 
 mod tables;
 #[cfg(test)]

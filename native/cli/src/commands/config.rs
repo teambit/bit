@@ -1,4 +1,6 @@
 //! `ConfigCmd` ([`options`], [`report`], [`stores`]) reads and edits the same global, scope, and workspace stores as `ConfigStoreMain`.
+//!
+//! Dispatches `config get`, `config set`, `config del`, and `config list`.
 mod options;
 mod report;
 mod stores;

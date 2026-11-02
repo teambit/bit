@@ -1,4 +1,6 @@
 //! Git remote [`Repository`] interpretation used only to render the onboarding checklist.
+//!
+//! Extracts [`host`] and owner/repository segments from SSH and HTTPS remote URLs.
 use reqwest::Url;
 use std::env;
 

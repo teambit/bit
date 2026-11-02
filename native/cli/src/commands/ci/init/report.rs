@@ -1,4 +1,6 @@
 //! `renderInitReport` ([`Report`], [`File`]): the exact files and manual commands required for CI onboarding.
+//!
+//! Defines [`Target`] and [`Changes`] structures for formatting `bit ci init` output.
 use super::{remote, shell_word};
 use crate::commands::color::Chalk;
 

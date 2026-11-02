@@ -1,4 +1,6 @@
 //! [`DepGraph`] model and [`render_honeywell_table`] rendering for `bit dependents` (`scopes/dependencies/dependencies/template.ts`).
+//!
+//! Computes BFS [`DependentInfo`] rows and formats workspace and scope dependent tables.
 
 use crate::commands::{color::Chalk, list::table::strip_sgr};
 use serde::Serialize;

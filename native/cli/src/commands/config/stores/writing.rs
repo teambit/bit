@@ -1,4 +1,6 @@
 //! [`Store`] persistence follows `GlobalConfig`, `ScopeJson`, and `WorkspaceConfig` [`Document`]s independently.
+//!
+//! Exposes [`write`] to persist updated configuration stores atomically.
 use super::{Document, Map, Store, Value, aspect};
 use std::{
     fs,

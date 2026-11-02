@@ -1,4 +1,4 @@
-//! [`render`] output formatting for [`Plan`] and [`Options`] in `bit deprecate` and `bit undeprecate`.
+//! [`render`] output formatting for [`Plan`] and [`Options`] in `bit deprecate` and `bit undeprecate` ([`Formatter`]).
 
 use super::{Formatter, Plan, options::Options};
 pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Formatter) -> String {

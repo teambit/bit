@@ -1,4 +1,6 @@
 //! Pin a deleted lane dependency through the shared Rust [`Document`] workspace policy editor ([`edit_workspace_config`]).
+//!
+//! Defines [`Policy`] to stage and commit `workspace.jsonc` dependency pins for [`Pin`]s.
 
 use crate::commands::workspace_command::format::Formatter;
 use bit_install::{

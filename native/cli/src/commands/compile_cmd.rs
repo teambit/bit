@@ -1,4 +1,6 @@
 //! Native `bit compile [component-names...]` (`scopes/compilation/compiler/compiler.cmd.ts`, `--changed`, `--verbose`, `--json`).
+//!
+//! Parses [`Options`] and delegates component compilation to [`runner`] and [`syntax`].
 
 pub(in crate::commands) mod syntax;
 

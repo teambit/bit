@@ -1,6 +1,6 @@
 //! Native `bit create <template-name> <component-names...>` (`CreateCmd`, `--scope`, `--namespace`, `--aspect`, `--env`).
 //!
-//! Validates CLI arguments, workspace presence, `--scope` format, and
+//! Validates CLI arguments ([`Options`]), workspace presence, `--scope` format, and
 //! same-name-as-template errors natively before delegating template generation
 //! and aspect loading to the Node.js CLI when needed.
 

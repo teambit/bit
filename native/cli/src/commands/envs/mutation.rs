@@ -1,4 +1,4 @@
-//! Environment assignment mutations (`set`, `unset`, [`replace`], [`update`]) across `.bitmap` and `component.json`.
+//! Environment assignment mutations (`set`, `unset`, [`replace`], [`update`], [`EnvBatch`]) across `.bitmap` and `component.json`.
 
 mod replace;
 mod update;

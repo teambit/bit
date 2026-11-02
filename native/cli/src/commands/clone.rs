@@ -1,4 +1,6 @@
 //! Native `bit clone <component-id> [dir]` (`scopes/workspace/workspace-root/clone.cmd.ts`, [`Command`]).
+//!
+//! Parses [`Options`] and initializes a workspace before importing the target component or lane.
 
 #[cfg(test)]
 mod tests;

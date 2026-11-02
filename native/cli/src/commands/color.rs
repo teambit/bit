@@ -1,5 +1,7 @@
 //! chalk 4.1.2 ([`Chalk`]) as the Node.js CLI's process sets it up: whether stdout gets
 //! colors (`supports-color` 7.2.0), and how `chalk.red`/`green`/`bold` wrap text.
+//!
+//! Detects terminal and flag-based color support and provides ANSI [`Style`] wrappers.
 
 #[cfg(test)]
 mod color_tests;

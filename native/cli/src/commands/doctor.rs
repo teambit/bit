@@ -1,4 +1,4 @@
-//! Native `bit doctor` built-in configuration, executable, filesystem, and repository diagnostics.
+//! Native `bit doctor` ([`COMMAND`], [`Context`], [`Options`]) built-in configuration, executable, filesystem, and repository diagnostics.
 mod archive;
 mod catalog;
 mod checks;

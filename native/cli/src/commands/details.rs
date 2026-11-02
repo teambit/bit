@@ -1,4 +1,4 @@
-//! Native `bit details` (`DetailsCmd` in `scopes/harmony/cli/details.cmd.ts`, [`Command`], [`Formatter`]).
+//! Native `bit details` (`DetailsCmd` in `scopes/harmony/cli/details.cmd.ts`, [`COMMAND`], [`Formatter`]).
 
 #[cfg(test)]
 mod tests;

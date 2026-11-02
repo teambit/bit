@@ -1,4 +1,6 @@
 //! Invoke the external `TypeScript` compiler ([`Target`]) without importing Bit runtime modules.
+//!
+//! Runs [`compile`] via `tool.cjs` using the bundled React/TypeScript `tsconfig.json`.
 use crate::discovery::{self, Target};
 use serde_json::{Value, json};
 use std::{

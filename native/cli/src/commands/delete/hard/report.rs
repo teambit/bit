@@ -1,4 +1,6 @@
 //! Published `removeTemplate` ([`Formatter`], [`Chalk`]) for remote hard-delete receipts.
+//!
+//! Formats [`components`] output sections for removed, lane-removed, dependent, and missing IDs.
 
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;

@@ -1,6 +1,8 @@
 //! The native checkout grammar ([`Options`], [`Target`]): the unambiguous subset
 //! of `bit checkout <to> [component-pattern]` that native planning accepts.
 //! Anything else is `None`, and the Node.js CLI runs the command.
+//!
+//! Defines [`Execution`] flags and [`numeric_target`] normalization.
 
 mod numeric_target;
 #[cfg(test)]

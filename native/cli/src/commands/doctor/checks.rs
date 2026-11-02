@@ -1,4 +1,4 @@
-//! Built-in [`Diagnosis`] dispatch ([`examine`], [`Context`]), preserving published per-check result shapes.
+//! Built-in [`Diagnosis`] dispatch ([`examine`], [`Context`], [`store`], [`vendors`]), preserving published per-check result shapes.
 use super::{catalog::Diagnosis, context::Context, store, vendors};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path, process::Command};

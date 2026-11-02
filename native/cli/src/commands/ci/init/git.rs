@@ -1,4 +1,6 @@
 //! Read-only Git facts for the `bit ci init` onboarding plan.
+//!
+//! Queries [`origin`], [`repository_root`], [`commits`], and [`default_branch`].
 #[cfg(test)]
 mod tests;
 

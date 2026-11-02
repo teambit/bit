@@ -1,4 +1,4 @@
-//! Native `bit eject-conf <pattern> [-p|--propagate] [-o|--override] [-j|--json]` (`scopes/workspace/workspace/eject-conf.cmd.ts`, [`Command`]).
+//! Native `bit eject-conf <pattern> [-p|--propagate] [-o|--override] [-j|--json]` (`scopes/workspace/workspace/eject-conf.cmd.ts`, [`COMMAND`], [`Formatter`]).
 
 #[cfg(test)]
 mod tests;

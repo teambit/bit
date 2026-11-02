@@ -1,4 +1,6 @@
 //! Native `bit ci [verify|pr|merge|sync|init]` (`scopes/git/ci/ci.cmd.ts`).
+//!
+//! Coordinates [`init`], [`merge`], and [`pr`] subcommands for Git-backed CI workflows.
 
 mod init;
 mod merge;

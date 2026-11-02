@@ -1,4 +1,6 @@
 //! Native `bit component-issues [--json|-j]` (`ComponentIssuesCmd`, [`Chalk`]).
+//!
+//! Renders the catalog of [`ISSUES`] ([`IssueDefinition`]) in formatted text or JSON.
 
 #[cfg(test)]
 mod tests;

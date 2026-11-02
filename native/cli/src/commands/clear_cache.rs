@@ -1,4 +1,6 @@
 //! Native `bit clear-cache` (`cc`) (`ClearCacheCmd` in `scopes/workspace/clear-cache/clear-cache-cmd.ts`, `--remote`).
+//!
+//! Clears local workspace/scope caches or dispatches `--remote` cache clearing via [`remote_action`].
 
 #[cfg(test)]
 mod tests;

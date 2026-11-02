@@ -1,4 +1,6 @@
 //! `CompileCmd` [`Report`]s retain [`Compiled`] emitted paths, diagnostics, and per-component status.
+//!
+//! Exposes [`create`] to render text or `--json` compilation summaries with elapsed duration.
 use super::{Compiled, Options};
 use crate::commands::{
     color::Chalk,

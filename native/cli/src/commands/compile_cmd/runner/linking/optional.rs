@@ -1,4 +1,6 @@
 //! Optional package and component flags follow the first merged [`WorkspaceComponent`] [`PolicyEntry`].
+//!
+//! Exposes [`apply`] to mark optional dependencies on [`ComponentDependencies`] lists.
 use crate::commands::workspace_command::component_service::Loaded;
 use bit_install::{
     model::{

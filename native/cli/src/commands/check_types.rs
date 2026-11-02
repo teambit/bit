@@ -1,4 +1,6 @@
 //! Native `bit check-types [component-pattern]` (`scopes/typescript/typescript/cmds/check-types.cmd.ts`, `--unmodified`, `--strict`).
+//!
+//! Parses [`Options`] and delegates workspace type checking to [`checker`].
 
 mod checker;
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! CLI argument parsing ([`parse_subcommand`], [`Subcommand`], [`WriteTarget`]) for `bit deps` (`bit dependencies`).
+//! CLI argument parsing ([`parse_subcommand`], [`Subcommand`], [`WriteTarget`], [`is_supported_pattern`]) for `bit deps` (`bit dependencies`).
 
 use super::{Subcommand, write::WriteTarget};
 use crate::commands::aspect::is_supported_pattern;

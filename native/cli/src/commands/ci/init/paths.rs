@@ -1,4 +1,6 @@
 //! `fs.realpathSync` resolves links while preserving ordinary names, including DOS short names (`bit ci init`).
+//!
+//! Exposes [`real`] to resolve symlinked paths up to 64 levels deep.
 #[cfg(test)]
 mod tests;
 

@@ -1,4 +1,4 @@
-//! Dependency [`table`]s produced by `diffMetadata` and cli-table 0.3.6 ([`Chalk`]).
+//! Dependency [`table`]s ([`format`]) produced by `diffMetadata` and cli-table 0.3.6 ([`Chalk`]).
 
 use crate::commands::{
     color::Chalk,

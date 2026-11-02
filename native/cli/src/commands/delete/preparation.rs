@@ -1,4 +1,6 @@
 //! Authoritative [`Prepared`] soft-delete [`Batch`] preconditions and best-effort lane [`policy`] planning.
+//!
+//! Validates `.bitmap` targets and constructs [`Batch`] plans for `bit delete`.
 use super::{options::Options, policy};
 use crate::commands::remove::preparation as selection;
 use bit_object_import::component_delete::{Batch, DependencyComponent, Scope};

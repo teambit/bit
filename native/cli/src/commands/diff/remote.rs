@@ -1,4 +1,4 @@
-//! Retain `scopeImporter.importWithoutDeps({cache:true,reason:"to show diff"})` via [`Options`] and [`Engine`].
+//! Retain `scopeImporter.importWithoutDeps({cache:true,reason:"to show diff"})` ([`prepare`]) via [`Options`] and [`Engine`].
 
 use super::{options::Options, progress};
 use crate::commands::{

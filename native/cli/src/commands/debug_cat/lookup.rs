@@ -1,4 +1,4 @@
-//! Component ([`load_cat_component`]), lane, and version-history lookup helpers for debug `cat-*` commands.
+//! Component ([`load_cat_component`], [`resolve_component_entry`]), lane ([`resolve_lane_entry`]), and version-history lookup helpers for debug `cat-*` commands.
 
 pub(in crate::commands) use crate::commands::lane::scope_root::diagnose_component_lookup_error;
 use crate::commands::{

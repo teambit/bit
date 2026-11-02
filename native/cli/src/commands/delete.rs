@@ -1,4 +1,6 @@
 //! `RemoveMain.markRemoveComps`: packages, one `.bitmap` publication, then source removal (`bit delete`).
+//!
+//! Coordinates [`options`], [`preparation`], [`loading`], [`policy`], and [`hard`] remote deletes.
 pub(in crate::commands) mod hard;
 pub(super) mod loading;
 pub(in crate::commands) mod options;

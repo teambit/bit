@@ -1,4 +1,4 @@
-//! Remote diagnostics ([`Context`], [`Options`]) reuse the configured client transport and local diagnosis engine.
+//! Remote diagnostics ([`Plan`], [`prepare`], [`Context`], [`Options`]) reuse the configured client transport and local diagnosis engine.
 use super::{
     catalog, checks,
     context::{Context, optional_json},

@@ -1,4 +1,6 @@
 //! Native `bit debug-load <component-id>` (`scopes/workspace/workspace/debug-load.cmd.ts`, `--aspect`).
+//!
+//! Parses [`Options`] and validates component inventory and `.bitmap` presence natively.
 
 #[cfg(test)]
 mod tests;

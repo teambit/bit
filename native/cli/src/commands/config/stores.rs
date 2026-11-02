@@ -1,4 +1,6 @@
 //! `ConfigStoreMain` [`Stores`] registration ([`Options`]) and deferred native [`writing`].
+//!
+//! Loads and mutates [`Store`] entries across `global`, `scope`, and `workspace` origins.
 mod writing;
 
 use super::options::Options;

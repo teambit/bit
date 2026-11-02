@@ -1,4 +1,6 @@
 //! Compilation [`Plan`] preparation and [`Loaded`] component execution for `bit compile`.
+//!
+//! Coordinates [`Links`], dist directory resolution, and [`emission::prepare`].
 
 use super::{Compiled, Options, emission, limits, linking::Links, report, write};
 use crate::commands::workspace_command::component_service::{Loaded, Selection};

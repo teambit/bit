@@ -1,4 +1,4 @@
-//! Local native deprecation policy ([`Command`], `bit deprecate`, `bit undeprecate`), published through the ordinary snapshot pipeline later.
+//! Local native deprecation policy ([`COMMAND`], [`UNDEPRECATE`], `bit deprecate`, `bit undeprecate`), published through the ordinary snapshot pipeline later.
 mod options;
 mod report;
 use super::{

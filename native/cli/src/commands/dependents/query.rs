@@ -1,4 +1,6 @@
 //! Scope and workspace [`DepGraph`] construction and [`render_dependents_report`] traversal for `bit dependents`.
+//!
+//! Exposes [`run_dependents_query`] to gather workspace and scope dependent graphs.
 
 use super::{
     Options, find_existing_bitmap_entry,

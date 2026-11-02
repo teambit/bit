@@ -1,5 +1,7 @@
 //! Native `bit checkout <to> [component-pattern]`, a workspace command
 //! ([`workspace_command`]) with the checkout [`options`] and [`report`].
+//!
+//! Exposes [`COMMAND`] (`checkout`) and [`REVERT`] (`revert`) entry points.
 
 pub(super) mod options;
 pub(super) mod report;

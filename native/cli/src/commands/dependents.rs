@@ -1,4 +1,6 @@
 //! Native `bit dependents <component-name>` (`scopes/dependencies/dependencies/dependents-cmd.ts`, [`render_honeywell_table`]).
+//!
+//! Parses [`Options`] and runs [`run_dependents_query`] to display workspace and scope dependents.
 
 pub(super) use render::render_honeywell_table;
 

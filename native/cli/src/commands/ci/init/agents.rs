@@ -1,4 +1,6 @@
 //! `scaffoldAgentsMd`: retain user edits and only fill the [`UNKNOWN`] repository placeholder.
+//!
+//! Renders and updates `AGENTS.md` sync sections between [`START`] and [`END`] markers.
 use std::{io, path::Path, sync::OnceLock};
 const START: &str = "<!-- bit-ci-sync:start";
 const END: &str = "<!-- bit-ci-sync:end -->";

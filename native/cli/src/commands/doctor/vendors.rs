@@ -1,4 +1,4 @@
-//! External executable [`version`] facts ([`Diagnosis`]); all diagnosis policy remains native.
+//! External executable [`version`] and [`examine`] facts ([`Diagnosis`]); all diagnosis policy remains native.
 use super::catalog::Diagnosis;
 use serde_json::{Value, json};
 use std::process::Command;

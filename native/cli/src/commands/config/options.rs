@@ -1,4 +1,6 @@
 //! Narrow [`Options`] grammar of the published `ConfigCmd`'s four subcommands (`get`, `set`, `del`, `list`).
+//!
+//! Parses subcommand arguments, `--origin`, `--detailed`, and `--json` flags.
 use std::ffi::OsString;
 
 pub(super) struct Options {

@@ -1,4 +1,4 @@
-//! Native `bit envs [list]` (`bit env [list]`) and `bit envs get <component-name>` ([`table`], [`Chalk`]).
+//! Native `bit envs [list]` ([`run_list`]) and `bit envs get <component-name>` ([`table`], [`Chalk`], [`Formatter`]).
 
 use crate::{
     commands::{

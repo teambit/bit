@@ -1,4 +1,6 @@
 //! Compilation [`batch_size`] and file budget limits for [`Compiled`] components.
+//!
+//! Reads `concurrency.io` from layered workspace/scope/global config stores.
 
 use super::Compiled;
 use bit_workspace_config::{config_string, effective, global_config_dir, read_global_config};

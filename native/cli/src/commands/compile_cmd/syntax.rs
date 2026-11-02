@@ -1,4 +1,6 @@
 //! Preserve external `TypeScript` parser diagnostics ([`Target`]) without loading Bit's dependency detectors.
+//!
+//! Exposes [`parse`] to attach `TypeScript` syntax errors onto custom dependency payloads.
 use crate::discovery::{self, Target};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};

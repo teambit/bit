@@ -1,4 +1,4 @@
-//! Published `bit doctor` [`Options`] grammar and `--archive` flag validation.
+//! Published `bit doctor` [`Options`] and [`Includes`] grammar and `--archive` flag validation.
 #[cfg(test)]
 mod tests;
 

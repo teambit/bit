@@ -1,4 +1,4 @@
-//! Rendering ([`MatchedTree`], [`TreeNode`]) and [`Lockfile`] manifest helpers for `bit deps usage`.
+//! Rendering ([`importer_tree_node`], [`MatchedTree`], [`TreeNode`]) and [`Lockfile`] manifest helpers for `bit deps usage`.
 
 use super::usage::{MatchedTree, NodeId, TreeNode};
 use crate::commands::color::Chalk;

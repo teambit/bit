@@ -1,4 +1,6 @@
 //! `SyncOrchestrator.syncInit`: onboard a repository without running reconciliation (`bit ci init`).
+//!
+//! Orchestrates [`agents`], [`files`], [`git`], [`paths`], [`remote`], and [`report`] generation.
 mod agents;
 mod files;
 mod git;

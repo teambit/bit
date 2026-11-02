@@ -1,4 +1,6 @@
 //! Publish the [`ASPECT`] onboarding [`File`]s in the released command's order.
+//!
+//! Writes `.github/workflows/bit-sync.yml` and `.github/workflows/bit-release.yml` via [`workflows`].
 use super::{git, report::File};
 use bit_workspace_config::jsonc::Document;
 use serde_json::json;

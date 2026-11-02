@@ -1,4 +1,6 @@
 //! `DeleteCmd`'s local soft-deletion [`Options`] and [`Scope`] selection grammar.
+//!
+//! Parses `--silent`, `--lane`, `--update-main`, and `--range` flags via [`parse`].
 use bit_object_import::component_delete::Scope;
 pub(super) struct Options<'a> {
     pub pattern: &'a str,

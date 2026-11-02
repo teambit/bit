@@ -1,4 +1,6 @@
 //! Component package linking ([`Links`], [`link_components`]) before and after compilation.
+//!
+//! Coordinates [`host`] and [`optional`] link preparation across [`WorkspaceComponent`]s.
 
 mod host;
 mod optional;

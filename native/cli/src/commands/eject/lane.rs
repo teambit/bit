@@ -1,4 +1,4 @@
-//! `bit lane eject` helper logic ([`eject_from_lane`], `scopes/workspace/eject/eject.main.runtime.ts`).
+//! `bit lane eject` helper logic ([`is_hub_component_modified`], [`find_bitmap_row`], `scopes/workspace/eject/eject.main.runtime.ts`).
 
 use super::find_bitmap_row;
 use crate::{
