@@ -94,8 +94,6 @@ export class DependencyInstaller {
 
     private rootDir?: string | PathAbsolute,
 
-    private cacheRootDir?: string | PathAbsolute,
-
     private preInstallSubscriberList?: PreInstallSubscriberList,
 
     private postInstallSubscriberList?: PostInstallSubscriberList,
@@ -356,7 +354,6 @@ export class DependencyInstaller {
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
       ...DEFAULT_PM_INSTALL_OPTIONS,
-      cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
       // Capsules stay on the project-local virtual store even when the global one is enabled.
@@ -421,7 +418,7 @@ export class DependencyInstaller {
         //
         // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
         // and it never leaves node_modules in a broken state.
-        // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+        // Removing node_modules in that case would delete useful state information that is used by pnpm.
         await this.cleanCompsNodeModules(componentDirectoryMap);
       } catch (err) {
         this.logger.debug('failed to remove node_modules directories from components', err);
@@ -439,7 +436,6 @@ export class DependencyInstaller {
     }
     const startTime = process.hrtime();
 
-    // TODO: the cache should be probably passed to the package manager constructor not to the install function
     const installResult = await this.packageManager.install(
       {
         rootDir: finalRootDir,
