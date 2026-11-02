@@ -1,4 +1,4 @@
-//! Topological sorting and node/edge graph construction for `bit log` / `show` history views.
+//! Topological sorting and [`Node`]/[`Edge`] graph construction for `bit log` / `show` [`Version`] history views.
 
 use super::invalid;
 use serde::Deserialize;

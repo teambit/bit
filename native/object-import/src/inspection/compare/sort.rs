@@ -1,4 +1,4 @@
-//! Deterministic array and map key sorting for semantic `Version` comparisons.
+//! Deterministic array and map key sorting ([`rows`], [`all`]) for semantic `Version` comparisons.
 
 use super::{super::invalid, fields};
 use crate::js_json::Value as Js;

@@ -1,4 +1,4 @@
-//! Move unexported `main` snaps into a newly created lane before publishing workspace references.
+//! Move unexported `main` snaps ([`Moved`]) into a newly created lane before publishing workspace references.
 mod history;
 
 use super::{Documents, invalid, outbound};

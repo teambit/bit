@@ -1,4 +1,4 @@
-//! Wire request payloads for workspace file inspection and model comparison operations.
+//! Wire request payloads ([`Begin`], [`Input`], [`Token`]) for workspace file inspection and model comparison operations.
 
 use serde::Deserialize;
 use std::path::PathBuf;

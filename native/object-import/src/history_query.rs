@@ -1,4 +1,4 @@
-//! Owned, read-only repository history queries; public imports and errors remain adapter checkpoints.
+//! Owned, read-only repository history queries ([`apply`], [`State`]); public imports and errors remain adapter checkpoints.
 pub(crate) mod populate;
 pub(crate) use state::State;
 

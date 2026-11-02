@@ -1,4 +1,4 @@
-//! Line-by-line historical blame attribution across ordered `Version` log records.
+//! Line-by-line historical blame attribution ([`blame`], [`Request`]) across ordered `Version` log records.
 
 use super::{
     invalid, lines,

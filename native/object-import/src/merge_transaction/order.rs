@@ -1,4 +1,4 @@
-//! Stage-grouped component completion permutation validation (`mergePlanOrder`).
+//! Stage-grouped component completion permutation validation ([`permutation`], `mergePlanOrder`).
 
 use super::invalid;
 use serde_json::Value;

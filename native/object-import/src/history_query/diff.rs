@@ -1,4 +1,4 @@
-//! Single-file unified diff generation between historical `Source` snapshots.
+//! Single-file unified diff generation ([`diff`], [`Request`]) between historical `Source` snapshots.
 
 use super::{
     invalid,

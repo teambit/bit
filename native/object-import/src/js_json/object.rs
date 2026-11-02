@@ -1,4 +1,4 @@
-//! `ECMAScript` property ordering (integer indices first, then insertion order) for `js_json` objects.
+//! `ECMAScript` property ordering ([`entries`]: integer indices first, then insertion order) for [`Value`] objects.
 
 use super::{Value, invalid};
 use std::{collections::HashSet, io};

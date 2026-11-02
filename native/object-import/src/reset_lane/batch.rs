@@ -1,4 +1,4 @@
-//! Single `Lane` and `.bitmap` publication for `bit reset --silent` on a lane.
+//! Single `Lane` and `.bitmap` publication ([`Batch`], [`Plan`]) for `bit reset --silent` on a lane.
 
 mod candidates;
 #[cfg(test)]

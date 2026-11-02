@@ -1,4 +1,4 @@
-//! Bounded `Source` object cache and temporary snapshot file materialization for history queries.
+//! Bounded `Source` object cache ([`Cache`]) and temporary snapshot file materialization for history queries.
 
 use super::invalid;
 use serde_json::{Value, json};

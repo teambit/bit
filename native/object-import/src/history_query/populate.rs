@@ -1,4 +1,4 @@
-//! `VersionHistory` population and ancestry traversal over local and overlay `Version` objects.
+//! `VersionHistory` population ([`Request`], [`read`]) and ancestry traversal over local and overlay `Version` objects.
 
 use super::{invalid, overlay_indices};
 use indexmap::IndexMap;

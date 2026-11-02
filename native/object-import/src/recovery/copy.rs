@@ -1,4 +1,4 @@
-//! Validated regular-file copy with symlink, hard-link, and ancestor-directory guards.
+//! Validated regular-file copy ([`file`], [`validate`]) with symlink, hard-link, and ancestor-directory guards.
 
 #[cfg(windows)]
 mod windows;

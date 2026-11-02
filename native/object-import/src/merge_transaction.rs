@@ -1,4 +1,4 @@
-//! Owned `main`/lane merge policy and retained materialization lifecycle.
+//! Owned `main`/lane merge policy ([`State`], [`apply`], [`reads`]) and retained materialization lifecycle.
 pub(crate) mod reads;
 
 mod bodies;

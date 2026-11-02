@@ -1,4 +1,4 @@
-//! Phase-ordered execution journal and receipt verification for merge transactions.
+//! Phase-ordered execution journal ([`State`], [`Record`]) and receipt verification for merge transactions.
 
 use super::invalid;
 use serde::Deserialize;

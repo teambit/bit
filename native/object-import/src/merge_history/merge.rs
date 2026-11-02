@@ -1,4 +1,4 @@
-//! Three-way file merge classification and `git merge-file` invocation across `current`, `base`, and `other`.
+//! Three-way file merge classification ([`verified`], [`Request`]) and `git merge-file` invocation ([`git`]) across `current`, `base`, and `other`.
 
 pub(crate) mod git;
 

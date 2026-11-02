@@ -1,4 +1,4 @@
-//! Retain graph bodies and mutable selection preimages until publication revalidation.
+//! Retain graph bodies and mutable selection preimages ([`ReadSet`], [`read`]) until publication revalidation.
 use super::{Repository, invalid, object_path};
 use std::{
     collections::HashSet,

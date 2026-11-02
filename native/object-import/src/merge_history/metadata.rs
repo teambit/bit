@@ -1,4 +1,4 @@
-//! Conservative `Version` object schema validation for native history and merge eligibility.
+//! Conservative `Version` object schema validation ([`validate`]) for native history and merge eligibility.
 
 // Conservative eligibility covers parseable Version records; unsupported model constructors replay in Node.
 use super::{count, hash, invalid};

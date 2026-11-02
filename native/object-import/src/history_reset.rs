@@ -1,4 +1,4 @@
-//! `bit reset` history, dependent-index, candidate-selection, and phase-journal operations.
+//! `bit reset` history, dependent-index, candidate-selection, and phase-journal operations ([`apply`], [`State`]).
 
 pub(crate) use journal::State;
 

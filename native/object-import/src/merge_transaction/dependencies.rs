@@ -1,4 +1,4 @@
-//! Merged component dependency version alignment and workspace availability filtering.
+//! Merged component dependency version alignment ([`rows`], [`identity`]) and workspace availability filtering.
 
 use super::invalid;
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Move local `Lane` objects to the scope trash and unindex them from `index.json`.
+//! Move local `Lane` objects ([`Plan`]) to the scope trash and unindex them from `index.json`.
 
 use crate::{recovery, store::Store, workspace::engine::command::outbound};
 use serde_json::Value;

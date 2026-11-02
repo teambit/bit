@@ -1,4 +1,4 @@
-//! Accessor-free `JavaScript` data representation and `JSON.stringify` formatting.
+//! Accessor-free `JavaScript` data representation ([`Value`]) and `JSON.stringify` formatting.
 
 #[path = "js_json/object.rs"]
 mod object;
@@ -12,7 +12,7 @@ mod writer;
 use serde::Serialize;
 use std::io;
 
-/// Accessor-free JavaScript data, preserving undefined, UTF-16 and binary64 bits.
+/// Accessor-free `JavaScript` data, preserving `undefined`, `UTF-16` and `binary64` bits.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(tag = "kind", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Value {

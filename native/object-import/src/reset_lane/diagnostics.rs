@@ -1,4 +1,4 @@
-//! Published reset failure diagnostics retaining successful cold `VersionHistory` population prefixes.
+//! Published reset failure diagnostics ([`error`], [`ObjectChange`]) retaining successful cold `VersionHistory` population prefixes.
 use super::{ObjectChange, invalid, object_path};
 use std::{
     fmt, fs, io,

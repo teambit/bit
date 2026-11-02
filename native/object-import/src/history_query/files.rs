@@ -1,4 +1,4 @@
-//! File-level historical lineage filtering and hidden-parent linking across `Version` rows.
+//! File-level historical lineage filtering ([`lineage`], [`Request`]) and hidden-parent linking across `Version` rows.
 
 use super::invalid;
 use serde::Deserialize;

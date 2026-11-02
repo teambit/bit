@@ -1,4 +1,4 @@
-//! Workspace-versus-model file diff planning (`inspectionDiff`) using retained file snapshots.
+//! Workspace-versus-model file diff planning ([`plan`], [`Request`]) using retained file snapshots.
 
 mod read;
 

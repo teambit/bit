@@ -1,4 +1,4 @@
-//! Candidate, pattern, soft-remove, and never-exported component selection for `bit reset`.
+//! Candidate ([`Candidates`]), pattern ([`Pattern`]), soft-remove ([`Soft`]), and never-exported ([`Never`]) component selection for `bit reset`.
 
 use super::{bound, invalid, text};
 use serde::Deserialize;

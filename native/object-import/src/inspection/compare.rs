@@ -1,4 +1,4 @@
-//! Source-code and semantic `Version` comparison planning (`sourceCode` and `modified` modes).
+//! Source-code and semantic `Version` comparison planning ([`plan`], `sourceCode` and `modified` modes).
 
 mod fields;
 mod sort;

@@ -1,4 +1,4 @@
-//! Workspace `workspace.jsonc` dependency policy aggregation and conflict resolution (`configWorkspaceMerge`).
+//! Workspace `workspace.jsonc` dependency policy aggregation and conflict resolution ([`plan`]).
 
 use super::{array, invalid, semver, text};
 use serde_json::{Value, json};

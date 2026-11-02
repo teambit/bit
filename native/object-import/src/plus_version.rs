@@ -1,4 +1,4 @@
-//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification and resolution.
+//! Published dependency-resolver plus-version (`+`, `+^`, `+~`) placeholder classification ([`is_plus`]) and resolution ([`resolve`]).
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Merge file-body preparation, checkout transition binding, and materialization execution.
+//! Merge file-body preparation ([`State`], [`Binding`]), checkout transition binding, and materialization execution.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! `LaneHistory` entry pruning and `UTF-16` key validation during `bit reset`.
+//! `LaneHistory` entry pruning ([`history_entries`], [`Request`]) and `UTF-16` key validation during `bit reset`.
 
 use super::{bound, invalid, text};
 use crate::js_json;

@@ -1,4 +1,4 @@
-//! Pending `VersionHistory` and `LaneHistory` reconciliation during lane reset.
+//! Pending `VersionHistory` ([`version_history`], [`ObjectChange`]) and `LaneHistory` reconciliation during lane reset.
 
 use super::{ObjectChange, Repository, changed, invalid, object_hash, outbound};
 use serde_json::{Value, json};

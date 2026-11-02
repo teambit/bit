@@ -1,4 +1,4 @@
-//! Phase-ordered execution journal and fork-receipt verification for `bit reset`.
+//! Phase-ordered execution journal ([`State`], [`Record`]) and fork-receipt verification for `bit reset`.
 
 use super::{bound, invalid};
 use serde::Deserialize;

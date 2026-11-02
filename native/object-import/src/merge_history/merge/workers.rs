@@ -1,4 +1,4 @@
-//! Serial and `Rayon`-parallel file merge classification across current component files.
+//! Serial and `Rayon`-parallel file merge classification ([`classify_all`], [`Execution`]) across current component files.
 
 use super::{Execution, classify};
 use rayon::prelude::*;

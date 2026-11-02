@@ -1,4 +1,4 @@
-//! Native repository object import, checkout, merge, history, and workspace command engine.
+//! Native repository object import, checkout, merge, history, and workspace command engine ([`lane_create`], [`lane_manage`], [`reset_lane`]).
 
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]

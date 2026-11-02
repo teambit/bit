@@ -1,4 +1,4 @@
-//! Prove that every object used for a remote delete decision still matches its preimage bytes.
+//! Prove via [`Readset`] that every object used for a remote delete decision still matches its preimage bytes.
 
 #[cfg(test)]
 mod tests;

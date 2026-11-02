@@ -1,4 +1,4 @@
-//! Caller-owned export phase progress events containing only operation metadata.
+//! Caller-owned export phase progress events ([`Event`], [`scope`]) containing only operation metadata.
 #[cfg(test)]
 mod tests;
 

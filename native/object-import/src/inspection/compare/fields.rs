@@ -1,4 +1,4 @@
-//! `UTF-16` `js_json` object field access, `.bitmap` filtering, and dependency alignment for comparison.
+//! `UTF-16` [`Js`] object field access ([`get`], [`set`]), `.bitmap` filtering, and dependency alignment for comparison.
 
 #[cfg(test)]
 #[path = "fields/tests.rs"]

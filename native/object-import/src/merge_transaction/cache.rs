@@ -1,4 +1,4 @@
-//! Deduplicated `Source` body capsule spooling and reference indexing for merge transactions.
+//! Deduplicated `Source` body capsule spooling ([`Capsules`], [`Trace`]) and reference indexing for merge transactions.
 
 use super::{invalid, reads::Trace};
 use serde_json::{Value, json};

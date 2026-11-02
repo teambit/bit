@@ -1,4 +1,4 @@
-//! Local scope `Component` and `Lane` object loading and projection for lane resets.
+//! Local scope `Component` and `Lane` object loading and projection ([`Repository`], [`BitmapState`], [`Heads`]) for lane resets.
 
 use super::{
     BitmapState, Heads, ObjectChange, Repository, Selection, changed, indexed_hash, invalid,

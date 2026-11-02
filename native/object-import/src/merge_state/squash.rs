@@ -1,4 +1,4 @@
-//! Lane-merge squash policy and parent/squashed-list mutation planning.
+//! Lane-merge squash policy ([`Policy`], [`policy`]) and parent/squashed-list mutation planning.
 
 use super::{hash, invalid};
 use serde::Deserialize;

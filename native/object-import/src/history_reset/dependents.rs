@@ -1,4 +1,4 @@
-//! Reverse dependency index construction and dependent filtering for `bit reset`.
+//! Reverse dependency index construction ([`index`], [`Request`]) and dependent filtering for `bit reset`.
 
 use super::{bound, invalid, text};
 use serde::Deserialize;

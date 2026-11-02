@@ -1,4 +1,4 @@
-//! Thread-local `Source` object read tracing and byte-budget accounting for merge transactions.
+//! Thread-local `Source` object read tracing ([`Trace`], [`Receipt`], [`Scope`]) and byte-budget accounting for merge transactions.
 
 use super::invalid;
 use crate::checkout::repository::SourceRecord;

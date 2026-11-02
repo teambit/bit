@@ -1,4 +1,4 @@
-//! Breadth-first `Version` graph traversal and tag/orphan attribution for history queries.
+//! Breadth-first `Version` graph traversal and tag/orphan attribution ([`Fields`], [`Labels`]) for history queries.
 
 use super::invalid;
 use serde::Deserialize;

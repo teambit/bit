@@ -1,4 +1,4 @@
-//! `Version` ancestry graph loading, divergence computation, and three-way file merge planning.
+//! `Version` ancestry graph loading ([`read_graph`]), divergence computation ([`status`]), and three-way file merge planning ([`merge`], [`metadata`]).
 
 pub(crate) mod merge;
 pub(crate) mod metadata;

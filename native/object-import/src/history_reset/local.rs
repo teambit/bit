@@ -1,4 +1,4 @@
-//! Local-only snap/tag selection and `Version` parent resolution for `bit reset`.
+//! Local-only snap/tag selection ([`append`], [`Append`]) and `Version` parent resolution for `bit reset`.
 
 use super::{bound, invalid, text};
 use serde::Deserialize;

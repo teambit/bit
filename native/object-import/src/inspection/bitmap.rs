@@ -1,4 +1,4 @@
-//! `.bitmap` canonicalization, removed-component filtering, and indented JSON rendering.
+//! `.bitmap` canonicalization ([`normalize`]), removed-component filtering, and indented JSON rendering ([`render`]).
 
 use super::invalid;
 use crate::js_json::{self, Value as Js};

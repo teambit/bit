@@ -1,4 +1,4 @@
-//! Four-byte magic-header frame routing (`WorkspaceSession::request`) for workspace session extensions.
+//! Four-byte magic-header frame routing ([`serve_extension`], [`word`], [`respond`]) for workspace session extensions.
 
 use rayon::ThreadPool;
 use serde::Serialize;

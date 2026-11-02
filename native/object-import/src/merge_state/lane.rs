@@ -1,4 +1,4 @@
-//! `Lane` head, visibility, and parent mutation planning during snap/tag/merge operations.
+//! [`Lane`] head, visibility, and parent mutation planning ([`Plan`]) during snap/tag/merge operations.
 
 use super::{hash, invalid};
 use serde::Deserialize;

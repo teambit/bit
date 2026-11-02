@@ -1,4 +1,4 @@
-//! Bounded byte-buffer writer for compact and pretty-printed `js_json` values.
+//! Bounded byte-buffer writer ([`Writer`]) for compact and pretty-printed [`Value`] nodes.
 
 use std::io;
 

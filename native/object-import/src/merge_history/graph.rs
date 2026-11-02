@@ -1,4 +1,4 @@
-//! `Version` ancestry graph validation, subset extraction, and common-ancestor divergence analysis.
+//! [`Version`] ancestry graph validation ([`Load`]), subset extraction, and common-ancestor divergence analysis.
 
 use super::{count, hash, invalid, path};
 use serde::{Deserialize, Serialize};

@@ -1,4 +1,4 @@
-//! Tagged and compact `serde` deserialization for [`Value`].
+//! Tagged ([`TaggedValue`]) and compact `serde` deserialization for [`Value`].
 
 #[cfg(test)]
 #[path = "wire/tests.rs"]
