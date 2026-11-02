@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::io;
 
 impl Scan<'_> {
-    /// One target: its policy, its files, its dependencies.
+    /// Captures one workspace `target` (policy, source files, and dependencies) into `captured`.
     pub(super) fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
         if self.behavior.missing_status_invalid
             && bitmap::capture_special(self.context, target, captured)?

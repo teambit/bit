@@ -5,6 +5,7 @@ use super::{Environments, Value, decline, io, json, text};
 use std::path::Path;
 
 impl Environments {
+    /// Parses custom-detector dependencies for `files` in `target` via built-in syntax or `host`.
     pub(in crate::commands::status) fn parser(
         &mut self,
         root: &Path,

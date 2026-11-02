@@ -6,6 +6,7 @@ use super::{Environments, Host, Value, callbacks, decline, io, json};
 use crate::commands::status::capture::{Capture, callback_load_stdout, callback_startup_stdout};
 
 impl Environments {
+    /// Begins an ordered checkout/switch callback stage on `self.host` when checkout callbacks are active.
     pub(in crate::commands::status) fn switch_begin(
         &self,
         context: &Value,

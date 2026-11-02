@@ -24,8 +24,10 @@ use bit_object_import::parse_jsonc;
 use serde_json::Value;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit script` command.
 pub const COMMAND: Command = Command { name: "script", aliases: &[], run };
 
+/// Error message emitted when no script name is provided and `--list` is not set.
 const MISSING_SCRIPT_ERR: &str = "script name is required. Use --list to see available scripts.";
 const NO_ENVS_CONFIG_MSG: &str = "no envs configured. Add to workspace.jsonc:\n{\n  \"teambit.workspace/scripts\": {\n    \"envs\": [\"your-scope/your-env\"]\n  }\n}";
 

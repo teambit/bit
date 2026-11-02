@@ -6,6 +6,7 @@ use bit_object_import::component_remove::{LocalBatch, select_ids};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Resolves bare component IDs matching `pattern` in `root` via [`select_ids`].
 #[inline]
 pub(in crate::commands) fn ids(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     select_ids(root, pattern)

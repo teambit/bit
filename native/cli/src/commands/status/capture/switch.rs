@@ -8,6 +8,7 @@ use super::{
 };
 use std::collections::{HashMap, HashSet};
 
+/// Active switch capture session interleaving source capture with ordered Harmony class loading.
 struct Session<'a> {
     engine: &'a mut Engine,
     root: &'a Path,

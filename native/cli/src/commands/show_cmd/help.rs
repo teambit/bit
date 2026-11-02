@@ -12,6 +12,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Emits `ShowCmd` `--help` output or missing-ID usage diagnostics before workspace loading.
 pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Outcome>> {
     let Some((code, error)) = presentation(argv) else {
         return Ok(None);

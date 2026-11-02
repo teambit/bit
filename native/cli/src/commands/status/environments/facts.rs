@@ -4,6 +4,7 @@
 
 use super::{EnvJsoncReader, Host, Value, WorkspaceComponent, io, json};
 
+/// Queries `host` and `reader` for raw environment policy, compiler, dev-pattern, and registration facts for `component`.
 pub(super) fn read(
     host: &Host,
     reader: &EnvJsoncReader<'_>,

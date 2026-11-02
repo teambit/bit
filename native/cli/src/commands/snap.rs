@@ -18,11 +18,13 @@ use std::{
     path::Path,
 };
 
+/// Descriptor for the native `bit snap` command.
 pub const COMMAND: Command = Command { name: "snap", aliases: &[], run };
 
 /// The warning `bit snap` prints without `--message`.
 const MESSAGE_WARNING: &str = "--message will be mandatory in the next few releases. make sure to add a message with your snap, will be displayed in the version history";
 
+/// Entry point for `bit snap`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

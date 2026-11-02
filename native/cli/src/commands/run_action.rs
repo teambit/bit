@@ -16,8 +16,10 @@ use crate::native::Outcome;
 use serde_json::Value;
 use std::{env, ffi::OsString, io};
 
+/// Descriptor for the native `bit run-action` command.
 pub const COMMAND: Command = Command { name: "run-action", aliases: &[], run };
 
+/// Parsed CLI options for `bit run-action <action-name> <remote> [options-json]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub action_name: String,

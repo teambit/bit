@@ -9,6 +9,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Returns `true` when `context` has pre-snap formatter or non-core aspect callbacks requiring host hydration.
 pub(super) fn configured(engine: &mut Engine, root: &Path, context: &Value) -> io::Result<bool> {
     if crate::commands::update_cmd::aspect_entry(
         &context["workspace"],

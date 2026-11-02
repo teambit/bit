@@ -6,6 +6,7 @@ use super::{
 };
 
 impl Scan<'_> {
+    /// Resolves observed or freshly detected dependencies for `target` and records pending cache writes in `captured`.
     pub(super) fn dependencies(
         &mut self,
         target: &Value,

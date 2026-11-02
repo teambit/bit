@@ -12,10 +12,12 @@ use crate::commands::{
 use bit_object_import::component_scope_rename::{Batch, Options, Selection};
 use serde_json::{Value, json};
 use std::{io, path::Path};
+/// Paired component rename facts and [`Batch`] plan for `bit scope rename`.
 struct Entries {
     facts: Vec<Value>,
     batch: Batch,
 }
+/// Executes a scope rename [`Options`] batch and returns the formatted [`Report`].
 pub(super) fn run(
     root: &Path,
     options: &Options,

@@ -9,8 +9,10 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
 
+/// Descriptor for the native `bit server` command.
 pub const COMMAND: Command = Command { name: "server", aliases: &[], run };
 
+/// Parsed command-line options for `bit server`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub port: Option<u16>,

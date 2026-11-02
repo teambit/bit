@@ -23,8 +23,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit search` command.
 pub const COMMAND: Command = Command { name: "search", aliases: &[], run };
 
+/// Parsed CLI flags and query strings for `bit search`.
 struct SearchArgs {
     queries: Vec<String>,
     local_only: bool,

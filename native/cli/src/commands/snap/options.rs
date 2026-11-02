@@ -5,6 +5,7 @@
 
 use serde_json::Value;
 
+/// Parsed CLI options for the native `bit snap [component-pattern]` command.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub pattern: Option<String>,

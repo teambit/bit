@@ -9,6 +9,7 @@ use super::{SPACE, array, decline, format::list_or_text, text};
 use serde_json::{Value, json};
 use std::io;
 
+/// Component issue kind produced directly during dependency detection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Issue {
     Untracked,

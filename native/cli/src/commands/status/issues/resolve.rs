@@ -10,9 +10,7 @@ use super::{super::js::truthy, Component};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
-/// `ordinaryResolveIssueHeads(context, receipt)`: one row per model with
-/// its head (and its lane head), none deprecated or removed. A `null`
-/// version is an absent object, which counts as ordinary.
+/// Evaluates `ordinaryResolveIssueHeads(context, receipt)`: one row per model with its head and lane head, none deprecated or removed.
 #[must_use]
 pub fn ordinary_heads_for(context: &Value, receipt: &Value, graph: Option<&[Component]>) -> bool {
     let referenced = graph.map(|components| {

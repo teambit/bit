@@ -1,4 +1,4 @@
-//! Remote and scope-level [`LoadedComponent`] loading ([`try_run`]) for native `bit show` ([`Options`], [`render_remote_outcome`]).
+//! Remote and scope-level [`LoadedComponent`] loading ([`try_run`], [`ENVS_ASPECT`], [`REMOVE_ASPECT`]) for native `bit show` ([`Options`], [`render_remote_outcome`]).
 
 pub(super) use super::render_remote_outcome;
 use super::{

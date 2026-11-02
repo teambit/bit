@@ -7,10 +7,12 @@ use bit_object_import::component_rename::{Options, Plan, batch::Batch};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Prepared component rename state pairing the native [`Plan`] with [`Engine`] inventory facts.
 pub(in crate::commands) struct Prepared {
     pub(in crate::commands) plan: Plan,
     pub(in crate::commands) facts: Value,
 }
+/// Validates target naming and prepares a [`Prepared`] component rename plan for `options`.
 #[inline]
 pub(in crate::commands) fn prepare(root: &Path, options: &Options) -> io::Result<Prepared> {
     bit_object_import::component_rename::validate_name(&options.target)?;

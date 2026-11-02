@@ -15,6 +15,7 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, sync::Arc};
 use tokio::task::JoinSet;
 
+/// Validates configured remote action plans and executes `bit resume-export` for `options`.
 pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let mut plans = Vec::with_capacity(options.remotes.len());

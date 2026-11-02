@@ -6,6 +6,7 @@ use crate::commands::workspace_command::format::Formatter;
 use indexmap::IndexMap;
 use std::io;
 
+/// Formats `(remote_name, error_message)` entries from `failed` into `"name - message"` lines.
 #[inline]
 pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
     failed

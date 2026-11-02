@@ -16,6 +16,7 @@ use std::{
 };
 use tokio::task::JoinSet;
 
+/// Partitioned remote answers from probing or removing pending export directories.
 #[derive(Default)]
 pub(super) struct Answers {
     pub present: Vec<String>,
@@ -24,6 +25,7 @@ pub(super) struct Answers {
     pub failed: IndexMap<String, String>,
 }
 
+/// Probes and removes pending export directories across `plans` for `options.export_id`.
 pub(super) async fn run(
     plans: &[Arc<Plan>],
     names: &[String],

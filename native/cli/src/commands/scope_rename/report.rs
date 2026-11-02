@@ -4,6 +4,7 @@
 use crate::commands::workspace_command::format::Formatter;
 use bit_object_import::component_scope_rename::{Batch, Options};
 use std::io;
+/// Formats the human-readable summary and affected/refactored component sections for `bit scope rename`.
 pub(super) fn render(
     batch: &Batch,
     options: &Options,

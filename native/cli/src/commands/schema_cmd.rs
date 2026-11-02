@@ -25,10 +25,13 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit schema` (`api`) command.
 pub const COMMAND: Command = Command { name: "schema", aliases: &["api"], run };
 
+/// Error message emitted when `bit schema` is invoked outside a workspace or scope without `--remote`.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
+/// Parsed command-line options for `bit schema <pattern>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: String,

@@ -7,6 +7,7 @@ use serde_json::Value;
 use std::{collections::HashSet, io};
 
 impl Checks<'_> {
+    /// Returns dependency IDs of `component` that point to locally removed workspace components.
     #[inline]
     pub(super) fn removed_dependencies(
         &self,

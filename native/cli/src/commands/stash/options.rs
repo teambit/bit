@@ -3,6 +3,7 @@
 //! Defines [`Options`] and [`parse`] for `bit stash [save|list|load]` and serializes checkout [`Value`] options.
 use serde_json::{Value, json};
 
+/// Parsed subcommand and flags for `bit stash <save|list|load>`.
 pub(super) enum Options {
     Save { include_new: bool, message: Option<String> },
     List,
@@ -11,6 +12,7 @@ pub(super) enum Options {
     Error(String),
 }
 
+/// Parses `bit stash` CLI tokens into [`Options`].
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args
         .iter()

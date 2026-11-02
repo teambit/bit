@@ -3,6 +3,7 @@
 //! [`initial`] and follow-up helpers coordinate [`Entries`], [`ProjectedLinker`], [`Chalk`], and [`Batch`] commits.
 use super::{Batch, Chalk, Entries, ProjectedLinker, Value, json, workspace_command};
 use std::{io, path::Path};
+/// Stages each component in `entries`, applying file moves and `onAdd` / `onRename` tooling callbacks.
 pub(super) fn initial(
     root: &Path,
     entries: &mut Entries,

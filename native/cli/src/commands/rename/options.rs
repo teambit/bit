@@ -3,6 +3,7 @@
 //! [`parse`] and [`consume_trailing_positions`] validate `bit rename <current-name> <new-name>` flags into [`Options`].
 use bit_object_import::component_rename::Options;
 
+/// Parses `bit rename <current-name> <new-name>` CLI tokens into [`Options`].
 pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut positions = Vec::with_capacity(2);

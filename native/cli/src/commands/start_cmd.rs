@@ -9,10 +9,13 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit start` (`c`) command.
 pub const COMMAND: Command = Command { name: "start", aliases: &["c"], run };
 
+/// Error message emitted when `bit start` is run outside a workspace or scope.
 const NO_WORKSPACE_OR_SCOPE_ERR: &str = "bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory";
 
+/// Parsed command-line options for `bit start [component-pattern]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

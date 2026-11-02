@@ -17,6 +17,7 @@ const NAMES: [&str; 4] = [
     r"^(?!\.)(?=.)[^/]*?\.composition(?:s)?\.[^/]*?$",
 ];
 
+/// Returns the compiled [`Regex`] slice corresponding to [`NAMES`].
 #[inline]
 fn names() -> &'static [Regex] {
     static NAMES_RE: OnceLock<Vec<Regex>> = OnceLock::new();

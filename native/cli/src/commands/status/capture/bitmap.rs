@@ -6,6 +6,7 @@ use super::{Capture, missing, text};
 use serde_json::Value;
 use std::io;
 
+/// Captures locally removed or pending-import `.bitmap` targets into `captured` when applicable.
 #[inline]
 pub(super) fn capture_special(
     context: &Value,
@@ -18,6 +19,7 @@ pub(super) fn capture_special(
     missing::status_pending(context, target, captured)
 }
 
+/// Returns `true` when any target in `targets` is marked `localOnly`, `softTagged`, or `locallyRemoved`.
 #[inline]
 pub(super) fn has_special_state(targets: &[Value]) -> bool {
     targets

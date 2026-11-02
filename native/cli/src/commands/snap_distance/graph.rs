@@ -8,6 +8,7 @@ use std::{
     path::Path,
 };
 
+/// Computes the snap distance (`snapsOnSourceOnly`, `snapsOnTargetOnly`, `commonSnapBeforeDiverge`) between `source` and `target`.
 pub(super) fn compute_snap_distance(vh_val: &Value, source: &str, target: &str) -> Option<Value> {
     let source = source.trim();
     let target = target.trim();

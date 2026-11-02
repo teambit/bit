@@ -15,6 +15,7 @@ use std::{
     path::Path,
 };
 
+/// Resolves active `.bitmap` entries matching `pattern` (literal or glob/multi-clause) for `bit scope set`.
 pub(in crate::commands) fn resolve_pattern_entries<'a>(
     root: &Path,
     bitmap: &'a Bitmap,

@@ -4,6 +4,7 @@
 use super::{Environments, Host, Path, Value, component, io, json, text};
 
 impl Environments {
+    /// Creates an empty [`Environments`] session configured for post-stash callback execution.
     #[inline]
     pub(in crate::commands) fn for_stash_callbacks() -> Self {
         Self::new()

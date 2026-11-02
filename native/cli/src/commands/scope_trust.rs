@@ -18,8 +18,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Default trusted scope glob patterns enabled when `bit scope trust --enable` initializes `trustedScopes`.
 const BUILTIN_TRUSTED_PATTERNS: &[&str] =
     &["teambit.*", "bitdev.*", "learn-bit-react.*", "bitdesign.*", "frontend.*"];
+/// Top-level `workspace.jsonc` key storing trusted scope patterns.
 const TRUSTED_SCOPES_KEY: &str = "trustedScopes";
 
 #[derive(Debug, Clone, PartialEq, Eq)]

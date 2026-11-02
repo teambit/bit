@@ -11,6 +11,7 @@ use bit_object_import::component_rename::{Options, Plan};
 use serde_json::{Value, json};
 use std::{borrow::Cow, io, path::Path};
 
+/// Executes a [`Prepared`] component rename plan and returns the formatted [`Report`].
 pub(super) fn run(
     root: &Path,
     mut prepared: Prepared,

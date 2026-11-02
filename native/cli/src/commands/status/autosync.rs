@@ -10,6 +10,7 @@ use bit_install::workspace::Bitmap;
 use serde_json::{Value, json};
 use std::{fmt::Write as _, fs, io, path::Path, process::Command};
 
+/// Accumulated startup reconciliation state and captured output from `workspace.bitmapAutoSync`.
 #[derive(Default)]
 pub(in crate::commands) struct Startup {
     pub(in crate::commands) committed: bool,
@@ -20,6 +21,7 @@ pub(in crate::commands) struct Startup {
     pub(in crate::commands) snapshot_tail: Option<Value>,
 }
 
+/// Runs `.bitmap` auto-synchronization against `.git` when `workspace.bitmapAutoSync` is enabled.
 #[inline]
 pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
     if !root.join(".git").exists() {

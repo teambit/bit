@@ -21,8 +21,10 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit run` command.
 pub const COMMAND: Command = Command { name: "run", aliases: &[], run };
 
+/// Parsed command-line options for `bit run [app-name]`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub app_name: Option<String>,

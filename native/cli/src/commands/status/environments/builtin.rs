@@ -7,6 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Built-in component service level supported without spawning a Harmony host.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Services {
     Disabled,
@@ -14,6 +15,7 @@ pub(super) enum Services {
     Compiler,
 }
 
+/// Returns `true` when `component` uses only the built-in `teambit.react/react` environment and core aspects.
 #[inline]
 pub(super) fn supported(
     component: &WorkspaceComponent,

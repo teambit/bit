@@ -23,7 +23,7 @@ const DETECTOR_EXTENSIONS: [&str; 16] = [
     ".js", ".jsx", ".cjs", ".mjs", ".css", ".sass", ".less", ".scss", ".styl", ".mts", ".cts",
     ".ts", ".tsx", ".md", ".mdx", ".jsonc",
 ];
-/// The TypeScript version the engine's import resolution reproduces.
+/// The `TypeScript` version the engine's import resolution reproduces.
 const TYPESCRIPT: &str = "5.9.2";
 /// `getAllCoreAspectsIds()`: the list `npm run generate-core-aspects-ids`
 /// writes for `load-aspect` (`bit aspect list-core --json`).

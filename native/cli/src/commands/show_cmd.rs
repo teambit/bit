@@ -16,11 +16,15 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit show` command.
 pub const COMMAND: Command = Command { name: "show", aliases: &[], run };
 
+/// Error message when `bit show --remote` is run outside a workspace or scope without `--legacy`.
 const REMOTE_NO_HOST_ERR: &str = "error: the current directory is not a workspace nor a scope. the full \"bit show\" is not supported.\nto see the legacy bit show, please use \"--legacy\" flag";
+/// Error message when `bit show` is run locally outside a workspace or scope.
 const LOCAL_NO_HOST_ERR: &str = "Could not find a workspace or scope. Consider using --remote or run inside a valid workspace or scope.";
 
+/// Parsed CLI options for `bit show <component-name>`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: String,

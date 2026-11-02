@@ -15,9 +15,11 @@ use std::{
     time::UNIX_EPOCH,
 };
 
+/// Inline Node.js one-liner that writes `require('module').builtinModules` as JSON to stdout.
 const BUILTINS_SCRIPT: &str =
     "process.stdout.write(JSON.stringify(require('module').builtinModules))";
 
+/// Handle to the discovered Node.js CLI runtime used for built-in module and `TypeScript` version queries.
 pub struct Node {
     cli: NodeCli,
 }

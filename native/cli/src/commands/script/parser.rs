@@ -7,12 +7,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Parsed handler body for an environment script (`Shell` command string or `Function` body).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::commands) enum ScriptHandler {
     Shell(String),
     Function(String),
 }
 
+/// Named script entry extracted from an environment's `scripts()` definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct ParsedScript {
     pub name: String,

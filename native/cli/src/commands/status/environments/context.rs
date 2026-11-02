@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Initialize configured providers, then capture controls after their canonical bootstrap writes.
+/// Initializes configured environment providers and captures workspace status controls into `(context, Environments)`.
 #[inline]
 pub(in crate::commands) fn read_context(
     engine: &mut crate::commands::engine::Engine,

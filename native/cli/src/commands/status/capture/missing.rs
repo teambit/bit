@@ -6,6 +6,7 @@ use super::{Capture, Component, decline, full_identity, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Records a locally removed `target` into `captured.components` and returns `Ok(true)`.
 #[inline]
 pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Result<bool> {
     if target["locallyRemoved"] != true {

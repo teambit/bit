@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Check whether a non-glob component pattern is absent from a main-lane `.bitmap`.
+/// Checks whether a non-glob component `pattern` is absent from a main-lane `.bitmap`.
 pub(super) fn missing_component(root: &Path, pattern: &str) -> bool {
     let pattern = pattern.trim().trim_end_matches('/');
     if pattern.is_empty() || pattern.contains('@') {

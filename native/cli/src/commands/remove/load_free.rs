@@ -14,6 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Load-free component status and configuration reader backed by [`Engine`] and [`policy`].
 pub(super) struct Reader {
     engine: Engine,
     context: Value,

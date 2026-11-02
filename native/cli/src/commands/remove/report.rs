@@ -3,6 +3,7 @@
 //! [`render`] formats removed ([`removed_section`]), lane, and modified component sections using [`Formatter`].
 use crate::commands::workspace_command::format::Formatter;
 
+/// Renders the workspace, lane, and modified component sections of `RemoveTemplate`.
 #[inline]
 pub(super) fn render(
     format: &Formatter,

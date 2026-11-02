@@ -25,7 +25,9 @@ use std::{
 use cycles::cyclic;
 use kinds::Issue;
 
+/// Aspect ID for the dependency resolver extension (`teambit.dependencies/dependency-resolver`).
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Aspect ID for the component issues extension (`teambit.component/issues`).
 const ISSUES: &str = "teambit.component/issues";
 /// `ISSUE_FORMAT_SPACE`.
 const SPACE: &str = "          ";

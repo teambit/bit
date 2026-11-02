@@ -8,8 +8,7 @@ mod tests;
 
 use super::{Capture, Engine, Path, Value, array, decline, fresh, io, json};
 
-/// `capture.commit()`: staged histories validated, dependency caches written,
-/// then the histories written.
+/// Commits `capture` (`capture.commit()`): validates read receipts and staged histories, writes dependency caches, then writes histories.
 pub fn commit(
     engine: &mut Engine,
     root: &Path,

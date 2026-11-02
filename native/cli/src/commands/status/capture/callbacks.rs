@@ -6,6 +6,7 @@ use super::{CacheWrites, Capture};
 use serde_json::Value;
 use std::io;
 
+/// Retained host session, temporary callback directories, and buffered stdout for [`Capture`].
 #[derive(Default)]
 pub(super) struct Callbacks {
     pub(super) host: Option<crate::host::Host>,

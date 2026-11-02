@@ -2,7 +2,7 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the [`commit`] that writes what the command staged.
 //!
-//! Re-exports [`workspace_issues`], [`issue_callbacks`], [`commit_checkout_dependencies`], and [`snapshot_data`].
+//! Re-exports [`workspace_issues`], [`issue_callbacks`], [`commit_checkout_dependencies`], [`snapshot_data`], and [`commit`].
 
 pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,

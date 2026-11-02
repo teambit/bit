@@ -10,6 +10,7 @@ pub use bit_workspace_config::cache_root;
 use bit_workspace_config::global_config_dir;
 use std::{env, fs, path::Path};
 
+/// Feature flag name that disables filesystem dependency cache reads and writes.
 const NO_FS_CACHE: &str = "no-fs-cache";
 
 /// Whether `no-fs-cache` may be enabled in any config layer: `BIT_FEATURES`,

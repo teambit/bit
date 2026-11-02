@@ -12,6 +12,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Invokes `statusLoadCallbacks` on `host` when environment load or issue callbacks apply, updating `capture`.
 pub(in crate::commands::status) fn load(
     host: &Host,
     context: &Value,

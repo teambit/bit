@@ -11,6 +11,7 @@ use bit_install::{
 use serde_json::Value;
 use std::{fs, path::Path};
 
+/// Applies legacy package/component dependency fields and model dependency resolver policies onto `deps`.
 #[inline]
 pub(super) fn apply_version_dependencies(
     ver_val: &Value,

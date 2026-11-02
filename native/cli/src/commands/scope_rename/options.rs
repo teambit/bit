@@ -2,6 +2,7 @@
 //!
 //! [`parse`] validates `bit scope rename <current-scope> <new-scope>` and `rename-owner` flags into [`Options`].
 use bit_object_import::component_scope_rename::Options;
+/// Parses `bit scope <rename|rename-owner> <old-scope> <new-scope>` arguments into [`Options`].
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let filtered: Vec<&str> = args
         .iter()

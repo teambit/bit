@@ -16,9 +16,11 @@ use bit_object_import::parse_jsonc;
 use serde_json::Value;
 use std::{fs, io, path::Path, process::Command};
 
+/// Embedded JSON array of built-in core aspect IDs.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
+/// Failure classification for `bit script` distinguishing user errors from declined fallback cases.
 pub(super) enum ScriptFailure {
     User(String),
     Declined(String),

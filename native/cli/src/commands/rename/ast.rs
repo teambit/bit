@@ -9,7 +9,9 @@ use std::{
     path::Path,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter used to allocate unique temporary AST spool directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// RAII guard that removes a temporary AST transformation spool directory on drop.
 struct Spool(std::path::PathBuf);
 impl Drop for Spool {
     #[inline]

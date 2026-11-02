@@ -20,9 +20,12 @@ use bit_install::workspace::BitmapEntry;
 use serde_json::{Map, Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit set-peer` command.
 pub const SET_PEER: Command = Command { name: "set-peer", aliases: &[], run: run_set };
+/// Descriptor for the native `bit unset-peer` command.
 pub const UNSET_PEER: Command = Command { name: "unset-peer", aliases: &[], run: run_unset };
 
+/// Aspect ID for the dependency resolver configuration entry.
 pub(in crate::commands) const DEP_RESOLVER_ID: &str = "teambit.dependencies/dependency-resolver";
 
 #[derive(Debug, Clone, PartialEq, Eq)]

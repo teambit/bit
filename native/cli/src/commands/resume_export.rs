@@ -12,8 +12,10 @@ use super::{Command, workspace_command};
 use crate::native::Outcome;
 use std::{ffi::OsString, io};
 
+/// Descriptor for the native `bit resume-export` command.
 pub const COMMAND: Command = Command { name: "resume-export", aliases: &[], run };
 
+/// Parsed CLI options for `bit resume-export <export-id> <remotes...>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub export_id: String,

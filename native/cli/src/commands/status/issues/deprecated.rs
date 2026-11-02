@@ -7,9 +7,11 @@ use node_semver::{Range, Version};
 use serde_json::Value;
 use std::io;
 
+/// Aspect ID for the component deprecation extension (`teambit.component/deprecation`).
 const DEPRECATION: &str = "teambit.component/deprecation";
 
 impl Checks<'_> {
+    /// Returns the list of deprecated dependency IDs referenced by `component`.
     #[inline]
     pub(super) fn deprecated_dependencies(&self, component: &Component) -> io::Result<Vec<String>> {
         if deprecated(self.context, &component.identity)? {

@@ -18,8 +18,10 @@ use bit_install::{output::Output, policy::scope::read_proof};
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
+/// Decline reason when a lane reset requires published CI stack diagnostics.
 pub(super) const LANE_CI_DIAGNOSTIC: &str = "CI lane reset diagnostics require the published stack";
 
+/// Returns `true` when `pattern` contains glob, negation, comma, or whitespace meta-characters.
 #[inline]
 pub(super) fn complex(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', ']', '{', '}', '!', ',', '$', ' '])

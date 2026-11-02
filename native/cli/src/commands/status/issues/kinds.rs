@@ -10,6 +10,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Top-level status issue kind combining post-detection workspace checks and [`detected::Issue`] variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Issue {
     MissingManual,

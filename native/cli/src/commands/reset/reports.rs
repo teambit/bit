@@ -9,6 +9,7 @@ use bit_object_import::reset_soft::Plan as SoftPlan;
 use serde_json::{Map, Value};
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Formats the summary [`Report`] for a `--soft` reset [`SoftPlan`].
 pub(super) fn soft_report(args: &[OsString], plan: &SoftPlan) -> Report {
     let formatter = Formatter::new(Chalk::detect(args));
     let items: Vec<_> = plan.entries

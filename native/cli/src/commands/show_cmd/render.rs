@@ -6,9 +6,12 @@ use super::{deps::DepEntry, remote_show::ext_id_str, workspace_show::LoadedCompo
 use bit_install::config::{DEPENDENCY_RESOLVER_ASPECT, aspect_id_without_version};
 use serde_json::{Map, Value, json};
 
+/// Aspect ID for the `teambit.pkg/pkg` aspect.
 const PKG_ASPECT: &str = "teambit.pkg/pkg";
+/// Aspect ID for the `teambit.component/dev-files` aspect.
 const DEV_FILES_ASPECT: &str = "teambit.component/dev-files";
 
+/// Serializes `loaded` into the `bit show --json --legacy` consumer component JSON layout.
 pub(super) fn legacy_json(loaded: &LoadedComponent) -> Value {
     let comp_deps = component_dep_list(&loaded.deps, "runtime");
     let dev_comp_deps = component_dep_list(&loaded.deps, "dev");

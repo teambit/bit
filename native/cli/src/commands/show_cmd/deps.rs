@@ -17,6 +17,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Resolved component or package dependency entry for `bit show`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct DepEntry {
     pub id: String,
@@ -28,6 +29,7 @@ pub(super) struct DepEntry {
     pub relative_paths: Vec<Value>,
 }
 
+/// Borrowed scope, component name, and package name identity for self-dependency filtering.
 pub(super) struct Identity<'a> {
     pub scope: &'a str,
     pub name: &'a str,
