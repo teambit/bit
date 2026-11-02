@@ -53,6 +53,7 @@ impl Assets {
     }
 }
 
+/// Prefixes each embedded file in [`FILES`] with an `installation` `createRequire` binding for `package`.
 #[inline]
 fn build_payloads(package: &Path) -> io::Result<[(&'static str, String); 7]> {
     let prefix = format!(

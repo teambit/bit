@@ -63,8 +63,7 @@ pub struct Planned {
     capture: capture::Capture,
     /// The engine's plan: `result` and `progress` for the report.
     pub plan: Value,
-    /// The request that applies the plan: `commandApply`, or the resolve
-    /// commands' own.
+    /// The request that applies the plan (`commandApply` or the resolve command's own).
     apply: &'static str,
 }
 

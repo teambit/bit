@@ -60,6 +60,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+/// Executes `bit templates` when invoked outside a workspace (starter templates only).
 fn run_outside_workspace(
     cwd: &Path,
     args: &[OsString],

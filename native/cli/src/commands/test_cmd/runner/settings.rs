@@ -61,6 +61,7 @@ impl Settings {
         }
         Ok(settings)
     }
+    /// Applies tester CLI flags from `args` onto `self`.
     fn apply(&mut self, args: &[OsString]) -> io::Result<()> {
         let mut arguments = args.iter().skip(1);
         while let Some(argument) = arguments.next() {

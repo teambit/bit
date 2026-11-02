@@ -93,7 +93,7 @@ pub fn receipt(target: &Value, policy: &Policy, files: &[String]) -> io::Result<
     }))
 }
 
-/// Unused Node defaults for the separately validated callback extension projection.
+/// Unused Node defaults for the separately validated callback extension projection (`native/callback`).
 #[inline]
 pub fn callback_receipt(policy: &Policy) -> io::Result<Value> {
     receipt(&json!({"identity":"native/callback"}), policy, &[])

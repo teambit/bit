@@ -25,6 +25,7 @@ fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
         .any(|(path, _)| path == Path::new("/etc/group"))
 }
 
+/// Resolves group `name` in `/etc/group` when its GID matches the process effective GID, returning the file proof.
 #[cfg(unix)]
 #[inline]
 pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {

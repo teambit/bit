@@ -38,6 +38,7 @@ pub(super) fn strip_ansi(value: &str) -> std::borrow::Cow<'_, str> {
     ANSI.replace_all(value, "")
 }
 
+/// Returns `true` when `character` is a valid XML 1.0 character (`Char`) allowed in [`attribute`].
 #[inline]
 const fn is_allowed_xml_char(character: char) -> bool {
     matches!(character, '\t' | '\n' | '\r')

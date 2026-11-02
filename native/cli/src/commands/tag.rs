@@ -29,7 +29,7 @@ const REMOTE_BUILD_WARNING: &str = r#"tagging components on "main" lane when usi
 - Use `snap` or `build` first to validate your build passing, and then version and export safely.
 
 To undo local tag use the "bit reset" command."#;
-
+/// Entry point for `bit tag`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     if env::var("BIT_FEATURES")
         .is_ok_and(|features| {

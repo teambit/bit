@@ -82,6 +82,7 @@ fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
     payload
 }
 
+/// Returns `true` when bare file `scope` has a clean index, clean `unmerged.json`, and supported startup.
 #[inline]
 fn file_scope_supported(scope: &std::path::Path) -> bool {
     let root = ScopeRoot { path: scope.to_owned(), bare: true };

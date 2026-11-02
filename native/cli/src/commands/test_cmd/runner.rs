@@ -73,6 +73,7 @@ pub(super) fn warnings(output: &bit_install::output::Output, options: &Options) 
         output.warning("--all is deprecated, use --unmodified instead");
     }
 }
+/// Formats a completed [`Execution`] into either `--json` or human-readable [`text_summary`] output.
 fn format_execution(
     execution: Execution,
     options: &Options,

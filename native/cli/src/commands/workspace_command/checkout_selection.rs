@@ -88,6 +88,7 @@ pub(super) fn select(
     Ok((array(result.get("targets"), "checkout selected targets")?.to_vec(), loads, captured))
 }
 
+/// Extracts non-empty `"identity"` or `"id"` values from `selected` target rows.
 #[inline]
 fn selected_identities(selected: &[Value]) -> Vec<Value> {
     selected

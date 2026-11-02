@@ -47,6 +47,7 @@ fn validate_sources(directory: &Path, component: &Component) -> io::Result<()> {
     Ok(())
 }
 
+/// Verifies that no path segment between `root` and `path` is a symbolic link.
 #[inline]
 fn check(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(|_| invalid("tester source root"))?;

@@ -68,6 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("validate runner execution delegated".into()))
 }
 
+/// Fast-path validation outcome resolved before invoking the full workspace validation runner.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum FastOutcome {
     Empty,

@@ -47,6 +47,7 @@ impl Case {
         output.push_str("    </testcase>\n");
     }
 }
+/// Appends a `<failure>` or `<error>` child element with ANSI-stripped `message` onto `output`.
 #[inline]
 fn message(output: &mut String, kind: &str, message: Option<&str>) {
     let Some(message) = message else {

@@ -43,6 +43,7 @@ pub(super) struct Candidate {
     pub comp_bare_id: Option<String>,
 }
 
+/// Collected dependency update [`Candidate`] entries and optional `savePrefix` from `workspace.jsonc`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Collected {
     pub candidates: Vec<Candidate>,

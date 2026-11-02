@@ -59,6 +59,7 @@ pub(super) fn request_with_empty(
     Ok((json!({"root":root,"config":config,"options":options}), has_tests))
 }
 
+/// Builds the Jest `testMatch` array from either glob `patterns` or explicit `requested` test files.
 #[inline]
 fn test_match(
     component_dir: &Path,

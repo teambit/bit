@@ -39,6 +39,7 @@ pub(in crate::commands) struct Component {
     pub files: Vec<Value>,
 }
 
+/// Constructs an [`io::Error`] with `message` for invalid component-service state.
 #[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message)

@@ -65,6 +65,7 @@ fn owner(root: &Path, bitmap: &Bitmap, path: &Path) -> io::Result<String> {
     Ok(identity)
 }
 
+/// Collects normalized absolute paths of files in `component` that match `patterns`.
 pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Vec<PathBuf>> {
     let mut paths = Vec::with_capacity(component.files.len());
     for file in &component.files {

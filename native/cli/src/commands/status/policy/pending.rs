@@ -48,6 +48,7 @@ struct Inputs {
     proofs: Vec<Value>,
 }
 impl Inputs {
+    /// Reads `merge-conflict` and `unmerged.json` under `root` along with their [`read_proof`] receipts.
     fn read(root: &Path) -> io::Result<Self> {
         if root.as_os_str().is_empty()
             || root

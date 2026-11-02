@@ -41,6 +41,7 @@ fn canonical(row: &Value) -> Option<&str> {
     (serde_json::to_vec(row).ok()? == serde_json::to_vec(&value).ok()?).then_some(hash)
 }
 
+/// Extracts up to 128 validated 40-hex-character SHA-1 hashes from array `value`.
 #[inline]
 fn refs(value: &Value) -> Option<Vec<&str>> {
     let refs = value.as_array()?;

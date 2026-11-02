@@ -55,6 +55,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+/// Extracts the single positional aspect ID argument from `args`.
 #[inline]
 fn parse_target(args: &[OsString]) -> Option<String> {
     let tokens = args

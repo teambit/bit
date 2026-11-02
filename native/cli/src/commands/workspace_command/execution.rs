@@ -83,7 +83,7 @@ fn ci_active() -> bool {
     crate::commands::scope_rename::ci_active()
 }
 
-/// Locate the workspace root or emit `ConsumerNotFound` outside a workspace when `CI` is unset.
+/// Locates the workspace root or emits `ConsumerNotFound` outside a workspace when `CI` is unset.
 pub fn workspace_or_fail(
     args: &[OsString],
     command: &str,

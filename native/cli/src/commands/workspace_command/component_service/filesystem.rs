@@ -34,6 +34,7 @@ fn non_empty(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Maps a POSIX/Node.js error `code` to its lowercase human-readable description.
 #[inline]
 fn code_description(code: &str) -> Option<&'static str> {
     match code {

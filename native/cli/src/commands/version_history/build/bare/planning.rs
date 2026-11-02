@@ -49,6 +49,7 @@ pub(super) fn prepare(
     finish(root, &target, head, proofs, lane_heads, delete_existing)
 }
 
+/// Resolves `id` (literal or single-match pattern) in `root` into a [`Target`].
 #[inline]
 fn resolve_target(root: &Path, id: &str) -> Option<Target> {
     let id = id.trim();

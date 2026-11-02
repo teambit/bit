@@ -33,6 +33,7 @@ pub struct Adoption {
 pub fn parse(args: &[&str]) -> Option<Options> {
     parse_mode(args, false)
 }
+/// Parses `bit lane import <lane>` CLI arguments into [`Options`].
 #[must_use]
 #[inline]
 pub(in crate::commands) fn parse_import(args: &[&str]) -> Option<Options> {

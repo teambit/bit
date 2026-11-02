@@ -34,6 +34,7 @@ impl Status<'_> {
         self.updates("updatesFromForked", name)
     }
 
+    /// Formats each entry in `self.result[field]` as `<id> ... <from> is ahead by <n> snaps`.
     fn updates(&self, field: &str, from: &str) -> io::Result<Vec<String>> {
         let rows = array(self.result.get(field), field)?;
         let forked = if field == "updatesFromForked" {

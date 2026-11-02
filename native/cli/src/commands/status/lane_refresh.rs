@@ -21,6 +21,7 @@ pub(super) struct Refreshes {
 }
 
 impl Refreshes {
+    /// Prepares main-lane and forked-lane head refreshes when `lanes` (`--lanes`) is set.
     pub(super) fn prepare(
         engine: &mut Engine,
         root: &Path,

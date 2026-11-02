@@ -38,6 +38,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+/// Parses `args` into `bit system log` or an unrecognized single-token subcommand.
 fn parse_args(args: &[OsString]) -> Option<Parsed> {
     let raw_tokens = args
         .iter()

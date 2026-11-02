@@ -26,6 +26,7 @@ pub(super) fn matches_aspect(entry: &Value, id: &str) -> bool {
     crate::commands::update_cmd::matches_aspect(entry, id)
 }
 
+/// Single dependency policy entry extracted from an environment or variant policy object.
 struct Entry {
     name: String,
     version: String,

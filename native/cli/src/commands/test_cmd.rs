@@ -42,6 +42,7 @@ pub(super) enum FastOutcome {
     Error(String),
 }
 
+/// Entry point for `bit test`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("test arguments are not UTF-8".into()));

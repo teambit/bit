@@ -36,6 +36,7 @@ fn default_workspace_scope(workspace: &Value) -> Option<&str> {
         .filter(|scope| !scope.is_empty())
 }
 
+/// Invokes `commandInboundList` on `engine` for `scope/**` and returns the non-empty component IDs.
 fn list(engine: &mut Engine, root: &Path, scope: &str) -> io::Result<Vec<Value>> {
     let cli = NodeCli::find()?;
     let listed: Value = engine.request(&json!({

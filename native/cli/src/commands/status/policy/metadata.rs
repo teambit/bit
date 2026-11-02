@@ -78,6 +78,7 @@ pub fn peer_metadata(state: &Value) -> io::Result<Value> {
     metadata_dependencies(lifecycles.get(2).unwrap_or(&Value::Null), entries)
 }
 
+/// Projects lifecycle dependency `indices` against `entries` into a JSON array of component dependency objects.
 fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value> {
     let indices = array(Some(indices), "dependency indices")?;
     let rows = indices

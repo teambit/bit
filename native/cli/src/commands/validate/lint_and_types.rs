@@ -72,6 +72,7 @@ pub(super) struct StepResult {
     pub message: String,
 }
 
+/// Runs the `check-types` validation step across `matched` workspace components.
 pub(super) fn run_check_types_step(matched: &[(&BitmapEntry, &WorkspaceComponent)]) -> StepResult {
     let mut error_files = 0usize;
     let mut details = Vec::new();

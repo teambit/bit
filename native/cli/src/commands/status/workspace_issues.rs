@@ -63,6 +63,7 @@ fn invalid_top_level_key(obj: &serde_json::Map<String, Value>) -> Option<String>
     Some(format!(r#"unable to parse the component-id "{key}" from the workspace.jsonc file"#))
 }
 
+/// Returns an error message when `teambit.workspace/variants` references an unknown `teambit.harmony/*` aspect.
 #[inline]
 fn unknown_variant_harmony_aspect(obj: &serde_json::Map<String, Value>) -> Option<String> {
     let variants = obj

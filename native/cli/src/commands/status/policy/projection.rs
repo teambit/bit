@@ -55,6 +55,7 @@ fn core_aspects() -> io::Result<&'static [String]> {
     Ok(CORE.get_or_init(|| parsed))
 }
 
+/// Populates `merger` with `.bitmap`, `merge-conflict`, `component.json`, model, and variant aspect configurations.
 fn populate(
     merger: &mut Merger<'_>,
     core: &[String],

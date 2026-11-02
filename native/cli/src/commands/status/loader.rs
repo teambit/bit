@@ -65,6 +65,7 @@ fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progres
     }
 }
 
+/// Formats the spinner reason suffix (`"for fetching lane ..."`) for an optional `forked_id`.
 #[inline]
 fn forked_lane_reason(forked_id: Option<&str>) -> String {
     let mut parts = forked_id

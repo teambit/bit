@@ -74,6 +74,7 @@ pub(super) fn run(
     emit_text(root, args, "build", true, report)
 }
 
+/// Resolves the target component identity (or pattern matches) for a version-history rebuild in `root`.
 #[inline]
 fn select(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Vec<String>> {
     if id.contains('*') || id.contains(',') {

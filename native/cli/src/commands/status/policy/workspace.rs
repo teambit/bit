@@ -59,6 +59,7 @@ fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     }))
 }
 
+/// Extracts the `"policy"` object from the [`RESOLVER`] aspect entry in `context["workspace"]`.
 #[inline]
 fn configured_policy(context: &Value) -> io::Result<Option<&Value>> {
     let resolver = nullish(

@@ -50,6 +50,7 @@ impl Graph {
         Some(graph)
     }
 
+    /// Inserts `hash` and all referenced parent, squashed, and unrelated hashes from `row` as graph vertices.
     fn add_row_nodes(&mut self, hash: &str, row: &Value) -> Option<()> {
         self.add_node(hash)?;
         for hash in refs(row, "parents")?

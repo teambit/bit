@@ -72,6 +72,7 @@ fn success_section(results: &Results, options: &Options, formatter: &Formatter) 
     }
 }
 
+/// Formats the `switch skipped` section or its minimal `--details` hint.
 #[inline]
 fn format_skipped(
     skipped: &[(crate::commands::ids::Id, String)],

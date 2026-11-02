@@ -60,6 +60,7 @@ fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<Stri
     render(&history, &model, short, chalk, &lanes)
 }
 
+/// Builds the topological [`graph::Graph`] from `history` and formats each node row with `model` and `lanes` pointers.
 #[inline]
 fn render(
     history: &Value,

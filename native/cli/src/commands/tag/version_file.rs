@@ -68,6 +68,7 @@ fn parse(content: &str) -> io::Result<Value> {
     Ok(json!({"entries":entries,"default":default}))
 }
 
+/// Collects all non-empty version strings from `data["entries"]` and `data["default"]`.
 #[inline]
 pub(super) fn entered_versions(data: &Value) -> Vec<String> {
     data["entries"]

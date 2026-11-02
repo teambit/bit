@@ -63,6 +63,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     Some(json)
 }
 
+/// Formats `version` as plain text or pretty-printed `{ "bit": version }` JSON when `json` is `true`.
 #[inline]
 fn render_version(version: &str, json: bool) -> io::Result<std::borrow::Cow<'_, str>> {
     if json {

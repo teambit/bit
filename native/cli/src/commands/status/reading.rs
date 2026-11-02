@@ -72,6 +72,7 @@ fn read_prepared<Prepared>(
     Ok((result, prepared, progress))
 }
 
+/// Computes the local status result, component [`capture::Capture`], and external issue-graph proofs for `root`.
 pub(super) fn local_result(
     engine: &mut Engine,
     root: &Path,

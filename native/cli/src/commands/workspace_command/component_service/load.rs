@@ -29,6 +29,7 @@ impl Loaded {
         self.capture.dependency_states.get(identity.trim())
     }
 
+    /// Returns the slice of captured component [`Value`] entries.
     #[must_use]
     #[inline]
     pub(in crate::commands) fn captured(&self) -> &[Value] {

@@ -63,6 +63,7 @@ impl Stream {
         }
         Ok(session)
     }
+    /// Spawns the Node.js Jest runner process connected to `listener` with `token`.
     fn spawn(
         colors: bool,
         args: &[OsString],

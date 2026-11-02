@@ -35,6 +35,7 @@ fn non_empty_str(val: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Extracts `<scope>/<name>` from a string or legacy object `componentId` [`Value`].
 #[inline]
 fn component_identity(id: &Value) -> Option<String> {
     if let Some(raw) = non_empty_str(id) {

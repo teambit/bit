@@ -61,6 +61,7 @@ fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io:
     Ok(())
 }
 
+/// Merges `source`'s `testMatch` and `coveragePathIgnorePatterns` arrays into `target`.
 fn merge(target: &mut Value, source: &Value) -> io::Result<()> {
     let patterns =
         source["config"]["testMatch"].as_array().ok_or_else(|| invalid("tester match patterns"))?;

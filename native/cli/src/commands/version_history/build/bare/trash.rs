@@ -40,6 +40,7 @@ pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     }
 }
 
+/// Returns `name` when it is non-empty and not whitespace-only.
 #[cfg(unix)]
 #[inline]
 fn non_empty_os_name(name: Option<&std::ffi::OsStr>) -> Option<&std::ffi::OsStr> {

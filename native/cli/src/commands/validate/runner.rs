@@ -81,6 +81,7 @@ fn load_eligible_workspace(root: &Path) -> Option<Workspace> {
     Some(ws)
 }
 
+/// Resolves the target workspace components to validate based on `options`.
 fn resolve_targets<'a>(
     root: &Path,
     ws: &'a Workspace,

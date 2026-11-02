@@ -52,6 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("watch execution delegated".into()))
 }
 
+/// Emits `err` (and optional `--import` deprecation warning) for `bit watch` inside or outside a workspace.
 fn emit_watch_err(
     cwd: &Path,
     root: Option<&Path>,

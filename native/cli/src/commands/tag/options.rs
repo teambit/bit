@@ -44,7 +44,7 @@ pub struct Options {
     pub skip_auto_tag: bool,
     pub mode: Mode,
 }
-
+/// Component pattern list and optional `--versions-file` path for `bit tag`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TagSelection {
     pub patterns: Vec<String>,

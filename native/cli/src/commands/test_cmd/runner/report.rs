@@ -78,6 +78,7 @@ fn file(row: &Value) -> io::Result<Value> {
     }
     Ok(result)
 }
+/// Projects a single Jest assertion row into a Bit tester `tests` entry.
 #[inline]
 fn test(row: &Value) -> Value {
     let mut value = json!({"ancestor":row["ancestorTitles"],"name":row["title"],"status":row["status"],"duration":row["duration"]});

@@ -35,7 +35,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     run_options(args, &argv, &options, false)
 }
-
+/// Entry point for `bit lane import <lane>` sharing the switch execution pipeline.
 #[inline]
 pub(super) fn lane_import(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse_import(&argv[2..]) else {

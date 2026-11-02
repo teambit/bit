@@ -68,6 +68,7 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     Some(token)
 }
 
+/// Parses a single `bit whoami` flag (`--token`, `--token=<value>`, or color flag) into `token`.
 #[inline]
 fn apply_whoami_arg<'a>(
     str_arg: &str,

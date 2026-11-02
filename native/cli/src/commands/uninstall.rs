@@ -77,6 +77,7 @@ fn detect_terminal(args: &[OsString]) -> Terminal {
     Terminal::detect(&argv)
 }
 
+/// Validated package list, discovered [`discovery::NodeCli`], working directory, and workspace root for `bit uninstall`.
 struct Prepared {
     packages: Vec<String>,
     cli: discovery::NodeCli,

@@ -25,7 +25,7 @@ pub(super) struct ResolvedUpdate {
     pub latest_range: String,
     pub target: Target,
 }
-
+/// Resolves each [`Candidate`] in `candidates` against local scope remotes or npm into [`ResolvedUpdate`] entries.
 pub(super) fn resolve_updates(
     root: &Path,
     candidates: &[Candidate],

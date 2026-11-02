@@ -37,6 +37,7 @@ impl Session {
         };
         Ok(Self { inner })
     }
+    /// Runs the prepared Jest worker session to completion and returns its result [`Value`].
     #[inline]
     pub(super) fn run(&mut self) -> io::Result<Value> {
         match &mut self.inner {

@@ -34,8 +34,8 @@ pub fn truthy(value: Option<&Value>) -> bool {
     }
 }
 
-/// An array index key, which JavaScript objects order before every other
-/// key. Values keyed that way would serialize in a different order than
+/// An array index key, which `JavaScript` objects order before every other
+/// key (checked by [`object`]). Values keyed that way would serialize in a different order than
 /// they were inserted, so they decline.
 #[inline]
 fn index_like(key: &str) -> bool {

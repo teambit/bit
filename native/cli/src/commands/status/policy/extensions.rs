@@ -43,6 +43,7 @@ pub fn status_extensions(target: &Value) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Normalizes a projected extension [`Value`] or validates a bare model extension via [`model_extension`].
 #[inline]
 fn projected_extension(extension: &Value) -> io::Result<Value> {
     if nullish(extension.get("extensionId")).is_some()
