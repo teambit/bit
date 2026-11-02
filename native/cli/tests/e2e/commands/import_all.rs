@@ -28,7 +28,7 @@ fn bitmap_without_objects(export: bool) -> Helper {
     helper
 }
 
-/// The output of a failed run.
+/// Asserts that `run` failed and returns concatenated stdout and stderr.
 fn failure(run: &Run) -> String {
     assert!(!run.status.success(), "succeeded:\n{}", run.stdout);
     format!("{}{}", run.stdout, run.stderr)

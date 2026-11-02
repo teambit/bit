@@ -7,6 +7,7 @@ use crate::{
     commands::move_paths::support,
     helper::{Helper, remote},
 };
+/// Updated source file contents written to `comp4` before tagging its newer remote version.
 const UPDATED: &str = "module.exports='new remote target version';\n";
 fn stale_target() -> Helper {
     let helper = dependents::graph();

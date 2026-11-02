@@ -4,6 +4,7 @@
 
 use serde_json::Value;
 
+/// Validates root-first ancestor ordering and sorts sibling `filesDiff` entries for JSON comparison.
 pub(super) fn normalize(output: &str) -> Value {
     let mut result: Value = serde_json::from_str(output).unwrap();
     let rows = result[0]["filesDiff"].as_array_mut().unwrap();

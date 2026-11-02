@@ -1,4 +1,4 @@
-//! End-to-end tests comparing released `bit compile` emitted bytes, reports ([`duration`]), caches, and package links at the same workspace path.
+//! End-to-end tests comparing released `bit compile` emitted bytes ([`builtin_compile_emitted_bytes_loader_caches_and_repeated_runs_match_node`]), reports ([`duration`]), caches, and package links at the same workspace path.
 //!
 //! Verifies [`support`] replay comparisons for built-in compiler outputs and `--json` / `--verbose` reports.
 

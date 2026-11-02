@@ -4,6 +4,7 @@
 
 use std::io::Read;
 
+/// Decompresses up to 4096 bytes of a `zlib`-compressed scope object into a UTF-8 diagnostic string.
 pub(super) fn decode(bytes: &[u8]) -> Option<String> {
     let mut decoded = Vec::new();
     flate2::read::ZlibDecoder::new(bytes)

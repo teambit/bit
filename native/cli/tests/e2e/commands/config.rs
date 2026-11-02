@@ -5,6 +5,7 @@
 use crate::helper::{Helper, Run, setup};
 use serde_json::Value;
 
+/// Runs a `bit config` command with an isolated `BIT_GLOBALS_DIR` and asserts native execution.
 fn run_config(helper: &Helper, command: &str) -> Run {
     let globals = helper.scopes.e2e_dir.join("globals");
     if !globals.exists() {

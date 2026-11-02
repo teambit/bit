@@ -5,6 +5,7 @@
 use super::super::inventory;
 use std::{fmt::Write as _, fs, path::Path};
 
+/// First backup timestamp fixture (`2026-10-18-12-0-0`).
 const FIRST: &str = "2026-10-18-12-0-0";
 const SECOND: &str = "2026-10-18-12-0-1";
 const THIRD: &str = "2026-10-18-12-0-2";

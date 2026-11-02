@@ -5,6 +5,7 @@
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::ffi::OsStr;
 
+/// Verifies `bit cli generate --docs` metadata and skill options match the pinned `Node.js` CLI.
 #[test]
 fn cli_generate_docs_options_match_pinned_node() -> KnownResult<()> {
     let helper = Helper::new();

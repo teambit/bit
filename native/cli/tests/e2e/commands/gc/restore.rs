@@ -7,6 +7,7 @@ mod conflicts;
 use super::{compare, fixture, objects, orphan};
 use std::{fs, os::unix::fs::PermissionsExt};
 
+/// Verifies `bit gc --restore` preserves read-only existing objects unless `--restore-overwrite` is passed.
 #[test]
 fn bare_restore_preserves_readonly_existing_objects_unless_overwriting() {
     for command in ["gc --restore", "gc --restore-overwrite"] {

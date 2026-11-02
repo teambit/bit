@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Verifies user-tracked `package.json` files are linked without generated metadata under `trackAllFiles`.
 #[test]
 fn tracked_package_json_is_linked_without_generated_metadata_matching_node() {
     let helper = Helper::new();

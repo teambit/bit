@@ -6,6 +6,7 @@ mod comparison;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
+/// Asserts that `command` succeeds on both native and `Node.js` CLIs with identical workspace state.
 fn parity(helper: &Helper, command: &str) {
     parity_status(helper, command, true);
 }

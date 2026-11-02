@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/reset.e2e.ts` for native `bit reset` and `bit untag` parity ([`cat_component`], [`list_local_scope`], [`read_bitmap`]).
+//! End-to-end port of `e2e/commands/reset.e2e.ts` for native `bit reset` and `bit untag` parity ([`cat_component`], [`list_local_scope`], [`read_bitmap`], [`aspect_config`]).
 //!
 //! Covers resetting local tags and snaps, `--all`, `--head`, `--soft`, and dependent component validation.
 

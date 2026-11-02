@@ -5,6 +5,7 @@
 use crate::helper::{Helper, config::read_jsonc};
 use std::ffi::OsStr;
 
+/// Verifies `bit import --fetch-deps` materializes only the selected component in `.bitmap`.
 #[test]
 fn fetch_deps_materializes_only_the_selected_component() {
     let helper = Helper::new();

@@ -2,6 +2,7 @@
 //!
 //! Provides deterministic output normalization for two-scope asynchronous `bit resume-export` probes.
 
+/// Canonicalizes the two-scope `pending objects to delete (2)` probe permutation for `mixed_scope`.
 pub(super) fn normalize(output: &str, mixed_scope: Option<&str>) -> String {
     let Some(scope) = mixed_scope else { return output.to_owned() };
     let heading = "  pending objects to delete (2)\n  (of the export-id \"fixture-export\")\n";

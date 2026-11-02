@@ -11,6 +11,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::path::Path;
 
+/// Registers `name` -> `file://<path>` in `workspace/.bit/scope.json` remotes.
 fn add_remote(workspace: &Path, name: &str, path: &Path) {
     config::update_scope_json(&workspace.join(".bit/scope.json"), |scope| {
         let remotes = scope

@@ -10,6 +10,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+/// Verifies workspace `bit gc --backup` and `--restore` match across text, JSON, and CI modes.
 #[test]
 fn workspace_collection_and_restore_match_in_text_json_and_ci_modes() {
     for (collect, restore, ci) in [

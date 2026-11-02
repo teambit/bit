@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, config},
 };
 use serde_json::json;
+/// Configures the `env/adoption` aspect provider in `helper`'s workspace.
 fn configure(helper: &Helper) {
     let source = include_str!("callbacks.cjs");
     helper.output_file("adoption-provider/index.js", source);

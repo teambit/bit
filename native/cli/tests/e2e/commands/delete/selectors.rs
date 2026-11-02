@@ -4,6 +4,7 @@
 
 use crate::commands::move_paths::support::{self, bitmap, successful};
 
+/// Verifies `$modified` and `$codeModified` selectors soft-delete only the modified component.
 #[test]
 fn modified_and_code_modified_delete_only_the_selected_component() {
     for state in ["$modified", "$codeModified"] {

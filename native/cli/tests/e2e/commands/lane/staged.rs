@@ -11,6 +11,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs, path::Path};
 
+/// Verifies staged `main` snaps move to the newly created lane with and without a remote head.
 #[test]
 fn staged_main_snaps_move_to_the_new_lane_with_and_without_a_remote_head() {
     for exported in [false, true] {

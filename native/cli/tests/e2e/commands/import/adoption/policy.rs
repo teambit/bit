@@ -8,6 +8,7 @@ use crate::{
     helper::{Helper, config, remote},
 };
 use serde_json::{Value, json};
+/// Canonical aspect ID for `teambit.dependencies/dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 fn fixture() -> Helper {
     let helper = support::workspace(2, false);

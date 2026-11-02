@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Computes the lowercase 40-hex SHA-1 digest of `value`.
 pub(super) fn digest(value: &str) -> String {
     format!("{:x}", Sha1::digest(value.as_bytes()))
 }

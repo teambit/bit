@@ -5,6 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
+/// Verifies `.node-app.js` application registration metadata matches `Node.js` after `bit snap`.
 #[test]
 fn node_application_registration_matches_node_snapshot() {
     let helper = Helper::new();

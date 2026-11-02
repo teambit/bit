@@ -5,6 +5,7 @@
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};
 
+/// Verifies `bit run --help` and `-h` match `Node.js` across workspaces, bare scopes, and outside directories.
 #[test]
 fn run_help_matches_node() -> KnownResult<()> {
     let helper = Helper::new();

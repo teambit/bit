@@ -4,6 +4,7 @@
 
 use super::assert_errors;
 
+/// Returns the two expected `zlib.inflate` corruption error variants for [`assert_errors`] tests.
 fn variants() -> [String; 2] {
     let body = "fatal: zlib.inflate has failed with an error: \"incorrect header check\"\ntry running bit import --all-history to fix the corrupted objects";
     [body.into(), format!("remote actual.remote responded with the following error:\n{body}")]

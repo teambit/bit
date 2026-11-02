@@ -2,6 +2,7 @@
 //!
 //! Preserves all non-completion output lines and validates elapsed time suffixes via [`valid_duration`].
 
+/// Replaces validated `importing components (completed in ...)` durations with `<duration>`.
 pub(super) fn durations(text: &str) -> String {
     text.split_inclusive('\n')
         .map(completion)

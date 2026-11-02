@@ -9,6 +9,7 @@ use std::{
     time::SystemTime,
 };
 
+/// Captured file modification time and optional directory permissions.
 struct Entry {
     modified: SystemTime,
     permissions: Option<fs::Permissions>,

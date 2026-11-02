@@ -14,6 +14,7 @@ use std::{
 pub(super) fn wait_past_setup_history(root: &Path) {
     history::Histories::wait_past_setup(root);
 }
+/// Compares all files and normalized backup histories between `actual` and `expected` roots.
 pub(super) fn tree(actual: &Path, expected: &Path, command: &str, rebuilt_index: bool) {
     let actual = inventory(actual, rebuilt_index);
     let expected = inventory(expected, rebuilt_index);

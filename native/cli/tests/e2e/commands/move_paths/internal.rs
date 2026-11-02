@@ -5,6 +5,7 @@
 use super::support::{bitmap, compare, setup, workspace};
 use std::fs;
 
+/// Verifies `bit move` relocates ignored files physically while reporting only tracked files.
 #[test]
 fn nested_directory_moves_ignored_bytes_but_reports_only_tracked_files() {
     let helper = workspace(0, false);

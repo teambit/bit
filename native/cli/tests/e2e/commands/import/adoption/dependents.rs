@@ -9,6 +9,7 @@ use crate::{
 };
 use std::fmt::Write;
 
+/// Builds a workspace connected to a remote scope with a multi-hop dependent component graph.
 pub(super) fn graph() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

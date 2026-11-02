@@ -6,6 +6,7 @@ mod cross_scope;
 use crate::helper::{Helper, config::read_jsonc};
 use std::{ffi::OsStr, fs};
 
+/// Builds a workspace fixture with `main` and multiple exported lanes (`dev`, `zeta`).
 fn fixture() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

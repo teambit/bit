@@ -5,7 +5,7 @@
 use crate::helper::{Helper, remote};
 use std::fs;
 
-/// bit remove command › with tagged components and --track=false
+/// Verifies `bit remove` on a tagged component with `--track=false` removes it from `.bitmap`, `list`, and `status`.
 #[test]
 fn with_tagged_components_and_track_false() {
     let helper = Helper::new();

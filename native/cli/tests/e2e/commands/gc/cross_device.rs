@@ -8,6 +8,7 @@ use std::{
     os::unix::fs::{MetadataExt, symlink},
 };
 
+/// Verifies bare-scope `bit gc` moves files and symlinks across `/dev/shm` (`EXDEV`) device boundaries.
 #[test]
 fn bare_collection_moves_files_and_links_across_devices_without_node() {
     for linked in [false, true] {

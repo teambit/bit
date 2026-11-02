@@ -10,6 +10,7 @@ use crate::{
 };
 use std::fs;
 
+/// Verifies recovering an undeleted remote component imports scope objects without tracking it in `.bitmap`.
 #[test]
 fn undeleted_remote_component_keeps_scope_import_prefix_without_tracking() {
     let helper = workspace(1, true);

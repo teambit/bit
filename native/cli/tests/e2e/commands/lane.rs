@@ -1,4 +1,4 @@
-//! End-to-end client-side lane creation, import, switch, and list CLI parity ([`RemoteScopeServer`]) from a clean or [`staged`] workspace.
+//! End-to-end client-side lane creation, import ([`lane_import_on_main_and_same_lane_matches_node`]), switch, and list CLI parity ([`RemoteScopeServer`]) from a clean or [`staged`] workspace.
 
 mod staged;
 use crate::helper::{Helper, config, parse, remote, setup};

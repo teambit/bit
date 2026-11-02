@@ -6,6 +6,7 @@ use super::{compare, fixture, objects, orphan};
 use crate::commands::move_paths::support;
 use serde_json::json;
 
+/// Verifies `bit gc --verbose` counts shared lane versions and reports deleted sources.
 #[test]
 fn verbose_bare_collection_counts_shared_lane_versions_and_reports_deleted_sources() {
     let helper = fixture();

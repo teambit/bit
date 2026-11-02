@@ -9,6 +9,7 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
+/// Verifies `bit recover` preserves aspect provider `.bitmap` configuration and new source files.
 #[test]
 fn recovery_preserves_provider_configuration_and_new_source_files() {
     let helper = workspace(1, true);

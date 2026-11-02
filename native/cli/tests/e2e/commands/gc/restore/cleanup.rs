@@ -9,6 +9,7 @@ use std::{
     time::SystemTime,
 };
 
+/// Captured `(exit_code, stdout, stderr, scope_tree)` tuple for `bit gc --restore` comparison.
 type Snapshot = (Option<i32>, String, String, BTreeMap<String, Vec<u8>>);
 
 #[test]

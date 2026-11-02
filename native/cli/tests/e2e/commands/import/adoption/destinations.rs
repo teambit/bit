@@ -8,6 +8,7 @@ use crate::{
     helper::Helper,
 };
 use std::fs;
+/// Returns a workspace whose untracked `comp1` directory contains an existing `sentinel.txt` file.
 fn occupied() -> (Helper, serde_json::Value) {
     let helper = exported(1);
     support::setup(&helper, &command(&helper, "comp1", ""));

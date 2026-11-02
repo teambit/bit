@@ -17,6 +17,7 @@ use crate::{
 use serde_json::Value;
 use std::fs;
 
+/// Creates a fresh workspace connected to a remote scope containing `count` published components.
 fn exported(count: usize) -> Helper {
     let helper = support::workspace(count, true);
     remote::publish(&helper);

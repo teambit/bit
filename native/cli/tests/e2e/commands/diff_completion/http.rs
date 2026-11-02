@@ -11,6 +11,7 @@ use std::{
     time::Duration,
 };
 
+/// Guard holding the child process of an ephemeral bare-scope `bit start` HTTP server.
 pub(crate) struct Server(Child);
 
 impl Drop for Server {

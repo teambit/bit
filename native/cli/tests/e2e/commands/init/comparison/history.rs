@@ -7,6 +7,7 @@ mod tests;
 
 use std::{collections::BTreeMap, fs, io, path::Path};
 
+/// Map of relative metadata paths to normalized [`History`] snapshots.
 pub(super) struct Histories(BTreeMap<String, History>);
 struct History {
     directory: String,

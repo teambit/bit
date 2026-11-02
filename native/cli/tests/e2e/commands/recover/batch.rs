@@ -4,6 +4,7 @@
 
 use crate::commands::move_paths::support::{bitmap, setup, successful, workspace};
 use std::fs;
+/// Canonical aspect ID for `teambit.component/remove`.
 const REMOVE: &str = "teambit.component/remove";
 
 #[test]

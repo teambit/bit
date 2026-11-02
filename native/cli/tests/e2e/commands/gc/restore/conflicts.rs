@@ -6,6 +6,7 @@ use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path, time::SystemTime};
 
+/// Captured `(exit_code, stdout, stderr, scope_tree)` tuple for `bit gc --restore` conflict tests.
 type Snapshot = (Option<i32>, String, String, BTreeMap<String, Vec<u8>>);
 
 #[test]

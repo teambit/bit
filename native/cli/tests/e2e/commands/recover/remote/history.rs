@@ -7,6 +7,7 @@ use crate::{
     helper::{Helper, Run},
 };
 
+/// Compares `command` against `Node.js` while asserting `["import", "recover"]` `.bitmap` history transitions.
 pub(in crate::commands::recover) fn compare(
     helper: &Helper,
     command: &str,

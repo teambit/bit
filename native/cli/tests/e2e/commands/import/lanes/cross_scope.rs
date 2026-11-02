@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Verifies cross-scope lane fetch matches released component models, refs, and reports.
 #[test]
 fn cross_scope_lane_fetch_matches_released_models_refs_and_reports() {
     for advanced in [false, true] {
