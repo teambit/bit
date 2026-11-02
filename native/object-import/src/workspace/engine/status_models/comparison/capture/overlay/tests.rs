@@ -1,6 +1,6 @@
 //! Unit tests for callback source overlay manifest [`Request`] and [`Target`] validation via [`capture`].
 //!
-//! Verifies that spooled callback overlays stay confined within `sourceOverlayRoot`.
+//! Verifies that spooled callback overlays stay confined within `sourceOverlayRoot` in `bit-object-import`.
 
 use crate::workspace::engine::status_models::comparison::{Request, Target, capture};
 use serde_json::json;

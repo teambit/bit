@@ -1,6 +1,6 @@
 //! Unit tests for status result [`Request`] modified component and [`read`] auto-tag computation.
 //!
-//! Verifies modified component classification and transitive auto-tag pending discovery.
+//! Verifies modified component classification and transitive auto-tag pending discovery in `bit-object-import`.
 
 use super::{Request, read};
 use serde_json::{Value, json};

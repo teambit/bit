@@ -1,6 +1,6 @@
 //! Unit tests for component log [`tags`] precedence and [`row`] removal metadata projection.
 //!
-//! Ensures normal tags override `orphanedVersions` labels and newest tags win ties.
+//! Ensures normal tags override `orphanedVersions` labels and newest tags win ties in `bit-object-import`.
 
 use super::{row, tags};
 use serde_json::json;

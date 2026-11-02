@@ -1,6 +1,6 @@
 //! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]) in `bit-object-import`.
 //!
-//! Validates scoped and unscoped staged component matching and rejects ambiguous unscoped names.
+//! Validates scoped and unscoped staged component matching and rejects ambiguous unscoped names or missing versions.
 
 use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};

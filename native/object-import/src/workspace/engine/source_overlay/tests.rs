@@ -1,6 +1,6 @@
 //! Unit tests for spooled [`SourceOverlay`] resolution and [`proof`] validation without disk mutations.
 //!
-//! Validates [`resolve_one`] and [`Budget`] enforcement across spooled overlay slices.
+//! Validates [`resolve_one`] and [`Budget`] enforcement across spooled overlay slices in `bit-object-import`.
 
 use super::SourceOverlay;
 use crate::workspace::engine::{

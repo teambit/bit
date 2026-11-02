@@ -1,6 +1,6 @@
 //! Unit tests for the persistent Node [`FileBridge`] remote action bridge process in `bit-object-import`.
 //!
-//! Verifies request/response framing and process reuse across multiple file-remote actions.
+//! Verifies request/response framing and process reuse across multiple file-remote actions and error states.
 
 use super::FileBridge;
 use serde_json::json;

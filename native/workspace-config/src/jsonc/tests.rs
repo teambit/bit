@@ -1,6 +1,6 @@
 //! Unit tests for comment-preserving `JSONC` [`Document`] [`parse`], formatting, and policy updates.
 //!
-//! Exercises [`golden`] round-trip cases and sorted dependency policy insertion.
+//! Exercises [`golden`] round-trip cases and sorted dependency policy insertion in `bit-workspace-config`.
 
 mod golden;
 

@@ -1,6 +1,6 @@
 //! Unit tests for shared [`Budgets`] output patch budgets across workspace diff [`Request`] and [`read`].
 //!
-//! Confirms that [`File`] diff generation enforces shared raw, packed, and output [`Budget`] limits.
+//! Confirms that [`File`] diff generation enforces shared raw, packed, and output [`Budget`] limits in `bit-object-import`.
 
 use super::{Budgets, File, Request, read};
 use crate::read_budget::Budget;

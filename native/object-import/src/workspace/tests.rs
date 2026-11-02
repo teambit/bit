@@ -1,6 +1,6 @@
 //! Unit tests for workspace file materialization framing and overwrite rules in `bit-object-import`.
 //!
-//! Exercises [`serve`] binary frame parsing, [`Directory`] fixtures, and file write safety.
+//! Exercises [`serve`] binary frame parsing, [`Directory`] fixtures, and atomic file write safety.
 
 use std::{
     fs,

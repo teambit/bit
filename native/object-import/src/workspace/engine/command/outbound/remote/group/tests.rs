@@ -1,6 +1,6 @@
 //! Unit tests for `/etc/group` [`parse`] resolution and scope `groupName` [`name`] configuration in `bit-object-import`.
 //!
-//! Checks exact group name matching, `root` group GID handling, and invalid configuration rejection.
+//! Checks exact group name matching, `root` group GID handling, and invalid `/etc/group` configuration rejection.
 
 use super::{name, parse};
 use serde_json::json;

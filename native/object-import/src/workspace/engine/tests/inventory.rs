@@ -1,6 +1,6 @@
 //! Unit tests for owned workspace inventory [`State`] sessions and [`serve`] token lifecycle.
 //!
-//! Confirms that `inventoryBegin` and `inventoryFinish` enforce single-use token ownership.
+//! Confirms that `inventoryBegin` and `inventoryFinish` enforce single-use token ownership across [`Directory`], [`POOL`], and [`frame`].
 
 use super::{Directory, POOL, frame};
 use crate::workspace::{engine::serve, snapshots::State};

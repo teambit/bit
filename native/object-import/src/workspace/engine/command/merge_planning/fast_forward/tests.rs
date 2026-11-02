@@ -1,6 +1,6 @@
 //! Unit tests for fast-forward merge [`model`] and [`selection`] staging and deferred publication.
 //!
-//! Ensures fast-forward merges stage updated component models without premature object writes.
+//! Ensures fast-forward merges stage updated component models without premature object writes in `bit-object-import`.
 
 use super::{model, selection};
 use serde_json::json;

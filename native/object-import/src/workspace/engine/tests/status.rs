@@ -1,6 +1,6 @@
 //! Unit tests for `fileStatus` target comparison, [`response`] payloads, and batch size limits.
 //!
-//! Checks target-ordered unchanged flags, invalid hash rejection, and batch count bounds.
+//! Checks target-ordered unchanged flags, invalid hash rejection, and batch count bounds in `bit-object-import`.
 
 use serde_json::json;
 

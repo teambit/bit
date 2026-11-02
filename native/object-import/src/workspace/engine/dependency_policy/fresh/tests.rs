@@ -1,6 +1,6 @@
 //! Unit tests for fresh component [`Detect`] dependency [`detect`]ion and [`proof`] policy resolution.
 //!
-//! Exercises source file import scanning, dev-file classification, and workspace policy matching.
+//! Exercises source file import scanning, dev-file classification, and workspace policy matching in `bit-object-import`.
 
 use super::{Detect, detect, proof};
 use serde_json::{Value, json};

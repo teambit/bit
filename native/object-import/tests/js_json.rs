@@ -1,6 +1,6 @@
 //! Differential tests for `JavaScript`-compatible [`js_json`] JSON serialization against Node.
 //!
-//! Verifies [`Value`] property key ordering and [`stringify`] formatting parity.
+//! Verifies [`Value`] property key ordering and [`stringify`] formatting parity in `bit-object-import`.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

@@ -1,6 +1,6 @@
 //! Unit tests for command target pattern [`Prepare`] [`selected`] matching and overlapping root [`validate`] checks.
 //!
-//! Verifies explicit `**` and path pattern selection as well as overlapping directory rejection.
+//! Verifies explicit `**` and path pattern selection, [`bitmap_identities`] resolution, and overlapping directory rejection.
 
 use super::{Prepare, checkout_lane::bitmap_identities, json, selected, validate};
 

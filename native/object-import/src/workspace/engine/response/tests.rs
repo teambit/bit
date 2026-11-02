@@ -1,6 +1,6 @@
 //! Unit tests for [`canonical`] error progress retention ([`with_progress`], [`failure_data`]) in workspace responses.
 //!
-//! Ensures [`is_canonical`] errors preserve attached progress metadata without altering error messages.
+//! Ensures [`is_canonical`] errors preserve attached progress metadata without altering error messages or classes.
 
 use super::{canonical, failure_data, is_canonical, with_progress};
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for status `VersionHistory` [`Request`] readset [`validate`] and [`commit`] phases.
 //!
-//! Confirms that [`identity`] history plans validate read proofs before writing `.bit/objects`.
+//! Confirms that [`identity`] history plans validate [`proof`]s before writing `.bit/objects` in `bit-object-import`.
 
 use super::{Request, commit, identity, proof, validate};
 use flate2::read::ZlibDecoder;

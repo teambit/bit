@@ -1,6 +1,6 @@
 //! Unit tests for tag [`pattern_order`] matching order and wildcard eligibility checks in `bit-object-import`.
 //!
-//! Verifies that overlapping patterns preserve outer pattern order and every wildcard matches an eligible component.
+//! Verifies that overlapping patterns preserve outer pattern order and every wildcard matches an eligible component without duplicates.
 
 use super::pattern_order;
 use serde_json::json;

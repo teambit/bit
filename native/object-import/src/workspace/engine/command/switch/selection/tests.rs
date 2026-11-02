@@ -1,6 +1,6 @@
 //! Unit tests for `switch --pattern` [`Entry`] multimatch [`filter`]ing and error messages.
 //!
-//! Confirms multimatch inclusion/exclusion ordering, version suffix stripping, and no-match errors.
+//! Confirms multimatch inclusion/exclusion ordering, version suffix stripping, and no-match errors in `bit-object-import`.
 
 use super::{Entry, filter};
 

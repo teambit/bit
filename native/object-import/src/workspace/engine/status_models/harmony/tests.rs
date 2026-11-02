@@ -1,6 +1,6 @@
 //! Unit tests for Harmony `Version` schema [`project`]ion, [`validate`] checks, and semantic hashing.
 //!
-//! Verifies legacy flattened dependency normalization and unsupported schema rejection.
+//! Verifies legacy flattened dependency normalization and unsupported schema rejection in `bit-object-import`.
 
 use super::{project, validate};
 use serde_json::json;

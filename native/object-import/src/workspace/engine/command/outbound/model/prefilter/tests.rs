@@ -1,6 +1,6 @@
 //! Unit tests for outbound [`Prepared`] and [`HistoryBytes`] export prefilter stale discovery rejection.
 //!
-//! Confirms that concurrent object store modifications between prefilter and preparation are rejected.
+//! Confirms that concurrent object store modifications between prefilter and preparation are rejected in `bit-object-import`.
 
 use super::{HistoryBytes, Prepared};
 use std::{

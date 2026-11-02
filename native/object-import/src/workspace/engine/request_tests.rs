@@ -1,6 +1,6 @@
 //! Unit tests for workspace engine [`Request`] deserialization and strict field checks in `bit-object-import`.
 //!
-//! Verifies `componentLog` and `commandOutboundPrepare` request wire payloads.
+//! Verifies `componentLog` and `commandOutboundPrepare` request wire payloads and unknown-field rejection.
 
 use super::Request;
 

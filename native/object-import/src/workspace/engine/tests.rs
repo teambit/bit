@@ -1,18 +1,12 @@
-//! Unit tests for workspace engine [`serve`] framing, batch reads, and status queries.
+//! Unit tests for workspace engine [`serve`] framing, batch reads, and status queries in `bit-object-import`.
 //!
-//! Exercises [`inventory`], [`read_batches`], [`read_raw`], and [`status`] sub-suites.
+//! Exercises [`inventory`], [`read_batches`], [`read_raw`], and [`status`] sub-suites across [`POOL`] workers.
 
 mod inventory;
 mod read_batches;
 mod read_raw;
 mod status;
 
-static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(4)
-        .build()
-        .unwrap()
-});
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -22,6 +16,12 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
+static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap()
+});
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug)]
 struct Directory(PathBuf);

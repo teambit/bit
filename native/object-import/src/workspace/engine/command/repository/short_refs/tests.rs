@@ -1,6 +1,6 @@
 //! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior in `bit-object-import`.
 //!
-//! Verifies short hash prefix resolution, retained object deduplication, and ambiguity errors.
+//! Verifies short hash prefix resolution in [`Directory`] fixtures, retained object deduplication, and ambiguity errors.
 
 use super::{matching_for_separator, unique};
 use crate::workspace::engine::command::scratch::Directory;

@@ -1,6 +1,6 @@
 //! Unit tests for HTTP fetching ([`fetch_http`], [`model`]) of hidden lane model update-dependent objects.
 //!
-//! Verifies tar stream extraction and HTTP status handling for remote hidden lane models.
+//! Verifies [`tar`] [`ObjectItem`] stream extraction and [`GlobalConfig`] [`Network`] HTTP status handling for remote hidden lane models.
 
 use super::{fetch_http, model};
 use bit_client_transfer::{

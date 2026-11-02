@@ -1,6 +1,6 @@
 //! Unit tests for pending merge [`lane_id`] scope resolution in `bit-object-import`.
 //!
-//! Checks that `main` resolves against the component scope while named lanes preserve their lane scope.
+//! Checks that `main` resolves against the component scope while named lanes preserve their lane scope across string and object inputs.
 
 use super::lane_id;
 use serde_json::json;

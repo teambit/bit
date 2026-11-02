@@ -1,6 +1,6 @@
 //! Unit tests for `component.json` [`Prepared`] reset configuration [`document`] projection and [`validate_destination`] checks.
 //!
-//! Exercises `component.json` generation, destination path safety, and atomic reset config writes.
+//! Exercises `component.json` generation, [`proof`] checks, destination path safety, and atomic reset config writes.
 
 use super::{Prepared, document, proof, validate_destination};
 use serde_json::json;

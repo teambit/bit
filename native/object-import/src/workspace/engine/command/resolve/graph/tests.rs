@@ -1,6 +1,6 @@
 //! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves in `bit-object-import`.
 //!
-//! Verifies that aspect extensions upgrade edge types to `ext` while preserving dependency order.
+//! Verifies that aspect extensions upgrade edge types to `ext` while preserving dependency order and leaf nodes.
 
 use super::edges;
 use serde_json::json;
