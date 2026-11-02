@@ -17,6 +17,7 @@ use std::{
 /// Native `bit clone` command descriptor.
 pub const COMMAND: Command = Command { name: "clone", aliases: &[], run };
 
+/// Parsed CLI options and target component ID for `bit clone`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: String,

@@ -9,6 +9,7 @@ use std::io;
 pub(super) fn json(components: &[Value], warnings: &Value) -> Value {
     json!({"addedComponents":components.iter().map(|row|json!({"id":row["id"],"files":row["files"]})).collect::<Vec<_>>(),"warnings":warnings})
 }
+/// Formats human-readable `bit add` terminal output from `components` and `warnings`.
 pub(super) fn text(components: &[Value], warnings: &Value, chalk: Chalk) -> io::Result<String> {
     let formatter = Formatter::new(chalk);
     let warning = warning(warnings, &formatter)?;

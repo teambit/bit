@@ -38,6 +38,7 @@ impl Retained {
         }
     }
 
+    /// Advances retained file content proofs matching `writes` after a native import commit.
     pub(in crate::commands::add::mutation) fn acknowledge_import(
         &mut self,
         writes: &[Value],

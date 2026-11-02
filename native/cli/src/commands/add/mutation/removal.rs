@@ -17,6 +17,7 @@ impl ProjectedLinker {
         let result = self.consumer_status(root, bitmap, ids);
         self.finish(result)
     }
+    /// Loads missing consumer components and compares status for `ids` against `bitmap`.
     fn consumer_status(
         &mut self,
         root: &Path,

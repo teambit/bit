@@ -15,6 +15,7 @@ impl ProjectedLinker {
         controls::refresh(&path)
     }
 
+    /// Verifies and advances the retained `.bitmap` preimage from `before` to `bitmap` after `fork`.
     pub(in crate::commands) fn fork_bitmap_committed(
         &mut self,
         root: &Path,

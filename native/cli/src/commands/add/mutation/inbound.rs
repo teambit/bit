@@ -40,6 +40,7 @@ impl ProjectedLinker {
         super::controls::validate(engine, &projection.context)?;
         environment.project_tracking_retained(root, &bitmap, &projection.components)
     }
+    /// Captures component rows for an inbound import, refreshing retained versions when `retain_loaded` is set.
     pub(in crate::commands) fn capture_import(
         &mut self,
         root: &Path,

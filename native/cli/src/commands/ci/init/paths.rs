@@ -31,6 +31,7 @@ pub(super) fn real(path: &Path) -> io::Result<PathBuf> {
     }
     Err(io::Error::other("too many symbolic link levels"))
 }
+/// Resolves the first symbolic link component along `path`, returning `Ok(None)` if none is a symlink.
 #[inline]
 fn resolve_link(path: &Path) -> io::Result<Option<PathBuf>> {
     let mut current = PathBuf::new();

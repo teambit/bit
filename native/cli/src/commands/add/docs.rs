@@ -28,6 +28,7 @@ pub(super) fn load(
     prepare(root, environment, components, false)?.publish()
 }
 
+/// Staged `ComponentFsCache` documentation entries and observed [`Source`] preimages ready for publication.
 pub(in crate::commands) struct Prepared {
     root: PathBuf,
     components: Vec<Value>,

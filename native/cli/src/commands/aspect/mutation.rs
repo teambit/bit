@@ -31,7 +31,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Staged `component.json` file path and serialized JSON payload awaiting commit.
 pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,

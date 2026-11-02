@@ -33,6 +33,7 @@ const INVALID_MERGE_RESOLVE_ERR: &str =
     "--auto-merge-resolve must be one of the following: [ours, theirs, manual]";
 const INIT_COMBINED_ERR: &str = "bit ci sync --init cannot be combined with a lane argument, --branch, --all, --main or --dry-run: it only scaffolds onboarding files (workflows + workspace.jsonc config) and exits \u{2014} it never reconciles";
 
+/// Parsed CLI flags for `bit ci sync`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct SyncOptions {
     pub lane: Option<String>,

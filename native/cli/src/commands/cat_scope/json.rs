@@ -53,6 +53,7 @@ pub(super) fn build_component_json_obj(
     Some(Value::Object(map))
 }
 
+/// Inserts `hash` and `type: "ModelComponent"` fields into `map` when `--json-extra` is active.
 #[inline]
 fn insert_extra(map: &mut Map<String, Value>, hash: &str, json_extra: bool) {
     if json_extra {

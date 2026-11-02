@@ -37,6 +37,7 @@ pub(super) fn workflows(
     }
     Ok(files)
 }
+/// Creates parent directories and writes a GitHub Actions workflow file at `path`.
 #[inline]
 fn write_workflow(path: &Path, content: &str) -> io::Result<()> {
     if let Some(parent) = path.parent() {

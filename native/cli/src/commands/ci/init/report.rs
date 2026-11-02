@@ -11,6 +11,7 @@ pub(super) struct File {
     pub status: &'static str,
     pub note: Option<&'static str>,
 }
+/// Aggregated target repository metadata and file changes for `bit ci init` reporting.
 pub(super) struct Report {
     pub target: Target,
     pub changes: Changes,

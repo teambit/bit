@@ -20,6 +20,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Parsed CLI flags for `bit capsule prune`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct PruneArgs {
     dry_run: bool,

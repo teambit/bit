@@ -9,6 +9,7 @@ pub(super) struct Options {
     pub env: Option<String>,
     pub json: bool,
 }
+/// Parses `args` into [`Options`], returning `None` when any flag or value falls outside native grammar.
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options {
         tracking: Tracking { config: json!({}), ..Default::default() },

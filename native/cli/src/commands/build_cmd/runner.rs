@@ -15,6 +15,7 @@ use bit_object_import::parse_jsonc;
 use serde_json::{Value, json};
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Default build pipeline task identifiers displayed by `bit build --list-tasks`.
 const BUILD_TASKS: &[&str] = &[
     "teambit.harmony/aspect:CoreExporterTask",
     "teambit.compilation/compiler:CompileComponents",

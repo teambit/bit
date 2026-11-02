@@ -30,6 +30,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit cat` command descriptor.
 pub const COMMAND: Command = Command { name: "cat", aliases: &[], run };
 
 const FILE_WITH_CONFIG_ERR: &str =

@@ -41,6 +41,7 @@ pub(super) fn compare(
     }
     Ok((result, before))
 }
+/// Builds a `statusCompare` target entry for `component` from stored model [`FIELDS`] in `context`.
 #[inline]
 fn target(
     context: &Value,

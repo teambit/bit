@@ -20,6 +20,7 @@ use std::{
 /// Native `bit cli` command descriptor.
 pub const COMMAND: Command = Command { name: "cli", aliases: &[], run };
 
+/// Executes `bit cli generate --docs` or reports unknown `--skill` types.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("cli arguments are not UTF-8".into()));

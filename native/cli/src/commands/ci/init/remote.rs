@@ -11,6 +11,7 @@ pub(super) struct Repository {
     pub host: String,
 }
 impl Repository {
+    /// Formats the repository identifier as `<owner>/<name>` for GitHub.com or `<host>/<owner>/<name>` otherwise.
     #[inline]
     pub(super) fn display(&self) -> String {
         let repo = format!("{}/{}", self.owner.trim(), self.name.trim());

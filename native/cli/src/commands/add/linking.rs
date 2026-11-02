@@ -24,6 +24,7 @@ pub(in crate::commands) fn overlay(
     Ok(())
 }
 
+/// Applies captured file lists, `mainFile`, extensions, and `packageName` from `row` to `component`.
 fn apply_captured(component: &mut WorkspaceComponent, row: &Value) -> io::Result<()> {
     let files: Vec<String> = serde_json::from_value(row["files"].clone())?;
     if files.len() > 4096

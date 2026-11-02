@@ -7,6 +7,7 @@ use chrono::{SecondsFormat, Utc};
 use serde::Serialize;
 use std::{fs, io, path::Path, time::SystemTime};
 
+/// Minimal root `package.json` payload identifying a Bit capsule root directory.
 #[derive(Serialize)]
 struct RootPackage<'a> {
     name: &'a str,

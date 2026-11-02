@@ -30,6 +30,7 @@ pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Ve
         webhook,
     ]
 }
+/// Formats the `gh secret` and `gh api` workflow permission commands for Step 2 of `bit ci init`.
 #[inline]
 fn permissions(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let repo = shell_word(&repository.display());

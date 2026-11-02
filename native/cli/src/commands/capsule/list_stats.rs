@@ -33,6 +33,7 @@ pub(super) struct RootEntry {
     pub(super) size_bytes: u64,
 }
 
+/// Collects sorted [`RootEntry`] metadata for all capsule directories under the resolved capsule root.
 pub(super) fn collect(cwd: &Path, with_sizes: bool) -> io::Result<Vec<RootEntry>> {
     let root = resolve_capsules_dir(cwd)?;
     let entries = match fs::read_dir(root) {

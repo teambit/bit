@@ -12,6 +12,7 @@ pub(in crate::commands::add::mutation) struct Facts {
     pub(super) environments: Value,
 }
 impl Facts {
+    /// Retains comparison rows and environment metadata from `capture` for subsequent selector checks.
     pub(in crate::commands::add::mutation) fn keep(&mut self, capture: &Capture) {
         for row in &capture.comparisons {
             let Some(id) = row["identity"]

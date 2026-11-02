@@ -9,6 +9,7 @@ pub(super) fn ci() -> bool {
     env::var_os("CI").is_some_and(|value| !value.is_empty())
 }
 
+/// Validates that selected [`Projection`] package paths under `root/node_modules` are not blocked in CI.
 pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
     if !ci() {
         return Ok(());

@@ -22,6 +22,7 @@ pub(super) fn error(args: &[&str], list: bool) -> Option<String> {
     }
 }
 
+/// Maps an unsupported `--no-color` or `--json`/`-j` flag to its yargs unknown-argument name list.
 #[inline]
 fn unknown_names(flag: &str, list: bool) -> Option<&'static [&'static str]> {
     let trimmed = flag.trim();

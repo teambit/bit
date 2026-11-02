@@ -15,6 +15,7 @@ pub(super) struct Projection {
 }
 
 impl Projection {
+    /// Returns the projected component entries corresponding to `self.selected`.
     #[inline]
     pub(super) fn loading_components(&self) -> Vec<Value> {
         self.selected

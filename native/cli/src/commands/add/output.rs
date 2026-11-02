@@ -43,6 +43,7 @@ pub(super) fn failure(
     })
 }
 
+/// Walks the error source chain of `error` to locate an embedded [`crate::host::callback_error::CallbackError`].
 #[inline]
 fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::CallbackError> {
     std::iter::successors(

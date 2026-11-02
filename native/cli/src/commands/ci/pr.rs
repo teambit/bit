@@ -23,6 +23,7 @@ pub(in crate::commands) struct PrOptions {
     pub skip_tasks: Option<String>,
 }
 
+/// In-memory snapshot of `.bitmap`, `scope.json`, and `index.json` for rollback after `bit ci pr`.
 struct WorkspaceSnapshot {
     bitmap: Option<Vec<u8>>,
     scope_json: Option<Vec<u8>>,

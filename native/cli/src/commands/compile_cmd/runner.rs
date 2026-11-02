@@ -22,6 +22,7 @@ struct Emitted {
     path: PathBuf,
     content: String,
 }
+/// Compiler diagnostic source file path and formatted error message.
 struct Diagnostic {
     path: PathBuf,
     message: String,

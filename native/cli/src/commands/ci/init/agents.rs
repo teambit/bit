@@ -38,6 +38,7 @@ pub(super) fn render(scope: &str, repo: &str, branch: &str) -> String {
     out
 }
 
+/// Writes or updates `AGENTS.md` under `root` with `section` and `repo`, returning `(status, note)`.
 pub(super) fn write(
     root: &Path,
     section: &str,

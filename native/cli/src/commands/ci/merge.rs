@@ -24,6 +24,7 @@ pub(in crate::commands) struct BumpOptions {
     pub major: bool,
 }
 
+/// Parsed CLI options for `bit ci merge`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct MergeOptions {
     pub auto_merge_resolve: Option<String>,

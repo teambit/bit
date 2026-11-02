@@ -17,7 +17,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Staged `bit aspect update` plan across `.bitmap` and `component.json` files.
 pub(in crate::commands::aspect) struct UpdatePlan {
     pub root: PathBuf,
     pub raw_aspect_id: String,

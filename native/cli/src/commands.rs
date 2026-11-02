@@ -121,6 +121,7 @@ mod ws_config;
 use crate::native::Outcome;
 use std::{ffi::OsString, io};
 
+/// Descriptor for a native CLI command, its aliases, and its entry-point runner.
 pub struct Command {
     pub name: &'static str,
     pub aliases: &'static [&'static str],

@@ -20,6 +20,7 @@ pub(super) struct Plan {
     pub proven: Vec<Value>,
 }
 
+/// Builds a documentation cache [`Plan`] for `components`, falling back to full misses on cache corruption.
 #[inline]
 pub(super) fn prepare(
     root: &Path,

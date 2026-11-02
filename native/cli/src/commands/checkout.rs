@@ -24,6 +24,7 @@ pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
 /// Native `bit revert` command descriptor.
 pub const REVERT: Command = Command { name: "revert", aliases: &[], run: run_revert };
 
+/// Executes `bit checkout` against `args`, falling back to option validation errors when applicable.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

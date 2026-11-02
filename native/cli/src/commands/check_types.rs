@@ -22,6 +22,7 @@ pub const COMMAND: Command = Command { name: "check-types", aliases: &[], run };
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 const EMPTY_CHECK_TYPES_HINT: &str = "no components found to check.\nuse \"--unmodified\" flag to check all components or specify the ids to check.\notherwise, only new and modified components will be checked";
 
+/// Parsed CLI options and component pattern for `bit check-types`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

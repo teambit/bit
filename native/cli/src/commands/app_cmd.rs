@@ -33,6 +33,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit app` (alias `apps`) command descriptor.
 pub const COMMAND: Command = Command { name: "app", aliases: &["apps"], run };
 
 pub(super) const GLOBAL_HELP: &str = "Global\n  -h, --help       show help\n      --log        print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info\n      --safe-mode  useful when it fails to load normally. it skips loading aspects from workspace.jsonc, and for legacy-commands it initializes only the CLI aspect";

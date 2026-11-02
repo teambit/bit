@@ -62,6 +62,7 @@ fn non_empty_trimmed(version: Option<&str>) -> Option<&str> {
         .filter(|ver| !ver.is_empty())
 }
 
+/// Prepends the `--all` deprecation notice for `head`/`latest` checkouts when `options.all` is set.
 #[inline]
 fn deprecated_all(options: &Options, report: String) -> String {
     let target = options.to.trim();

@@ -21,6 +21,7 @@ pub(super) fn error(error: io::Error, chalk: Chalk) -> io::Error {
     };
     io::Error::new(error.kind(), Colored { message, source: error })
 }
+/// Wraps native filesystem IO errors (`ENOTDIR`, `EISDIR`, `EPERM`) in inner red [`Chalk`] styling.
 pub(super) fn native_io(error: io::Error, chalk: Chalk) -> io::Error {
     if !chalk.enabled() || has_colored_or_callback(&error) {
         return error;

@@ -24,6 +24,7 @@ pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     run_cmd::is_help_form(rest).then_some(name)
 }
 
+/// Renders `bit app --help` or `bit app list --help` output when requested in `argv`.
 #[inline]
 pub(super) fn app_help_output(argv: &[&str], chalk: Chalk) -> Option<String> {
     let name = command_name(argv)?;

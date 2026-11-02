@@ -27,6 +27,7 @@ pub(in crate::commands::capsule) fn parse_create_flags(rest: &[&str]) -> Option<
     Some(Subcommand::Create(create))
 }
 
+/// Appends non-flag positional component IDs after `--` into `ids`.
 fn consume_trailing_capsule_ids<'a>(
     args: impl Iterator<Item = &'a str>,
     ids: &mut Vec<String>,

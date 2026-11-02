@@ -48,6 +48,7 @@ pub(super) fn prepare(
     projection::prepare_loaded(root, bitmap, &selected, context, workspace)
 }
 
+/// Selects [`WorkspaceComponent`] entries from `projection` in the order of `identities`.
 pub(super) fn components(
     projection: &Projection,
     identities: &[String],

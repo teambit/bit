@@ -52,6 +52,7 @@ impl ProjectedLinker {
         self.cached_classes(root, &rows)?;
         Ok(rows)
     }
+    /// Links `identities` using retained component rows and cached provider classes.
     #[inline]
     pub(in crate::commands) fn link_retained(
         &mut self,

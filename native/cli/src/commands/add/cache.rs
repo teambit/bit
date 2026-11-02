@@ -35,6 +35,7 @@ fn identity(value: &str) -> &str {
     trimmed.split_once('@').map_or(trimmed, |(identity, _)| identity.trim())
 }
 
+/// Observed `node_modules` `package.json` preimages for tracked [`WorkspaceComponent`]s.
 pub(super) struct Manifests(Vec<(PathBuf, Option<String>)>);
 impl Manifests {
     pub(super) fn observe(root: &Path, components: &[WorkspaceComponent]) -> Self {

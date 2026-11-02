@@ -35,6 +35,7 @@ struct DebugOrigin {
     extra_data: Option<Value>,
 }
 
+/// Aggregated pre-merge origins, post-merge entries, and final resolved aspects for `--debug`.
 struct DebugReport {
     before: Vec<DebugOrigin>,
     after: Vec<AspectEntry>,

@@ -51,6 +51,7 @@ pub(in crate::commands::aspect) fn run_get(
     .map_err(|err| Failure::Declined(err.to_string()))
 }
 
+/// Collects merged [`AspectEntry`] records for `component`, optionally filtered by `aspect_filter`.
 pub(in crate::commands::aspect) fn collect_get_entries(
     root: &Path,
     component: &str,

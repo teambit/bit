@@ -14,6 +14,7 @@ pub(super) fn temporary(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Returns `true` when `root` is a non-empty absolute path whose `.bitTmp` entry exists.
 #[inline]
 fn has_temporary_path(root: &Path) -> bool {
     root.is_absolute()

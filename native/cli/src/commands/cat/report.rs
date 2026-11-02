@@ -30,6 +30,7 @@ pub(super) fn render(value: &Value, options: &Options<'_>) -> io::Result<String>
     Ok(sections.join("\n\n"))
 }
 
+/// Formats the `--json` payload for `bit cat` from `value`, `files`, and optional `selected` file.
 fn json_report(
     value: &Value,
     files: &[Value],

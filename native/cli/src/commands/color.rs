@@ -45,6 +45,7 @@ impl Chalk {
         Self { enabled }
     }
 
+    /// Returns `true` when ANSI color output is active for this [`Chalk`] instance.
     #[inline]
     pub const fn enabled(self) -> bool {
         self.enabled

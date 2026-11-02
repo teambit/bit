@@ -49,6 +49,7 @@ pub(in crate::commands) struct CreateArgs {
     pub use_hash: bool,
 }
 
+/// Materialized component capsule identifier and filesystem directory path.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct CreatedCapsule {
     id: String,

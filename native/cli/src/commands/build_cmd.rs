@@ -26,6 +26,7 @@ const REWRITE_ERR: &str = "cannot use --rewrite without --reuse-capsules";
 const REINSTALL_ERR: &str = "cannot use --reinstall without --reuse-capsules";
 const EMPTY_BUILD_HINT: &str = r#"no components found to build. use "--unmodified" flag to build all components or specify the ids to build, otherwise, only new and modified components will be built"#;
 
+/// Capsule reuse, rewrite, and reinstall flags for `bit build`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct CapsuleFlags {
     pub reuse_capsules: bool,

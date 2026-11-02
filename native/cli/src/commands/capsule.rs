@@ -36,6 +36,7 @@ const BUILD_BASE_KEY: &str = "capsules_build_components_base_dir";
 const SCOPE_ASPECTS_BASE_KEY: &str = "capsules_scopes_aspects_base_dir";
 const GLOBAL_SCOPE_ASPECTS_BASE_KEY: &str = "capsules_global_scope_aspects_base_dir";
 
+/// Parsed `bit capsule` subcommand and subcommand-specific options.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     BareList,

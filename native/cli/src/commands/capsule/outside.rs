@@ -38,6 +38,7 @@ pub(super) fn run_outside_scope(
     }
 }
 
+/// Handles `bit capsule create` when invoked outside any workspace or bare scope.
 fn run_create_outside_scope(chalk: Chalk, argv: &[&str], args: &CreateArgs) -> io::Result<Outcome> {
     if !supports_create_outside(argv, args) {
         return Ok(Outcome::Declined("capsule create outside scope delegated".into()));

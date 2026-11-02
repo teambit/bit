@@ -6,6 +6,7 @@ mod tests;
 
 use std::path::{Path, PathBuf};
 
+/// Runs `git` with `args` in `root` and returns trimmed stdout when the command succeeds.
 #[inline]
 fn run(root: &Path, args: &[&str]) -> Option<String> {
     super::super::run_git(root, args)
