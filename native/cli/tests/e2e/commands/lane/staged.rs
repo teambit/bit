@@ -1,4 +1,6 @@
 //! End-to-end released-oracle comparison for transferring staged main snaps to a new lane (`bit lane create`) via [`object`] and [`state`].
+//!
+//! Verifies staged snap migration to a new lane with and without an exported remote head.
 
 use super::{object, state};
 use crate::{

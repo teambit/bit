@@ -1,4 +1,6 @@
 //! End-to-end tests ([`Snapshot`]) verifying copy errors retain the reverse-sorted prefix and roll the `deleted-objects` backup back for another attempt.
+//!
+//! Verifies directory conflict handling and backup preservation during `bit gc --restore`.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

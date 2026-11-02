@@ -1,4 +1,6 @@
 //! End-to-end option handling, `trackAllFiles`, and multi-component scaling parity tests ([`compare`]) for the native `bit add` command.
+//!
+//! Verifies `--scope`, `--env`, `--override`, and `--json` flags across [`workspace`] and [`config`].
 
 use super::support::{compare, workspace};
 use crate::helper::config;

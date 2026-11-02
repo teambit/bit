@@ -1,4 +1,6 @@
 //! Raw workspace-config and `.bitmap` history [`Snapshot`] reader and parser for replay oracle comparison.
+//!
+//! Validates backup timestamps, preimage bytes, and file permission modes across sequential writes.
 
 #[cfg(test)]
 mod tests;

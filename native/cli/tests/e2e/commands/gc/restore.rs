@@ -1,4 +1,6 @@
 //! End-to-end tests ([`compare`]) ensuring `bit gc --restore` and `--restore-overwrite` compare existing object bytes and permissions.
+//!
+//! Verifies read-only target preservation, symlink restoration, [`cleanup`], and [`conflicts`].
 
 mod cleanup;
 mod conflicts;

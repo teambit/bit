@@ -1,4 +1,6 @@
 //! Unit tests for formatting native-to-`Node.js` CLI fallback trace warnings ([`fallback_message`]).
+//!
+//! Verifies command name and decline reason formatting in `BIT_NATIVE_TRACE` messages.
 
 use super::fallback_message;
 

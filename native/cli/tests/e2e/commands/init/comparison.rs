@@ -1,4 +1,6 @@
 //! Directory and history comparison helpers ([`tree`], [`wait_past_setup_history`], [`copy_directory_modes`]) for `bit init` end-to-end tests.
+//!
+//! Delegates backup timestamp normalization to [`history`] while comparing exact workspace bytes.
 
 mod history;
 

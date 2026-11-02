@@ -1,4 +1,6 @@
 //! Normalize ([`durations`]) only the released `bit import` completion line's validated duration token string.
+//!
+//! Preserves all non-completion output lines and validates elapsed time suffixes via [`valid_duration`].
 
 pub(super) fn durations(text: &str) -> String {
     text.split_inclusive('\n')

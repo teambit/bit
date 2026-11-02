@@ -1,4 +1,6 @@
 //! Unit tests for concurrent snapshot [`User`] author identity resolution and caching in [`Cache`] receipts.
+//!
+//! Verifies once-only [`Cache::load`] resolution and fresh timestamp allocation per log entry.
 
 use super::{Cache, User};
 use std::{

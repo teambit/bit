@@ -1,4 +1,6 @@
 //! End-to-end tests verifying `bit import --fetch-deps` bypasses a saved dependency graph without adding dependencies to `.bitmap` entries.
+//!
+//! Verifies [`Helper`] and [`read_jsonc`] `.bitmap` state after `--fetch-deps` imports.
 
 use crate::helper::{Helper, config::read_jsonc};
 use std::ffi::OsStr;

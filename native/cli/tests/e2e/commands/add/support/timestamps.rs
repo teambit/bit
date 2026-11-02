@@ -1,4 +1,6 @@
 //! Replay dependency-cache modification timestamps and directory permissions ([`Snapshot`], [`Entry`]) lost during fixture copying.
+//!
+//! Captures and restores source and `.bit/cache` mtimes before executing replay comparisons.
 
 use std::{
     collections::BTreeMap,

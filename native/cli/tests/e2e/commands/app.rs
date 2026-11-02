@@ -1,4 +1,4 @@
-//! End-to-end parity tests for the native `bit app` and `bit apps` CLI command family.
+//! End-to-end parity tests for the native `bit app` and `bit apps` CLI command family via [`Helper`] and [`KnownResult`].
 
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::{ffi::OsStr, fs};

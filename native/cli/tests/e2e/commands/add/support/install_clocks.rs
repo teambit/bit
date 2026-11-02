@@ -1,4 +1,6 @@
 //! Opt-in exact-token projection ([`project`]) for `pnpm` independently generated installation clocks (`prunedAt`).
+//!
+//! Validates `.modules.yaml` structure, RFC 2822 `prunedAt` formatting, and bounded timestamp windows.
 
 use serde_json::Value;
 use std::collections::BTreeMap;

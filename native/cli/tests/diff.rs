@@ -1,5 +1,6 @@
-//! Integration tests for `bit diff` inputs the native command leaves to the `Node.js` CLI, each for
-//! its traced reason (including unresolved patterns, workspace checks, and missing host package).
+//! Integration tests for `bit diff` inputs the native command leaves to the `Node.js` CLI ([`STUB`]).
+//!
+//! Verifies each traced fallback reason across unresolved patterns, workspace checks, and missing host packages.
 
 use std::{
     fs,

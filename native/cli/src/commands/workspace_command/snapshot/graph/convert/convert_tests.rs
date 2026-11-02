@@ -1,4 +1,6 @@
 //! Unit tests for converting ([`convert`]) filtered `pnpm` lockfiles and [`ref_to_relative`] references into serialized dependency graphs.
+//!
+//! Verifies [`Replacer`], [`WorkspaceComponent`], and [`HASH`] version substitution in lockfile graphs.
 
 use super::{
     super::replacer::{Replacer, WorkspaceComponent},

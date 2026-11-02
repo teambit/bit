@@ -1,4 +1,6 @@
 //! End-to-end tests ([`compare_with_snapshot`]) using a real `tmpfs` (`EXDEV`) backup to force the collector's cross-device copy/remove path.
+//!
+//! Verifies [`fixture`], [`objects`], [`orphan`], and [`tree`] parity across filesystem device boundaries.
 
 use super::{compare_with_snapshot, fixture, objects, orphan, tree};
 use std::{

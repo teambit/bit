@@ -1,4 +1,6 @@
 //! Unit tests for stream-error variant matching ([`assert_errors`]) in replay output comparison suites.
+//!
+//! Verifies [`variants`] acceptance and rejection of altered scope names or extra stderr lines.
 
 use super::assert_errors;
 

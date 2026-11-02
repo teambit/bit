@@ -1,4 +1,6 @@
 //! Unit tests for `--ignore-issues`, `--ignore-newest-version`, and `--no-lock-deps` policy CLI flag parsing ([`parse`]).
+//!
+//! Verifies policy option extraction alongside remaining positional component patterns.
 
 use super::parse;
 use serde_json::json;

@@ -1,4 +1,6 @@
 //! Complete independently qualified stream diagnostics ([`Comparison`], [`assert_errors`]), with exact byte comparison as default.
+//!
+//! Supports optional stdout/stderr normalization, error-variant matching, and artifact projections.
 
 #[cfg(test)]
 mod tests;

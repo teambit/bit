@@ -1,4 +1,4 @@
-//! End-to-end `CatCmd` (`bit cat-component` / `bit cat-object`) source, config, and historical-version parity tests.
+//! End-to-end `CatCmd` (`bit cat-component` / `bit cat-object`) source, config, and historical-version parity tests ([`compared`]).
 
 use crate::helper::{Helper, config, parse, setup};
 use serde_json::json;

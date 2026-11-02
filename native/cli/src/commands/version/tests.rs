@@ -1,4 +1,6 @@
 //! Unit tests for `bit version` CLI flag parsing ([`parse_json_flag`]) and text/JSON formatting ([`render_version`]).
+//!
+//! Verifies `-j`, `--json`, and `--json=true` / `--json=false` flag combinations.
 
 use super::{parse_json_flag, render_version};
 use std::ffi::OsString;

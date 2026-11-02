@@ -1,4 +1,6 @@
 //! End-to-end tests ensuring empty policies and explicit lifecycle policy ranges ([`RESOLVER`]) retain the published `--write-deps` rules.
+//!
+//! Verifies [`command`], [`file`], and [`empty_environment`] dependency manifest writes.
 
 use super::{command, file};
 use crate::{

@@ -1,4 +1,6 @@
 //! End-to-end tests verifying a tracked authored component ([`FOO_FIXTURE`]) survives a lost local scope and a normal `bit import` installation.
+//!
+//! Verifies [`without_progress_timing`] output and `.bitmap` / `node_modules` restoration.
 
 use super::{FOO_FIXTURE, Helper, OsStr, fs, setup, without_progress_timing};
 use flate2::read::ZlibDecoder;

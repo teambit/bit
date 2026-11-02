@@ -1,4 +1,6 @@
 //! Unit tests for `bit system` [`Parsed`] CLI subcommand parsing ([`parse_args`]) and unrecognized-subcommand errors ([`format_unrecognized`]).
+//!
+//! Verifies `log` subcommand recognition, `--help` / `--json` rejection, and [`Chalk`] error output.
 
 use super::{Chalk, Parsed, format_unrecognized, parse_args};
 use std::ffi::OsString;

@@ -1,4 +1,4 @@
-//! End-to-end native `bit lint` orchestration tests comparing released `ESLint` diagnostics and complete workspace/cache state.
+//! End-to-end native `bit lint` orchestration tests comparing released `ESLint` diagnostics ([`duration`], [`text_duration`]) and complete workspace/cache state.
 
 use super::move_paths::support;
 

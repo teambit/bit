@@ -1,4 +1,6 @@
 //! End-to-end command parity test modules (`e2e/commands/`) for native `bit` CLI commands.
+//!
+//! Organizes [`add`], [`diff_completion`], [`move_paths`], and individual command parity test suites.
 
 pub(crate) mod add;
 pub(crate) mod diff_completion;

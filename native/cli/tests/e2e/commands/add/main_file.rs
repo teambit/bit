@@ -1,4 +1,6 @@
 //! End-to-end main-file resolution and case-sensitivity parity tests ([`compare`]) for the native `bit add` command.
+//!
+//! Verifies `{PARENT}` placeholder expansion, missing main files, and [`workspace`] / [`config`] persistence.
 
 use super::support::{compare, workspace};
 use crate::helper::config;

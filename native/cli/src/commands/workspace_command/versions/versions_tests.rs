@@ -1,4 +1,6 @@
 //! Unit tests for `bit snap` ([`SNAP`]) and `bit tag` ([`TAG`]) version-bump and auto-dependent terminal report formatting ([`format`]).
+//!
+//! Verifies [`ONE`] and [`TWO`] component version formatting and [`expected_success_symbols`] with [`Chalk`].
 
 use super::{SNAP, TAG, format};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

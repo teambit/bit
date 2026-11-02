@@ -1,4 +1,6 @@
 //! Unit tests for `bit use` CLI target parsing ([`parse_target`]) and configured aspect detection ([`is_extension_configured`]).
+//!
+//! Verifies aspect target extraction and matching against existing `workspace.jsonc` extension keys.
 
 use super::{is_extension_configured, parse_target};
 use serde_json::json;

@@ -1,4 +1,6 @@
 //! Unit tests for ISO-8601 timestamp formatting ([`iso`]) and `.bit/command-history` lifecycle logging in [`History`].
+//!
+//! Verifies `Date.prototype.toISOString` millisecond parity and command start/end log lines.
 
 use super::{History, iso};
 use std::{ffi::OsString, fs};

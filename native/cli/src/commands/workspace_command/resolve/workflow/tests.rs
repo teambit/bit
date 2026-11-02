@@ -1,4 +1,6 @@
 //! Unit tests for [`Kind::Tag`] and [`Kind::Snap`] build, skip-tests, skip-tasks, and editor workflow CLI flag parsing ([`parse`]).
+//!
+//! Verifies `--build`, `--skip-tests`, `--skip-tasks`, and `--editor` workflow parameter extraction.
 
 use super::parse;
 use crate::commands::workspace_command::resolve::Kind;

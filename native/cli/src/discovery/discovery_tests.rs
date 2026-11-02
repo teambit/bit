@@ -1,4 +1,6 @@
 //! Unit tests for discovering the `Node.js` CLI [`Target`] entry point ([`find_in`]) across [`Environment`], checkout, and BVM installations.
+//!
+//! Verifies [`ENTRY`], [`NODE`], [`NodeCli`], and [`Source`] resolution order across BVM version links.
 
 use super::{Environment, NodeCli, Source, Target, find_in};
 use std::{

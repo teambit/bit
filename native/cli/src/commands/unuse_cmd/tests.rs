@@ -1,4 +1,6 @@
 //! Unit tests for `bit unuse` CLI target parsing ([`parse_target`]) and configured aspect lookup ([`find_extension_key`]).
+//!
+//! Verifies aspect ID matching with and without default scope or version suffixes.
 
 use super::{find_extension_key, parse_target};
 use serde_json::json;

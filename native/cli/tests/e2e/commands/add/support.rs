@@ -1,4 +1,4 @@
-//! Replay harness ([`compare`], [`compare_ci`], [`workspace`]) comparing exact command bytes, scope objects, and filesystem state at the same workspace path.
+//! Replay harness ([`compare`], [`compare_ci`], [`workspace`]) and [`Comparison`] / [`history_oracle`] utilities comparing command bytes, scope objects, and filesystem state at the same workspace path.
 
 pub(crate) mod history_oracle;
 

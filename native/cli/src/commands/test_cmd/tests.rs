@@ -1,4 +1,6 @@
 //! Unit tests for `bit test` [`Options`] CLI parsing ([`parse_options`]) and [`FastOutcome`] workspace classification ([`classify_workspace`]).
+//!
+//! Verifies `--unmodified`, `--coverage`, `--junit`, `--env`, and [`Chalk`] diagnostic rendering.
 
 use super::{FastOutcome, Options, classify_workspace, parse_options};
 use crate::commands::color::Chalk;

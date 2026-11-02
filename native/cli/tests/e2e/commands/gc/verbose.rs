@@ -1,4 +1,6 @@
 //! End-to-end tests ([`compare`]) verifying `bit gc --verbose` counts retain repeated lane traversals even when object retention is deduplicated.
+//!
+//! Verifies [`fixture`], [`objects`], and [`orphan`] counts across text and `--json` verbose GC runs.
 
 use super::{compare, fixture, objects, orphan};
 use crate::commands::move_paths::support;

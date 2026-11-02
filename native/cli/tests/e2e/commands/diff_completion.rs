@@ -1,4 +1,6 @@
 //! End-to-end tests for workspace and remote `bit diff` selection, [`publish_remote_fixture`], and presentation parity.
+//!
+//! Verifies [`workspace`], [`parity`], and [`http`] remote diff queries across components and versions.
 
 pub(crate) mod http;
 mod remote_fixture;

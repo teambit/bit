@@ -1,4 +1,6 @@
 //! End-to-end whole-command parity tests ([`successful`]) for workspace adoption, `--write-deps`, and dependent-path imports.
+//!
+//! Organizes [`callbacks`], [`combined`], [`dependents`], [`destinations`], [`edge_policies`], [`installation`], [`output`], and [`policy`].
 
 mod callbacks;
 mod combined;

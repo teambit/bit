@@ -1,4 +1,6 @@
 //! Unit tests for history backup timestamp comparison ([`date`], [`past`]) in `bit init` replay suites.
+//!
+//! Verifies same-second rejection, next-second advancement, and month/year rollover carry.
 
 use super::{date, past};
 use chrono::Timelike;

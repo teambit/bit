@@ -1,4 +1,6 @@
 //! Unit tests for `bit templates` [`Options`] CLI parsing ([`parse_options`]) and workspace/component template catalog formatting ([`select_templates`], [`format_templates_report`]).
+//!
+//! Verifies [`can_use_builtin_workspace_templates`], [`friendly_aspect_name`], and [`Chalk`] output.
 
 use super::{
     Options, can_use_builtin_workspace_templates,

@@ -1,4 +1,6 @@
 //! End-to-end parity tests for `bit cli generate --docs` metadata and skill CLI options.
+//!
+//! Verifies `--metadata`, `--metadata.id=cli`, and `--skill` output via [`Helper`] and [`KnownResult`].
 
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::ffi::OsStr;

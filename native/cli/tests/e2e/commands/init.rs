@@ -1,4 +1,6 @@
 //! End-to-end `InitCmd` (`bit init`) provisioning tests ([`parity`]) comparing every generated file byte and directory.
+//!
+//! Verifies [`parity_status`], [`parity_options`], and [`comparison`] across bare and workspace init modes.
 
 mod comparison;
 use crate::helper::Helper;

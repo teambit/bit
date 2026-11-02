@@ -1,4 +1,6 @@
 //! Unit tests for multi-write replay clock-phase launch gate matching ([`multiple_bitmap_writes`], [`delay`], [`START`], [`END`], [`SECOND`]).
+//!
+//! Verifies fork/recover gate classification and half-open launch window bounds.
 
 use super::{END, SECOND, START, delay, multiple_bitmap_writes};
 #[test]

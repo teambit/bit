@@ -1,4 +1,6 @@
 //! End-to-end dependent-path import (`--dependents`) and `--dependents-via` dependency graph ([`graph`]) traversal tests.
+//!
+//! Verifies [`command`], [`http`], and [`support`] replay comparisons for transitive dependent imports.
 
 use super::command;
 use crate::{

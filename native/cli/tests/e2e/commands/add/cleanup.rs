@@ -1,4 +1,6 @@
 //! End-to-end tests ensuring consumer destruction runs after successful links ([`compare`]), including no-added results, `.bitTmp` cleanup, and best-effort `.bitmap` history.
+//!
+//! Verifies `.bitTmp` removal on success and retention on pre-destruction link failure in [`workspace`].
 use super::support::{compare, workspace};
 use std::fs;
 

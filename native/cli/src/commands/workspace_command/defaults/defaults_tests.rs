@@ -1,4 +1,6 @@
 //! Unit tests for `.bit-app` file detection ([`app_file`]) and default dev-file receipt construction in workspace commands.
+//!
+//! Verifies `.bit-app.*` / `.*-app.*` filename suffixes and default [`policy`] structures.
 
 use super::app_file;
 

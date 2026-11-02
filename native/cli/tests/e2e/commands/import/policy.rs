@@ -1,4 +1,6 @@
 //! End-to-end tests verifying `bit import` finalization updates the workspace policy using imported automatic dependency ranges.
+//!
+//! Verifies [`fixture`], [`read_jsonc`], and [`set_workspace_key`] policy merging after import.
 
 use crate::helper::{
     Helper,

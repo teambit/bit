@@ -1,4 +1,6 @@
 //! Decode ([`decode`]) bounded `zlib`-compressed object failures for diagnostics without changing compared bytes.
+//!
+//! Decompresses up to 4 KiB of UTF-8 scope object payloads for human-readable diff diagnostics.
 
 use std::io::Read;
 

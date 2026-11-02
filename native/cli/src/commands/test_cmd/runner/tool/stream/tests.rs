@@ -1,4 +1,6 @@
 //! Unit tests for test-runner control socket handshake ([`accept`]) and delayed message reception over TCP.
+//!
+//! Verifies token authentication and non-blocking readiness message streaming from child processes.
 
 use super::accept;
 use std::{

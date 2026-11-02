@@ -1,4 +1,6 @@
 //! End-to-end tests verifying owned source replacement ([`UPDATED`]) advances only its exact proofs before `--write-deps` recapture.
+//!
+//! Verifies [`command`], [`dependents`], and [`file`] across combined source and policy updates.
 
 use super::{command, dependents, file};
 use crate::{

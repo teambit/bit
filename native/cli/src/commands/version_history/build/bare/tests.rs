@@ -1,4 +1,6 @@
 //! Unit tests for bare-scope `VersionHistory` [`Plan`] atomic publication, trash moves, and parent ancestry checks.
+//!
+//! Verifies temporary-file collision safety and atomic object replacement in bare scopes.
 
 use super::{Plan, fs};
 

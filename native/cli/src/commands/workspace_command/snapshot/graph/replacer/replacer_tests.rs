@@ -1,4 +1,6 @@
 //! Unit tests for replacing `file:` [`WorkspaceComponent`] dependency specifiers with component versions in [`Replacer`] snapshots.
+//!
+//! Verifies [`replacer`] regex matching across peer dependency suffixes and `0.0.0-<hash>` snap versions.
 
 use super::{Replacer, WorkspaceComponent};
 

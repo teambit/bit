@@ -1,5 +1,6 @@
-//! Integration tests for `bit checkout` inputs the native command leaves to the `Node.js` CLI, each
-//! for its traced reason (including grammar, workspace, and host preflight checks).
+//! Integration tests for `bit checkout` inputs the native command leaves to the `Node.js` CLI ([`STUB`]).
+//!
+//! Verifies each traced fallback reason across grammar, workspace, and host preflight checks.
 
 use std::{
     fs,

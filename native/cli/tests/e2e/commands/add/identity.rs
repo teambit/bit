@@ -1,4 +1,6 @@
 //! End-to-end tests ([`compare`]) verifying re-tracking keeps published identities and variant scopes distinct from the workspace's current `defaultScope`.
+//!
+//! Verifies exported component scope preservation across [`workspace`], [`config`], and [`remote`] operations.
 use super::support::{compare, workspace};
 use crate::helper::{config, remote};
 use serde_json::json;

@@ -1,4 +1,6 @@
 //! Remote scope fixture publishing ([`publish_remote_fixture`]) and canonical object seeding for `bit diff` end-to-end tests.
+//!
+//! Exercises [`remote_parity_with`] and [`remote_versions`] against seeded and exported remote scopes.
 
 use super::{Helper, remote_parity_with, remote_versions};
 

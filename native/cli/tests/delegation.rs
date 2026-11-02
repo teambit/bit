@@ -1,5 +1,6 @@
-//! Integration tests running `bit` against a stub `Node.js` CLI ([`STUB`]) that echoes its arguments and
-//! exits with a chosen code: what users see when a command is delegated, disabled, or traced.
+//! Integration tests running `bit` against a stub `Node.js` CLI ([`STUB`]) that echoes its arguments.
+//!
+//! Verifies exit codes and stderr output when a command is delegated, disabled, or traced.
 
 use std::{
     fs,

@@ -1,4 +1,6 @@
 //! Normalize only validated workspace-config backup clock IDs ([`Snapshot`], [`Backup`]), preserving snapshots, file modes, and reasons.
+//!
+//! Verifies [`validate_history_id`] and [`mode`] invariants across `workspace-config-history` entries.
 
 use super::{Backup, mode, validate_history_id};
 use std::{

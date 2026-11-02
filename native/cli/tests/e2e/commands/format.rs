@@ -1,4 +1,6 @@
 //! End-to-end tests ensuring native `bit format` checks compare the released command, full caches, and untouched remote scope.
+//!
+//! Verifies [`support`] replay comparisons for `--check`, `--changed`, and `--json` formatting runs.
 
 use super::move_paths::support;
 #[test]
