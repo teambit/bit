@@ -46,6 +46,7 @@ fn scopes(options: &Options) -> Vec<String> {
         })
         .collect()
 }
+/// Builds the scope-qualified pattern string for filtering remote components in `scope`.
 #[inline]
 fn pattern(options: &Options, scope: &str) -> Option<String> {
     if !options.scope_fork {

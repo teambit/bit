@@ -39,6 +39,7 @@ impl Error {
     }
 }
 impl From<io::Error> for Error {
+    /// Converts a raw [`io::Error`] into [`Error::Filesystem`].
     #[inline]
     fn from(error: io::Error) -> Self {
         Self::Filesystem(error)

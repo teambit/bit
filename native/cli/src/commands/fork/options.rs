@@ -60,6 +60,7 @@ fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()>
     }
     Some(())
 }
+/// Consumes all remaining arguments after `--` as positional fork targets.
 #[inline]
 fn consume_trailing_positions<'a>(
     arguments: impl Iterator<Item = &'a &'a str>,

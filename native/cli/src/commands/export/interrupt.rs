@@ -15,8 +15,11 @@ use unix as platform;
 #[cfg(windows)]
 use windows as platform;
 
+/// Flag indicating whether an export interrupt [`Guard`] is currently installed.
 static ACTIVE: AtomicBool = AtomicBool::new(false);
+/// Flag indicating whether Ctrl+C warning output is enabled on stdout.
 static ENABLED: AtomicBool = AtomicBool::new(false);
+/// Flag indicating whether ANSI color is enabled for the Ctrl+C warning message.
 static COLOR: AtomicBool = AtomicBool::new(false);
 const PLAIN: &str = "⚠ unable to cancel the export process at this point because the communication with the remote already started\n";
 const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the export process at this point because the communication with the remote already started\u{1b}[39m\n";

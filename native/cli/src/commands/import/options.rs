@@ -24,7 +24,7 @@ pub struct Options {
     /// `--include-deprecated`: wildcard patterns keep deprecated components.
     pub selection: SelectionOptions,
 }
-
+/// Filesystem materialization, merge, path, dependency, and adoption flags for `bit import`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct WriteOptions {
     pub skip_write_config_files: bool,

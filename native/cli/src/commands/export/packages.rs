@@ -80,6 +80,7 @@ fn cloud_domain(value: &Value) -> &str {
         .unwrap_or("bit.cloud")
 }
 
+/// Deserializes and enriches per-component package link [`Plan`]s from `receipt`.
 fn plans(receipt: &Value) -> io::Result<Vec<Plan>> {
     let Some(raw_plans) = receipt
         .get("packageManifestPlans")

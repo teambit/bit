@@ -53,6 +53,7 @@ fn single(options: &Options, state: &Value, scope: String) -> Selected {
         },
     }
 }
+/// Matches `options.source` against local workspace component `pool` when not running `bit scope fork`.
 fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
     if options.scope_fork {
         return Ok(vec![]);

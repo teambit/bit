@@ -44,6 +44,7 @@ pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
     }
 }
 
+/// Verifies that `source` and `target` are neither identical nor a file-overwriting-directory conflict.
 #[inline]
 fn check_target(
     source: &Path,

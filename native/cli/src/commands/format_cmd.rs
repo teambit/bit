@@ -16,6 +16,7 @@ use std::{env, ffi::OsString, io, path::Path};
 /// Descriptor for the `bit format` CLI command.
 pub const COMMAND: Command = Command { name: "format", aliases: &[], run };
 
+/// Error message emitted when `bit format` is invoked outside both a workspace and a bare scope.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
 /// Parsed CLI options for `bit format`.

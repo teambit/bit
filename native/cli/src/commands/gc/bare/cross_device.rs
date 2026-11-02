@@ -41,6 +41,7 @@ fn copy_link(source: &Path, target: &Path) -> io::Result<()> {
     create_symlink(&link, target).map_err(|error| paired_failure(error, "symlink", &link, target))
 }
 
+/// Creates a symbolic link at `target` pointing to `link` using the platform symlink syscall.
 #[inline]
 fn create_symlink(link: &Path, target: &Path) -> io::Result<()> {
     #[cfg(unix)]

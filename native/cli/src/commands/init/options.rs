@@ -72,6 +72,7 @@ pub(super) fn parse(args: &[OsString]) -> Option<Options> {
     Some(options)
 }
 
+/// Consumes a single trailing workspace path token after `--` for `bit init`.
 #[inline]
 fn consume_trailing_init_path<'a>(
     args: impl Iterator<Item = Option<&'a str>>,

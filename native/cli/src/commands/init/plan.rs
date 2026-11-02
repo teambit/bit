@@ -93,6 +93,7 @@ fn plan_scope(
     Ok(())
 }
 
+/// Resolves the scope name for `bit init` from `--bare` or a randomized local workspace name.
 #[inline]
 fn scope_name(options: &Options, cwd: &Path) -> io::Result<String> {
     if let Some(bare) = options.bare.as_deref() {

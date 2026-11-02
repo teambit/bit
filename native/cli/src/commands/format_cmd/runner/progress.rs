@@ -37,6 +37,7 @@ impl Progress {
         let total = self.non_empty_count().max(index + 1);
         output.status(&format!("formatting components ({}/{total}) {identity}", index + 1));
     }
+    /// Counts how many component identities in `self.identities` are non-empty.
     #[inline]
     fn non_empty_count(&self) -> usize {
         self.identities

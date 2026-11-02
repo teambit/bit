@@ -57,6 +57,7 @@ fn build(scope: &Path) -> io::Result<Value> {
     Ok(json!({"components":components,"lanes":lanes}))
 }
 
+/// Enumerates and sorts all 40-char lowercase hex object hashes under `objects`.
 fn hashes(objects: &Path) -> io::Result<Vec<String>> {
     let mut hashes = Vec::new();
     for directory in fs::read_dir(objects)? {

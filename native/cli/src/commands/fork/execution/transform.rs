@@ -68,6 +68,7 @@ pub(super) fn local(
     let rows = load(root, linker, output)?;
     Refactor::prepare(root, &rows, &[(old.into(), new.into())], true, false)?.apply()
 }
+/// Refactors import specifiers across the workspace after a batch (`multiple`) remote or scope fork.
 #[inline]
 pub(super) fn multiple(
     root: &Path,

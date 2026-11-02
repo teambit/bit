@@ -60,6 +60,7 @@ pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Re
         .collect())
 }
 
+/// Returns `true` when `.bitmap`'s `_bit_lane` entry names a non-`main` lane.
 #[inline]
 fn is_non_main_lane(lane: Option<&Value>) -> bool {
     let Some(lane) = lane else { return false };

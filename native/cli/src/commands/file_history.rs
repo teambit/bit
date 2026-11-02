@@ -49,6 +49,7 @@ pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, String, Vec<
     Ok((identity, file, rows))
 }
 
+/// Resolves `input` against `.bitmap` and classifies it as [`Target::Versioned`], [`Target::Unversioned`], or [`Target::Unowned`].
 pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     if root.join("workspace.jsonc").is_file() {
         super::status::autosync::run_if_enabled(root)?;

@@ -66,6 +66,7 @@ fn prepare(
     };
     (source, kernel)
 }
+/// Trims `value` and returns `Some` when the resulting string is non-empty.
 #[inline]
 fn clean_opt(value: Option<&str>) -> Option<String> {
     value

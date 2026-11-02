@@ -60,6 +60,7 @@ fn push_export_id(options: &mut Options, item: &str) -> Option<()> {
     Some(())
 }
 
+/// Applies a single CLI flag or positional ID argument `arg` onto `options`.
 fn apply_export_arg<'a>(
     options: &mut Options,
     arg: &str,

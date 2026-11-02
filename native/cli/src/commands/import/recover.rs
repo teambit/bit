@@ -52,6 +52,7 @@ pub(in crate::commands) fn recover_probe(
     bit_object_import::component_recover::probe_remote(ids, &remotes, &network)
 }
 
+/// Imports missing scope objects for `ids` into `root` without workspace materialization during `bit recover`.
 #[inline]
 pub(in crate::commands) fn recover_scope_import(
     root: &Path,

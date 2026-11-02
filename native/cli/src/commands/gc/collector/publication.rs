@@ -41,6 +41,7 @@ impl Plan {
             }
         }
     }
+    /// Executes stray-file deletion and object backup/removal for `self` unless `dry_run` is set.
     #[inline]
     pub(in crate::commands::gc) fn execute(&self, scope: &Path) -> io::Result<()> {
         if self.result.flags.dry_run {

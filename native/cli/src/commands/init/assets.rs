@@ -29,6 +29,7 @@ impl Assets {
         (write(root, self.agent), write(root, self.mcp))
     }
 }
+/// Writes a single staged `(path, bytes)` asset under `root` and returns its relative path string on success.
 #[inline]
 fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     let (path, bytes) = file?;

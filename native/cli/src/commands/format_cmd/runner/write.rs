@@ -55,6 +55,7 @@ pub(super) fn publish_components(
     Ok(None)
 }
 
+/// Verifies that every input file still matches its pre-formatted `source` text before writing.
 #[inline]
 pub(super) fn validate(inputs: &[Value]) -> io::Result<()> {
     for input in inputs {

@@ -87,6 +87,7 @@ fn prepare(scope: &Path, options: &Options) -> io::Result<Plan> {
     let index = index::prepare(scope, &objects)?;
     Ok(Plan { logs, deleted, index })
 }
+/// Formats the initial bare-scope object inventory counts for `name`.
 #[inline]
 fn inventory_report(
     name: &str,

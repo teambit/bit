@@ -8,6 +8,7 @@ use std::{
     io::{self, Write},
     path::Path,
 };
+/// Aspect ID of the Bit dependency resolver in `workspace.jsonc`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// Updates `workspace.jsonc` dependency-resolver policy with forked dependency `facts` and notifies `linker`.
 pub(super) fn persist(

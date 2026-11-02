@@ -42,6 +42,7 @@ struct Shortened {
     version: Option<String>,
 }
 
+/// Borrowed scope, name, and version slices split from a component ID string.
 struct ParsedId<'a> {
     scope: Option<&'a str>,
     name: &'a str,

@@ -52,6 +52,7 @@ pub(super) struct GcResult {
     pub dirs: GcDirSizes,
 }
 
+/// Deleted object count and byte total for a single Bit object type (`Version` or `Source`).
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize)]
 pub(super) struct DeletedTypeStats {
     pub count: usize,

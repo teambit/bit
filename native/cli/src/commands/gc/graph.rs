@@ -20,7 +20,7 @@ pub(super) struct CompIdSpec {
     pub name: String,
     pub version: Option<String>,
 }
-
+/// Reachability graph of `Version` objects, component [`models::Models`], and remote references.
 pub(super) struct GcGraph {
     pub version_map: HashMap<String, Value>,
     pub models: models::Models,

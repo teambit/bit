@@ -46,6 +46,7 @@ pub(super) struct ScopeRootRefs {
     pub unmerged_roots: Vec<String>,
 }
 
+/// Complete snapshot of a scope's objects, trashed lanes, root references, stray files, and directory sizes.
 #[derive(Debug, Default, Clone)]
 pub(super) struct ScopeInventory {
     pub objects: Vec<ObjectEntry>,

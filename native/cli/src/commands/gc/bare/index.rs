@@ -41,6 +41,7 @@ fn component(value: &Value, hash: &str) -> io::Result<Value> {
     Ok(json!({"id":{"scope":scope,"name":name},"isSymlink":is_symlink,"hash":hash}))
 }
 
+/// Formats a `Lane` object entry for `index.json`.
 #[inline]
 fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;

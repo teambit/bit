@@ -20,7 +20,7 @@ use bit_install::{HostInfo, InstallOptions, Outcome, config::WorkspaceConfig, ou
 use canonical::{canonical_workspace, deps_graph_enabled};
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
-
+/// Aspect ID of the unsupported Yarn package manager aspect.
 const YARN: &str = "teambit.dependencies/yarn";
 
 /// Versions passed to `ComponentWriter.finalizeWrite`: changed components and

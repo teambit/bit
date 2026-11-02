@@ -93,7 +93,7 @@ fn imported_ids(rows: &[Value], multi_lane: bool) -> io::Result<(Vec<String>, Ha
     }
     Ok((ids, imported))
 }
-
+/// Deserializes and validates a single `importDetails` entry `row` into [`Details`].
 fn details_row(row: &Value) -> io::Result<Details> {
     let map = object(row)?;
     let versions: Vec<String> = array(map.get("versions"), "versions")?

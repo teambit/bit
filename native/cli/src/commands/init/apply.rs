@@ -44,6 +44,7 @@ fn remove(path: &Path) -> io::Result<()> {
         Err(error) => Err(error),
     }
 }
+/// Removes a single file or symlink at `path` on Unix platforms.
 #[cfg(not(windows))]
 #[inline]
 fn remove_leaf(path: &Path) -> io::Result<()> {

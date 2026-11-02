@@ -27,7 +27,7 @@ use std::{
 pub const COMMAND: Command = Command { name: "insights", aliases: &[], run };
 
 const CORE_INSIGHTS: [&str; 2] = ["circular", "duplicate dependencies"];
-
+/// Parsed CLI flags and insight names for `bit insights`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct Options {
     pub list: bool,

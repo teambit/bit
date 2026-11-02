@@ -51,6 +51,7 @@ impl Models {
     pub(in crate::commands::gc) fn contains_key(&self, key: &str) -> bool {
         self.identities.contains_key(key)
     }
+    /// Looks up a `Component` object by optional `scope` and `name`, falling back to bare `name`.
     #[inline]
     pub(super) fn get(&self, scope: Option<&str>, name: &str) -> Option<&Value> {
         let name = name.trim();

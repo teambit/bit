@@ -75,6 +75,7 @@ pub(super) fn run(
     output.stop();
     Ok(report::render(options, &results.ids, chalk))
 }
+/// Populates `rootDir` and `mainFile` on `source` from the latest workspace inventory for `id`.
 #[inline]
 fn apply_inventory_fields(root: &Path, id: &str, source: &mut Value) -> io::Result<()> {
     let state = inventory::read(root)?;

@@ -38,7 +38,7 @@ pub const COMMAND: Command = Command { name: "internalize", aliases: &[], run };
 const INTERNALIZE_ASPECT_ID: &str = "teambit.component/internalize";
 const MISSING_PATTERN_ERR: &str =
     "please specify a component-pattern, or use --list to show the internal components";
-
+/// Parsed CLI options for `bit internalize`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

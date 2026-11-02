@@ -10,6 +10,7 @@ use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
 /// Descriptor for the `bit fork` CLI command.
 pub const COMMAND: Command = Command { name: "fork", aliases: &[], run };
+///Entry point for `bit fork`.
 #[inline]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_mode(args, false)

@@ -30,7 +30,7 @@ const GIT_DRIVER_KEY: &str = "merge.bitmap-driver.driver";
 const GIT_NAME_VALUE: &str = "A custom merge driver used to resolve conflicts in .bitmap files";
 const GIT_DRIVER_VALUE: &str = "bd git merge-bitmaps %O %A %B";
 const GIT_ATTRIBUTES_LINE: &str = ".bitmap merge=bitmap-driver";
-
+/// Parsed subcommand and arguments for `bit git`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Parsed {
     MergeBitmaps { current: String, other: String },

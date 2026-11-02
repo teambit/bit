@@ -62,7 +62,7 @@ fn build_scope_graph(scope_dir: &Path, options: &Options) -> Result<CompGraph, F
     graph.sort_deterministic();
     Ok(graph)
 }
-
+/// Applies local-only and cycle filters to `graph` according to `options`.
 #[inline]
 fn apply_scope_filters(
     graph: &mut CompGraph,

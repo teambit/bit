@@ -78,6 +78,7 @@ impl<'a> Collector<'a> {
             .cloned()
             .collect())
     }
+    /// Seeds `self.retained` and `self.dependencies` from `ScopeMeta` and local `Component` objects.
     fn local_components(&mut self) -> io::Result<()> {
         for object in self.objects.values() {
             match object.kind.as_str() {

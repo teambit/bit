@@ -6,7 +6,9 @@ use bit_workspace_config::jsonc::Document;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Aspect ID of the Bit workspace aspect in `workspace.jsonc`.
 const WORKSPACE: &str = "teambit.workspace/workspace";
+/// Aspect ID of the Bit dependency resolver aspect in `workspace.jsonc`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 /// Generates a new `workspace.jsonc` byte buffer from the installed template and `options`.

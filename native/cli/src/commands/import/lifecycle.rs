@@ -54,6 +54,7 @@ impl Lifecycle {
             json: options.output.json,
         })
     }
+    /// Returns `true` when either the [`ProjectedLinker`] or the status cache is owned by this session.
     #[inline]
     pub(super) const fn started(&self) -> bool {
         self.linker.is_some() || self.cache_owned

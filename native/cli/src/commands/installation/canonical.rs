@@ -63,6 +63,7 @@ fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Continuation
     Ok(Continuation::Resume(run_prepared(prepared, path.to_owned())))
 }
 
+/// Executes `prepared` on a background thread and formats the canonical continuation JSON response.
 fn run_prepared(prepared: CanonicalInstall, path: String) -> Value {
     let output = Arc::new(Mutex::new(String::new()));
     let captured = Arc::clone(&output);

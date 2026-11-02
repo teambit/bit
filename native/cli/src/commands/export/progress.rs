@@ -55,6 +55,7 @@ impl Exported {
         }
     }
 
+    /// Replays transfer, verification, and persistence status lines for direct (non-hub) exports.
     fn replay_direct(&self, output: &Output) {
         for (scope, objects) in &self.transfers {
             let scope = scope.trim();

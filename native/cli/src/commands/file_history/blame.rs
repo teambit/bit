@@ -60,6 +60,7 @@ fn consume_trailing_path<'a>(
     Some(())
 }
 
+/// Entry point for `bit blame`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("blame arguments are not UTF-8".into()));

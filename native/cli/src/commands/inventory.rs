@@ -70,6 +70,7 @@ struct Scan {
     own: Vec<String>,
 }
 
+/// Nested directory ignore patterns reported by the workspace engine.
 #[derive(Deserialize)]
 struct Nested {
     directory: String,

@@ -13,6 +13,7 @@ pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
             .all(|id| !has_wildcard(id) || valid_pattern(id))
 }
 
+/// Returns `true` when every flag in `flags` is supported and no short/long alias pair is duplicated.
 #[inline]
 fn valid_import_flags(flags: &[&str]) -> bool {
     let allowed = [

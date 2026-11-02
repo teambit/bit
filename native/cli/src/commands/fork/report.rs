@@ -48,6 +48,7 @@ fn summary(options: &Options, ids: &[String], chalk: Chalk) -> String {
         format!("forked {} from {}", chalk.bold(first_id), chalk.bold(source))
     }
 }
+/// Resolves the target scope name from `options.scope` or the first forked component ID in `ids`.
 #[inline]
 fn target_scope<'a>(options: &'a Options, ids: &'a [String]) -> &'a str {
     options.scope

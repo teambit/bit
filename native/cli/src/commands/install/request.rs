@@ -15,6 +15,7 @@ pub(super) fn needs_canonical_install(root: &Path) -> bool {
     configured_root_aspects(root).unwrap_or(true)
 }
 
+/// Inspects `workspace.jsonc`, `scope.jsonc`, and global config for non-core aspects or `require` entries.
 fn configured_root_aspects(root: &Path) -> io::Result<bool> {
     let config = WorkspaceConfig::load(root)?;
     let core: Vec<String> = serde_json::from_str(include_str!(

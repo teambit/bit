@@ -41,6 +41,7 @@ pub(super) fn parents(source: &Path, target: &Path, metadata: &fs::Metadata) -> 
     }
     Ok(())
 }
+/// Verifies that a single ancestor directory `parent` of `target` is not identical to `source`.
 #[inline]
 fn check_parent_entry(
     source: &Path,

@@ -95,6 +95,7 @@ impl Planned {
     }
 }
 
+/// Returns `true` when `value` contains a non-empty lane string or nested `name`/`id` field.
 #[inline]
 fn has_active_lane(value: &Value) -> bool {
     [

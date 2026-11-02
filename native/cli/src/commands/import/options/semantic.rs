@@ -25,6 +25,7 @@ fn directories(options: &Options) -> Option<&'static str> {
         .is_some_and(|path| !path.trim().is_empty())
         .then_some("--path and --write-to-empty-dir cannot be used together")
 }
+/// Checks for flags (`--dependencies`, `--dependents`, `--track-only`, etc.) that require explicit component IDs.
 #[inline]
 fn missing_ids(options: &Options) -> Option<&'static str> {
     if options.ids

@@ -53,6 +53,7 @@ pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
     }
     Some(values)
 }
+/// Parses an inline `--write-deps=<val>` or `--dependents-via=<val>` flag into `values`.
 #[inline]
 fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
     if let Some(val) = argument.strip_prefix("--write-deps=") {

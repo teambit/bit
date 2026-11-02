@@ -75,6 +75,7 @@ pub(super) fn selection(
     }
 }
 
+/// Validates that `prepared["laneGroups"]` matches `options.ids` and `prepared["progress"]` for `--lanes`.
 pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::Result<()> {
     let Some(groups) = prepared
         .get("laneGroups")

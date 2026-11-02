@@ -1,4 +1,4 @@
-//! `ExportMain` writes the last cloud build ([`remember`]) after its post-export callback; write failures are logged (`export.main.runtime.ts`).
+//! `ExportMain` writes the last cloud build ([`remember`], [`exported_lane`]) after its post-export callback; write failures are logged (`export.main.runtime.ts`).
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 

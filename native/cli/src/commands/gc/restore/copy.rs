@@ -28,6 +28,7 @@ pub(super) fn preflight(source: &Path, target: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates a symbolic link at `source` and any existing symlink at `target` during preflight.
 #[cfg(unix)]
 fn preflight_symlink(
     source: &Path,

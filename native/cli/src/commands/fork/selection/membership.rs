@@ -32,6 +32,7 @@ pub(super) fn classify(
 fn equal(left: &str, right: &str, pool: &[Value]) -> bool {
     bare(left) == bare(right) && version(left, pool) == version(right, pool)
 }
+/// Resolves the concrete version string for `id`, falling back to its matching entry in `pool`.
 fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
     let bare_id = bare(id);
     let explicit = id

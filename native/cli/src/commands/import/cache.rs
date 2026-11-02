@@ -72,6 +72,7 @@ fn eligible(options: &Options, retained: bool) -> bool {
     !retained && writing && without_install && ordinary
 }
 
+/// Strips any trailing `@version` suffix from `raw` and returns the trimmed bare ID.
 #[inline]
 fn bare(raw: &str) -> &str {
     let trimmed = raw.trim();

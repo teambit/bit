@@ -67,6 +67,7 @@ fn consume_trailing_path<'a>(
     Some(())
 }
 
+/// Entry point for `bit log-file`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("log-file arguments are not UTF-8".into()));

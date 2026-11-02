@@ -90,6 +90,7 @@ impl Id {
             })
     }
 
+    /// Formats this identifier as `<scope>/<name>` without any `@version` suffix.
     #[inline]
     #[must_use]
     pub fn without_version(&self) -> String {

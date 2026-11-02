@@ -13,7 +13,7 @@ pub(super) enum Preflight {
     Empty,
     Fail(String),
 }
-
+/// Sends a non-recovery `commandInboundPrepare` request to `engine` for `options` and `ids`.
 #[inline]
 pub(super) fn prepare_into(
     engine: &mut Engine,

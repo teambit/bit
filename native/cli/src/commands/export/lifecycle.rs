@@ -68,6 +68,7 @@ impl Lifecycle {
         Ok(Self { host: Some(Arc::new(host)), root: root.to_owned() })
     }
 
+    /// Builds the optional [`bit_object_import::export_actions::Handler`] delegating file actions to the [`Host`].
     pub(super) fn file_actions(&self) -> Option<bit_object_import::export_actions::Handler> {
         self.host
             .as_ref()

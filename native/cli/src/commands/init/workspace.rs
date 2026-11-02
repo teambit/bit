@@ -80,6 +80,7 @@ fn bitmap(plan: &mut Plan, scope: &Path, options: &Options) -> io::Result<()> {
     Ok(())
 }
 
+/// Rejects initializing an empty `.bitmap` over a scope that still retains objects unless `--force` or a scope reset is active.
 #[inline]
 fn validate_objects(value: &Value, scope: &Path, options: &Options) -> io::Result<()> {
     let clears_scope = options.resets.scope
