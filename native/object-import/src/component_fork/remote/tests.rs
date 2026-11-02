@@ -27,6 +27,7 @@ fn object(root: &Path, kind: &str, hash: &str, body: &[u8]) -> ObjectItem {
     fs::write(path, &compressed).unwrap();
     ObjectItem { hash: hash.into(), compressed, scope: None }
 }
+/// Creates a temporary bare scope containing `Component`, `Version`, and binary `Source` objects for `old.scope/source`.
 fn fixture() -> (tempfile::TempDir, Vec<ObjectItem>) {
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();

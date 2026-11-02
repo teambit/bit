@@ -15,6 +15,7 @@ fn text(value: &Value) -> Option<String> {
     value.as_str().map(str::to_string)
 }
 
+/// Verifies [`valid_range`] output against npm `semver` 7.7.1 golden cases.
 #[test]
 fn valid_range_matches_semver_7() {
     for case in golden()["validRange"].as_array().unwrap() {

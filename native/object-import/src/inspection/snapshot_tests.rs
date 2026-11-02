@@ -11,6 +11,7 @@ fn request(fixture: &Fixture) -> Value {
         "workspaceRoot":false,"snapshotDirectory":fixture.directory("snapshots")})
 }
 
+/// Verifies that [`begin`] with `ownedMemory: true` requires `enable_memory_snapshots` and never spools files to disk.
 #[test]
 fn owned_capture_requires_embedded_capability_and_never_spools() {
     let fixture = Fixture::new();

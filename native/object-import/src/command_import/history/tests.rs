@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 fn row(index: usize) -> Value {
     json!({"hash":format!("{index:040x}"),"parents":if index == 0 {Vec::new()} else {vec![format!("{:040x}", index-1)]}})
 }
+/// Wraps `rows` into a `VersionHistory` JSON payload for `fixture.scope/component`.
 fn history(rows: Vec<Value>) -> Value {
     let mut value = json!({"name":"component","scope":"fixture.scope","graphCompleteRefs":[]});
     value["versions"] = Value::Array(rows);

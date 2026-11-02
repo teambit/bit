@@ -15,6 +15,7 @@ fn own_undefined_keys_differ_from_absence_and_null() {
     assert!(equal(&absent, &json!({"data":{},"dataUndefinedKeys":[]})));
 }
 
+/// Verifies that [`equal`] ignores key ordering in both `data` objects and `dataUndefinedKeys` sets.
 #[test]
 fn undefined_sets_and_object_properties_ignore_order() {
     let left = json!({"data":{"a":1,"b":[true]},"dataUndefinedKeys":["name","description"]});

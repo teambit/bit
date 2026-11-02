@@ -12,6 +12,7 @@ fn component_writer_uses_platform_eol_for_new_nonpreserved_targets() {
     assert_eq!(writer.contents(mixed.to_vec(), false), b"first\nsecond\nthird\n");
 }
 
+/// Verifies that [`Writer::target`] retains exact source EOL bytes when `exported` or `preserve` is set.
 #[test]
 fn exported_and_preserved_target_writes_retain_exact_source_eol() {
     for (exported, preserve) in [(true, false), (true, true), (false, true)] {

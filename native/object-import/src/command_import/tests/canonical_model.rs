@@ -45,6 +45,7 @@ fn equal_head_main_refresh_canonicalizes_both_alternative_streams_without_fetchi
     assert_eq!(fs::read(remote).unwrap(), alternative);
 }
 
+/// Inflates `compressed` and re-encodes the raw object payload at `compression` level.
 pub(super) fn alternative(compressed: &[u8], compression: Compression) -> Vec<u8> {
     let raw = crate::checkout::repository::inflate(compressed, 32768).unwrap();
     let mut encoder = ZlibEncoder::new(Vec::new(), compression);

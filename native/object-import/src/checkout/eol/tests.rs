@@ -13,6 +13,7 @@ fn detects_binary_nuls_pdfs_controls_and_suspicious_byte_density() {
         assert!(!binary(bytes));
     }
 }
+/// Verifies that Unicode BOM prefixes override binary detection and only the first 512 bytes are inspected.
 #[test]
 fn bom_overrides_and_only_first_512_bytes_match_canonical_classifier() {
     for bom in [

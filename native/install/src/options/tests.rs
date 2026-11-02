@@ -16,6 +16,7 @@ fn options(args: &[&str]) -> InstallOptions {
     }
 }
 
+/// Verifies parsing of positional package arguments and boolean CLI flags.
 #[test]
 fn parses_packages_and_switches() {
     let parsed = options(&[

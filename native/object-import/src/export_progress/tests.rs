@@ -23,6 +23,7 @@ fn nested_observer_unwind_restores_the_outer_operation() {
     );
 }
 
+/// Verifies that concurrent threads running [`scope`] and [`emit`] isolate their progress [`Event`] channels.
 #[test]
 fn concurrent_export_owners_do_not_receive_each_others_events() {
     let barrier = Arc::new(Barrier::new(2));

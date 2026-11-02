@@ -20,6 +20,7 @@ fn variants(value: &Value) -> Vec<(String, Map<String, Value>)> {
         .collect()
 }
 
+/// Verifies that [`by_root_dir_and_name`] orders matching variants by specificity and stops at `propagate: false`.
 #[test]
 fn variants_sort_by_specificity_and_stop_propagation() {
     let variants = variants(&json!({

@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 fn call(kind: &str, input: Value) -> Value {
     apply(kind, input, &mut State::default()).expect("native policy")
 }
+/// Verifies that `historyResetCandidates` reports indices of `removed` entries absent from `components`.
 #[test]
 fn removed_candidates_compare_only_original_components() {
     assert_eq!(

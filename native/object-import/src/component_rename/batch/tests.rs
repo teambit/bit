@@ -34,6 +34,7 @@ impl Drop for Directory {
     }
 }
 
+/// Builds a temporary workspace containing `first` and `second` components along with rename [`Options`] and facts.
 fn workspace() -> (Directory, Vec<Options>, Vec<Value>) {
     let directory = Directory::new();
     let root = directory.path();

@@ -19,6 +19,7 @@ fn recorder() -> (Sink, Arc<Mutex<String>>) {
     (Arc::new(move |text: &str| target.lock().unwrap().push_str(text)), written)
 }
 
+/// Drains and returns the accumulated text from `written`.
 fn take(written: &Mutex<String>) -> String {
     std::mem::take(&mut *written.lock().unwrap())
 }

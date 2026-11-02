@@ -22,6 +22,7 @@ fn store(store: &crate::store::Store, body: &[u8], index: usize) -> wire::Model 
     serde_json::from_value(json!({"relativePath":format!("file-{index}"),"hash":identity})).unwrap()
 }
 
+/// Verifies that [`load`] preserves model file order across thread counts and enforces byte budgets.
 #[test]
 fn parallel_model_reads_preserve_order_and_retry_skewed_budgets() {
     let fixture = Fixture::new();

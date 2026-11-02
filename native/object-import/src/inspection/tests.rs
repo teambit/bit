@@ -33,6 +33,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
+/// Verifies that `inspectionBegin` retains snapshot bytes across source deletion and `inspectionFinish` invalidates the token.
 #[test]
 fn retained_snapshot_survives_file_mutation_and_finish_rejects_old_token() {
     let fixture = Fixture::new();

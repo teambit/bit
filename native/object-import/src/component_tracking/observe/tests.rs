@@ -23,6 +23,7 @@ fn a_repeated_control_read_cannot_replace_the_original_preimage() {
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Verifies that re-reading a modified directory fails and invalidates the [`Observed`] directory inventory.
 #[test]
 fn a_repeated_directory_read_cannot_replace_the_original_inventory() {
     let root = fixture();

@@ -11,6 +11,7 @@ fn compress(body: &[u8]) -> Vec<u8> {
     compressor.finish().unwrap()
 }
 
+/// Verifies that [`super::inflate_with`] charges exact inflated body bytes against a shared [`crate::read_budget::Budget`].
 #[test]
 fn shared_inflation_charges_exact_body_bytes_across_chunks_and_records() {
     let body = vec![b'x'; 128 * 1024 + 1];

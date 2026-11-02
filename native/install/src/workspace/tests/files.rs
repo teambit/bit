@@ -43,6 +43,7 @@ fn component_files_apply_bit_and_user_ignore_rules() {
     );
 }
 
+/// Verifies that `track_all_files` retains `package.json` and `tsconfig.json` while honoring `ignored_files`.
 #[test]
 fn track_all_files_keeps_generated_files_and_ignored_files_apply() {
     let dir = tempdir().unwrap();

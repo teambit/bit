@@ -37,6 +37,7 @@ fn registration() -> Registration {
     )
 }
 
+/// Builds a [`WorkspaceComponent`] fixture for `id` configured with `extensions`.
 fn configured(id: &str, extensions: &[&str]) -> WorkspaceComponent {
     let mut subject = component(Path::new("/ws"), id, "teambit.harmony/node");
     for extension in extensions {

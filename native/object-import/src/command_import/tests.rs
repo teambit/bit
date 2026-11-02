@@ -505,7 +505,7 @@ fn repeated_fetch_counts_cached_sources_and_preserves_existing_ref_inode() {
     );
     assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap()[0]["head"], head);
 }
-
+/// Verifies that `prepare_lane_referenced` fetches only missing same-scope snap `Version` and `Source` objects.
 #[test]
 fn lane_referenced_import_fetches_only_missing_same_scope_snap_sources() {
     let fixture = Fixture::new();

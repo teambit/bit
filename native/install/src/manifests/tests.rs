@@ -16,7 +16,7 @@ use crate::{
 use indexmap::IndexMap;
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
-
+/// Default synthetic workspace root path for manifest planning tests.
 pub(super) const ROOT: &str = "/ws";
 
 pub(super) fn id(scope: &str, name: &str, version: Option<&str>) -> ComponentId {

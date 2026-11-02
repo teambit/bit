@@ -15,6 +15,7 @@ fn tracking_is_read_only_until_commit() {
     assert!(std::fs::read_to_string(root.join(".bitmap")).unwrap().contains("foo"));
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`Plan::validate`] fails if a tracked source file is modified after [`Plan::prepare`].
 #[test]
 fn stale_source_prevents_publication() {
     let root = fixture();

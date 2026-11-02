@@ -32,6 +32,7 @@ fn observed(bytes: &[u8]) -> (wire::Current, State) {
     )
 }
 
+/// Verifies that [`load`] reads normalized bytes from the retained snapshot [`State`] without reopening disk files.
 #[test]
 fn retained_current_uses_the_observed_bytes_without_reopening_the_workspace() {
     let (file, snapshots) = observed(b"line\r\n");

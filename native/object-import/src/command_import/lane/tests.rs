@@ -18,6 +18,7 @@ fn alias_resolution_prefers_tracking_and_rejects_ambiguous_names() {
     assert!(resolve_local("dev", &json!({}), &ambiguous).is_err());
 }
 
+/// Verifies that [`entries`] extracts hidden `updateDependents` hashes and rejects overlapping or unpinned entries.
 #[test]
 fn stored_hidden_ids_keep_version_and_decline_overlapping_buckets() {
     let visible = "1".repeat(40);

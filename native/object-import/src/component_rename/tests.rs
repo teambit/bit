@@ -14,6 +14,7 @@ fn class_and_filename_replacements_follow_the_published_order() {
         "your-card/my-button.ts",
     );
 }
+/// Verifies that [`refactor::content`] skips NUL-containing binary sources and [`refactor::package`] avoids prefix lookalikes.
 #[test]
 fn binary_sources_and_package_prefix_lookalikes_are_preserved() {
     assert_eq!(refactor::content(b"\0my-button", "my-button", "other").unwrap(), b"\0my-button");

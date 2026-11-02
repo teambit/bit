@@ -14,6 +14,7 @@ fn source(body: &[u8], compression: Compression) -> (String, Vec<u8>) {
     encoder.write_all(body).unwrap();
     (hash, encoder.finish().unwrap())
 }
+/// Computes the two-character fanout loose object path under `directory` for `hash`.
 fn object_path(directory: &Path, hash: &str) -> std::path::PathBuf {
     directory
         .join(&hash[..2])

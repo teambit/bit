@@ -22,6 +22,7 @@ impl Drop for Directory {
     }
 }
 
+/// Verifies that [`Capture::accept_published`] rebases owned paths while rejecting external modifications on unowned paths.
 #[test]
 fn retaining_native_writes_rebases_only_owned_paths_and_preserves_other_read_proofs() {
     let directory = Directory::new();

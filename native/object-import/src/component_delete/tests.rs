@@ -45,6 +45,7 @@ fn fixture() -> PathBuf {
         .unwrap();
     root
 }
+/// Encodes and writes a loose Bit object (`hash`, `kind`, `value`) into `root/.bit/objects`.
 fn object(root: &std::path::Path, hash: &str, kind: &str, value: &Value) {
     let path = root
         .join(".bit/objects")

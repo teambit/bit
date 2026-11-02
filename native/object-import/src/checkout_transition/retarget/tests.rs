@@ -17,6 +17,7 @@ fn retained_plan() -> plan::Plan {
         other: None,
     }
 }
+/// Builds a [`plan::Current`] entry at relative path `"a"` with `hash` as its raw hash.
 fn current(hash: &str) -> plan::Current {
     plan::Current {
         relative_path: "a".to_owned(),

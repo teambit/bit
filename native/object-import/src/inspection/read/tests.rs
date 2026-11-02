@@ -24,6 +24,7 @@ fn request(fixture: &Fixture, bodies: &[&[u8]]) -> wire::Begin {
     .unwrap()
 }
 
+/// Verifies that [`capture`] preserves file order, raw/snapshot/Linux hashes, and binary content across thread counts.
 #[test]
 fn parallel_capture_preserves_input_order_hashes_and_binary_normalization() {
     let bodies: [&[u8]; 8] = [

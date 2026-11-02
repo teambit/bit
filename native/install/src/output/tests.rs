@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+/// Serializes tests that exercise the process-wide spinner/loader state.
 static STATUS_TEST: Mutex<()> = Mutex::new(());
 
 /// Creates an in-memory [`Sink`] and shared buffer for inspecting rendered CLI output.

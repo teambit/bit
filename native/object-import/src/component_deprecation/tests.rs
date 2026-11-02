@@ -6,6 +6,7 @@ use super::{ASPECT, Value, json, selection, set_config, validate_range};
 fn bitmap() -> Value {
     json!({"foo":{"name":"foo","scope":"scope","version":"1.0.0","rootDir":"foo"},"bar":{"name":"bar","defaultScope":"scope","rootDir":"bar"}})
 }
+/// Verifies that [`set_config`] records `deprecate: true` and decomposed `newId` metadata under [`ASPECT`].
 #[test]
 fn replacement_metadata_retains_scope_name_and_version() {
     let mut bitmap = bitmap();

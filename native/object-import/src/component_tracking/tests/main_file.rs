@@ -18,6 +18,7 @@ fn find(files: &[&str], main: Option<&str>, existing: Option<&str>) -> std::io::
         existing,
     )
 }
+/// Verifies that [`find`] prefers the existing `.bitmap` main file when no explicit `--main` override is supplied.
 #[test]
 fn existing_main_wins_without_explicit_override() {
     assert_eq!(find(&["new.js"], None, Some("old.js")).unwrap(), "old.js");

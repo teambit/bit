@@ -20,6 +20,7 @@ fn projected_roots_preserve_published_textual_prefix_matching() {
     assert_eq!(bitmap["other"]["rootDir"], "nextista");
     assert_eq!(changes[0]["changes"][0], json!({"from":"bar","to":"next"}));
 }
+/// Verifies that [`project::apply`] rejects untracked source paths without mutating `.bitmap`.
 #[test]
 fn untracked_paths_fail_without_mutating_bitmap() {
     let root = std::env::temp_dir();

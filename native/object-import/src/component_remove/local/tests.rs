@@ -30,6 +30,7 @@ fn fixture() -> PathBuf {
         .unwrap();
     root
 }
+/// Verifies that [`LocalBatch::prepare`] and [`LocalBatch::commit`] remove component directories, package links, and `package.json` dependencies.
 #[test]
 fn batch_publishes_once_and_removes_package_dependencies() {
     let root = fixture();

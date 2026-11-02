@@ -58,6 +58,7 @@ impl Fixture {
     }
 }
 
+/// Verifies that [`ci_requires_published_diagnostic`] resolves cached local `LaneHistory` keys without contacting unreachable HTTP remotes.
 #[test]
 fn cached_key_stays_native_without_contacting_an_http_remote() {
     let fixture = Fixture::new();

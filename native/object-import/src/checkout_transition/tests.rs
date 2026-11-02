@@ -67,6 +67,7 @@ impl Fixture {
 }
 use sha1::Digest;
 
+/// Verifies that `checkoutPrepare` retains verified `Source` and `Version` objects in [`State`].
 #[test]
 fn prepare_retains_verified_source_and_random_version_identity() {
     let fixture = Fixture::new();

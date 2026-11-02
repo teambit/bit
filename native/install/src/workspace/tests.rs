@@ -1,6 +1,7 @@
 //! Unit tests ([`write`], [`components`], [`files`], [`matching`]) for workspace component loading, file scanning, and variant
 //! pattern matching in `bit-install`.
 
+/// Workspace component and `.bitmap` loading unit tests.
 mod components;
 mod files;
 mod matching;

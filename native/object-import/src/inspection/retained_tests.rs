@@ -19,6 +19,7 @@ fn observe(reads: &mut Reads, path: &Path, raw: &[u8]) -> u64 {
         })
         .unwrap()
 }
+/// Builds an `inspectionBegin` request JSON object referencing `token` and `raw` hashes in `fixture`.
 fn request(fixture: &Fixture, token: u64, raw: &[u8]) -> Value {
     json!({"files":[{"relativePath":"file","path":fixture.0.join("file"),
         "rawHash":hash(raw),"snapshotHash":hash(raw.strip_prefix(b"\xef\xbb\xbf").unwrap_or(raw)),

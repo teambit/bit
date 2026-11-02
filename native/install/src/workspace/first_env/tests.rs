@@ -26,6 +26,7 @@ fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     fs::write(dir.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
+/// Builds a [`WorkspaceComponent`] fixture for `org.scope/{name}` with `env_id`, `is_env`, and aspect `config`.
 fn component(name: &str, env_id: &str, is_env: bool, config: &Value) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {

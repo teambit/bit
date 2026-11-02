@@ -20,7 +20,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, io, io::Write, path::Path, sync::Mutex};
-
+/// Mock [`Host`] recording environment policy lookups and fallback checks.
 #[derive(Debug, Default)]
 pub struct TestHost {
     pub policies: HashMap<String, Value>,

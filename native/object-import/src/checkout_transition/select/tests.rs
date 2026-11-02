@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 fn input(reset: bool) -> Value {
     json!({"component":{"id":"scope/name@1.0.0","idWithoutVersion":"scope/name","componentVersion":"1.0.0","hasBitmap":true,"currentExists":true,"isRemoved":false},"model":{"hasMainHead":true},"options":{"reset":reset,"head":false,"main":false,"latest":false,"forceOurs":false,"forceTheirs":false,"revert":false,"loadStash":false}})
 }
+/// Submits an observation receipt for `previous` with `value` to `state` and returns the next checkpoint.
 fn receipt(state: &mut State, previous: &Value, value: &Value) -> Value {
     state.receipt(json!({"token":previous["token"],"revision":previous["revision"],"observation":previous["directive"]["observation"],"value":value})).expect("valid receipt")
 }

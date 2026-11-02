@@ -15,6 +15,7 @@ fn separates_repositories_and_replaces_duplicate_entries() {
     assert!(state.get(&other, [1; 20]).is_none());
     assert_eq!(state.sources.len(), 1);
 }
+/// Verifies that empty source entries and oversized repository keys are bounded by cache entry and byte limits.
 #[test]
 fn empty_sources_and_large_keys_cannot_grow_unbounded() {
     let directory = std::env::temp_dir();

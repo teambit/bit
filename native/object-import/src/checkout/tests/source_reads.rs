@@ -16,6 +16,7 @@ fn response(bytes: Vec<u8>, state: &mut cache::State) -> (Value, Vec<u8>) {
         .unwrap();
     (serde_json::from_slice(&output[..end]).unwrap(), output[end + 1..].to_vec())
 }
+/// Verifies that parallel raw source reads return exact uncompressed bytes and per-occurrence offsets without writing files.
 #[test]
 fn parallel_raw_source_reads_preserve_original_bytes_and_distinct_occurrences() {
     let directory = Directory::new();

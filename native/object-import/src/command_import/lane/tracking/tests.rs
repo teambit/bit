@@ -19,6 +19,7 @@ fn first_remote_switch_appends_alias_but_existing_remote_alias_is_preserved() {
     assert!(!append(&mut scope, &id, "ignored-new-alias").unwrap());
     assert_eq!(scope["lanes"]["tracking"][0]["localLane"], "local-dev");
 }
+/// Verifies that [`append`] updates an existing `localLane` alias in place without reordering other tracking entries.
 #[test]
 fn alias_collision_updates_the_existing_row_without_reordering_other_tracking() {
     let id = Id { scope: "remote.scope".into(), name: "dev".into() };

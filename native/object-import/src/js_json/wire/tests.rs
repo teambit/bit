@@ -22,6 +22,7 @@ fn compact_and_legacy_strings_have_identical_javascript_serialization() {
         r#"{"2":0,"10":"Unicode Ω🌱\u0000\r\n","\ud800":"\udfff"}"#,
     );
 }
+/// Verifies that duplicate object keys across compact string and UTF-16 array encodings are rejected during serialization.
 #[test]
 fn mixed_key_encodings_cannot_hide_duplicate_javascript_properties() {
     let value: Value = serde_json::from_value(json!({"kind":"object", "value":[

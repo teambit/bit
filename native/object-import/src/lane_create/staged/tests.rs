@@ -61,6 +61,7 @@ fn fixture(exported: bool) -> tempfile::TempDir {
     dir
 }
 
+/// Encodes and writes a loose Bit object (`hash`, `kind`, `value`) under `root/.bit/objects`.
 fn put(root: &Path, hash: &str, kind: &str, value: &Value) {
     let directory = root
         .join(".bit/objects")

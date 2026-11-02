@@ -8,6 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic counter for unique parallel current-file test directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory fixture for parallel current workspace file reading tests.
 struct Fixture(PathBuf);

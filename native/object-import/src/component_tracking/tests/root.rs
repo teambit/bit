@@ -17,6 +17,7 @@ fn root_requires_explicit_intent() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`Plan::prepare`] rejects `--root` when none of the target paths resolve to the workspace root.
 #[test]
 fn root_flag_rejects_ordinary_directory() {
     let root = fixture();

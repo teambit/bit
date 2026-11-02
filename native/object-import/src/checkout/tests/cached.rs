@@ -15,6 +15,7 @@ fn cached_response(
     serve(&mut Cursor::new(frame(directory, inputs)), &mut output, true, state, pool()).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+/// Verifies that preflight reuses cached source bytes only when the caller passes explicit cache authority (`3`).
 #[test]
 fn preflight_reuses_verified_bytes_only_with_explicit_cache_authority() {
     let directory = Directory::new();

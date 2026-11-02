@@ -13,6 +13,7 @@ fn expected(value: &Value) -> Result<Option<String>, ()> {
     }
 }
 
+/// Verifies two-range intersections against the `semver-range-intersect` 0.3.1 golden corpus.
 #[test]
 fn pairs_match_semver_range_intersect() {
     for case in golden()["intersectPairs"].as_array().unwrap() {

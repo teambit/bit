@@ -16,6 +16,7 @@ fn lane_history_equality_ignores_order_but_preserves_soft_deletion() {
     assert!(!same_entries(&left, &right).unwrap());
 }
 
+/// Verifies that [`replace_entry`] moves an updated hidden component to the end of `updateDependents`.
 #[test]
 fn updated_hidden_component_moves_to_end_like_canonical_lane() {
     let old = "1".repeat(40);

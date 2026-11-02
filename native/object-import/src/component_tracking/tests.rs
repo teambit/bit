@@ -29,6 +29,7 @@ pub(super) fn fixture() -> PathBuf {
     .unwrap();
     root
 }
+/// Builds a baseline workspace facts JSON object with `defaultScope: "scope"`.
 fn facts() -> Value {
     json!({"defaultScope":"scope","workspace":{"teambit.workspace/workspace":{"defaultScope":"scope"}}})
 }

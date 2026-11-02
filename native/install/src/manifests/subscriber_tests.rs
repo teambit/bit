@@ -38,6 +38,7 @@ fn replacing_links_uses_unlinked_manifests_without_overwriting_declared_dependen
     assert_eq!(original[0].manifest["dependencies"], json!({"declared":"^1.0.0"}));
 }
 
+/// Verifies that omitting `linkedDependencies` restores the unlinked manifest without keeping stale links.
 #[test]
 fn deleting_the_link_option_does_not_retain_previously_merged_links() {
     let directory = tempfile::tempdir().unwrap();

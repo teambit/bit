@@ -15,6 +15,7 @@ fn compressed(kind: &str, hash: &str, bytes: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
+/// Builds an [`Overlay`] and [`wire::Version`] manifest containing a compressed `Source` and `Version` object.
 fn fixture() -> (Overlay, wire::Version) {
     let bytes = b"imported source\n";
     let hash = crate::validate::hexadecimal(&Sha1::digest(bytes));

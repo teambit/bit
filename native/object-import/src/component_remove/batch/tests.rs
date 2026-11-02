@@ -26,6 +26,7 @@ fn fixture() -> PathBuf {
         .unwrap();
     root
 }
+/// Verifies that [`NewBatch::prepare`] and [`NewBatch::commit`] remove new components and append a single `.bitmap` history entry.
 #[test]
 fn removes_new_components_with_one_bitmap_history_entry() {
     let root = fixture();

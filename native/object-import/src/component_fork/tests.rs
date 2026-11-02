@@ -22,6 +22,7 @@ fn fixture() -> (tempfile::TempDir, Options, Value) {
     let source = json!({"identity":"old.scope/source","version":"0.0.1","rootDir":"original","mainFile":"source.js","files":["source.js"],"sourceConfigs":{"teambit.pkg/pkg":{"name":"ignored"},"custom/aspect":{"enabled":true}}});
     (directory, options, source)
 }
+/// Verifies that [`Plan::prepare`] and [`Plan::apply_files`] copy local component sources and record `teambit.component/forking` metadata.
 #[test]
 fn local_fork_preserves_source_names_bytes_and_original_bitmap_entry() {
     let (directory, options, source) = fixture();

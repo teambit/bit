@@ -11,6 +11,7 @@ fn version(prerelease: Value) -> Value {
     result["prerelease"] = prerelease;
     result
 }
+/// Verifies that [`semver::compare`] matches npm numeric coercion and prerelease ordering rules.
 #[test]
 fn prerelease_numeric_identifiers_match_npm_number_coercion() {
     assert_eq!(

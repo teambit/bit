@@ -31,6 +31,7 @@ impl Drop for Scratch {
     }
 }
 
+/// Verifies that [`read_history`] and [`validate`] reject symlinked `VersionHistory` leaf files before and after preparation.
 #[test]
 fn history_leaf_symlinks_are_rejected_before_and_after_preparation() {
     let scratch = Scratch::new();

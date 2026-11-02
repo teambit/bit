@@ -11,6 +11,7 @@ fn row(path: Js, name: &str) -> Js {
         ("test".encode_utf16().collect(), Js::Boolean(false)),
     ])
 }
+/// Wraps `rows` into a [`Js::Object`] with a single `"files"` array property.
 fn files(rows: Vec<Js>) -> Js {
     Js::Object(vec![("files".encode_utf16().collect(), Js::Array(rows))])
 }

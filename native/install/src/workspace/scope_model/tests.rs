@@ -19,6 +19,7 @@ fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     fs::write(dir.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
+/// Builds a [`ComponentId`] for `org.remote/envs/my-env` with optional `version`.
 fn id(version: Option<&str>) -> ComponentId {
     ComponentId {
         scope: Some("org.remote".into()),
