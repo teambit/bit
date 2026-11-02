@@ -18,6 +18,7 @@ const GOLDEN: &str = concat!(
     "bfb07c039a697e77",
 );
 
+/// Verifies that `super::reusing` preserves the captured compressed bytes when the remote `Component` JSON is unchanged.
 #[test]
 fn unchanged_remote_component_preserves_all_captured_compressed_bytes() {
     let directory = tempfile::tempdir().unwrap();
@@ -40,6 +41,7 @@ fn unchanged_remote_component_preserves_all_captured_compressed_bytes() {
     assert!(capture.validate().is_err());
 }
 
+/// Verifies that `super::reusing` re-serializes and compresses a modified remote `Component` instead of reusing [`GOLDEN`].
 #[test]
 fn changed_remote_component_is_serialized_instead_of_reusing_the_old_stream() {
     let directory = tempfile::tempdir().unwrap();

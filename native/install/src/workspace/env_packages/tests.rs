@@ -48,7 +48,7 @@ fn scope() -> tempfile::TempDir {
     dir
 }
 
-/// Verifies that [`external_env_packages`] resolves custom package names from stored `teambit.pkg/pkg` configs.
+/// Verifies that [`external_env_packages`] resolves custom package names from stored `teambit.pkg/pkg` configs in [`ScopeObjects`].
 #[test]
 fn an_external_env_is_named_by_its_stored_pkg_config() {
     let scope = scope();

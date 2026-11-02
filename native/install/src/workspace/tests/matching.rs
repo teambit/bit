@@ -65,6 +65,7 @@ fn dir_variants_reject_globs_and_match_whole_segments() {
     assert_eq!(by_root_dir_and_name(&dirs, "comp/", "a").unwrap().extensions.len(), 1);
 }
 
+/// Verifies [`glob::matches`] across single-star, double-star, character class, and brace expansion patterns.
 #[test]
 fn glob_subset() {
     assert!(glob::matches("ui/*", "ui/button"));

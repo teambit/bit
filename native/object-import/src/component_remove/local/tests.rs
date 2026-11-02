@@ -55,6 +55,7 @@ fn batch_publishes_once_and_removes_package_dependencies() {
     );
     fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that `--track` (`track = true`) in [`LocalBatch::prepare`] removes component source files while keeping `.bitmap` and `node_modules` packages.
 #[test]
 fn track_keeps_bitmap_packages_and_configuration() {
     let root = fixture();
@@ -67,6 +68,7 @@ fn track_keeps_bitmap_packages_and_configuration() {
     assert!(!root.join(".bit/bitmap-history-metadata.txt").exists());
     fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`LocalBatch::commit`] fails before deleting any source files when `package.json` changed after preparation.
 #[test]
 fn stale_configuration_fails_before_removing_any_source() {
     let root = fixture();

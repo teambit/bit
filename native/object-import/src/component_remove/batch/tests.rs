@@ -44,6 +44,7 @@ fn removes_new_components_with_one_bitmap_history_entry() {
     );
     fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`NewBatch::commit`] aborts without deleting component source files if `.bitmap` changed after [`NewBatch::prepare`].
 #[test]
 fn stale_batch_does_not_remove_any_files() {
     let root = fixture();
@@ -54,6 +55,7 @@ fn stale_batch_does_not_remove_any_files() {
     assert!(root.join("beta/index.js").exists());
     fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`NewBatch::prepare_with_components`] rejects removing a new aspect component that is referenced by another workspace component.
 #[test]
 fn used_new_aspect_is_rejected_before_any_removal() {
     let root = fixture();

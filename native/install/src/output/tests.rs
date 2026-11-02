@@ -27,6 +27,7 @@ fn pretty_time_uses_the_largest_whole_unit() {
     assert_eq!(pretty_time(Duration::from_secs(3_700)), "1h");
 }
 
+/// Verifies that [`Output::paint`] emits ANSI escape codes only when `color: true` is configured.
 #[test]
 fn paints_only_with_colors() {
     let (sink, _) = recorder();

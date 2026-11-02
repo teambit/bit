@@ -54,6 +54,7 @@ fn remote_fork_refactors_id_names_and_filename_while_preserve_only_keeps_names()
         b"module.exports = 'target new.scope/target';",
     );
 }
+/// Verifies that [`Plan::apply_files`] aborts without copying if source files change after [`Plan::prepare`].
 #[test]
 fn changed_source_and_changed_workspace_prevent_any_copy() {
     let (directory, options, source) = fixture();
@@ -67,6 +68,7 @@ fn changed_source_and_changed_workspace_prevent_any_copy() {
             .exists(),
     );
 }
+/// Verifies that [`Plan::prepare`] rejects a non-empty target directory before mutating `.bitmap` or copying files.
 #[test]
 fn occupied_target_is_rejected_before_bitmap_or_sources_change() {
     let (directory, options, source) = fixture();

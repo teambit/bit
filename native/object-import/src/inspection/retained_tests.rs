@@ -43,6 +43,7 @@ fn explicit_read_receipt_keeps_the_original_observation_without_stripping_a_seco
     assert!(!fixture.0.join("file").exists());
 }
 
+/// Verifies that [`begin`] rejects modified receipt fields or mismatched read owners without writing snapshot spool files.
 #[test]
 fn changed_receipts_and_other_owners_cannot_publish_a_snapshot() {
     for field in ["readToken", "path", "rawHash", "snapshotHash", "owner"] {
@@ -68,6 +69,7 @@ fn changed_receipts_and_other_owners_cannot_publish_a_snapshot() {
     }
 }
 
+/// Verifies that [`begin`] without a `readToken` reads current disk bytes instead of using a retained [`Observation`].
 #[test]
 fn read_without_a_token_observes_disk_instead_of_a_retained_body() {
     let fixture = Fixture::new();

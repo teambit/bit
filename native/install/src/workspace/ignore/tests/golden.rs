@@ -1,6 +1,6 @@
 //! Golden fixtures ([`REGEXES`], [`PATHS`]) recorded from `node-ignore` 3.3.10, the version Bit lists component files
 //! with. Do not edit by hand; regenerate from the `node-ignore` test suite.
-/// Recorded `(pattern, positive_regex, negative_regex)` tuples from `node-ignore` 3.3.10.
+/// Recorded `(pattern, positive_regex, negative_regex)` tuples from `node-ignore` 3.3.10 ([`FILTERS`]).
 pub(super) const REGEXES: &[(&str, &str, &str)] = &[
     ("node_modules", r"(?:^|\/)node_modules(?=$|\/)", r"(?:^|\/)node_modules(?=$|\/$)"),
     ("**/node_modules/**", r"^(?:.*\/)?node_modules\/.+", r"^(?:.*\/)?node_modules\/.+"),

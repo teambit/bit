@@ -67,6 +67,7 @@ fn applies_the_registered_policy_only_to_components_configuring_the_aspect() {
     assert!(component_slots(&utils, &[registration()]).is_empty());
 }
 
+/// Verifies that [`component_slots`] matches a registrar whose ID contains the configured partial aspect ID.
 #[test]
 fn a_registrar_containing_the_configured_id_matches() {
     let subject = configured("my-scope/bar/foo", &["my-scope/extension-add"]);

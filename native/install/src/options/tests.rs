@@ -45,6 +45,7 @@ fn parses_values_and_aliases() {
     assert_eq!(parsed.packages, ["is-odd"]);
 }
 
+/// Verifies that `--no-optional` is parsed as a literal boolean flag on [`InstallOptions`].
 #[test]
 fn no_optional_is_a_literal_flag() {
     assert!(options(&["install", "--no-optional"]).no_optional);

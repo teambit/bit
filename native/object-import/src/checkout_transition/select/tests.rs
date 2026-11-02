@@ -30,6 +30,7 @@ fn reset_observes_unmerged_and_stops_before_target_removal_when_unmodified() {
     assert_eq!(output["directive"]["legitimate"], true);
     assert!(state.records.is_empty());
 }
+/// Verifies that an invalid [`receipt`] leaves the checkpoint intact and that terminal checkpoints cannot be re-consumed.
 #[test]
 fn invalid_receipt_keeps_checkpoint_available_and_terminal_is_consumed() {
     let mut state = State::default();
@@ -49,6 +50,7 @@ fn invalid_receipt_keeps_checkpoint_available_and_terminal_is_consumed() {
             .is_err(),
     );
 }
+/// Verifies that `currentVersion` is observed after target resolution and drives merge planning in [`State`].
 #[test]
 fn current_version_is_observed_after_resolution_and_drives_merge() {
     let mut state = State::default();

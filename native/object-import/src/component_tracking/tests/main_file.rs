@@ -28,10 +28,12 @@ fn existing_main_wins_without_explicit_override() {
 fn explicit_override_wins() {
     assert_eq!(find(&["old.js", "new.js"], Some("new.js"), Some("old.js")).unwrap(), "new.js");
 }
+/// Verifies that [`find`] rejects an explicit `--main` path that is absent from the component's tracked files.
 #[test]
 fn explicit_missing_does_not_guess() {
     assert!(find(&["index.js"], Some("missing.js"), None).is_err());
 }
+/// Verifies that [`find`] selects the sole tracked file as `mainFile` when a component has only one file.
 #[test]
 fn one_file_is_main() {
     assert_eq!(find(&["sole.txt"], None, None).unwrap(), "sole.txt");

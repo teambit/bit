@@ -7,8 +7,11 @@ use std::{fs, path::Path};
 
 /// Synthetic 40-hex-character `Component` model object hash for staged lane creation tests.
 const MODEL: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+/// Synthetic 40-hex-character first `Version` snap hash on `main`.
 const FIRST: &str = "1111111111111111111111111111111111111111";
+/// Synthetic 40-hex-character second staged `Version` snap hash moved to [`LANE`].
 const SECOND: &str = "2222222222222222222222222222222222222222";
+/// Synthetic 40-hex-character `Lane` object hash created by [`plan`].
 const LANE: &str = "dddddddddddddddddddddddddddddddddddddddd";
 
 /// Creates a temporary workspace fixture with `alpha` on `main` and an optional exported `Lane` object.

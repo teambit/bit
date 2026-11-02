@@ -80,6 +80,7 @@ fn file_remote_key_is_proved_without_publishing_history_or_refs() {
     assert_eq!(snapshot(fixture.temporary.path()), before);
 }
 
+/// Verifies that [`ci_requires_published_diagnostic`] requires the published diagnostic for a newly created local lane without remote history.
 #[test]
 fn new_lane_does_not_consult_a_remote_history() {
     let fixture = Fixture::new();
@@ -89,6 +90,7 @@ fn new_lane_does_not_consult_a_remote_history() {
     assert!(fixture.requires("known"));
 }
 
+/// Verifies that [`ci_requires_published_diagnostic`] requires the published diagnostic on `main` or when a `file://` remote key is absent.
 #[test]
 fn main_and_an_absent_file_remote_key_require_the_released_diagnostic() {
     let fixture = Fixture::new();

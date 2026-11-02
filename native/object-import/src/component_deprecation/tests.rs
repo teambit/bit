@@ -25,10 +25,12 @@ fn range_and_undeprecation_have_distinct_config_shapes() {
     set_config(&mut bitmap, "scope/foo", None, None, true).unwrap();
     assert_eq!(bitmap["foo"]["config"][ASPECT], json!({"deprecate":false,"newId":""}));
 }
+/// Verifies that [`selection::select`] matches namespace globs and negated exclusion patterns in [`bitmap`].
 #[test]
 fn patterns_include_namespaces_and_exclusions() {
     assert_eq!(selection::select(&bitmap(), "**, !scope/bar").unwrap(), vec!["scope/foo@1.0.0"]);
 }
+/// Verifies that [`validate_range`] rejects invalid `SemVer` range strings before mutating `.bitmap` configuration.
 #[test]
 fn invalid_ranges_are_rejected_before_configuration_changes() {
     assert!(validate_range(Some("not-a-version")).is_err());

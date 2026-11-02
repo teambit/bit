@@ -4,7 +4,7 @@
 use super::equal;
 use serde_json::json;
 
-/// Verifies that [`equal`] distinguishes own `undefined` keys (`dataUndefinedKeys`) from absent keys and `null`.
+/// Verifies that [`equal`] distinguishes own `undefined` keys (`dataUndefinedKeys`) from absent keys and JSON `null`.
 #[test]
 fn own_undefined_keys_differ_from_absence_and_null() {
     let absent = json!({"data":{}});

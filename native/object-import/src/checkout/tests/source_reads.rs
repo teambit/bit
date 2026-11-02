@@ -64,6 +64,7 @@ fn cached_read_authority_is_explicit_and_never_hides_an_uncached_missing_file() 
     assert_eq!(missing["failed"], true);
     assert!(body.is_empty());
 }
+/// Verifies that [`read_sources`] rejects EOL normalization flags and batches exceeding 256 files before emitting data.
 #[test]
 fn source_reads_reject_normalization_and_excessive_counts_before_any_acknowledged_body() {
     let directory = Directory::new();

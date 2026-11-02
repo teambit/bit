@@ -34,6 +34,7 @@ fn refactored_dependents_use_workspace_write_on_both_platforms() {
     }
 }
 
+/// Verifies that [`Writer::target`] leaves NUL-containing binary source bytes untouched on both Unix and Windows.
 #[test]
 fn component_writer_keeps_binary_source_bytes_on_both_platforms() {
     let source = b"\0first\nsecond\r\n";

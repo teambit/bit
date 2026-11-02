@@ -5,6 +5,7 @@
 mod components;
 /// Component file discovery and ignore rule rebasing unit tests.
 mod files;
+/// Variant pattern specificity and component package naming unit tests.
 mod matching;
 
 use std::{fs, path::Path};

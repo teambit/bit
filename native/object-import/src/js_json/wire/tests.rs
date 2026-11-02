@@ -46,6 +46,7 @@ fn compact_wire_rejects_invalid_code_units_and_non_string_keys() {
     }
 }
 
+/// Verifies that compact [`Value`] primitives, arrays, and `undefined` fields round-trip identically to legacy tagged representations.
 #[test]
 fn compact_primitives_and_arrays_preserve_tagged_values_and_javascript_bytes() {
     let compact = json!({"kind":"object","value":[
@@ -66,6 +67,7 @@ fn compact_primitives_and_arrays_preserve_tagged_values_and_javascript_bytes() {
     );
 }
 
+/// Verifies that [`Value`] deserialization rejects bare numbers and untagged objects while accepting `null`, `false`, `""`, and `[]`.
 #[test]
 fn compact_values_reject_ambiguous_numbers_and_untagged_objects() {
     for value in [

@@ -60,6 +60,7 @@ fn workspace() -> (Directory, Vec<Options>, Vec<Value>) {
     (directory, options, facts)
 }
 
+/// Verifies that [`Batch::prepare_plans`] produces the same receipts, `.bitmap` proposals, and AST inputs as serial [`Plan::prepare`].
 #[test]
 fn parallel_plans_preserve_serial_proposals_and_source_proofs() {
     let (directory, options, facts) = workspace();
@@ -80,6 +81,7 @@ fn parallel_plans_preserve_serial_proposals_and_source_proofs() {
     assert!(parallel[1].validate().is_err());
 }
 
+/// Verifies that [`Batch::prepare_plans`] reports the first failing [`Plan::prepare`] error in request order without mutating disk files.
 #[test]
 fn parallel_failures_report_the_first_requested_plan_without_publication() {
     let (directory, mut options, facts) = workspace();

@@ -38,6 +38,7 @@ fn local_append_and_tag_cache_preserve_original_ref_provenance() {
     assert_eq!(selected["selected"], json!([{"source":1},{"source":0}]));
     assert_eq!(selected["lastFoundTag"], "new");
 }
+/// Verifies that `historyResetLocalVersions` with `lane: true` retains only the recorded `laneHead` and mutated history entries.
 #[test]
 fn lane_filter_keeps_recorded_head_and_mutated_history_only() {
     let first_hash = "a".repeat(40);
@@ -49,6 +50,7 @@ fn lane_filter_keeps_recorded_head_and_mutated_history_only() {
     );
     assert_eq!(selected["selected"], json!([{"source":2},{"source":0}]));
 }
+/// Verifies that `historyResetDependents` deduplicates dependency edges and excludes batch candidate IDs.
 #[test]
 fn dependency_index_deduplicates_edges_and_filters_batch_candidates() {
     let indexed = call(

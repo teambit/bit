@@ -56,6 +56,7 @@ fn imported_version_and_sources_need_no_published_local_objects() {
     assert!(packed > 0);
 }
 
+/// Verifies that manifest mismatches and [`MAX_BYTES`] aggregate limits decline in [`body`] and `load_with_overlay`.
 #[test]
 fn imported_manifest_mismatch_and_aggregate_limits_decline() {
     let (overlay, mut version) = fixture();
@@ -79,6 +80,7 @@ fn imported_manifest_mismatch_and_aggregate_limits_decline() {
     );
 }
 
+/// Verifies that filtered `files` manifests retain complete `Version` proof validation via `proof_files`.
 #[test]
 fn filtered_manifest_retains_complete_version_proof() {
     let (overlay, mut version) = fixture();

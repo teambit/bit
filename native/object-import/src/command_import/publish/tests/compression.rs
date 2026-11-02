@@ -31,6 +31,7 @@ fn version_history_matches_the_released_node_compressed_stream() {
     );
 }
 
+/// Verifies that `LaneHistory` serialization compresses to the exact Node.js `zlib.deflate` stream via [`exact`].
 #[test]
 fn lane_history_matches_the_released_node_compressed_stream() {
     exact(
@@ -39,6 +40,7 @@ fn lane_history_matches_the_released_node_compressed_stream() {
     );
 }
 
+/// Parses `serialized`, re-encodes and compresses it via `super::super::object`, and asserts byte-identity with `compressed`.
 fn exact(serialized: &[u8], compressed: &[u8]) {
     let boundary = serialized
         .iter()

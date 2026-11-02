@@ -56,6 +56,7 @@ fn retained_snapshot_survives_file_mutation_and_finish_rejects_old_token() {
     assert_eq!(apply("inspectionFinish", request.clone(), &mut state).unwrap()["finished"], true);
     assert!(apply("inspectionFinish", request, &mut state).is_err());
 }
+/// Verifies that `inspectionBegin` via [`apply`] writes no private snapshot files when a late read fails or a duplicate path is present.
 #[test]
 fn late_read_error_and_duplicate_path_never_write_private_snapshots() {
     let fixture = Fixture::new();
@@ -79,6 +80,7 @@ fn late_read_error_and_duplicate_path_never_write_private_snapshots() {
         assert!(state.plans.is_empty());
     }
 }
+/// Verifies that `inspectionFiles` reports `modified: false` when `modelFiles` is empty even if workspace files exist.
 #[test]
 fn empty_model_is_not_modified_even_when_current_files_exist() {
     let fixture = Fixture::new();

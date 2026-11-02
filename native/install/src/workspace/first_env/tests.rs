@@ -72,6 +72,7 @@ fn the_first_configured_env_component_is_the_env() {
     assert_eq!(components[1].env_id, "org.scope/my-env");
 }
 
+/// Verifies that an explicit `teambit.envs/envs` configuration takes precedence over other configured env aspects.
 #[test]
 fn a_configured_env_wins() {
     let scope = tempfile::tempdir().unwrap();

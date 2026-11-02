@@ -32,6 +32,7 @@ fn current(hash: &str) -> plan::Current {
 fn target(path: &str, hash: &str) -> wire::Manifest {
     wire::Manifest { hash: hash.to_owned(), relative_path: path.to_owned(), name: None, test: None }
 }
+/// Verifies that [`additions`] reuses the first retained body for duplicates and allocates separate indices for new occurrences.
 #[test]
 fn retained_duplicates_select_first_body_and_new_occurrences_keep_separate_indices() {
     let plan = retained_plan();
@@ -47,6 +48,7 @@ fn retained_duplicates_select_first_body_and_new_occurrences_keep_separate_indic
     assert_eq!(added[1].path, Path::new("private").join("owner-3.checkout"));
     assert_eq!(added[0].contents, added[1].contents);
 }
+/// Verifies that [`statuses`] compares against the first [`current`] path entry and preserves [`target`] order.
 #[test]
 fn status_lookup_keeps_first_current_path_and_target_order() {
     let mut plan = retained_plan();

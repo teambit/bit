@@ -37,6 +37,7 @@ fn satisfies_matches_semver_7() {
     }
 }
 
+/// Verifies that [`satisfies_including_prerelease`] admits prereleases of newer minor/patch versions within the same major range.
 #[test]
 fn include_prerelease_admits_prereleases_of_other_tuples() {
     assert!(!satisfies("2.1.0-beta.1", "^2.0.0"));

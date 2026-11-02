@@ -25,6 +25,7 @@ fn items(ranges: &[&str], field: Field) -> Vec<Item> {
         .collect()
 }
 
+/// Runs [`hoist`] on `entries` with `dedupe_peer_deps: false` and unwraps the [`Deduped`] result.
 fn run(entries: Vec<(&str, IndexEntry)>) -> Deduped {
     let index: IndexMap<String, IndexEntry> = entries
         .into_iter()

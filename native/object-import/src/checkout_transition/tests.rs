@@ -81,6 +81,7 @@ fn prepare_retains_verified_source_and_random_version_identity() {
     assert_eq!(fs::read(spool).expect("spool bytes"), b"hello\n");
     assert!(output["targetFiles"][0].get("contents").is_none());
 }
+/// Verifies that a stale `current` workspace snapshot causes [`apply`] to decline before writing any private spool files.
 #[test]
 fn stale_current_snapshot_declines_before_any_private_write() {
     let fixture = Fixture::new();
@@ -96,6 +97,7 @@ fn stale_current_snapshot_declines_before_any_private_write() {
             .is_none(),
     );
 }
+/// Verifies that a missing `Source` object declines the entire `checkoutPrepare` call without leaving spool files.
 #[test]
 fn late_missing_source_declines_whole_prepare_without_spools() {
     let fixture = Fixture::new();

@@ -89,6 +89,7 @@ const BITMAP: &str = r#"/**
     "$schema-version": "17.0.0"
 }"#;
 
+/// Initializes a temporary workspace with [`BITMAP`] and loads its [`Workspace`] state.
 fn workspace() -> (tempfile::TempDir, Workspace) {
     let dir = tempdir().unwrap();
     write(

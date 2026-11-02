@@ -55,6 +55,7 @@ fn object(root: &std::path::Path, hash: &str, kind: &str, value: &Value) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, outbound::encode_object(hash, kind, value).unwrap()).unwrap();
 }
+/// Verifies that [`Batch::prepare`] and [`Batch::commit`] preserve unrelated `.bitmap` config and repository objects.
 #[test]
 fn one_batch_preserves_unrelated_config_and_repository_objects() {
     let root = fixture();
@@ -81,6 +82,7 @@ fn one_batch_preserves_unrelated_config_and_repository_objects() {
     );
     fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that concurrent `.bit/index.json` changes prevent [`Batch::commit`] from mutating packages or `.bitmap`.
 #[test]
 fn changed_repository_prevents_every_package_and_bitmap_write() {
     let root = fixture();

@@ -48,6 +48,7 @@ fn root_main_is_workspace_configuration() {
         "workspace.jsonc",
     );
 }
+/// Verifies that [`main_file::choose`] honors an explicit `--main` override when tracking the workspace root component.
 #[test]
 fn root_explicit_main_is_respected() {
     assert_eq!(
@@ -62,6 +63,7 @@ fn root_explicit_main_is_respected() {
         "index.js",
     );
 }
+/// Verifies that tracking the workspace root includes `.bitmap` while excluding `.bit/` repository files.
 #[test]
 fn root_tracks_bitmap_but_not_scope() {
     let root = fixture();

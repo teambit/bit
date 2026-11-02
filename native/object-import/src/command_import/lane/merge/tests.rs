@@ -3,7 +3,7 @@
 
 use super::{Entry, json, replace_entry, same_entries};
 
-/// Verifies that [`same_entries`] ignores component order while distinguishing soft-deleted entries.
+/// Verifies that [`same_entries`] ignores component order while distinguishing soft-deleted `isDeleted` entries.
 #[test]
 fn lane_history_equality_ignores_order_but_preserves_soft_deletion() {
     let first = json!({"id":{"scope":"test.scope","name":"alpha"},"head":"1".repeat(40)});

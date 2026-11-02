@@ -34,10 +34,12 @@ pub(super) fn fixture() -> PathBuf {
 fn facts() -> Value {
     json!({"defaultScope":"scope","workspace":{"teambit.workspace/workspace":{"defaultScope":"scope"}}})
 }
+/// Writes a minimal `module.exports=1;\n` source file at `root/path`, creating parent directories as needed.
 fn source(root: &std::path::Path, path: &str) {
     fs::create_dir_all(root.join(path).parent().unwrap()).unwrap();
     fs::write(root.join(path), "module.exports=1;\n").unwrap();
 }
+/// Builds tracking [`Options`] for the given relative `paths`.
 fn options(paths: &[&str]) -> Options {
     Options {
         paths: paths

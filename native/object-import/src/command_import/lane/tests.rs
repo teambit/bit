@@ -50,12 +50,14 @@ fn lane_path_segments_are_validated_before_remote_lookup() {
     assert!(Id { scope: "test.scope".into(), name: "feature-42".into() }.validate().is_ok());
 }
 
+/// Verifies that [`entries`] rejects duplicate visible component IDs before lane import.
 #[test]
 fn duplicate_visible_components_are_rejected_before_import() {
     let row = json!({"id":{"scope":"test.scope","name":"alpha"},"head":"1".repeat(40)});
     assert!(entries(&json!({"components":[row,row]})).is_err());
 }
 
+/// Verifies that `resolve_lane_identity` matches `prepare_lane` and retains `scope.json` preimages for validation.
 #[test]
 fn public_alias_lookup_matches_the_authoritative_owner_and_retains_scope_preimages() {
     let root = tempfile::tempdir().unwrap();

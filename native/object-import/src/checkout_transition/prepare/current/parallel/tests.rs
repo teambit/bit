@@ -65,6 +65,7 @@ fn load(files: &[wire::Current], total: &mut usize) -> std::io::Result<Vec<super
     result
 }
 
+/// Verifies that parallel current-file loading matches serial UTF-8 BOM stripping and EOL normalization.
 #[test]
 fn ordered_parallel_reads_match_serial_bom_and_line_ending_semantics() {
     let fixture = Fixture::new();

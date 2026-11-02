@@ -36,6 +36,7 @@ fn multiple_components_keep_namespaces_for_duplicate_basenames() {
     assert!(plan.bitmap().get("two/foo").is_some());
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`Plan::prepare`] preserves an explicit `--namespace` prefix in `.bitmap` even for a single component.
 #[test]
 fn explicit_namespaces_are_not_shortened() {
     let root = fixture();
@@ -46,6 +47,7 @@ fn explicit_namespaces_are_not_shortened() {
     assert!(plan.bitmap().get("bar/foo").is_some());
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`Plan::prepare`] blocks tracking individual file paths instead of component directories.
 #[test]
 fn individual_files_are_rejected() {
     let root = fixture();

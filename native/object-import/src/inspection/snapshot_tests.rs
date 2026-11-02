@@ -5,7 +5,7 @@ use super::{State, apply, begin, tests::Fixture};
 use serde_json::{Value, json};
 use std::fs;
 
-/// Builds an `ownedMemory: true` inspection begin request JSON object for `fixture`.
+/// Builds an `ownedMemory: true` inspection begin [`Value`] request for [`Fixture`].
 fn request(fixture: &Fixture) -> Value {
     json!({"ownedMemory":true,"files":[{"relativePath":"file","path":fixture.0.join("file")}],
         "workspaceRoot":false,"snapshotDirectory":fixture.directory("snapshots")})

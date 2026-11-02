@@ -51,6 +51,7 @@ fn an_existing_symlink_ancestor_declines_before_source_capture() {
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Verifies that [`Observed::validate`] fails if a directory ancestor is swapped for a symlink after [`Observed::ancestors`] runs.
 #[cfg(any(unix, windows))]
 #[test]
 fn an_ancestor_swapped_for_a_symlink_cannot_reuse_identical_sources() {
@@ -70,6 +71,7 @@ fn an_ancestor_swapped_for_a_symlink_cannot_reuse_identical_sources() {
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Creates a directory symlink on Unix from `destination` to `source`.
 #[cfg(unix)]
 fn link(source: &std::path::Path, destination: &std::path::Path) {
     std::os::unix::fs::symlink(source, destination).unwrap();

@@ -6,7 +6,7 @@ mod golden;
 use super::{Ignore, parts, source};
 use pretty_assertions::assert_eq;
 
-/// Verifies that compiled positive and negative regex sources match `node-ignore` 3.3.10 golden outputs.
+/// Verifies that compiled positive and negative regex [`source`] strings match `node-ignore` 3.3.10 [`golden`] outputs.
 #[test]
 fn regex_sources_match_node_ignore() {
     for (pattern, positive, negative) in golden::REGEXES {

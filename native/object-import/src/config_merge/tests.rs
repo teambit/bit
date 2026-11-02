@@ -44,6 +44,7 @@ fn range_excludes_prerelease_without_same_core_explicit_comparator() {
         .push(json!({"operator":">=","version":version(json!(["alpha"]))}));
     assert!(semver::satisfies(&input, "candidate", "range").unwrap());
 }
+/// Verifies that [`semver::satisfies`] enforces npm's prerelease gate on wildcard (`""`) and union comparator sets.
 #[test]
 fn ranges_or_sets_and_any_comparator_preserve_npm_gate() {
     let input = json!({"stable":{"version":version(json!([]))},"pre":{"version":version(json!(["alpha"]))},"range":{"range":[[{"operator":""}]]}});
@@ -51,6 +52,7 @@ fn ranges_or_sets_and_any_comparator_preserve_npm_gate() {
     assert!(!semver::satisfies(&input, "pre", "range").unwrap());
     assert!(!semver::satisfies(&input, "invalid", "range").unwrap());
 }
+/// Verifies that `serde_json::Value` structural equality ignores object key order while preserving distinct serialization order.
 #[test]
 fn structural_data_equality_ignores_object_order_with_preserved_serialization() {
     let left: Value = serde_json::from_str(r#"{"first":1,"second":[true,null]}"#).unwrap();

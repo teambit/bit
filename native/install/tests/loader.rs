@@ -49,6 +49,7 @@ fn restarts_leave_one_spinner(command: &Output, written: &Mutex<String>) {
     assert_eq!(take(written), "", "a frame after stop");
 }
 
+/// Verifies that starting a status on a second [`Output`] replaces the active spinner from the first [`Output`].
 fn a_new_status_replaces_the_other_outputs_spinner(
     command: &Output,
     install: &Output,

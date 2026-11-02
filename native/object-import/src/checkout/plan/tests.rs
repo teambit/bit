@@ -47,6 +47,7 @@ fn store(directory: &Path, hash: &str, kind: &str, body: &[u8]) {
     )
     .unwrap();
 }
+/// Seeds `directory` with a `1.0.0` `Component`, `Version`, and `Source` object and returns a baseline checkout plan request.
 fn setup(directory: &Path) -> Value {
     let component = "1".repeat(40);
     let version = "2".repeat(40);

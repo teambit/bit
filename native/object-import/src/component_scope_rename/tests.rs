@@ -2,7 +2,7 @@
 //! [`Options`] validation in `bit-object-import` scope rename operations ([`owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes`]).
 
 use super::{Options, selection};
-/// Verifies that [`selection::scope`] with `owner: true` matches only scopes prefixed by `old.` and preserves the suffix.
+/// Verifies that [`selection::scope`] with [`Options`] `owner: true` matches only scopes prefixed by `old.` and preserves the suffix.
 #[test]
 fn owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes() {
     let options =

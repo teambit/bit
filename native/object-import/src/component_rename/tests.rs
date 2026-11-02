@@ -38,6 +38,7 @@ fn invalid_new_names_are_rejected_before_sources_are_read() {
     assert!(identity::validate_name("nested//component").is_err());
 }
 
+/// Verifies that `target_key` qualifies existing and new `.bitmap` keys by scope when renaming to the same component name.
 #[test]
 fn same_name_replacements_qualify_new_components_by_their_default_scope() {
     let mut rows=serde_json::json!({"comp1":{"name":"comp1","scope":"old.scope","version":"0.0.1","defaultScope":"old.scope"}}).as_object().unwrap().clone();
@@ -48,6 +49,7 @@ fn same_name_replacements_qualify_new_components_by_their_default_scope() {
     assert!(!rows.contains_key("comp1"));
 }
 
+/// Verifies that [`refactor::PackageMatchers`] preserves regex capture and literal `$&` replacement semantics across reuse.
 #[test]
 fn reusable_package_matchers_preserve_regex_capture_and_literal_replacement_semantics() {
     let pairs = vec![("@org/a.b".into(), "@new/$&".into())];
