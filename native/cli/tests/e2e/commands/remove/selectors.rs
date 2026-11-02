@@ -57,6 +57,7 @@ fn local_only_and_soft_tagged_selection_preserve_other_rows() {
         assert!(bitmap(&helper).get("comp2").is_some());
     }
 }
+/// Verifies invalid state selectors and missing main file errors preserve the workspace [`bitmap`].
 #[test]
 fn state_errors_and_missing_main_failures_preserve_the_workspace() {
     for state in ["$notAState", "$env:not/an-env", "$modified"] {

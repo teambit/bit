@@ -54,6 +54,7 @@ fn manually_moved_tagged_directory_updates_metadata_without_repeating_the_move()
     successful(&helper, "move bar baz");
     assert_eq!(bitmap(&helper)["bar/foo"]["rootDir"], "baz");
 }
+/// Verifies moving an imported component directory preserves clean `bit status --json` via [`json`].
 #[test]
 fn imported_directory_move_preserves_clean_component_status() {
     let helper = workspace();

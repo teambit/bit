@@ -90,6 +90,7 @@ fn state(helper: &Helper, origin: &str, head: &str) -> Value {
     json!({"model":model,"version":version,"refs":refs,"bitmap":helper.read_bit_map()})
 }
 
+/// Recursively reads all ref files under `path` relative to `root` into `result`.
 fn read_refs(path: &Path, root: &Path, result: &mut BTreeMap<String, String>) {
     if !path.exists() {
         return;

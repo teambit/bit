@@ -91,6 +91,7 @@ fn run(helper: &Helper, native: bool, color: bool, ci: bool) -> Run {
     assert!(!result.trace.contains("starting the JavaScript host"), "{result:?}");
     result
 }
+/// Locates and validates the unique `deleted-objects.restoring-<date>-<pid>-0` staging directory in `scope`.
 fn staging_directory(scope: &Path, before: u128, after: u128) -> String {
     let names: Vec<_> = fs::read_dir(scope)
         .unwrap()

@@ -37,7 +37,7 @@ fn export_recovery_validates_all_remotes_then_persists_without_node() {
     }
 }
 
-/// Starts a mock HTTP action [`Server`] synchronizing `ExportValidate` across `barrier` before `ExportPersist`.
+/// Starts a mock HTTP action [`Server`] synchronizing `ExportValidate` across [`Barrier`] before `ExportPersist`.
 fn validation_server(scope: &'static str, barrier: Arc<Barrier>) -> Server {
     Server::start(4, move |request| {
         if request.body["name"] == "ExportValidate" {

@@ -1,4 +1,4 @@
-//! End-to-end local and remote `bit remove` parity tests ([`completion`], [`selectors`], [`suite`], [`new_component_removal_matches_node_with_and_without_files`]) against the pinned `Node.js` CLI via [`Helper`].
+//! End-to-end local and remote `bit remove` parity tests ([`completion`], [`selectors`], [`suite`], [`new_component_removal_matches_node_with_and_without_files`], [`new_component_with_missing_main_file_matches_node`]) against the pinned `Node.js` CLI via [`Helper`].
 
 mod completion;
 mod selectors;

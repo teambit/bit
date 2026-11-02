@@ -91,6 +91,7 @@ fn historical_dependency_fixture() -> Helper {
     helper
 }
 
+/// Verifies historical version dependents block `bit delete --hard` via [`compare_file_remote`] and [`historical_dependency_fixture`].
 #[test]
 fn historical_version_dependent_blocks_hard_delete_like_node() {
     let helper = historical_dependency_fixture();

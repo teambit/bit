@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config::read_jsonc};
 use std::ffi::OsStr;
 
-/// Tag message used when publishing the two-component dependency fixture.
+/// Tag message used when publishing the two-component dependency fixture for [`fetch_deps_materializes_only_the_selected_component`].
 const TAG_MESSAGE: &str = "--message dependencies";
 
 /// Verifies `bit import --fetch-deps` after [`TAG_MESSAGE`] materializes only the selected component in `.bitmap` via [`read_jsonc`].

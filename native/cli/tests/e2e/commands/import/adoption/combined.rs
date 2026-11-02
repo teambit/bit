@@ -36,6 +36,7 @@ fn override_dependents_then_package_dependency_writes_keep_the_exact_owned_sourc
 fn override_dependents_then_workspace_dependency_writes_keep_the_exact_owned_source_transition() {
     combined("workspace.jsonc");
 }
+/// Runs `bit import comp4 --override --dependents --write-deps <target>` on [`stale_target`] and asserts [`UPDATED`] parity.
 fn combined(target: &str) {
     let helper = stale_target();
     super::successful(

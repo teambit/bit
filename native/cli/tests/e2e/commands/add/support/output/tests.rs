@@ -22,7 +22,7 @@ fn only_the_two_complete_independent_stream_errors_are_accepted() {
     assert_ne!(variants[0], variants[1]);
 }
 
-/// Verifies that [`assert_errors`] panics when scope names, causes, advice, or extra lines differ from [`variants`].
+/// Verifies that [`assert_errors`] panics when scope names, causes, advice, or extra lines diverge from [`variants`].
 #[test]
 fn changed_scope_cause_advice_and_extra_output_are_rejected() {
     let variants = variants();

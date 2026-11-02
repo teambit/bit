@@ -5,7 +5,7 @@
 use super::support::{bitmap, compare, setup, workspace};
 use std::fs;
 
-/// Contents of the `.bitignore`-excluded file inside the relocated directory.
+/// Contents of the `.bitignore`-excluded file inside the relocated directory in [`nested_directory_moves_ignored_bytes_but_reports_only_tracked_files`].
 const IGNORED_TEXT: &str = "ignored bytes\n";
 
 /// Verifies `bit move` relocates [`IGNORED_TEXT`] physically while reporting only tracked files via [`compare`] and [`bitmap`].

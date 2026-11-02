@@ -61,6 +61,7 @@ fn recovery_of_a_clean_component_reports_no_match_without_mutation() {
     assert!(output.stderr.contains("no soft-deleted components found matching pattern"));
 }
 
+/// Verifies `component.json` removal range is replaced by [`REMOVE`] `removed: false` without losing other aspects.
 #[test]
 fn component_json_removal_range_is_replaced_without_losing_other_aspects() {
     let helper = workspace(1, true);

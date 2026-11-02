@@ -4,7 +4,7 @@
 
 use serde_json::Value;
 
-/// Expected root-level file paths before nested directory batches in `filesDiff`.
+/// Expected root-level file paths before nested directory batches in `filesDiff` validated by [`normalize`].
 const ROOT_PATHS: [&str; 3] = ["foo.js", "a.js", "z.js"];
 
 /// Validates [`ROOT_PATHS`] root-first ancestor ordering and sorts sibling `filesDiff` entries into a [`Value`] for JSON comparison.

@@ -87,6 +87,7 @@ fn validation_clocks(bytes: &mut Vec<u8>, validation: &Value, started: i64, ende
         nested_clock(bytes, key, timestamp);
     }
 }
+/// Replaces the nested JSON clock field `key: timestamp` in `bytes` with `key: 0`.
 fn nested_clock(bytes: &mut Vec<u8>, key: &str, timestamp: i64) {
     let text = std::str::from_utf8(bytes).expect("metadata UTF-8");
     let token = format!("\"{key}\": {timestamp},\n");

@@ -8,7 +8,7 @@ pub(super) fn durations(text: &str) -> String {
         .map(completion)
         .collect()
 }
-/// Normalizes a single `importing components (completed in ...)` line if its duration suffix is valid.
+/// Normalizes a single `importing components (completed in ...)` line if its duration suffix passes [`valid_duration`].
 fn completion(line: &str) -> String {
     let body = line.trim_end_matches(['\r', '\n']);
     let plain = body.strip_prefix("\u{1b}[K\u{1b}[0J").unwrap_or(body);

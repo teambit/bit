@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/export.e2e.ts` for native `bit export` main, lane, and `--head-only` ([`head_only_main_export_matches_node`]) parity via [`Helper`] and [`FOO_FIXTURE`].
+//! End-to-end port of `e2e/commands/export.e2e.ts` for native `bit export` main, lane, and `--head-only` ([`head_only_main_export_matches_node`], [`head_only_lane_reexport_matches_node`]) parity via [`Helper`] and [`FOO_FIXTURE`].
 
 #[cfg(unix)]
 mod shared;

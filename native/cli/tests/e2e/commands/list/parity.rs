@@ -77,7 +77,7 @@ pub(super) fn compare(helper: &Helper, command: &str) -> Run {
     compare_with_ownership(helper, command, true)
 }
 
-/// Runs `command` expecting native CLI delegation to `Node.js` while asserting read-only state.
+/// Runs `command` expecting native CLI delegation to `Node.js` via [`compare_with_ownership`] while asserting read-only state.
 fn compare_declined(helper: &Helper, command: &str) -> Run {
     compare_with_ownership(helper, command, false)
 }

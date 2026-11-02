@@ -66,7 +66,7 @@ fn bare_restore_treats_dangling_destination_links_as_existing_entries() {
     }
 }
 
-/// Verifies `bit gc --restore` replaces existing destination symlinks even without `--restore-overwrite`.
+/// Verifies `bit gc --restore` replaces existing destination symlinks even without `--restore-overwrite` via [`compare`].
 #[test]
 fn bare_restore_replaces_existing_symlinks_even_without_overwrite() {
     for command in ["gc --restore", "gc --restore-overwrite"] {

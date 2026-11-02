@@ -73,6 +73,7 @@ fn rename_rereads_provider_configuration_and_moves_newly_created_sources() {
             .is_file(),
     );
 }
+/// Asserts that `identity provider mutation` appears exactly once in `output`.
 fn assert_once(output: &str) {
     assert_eq!(output.matches("identity provider mutation").count(), 1, "{output}");
 }

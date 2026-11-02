@@ -38,6 +38,7 @@ fn standard_format_check_text_and_ci_match_node() {
     support::compare_ci(&helper, "format --check --json", true);
 }
 
+/// Replaces the validated `<seconds>s.` duration token in `bit format` stdout with `<duration>s.`.
 fn duration(output: &str) -> String {
     let Some((before, after)) = output.rsplit_once(" components in ") else {
         return output.to_owned();

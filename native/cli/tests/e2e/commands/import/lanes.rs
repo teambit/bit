@@ -50,7 +50,7 @@ fn dependency_fixture() -> Helper {
     helper
 }
 
-/// Verifies `bit import --fetch-deps` on an active lane preserves both lane and `main` dependency heads.
+/// Verifies `bit import --fetch-deps` on an active lane in [`dependency_fixture`] preserves both lane and `main` dependency heads.
 #[test]
 fn active_lane_fetch_deps_preserves_lane_and_main_dependency_heads() {
     let helper = dependency_fixture();

@@ -27,7 +27,7 @@ fn undeleted_remote_component_keeps_scope_import_prefix_without_tracking() {
     assert!(!helper.scopes.local_path.join("comp1").exists());
 }
 
-/// Verifies recovering a soft-deleted remote component imports it and overrides `removed` to `false`.
+/// Verifies recovering a soft-deleted remote component imports it and overrides `removed` to `false` via [`history::compare`] and [`stable`].
 #[test]
 fn deleted_remote_component_is_imported_then_its_removal_is_overridden() {
     let helper = workspace(1, true);

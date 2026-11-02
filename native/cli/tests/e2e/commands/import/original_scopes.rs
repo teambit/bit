@@ -55,7 +55,7 @@ fn fixture() -> (Helper, Helper) {
     (dependent, original)
 }
 
-/// Spawns a `bit start` HTTP scope server for `scope` and returns `(server, url)`.
+/// Spawns a `bit start` HTTP [`ScopeServer`] for `scope` and returns `(server, url)`.
 fn serve(scope: &Path) -> (ScopeServer, String) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let port = listener.local_addr().unwrap().port();

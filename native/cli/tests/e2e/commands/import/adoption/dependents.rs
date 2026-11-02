@@ -54,6 +54,7 @@ fn silent_dependents_via_limits_paths_to_the_requested_intermediate_component() 
     super::successful(&helper, &command(&helper, "comp4", &flags));
     assert_components(&helper, &["comp1", "comp2", "comp3", "comp4"]);
 }
+/// Verifies `bit import --dependents --dependents-all --silent` over HTTP [`http::start`] imports the full dependent graph.
 #[test]
 fn http_dependents_all_with_silent_uses_the_same_complete_graph_paths() {
     let helper = graph();

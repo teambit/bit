@@ -26,7 +26,7 @@ fn env_intersection_and_union_delete_each_member_once() {
         assert_eq!(map[name]["config"]["teambit.component/remove"]["removed"], true);
     }
 }
-/// Verifies `$new` and `$unknown` selector errors fail without modifying [`bitmap`].
+/// Verifies `$new` and `$unknown` selector errors fail via [`support::compare`] without modifying [`bitmap`].
 #[test]
 fn new_and_unknown_state_errors_do_not_publish_deletion() {
     for state in ["$new", "$unknown"] {

@@ -58,6 +58,7 @@ fn compare_failure(helper: &Helper, overwrite: bool, prepare: impl Fn(&Path)) {
     let actual = capture(helper, overwrite, true, &prepare);
     assert_eq!(actual, expected);
 }
+/// Captures a [`Snapshot`] of `bit gc --restore` after applying `prepare` to `helper`'s remote scope.
 fn capture(helper: &Helper, overwrite: bool, native: bool, prepare: &impl Fn(&Path)) -> Snapshot {
     let scope = &helper.scopes.remote_path;
     prepare(scope);

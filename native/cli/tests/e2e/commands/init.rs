@@ -47,6 +47,7 @@ fn normal_and_bare_provisioning_match_node() {
         parity(&Helper::new(), command);
     }
 }
+/// Verifies `--name`, `--default-directory`, `--default-scope`, `--generator`, and `--external-package-manager` match `Node.js` via [`parity`].
 #[test]
 fn workspace_defaults_generators_and_external_manager_match_node() {
     for command in [

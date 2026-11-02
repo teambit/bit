@@ -61,6 +61,7 @@ fn write_deps_onload_failure_retains_the_published_import_prefix_and_provider_ou
     assert!(helper.scopes.local_path.join("adoption-provider-observed").is_file());
 }
 
+/// Verifies first graph seeder `onLoad` failure precedes the second seeder's dependency cache publication via [`stale_seeder_sources`].
 #[test]
 fn first_graph_seeder_onload_failure_precedes_second_seeders_dependency_cache_publication() {
     let helper = dependents::graph();

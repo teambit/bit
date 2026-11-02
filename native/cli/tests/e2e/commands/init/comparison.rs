@@ -95,6 +95,7 @@ fn normalize(path: &str, mut bytes: Vec<u8>) -> Vec<u8> {
     bytes
 }
 
+/// Validates that `value` is a six-field `YYYY-M-D-H-M-S` backup timestamp string.
 fn validate_date(value: &str) {
     let parts: Vec<_> = value
         .split('-')

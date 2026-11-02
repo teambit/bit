@@ -44,6 +44,7 @@ fn write_to_empty_directory_rejects_override_and_explicit_path() {
         assert!(result.stderr.contains(message));
     }
 }
+/// Verifies `--write-to-empty-dir` increments the destination directory via [`relocate`] and preserves all original bytes.
 #[test]
 fn write_to_empty_directory_increments_the_destination_and_preserves_all_original_bytes() {
     let (helper, original) = occupied();

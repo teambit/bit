@@ -76,6 +76,7 @@ fn track_only_json_performs_real_default_installation_without_replacing_existing
         b"module.exports='retained local file';\n",
     );
 }
+/// Verifies `--write-to-empty-dir --write-deps workspace.jsonc --json` performs default installation via [`install`] and [`assert_linked`].
 #[test]
 fn empty_directory_and_workspace_policy_json_perform_real_default_installation() {
     let helper = fixture(1);

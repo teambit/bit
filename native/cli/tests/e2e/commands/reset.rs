@@ -42,7 +42,7 @@ fn aspect_config(helper: &Helper, id: &str, aspect: &str) -> Value {
         .clone()
 }
 
-/// `isDeprecated(id)`.
+/// Returns `true` when `id`'s `teambit.component/deprecation` aspect config has `deprecate: true` via [`aspect_config`].
 fn is_deprecated(helper: &Helper, id: &str) -> bool {
     aspect_config(helper, id, "teambit.component/deprecation")["config"]["deprecate"] == true
 }

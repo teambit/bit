@@ -76,7 +76,7 @@ pub(super) fn tree(root: &Path) -> BTreeMap<String, Vec<u8>> {
     entries
 }
 
-/// Asserts that [`tree`] maps for `actual` and `expected` workspace roots are identical.
+/// Asserts that [`tree`] maps for `actual` and `expected` workspace roots are identical via [`assert_tree_maps`].
 pub(super) fn assert_same_tree(actual: &Path, expected: &Path) {
     let actual = tree(actual);
     let expected = tree(expected);

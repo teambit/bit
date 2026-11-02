@@ -56,7 +56,7 @@ fn tracked_package_json_is_linked_without_generated_metadata_matching_node() {
     );
 }
 
-/// Collects all decompressed `Source` scope objects under `root` keyed by their relative object path.
+/// Collects all decompressed `Source` scope objects under `root` via [`Read`] keyed by their relative object [`PathBuf`].
 fn source_objects(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     super::super::remove::scope_objects(root)
         .into_iter()

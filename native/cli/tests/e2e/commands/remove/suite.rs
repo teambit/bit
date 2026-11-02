@@ -79,6 +79,7 @@ fn with_imported_components_no_dependencies() {
     assert!(!bit_map.contains(r#""bar/foo""#));
 }
 
+/// Verifies `bit remove` on a modified component fails with a diagnostic rather than removing it.
 /// bit remove command › remove modified component
 #[test]
 fn remove_modified_component() {

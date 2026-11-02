@@ -40,6 +40,7 @@ impl Histories {
         }
         Self(histories)
     }
+    /// Rewrites backup file `path` to use its normalized `FILE_<n>` or `ORPHAN-<id>` token.
     pub(super) fn path(&self, path: &str) -> String {
         for history in self.0.values() {
             if let Some(name) = path.strip_prefix(&history.directory) {

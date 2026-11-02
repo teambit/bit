@@ -35,7 +35,7 @@ fn fixture() -> Helper {
     support::setup(&helper, &command(&helper, "comp2", ""));
     helper
 }
-/// Verifies `--write-deps package.json` selects the highest component policy range and preserves unrelated fields.
+/// Verifies `--write-deps package.json` on [`fixture`] selects the highest component policy range and preserves unrelated fields.
 #[test]
 fn write_deps_package_json_selects_the_highest_component_range_and_preserves_other_fields() {
     let helper = fixture();

@@ -52,6 +52,7 @@ fn update_main_on_a_lane_preserves_other_configuration_and_sources_policy() {
         json!({"removed":true,"removeOnMain":true}),
     );
 }
+/// Verifies `bit delete --update-main --range` keeps lane sources and marks only the selected range in [`bitmap`].
 #[test]
 fn update_main_range_keeps_lane_sources_and_marks_only_the_selected_range() {
     let helper = support::workspace(1, true);

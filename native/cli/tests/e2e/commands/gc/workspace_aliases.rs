@@ -79,6 +79,7 @@ fn copy_objects(source: &Path, target: &Path) {
         }
     }
 }
+/// Backdates the modification times of `hashes` in `scope/objects` by two hours.
 fn age_objects(scope: &Path, hashes: &[String]) {
     let modified = SystemTime::now() - Duration::from_hours(2);
     for hash in hashes {

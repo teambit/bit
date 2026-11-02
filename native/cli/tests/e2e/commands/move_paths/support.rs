@@ -81,7 +81,7 @@ pub(crate) fn compare_with_error_variants(
     actual
 }
 
-/// Keep delegation explicit and preserve the real remote invariant.
+/// Keep delegation explicit via [`support::compare_declined`] and preserve the real remote invariant.
 pub(crate) fn compare_declined(helper: &Helper, command: &str, stdout: fn(&str) -> String) -> Run {
     let remote = tree(&helper.scopes.remote_path);
     let actual = support::compare_declined(helper, command, stdout);

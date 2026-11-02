@@ -6,7 +6,7 @@ mod parity;
 
 use crate::helper::{FOO_FIXTURE, Helper};
 
-/// when a component is created but not tagged › should display "found 0 components"
+/// when a component is created but not tagged ([`FOO_FIXTURE`]) › should display "found 0 components"
 #[test]
 fn a_new_component_is_not_listed() {
     let helper = Helper::new();

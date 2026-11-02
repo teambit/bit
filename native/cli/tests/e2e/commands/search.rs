@@ -4,7 +4,7 @@
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 
-/// Initializes a workspace with tagged `bar/foo` and `utils/is-type` components for search tests.
+/// Initializes a workspace with tagged `bar/foo` ([`FOO_FIXTURE`]) and `utils/is-type` components for search tests.
 fn setup_workspace(helper: &Helper) {
     helper.re_init_workspace();
     helper.create_component_bar_foo(FOO_FIXTURE);

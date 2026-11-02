@@ -88,6 +88,7 @@ fn malformed_file_remote_declines_before_any_removal() {
     assert_eq!(tree(&helper.scopes.remote_path), before);
 }
 
+/// Verifies `bit resume-export --delete --force` preserves symlink targets without dereferencing them.
 #[cfg(unix)]
 #[test]
 fn file_pending_deletion_preserves_symlink_targets() {

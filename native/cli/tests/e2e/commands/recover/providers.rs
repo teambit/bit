@@ -9,7 +9,7 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
-/// Expected source contents written by `providers.cjs` into `comp1/provider.js`.
+/// Expected source contents written by `providers.cjs` into `comp1/provider.js` in [`recovery_preserves_provider_configuration_and_new_source_files`].
 const PROVIDER_SOURCE: &str = "module.exports=42;\n";
 
 /// Verifies `bit recover` preserves aspect provider `.bitmap` configuration ([`bitmap`]) and [`PROVIDER_SOURCE`] files.

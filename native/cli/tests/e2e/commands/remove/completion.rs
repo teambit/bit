@@ -49,6 +49,7 @@ fn versioned_batch_with_missing_main_can_still_be_removed() {
     assert!(bitmap(&helper).get("comp1").is_none());
     assert!(bitmap(&helper).get("comp2").is_none());
 }
+/// Verifies removing a root component (`--root`) preserves `workspace.jsonc` and nested component sources.
 #[test]
 fn removing_root_component_preserves_workspace_and_nested_sources() {
     let helper = support::workspace(1, false);

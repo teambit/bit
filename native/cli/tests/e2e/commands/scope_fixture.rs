@@ -17,7 +17,7 @@ pub(super) fn fixture() -> Helper {
     support::setup(&helper, "export");
     helper
 }
-/// Compares `command` executed in `helper`'s bare remote scope against `Node.js` with `color` enabled or disabled.
+/// Compares `command` executed in `helper`'s bare remote scope against `Node.js` with `color` enabled or disabled via [`compare_with_cleanup`].
 pub(super) fn compare(helper: &Helper, command: &str, color: bool) -> Run {
     compare_with_cleanup(helper, command, color, |_| {}, |_| {})
 }

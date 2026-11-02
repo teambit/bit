@@ -72,6 +72,7 @@ fn saving_config_in_the_local_workspace() {
     assert!(!shared.stdout.contains("global-val"));
 }
 
+/// Verifies `bit config set --local` saves and deletes entries in the local scope configuration via [`run_config`] and [`list_config_locally`].
 #[test]
 fn saving_config_in_the_local_scope() {
     let helper = Helper::new();

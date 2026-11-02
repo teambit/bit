@@ -36,6 +36,7 @@ pub(super) fn write(scope: &Path, kind: &str, hash: &str, body: &[u8]) {
 fn write_json(scope: &Path, kind: &str, hash: &str, body: &Value) {
     write(scope, kind, hash, &serde_json::to_vec(body).unwrap());
 }
+/// Seeds a two-version `fixture.foreign/dependency` graph in `helper`'s remote scope and returns `(deleted_hashes, kept_hashes)`.
 pub(super) fn dependency_graph(helper: &Helper) -> (Vec<String>, Vec<String>) {
     let scope = &helper.scopes.remote_path;
     let model_hash = digest(&format!("{}/comp1", helper.scopes.remote));

@@ -20,7 +20,7 @@ use std::{fs, io::Write, path::Path};
 
 use super::scope_fixture::{compare, compare_with_snapshot, fixture};
 
-/// Writes an unreachable `Source` object into `scope` and returns its 40-hex SHA-1 hash.
+/// Writes an unreachable `Source` object into `scope` via [`ZlibEncoder`] and [`Sha1`] and returns its 40-hex SHA-1 hash.
 fn orphan(scope: &Path) -> String {
     let bytes = b"unreachable binary\0source\xff";
     let hash = format!("{:x}", Sha1::digest(bytes));

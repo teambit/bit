@@ -69,6 +69,7 @@ fn imported_automatic_dependency_updates_workspace_range() {
     parity("^1.0.0", "");
 }
 
+/// Verifies `--merge=ours` still updates the imported workspace policy via [`parity`].
 #[test]
 fn merge_ours_still_updates_the_imported_workspace_policy() {
     parity("^1.0.0", "--merge=ours");

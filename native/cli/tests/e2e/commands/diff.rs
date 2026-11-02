@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/diff.e2e.ts` for native `bit diff` ([`diff`], [`diff_any`]) file ([`BAR_FOO_V1`], [`NO_DIFF`], [`SUCCESS_DIFF`]), dependency, and configuration parity.
+//! End-to-end port of `e2e/commands/diff.e2e.ts` for native `bit diff` ([`diff`], [`diff_any`], [`combined`]) file ([`BAR_FOO_V1`], [`NO_DIFF`], [`SUCCESS_DIFF`]), dependency, and configuration parity.
 
 use crate::{
     helper::{Helper, Run, known, len, parse, strip_ansi},

@@ -48,6 +48,7 @@ impl Snapshot {
         }
     }
 
+    /// Recursively records file modification times and directory permissions under `path` relative to `root`.
     fn visit(&mut self, root: &Path, path: &Path) {
         let metadata = fs::symlink_metadata(path).unwrap();
         if metadata.file_type().is_symlink() {

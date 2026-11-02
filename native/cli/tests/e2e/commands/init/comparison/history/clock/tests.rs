@@ -13,7 +13,7 @@ fn the_same_second_is_not_past_but_the_next_second_is() {
     assert!(past(latest, date("2026-10-18-12-0-1")));
     assert!(!past(latest, date("2026-10-18-11-59-59")));
 }
-/// Verifies [`date`] and [`past`] handle month-end and year-end rollovers accurately.
+/// Verifies [`date`] and [`past`] handle month-end and year-end rollovers accurately across calendar boundaries.
 #[test]
 fn numeric_dates_preserve_month_and_year_carry() {
     assert!(past(Some(date("2026-9-30-23-59-59")), date("2026-10-1-0-0-0")));

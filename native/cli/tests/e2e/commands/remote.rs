@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Copies the shared global `config.json` into an isolated `globals` directory for `helper`.
+/// Copies the shared global `config.json` from [`setup::shared`] into an isolated `globals` directory for `helper`.
 fn case_globals(helper: &Helper) -> PathBuf {
     let globals = helper.scopes.e2e_dir.join("globals");
     fs::create_dir_all(globals.join("config")).unwrap();

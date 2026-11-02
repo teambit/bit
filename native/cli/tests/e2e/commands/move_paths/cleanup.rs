@@ -32,7 +32,7 @@ fn deprecation_changes_and_noops_retain_existing_consumer_temporary_files() {
     }
 }
 
-/// Verifies a link failure during `bit move` retains `.bitTmp` files and preserves the prior `.bitmap`.
+/// Verifies a link failure during `bit move` retains `.bitTmp` files and preserves the prior `.bitmap` via [`compare`].
 #[test]
 fn move_link_failure_keeps_temporary_files_and_old_bitmap_after_relocation() {
     let helper = workspace(1, false);

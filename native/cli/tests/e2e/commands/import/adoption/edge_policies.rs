@@ -31,6 +31,7 @@ fn empty_dependency_set_creates_the_missing_root_package_without_inventing_depen
     let package = config::read_jsonc(&helper.scopes.local_path.join("package.json"));
     assert_eq!(package["dependencies"], json!({}));
 }
+/// Verifies `--write-deps workspace.jsonc` in [`empty_environment`] persists [`RESOLVER`] configuration without creating `package.json`.
 #[test]
 fn empty_dependency_set_still_persists_workspace_configuration_without_creating_a_package() {
     let helper = empty_environment();

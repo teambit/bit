@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
-/// Node application plugin source registered alongside `bar/foo.js`.
+/// Node application plugin source registered alongside `bar/foo.js` ([`FOO_FIXTURE`]) in [`node_application_registration_matches_node_snapshot`].
 const NODE_APP_PLUGIN: &str =
     "module.exports.default = { name: 'foo-app', entry: require.resolve('./foo.js') };\n";
 
