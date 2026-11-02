@@ -189,7 +189,7 @@ enum Request {
         right: String,
     },
 }
-
+/// Wire response envelope returned by [`serve`] for workspace engine requests.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,

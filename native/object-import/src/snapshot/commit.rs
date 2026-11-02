@@ -36,6 +36,7 @@ enum Kind {
     ExportMetadata,
 }
 impl Kind {
+    /// Returns the canonical repository header type name for `self`.
     #[inline]
     #[must_use]
     const fn name(self) -> &'static str {

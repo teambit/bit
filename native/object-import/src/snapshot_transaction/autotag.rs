@@ -42,6 +42,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     }
     Ok(json!({"results":results}))
 }
+/// Builds the reverse dependency adjacency map across `components` for auto-tag traversal.
 fn graph(components: &[Value]) -> io::Result<HashMap<String, Node>> {
     let ids: Vec<String> = components
         .iter()

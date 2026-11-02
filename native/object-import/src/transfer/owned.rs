@@ -34,6 +34,7 @@ pub(super) struct Plan {
     pub(super) objects_hash: String,
 }
 
+/// Freezes and spools a transfer object collection into `state`, returning its token and summary JSON.
 pub(super) fn collect(state: &mut State, input: &Value) -> io::Result<Value> {
     let request = wire::collect(input)?;
     staging(&request.staging_directory, state)?;

@@ -22,6 +22,7 @@ pub(in crate::workspace::engine) struct Target {
     directory: String,
     version: String,
 }
+/// Active workspace client status scan plan tracking targets, cursor position, and accumulated modified/new IDs.
 struct Plan {
     root: PathBuf,
     targets: Vec<Target>,

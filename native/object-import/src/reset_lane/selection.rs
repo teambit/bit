@@ -47,6 +47,7 @@ fn tag_labels(selection: &mut Selection, model: &Value) {
     }
 }
 
+/// Extracts validated 40-char lowercase hex hashes from `distance["sourceOnly"]`.
 fn hashes(distance: &Value) -> io::Result<Vec<String>> {
     distance["sourceOnly"]
         .as_array()

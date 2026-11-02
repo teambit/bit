@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Ordered list of `(path, preimage_bytes)` pairs retained for lane-reset revalidation.
 pub(super) type ReadSet = Vec<(PathBuf, Option<Vec<u8>>)>;
 
 /// Reads regular file `path` and appends its preimage bytes to `proofs`.

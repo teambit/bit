@@ -56,6 +56,7 @@ pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>
     (row_scope, row_name)
 }
 
+/// Inserts restored component `row` at `key` into `.bitmap` `rows` in canonical key order.
 pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io::Result<()> {
     let key = key.trim();
     if key.starts_with('$')

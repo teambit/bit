@@ -27,6 +27,7 @@ pub(crate) struct State {
     revision: u64,
 }
 impl State {
+    /// Validates and registers `operations` under a fresh SHA-1 recovery token.
     pub(crate) fn initialize(
         &mut self,
         operations: Vec<Operation>,

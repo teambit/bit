@@ -28,6 +28,7 @@ impl Readset {
         Self { objects: scope.join("objects"), entries: Vec::new(), bytes: 0 }
     }
 
+    /// Reads and decodes loose object `hash` of `kind`, recording its preimage bytes in `self`.
     pub(super) fn read(&mut self, hash: &str, kind: &str) -> io::Result<Value> {
         let hash = hash.trim();
         validate_hash(hash)?;

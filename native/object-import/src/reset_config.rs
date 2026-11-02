@@ -74,6 +74,7 @@ pub(crate) fn removed_lane_row(
     })))
 }
 
+/// Rejects relative paths containing empty, `.`, `..`, or NUL segments.
 fn validate_relative_path(path: &str, message: &str) -> io::Result<()> {
     if path.contains('\0')
         || path

@@ -25,6 +25,7 @@ struct Component {
     entered_version: Option<String>,
     tag_data: Option<Tag>,
 }
+/// Explicit `versionToTag` and optional `prereleaseId` override for a component tag request.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Tag {

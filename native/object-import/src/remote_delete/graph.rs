@@ -44,6 +44,7 @@ fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
     Ok(reverse)
 }
 
+/// Traverses `model`'s reachable `Version` graph and records reverse dependency edges in `reverse`.
 fn add_component(
     readset: &mut Readset,
     identity: &str,

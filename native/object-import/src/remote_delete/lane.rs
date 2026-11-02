@@ -67,6 +67,7 @@ fn select_lanes(
     Ok((refs, removed))
 }
 
+/// Splits and validates a non-`main` `scope/name` remote lane identifier.
 fn parse_lane_id(id: &str) -> io::Result<(&str, &str)> {
     let (raw_scope, raw_name) = id
         .trim()

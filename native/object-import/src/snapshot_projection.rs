@@ -74,6 +74,7 @@ fn component_name_and_scope(fields: &Value) -> io::Result<(String, String)> {
     Ok((name.to_owned(), scope_text))
 }
 
+/// Computes the `<laneHash>:LaneHistory` SHA-1 digest for a `LaneHistory` object.
 fn lane_history_identity(fields: &Value) -> io::Result<String> {
     let lane_hash = text(get(fields, "laneHash"))?;
     let trimmed = lane_hash.trim();

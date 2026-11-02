@@ -68,6 +68,7 @@ pub fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
     writeln!(metadata, "{file_id} reset")
 }
 
+/// Validates that `file_id` matches the six-segment numeric `.bitmap-<file_id>` timestamp format.
 pub(crate) fn validate_file_id(file_id: &str) -> io::Result<()> {
     let file_id = file_id.trim();
     if file_id.len() > 32 {

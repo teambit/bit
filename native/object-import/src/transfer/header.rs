@@ -54,6 +54,7 @@ fn split(mut name: &str) -> io::Result<(&str, &str)> {
     Ok((prefix, name))
 }
 
+/// Copies `bytes` into `block` starting at `offset`.
 #[inline]
 fn copy(block: &mut [u8; 512], offset: usize, bytes: &[u8]) {
     block[offset..offset + bytes.len()].copy_from_slice(bytes);

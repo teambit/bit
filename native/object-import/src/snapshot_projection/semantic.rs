@@ -74,6 +74,7 @@ fn retain(name: &str, value: &Value) -> io::Result<bool> {
     }
 }
 
+/// Projects `Version` `files` rows into canonical `("file", "relativePath", "name", "test")` order.
 fn files(value: &Value) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("Version files required"));

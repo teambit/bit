@@ -54,6 +54,7 @@ pub(super) fn project(
     project_hidden(lane, &format!("{scope}/{name}"), selection)
 }
 
+/// Returns `true` when `Lane` component `id` matches `(scope, name)`.
 #[inline]
 #[must_use]
 fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {

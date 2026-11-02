@@ -52,6 +52,7 @@ pub(crate) fn read(
     Ok((body, size, kind))
 }
 
+/// Reads a loose repository object file for `hash` from `directory`, enforcing `maximum` byte bounds.
 pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io::Result<Vec<u8>> {
     let identity = crate::validate::hexadecimal(&hash);
     let path = directory

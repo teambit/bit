@@ -38,6 +38,7 @@ struct Owner {
     gid: u32,
 }
 impl Owner {
+    /// Converts an optional [`Owner`] into a `(uid, gid)` tuple for [`Store::new`].
     #[inline]
     #[must_use]
     fn pair(owner: Option<Self>) -> Option<(u32, u32)> {

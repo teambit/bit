@@ -28,6 +28,7 @@ pub struct Batch {
     index: Option<BytesChange>,
 }
 
+/// Explicit component identities and `--force` flag for [`Batch::prepare_selected`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selected {
     identities: Vec<String>,

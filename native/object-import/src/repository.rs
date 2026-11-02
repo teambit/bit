@@ -77,6 +77,7 @@ pub fn read_raw_scope_object(
     Ok(Some((headers, body.to_vec())))
 }
 
+/// Constructs an `InvalidData` I/O error with `message`.
 #[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

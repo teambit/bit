@@ -70,6 +70,7 @@ fn outcome(
     Ok(tags != 0 || head.is_some() || lane_local.is_some())
 }
 
+/// Selected replacement head hash, provenance descriptor, and common-ancestor flag.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selection {
     hash: Option<String>,

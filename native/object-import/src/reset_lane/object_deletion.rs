@@ -1,4 +1,4 @@
-//! `Repository.removeFile(path, true)` pruning ([`remove`]) of a deleted object's empty parent directory.
+//! `Repository.removeFile(path, true)` pruning ([`remove`], [`prune_empty_parent`]) of a deleted object's empty parent directory.
 #[cfg(test)]
 mod tests;
 use super::invalid;

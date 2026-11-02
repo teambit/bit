@@ -41,6 +41,7 @@ fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<
     }
 }
 
+/// Walks `current` and its parents in `objects`, appending missing `Version` entries to `versions`.
 fn append_missing_ancestors(
     objects: &Path,
     versions: &mut Vec<Value>,

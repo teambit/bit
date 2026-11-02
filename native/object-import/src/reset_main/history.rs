@@ -78,6 +78,7 @@ fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) ->
     Ok(changed)
 }
 
+/// Reads an existing `VersionHistory` object at `path` or initializes an empty one for `(scope, name)`.
 fn load_or_init_history(
     path: &Path,
     objects: &Path,

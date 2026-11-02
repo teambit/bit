@@ -60,6 +60,7 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<Action>> {
     Ok(actions)
 }
 
+/// Reads and validates an optional length-prefixed absolute path from `reader`, updating `total` byte budget.
 fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<PathBuf>> {
     let length = protocol::word(reader)? as usize;
     *total = total.saturating_add(length);

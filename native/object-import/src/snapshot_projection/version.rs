@@ -80,6 +80,7 @@ fn field(fields: &Value, name: &str) -> io::Result<Value> {
     }
 }
 
+/// Projects each element of array `value` using `names` property order.
 fn rows(value: &Value, names: &[&str]) -> io::Result<Value> {
     if matches!(value, Value::Undefined) {
         return Ok(Value::Undefined);

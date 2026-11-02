@@ -42,6 +42,7 @@ fn artifact(artifact: &Value) -> io::Result<Value> {
         .collect::<io::Result<Vec<_>>>()?;
     replace(artifact, "files", Value::Array(refs))
 }
+/// Projects a single artifact file `reference` into `("relativePath", "file", "url")` field order.
 fn reference(reference: &Value) -> io::Result<Value> {
     object(reference)?;
     if let Value::String(units) = get(reference, "relativePath") {

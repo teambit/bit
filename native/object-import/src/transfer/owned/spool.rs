@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-/// Rollback guard that removes partially written spool files if collection fails before completion.
+/// Rollback guard that removes partially written spool files if [`write`] fails before completion.
 #[derive(Debug, Default)]
 struct Pending(Vec<PathBuf>);
 impl Drop for Pending {

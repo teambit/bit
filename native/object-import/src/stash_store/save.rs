@@ -56,6 +56,7 @@ impl PreparedSave {
         fs::write(target, &self.bytes)
     }
 }
+/// Computes the next numeric stash filename index from the `latest` `stash-<n>.json` entry.
 fn next_index(latest: Option<&str>) -> io::Result<u64> {
     let Some(latest) = latest
         .map(str::trim)

@@ -65,6 +65,7 @@ fn insert_target(
     targets.push(target);
     Ok(())
 }
+/// Validates `.bitmap` row `key`/`value` against `config` and constructs its [`Target`].
 fn target(key: &str, value: &Value, config: &Value) -> io::Result<Target> {
     validate_entry(value)?;
     let scope = optional_text(value, "scope")?;

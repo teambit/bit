@@ -26,6 +26,7 @@ pub(crate) struct Version {
     pub(crate) expected: Option<References>,
 }
 
+/// Transfer selection mode (`Export` vs `Fetch`) governing artifact inclusion and strictness.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Mode {
     Export { strict_local_artifacts: bool },

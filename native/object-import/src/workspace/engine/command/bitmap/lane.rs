@@ -87,8 +87,8 @@ fn switch_flags(
     Ok((available, lane_only))
 }
 
-// Consumer.getNotExportedIds considers only the current lane's available bitmap
-// IDs. The writer therefore loads an inactive unscoped entry as a scoped ID.
+/// `Consumer.getNotExportedIds` considers only the current lane's available bitmap
+/// IDs. The writer therefore loads an inactive unscoped entry as a scoped ID.
 pub(super) fn promote_inactive_scope(
     entry: &mut Value,
     context: &Value,

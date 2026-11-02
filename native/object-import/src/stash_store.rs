@@ -45,7 +45,7 @@ impl PreparedLoad {
         let data = crate::parse_jsonc(bytes)?;
         Ok(Self { observation, filename, data })
     }
-    /// The complete detached-Version and bitmap metadata, without Source bodies.
+    /// Returns the complete detached-`Version` and `.bitmap` metadata JSON without `Source` bodies.
     #[inline]
     #[must_use]
     pub fn data(&self) -> &Value {

@@ -26,6 +26,7 @@ pub(super) struct Object {
     pub(super) body: Option<String>,
 }
 
+/// Workspace file `path`, raw `hash`, normalized `source_hash`, and [`Normalization`] mode for a `Source` object.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Workspace {

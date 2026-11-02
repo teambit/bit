@@ -38,6 +38,7 @@ impl Bitmap {
         Ok(Self { before, document, key, staged_config })
     }
 
+    /// Updates `self.key` to `version`, restores staged config, and renders the `.bitmap` [`BytesChange`].
     pub(super) fn project(mut self, version: String) -> io::Result<BytesChange> {
         let row =
             self.document[&self.key].as_object_mut().ok_or_else(|| invalid("reset bitmap row"))?;

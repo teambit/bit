@@ -19,6 +19,7 @@ pub struct Batch {
     controls: Vec<crate::reset_lane::controls::Control>,
 }
 
+/// Explicit component identities and `--force` flag for [`Batch::prepare_selected`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Selected {
     identities: Vec<String>,

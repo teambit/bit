@@ -59,6 +59,7 @@ pub(crate) struct State {
     stash: Option<Box<stash::Retained>>,
     histories: Histories,
 }
+/// Retained lane history checkout and inspection contexts within a command [`State`].
 #[derive(Default)]
 struct Histories {
     checkout: Option<Box<lane_history::Retained>>,

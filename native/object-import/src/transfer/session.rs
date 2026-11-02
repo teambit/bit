@@ -40,6 +40,7 @@ impl State {
         Ok(json!({"cancelled":true,"releasedCollections":collections,"releasedPlans":plans}))
     }
 
+    /// Removes spooled temporary object files that are no longer referenced by any active collection or plan.
     pub(super) fn cleanup_unused(&mut self) -> io::Result<()> {
         if self.spool_paths.is_empty() {
             return Ok(());

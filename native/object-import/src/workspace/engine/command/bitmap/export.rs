@@ -58,6 +58,7 @@ fn find_export_row<'a>(
         .map(|(_, row)| row)
 }
 
+/// Returns whether `.bitmap` entry `(key, row)` matches the exported `(scope, name)` identity.
 #[inline]
 fn export_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     let key = key.trim();

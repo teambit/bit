@@ -40,6 +40,7 @@ pub(crate) struct Descriptor {
     pub(crate) body: Body,
 }
 
+/// Summary of a prepared tar archive (`path`, entry `count`, byte sizes, and SHA-1 digests).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Prepared {
     pub(crate) path: PathBuf,

@@ -27,6 +27,7 @@ pub(super) struct Receipt {
     success: bool,
 }
 
+/// Active multi-scope export transaction state tracking current [`Phase`], `token`, and `revision`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Transaction {
     scope_count: usize,

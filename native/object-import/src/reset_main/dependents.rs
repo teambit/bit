@@ -54,6 +54,7 @@ fn validate_row(
     Ok(())
 }
 
+/// Loads the `Component` model for `row` when `same` is `false`.
 fn component_model(objects: &Path, row: &Value, same: bool) -> io::Result<Option<Value>> {
     if same {
         return Ok(None);

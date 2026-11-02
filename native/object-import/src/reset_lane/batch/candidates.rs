@@ -22,6 +22,7 @@ pub(super) struct Discovery {
 }
 
 impl Discovery {
+    /// Attaches `self.population` and `self.proofs` to a reset `error` via [`diagnostics::with_population`].
     #[inline]
     pub(super) fn failure(&self, error: io::Error) -> io::Error {
         diagnostics::with_population(

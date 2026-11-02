@@ -40,6 +40,7 @@ impl Plan {
         )
     }
 
+    /// Prepares a `bit reset --soft` plan restricted to explicit component `identities` at `root`.
     pub fn prepare_selected(root: &Path, identities: &[String]) -> io::Result<Self> {
         let selected = identities
             .iter()

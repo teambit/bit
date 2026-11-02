@@ -65,6 +65,7 @@ fn detached(value: &Value) -> io::Result<Value> {
     Ok(if active { output } else { Value::Undefined })
 }
 
+/// Projects raw `Lane` `fields` into their canonical snapshot object representation.
 pub(super) fn lane(fields: &Value) -> io::Result<Value> {
     let Value::Array(components) = get(fields, "components") else {
         return Err(invalid("lane components required"));

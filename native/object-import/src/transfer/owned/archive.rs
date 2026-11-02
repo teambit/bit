@@ -66,6 +66,7 @@ fn export_archive(plan: &Plan, request: &wire::Archive, parent: &Path) -> io::Re
     )
 }
 
+/// Encodes 512-byte `USTAR` tar headers for each entry in `plan` before writing the archive.
 fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<Vec<[u8; 512]>> {
     let offset = usize::from(fetch);
     let mut headers = Vec::with_capacity(plan.entries.len());

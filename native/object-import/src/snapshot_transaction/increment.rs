@@ -53,6 +53,7 @@ fn stable(version: &mut Value, release: &str) -> io::Result<()> {
     version["prerelease"] = json!([]);
     Ok(())
 }
+/// Increments the `prerelease` identifier array on `version` using optional `identifier`.
 fn pre(version: &mut Value, identifier: Option<&str>) -> io::Result<()> {
     let mut values = increment_parts(array(version)?)?;
     select_identifier(&mut values, identifier)?;

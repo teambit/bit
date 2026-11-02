@@ -83,6 +83,7 @@ impl WorkspaceSession {
     }
 }
 
+/// Returns or initializes the shared `Rayon` worker pool for `threads` (`1..=8`).
 pub(crate) fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> {
     let threads = threads.clamp(1, POOLS.len());
     let entry = &POOLS[threads - 1];

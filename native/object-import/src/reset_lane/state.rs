@@ -65,6 +65,7 @@ impl BitmapState {
                     .is_some_and(|scope| !scope.trim().is_empty()))
     }
 
+    /// Verifies that the `.bitmap` row version for `self.key` resolves to `head` on `model`.
     pub(super) fn validate_head(&self, model: &Value, head: &str) -> io::Result<()> {
         let version = self.document[&self.key]["version"].as_str().map(str::trim);
         if !self.key.is_empty()

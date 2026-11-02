@@ -28,6 +28,7 @@ impl TagIndex {
         }
         index
     }
+    /// Records `label` for `hash`, preferring normal versions over orphaned versions.
     pub(crate) fn insert(&mut self, hash: &str, label: &str, normal: bool) {
         let (hash, label) = (hash.trim(), label.trim());
         if !hash.is_empty() && !label.is_empty() {

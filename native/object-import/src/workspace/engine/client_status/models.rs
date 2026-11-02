@@ -61,6 +61,7 @@ fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option
     Ok(None)
 }
 
+/// Resolves a component's object hash from `scope/index.json` when available and within size bounds.
 fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
     let index_path = scope.join("index.json");
     let meta = std::fs::symlink_metadata(&index_path).ok()?;

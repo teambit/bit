@@ -49,6 +49,7 @@ fn row(index: usize, component: &Value, components: &[Value]) -> io::Result<Valu
         json!({"index":index,"dependencies":dependencies,"extensions":extensions,"resolver":resolver}),
     )
 }
+/// Returns a normalized component ID object (`{ scope?, name, version }`) with updated `version`.
 fn normalize_component_id(id: &Value, version: String) -> io::Result<Value> {
     if id.is_object() {
         let mut normalized = id.clone();

@@ -63,6 +63,7 @@ fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
     Ok(local)
 }
 
+/// Resolves `label` against `versions` and `orphaned` maps, falling back to `trimmed` when already a hash.
 fn resolve_label_hash<'a>(
     versions: &'a Map<String, Value>,
     orphaned: Option<&'a Map<String, Value>>,

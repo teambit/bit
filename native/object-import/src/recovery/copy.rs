@@ -47,6 +47,7 @@ fn regular(path: &Path, metadata: fs::Metadata) -> io::Result<fs::Metadata> {
     links(path, &metadata)?;
     Ok(metadata)
 }
+/// Validates that every ancestor directory of `path` is an ordinary non-symlink directory without extended ACLs.
 fn ancestors(path: &Path) -> io::Result<()> {
     for parent in path.ancestors().skip(1) {
         let metadata = fs::symlink_metadata(parent)?;

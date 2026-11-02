@@ -32,6 +32,7 @@ pub(crate) fn hexadecimal(bytes: &[u8]) -> String {
     output
 }
 
+/// Validates a compressed repository object against its `expected` 20-byte SHA-1 hash.
 pub(crate) fn validate(compressed: &[u8], expected: [u8; 20]) -> Outcome {
     let hash = hexadecimal(&expected);
     match source(compressed, &hash, expected) {

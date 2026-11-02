@@ -27,6 +27,7 @@ struct HeadPolicy {
     override_head: bool,
 }
 
+/// Evaluates `detached`, `tag`, and optional `parent` fields for `plan`.
 pub(super) fn plan(plan: &Plan) -> io::Result<Value> {
     validate(plan)?;
     let detached = detached(plan)?;

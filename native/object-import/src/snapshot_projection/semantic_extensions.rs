@@ -56,6 +56,7 @@ fn sorted_config(value: &Value) -> io::Result<Value> {
     Ok(Value::Object(sorted))
 }
 
+/// Extracts canonical `{ id }` entries for extensions carrying a truthy `extensionId`.
 pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
     let Value::Array(entries) = value else {
         return Err(invalid("extensions required"));

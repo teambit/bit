@@ -65,6 +65,7 @@ fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String
     Ok(found.map(|digest| crate::validate::hexadecimal(&digest)))
 }
 
+/// Returns the remote-tracking head hash for `(scope, name)` when `bitmap.exported` is `true`.
 #[inline]
 pub(super) fn exported_head(
     root: &Path,

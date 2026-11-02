@@ -30,6 +30,7 @@ const FULL: &[&str] = &[
 ];
 /// Ordered phase sequence required for a soft-tag transaction (`snapshotTransactionBegin` with `soft: true`).
 const SOFT: &[&str] = &["initialize", "preSnap", "prepareVersions", "captureLane", "softTag"];
+/// Ordered phase sequence required for a repository object persistence transaction (`snapshotRepositoryBegin`).
 const REPOSITORY: &[&str] = &[
     "deleteObjects",
     "validateObjects",

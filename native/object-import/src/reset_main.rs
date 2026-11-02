@@ -38,6 +38,7 @@ struct ObjectChange {
     after: Option<Vec<u8>>,
 }
 
+/// Retained `root`, `identity`, `head_only`, and `force` parameters for [`Plan`] revalidation.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Input {
     root: PathBuf,

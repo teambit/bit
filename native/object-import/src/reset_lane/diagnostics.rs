@@ -13,6 +13,7 @@ struct CanonicalError {
     proofs: Vec<(PathBuf, Option<Vec<u8>>)>,
 }
 
+/// Preimage and postimage byte pair for a cold `VersionHistory` population write.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Write {
     path: PathBuf,

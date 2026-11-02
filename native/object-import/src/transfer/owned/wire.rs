@@ -61,6 +61,7 @@ pub(super) struct Collect {
     pub(super) options: Options,
 }
 
+/// Boolean collection flags (`throwForMissingLocalArtifacts`, `includeArtifacts`, `gracefulMissing`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {

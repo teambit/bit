@@ -50,6 +50,7 @@ fn set_head(model: &mut Value, head: Option<&str>) -> io::Result<()> {
     Ok(())
 }
 
+/// Prunes `selection.removed` hashes from `versions` and `orphanedVersions` and clears `state.versions`.
 fn remove_versions(model: &mut Value, selection: &Selection) -> io::Result<()> {
     let keep = |hash: &Value| !is_removed(hash, &selection.removed);
     let versions =

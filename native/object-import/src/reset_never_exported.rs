@@ -55,6 +55,7 @@ impl Plan {
         })
     }
 
+    /// Revalidates `self` against disk, removes unexported loose objects, backs up `.bitmap`, and writes `self.after`.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         let file_id = file_id.trim();
         crate::reset_main::validate_file_id(file_id)?;

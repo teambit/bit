@@ -21,6 +21,7 @@ pub(crate) fn history(value: &Value) -> io::Result<()> {
     prepare(value, false)
 }
 
+/// Validates that `value` satisfies `Version` query structural eligibility (including builder artifacts).
 #[inline]
 pub(crate) fn query(value: &Value) -> io::Result<()> {
     prepare(value, true)

@@ -62,6 +62,7 @@ fn immediate(
     Ok(found)
 }
 
+/// Collects `(version_hash, component_id)` pairs across all non-symlink indexed `components`.
 fn references(
     objects: &Path,
     index: &Value,

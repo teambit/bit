@@ -78,6 +78,7 @@ fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+/// Decodes a hexadecimal `Source` body string `text` into raw bytes within `maximum`.
 fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
     let text = text.trim();
     if text.len() > maximum.min(MAX_RAW) * 2 || !text.len().is_multiple_of(2) {
