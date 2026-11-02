@@ -8,7 +8,7 @@ use crate::policy::{DEPENDENCY_RESOLVER, overrides::FieldMaps};
 use indexmap::IndexMap;
 use serde_json::Value;
 
-/// The stored `Version` of a workspace component, when it has one.
+/// Stored `Version` object wrapper (`componentFromModel`) for a workspace component.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ComponentModel {
     version: Option<Value>,

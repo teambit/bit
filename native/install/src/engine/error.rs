@@ -17,7 +17,7 @@ pub struct EngineError {
 }
 
 impl EngineError {
-    /// Capture a pacquet diagnostic.
+    /// Convert a `pacquet` [`Diagnostic`] into an [`EngineError`] with `ERR_PNPM_*` code and hint.
     pub fn from_diagnostic<Diag: Diagnostic + ?Sized>(error: &Diag) -> Self {
         let non_empty = |text: Box<dyn fmt::Display + '_>| {
             let rendered = text.to_string();

@@ -17,6 +17,7 @@ use crate::{
 };
 use serde_json::Value;
 
+/// Ordered dependency lifecycles (`Runtime`, `Dev`, `Peer`) iterated during dependency extraction.
 const LIFECYCLES: [Lifecycle; 3] = [Lifecycle::Runtime, Lifecycle::Dev, Lifecycle::Peer];
 
 /// Build the final list: component dependencies, configured extensions, packages,

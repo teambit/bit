@@ -8,6 +8,7 @@
 
 use std::{fs, io, path::Path};
 
+/// File extensions scanned as `JavaScript` or `TypeScript` modules.
 const SCRIPT: [&str; 8] = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
 const STYLE: [&str; 4] = ["scss", "sass", "less", "css"];
 const MAX_SOURCE: u64 = 1024 * 1024;

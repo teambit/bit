@@ -2,7 +2,7 @@
 //!
 //! [`load_global_config`] resolves `BIT_CONFIG_*` environment variables, `.bitrc.json`, and global config files.
 
-/// `bit config` keys read during install (`@teambit/legacy.constants`).
+/// Global `bit config` key constants read during workspace installation (`@teambit/legacy.constants`).
 pub mod keys {
     pub const CLOUD_DOMAIN: &str = "cloud_domain";
     pub const REGISTRY_URL: &str = "registry";

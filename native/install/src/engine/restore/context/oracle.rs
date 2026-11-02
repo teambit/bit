@@ -4,6 +4,7 @@
 use serde_json::{Value, json};
 use std::process::Command;
 
+/// Verify that native resolution-context merging matches `@teambit/pnpm`'s `mergeGraphLockfileIntoExisting`.
 #[test]
 fn resolution_context_matches_released_lockfile_merger() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else { return };

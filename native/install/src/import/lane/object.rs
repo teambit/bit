@@ -9,7 +9,7 @@ use serde_json::{Map, Value, json};
 /// Lanes without `isDeleted` data (the old lane schema in `TypeScript`).
 pub const OLD_LANE_SCHEMA: &str = "0.0.0";
 
-/// A visible lane entry.
+/// Visible lane component entry holding `scope`, `name`, `head` hash, and `is_deleted` flag.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneComponent {
     pub scope: String,

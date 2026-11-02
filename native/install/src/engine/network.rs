@@ -24,6 +24,7 @@ pub struct ProxySettings {
 }
 
 impl ProxySettings {
+    /// Return `true` when either `http_proxy` or `https_proxy` is non-empty.
     #[inline]
     fn is_set(&self) -> bool {
         [&self.http_proxy, &self.https_proxy]

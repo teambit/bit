@@ -24,7 +24,7 @@ use std::{
     time::Instant,
 };
 
-/// `OutsideWorkspaceError`.
+/// Canonical error message (`OutsideWorkspaceError`) when `bit install` runs outside a workspace.
 const OUTSIDE_WORKSPACE: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
 const YARN: &str = "teambit.dependencies/yarn";

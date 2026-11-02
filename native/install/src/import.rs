@@ -3,7 +3,7 @@
 //! objects of every exported `.bitmap` id (`importAccordingToBitMap`); on a
 //! remote lane it first fetches the lane object (`importObjectsOnLane`).
 //!
-//! Coordinates HTTP/file remote transports ([`FetchOptions`]), lane merges, and scope object persistence ([`Repo`]).
+//! Coordinates HTTP/file remote transports ([`FetchOptions`]), lane merges ([`local_update_dependents`]), and scope object persistence ([`Repo`]).
 
 pub(crate) mod remotes {
     pub use bit_client_transfer::remotes::*;

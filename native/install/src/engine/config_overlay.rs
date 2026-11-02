@@ -21,7 +21,7 @@ use std::{
     sync::{Arc, Mutex, OnceLock},
 };
 
-/// What one install call adds to the settings.
+/// Per-invocation install overlay applied on top of [`EngineSettings`].
 #[derive(Debug, Clone)]
 pub(super) struct CallOverlay<'a> {
     pub overrides: &'a DependencyMap,

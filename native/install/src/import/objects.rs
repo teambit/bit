@@ -15,7 +15,7 @@ use std::{
 
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
-/// An inflated object: its type header and JSON or raw content.
+/// Inflated loose Bit object containing its header `kind` and raw payload `content`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Parsed {
     pub kind: String,

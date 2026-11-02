@@ -1,6 +1,6 @@
 //! Global bit config, `workspace.jsonc` aspects, `dependency-resolver` settings, and `scope.json`.
 //!
-//! Re-exports [`EffectiveConfig`], [`MergeConfig`], [`ScopeJson`], and [`WorkspaceConfig`] for workspace installation.
+//! Re-exports [`EffectiveConfig`], [`MergeConfig`], [`ScopeJson`], and [`WorkspaceConfig`] ([`DependencyResolverConfig`]) for workspace installation.
 
 pub use global::{EffectiveConfig, keys, load_global_config};
 pub(crate) use merge_config::truthy;

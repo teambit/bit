@@ -22,6 +22,7 @@ use std::{
     io,
 };
 
+/// Default `LaneHistory` log message (`"import (merge from remote)"`) recorded when merging a remote lane.
 const HISTORY_MESSAGE: &str = "import (merge from remote)";
 
 /// Merge the remote lane into the local scope and save it when it changed.

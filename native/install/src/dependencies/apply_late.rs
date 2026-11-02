@@ -13,6 +13,7 @@ use super::{
 use crate::policy::overrides::{self, FieldMaps};
 use std::io;
 
+/// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`].
 const RUNTIME: usize = 0;
 const DEV: usize = 1;
 const PEER: usize = 2;

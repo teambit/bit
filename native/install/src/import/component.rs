@@ -2,7 +2,7 @@
 //! (`MultipleComponentMerger`, `ModelComponentMerger` for imports,
 //! `ObjectsWritable.mergeVersionObject`/`mergeVersionHistory`).
 //!
-//! Applies import merge plans ([`merge_component`]), detects tag conflicts, and reconciles `VersionHistory` graphs.
+//! Applies import merge plans ([`merge_component`]), detects tag conflicts, and reconciles `VersionHistory` graphs ([`Map`] / [`Value`]).
 
 use super::objects::invalid;
 use serde_json::{Map, Value, json};

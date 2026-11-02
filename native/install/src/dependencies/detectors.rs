@@ -20,7 +20,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::PathBuf};
 
-/// What a custom detector found in one file.
+/// Specifiers and lookup paths returned by a custom dependency detector for a single file.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct CustomDetection {
     /// The specifiers, in detector order and without duplicates.

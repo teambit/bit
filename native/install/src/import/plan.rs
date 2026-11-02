@@ -27,7 +27,7 @@ const MISSING_REASON: &str = "for getting missing versions and dependencies";
 const FLATTENED_REASON: &str =
     "which are flattened dependencies of components that don't have dependency-graph";
 
-/// One import run against the workspace scope.
+/// Pre-install scope object importer coordinating multi-round remote fetches into [`Repo`].
 #[derive(Clone, Copy)]
 pub struct Importer<'a> {
     pub repo: &'a Repo,

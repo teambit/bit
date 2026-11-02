@@ -2,7 +2,7 @@
 //! retained `InstallMain` and dependency-installer callbacks have finished.
 //!
 //! Validates all package-manager inputs before any filesystem or network effect via [`CanonicalInstall`].
-//! Declines unsupported options cleanly so callers can fall back before mutations occur.
+//! Declines unsupported options cleanly so callers can fall back before mutations occur ([`EngineResult`]).
 
 mod environment;
 mod parse;

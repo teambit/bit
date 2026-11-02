@@ -11,7 +11,7 @@ use crate::{config::DependencyResolverConfig, model::GlobalConfig};
 use indexmap::IndexMap;
 use pnpm_network::{AuthHeadersByScope, DEFAULT_REGISTRY_SCOPE, nerf_dart};
 
-/// The npmjs registry.
+/// Default public npm registry URL (`https://registry.npmjs.org/`).
 pub const NPM_REGISTRY: &str = "https://registry.npmjs.org/";
 /// The cloud domain when `cloud_domain` is not configured.
 const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";

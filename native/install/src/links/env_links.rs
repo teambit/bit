@@ -20,8 +20,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// The root `link:` dependencies resolved from envs, and the messages for the
-/// dependencies an env cannot resolve (`logger.console` in `TypeScript`).
+/// Root `link:` [`DependencyMap`] entries resolved from environments alongside unresolved diagnostic messages.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct EnvLinks {
     pub links: DependencyMap,

@@ -19,7 +19,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::{io, path::Path};
 
-/// One file's classified imports (a `DependenciesTree` entry).
+/// Classified imports and dependency issues for a single component file (`DependenciesTree` entry).
 #[derive(Debug, Default, Clone)]
 struct FileTree {
     packages: IndexMap<String, String>,

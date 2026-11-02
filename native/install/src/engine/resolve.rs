@@ -18,7 +18,7 @@ use pnpm_resolving_resolver_base::{
 use serde_json::Value;
 use std::io;
 
-/// `ResolvedPackageVersion`.
+/// Resolved package version metadata (`ResolvedPackageVersion` in `lynx.ts`).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ResolvedVersion {
     pub package_name: String,

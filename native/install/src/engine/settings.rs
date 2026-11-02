@@ -16,7 +16,7 @@ use pnpm_config::{Config, Host};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// The environment variables that change how Bit installs.
+/// Process environment variables (`BIT_ENABLE_GLOBAL_VIRTUAL_STORE`, `BIT_ALLOW_SCRIPTS`) affecting installation.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct EnvVars {
     /// `BIT_ENABLE_GLOBAL_VIRTUAL_STORE`: overrides the configured global virtual store.

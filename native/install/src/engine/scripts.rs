@@ -21,7 +21,7 @@ const TRUSTED_DEPS_JSON: &str = include_str!("trusted_deps.json");
 const UNTRUSTED_PACKAGE_NAMES: [&str; 6] =
     ["es5-ext", "less", "protobufjs", "ssh", "core-js-pure", "core-js"];
 
-/// The engine's build policy.
+/// Resolved dependency build-script execution policy for the package engine.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ScriptPolicy {
     /// `allowBuilds`: `name -> allowed`.

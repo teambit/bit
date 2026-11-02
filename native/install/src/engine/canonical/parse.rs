@@ -7,6 +7,7 @@ use crate::model::Project;
 use serde_json::{Map, Value};
 use std::path::{Path, PathBuf};
 
+/// Validated canonical `lynx.install` request holding paths, projects, network maps, and environment.
 pub(super) struct Request<'a> {
     pub(super) paths: Paths,
     pub(super) projects: Vec<Project>,

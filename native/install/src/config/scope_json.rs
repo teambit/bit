@@ -18,6 +18,7 @@ pub struct TrackLane {
     pub remote_scope: String,
 }
 
+/// Lane tracking and new-lane lists persisted under `lanes` in `scope.json`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Lanes {

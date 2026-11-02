@@ -14,7 +14,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-/// `BitObject.hash()` of a `LaneHistory`: `sha1("<laneHash>:LaneHistory")`.
+/// Compute the `BitObject.hash()` SHA-1 digest (`sha1("<laneHash>:LaneHistory")`) for a `LaneHistory` object.
 #[must_use]
 #[inline]
 pub fn history_hash(lane_hash: &str) -> String {

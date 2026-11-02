@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
-/// Versions per package name, highest first (`collectVersionsByPackageName`).
+/// Versions per package name, sorted highest first (`collectVersionsByPackageName`).
 type Versions = HashMap<String, Vec<String>>;
 
 /// Rewrite peer provider ids to the best version the merged graph has.

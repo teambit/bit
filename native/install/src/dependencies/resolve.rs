@@ -29,7 +29,7 @@ const COMMONJS_EXTENSIONS: [&str; 15] = [
 ];
 /// What `ts.resolveModuleName` tries for a relative import.
 const TYPESCRIPT_EXTENSIONS: [&str; 3] = ["ts", "tsx", "d.ts"];
-/// Origin files `filing-cabinet` resolves through TypeScript.
+/// Origin file extensions `filing-cabinet` resolves through `TypeScript` module resolution.
 const TYPESCRIPT_ORIGINS: [&str; 6] = ["ts", "tsx", "cts", "mts", "md", "mdx"];
 /// The extensions `filing-cabinet` has a default lookup for (`defaultLookups`).
 const DEFAULT_LOOKUPS: [&str; 14] = [

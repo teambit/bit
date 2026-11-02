@@ -9,6 +9,7 @@ use super::{
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Pre-evaluate `package.json` manifests via [`Host`] transformers for tracked components when `tracking` is enabled.
 pub(super) async fn prepare(
     components: &[&WorkspaceComponent],
     host: &dyn Host,

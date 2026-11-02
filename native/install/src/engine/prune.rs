@@ -1,7 +1,7 @@
 //! Remove `node_modules/.pnpm` directories the current lockfile no longer
 //! lists (`pnpm-prune-modules.ts`), preserving directories loaded by the host.
 //!
-//! Compares materialized `.pnpm` virtual-store entries against `node_modules/.pnpm/lock.yaml` snapshots via [`prune_modules`].
+//! Compares materialized `.pnpm` virtual-store entries against `node_modules/.pnpm/lock.yaml` snapshots ([`Lockfile`]) via [`prune_modules`].
 
 #[cfg(test)]
 mod tests;

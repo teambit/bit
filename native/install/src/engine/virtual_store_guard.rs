@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Fail when the switch would delete the running bit's own code.
+/// Return an error when switching virtual-store mode would delete the running `bit` binary's `node_modules` directory.
 pub(super) fn assert_safe_transition(
     root: &Path,
     enable_global_virtual_store: bool,

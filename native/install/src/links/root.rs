@@ -17,6 +17,7 @@ use std::{
 
 /// The aspect ID of Bit itself (`aspectLoader.mainAspect`).
 const MAIN_ASPECT_ID: &str = "teambit.harmony/bit";
+/// Package name (`@teambit/bit`) of the main Bit aspect.
 const MAIN_ASPECT_PACKAGE: &str = "@teambit/bit";
 const LINK_PREFIX: &str = "link:";
 

@@ -19,7 +19,7 @@ use std::{
     sync::Arc,
 };
 
-/// One engine call's shared state; `Install` borrows from it.
+/// Per-invocation engine session owning the HTTP client, [`LazyLockfile`], and multi-thread runtime.
 pub(super) struct Session {
     config: &'static Config,
     client: Arc<ThrottledClient>,

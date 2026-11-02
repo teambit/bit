@@ -14,7 +14,7 @@ use futures_util::{StreamExt, stream};
 use indexmap::IndexMap;
 use std::io;
 
-/// Fetches through the right transport for each remote scope.
+/// Concurrent remote scope object fetcher dispatching across HTTP and `file://` transports.
 #[derive(Debug, Clone, Copy)]
 pub struct Fetcher<'a> {
     pub remotes: &'a Remotes,

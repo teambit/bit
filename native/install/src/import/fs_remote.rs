@@ -12,7 +12,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path};
 
-/// Serve one fetch request from the bare scope at `path`.
+/// Serve a remote object fetch request directly from the bare local scope at `path`.
 pub fn fetch(path: &Path, ids: &[String], options: &FetchOptions) -> io::Result<Vec<ObjectItem>> {
     let scope_json: Value = match fs::read(path.join("scope.json")) {
         Ok(bytes) => {

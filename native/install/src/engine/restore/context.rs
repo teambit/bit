@@ -8,6 +8,7 @@ mod tests;
 
 use serde_json::{Map, Value, json};
 
+/// Lockfile resolution context keys (`pnpmfileChecksum`, `settings`, `overrides`) compared across graphs.
 const KEYS: [&str; 3] = ["pnpmfileChecksum", "settings", "overrides"];
 
 #[inline]

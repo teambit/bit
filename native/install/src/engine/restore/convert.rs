@@ -29,7 +29,7 @@ const PACKAGE_FIELDS: [&str; 12] = [
     "version",
 ];
 
-/// The parts of a dependency graph the conversion reads.
+/// Extracted `packages`, `edges`, and context fields of a serialized `DependenciesGraph`.
 pub(super) struct Graph {
     pub packages: Map<String, Value>,
     pub edges: Vec<Value>,

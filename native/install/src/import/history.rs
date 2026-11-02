@@ -16,7 +16,7 @@ use super::{
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
 
-/// The variable is set to anything but the empty string (`process.env` truthiness).
+/// Return `true` when `BIT_FETCH_INCOMPLETE_VERSION_HISTORY` is set to a truthy non-empty value.
 #[must_use]
 #[inline]
 pub fn refetch_requested() -> bool {

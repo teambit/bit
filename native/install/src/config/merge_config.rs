@@ -7,6 +7,7 @@ use indexmap::IndexMap;
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
+/// Filename (`merge-conflict`) of the workspace root config-merge conflict file.
 const FILE_NAME: &str = "merge-conflict";
 const ID_PREFIX: &str = "[*]";
 const WORKSPACE_ID: &str = "WORKSPACE";

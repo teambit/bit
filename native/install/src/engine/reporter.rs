@@ -23,7 +23,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// `ignoredBuildsInstructionText`, verbatim from `lynx.ts`.
+/// Security guidance (`ignoredBuildsInstructionText`) printed when dependency build scripts are ignored.
 const APPROVE_BUILDS_INSTRUCTION_TEXT: &str = "Update the \"allowScripts\" field under \"teambit.dependencies/dependency-resolver\" in workspace.jsonc. \nSet to true to allow, false to explicitly disallow. \nExample: allowScripts: { \"esbuild\": true, \"core-js\": false }. \nThis is a security-sensitive setting: enabling scripts may allow arbitrary code execution during install.";
 
 /// Receives rendered chunks instead of stdout (Bit's CLI server forwards them

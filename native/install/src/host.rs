@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{io, path::PathBuf};
 
-/// Facts about the running `bit` process, collected once by the `JavaScript` entry point.
+/// Process and installation facts about the running `bit` CLI collected from the `JavaScript` entry point.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(

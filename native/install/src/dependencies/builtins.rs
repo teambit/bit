@@ -3,6 +3,7 @@
 //!
 //! Recognizes `node:`-prefixed and bare core Node.js module specifiers during dependency resolution.
 
+/// Canonical list of Node.js built-in module names (`require('module').builtinModules`).
 const BUILTINS: [&str; 45] = [
     "assert",
     "sea",

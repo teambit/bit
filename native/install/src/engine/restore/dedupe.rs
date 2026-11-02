@@ -9,6 +9,7 @@ use super::dep_path;
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
 
+/// Remove snapshot dependency entries whose versions are superseded by the workspace `root` manifest.
 pub(super) fn dedupe(
     lockfile: &mut Map<String, Value>,
     root: Option<&Map<String, Value>>,

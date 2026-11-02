@@ -23,7 +23,7 @@ use std::{
     sync::Arc,
 };
 
-/// The root components directory, `.bit_roots`.
+/// Root components directory name (`.bit_roots`).
 const BIT_ROOTS_DIR: &str = ".bit_roots";
 
 /// Bit's hook chain plus what it needs to transform dependency manifests.

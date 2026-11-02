@@ -14,6 +14,7 @@ use indexmap::IndexMap;
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Workspace policy section keys (`dependencies` and `peerDependencies`) in `workspace.jsonc`.
 const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 
 /// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.

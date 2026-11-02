@@ -1,6 +1,6 @@
 //! Per-component dependency lists (`DependenciesLoader`): detection, `ApplyOverrides`,
 //! version resolution, and `extractDepsFromLegacy`.
-//! Coordinates [`scan`], [`cache`] reads/writes, [`dev_files`], and [`apply`] / [`apply_late`] policy overrides.
+//! Coordinates [`scan`], [`cache`] reads/writes, [`dev_files`], and [`apply`] / [`apply_late`] policy overrides ([`definitely_typed`]).
 
 pub mod cache;
 pub(crate) mod data;

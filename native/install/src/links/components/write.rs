@@ -4,6 +4,7 @@
 
 use super::{Manifest, is_symlink};
 use std::{fs, io, path::Path};
+/// Atomically write a component `package.json` [`Manifest`] at `path`, returning `true` if its content changed.
 #[inline]
 pub(super) fn package(path: &Path, manifest: &Manifest) -> io::Result<bool> {
     write(path, manifest, false)

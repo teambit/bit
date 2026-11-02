@@ -11,7 +11,7 @@ use crate::manifests::semver;
 use serde_json::{Map, Value};
 use std::collections::{HashMap, HashSet};
 
-/// `DependenciesGraph.ROOT_EDGE_ID`.
+/// Root edge identifier (`"."`, `DependenciesGraph.ROOT_EDGE_ID`) in a serialized dependency graph.
 pub const ROOT: &str = ".";
 
 /// `isEmpty()`.

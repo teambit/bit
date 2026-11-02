@@ -15,7 +15,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::{cell::Cell, collections::BTreeSet, io};
 
-/// `DEFAULT_LANE`.
+/// Default lane name (`"main"`, `DEFAULT_LANE`).
 pub const MAIN: &str = "main";
 
 /// What one fetch added to the scope.
