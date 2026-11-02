@@ -65,7 +65,7 @@ pub(super) fn package_dependencies(
     Ok(plain_text(&changes, field, labels, chalk))
 }
 
-/// Looks up the trimmed version string for package `name` in `map`.
+/// Looks up the trimmed version string for package `name` in `map` for [`package_dependencies`].
 #[inline]
 fn pkg_version(map: &Map<String, Value>, name: &str) -> io::Result<Option<String>> {
     let trimmed = name.trim();

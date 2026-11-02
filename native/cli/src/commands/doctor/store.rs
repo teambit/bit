@@ -75,6 +75,7 @@ fn missing_head_symptoms(missing: &[Value]) -> String {
             .join("\n"),
     )
 }
+/// Reads and parses `<scope>/index.json` as JSONC, returning `[]` when the file is absent.
 #[inline]
 fn read_index(scope: &Path) -> io::Result<Value> {
     match fs::read(scope.join("index.json")) {

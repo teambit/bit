@@ -91,7 +91,7 @@ fn global(context: &Context) -> GlobalConfig {
         .collect();
     bit_client_transfer::config::effective(global, &Value::Null, &Value::Null)
 }
-/// Returns the trimmed single diagnosis name requested on `options`, if any.
+/// Returns the trimmed single diagnosis name requested on [`Options`], if any.
 #[inline]
 fn requested_name(options: &Options) -> Option<&str> {
     options.name

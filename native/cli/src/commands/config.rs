@@ -17,7 +17,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the `bit config` CLI command.
+/// Descriptor for the `bit config` CLI [`Command`].
 pub const COMMAND: Command = Command { name: "config", aliases: &[], run };
 
 /// Executes `bit config` (`get`, `set`, `del`, `list`) against the layered configuration [`stores`].

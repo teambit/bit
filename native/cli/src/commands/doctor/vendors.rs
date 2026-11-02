@@ -63,6 +63,7 @@ pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
     diagnosis.result(bare, &symptoms, treatment)
 }
 
+/// Trims surrounding whitespace and quote characters from `command` on Unix platforms.
 #[cfg(not(windows))]
 #[inline]
 fn executable(command: &str) -> std::path::PathBuf {

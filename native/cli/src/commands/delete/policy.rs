@@ -13,7 +13,9 @@ use node_semver::{Range, Version};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Aspect identifier key for `@teambit/dependency-resolver` in `workspace.jsonc`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// History reason recorded when `bit delete` pins lane-deleted dependencies in `workspace.jsonc`.
 const REASON: &str = "delete (pin deleted-on-lane deps to main)";
 
 /// Staged `workspace.jsonc` [`Document`] edit that pins lane-deleted dependencies to their `main` version.

@@ -16,7 +16,7 @@ use crate::{
     native::Outcome,
 };
 use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
-/// Aggregated version, peer-status, copy-count, and origin metadata for a diagnosed package.
+/// Aggregated [`VersionOrigin`], peer-status, and copy-count metadata for a diagnosed package.
 struct PackageInfo {
     name: String,
     versions: Vec<String>,

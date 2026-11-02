@@ -68,6 +68,7 @@ fn text(value: &Value) -> &str {
         .map(str::trim)
         .unwrap_or_default()
 }
+/// Formats the environment metadata header block (`bit version`, `node version`, `npm version`, etc.) from `meta`.
 fn metadata(meta: &Value) -> String {
     let version = |key: &str| {
         meta[key.trim()]

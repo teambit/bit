@@ -15,7 +15,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the `bit component-issues` CLI command.
+/// Descriptor for the `bit component-issues` CLI [`Command`].
 pub const COMMAND: Command = Command { name: "component-issues", aliases: &[], run };
 
 /// Aspect ID for `@teambit/component-issues` (`teambit.component/issues`).

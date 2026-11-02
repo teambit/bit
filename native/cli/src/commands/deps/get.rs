@@ -32,7 +32,7 @@ struct DepInfoRow {
     parent: String,
     dependency_type: &'static str,
 }
-/// Executes `bit deps get` against a bare scope directory rooted at `scope`.
+/// Executes `bit deps get` against a bare [`ScopeRoot`] directory rooted at `scope`.
 pub(super) fn run_bare_scope(
     scope: &ScopeRoot,
     args: &[OsString],

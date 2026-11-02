@@ -76,7 +76,7 @@ fn append(builder: &mut tar::Builder<fs::File>, name: &str, bytes: &[u8]) -> io:
     header.set_cksum();
     builder.append_data(&mut header, name, bytes)
 }
-/// Walks `root` in breadth-first directory order and appends non-excluded entries to `builder`.
+/// Walks `root` in breadth-first directory order and appends non-excluded entries to `builder` per [`Options`].
 fn walk(
     builder: &mut tar::Builder<fs::File>,
     root: &Path,

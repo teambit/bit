@@ -76,6 +76,7 @@ fn collect_variant_policies(ctx: &WorkspaceDepsContext, rows: &mut Vec<Candidate
     }
 }
 
+/// Appends non-root [`CandidateRow`] entries from variant and per-component dependency-resolver policies.
 fn collect_variant_and_comp_policies(
     root: &Path,
     ctx: &WorkspaceDepsContext,

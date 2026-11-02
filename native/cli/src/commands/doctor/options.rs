@@ -96,6 +96,7 @@ impl Options {
         true
     }
 
+    /// Applies boolean CLI flags (`--json`, `--list`, `--archive`, `--include-*`, `--exclude-*`) onto `self`.
     fn apply_boolean(&mut self, arg: &str) -> bool {
         match arg {
             "--no-color" | "--no-color=true" | "--no-color=false" => {}

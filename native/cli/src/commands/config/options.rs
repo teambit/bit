@@ -13,7 +13,7 @@ pub(super) struct Options {
 }
 
 impl Options {
-    /// Parses `args` into [`Options`] when they fit the native `bit config` grammar.
+    /// Parses `args` into [`Options`] when they fit the native `bit config` grammar and pass [`is_color_flag`] filtering.
     pub(super) fn parse(args: &[OsString]) -> Option<Self> {
         let mut values = args
             .iter()

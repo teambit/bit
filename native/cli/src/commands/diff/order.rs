@@ -75,7 +75,7 @@ pub(super) fn filesystem(root: &Path, files: &[String]) -> io::Result<Vec<String
     Ok(ordered)
 }
 
-/// Lists direct child directories (matching `parents`) and regular files under `root.join(directory)`.
+/// Lists direct child directories (matching `parents`) and regular files under `root.join(directory)` for [`filesystem`].
 fn enumerate(
     root: &Path,
     directory: &Path,

@@ -89,7 +89,7 @@ fn missing_component_error(root: &Path, options: &options::Options) -> Option<St
     })
 }
 
-/// Checks whether the configured git executable fails with `NotFound` when invoked with `--version`.
+/// Checks whether the configured [`git::executable`] fails with `NotFound` when invoked with `--version`.
 #[inline]
 fn git_missing(root: &Path) -> bool {
     let Ok(executable) = git::executable(root) else {

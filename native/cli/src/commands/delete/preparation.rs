@@ -59,6 +59,7 @@ impl Prepared {
         Ok(())
     }
 }
+/// Builds an optional `workspace.jsonc` [`policy::Policy`] edit from any lane dependency pins in `plan`.
 #[inline]
 fn prepare_policy(root: &Path, plan: &Batch) -> Option<policy::Policy> {
     let pins = plan

@@ -15,7 +15,7 @@ pub(super) struct Plan {
     pub compiled: Vec<Compiled>,
 }
 impl Plan {
-    /// Validates [`Options`] and prepares [`Loaded`] components, [`Links`], and [`Compiled`] emission plans.
+    /// Validates [`Options`] and prepares [`Loaded`] components, [`Links`], and [`Compiled`] emission plans via [`validate_order`].
     pub(super) fn prepare(root: &Path, options: &Options) -> io::Result<Self> {
         if options.generate_types || (options.json && options.components.is_empty()) {
             return Err(io::Error::other("compiler options require another service"));

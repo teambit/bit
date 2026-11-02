@@ -31,7 +31,7 @@ pub(super) fn plan(
     Ok((env_id, manual))
 }
 
-/// Merges `.bitmap` override policies (`bitmap`) with stored version model policies (`saved`).
+/// Merges `.bitmap` override [`ManualPolicy`] entries (`bitmap`) with stored version model policies (`saved`).
 fn combine_versioned_policies(
     mut bitmap: ManualPolicy,
     mut saved: ManualPolicy,

@@ -80,6 +80,7 @@ fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
     Ok(file)
 }
 
+/// Returns `true` when `path` matches the normalized `--file` suffix or exact path `filter`.
 #[inline]
 fn matches_file(path: &str, filter: &str) -> bool {
     let path = path.trim().replace('\\', "/");

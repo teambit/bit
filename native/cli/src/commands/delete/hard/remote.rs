@@ -23,7 +23,7 @@ pub(super) struct Prepared {
     groups: Vec<Group>,
 }
 
-/// Groups `ids` by remote scope and resolves each target into a [`Prepared`] delete batch.
+/// Groups `ids` by remote scope via [`group`] and resolves each target into a [`Prepared`] delete batch.
 pub(super) fn prepare(
     context: &Context,
     ids: &[String],

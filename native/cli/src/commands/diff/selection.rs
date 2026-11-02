@@ -92,6 +92,7 @@ fn matching(targets: &[Value], keep: impl Fn(&Value) -> bool) -> Vec<Value> {
         .collect()
 }
 
+/// Resolves wildcard, comma-separated, or negated glob `pattern` segments against `targets`.
 fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     let identities = targets
         .iter()

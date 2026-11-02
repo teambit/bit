@@ -48,7 +48,7 @@ pub(super) fn run_report(
     })
 }
 
-/// Returns the first concrete non-alias version (`"version"` or `"head"`) from `target`.
+/// Returns the first concrete non-alias version (`"version"` or `"head"`) from `target` for [`one`].
 #[inline]
 fn target_version(target: &Value) -> Option<&str> {
     ["version", "head"]

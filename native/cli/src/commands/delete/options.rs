@@ -10,7 +10,7 @@ pub(super) struct Options<'a> {
     pub update_main: bool,
     pub scope: Scope,
 }
-/// Parses `args` into local [`Options`] when they fit the native `bit delete` grammar.
+/// Parses `args` into local [`Options`] via [`scope`] when they fit the native `bit delete` grammar.
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut pattern = None;
     let mut silent = false;

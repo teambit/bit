@@ -51,7 +51,7 @@ pub(super) fn is_hub_component_modified(
     are_version_files_modified(&scope_dir, &root.join(root_dir), &ver_val)
 }
 
-/// Checks whether any file in `ver_val["files"]` differs on disk under `comp_dir`.
+/// Checks whether any file in `ver_val["files"]` differs on disk under `comp_dir` for [`is_hub_component_modified`].
 #[inline]
 fn are_version_files_modified(scope_dir: &Path, comp_dir: &Path, ver_val: &Value) -> Option<bool> {
     for file_item in ver_val["files"].as_array()? {

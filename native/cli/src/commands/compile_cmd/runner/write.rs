@@ -84,8 +84,7 @@ fn write_emitted_content(opened: &mut fs::File, content: &str) -> io::Result<()>
     let owned = if cfg!(windows) { normalized.replace('\n', "\r\n") } else { normalized };
     opened.write_all(owned.as_bytes())
 }
-// DataToPersist opens the pending batch concurrently. Even a failed first open can
-// leave a later output truncated; do not complete its write after reporting that failure.
+/// Opens every [`Emitted`] file in `files` before writing so batch open errors match `DataToPersist`.
 fn open_batch(files: &[Emitted]) -> io::Result<Vec<fs::File>> {
     let mut opened = Vec::with_capacity(files.len());
     let mut error = None;

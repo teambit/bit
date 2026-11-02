@@ -97,7 +97,7 @@ fn remove_for_entry(
     Ok(removed_for_comp)
 }
 
-/// Matches `raw_pkg` against resolved `deps` or `missing` specifiers for `lifecycle`.
+/// Matches `raw_pkg` against resolved [`ResolvedDep`] rows (`deps`) or `missing` specifiers for `lifecycle`.
 fn match_pkg(
     raw_pkg: &str,
     deps: &[ResolvedDep],

@@ -20,7 +20,7 @@ use std::{
     path::Path,
 };
 
-/// Node identifier in the reverse dependency graph (`Importer` path or resolved pnpm `Package`).
+/// Node identifier in the reverse dependency graph (`Importer` path or resolved pnpm [`PkgNameVerPeer`]).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(super) enum NodeId {
     Importer(String),

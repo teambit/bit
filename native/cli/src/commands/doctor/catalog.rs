@@ -73,7 +73,7 @@ impl Diagnosis {
     }
 }
 
-/// Returns `true` when `bare` contains a truthy `"valid"`, `"pass"`, or `"passed"` status field.
+/// Returns `true` when `bare` contains a truthy `"valid"`, `"pass"`, or `"passed"` status field for [`Diagnosis::result`].
 #[inline]
 fn is_valid(bare: &Value) -> bool {
     ["valid", "pass", "passed"]

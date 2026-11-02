@@ -93,6 +93,7 @@ fn changes(lines: &[&str]) -> io::Result<Vec<Vec<String>>> {
     Ok(rows)
 }
 
+/// Extracts the version suffix from a `- <name>@<ver>` or `+ <name>@<ver>` dependency diff line.
 #[inline]
 fn version<'a>(line: Option<&'a str>, prefix: &str, name: &str) -> Option<&'a str> {
     let rest = line?

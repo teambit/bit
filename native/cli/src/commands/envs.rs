@@ -63,6 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_in_workspace(&root, args, &subcommand, chalk)
 }
 
+/// Handles `bit envs` outside a workspace by dispatching to bare-scope inspection or emitting [`WORKSPACE_NOT_FOUND_ERR`].
 fn run_without_workspace(
     cwd: &Path,
     args: &[OsString],

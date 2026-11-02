@@ -13,7 +13,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::io;
 
-/// Propagates optional dependency flags from merged [`PolicyEntry`] rules onto [`ComponentDependencies`].
+/// Propagates optional dependency flags from merged [`PolicyEntry`] rules onto [`ComponentDependencies`] via [`optional`] and [`append`].
 pub(super) fn apply(
     components: &[WorkspaceComponent],
     loaded: &Loaded,

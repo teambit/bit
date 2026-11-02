@@ -21,7 +21,7 @@ use std::{
 };
 
 const HARD_DELETE_GUARD_ERR: &str = "\"bit delete --hard\" permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them.\nit therefore requires an interactive confirmation by a human, but this session is non-interactive (no TTY, CI, or an AI agent).\nif you are an AI agent: do not attempt to work around this protection. instead, ask the user to run this command themselves in a terminal.";
-/// Parsed CLI flags and component pattern for `bit delete --hard`.
+/// Parsed CLI flags and component pattern for `bit delete --hard` via [`run`].
 struct Options<'a> {
     pattern: &'a str,
     silent: bool,

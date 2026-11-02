@@ -34,7 +34,7 @@ const REACT_PEER: &[(&str, &str)] =
 
 type Deps = &'static [(&'static str, &'static str)];
 type SourcedDep<'a> = (&'a str, &'a str, &'static str);
-/// Normalized manual dependency policy entries and ignored dependency names for `bit deps debug` rendering.
+/// Normalized manual dependency policy entries and ignored dependency names for `bit deps debug` ([`prepare`]).
 #[derive(Default)]
 struct ManualPolicy {
     runtime: Vec<(String, String)>,

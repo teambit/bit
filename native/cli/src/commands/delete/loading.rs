@@ -91,6 +91,7 @@ fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io:
     ))
 }
 
+/// Extracts the trimmed component `scope` or `defaultScope` from `row`, falling back to `fallback_scope`.
 #[inline]
 fn row_scope_or_default<'a>(row: &'a Value, fallback_scope: &'a str) -> &'a str {
     row["scope"]

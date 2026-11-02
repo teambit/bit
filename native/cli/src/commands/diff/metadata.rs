@@ -77,7 +77,7 @@ impl Labels {
     }
 }
 
-/// The printable fields that differ: `object-diff` over the right side's keys.
+/// The printable [`Side`] fields that differ: `object-diff` over the right side's keys.
 fn fields(left: &Side, right: &Side, labels: &Labels, chalk: Chalk) -> io::Result<Vec<Value>> {
     let mut output = Vec::new();
     for (field, value) in &right.printable {

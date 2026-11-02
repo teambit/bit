@@ -51,7 +51,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Descriptor for the `bit deps` (`bit dependencies`) CLI command.
 pub const COMMAND: Command = Command { name: "deps", aliases: &["dependencies"], run };
+/// Descriptor for the `bit why` CLI command.
 pub const WHY: Command = Command { name: "why", aliases: &[], run: run_why };
 /// Parsed subcommand variant for `bit deps` (`bit dependencies`) and `bit why`.
 #[derive(Debug, Clone, PartialEq, Eq)]

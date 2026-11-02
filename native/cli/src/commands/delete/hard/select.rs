@@ -10,7 +10,7 @@ use bit_client_transfer::remotes::Remote;
 use serde_json::Value;
 use std::{fs, io};
 
-/// Resolves `pattern` into concrete remote component IDs via literal parsing or remote wildcard listing.
+/// Resolves `pattern` into concrete remote component IDs via [`literal`] parsing or remote [`inventory`] listing.
 pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     if !pattern.contains('*') {

@@ -10,6 +10,7 @@ use std::{io, thread};
 
 /// Maximum serialized byte size (4 MiB) of a single `BWS1` request payload.
 const MAX_REQUEST: usize = 4 * 1024 * 1024;
+/// Maximum serialized byte size (32 MiB) of a single `BWS1` response payload.
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
 /// Stateful `BWS1` client wrapping a [`WorkspaceSession`] with monotonically increasing request IDs.

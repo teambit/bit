@@ -11,6 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Aspect identifier key under which `workspace.jsonc` configuration entries are stored.
 const ASPECT: &str = "teambit.harmony/config-store";
 
 /// Single configuration store layer (`global`, `scope`, or `workspace`) with staged mutation state.

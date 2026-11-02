@@ -26,7 +26,7 @@ pub struct Side {
 }
 
 impl Side {
-    /// Overrides the displayed version label on `self` after trimming whitespace.
+    /// Overrides the displayed version label on [`Side`] (`self`) after trimming whitespace.
     #[inline]
     pub fn with_version(mut self, version: &str) -> Self {
         self.version = version.trim().to_string();

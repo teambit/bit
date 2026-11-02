@@ -89,6 +89,7 @@ pub(super) fn resolve_display_name(root: &Path, pkg_name: &str) -> String {
     pkg_name.to_owned()
 }
 
+/// Returns the deterministic `(display_name, sort_id)` sort key for a reverse-dependency [`NodeId`].
 #[inline]
 pub(super) fn node_sort_key(root: &Path, node: &NodeId) -> (String, String) {
     match node {

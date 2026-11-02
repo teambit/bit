@@ -88,6 +88,7 @@ fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
     store::preflight(&context, options.name.as_deref())?;
     Ok(Some(context))
 }
+/// Prepares the [`remote::Plan`] when `--remote` is requested and local preflight succeeded.
 #[inline]
 fn prepare_remote(
     context: Option<&Context>,

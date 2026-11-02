@@ -40,7 +40,7 @@ pub const CAT_VERSION_HISTORY: Command =
     Command { name: "cat-version-history", aliases: &["cvh"], run: run_version_history };
 pub const CAT_LANE_HISTORY: Command =
     Command { name: "cat-lane-history", aliases: &["clh"], run: run_lane_history };
-/// Parsed CLI flags and 40-hex object hash for `bit cat-object`.
+/// Parsed CLI flags and 40-hex `SHA-1` object hash for `bit cat-object`.
 #[derive(Debug, Default, PartialEq, Eq)]
 struct ObjectOptions {
     hash: String,

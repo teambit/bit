@@ -53,7 +53,7 @@ impl Engine {
     }
 }
 
-/// Splits `proofs` into index ranges bounded by [`MAX_PROOFS`] and [`MAX_REQUEST`] byte size.
+/// Splits `proofs` into index [`Range`] slices bounded by [`MAX_PROOFS`] and [`MAX_REQUEST`] byte size.
 #[inline]
 fn frames(proofs: &[&Value]) -> io::Result<Vec<Range<usize>>> {
     const OVERHEAD: usize = r#"{"kind":"dependencyFreshValidate","readSet":[]}"#.len();

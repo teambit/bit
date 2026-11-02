@@ -88,6 +88,7 @@ fn scope(root: &Path) -> Option<PathBuf> {
             .map(Path::to_path_buf)
     }
 }
+/// Parses `path` as JSONC, returning `Ok(Value::Null)` when `path` does not exist on disk.
 #[inline]
 pub(super) fn optional_json(path: &Path) -> io::Result<Value> {
     match fs::read(path) {

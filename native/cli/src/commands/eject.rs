@@ -33,7 +33,7 @@ pub(super) struct Options {
     pub keep_files: bool,
 }
 
-/// Returns `true` when the `CI` environment variable is set to a truthy value.
+/// Returns `true` when the `CI` environment variable is set to a truthy value for [`run`].
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

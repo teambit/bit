@@ -66,7 +66,7 @@ fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
     }
 }
 
-/// Applies the replacement environment `env_no_ver` to `entry` in `component.json` or `.bitmap`.
+/// Applies the replacement environment `env_no_ver` to [`BitmapEntry`] `entry` in `component.json` or `.bitmap`.
 #[inline]
 fn apply_replace_to_entry(
     batch: &mut EnvBatch,

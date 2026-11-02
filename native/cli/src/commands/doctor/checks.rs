@@ -73,6 +73,7 @@ fn latest(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
         },
     ))
 }
+/// Queries `@teambit/bvm.list` via `context.cli.node` for the latest published Bit release version.
 fn latest_fact(context: &Context) -> io::Result<Value> {
     let package =
         context.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;

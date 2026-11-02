@@ -71,7 +71,7 @@ fn supported_plus_mix(manual: &ManualPolicy) -> bool {
     supported_runtime_mix || supported_dev_mix || supported_both_mix
 }
 
-/// Appends parsed dependency-resolver policy entries from `values` under `field` into `manual`.
+/// Appends parsed dependency-resolver policy entries from `values` under `field` into [`ManualPolicy`].
 fn append_manual_field(
     manual: &mut ManualPolicy,
     field: &str,

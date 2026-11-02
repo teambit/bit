@@ -73,6 +73,7 @@ fn range_report(
     format_range_summary(plan.changed(), plan.unchanged(), range, verb, unchanged_state, format)
 }
 
+/// Formats the single-component `--range` changed or unchanged message when exactly one ID is present.
 #[inline]
 fn format_range_summary(
     changed: &[String],

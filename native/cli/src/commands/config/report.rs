@@ -75,6 +75,7 @@ fn parse_git_config(text: &str, key: &str) -> String {
         .unwrap_or_default()
 }
 
+/// Formats `bit config list` output across single-origin, combined, or `--detailed` modes.
 fn list(stores: &Stores, options: &Options, chalk: Chalk) -> io::Result<String> {
     let combined = stores.combined();
     if let Some(origin) = options.origin

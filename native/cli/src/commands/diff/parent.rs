@@ -91,7 +91,7 @@ fn selected_identities(
         .collect()
 }
 
-/// Resolves and computes the diff between `identity@version` and its first meaningful parent version.
+/// Resolves and computes the diff between `identity@version` and its first meaningful parent version via [`Engine`].
 fn one_parent(
     engine: &mut Engine,
     root: &Path,

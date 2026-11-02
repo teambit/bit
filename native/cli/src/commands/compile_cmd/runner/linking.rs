@@ -25,7 +25,7 @@ pub(super) struct Links {
     has_roots: bool,
 }
 impl Links {
-    /// Loads [`Workspace`] components and prepares their [`ComponentDependencies`] for linking.
+    /// Loads [`Workspace`] components and prepares their [`ComponentDependencies`] for linking via [`optional::apply`].
     pub(super) fn prepare(root: &Path, loaded: &Loaded) -> io::Result<Self> {
         let config = WorkspaceConfig::load(root).map_err(io::Error::other)?;
         let core: Vec<String> = serde_json::from_str(include_str!(

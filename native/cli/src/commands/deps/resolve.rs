@@ -26,7 +26,7 @@ pub(super) struct ResolvedDep {
     pub comp_bare_id: Option<String>,
     pub is_extension: bool,
 }
-/// Loaded workspace configuration, active components, and scope object store for `bit deps` commands.
+/// Loaded [`WorkspaceConfig`], active [`Workspace`] components, and [`ScopeObjects`] store for `bit deps` commands.
 pub(super) struct WorkspaceDepsContext {
     pub root: PathBuf,
     pub ws_config: WorkspaceConfig,

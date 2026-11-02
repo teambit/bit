@@ -63,6 +63,7 @@ fn dependent_row(id: &str, dependencies: &[String], format: &Formatter) -> Strin
     )
 }
 
+/// Formats the `missingComponents` error section of a remote hard-delete `receipt`.
 fn missing(receipt: &Value, format: &Formatter) -> String {
     let missing = list(&receipt["missingComponents"]);
     if missing.is_empty() {

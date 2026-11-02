@@ -86,6 +86,7 @@ const fn command_name(undo: bool) -> &'static str {
     if undo { "undeprecate" } else { "deprecate" }
 }
 
+/// Returns `true` when the `CI` environment variable is set to a truthy value.
 #[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")
