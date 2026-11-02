@@ -87,6 +87,7 @@ fn other_flags_decline() {
     }
 }
 
+/// Verifies that running `bit status --json` outside a workspace declines to the `Node.js` CLI.
 #[test]
 fn outside_a_workspace_declines() {
     let dir = workspace();

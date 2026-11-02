@@ -39,7 +39,7 @@ fn malformed_metadata_and_remote_error_never_return_partial_objects() {
     assert_eq!(read(&bytes).unwrap_err().to_string(), "server failed");
     assert!(read_bounded(&bytes, bytes.len() - 1).is_err());
 }
-/// Verifies that tar entry headers and payloads decode across arbitrary chunk reader boundaries.
+/// Verifies that tar entry headers and payloads decode across arbitrary chunk [`Read`] boundaries.
 #[test]
 fn entry_headers_and_bodies_can_cross_every_reader_boundary() {
     struct Pieces(io::Cursor<Vec<u8>>);

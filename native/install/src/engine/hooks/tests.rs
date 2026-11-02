@@ -62,6 +62,7 @@ fn root_components_drop_workspace_deps_of_workspace_projects() {
     assert_eq!(hooks.apply(manifest.clone(), None), manifest);
 }
 
+/// Verifies that [`BitHooks::dependency_manifest`] returns the raw manifest for an injected workspace project.
 #[test]
 fn an_injected_project_gets_its_raw_manifest() {
     let raw = json!({ "name": "comp", "dependencies": { "sibling": "workspace:*" } });

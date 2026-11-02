@@ -46,6 +46,7 @@ fn untrusted_packages_are_disallowed_unless_explicitly_allowed() {
     assert_eq!(policy.allow_builds.get("es5-ext"), Some(&false));
 }
 
+/// Verifies that `"warn"` entries in `allowScripts` are omitted from `allow_builds` by [`resolve`].
 #[test]
 fn warn_placeholders_are_not_forwarded() {
     let configured = allow(&[("my-pkg", json!("warn"))]);

@@ -77,6 +77,7 @@ fn disables_the_mode_in_the_config() {
     );
 }
 
+/// Verifies that [`remove_postinstall_script`] removes Bit's own `postinstall` script while leaving custom scripts untouched.
 #[test]
 fn removes_only_bits_postinstall_script() {
     let root = tempfile::tempdir().unwrap();

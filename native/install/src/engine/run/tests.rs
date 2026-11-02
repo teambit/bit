@@ -89,6 +89,7 @@ async fn installs_local_projects_with_core_removal_overrides() {
     assert!(!repeat.dependencies_changed);
 }
 
+/// Verifies that injected workspace components retain sibling dependencies when `root_components` is enabled on [`EngineSettings`].
 #[tokio::test]
 async fn injected_components_retain_sibling_dependencies_removed_from_importers() {
     let dir = tempfile::tempdir().expect("temp dir");

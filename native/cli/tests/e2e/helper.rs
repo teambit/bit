@@ -46,7 +46,7 @@ pub struct Run {
     pub native: bool,
 }
 
-/// `generateRandomStr` 8-character lowercase hexadecimal random token generator.
+/// `generateRandomStr` 8-character lowercase hexadecimal random token generator for [`Helper`].
 fn random_str() -> String {
     let mut bytes = [0u8; 4];
     getrandom::fill(&mut bytes).unwrap();

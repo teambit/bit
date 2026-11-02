@@ -73,6 +73,7 @@ fn merges_direct_dependencies_and_prunes_unreachable_nodes() {
     assert_eq!(base["pnpmfileChecksum"], "bit-1");
 }
 
+/// Verifies that [`merge`] rewrites peer dependency suffixes to the best compatible host version.
 #[test]
 fn rewrites_peer_providers_to_the_best_compatible_version() {
     let mut base = graph(

@@ -19,7 +19,7 @@ fn prints_seconds_like_javascript() {
     assert_eq!(seconds(Duration::from_millis(40)), "0.04");
 }
 
-/// Verifies [`format`] output when all components install and compile cleanly.
+/// Verifies [`format`] output using [`output`] when all components install and compile cleanly.
 #[test]
 fn formats_the_summary() {
     let text = format(&output(), 3, Duration::from_millis(1_250), false, &[]);

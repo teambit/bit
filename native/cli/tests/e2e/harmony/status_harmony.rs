@@ -56,7 +56,7 @@ fn standard_root_aspects_run_status_and_diff_natively() {
 /// `MISSING_DEPS_SPACE` of `@teambit/component-issues`.
 const ISSUE_INDENT: &str = "          ";
 
-/// `statusFailureMsg`.
+/// `statusFailureMsg` constant emitted when `bit status` detects component issues.
 const STATUS_FAILURE_MSG: &str = "issues found";
 
 /// Creates an isolated local workspace populated with `count` chained components.

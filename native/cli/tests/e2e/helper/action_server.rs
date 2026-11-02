@@ -54,6 +54,7 @@ impl Server {
     }
 }
 
+/// Reads one HTTP `POST` request from `stream`, invokes `answer`, and writes the JSON response.
 fn exchange(mut stream: TcpStream, answer: &mut impl FnMut(&Request) -> (u16, Value)) -> Request {
     stream.set_nonblocking(false).unwrap();
     stream

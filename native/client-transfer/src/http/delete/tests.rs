@@ -84,6 +84,7 @@ fn runtime() -> tokio::runtime::Runtime {
         .unwrap()
 }
 
+/// Verifies that [`Network::delete_scope`] sends a single authenticated `POST /api/scope/delete` request and returns the reply.
 #[test]
 fn scope_delete_sends_one_authenticated_post_and_keeps_reply() {
     let body = r#"{"removedComponentIds":["remote.scope/alpha"],"missingComponents":[],"dependentBits":{}}"#;

@@ -67,6 +67,7 @@ fn removes_directories_the_current_lockfile_does_not_list() {
     assert_eq!(entries(&store), expected);
 }
 
+/// Verifies that [`prune_modules`] leaves existing virtual-store directories untouched when `lock.yaml` is absent.
 #[test]
 fn without_a_current_lockfile_nothing_is_pruned() {
     let dir = tempfile::tempdir().expect("temp dir");

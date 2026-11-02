@@ -25,7 +25,7 @@ fn run(root: &Path, components: &[WorkspaceComponent], host: &FakeHost) -> io::R
     Ok(())
 }
 
-/// Verifies that a failure in the second component's `package.json` transformer aborts before creating any links.
+/// Verifies that a failure in the second component's `package.json` transformer ([`FakeHost`]) aborts before creating any links.
 #[test]
 fn second_transformer_failure_precedes_every_package_and_source_link() {
     let directory = tempfile::tempdir().unwrap();

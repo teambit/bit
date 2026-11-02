@@ -84,7 +84,7 @@ fn lists_a_remote_scope_with_node_fetch_headers() {
     assert_eq!(listed[0].id(), "acme.ui/button@1.0.0");
 }
 
-/// Verifies that `Network::inventory` queries deleted components with the `aspects` and `deprecation` `GraphQL` fields.
+/// Verifies that [`Network::inventory`] queries deleted components with the `aspects` and `deprecation` `GraphQL` fields.
 #[test]
 fn inventories_deleted_components_with_published_graphql_fields() {
     let (url, server) = serve_once(

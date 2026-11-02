@@ -54,6 +54,7 @@ fn npmjs_is_replaced_by_the_bit_registry_with_the_user_token() {
     assert_eq!(registries.scopes["bit"].auth_header_value, "Bearer tok");
 }
 
+/// Verifies that a `registry` entry in [`GlobalConfig`] overrides Bit's default cloud registry.
 #[test]
 fn the_registry_global_config_overrides_the_cloud_registry() {
     let registries = resolve(

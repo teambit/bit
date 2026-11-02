@@ -76,6 +76,7 @@ impl Fixture {
             .is_some_and(|restores| restores.is_empty())
     }
 
+    /// Returns the filesystem path to the first component's directory.
     fn component_dir(&self) -> &Path {
         &self.components[0].dir
     }

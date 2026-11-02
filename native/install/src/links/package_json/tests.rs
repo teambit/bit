@@ -77,6 +77,7 @@ fn new_component_is_0_0_1_new_without_homepage() {
     assert_eq!(manifest["source"], json!("index.ts"));
 }
 
+/// Verifies that an exported snap hash produces a `0.0.0-<hash>` version and `homepage` URL in `package.json`.
 #[test]
 fn exported_snap_gets_homepage_and_semver_version() {
     let hash = "0123456789abcdef0123456789abcdef01234567";

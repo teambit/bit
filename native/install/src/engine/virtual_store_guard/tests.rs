@@ -44,7 +44,7 @@ fn a_self_hosted_bit_cannot_switch_layouts() {
     assert_safe_transition(dir.path(), true, elsewhere.path()).expect("not self hosted");
 }
 
-/// Verifies that [`assert_safe_transition`] succeeds in a fresh workspace without an existing `.modules.yaml`.
+/// Verifies that [`assert_safe_transition`] succeeds in a fresh workspace without an existing `.modules.yaml` file.
 #[test]
 fn a_fresh_workspace_has_nothing_to_guard() {
     let dir = tempfile::tempdir().expect("temp dir");

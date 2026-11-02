@@ -1,6 +1,7 @@
 //! Unit tests for workspace component `node_modules` linking ([`link_components`], [`ComponentLinkOptions`], [`FakeHost`], [`tracking`]) and `package.json`
 //! generation in `bit-install` component links.
 
+/// Ordered tracking component link barrier tests.
 mod tracking;
 
 use super::{ComponentLinkOptions, link_components};

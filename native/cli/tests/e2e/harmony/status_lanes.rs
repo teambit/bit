@@ -68,6 +68,7 @@ fn unavailable_on_main_matches_node() {
     assert_command_parity(&helper, &quick_root, "status --quick --json");
 }
 
+/// Verifies `pendingUpdatesFromMain` reporting and `.bit/index.json` / remote ref parity with `Node.js`.
 #[test]
 fn pending_updates_from_main_match_node() {
     let helper = Helper::new();

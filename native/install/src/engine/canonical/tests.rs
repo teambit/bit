@@ -58,6 +58,7 @@ fn declines_incomplete_manifest_inventory_before_native_install() {
     assert!(Request::new(&input).is_none());
 }
 
+/// Verifies that supported scalar package options and registry overrides reach [`CanonicalInstall`] engine settings.
 #[test]
 fn published_mutations_reach_native_engine_settings() {
     let dir = tempfile::tempdir().expect("private root");

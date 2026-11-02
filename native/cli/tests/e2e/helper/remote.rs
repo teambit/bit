@@ -80,6 +80,7 @@ pub(crate) fn node_export(helper: &Helper) {
     node_export_at(&helper.scopes.local_path);
 }
 
+/// Runs `bit export` via the `Node.js` CLI in `workspace` and asserts that `staged-snaps` is cleared.
 fn node_export_at(workspace: &Path) {
     let exported = Helper::cmd_in_with(workspace, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
     assert!(exported.status.success(), "{} {}", exported.stdout, exported.stderr);

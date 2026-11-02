@@ -67,6 +67,7 @@ fn watch_recognizes_bitmap_changes_and_regenerates_package_json() {
     assert!(bitmap.get("comp3").is_none());
 }
 
+/// Verifies that `bit check-types` detects `TypeScript` type errors and succeeds once fixed.
 #[test]
 fn watch_with_check_types_detects_and_fixes_errors() {
     let helper = Helper::new();

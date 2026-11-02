@@ -52,6 +52,7 @@ fn relative_component_named_import_matches_node() {
     parity(&helper);
 }
 
+/// Verifies that self-referential component package imports (`SelfReference`) match `Node.js` `status --json`.
 #[test]
 fn self_reference_matches_node() {
     let helper = Helper::new();

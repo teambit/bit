@@ -66,6 +66,7 @@ fn the_global_proxy_is_the_last_resort() {
     assert_eq!(settings.https_proxy.as_deref(), Some("https://global:4"));
 }
 
+/// Verifies that [`proxy`] returns [`ProxySettings::default`] when no proxy is configured in any layer.
 #[test]
 fn no_proxy_configured_anywhere_is_empty() {
     let settings = proxy(

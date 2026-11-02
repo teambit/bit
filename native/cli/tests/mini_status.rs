@@ -91,6 +91,7 @@ fn reports_new_components_natively() {
     assert!(lines[1].ends_with("ms --json, succeeded"), "{history}");
 }
 
+/// Verifies that `bit mini-status` without `--json` runs natively and prints plain-text sections.
 #[test]
 fn reports_without_flags_natively() {
     let workspace = Workspace::new();

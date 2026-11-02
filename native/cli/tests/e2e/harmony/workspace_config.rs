@@ -52,7 +52,7 @@ fn adding_a_non_component_key() {
     );
 }
 
-/// workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a `ComponentNotFound` error with specific suggestions for the workspace.jsonc file
+/// workspace config (workspace.jsonc) › adding a non-existing component to a variant › any command should throw a `ComponentNotFound` error with specific suggestions for the workspace.jsonc file ([`Helper`]).
 #[test]
 fn adding_a_non_existing_component_to_a_variant() {
     let helper = Helper::new();

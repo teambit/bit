@@ -52,6 +52,7 @@ fn a_junction_is_removed_without_touching_its_target() {
     assert!(src.join("kept").exists());
 }
 
+/// Verifies that [`create_link_or_symlink`] replaces a stale directory junction and preserves an already valid link.
 #[test]
 fn replaces_a_junction_and_keeps_a_valid_link() {
     let dir = tempfile::tempdir().unwrap();

@@ -61,6 +61,7 @@ fn built_in_package_extensions_apply_under_the_global_virtual_store_only() {
     assert_eq!(package_extensions(None, false), None);
 }
 
+/// Verifies that [`peer_dependency_rules`] suppresses missing and mismatched peer warnings by default while merging user rules.
 #[test]
 fn peer_dependency_warnings_are_suppressed_by_default() {
     assert_eq!(peer_dependency_rules(None), json!({ "allowAny": ["*"], "ignoreMissing": ["*"] }));

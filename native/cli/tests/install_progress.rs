@@ -8,6 +8,7 @@ const MARKER: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{
 /// Initial zero-added progress frame emitted by pnpm's startup timer.
 const FRAME: &str =
     "Progress: resolved 1, reused 0, downloaded 0, added 0\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
+/// Content-addressable store banner line emitted at the start of pnpm installation.
 const BANNER: &str =
     "Packages are hard linked from the content-addressable store to the virtual store.\n";
 

@@ -74,6 +74,7 @@ fn store(repo: &Repo, history_versions: &Value) -> (String, String) {
     (first, second)
 }
 
+/// Returns the test component [`Id`] (`remote/comp1@0.0.2`) used for [`incomplete`] history checks.
 fn requested() -> Id {
     Id::parse("remote/comp1@0.0.2").unwrap()
 }

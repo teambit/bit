@@ -94,7 +94,7 @@ fn updates_policies_added_by_deps_set_latest_and_compatible() {
     assert!(show3.is_array());
 }
 
-/// Verifies `bit update --yes` against version ranges resolved from component models with and without `savePrefix`.
+/// Verifies `bit update --yes` against version ranges resolved from component models with and without `savePrefix` ([`Helper`]).
 #[test]
 fn updates_from_model_with_and_without_save_prefix() {
     let helper = Helper::new();

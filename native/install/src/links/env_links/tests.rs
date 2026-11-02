@@ -47,6 +47,7 @@ fn dependencies(id: &str, policy: Vec<PolicyEntry>) -> IndexMap<String, Componen
     IndexMap::from([(id.to_owned(), ComponentDependencies { policy, ..Default::default() })])
 }
 
+/// Verifies that [`resolved_from_env_links`] links a package resolved from a workspace environment's virtual-store directory.
 #[cfg(unix)]
 #[test]
 fn links_the_package_the_workspace_env_resolves() {

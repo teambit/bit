@@ -78,6 +78,7 @@ fn local_lane(repo: &Repo, hash: &str, object: &Value) {
     .unwrap();
 }
 
+/// Constructs a [`RemoteLane`] fixture for `org/dev` from `hash` and serialized `object`.
 fn remote_lane(hash: &str, object: Value) -> RemoteLane {
     RemoteLane {
         id: LaneId { scope: SCOPE.into(), name: LANE.into(), exported: true },

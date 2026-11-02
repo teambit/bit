@@ -51,6 +51,7 @@ fn remove_file_or_link(path: &Path, kind: fs::FileType) {
     fs::remove_file(path).expect("remove fixture file or link");
 }
 
+/// Verifies that [`contents`] clears child files and directories while keeping a locked root directory intact on Windows.
 #[cfg(windows)]
 #[test]
 fn restoring_remote_contents_preserves_a_locked_root_without_retaining_outputs() {

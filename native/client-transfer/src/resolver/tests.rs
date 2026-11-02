@@ -56,6 +56,7 @@ fn the_module_gets_the_scope_this_scope_and_the_configured_token() {
     assert_eq!(url, "file:///remote/local/undefined", "a missing token is undefined, as in Bit");
 }
 
+/// Verifies that rejected promises or syntax errors in a custom [`Resolver`] script surface as resolution errors.
 #[test]
 fn a_rejection_or_a_broken_module_is_the_error() {
     let dir = TempDir::new().unwrap();

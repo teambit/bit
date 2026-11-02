@@ -9,7 +9,7 @@ fn parsed(name: &str, version: &str) -> Option<(String, String)> {
     Some((name.to_string(), version.to_string()))
 }
 
-/// Verifies that [`parse_package_name`] splits scoped, unscoped, and subpath package specifiers like `parse-package-name`.
+/// Verifies that [`parse_package_name`] splits scoped, unscoped, and subpath package specifiers like `parse-package-name` ([`parsed`]).
 #[test]
 fn parses_package_names_like_parse_package_name() {
     assert_eq!(parse_package_name("lodash"), parsed("lodash", ""));

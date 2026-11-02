@@ -9,7 +9,7 @@ use crate::helper::{Helper, parse};
 /// - `updates from main and lane › updates are available from both main and lane › bit checkout head › should update only components from the current lane`
 /// - `updates from main and lane › updates are available from both main and lane › bit lane merge main › should update not only components belong to the main but also components that are available on the workspace and have updates from main`
 ///
-/// Verifies outdated status reporting, `checkout head`, and `lane merge main` when both `main` and the active lane advance ([`Helper`]).
+/// Verifies outdated status reporting, `checkout head`, and `lane merge main` when both `main` and the active lane advance ([`Helper`], [`parse`]).
 #[test]
 fn updates_available_from_both_main_and_lane() {
     let helper = Helper::new();

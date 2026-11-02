@@ -85,6 +85,7 @@ fn hard_link_directory_mirrors_files_and_skips_node_modules() {
     assert!(!dest.join("broken").exists());
 }
 
+/// Verifies that [`hard_link_directory`] creates the destination directory when mirroring a symlinked subdirectory.
 #[test]
 fn hard_link_directory_creates_the_destination_for_a_symlinked_directory() {
     use std::os::unix::fs::symlink;

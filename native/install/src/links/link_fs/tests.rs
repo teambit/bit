@@ -62,6 +62,7 @@ fn may_link_target_refuses_real_directories_unless_installed_locally() {
     assert!(may_link_target(dir.path(), true));
 }
 
+/// Verifies that [`linked_correctly`] returns `true` only when the destination is a hard link to the source file.
 #[test]
 fn a_hard_link_of_the_source_is_linked_correctly() {
     let dir = tempfile::tempdir().unwrap();

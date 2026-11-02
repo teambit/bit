@@ -69,6 +69,7 @@ fn special_component_policy_versions_are_ignored() {
     }
 }
 
+/// Verifies that [`update_version`] matches the dependency [`Lifecycle`] and defaults unversioned entries to `0.0.1-new`.
 #[test]
 fn component_policy_matches_the_dependency_lifecycle() {
     let mut dependency = dep("1.0.0", Lifecycle::Dev);

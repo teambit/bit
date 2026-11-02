@@ -68,6 +68,7 @@ fn extracts_literal_calls_without_interpolated_or_dynamic_require() {
     );
 }
 
+/// Verifies that files with syntax errors or unsupported extensions return `parse_error` or `unsupported` with no partial dependencies.
 #[test]
 fn failed_files_do_not_return_partial_dependencies() {
     let result = scan(&fixture("ts", "import 'ok'; const = ;"), false);

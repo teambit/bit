@@ -24,7 +24,7 @@ fn transport_overrides_preserve_layer_precedence_and_empty_environment_fallback(
     assert_eq!(config["symphony_url"], "http://127.0.0.1");
 }
 
-/// Verifies that bare scope transport configuration merges scope and global settings when workspace policy is empty.
+/// Verifies that bare scope transport configuration merges scope and global settings when workspace policy is empty ([`GlobalConfig`], [`layers`]).
 #[test]
 fn bare_scope_transport_uses_scope_and_global_without_workspace_policy() {
     let global: GlobalConfig = serde_json::from_value(json!({

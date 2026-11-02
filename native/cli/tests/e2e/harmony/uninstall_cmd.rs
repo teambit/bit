@@ -14,7 +14,7 @@ fn should_remove_packages_from_node_modules_that_were_uninstalled() {
     assert!(!helper.scopes.local_path.join("node_modules/is-negative").exists());
 }
 
-/// uninstall command › root policies removed › should not remove packages from `node_modules` that were not uninstalled.
+/// uninstall command › root policies removed › should not remove packages from `node_modules` that were not uninstalled ([`Helper`]).
 #[test]
 fn should_not_remove_packages_from_node_modules_that_were_not_uninstalled() {
     let helper = Helper::new();

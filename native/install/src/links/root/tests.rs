@@ -68,6 +68,7 @@ fn workspace() -> (tempfile::TempDir, PathBuf) {
     (dir, root)
 }
 
+/// Verifies that [`linked_root_deps`] links `@teambit/bit`, core aspects, and core packages from the running Bit installation.
 #[test]
 fn links_bit_core_aspects_and_core_packages_from_the_running_bit() {
     let (dir, root) = workspace();

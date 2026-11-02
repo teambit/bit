@@ -62,7 +62,7 @@ pub fn set_workspace_aspect_key(root: &Path, key: &str, value: Value) {
     write_json(&path, &config, b"  ");
 }
 
-/// `ScopeJson.toJson()`: four spaces, no trailing newline.
+/// `ScopeJson.toJson()`: updates `scope.json` in place with four-space indentation and no trailing newline.
 pub fn update_scope_json(path: &Path, update: impl FnOnce(&mut Map<String, Value>)) {
     let mut scope: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
     update(scope.as_object_mut().unwrap());

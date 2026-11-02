@@ -64,6 +64,7 @@ fn parses_dependency_paths() {
     assert_eq!(parse("x@file:comps/x").non_semver_version.as_deref(), Some("file:comps/x"));
 }
 
+/// Verifies that [`to_lockfile`] converts a parsed [`Graph`] and [`root_project`] into a v9 lockfile with overrides and snapshots.
 #[test]
 fn converts_a_graph_into_a_lockfile() {
     let graph = Graph::parse(&graph()).expect("graph");

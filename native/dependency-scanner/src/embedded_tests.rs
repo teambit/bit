@@ -23,7 +23,7 @@ fn embedded_declines_invalid_or_unbounded_requests() {
     assert!(scan_request("{", &pool).is_err());
 }
 
-/// Verifies that requests exceeding total dependency metadata limits return `invalid_request`.
+/// Verifies that requests exceeding total dependency metadata [`limits`] return `invalid_request` from [`scan_request`].
 #[test]
 fn embedded_bounds_expanded_dependency_metadata() {
     let pool = ThreadPoolBuilder::new()

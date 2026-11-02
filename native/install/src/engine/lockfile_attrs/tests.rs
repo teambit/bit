@@ -57,6 +57,7 @@ fn an_uncomputed_list_keeps_the_recorded_one() {
     assert_eq!(merge(None, None), None);
 }
 
+/// Verifies that [`write`] only rewrites `pnpm-lock.yaml` when the `bit:` custom attributes block actually changes.
 #[test]
 fn writes_the_bit_block_only_on_change() {
     let dir = tempfile::tempdir().expect("temp dir");

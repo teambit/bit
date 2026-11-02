@@ -34,7 +34,7 @@ fn writable_directories(path: &Path) {
     }
 }
 
-/// Verifies that [`remove`] deletes read-only fixture directories without following symlinks.
+/// Verifies that [`remove`] deletes read-only fixture directories without following symlinks (`0o555` permissions).
 #[cfg(unix)]
 #[test]
 fn cleanup_removes_readonly_fixture_outputs_without_following_symlinks() {

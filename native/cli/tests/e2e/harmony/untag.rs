@@ -70,6 +70,7 @@ fn reset_all(helper: &Helper) -> Value {
     parse(&native_status.stdout)
 }
 
+/// Reads the `version` string recorded for `comp1` in the local `.bitmap` file.
 fn bitmap_version(helper: &Helper) -> String {
     let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     let bitmap = parse(&text[text.find('{').unwrap()..]);

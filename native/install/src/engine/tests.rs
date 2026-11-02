@@ -20,7 +20,7 @@ fn engine_errors_render_like_bit_renders_pnpm_errors() {
     assert_eq!(EngineError::from_io(&io), Some(&error));
 }
 
-/// Verifies that [`READ_PACKAGE_HOOKS_CHECKSUM`] (`bit-1`) and [`VIRTUAL_STORE_DIR_MAX_LENGTH`] match Bit's pnpm constants.
+/// Verifies that [`READ_PACKAGE_HOOKS_CHECKSUM`] (`bit-1`) and [`VIRTUAL_STORE_DIR_MAX_LENGTH`] (`60` / `120`) match Bit's pnpm constants.
 #[test]
 fn constants_match_bit() {
     assert_eq!(READ_PACKAGE_HOOKS_CHECKSUM, "bit-1");

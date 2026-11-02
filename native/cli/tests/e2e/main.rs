@@ -11,6 +11,7 @@ mod commands;
 mod flows;
 /// End-to-end cross-feature functionality parity suites.
 mod functionalities;
+/// End-to-end Harmony workspace, lane, and scope parity suites.
 mod harmony;
 mod helper;
 mod known_failure;
