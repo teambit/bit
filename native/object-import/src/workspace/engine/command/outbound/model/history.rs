@@ -58,6 +58,7 @@ fn history(
         .collect();
     Ok((encode(history_hash, "VersionHistory", &value)?, hashes))
 }
+/// Builds a single `VersionHistory` entry for `hash` from its `Version` object in `dir`.
 fn version_row(dir: &Path, hash: &str) -> io::Result<Value> {
     let version = read_object(dir, hash, "Version")?;
     let mut row = json!({"hash":hash,"parents":refs(&version["parents"])?});

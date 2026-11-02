@@ -6,7 +6,7 @@ use super::{
 };
 use std::io;
 
-/// Builds an outbound [`Plan`] for `lane` with resolved remote host and [`lane_publication`] state.
+/// Builds an outbound [`Plan`] for `lane` with resolved remote host, [`parse_resume_id`], and [`lane_publication`] state.
 #[inline]
 pub(super) fn prepare(input: &Prepare, lane: LaneSelected) -> io::Result<Plan> {
     let scope = lane.scope.trim();

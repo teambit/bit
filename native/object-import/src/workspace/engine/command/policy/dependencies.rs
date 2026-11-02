@@ -46,7 +46,7 @@ struct CompleteRow {
     resolution: Value,
     default_node: projection::Defaults,
 }
-
+/// Runs post-merge source dependency detection across planned components using a sealed [`SourceOverlay`].
 pub(in crate::workspace::engine) fn detect(
     input: Detect,
     state: &mut State,

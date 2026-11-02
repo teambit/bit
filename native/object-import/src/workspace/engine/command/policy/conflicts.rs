@@ -15,6 +15,7 @@ pub(super) struct File {
 }
 
 impl File {
+    /// Verifies that the destination `merge-conflict` path does not already exist or resolve as a symlink.
     #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         if self.path.try_exists()? || self.path.is_symlink() {

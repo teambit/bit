@@ -74,7 +74,7 @@ fn execute_transfer(retained: &mut Retained) -> io::Result<Vec<String>> {
 }
 
 /// Push every batch, then validate them all; a failure cleans the pushed
-/// pending objects.
+/// [`Pending`] objects via [`remote`].
 fn push_and_validate(retained: &mut Retained, actions: &mut remote::Actions) -> io::Result<()> {
     retained.transfer.progress.phase = "push";
     if retained.resume.is_none() {

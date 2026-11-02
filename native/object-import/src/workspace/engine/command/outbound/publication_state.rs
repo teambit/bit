@@ -27,6 +27,7 @@ impl Publication {
         }
     }
 
+    /// Returns `(updated_ids, removed_ids)` for the export receipt.
     #[inline]
     pub(super) fn receipt_ids(&self) -> (Vec<String>, Vec<String>) {
         match self {

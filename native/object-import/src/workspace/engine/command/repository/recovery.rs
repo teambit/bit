@@ -4,7 +4,7 @@ use super::{Repository, proof};
 use std::{io, path::Path};
 
 impl Repository {
-    /// Updates cached object proofs and evicts stale `Component` entries after restoring `objects` under `root`.
+    /// Updates cached [`proof::Proof`] entries and evicts stale `Component` entries after restoring `objects` under `root`.
     #[inline]
     pub(in crate::workspace::engine::command) fn accept_recovery_objects(
         &mut self,

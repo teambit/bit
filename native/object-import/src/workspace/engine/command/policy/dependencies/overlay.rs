@@ -57,6 +57,7 @@ fn apply_row(
     Ok(())
 }
 
+/// Resolves the materialized or merged file list for `row` inside `planned`.
 #[inline]
 fn overlay_files<'a>(
     row: &super::super::Row,

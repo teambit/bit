@@ -41,6 +41,7 @@ pub(super) fn append(
     Ok((reconciled.local, after))
 }
 
+/// Prepares [`Reconciled`] exported and local `Lane` JSON objects by merging local and remote `updateDependents`.
 pub(super) fn prepare(
     input: &Prepare,
     loaded: &Loaded,

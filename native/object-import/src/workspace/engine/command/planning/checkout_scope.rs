@@ -81,6 +81,7 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     Ok((format!("{scope}/{name}"), version))
 }
 
+/// Runs [`prepare`] when `include_new_from_scope` is enabled on `record.request.options.scope`.
 #[inline]
 pub(super) fn prepare_if_enabled(
     record: &mut Record,

@@ -48,6 +48,7 @@ fn entry(value: &Value) -> io::Result<Value> {
     Ok(result)
 }
 
+/// Resolves the normalized aspect identifier string from `value["name"]`, `legacyId`, or `extensionId`.
 pub(super) fn identity(value: &Value) -> io::Result<String> {
     if let Some(name) = value["name"]
         .as_str()

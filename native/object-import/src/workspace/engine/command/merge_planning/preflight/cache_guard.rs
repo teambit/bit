@@ -34,10 +34,10 @@ pub(super) fn verify(
     )
 }
 
-// Autosnap reloads all workspace dependency data after materialization. A
-// pre-write capture can be rekeyed only when the incoming files have the same
-// classification and component policy. Imports are checked against retained
-// source bodies separately, without crossing the JavaScript boundary.
+/// Autosnap reloads all workspace dependency data after materialization. A
+/// pre-write capture can be rekeyed only when the incoming files have the same
+/// classification and component policy. Imports are checked against retained
+/// source bodies separately, without crossing the `JavaScript` boundary.
 pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io::Result<()> {
     let target = harmony::project(target)?;
     for field in [

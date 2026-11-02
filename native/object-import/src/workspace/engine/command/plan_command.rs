@@ -68,6 +68,7 @@ fn retain_plan(
     })
 }
 
+/// Dispatches checkout, merge, or switch planning on `record` inside `pool`.
 #[inline]
 fn plan_operation(
     record: &mut Record,

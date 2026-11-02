@@ -70,6 +70,7 @@ fn selected_parents(
         .map(Some)
 }
 
+/// Returns `(same_lane, any_lane)` indicating whether `origin` matches `(scope, name)` or any non-empty lane.
 #[inline]
 fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
     let (scope, name) = (scope.trim(), name.trim());

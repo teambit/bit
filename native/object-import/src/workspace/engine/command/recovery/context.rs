@@ -78,6 +78,7 @@ fn capture_targets(
     Ok((targets, pending))
 }
 
+/// Validates recovery paths and rejects unsupported non-canonical lifecycle options on `request`.
 #[inline]
 fn validate(request: &Prepare) -> io::Result<()> {
     for path in [&request.root, &request.home, &request.global_remotes_file] {

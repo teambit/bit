@@ -33,6 +33,7 @@ enum Operation {
     ComponentAbort,
     LaneAbort,
 }
+/// Recovery options governing callback lifecycle, pattern filtering, silence, and dependency installation.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {

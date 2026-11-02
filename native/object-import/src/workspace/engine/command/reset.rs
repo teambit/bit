@@ -74,6 +74,7 @@ pub(super) fn validate_after_restore(record: &Record, prepared: &PreparedPlan) -
     validate_inputs(record, prepared)
 }
 
+/// Verifies that `prepared` has no merge/policy/switch state and validates all repository, config, and material inputs.
 #[inline]
 fn validate_inputs(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     if prepared.plan.merge.is_some()

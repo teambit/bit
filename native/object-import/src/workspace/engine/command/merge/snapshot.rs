@@ -21,6 +21,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub remote: &'a str,
     pub lane: Option<&'a Value>,
 }
+/// Staged snapshot transaction state, proof obligations, `Version` payloads, and serialized object manifests.
 pub(in crate::workspace::engine::command) struct Snapshot {
     state: crate::snapshot_transaction::State,
     token: Value,

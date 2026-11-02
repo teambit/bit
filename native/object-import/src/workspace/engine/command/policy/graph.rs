@@ -76,6 +76,7 @@ fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
     Ok(edges)
 }
 
+/// Appends `ext`-typed dependency edges from `version["extensions"]` for `source` into `edges`.
 fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> io::Result<()> {
     for extension in projection::array(&version["extensions"])? {
         if let Some(id) = extension

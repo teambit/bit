@@ -9,6 +9,7 @@ use std::io;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
+    /// Active merge transaction owner token.
     token: String,
 }
 

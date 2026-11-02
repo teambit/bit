@@ -45,6 +45,7 @@ pub(super) fn prepare(
     )?;
     Ok(Some(Lane { snapshot, _directory: directory, id: format!("{scope}/{name}") }))
 }
+/// Reads and inflates the `last-merged/lane` backup object, returning its `(hash, value)` pair.
 fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(String, Value)> {
     let bytes = proof::read(&crate::scope_path(root).join("last-merged/lane"), proofs)?
         .ok_or_else(|| invalid("recovery Lane backup absent"))?;

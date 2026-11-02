@@ -82,6 +82,7 @@ pub(super) fn select_pattern(targets: &[Value], pattern: &str) -> io::Result<Vec
     Ok(selected)
 }
 
+/// Returns `true` when `target`'s unversioned identity or tail component name matches `pattern`.
 #[inline]
 fn matches_identity(target: &Value, pattern: &str) -> bool {
     let pattern = pattern.trim();

@@ -54,6 +54,7 @@ fn capture(version: &Value, files: &[Value], budget: &Budget) -> io::Result<Vec<
             .collect()
     }
 }
+/// Rekeys flattened dependency graph edges for `input.identity` to `hash` and stores the graph as a `Source` object.
 fn edges(
     root: &Path,
     input: &Input<'_>,

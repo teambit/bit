@@ -70,6 +70,7 @@ fn stage_heads<'a>(
     }
 }
 
+/// Returns `true` when `to` (`head` or tagless `latest`) compares distinct non-empty `head` and `remote` refs.
 #[inline]
 fn resolves_heads(to: &str, model: &Value, head: Option<&str>, remote: Option<&str>) -> bool {
     let latest_without_tags = to.eq_ignore_ascii_case("latest")

@@ -58,6 +58,7 @@ fn target_paths(target: &Value) -> io::Result<(&str, &str)> {
     Ok((directory, main))
 }
 
+/// Moves `identity@version` from `components` to `failedComponents` and `addedComponents` on `plan.result`.
 fn report_one(plan: &mut Planned, identity: &str, target: &Value) -> io::Result<()> {
     let version = target["version"]
         .as_str()

@@ -7,7 +7,7 @@ use super::{
 use serde_json::Value;
 use std::io;
 
-/// Filters implicit merge `targets` down to components with diverged local and remote heads.
+/// Filters implicit merge `targets` down to components with diverged local and remote heads via [`target_identity`].
 #[inline]
 pub(in crate::workspace::engine::command) fn select_targets(
     request: &Prepare,

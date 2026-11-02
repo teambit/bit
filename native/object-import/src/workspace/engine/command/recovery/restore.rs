@@ -32,6 +32,7 @@ struct Objects {
     lane: Option<super::lane::Lane>,
     main: Option<main::Main>,
 }
+/// Planned file copies, directory removals, staged control moves, and permissions for recovery restoration.
 #[derive(Default)]
 struct Mutations {
     copies: Vec<(PathBuf, PathBuf)>,

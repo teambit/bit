@@ -69,6 +69,7 @@ fn selected_update_ids(
     Ok(result)
 }
 
+/// Collects exported `scope/name` identities from `exported_ids` that are absent from `bitmap` and `report`.
 pub(super) fn missing(report: &Reported, bitmap: &Value, exported_ids: &[String]) -> Vec<String> {
     let mut seen = HashSet::with_capacity(exported_ids.len());
     exported_ids

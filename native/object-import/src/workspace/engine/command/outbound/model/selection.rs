@@ -49,6 +49,7 @@ fn head_only(model: &Value) -> io::Result<Staged> {
     })
 }
 
+/// Validates that `label` is a non-empty version tag or hash free of path separators, `@`, and control characters.
 #[inline]
 fn validate_label(label: &str) -> io::Result<()> {
     let trimmed = label.trim();

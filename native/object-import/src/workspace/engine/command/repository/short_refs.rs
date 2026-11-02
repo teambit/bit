@@ -47,6 +47,7 @@ fn matching_for_separator(
     Ok(refs.into_iter().collect())
 }
 
+/// Scans `entries` in a two-hex-prefix object bucket and inserts 40-hex hashes matching `prefix` into `refs`.
 fn collect(entries: fs::ReadDir, prefix: &str, refs: &mut BTreeSet<String>) -> io::Result<()> {
     let suffix = &prefix[2..];
     for (index, entry) in entries.enumerate() {

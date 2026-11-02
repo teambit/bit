@@ -63,6 +63,7 @@ fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<St
         ))
 }
 
+/// Appends a single fast-forward [`super::super::policy::Row`] for `identity` onto `prepared.policy`.
 fn append_fast_forward(
     prepared: &mut Prepared,
     material: &super::super::materialization::Prepared,

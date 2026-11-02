@@ -24,6 +24,7 @@ pub(in crate::workspace::engine::command) struct SelectionOptions {
     pub(in crate::workspace::engine::command) resolve_unrelated: Option<String>,
     pub(in crate::workspace::engine::command) target_as_diverged: bool,
 }
+/// Evaluates native merge status for `input` by driving `mergeStatusBegin` and `mergeStatusReceipt` on `state`.
 pub(super) fn select(
     input: &Input<'_>,
     owner: &Value,

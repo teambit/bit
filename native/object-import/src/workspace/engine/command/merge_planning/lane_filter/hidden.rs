@@ -47,6 +47,7 @@ fn package_name(dependency: &mut Value, resolver: Option<&[Value]>) {
     }
 }
 
+/// Returns `true` when `left` and `right` represent the same `(scope, name, version)` component identifier.
 #[inline]
 fn same_component_id(left: &Value, right: &Value) -> bool {
     left == right

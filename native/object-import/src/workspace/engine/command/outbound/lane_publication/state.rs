@@ -63,6 +63,7 @@ impl Prepared {
         Ok(())
     }
 
+    /// Returns `true` when `.bitmap`, `scope.json`, remote refs, and staged files match their captured preimages.
     #[inline]
     fn validate_files(&self) -> io::Result<bool> {
         let root = &self.workspace.root;

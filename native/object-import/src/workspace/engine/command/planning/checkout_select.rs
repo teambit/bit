@@ -87,6 +87,7 @@ fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
         .filter(|head| !head.is_empty())
 }
 
+/// Computes `(modified, merge_pending)` flags for `captured` during checkout or switch selection.
 fn modification(
     record: &mut Record,
     captured: &capture::Captured,

@@ -35,6 +35,7 @@ pub(in super::super) struct Resolution {
 }
 
 impl Resolution {
+    /// Returns `true` when remote host resolution is skipped for preflight-only validation.
     #[inline]
     pub(in super::super) fn preflight(&self) -> bool {
         self.preflight_only

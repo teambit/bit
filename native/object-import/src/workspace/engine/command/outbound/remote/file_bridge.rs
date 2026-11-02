@@ -53,6 +53,7 @@ pub(super) struct FileBridge {
 }
 
 impl FileBridge {
+    /// Spawns the Node.js file-scope action bridge process and awaits its `{ ready: true }` greeting.
     #[inline]
     pub(super) fn spawn(node: &Path, bit_dir: &Path) -> io::Result<Self> {
         let mut child = Command::new(node)

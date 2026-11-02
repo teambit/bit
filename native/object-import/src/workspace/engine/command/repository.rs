@@ -11,7 +11,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-/// Cached local/imported scope object reader, byte-budget guard, and read-proof collector.
+/// Cached local/imported scope object reader, [`Budget`] guard, and [`proof::Proof`] collector.
 pub(in crate::workspace::engine) struct Repository {
     directory: PathBuf,
     imported: Option<command_import::PreparedImport>,

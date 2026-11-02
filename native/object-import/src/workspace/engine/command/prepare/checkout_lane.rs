@@ -29,6 +29,7 @@ struct Candidates<'a> {
     workspace_only: bool,
 }
 
+/// Computes workspace status metadata for `request`, filtering to visible lane targets during checkout.
 pub(super) fn metadata(
     request: &Prepare,
     input: &status_context::Request,

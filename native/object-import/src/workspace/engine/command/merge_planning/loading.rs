@@ -68,6 +68,7 @@ fn heads(record: &mut Record, identity: &str, model: &Value) -> io::Result<(Stri
     Ok((remote, current_head))
 }
 
+/// Computes [`super::merge::SelectionOptions`] for `captured` and `selected` from `record`.
 #[inline]
 pub(super) fn options(
     record: &Record,

@@ -26,6 +26,7 @@ impl Prepared {
         }
         Ok(())
     }
+    /// Builds the expected post-restore [`Controls`] map from `self`.
     pub(in super::super) fn controls(&self) -> Controls {
         let scope_dir = crate::scope_path(&self.root);
         let mut expected = BTreeMap::from([

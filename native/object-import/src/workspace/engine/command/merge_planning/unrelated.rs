@@ -63,6 +63,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
+/// Prepares unrelated-history merge state, lane head updates, and unmerged entries for a single `selected` item.
 fn one(
     record: &Record,
     planned: &mut super::planning::Planned,

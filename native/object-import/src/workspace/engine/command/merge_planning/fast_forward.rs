@@ -58,6 +58,7 @@ fn validate_target(
     Ok(())
 }
 
+/// Stages updated local `Component` `models` into a fast-forward snapshot directory when `models` is non-empty.
 #[inline]
 fn persist_models(
     planned: &mut planning::Planned,

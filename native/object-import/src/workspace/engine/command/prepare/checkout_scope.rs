@@ -61,6 +61,7 @@ fn import_targets(candidates: &[Candidate]) -> Vec<command_import::Target> {
         .collect()
 }
 
+/// Attaches `scopeAdditions`, `scopeAddedTargets`, and `newFromScope` to `context` when enabled.
 pub(super) fn attach(
     request: &Prepare,
     context: &mut Value,

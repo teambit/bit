@@ -51,6 +51,7 @@ fn prepare_staged_config_ids(
     serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
 }
 
+/// Returns `true` when `row` in `staged-config.json` matches the component identity `(scope, name)`.
 fn staged_row_matches(row: &Value, scope: &str, name: &str) -> bool {
     let (scope, name) = (scope.trim(), name.trim());
     if let Some(raw) = row["id"].as_str().map(str::trim) {

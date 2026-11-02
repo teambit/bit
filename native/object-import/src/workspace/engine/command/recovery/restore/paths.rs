@@ -49,6 +49,7 @@ fn row_directory(row: &Value) -> Option<&str> {
         .or_else(|| row["directory"].as_str())
         .and_then(normalize_directory)
 }
+/// Strips leading `./` or `.\` and trailing path separators from `dir`, returning `None` if empty.
 #[inline]
 fn normalize_directory(dir: &str) -> Option<&str> {
     let trimmed = dir.trim();

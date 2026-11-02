@@ -20,6 +20,7 @@ pub(super) fn validate(root: &Path, removed: &[Removed]) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates that `directory` is a non-root relative path whose existing segments under `root` are directories.
 #[inline]
 fn validate_one(root: &Path, directory: &str) -> io::Result<()> {
     crate::checkout::plan::relative_path(directory)?;

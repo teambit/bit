@@ -46,6 +46,7 @@ pub(super) fn failure(input: &Input<'_>) -> io::Result<Value> {
     )
 }
 
+/// Formats the fatal unrelated-history error message for `input.target`.
 #[inline]
 pub(super) fn error(input: &Input<'_>) -> io::Result<String> {
     let identity =

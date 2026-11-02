@@ -23,7 +23,7 @@ pub(super) fn read(root: &Path, all: bool) -> io::Result<Value> {
     Ok(json!({"ids":ids}))
 }
 
-/// Wildcard discovery computes divergence before applying the user's filter.
+/// Wildcard discovery computes `VersionHistory` divergence via [`candidate_scope_and_name`] before applying the user's filter.
 pub(super) fn histories(root: &Path) -> io::Result<Vec<super::HistoryBytes>> {
     let bitmap = crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
     let index: Value = crate::parse_jsonc(&fs::read(crate::scope_path(root).join("index.json"))?)?;

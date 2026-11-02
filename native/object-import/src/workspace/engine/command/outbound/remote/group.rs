@@ -43,6 +43,7 @@ fn name(config: &Value) -> io::Result<Option<&str>> {
     }
 }
 
+/// Resolves the `(uid, gid)` ownership pair for `pending` when `scope/scope.json` configures `groupName`.
 pub(super) fn owner(scope: &Path, pending: &Path) -> io::Result<Option<(u32, u32)>> {
     let config: Value = crate::parse_jsonc(&fs::read(scope.join("scope.json"))?)?;
     let Some(gid) = id(&config)? else { return Ok(None) };

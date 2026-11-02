@@ -68,6 +68,7 @@ fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Resul
     Ok(())
 }
 
+/// Returns `Err` if any `dependencies` or `devDependencies` entry on `version` matches `identities`.
 fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {
         for dependency in

@@ -43,6 +43,7 @@ impl Main {
         validate_index(root, &objects, proofs)?;
         Ok(Some(Self { directory, names, objects }))
     }
+    /// Verifies that the sorted file inventory in `last-merged/main-components` has not changed.
     #[inline]
     pub(super) fn validate(&self) -> io::Result<()> {
         if filenames(&self.directory)? != self.names {
