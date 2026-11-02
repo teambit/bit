@@ -78,6 +78,7 @@ impl Retained {
         }
         Ok(replacements)
     }
+    /// Checks whether any retained content proof matches `before`'s path and verifies its hash matches `before`.
     fn matching_content(&self, before: &Value) -> io::Result<bool> {
         let expected_path = content_path(before)?;
         let mut matched = false;

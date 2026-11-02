@@ -87,6 +87,7 @@ fn fill_repo(content: &str, repo: &str) -> String {
     )
 }
 
+/// Returns `true` when `line` starts a Markdown block element (heading, fence, comment, table, quote, or list).
 #[inline]
 fn starts_block(line: &str) -> bool {
     static BLOCK_RE: OnceLock<Option<regress::Regex>> = OnceLock::new();

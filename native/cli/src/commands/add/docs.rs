@@ -78,6 +78,7 @@ pub(super) fn prepare(
 }
 
 impl Prepared {
+    /// Builds read-set proofs from observed [`Source`] bytes for every tracked documentation file.
     #[inline]
     pub(in crate::commands) fn source_proofs(&self) -> Vec<Value> {
         self.observed

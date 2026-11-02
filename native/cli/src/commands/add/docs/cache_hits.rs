@@ -72,6 +72,7 @@ fn partition(
     }
     Ok(plan)
 }
+/// Inspects `cache` for `components` and `observed` [`Source`]s via [`partition`] with cache reads enabled.
 #[inline]
 pub(super) fn inspect(
     root: &Path,

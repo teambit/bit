@@ -66,6 +66,7 @@ impl ProjectedLinker {
         let result = self.link_cached_inner(root, bitmap, identities, json, chalk);
         self.finish(result)
     }
+    /// Projects retained `bitmap` tracking state and links `identities` via [`link_rows`].
     fn link_cached_inner(
         &mut self,
         root: &Path,

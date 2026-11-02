@@ -39,6 +39,7 @@ struct Force {
     include_new_from_scope: bool,
 }
 
+/// Supported boolean flag names accepted by `bit checkout`.
 const BOOLEAN: [&str; 8] = [
     "--skip-dependency-installation",
     "--manual",

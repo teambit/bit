@@ -63,6 +63,7 @@ fn apply_create_arg<'a>(
     Some(())
 }
 
+/// Applies a boolean flag (`--json`, `--seeders-only`, `--always-new`, `--use-hash`, `--install-packages=false`) to `create`.
 fn apply_create_bool(arg: &str, create: &mut CreateArgs) -> bool {
     let Some((flag, val)) = parse_bool_flag(arg) else {
         return false;

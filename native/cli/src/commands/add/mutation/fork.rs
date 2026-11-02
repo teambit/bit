@@ -43,7 +43,7 @@ impl ProjectedLinker {
     }
 }
 
-/// Validates that `root` is a non-empty absolute path and returns `root/.bitmap`.
+/// Validates that `root` is a non-empty absolute path and returns `root/.bitmap` for [`ProjectedLinker`].
 #[inline]
 fn bitmap_path(root: &Path) -> io::Result<std::path::PathBuf> {
     if !root.is_absolute()

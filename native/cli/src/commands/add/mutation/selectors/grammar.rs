@@ -54,6 +54,7 @@ pub(super) fn identities(targets: &[Value]) -> Vec<String> {
         .filter_map(|row| row_identity(row).map(str::to_owned))
         .collect()
 }
+/// Matches non-state `parts` against `targets` using [`patterns::extended::matching`].
 pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Value>> {
     let parts = parts
         .iter()

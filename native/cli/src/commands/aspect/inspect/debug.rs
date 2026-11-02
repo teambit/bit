@@ -66,6 +66,7 @@ pub(super) fn run_get_debug(
     .map_err(|err| Failure::Declined(err.to_string()))
 }
 
+/// Collects the [`DebugReport`] of pre-merge, post-merge, and final aspect entries for `component`.
 fn collect_debug_report(
     root: &Path,
     component: &str,

@@ -68,6 +68,7 @@ fn emit_unknown_skill(args: &[OsString], skill: &str) -> io::Result<Outcome> {
     workspace_command::execute_failure_scope(&cwd, args, "generate", true, "", err)
 }
 
+/// Extracts an unrecognized `--skill` / `-s` value from `bit cli generate` arguments when `--docs` is absent.
 pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
     let ["generate", rest @ ..] = args else { return None };
     if docs_enabled(rest) || !valid_docs_options(rest) {

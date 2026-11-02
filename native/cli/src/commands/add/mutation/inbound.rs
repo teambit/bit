@@ -92,6 +92,7 @@ impl ProjectedLinker {
         Ok(())
     }
 
+    /// Reloads `.bitmap` from `root`, validates control proofs, and projects the workspace into the retained session.
     pub(in crate::commands) fn import_project_workspace(&mut self, root: &Path) -> io::Result<()> {
         let bitmap = bit_object_import::parse_jsonc(&std::fs::read(root.join(".bitmap"))?)?;
         let (mut engine, projection) = super::load::projected(root, &bitmap, &[])?;

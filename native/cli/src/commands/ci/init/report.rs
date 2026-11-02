@@ -25,6 +25,7 @@ pub(super) struct Target {
     pub guessed: bool,
     pub repo_root: String,
 }
+/// Scaffolded file statuses, `workspace.jsonc` edits, and Git staging state for [`Report`].
 pub(super) struct Changes {
     pub commits: bool,
     pub git: bool,

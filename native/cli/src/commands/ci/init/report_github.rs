@@ -65,6 +65,7 @@ fn scope_or_placeholder(input: &Report) -> &str {
         trimmed => trimmed,
     }
 }
+/// Formats Step 3 (`Make Bit -> Git instant`) for a `github.com` [`Repository`].
 #[inline]
 fn public_webhook(input: &Report, repository: &Repository, chalk: Chalk) -> String {
     let scope = scope_or_placeholder(input);

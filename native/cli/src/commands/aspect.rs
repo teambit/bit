@@ -49,6 +49,7 @@ pub(super) struct ListOpts {
     pub json: bool,
 }
 
+/// Parsed CLI arguments and flags for `bit aspect get`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct GetOpts {
     pub component: String,

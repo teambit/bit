@@ -78,6 +78,7 @@ fn emit_pattern_error(
     })
 }
 
+/// Loads `(Workspace, Bitmap)` from `root` when `bitmapAutoSync` is not enabled.
 #[inline]
 fn load_workspace(root: &Path) -> Option<(Workspace, Bitmap)> {
     let ws_config = WorkspaceConfig::load(root).ok()?;

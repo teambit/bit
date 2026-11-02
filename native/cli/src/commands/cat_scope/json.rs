@@ -74,6 +74,7 @@ fn default_binding_prefix(scope: &str) -> String {
     format!("@{owner}")
 }
 
+/// Returns `Some` trimmed string slice when `val` is a non-empty JSON string.
 #[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()

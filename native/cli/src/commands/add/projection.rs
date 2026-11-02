@@ -48,6 +48,7 @@ pub(super) fn prepare(
     prepare_loaded(root, bitmap, added, context, workspace)
 }
 
+/// Builds a [`Projection`] from an already-loaded [`Workspace`], `bitmap`, `added` rows, and `context`.
 pub(super) fn prepare_loaded(
     root: &Path,
     bitmap: &Value,

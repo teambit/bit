@@ -80,6 +80,7 @@ fn run_remote(cwd: &Path, args: &[OsString], remote: &str) -> io::Result<Outcome
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Parses `bit clear-cache` arguments, returning `Some(Some(remote))` when `--remote` is passed.
 fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     if args.is_empty() {
         return None;

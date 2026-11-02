@@ -25,6 +25,7 @@ pub(super) fn repository_root(root: &Path) -> Option<PathBuf> {
         .filter(|value| !value.is_empty())
         .map(|value| Path::new(&value).components().collect())
 }
+/// Returns `true` when `HEAD` resolves to a valid commit in the Git repository at `root`.
 #[inline]
 pub(super) fn commits(root: &Path) -> bool {
     run(root, &["rev-parse", "--verify", "--quiet", "HEAD"]).is_some_and(|value| !value.is_empty())

@@ -49,6 +49,7 @@ impl Retained {
         }
         Ok(())
     }
+    /// Returns `true` when at least one component capture has been recorded on this [`Retained`] session.
     #[inline]
     pub(super) const fn has_started(&self) -> bool {
         self.started

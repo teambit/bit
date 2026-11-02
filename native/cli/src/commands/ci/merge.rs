@@ -49,6 +49,7 @@ pub(super) fn parse_merge(rest: &[&str]) -> Option<MergeOptions> {
     Some(opts)
 }
 
+/// Returns `Some` trimmed string when `val` is non-empty and does not start with `-`.
 #[inline]
 fn non_flag_val(val: &str) -> Option<String> {
     let trimmed = val.trim();

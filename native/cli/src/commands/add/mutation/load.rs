@@ -72,6 +72,7 @@ fn prepare_with(
     Ok(Loaded { engine, projection, capture })
 }
 
+/// Spawns a fresh [`Engine`] and builds the [`Projection`] for `identities` via [`projected_with_engine`].
 #[inline]
 pub(super) fn projected(
     root: &Path,

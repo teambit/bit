@@ -83,6 +83,7 @@ pub(super) fn select(files: &[Value], requested: &str) -> io::Result<Value> {
         .ok_or_else(|| decline("cat requested file absent"))
 }
 
+/// Renders `files` as plain text (with `--- <path> ---` headers unless `single` is true).
 fn text_files(files: &[Value], single: bool) -> io::Result<String> {
     files
         .iter()

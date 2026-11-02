@@ -64,6 +64,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     present(&root, args, &options, prepared)
 }
 
+/// Returns `true` when the `CI` environment variable is set to a truthy non-empty value.
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

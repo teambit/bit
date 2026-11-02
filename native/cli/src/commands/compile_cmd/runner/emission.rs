@@ -74,7 +74,7 @@ fn compile(
     Ok(compiled)
 }
 
-/// Resolves the source file path from `absolutePath`, `path`, or `directory` + `relativePath`.
+/// Resolves the source file path from `absolutePath`, `path`, or `directory` + `relativePath` for [`compile`].
 #[inline]
 fn source_path(source: &Value) -> io::Result<PathBuf> {
     if let Some(path) = source["absolutePath"]

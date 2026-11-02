@@ -23,6 +23,7 @@ impl Source {
     pub(super) fn bytes(&self) -> &[u8] {
         &self.bytes
     }
+    /// Returns the modification time of this [`Source`] in fractional milliseconds since [`UNIX_EPOCH`].
     #[inline]
     pub(super) fn mtime_ms(&self) -> f64 {
         match self.modified.duration_since(UNIX_EPOCH) {

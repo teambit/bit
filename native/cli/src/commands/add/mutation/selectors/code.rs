@@ -6,6 +6,7 @@ use crate::commands::engine::Engine;
 use serde_json::{Map, Value, json};
 use std::{io, path::Path};
 
+/// Nine `Version` object fields compared alongside source files when evaluating `$codeModified` in [`compare`].
 const FIELDS: [&str; 9] = [
     "mainFile",
     "dependencies",

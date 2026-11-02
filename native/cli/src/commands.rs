@@ -244,6 +244,7 @@ pub const COMMANDS: &[Command] = &[
     ws_config::COMMAND,
 ];
 
+/// Looks up a native [`Command`] descriptor in [`COMMANDS`] by exact ASCII name or alias.
 pub fn find(name: &str) -> Option<&'static Command> {
     let trimmed = name.trim();
     if trimmed.is_empty()

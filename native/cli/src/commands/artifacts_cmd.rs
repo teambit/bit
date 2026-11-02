@@ -76,6 +76,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     finish_artifacts(&root, args, &options, &formatter)
 }
 
+/// Executes artifact extraction in workspace `root` via [`extract_and_render`] and emits the [`Outcome`].
 fn finish_artifacts(
     root: &Path,
     args: &[OsString],

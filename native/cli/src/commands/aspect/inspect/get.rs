@@ -76,7 +76,7 @@ pub(in crate::commands::aspect) fn collect_get_entries(
     Ok(merged)
 }
 
-/// Resolves a single [`BitmapEntry`] matching `component` for `bit aspect get`.
+/// Resolves a single [`BitmapEntry`] matching `component` for `bit aspect get` via [`collect_get_entries`].
 pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
     root: &Path,
     bitmap: &'a Bitmap,

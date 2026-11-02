@@ -51,7 +51,7 @@ fn component_packages(row: &Value) -> io::Result<(String, ComponentDependencies)
     Ok((identity.to_owned(), result))
 }
 
-/// Appends validated [`PackageDependency`] entries for `lifecycle` from `packages` into `result`.
+/// Appends validated [`PackageDependency`] entries for `lifecycle` from `packages` into `result` for [`component_packages`].
 fn add_lifecycle_packages(
     packages: &serde_json::Map<String, Value>,
     lifecycle: Lifecycle,

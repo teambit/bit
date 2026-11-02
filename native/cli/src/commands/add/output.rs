@@ -56,7 +56,7 @@ fn downcast_callback(error: &io::Error) -> Option<&crate::host::callback_error::
     .find_map(|inner| inner.downcast_ref::<crate::host::callback_error::CallbackError>())
 }
 
-/// Released filesystem error formatting nests red within the command handler's red via [`colors::native_io`].
+/// Wraps native filesystem link errors in inner red [`Chalk`] styling via [`colors::native_io`].
 #[inline]
 pub(super) fn link_error(error: io::Error, chalk: Chalk) -> io::Error {
     colors::native_io(error, chalk)

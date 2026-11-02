@@ -26,6 +26,7 @@ fn server() -> Option<Url> {
         .ok()
         .and_then(|value| Url::parse(super::trim(&value)).ok())
 }
+/// Matches case-insensitive regex `pattern` against `value` and returns capture `group`.
 #[inline]
 fn capture(value: &str, pattern: &str, group: usize) -> Option<String> {
     let found = regress::Regex::with_flags(pattern, "i").ok()?.find(value)?;

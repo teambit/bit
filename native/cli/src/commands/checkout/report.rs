@@ -86,6 +86,7 @@ struct Checkout<'r> {
 }
 
 impl Checkout<'_> {
+    /// Returns the [`Chalk`] instance configured on `self.format`.
     #[inline]
     fn chalk(&self) -> Chalk {
         self.format.chalk

@@ -46,7 +46,7 @@ impl ProjectedLinker {
         self.with_installer(|installer| installer.install_fork(root))
     }
 
-    /// Keep native recovery imports and installation on the original provider session.
+    /// Runs `action` with an [`Installer`] backed by the retained [`Environments`] provider session.
     pub(in crate::commands) fn with_installer<ResultValue>(
         &mut self,
         action: impl FnOnce(Installer) -> io::Result<ResultValue>,

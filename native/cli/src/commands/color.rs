@@ -57,6 +57,7 @@ impl Chalk {
         self.apply(&[RED], text)
     }
 
+    /// Wraps `text` in ANSI green when colors are enabled.
     #[inline]
     pub fn green(self, text: &str) -> String {
         self.apply(&[GREEN], text)

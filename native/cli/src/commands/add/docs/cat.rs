@@ -58,6 +58,7 @@ impl CatDocs {
         &self.components
     }
 
+    /// Records the host documentation parser `receipt` via [`parse_doc_receipt`] and marks the cache host-published.
     #[inline]
     pub(in crate::commands) fn absorb(&mut self, receipt: &Value) -> io::Result<Option<String>> {
         let error = parse_doc_receipt(receipt)?;

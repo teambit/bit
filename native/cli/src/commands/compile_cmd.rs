@@ -68,6 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("compile execution delegated".into()))
 }
 
+/// Returns `true` when the `CI` environment variable is set to a truthy non-zero value.
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

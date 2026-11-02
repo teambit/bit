@@ -73,6 +73,7 @@ fn proof_path(proof: &Value) -> Option<&str> {
         })
 }
 
+/// Returns the retained control read-set slice stored under [`KEY`] in `facts`.
 #[inline]
 pub(super) fn reads(facts: &Value) -> &[Value] {
     facts[KEY]

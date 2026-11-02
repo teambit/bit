@@ -67,6 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("clone remote workspace initialization delegated".into()))
 }
 
+/// Parses `bit clone` CLI arguments into [`Options`], requiring at least a component `id`.
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options {
         id: String::new(),

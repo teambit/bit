@@ -29,6 +29,7 @@ const BUILD_TASKS: &[&str] = &[
 const DEPLOY_TASKS: &[&str] =
     &["teambit.pkg/pkg:PublishComponents", "teambit.harmony/application:deploy_application"];
 
+/// Renders the `bit build --list-tasks` report for `target` in workspace `root`.
 pub(super) fn run_list_tasks(root: &Path, args: &[OsString], target: &str) -> io::Result<Outcome> {
     let formatter = Formatter::new(Chalk::detect(args));
     let trimmed = target.trim();

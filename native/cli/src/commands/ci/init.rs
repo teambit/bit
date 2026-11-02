@@ -79,6 +79,7 @@ fn prepare(root: &Path) -> io::Result<Option<Plan>> {
     }))
 }
 impl Plan {
+    /// Scaffolds workflows, `workspace.jsonc` sync config, and `AGENTS.md` and renders the [`Report`].
     fn execute(&self, chalk: Chalk, output: &bit_install::output::Output) -> io::Result<Report> {
         let target = self.target();
         let mut files = self.write_workflows(&target.branch, output)?;

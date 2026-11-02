@@ -39,6 +39,7 @@ fn identity(value: &str) -> &str {
 /// Observed `node_modules` `package.json` preimages for tracked [`WorkspaceComponent`]s.
 pub(super) struct Manifests(Vec<(PathBuf, Option<String>)>);
 impl Manifests {
+    /// Snapshots `node_modules/<pkg>/package.json` preimages via [`serialized`] for `components`.
     pub(super) fn observe(root: &Path, components: &[WorkspaceComponent]) -> Self {
         Self(
             components

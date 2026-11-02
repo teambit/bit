@@ -121,6 +121,7 @@ fn run_workspace(
     }
 }
 
+/// Staged `bit add` [`Plan`], workspace [`projection::Projection`], optional [`capture::Capture`], and [`Engine`].
 struct Prepared {
     plan: Plan,
     projection: projection::Projection,

@@ -66,6 +66,7 @@ impl Facts {
     }
 }
 
+/// Stages and commits `VersionHistory` graphs via [`commit_history`] for `ids` in `context`.
 pub(super) fn history(
     engine: &mut Engine,
     root: &Path,

@@ -78,6 +78,7 @@ pub(super) fn run_create_in_bare_scope(
     run_outside_failure(chalk, "create", args.json, &error)
 }
 
+/// Returns `true` when `id` is a non-empty ASCII alphanumeric, hyphen, or underscore component name.
 #[inline]
 fn safe_unscoped_id(id: &str) -> bool {
     let id = id.trim();

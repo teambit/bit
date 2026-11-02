@@ -36,7 +36,7 @@ pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,
 }
-/// Loaded `.bitmap` state, raw preimage bytes, and [`Chalk`] styling for aspect mutations.
+/// Loaded `.bitmap` state, raw preimage bytes, and [`Chalk`] styling for [`MutationBatch`] and [`Prepared`] aspect mutations.
 pub(super) struct BitmapContext {
     pub root: PathBuf,
     pub bitmap: Bitmap,

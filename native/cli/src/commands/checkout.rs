@@ -46,6 +46,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+/// Emits a deterministic checkout option validation error when `raw_args` fails [`options::validate_error`].
 fn fallback_checkout_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outcome> {
     let Some(err_msg) = options::validate_error(raw_args) else {
         return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));

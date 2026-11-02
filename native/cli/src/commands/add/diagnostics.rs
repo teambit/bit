@@ -57,6 +57,7 @@ fn matches_target(target: &serde_json::Value, identity: &str) -> bool {
                 raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()) == expected
             })
 }
+/// Returns `true` when `package` or any of its parent directories is blocked by an ordinary file.
 fn blocked_package(package: &Path) -> io::Result<bool> {
     if metadata(package)?.is_some_and(|metadata| metadata.is_file()) {
         return Ok(true);

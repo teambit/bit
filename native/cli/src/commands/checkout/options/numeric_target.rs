@@ -76,6 +76,7 @@ pub(super) fn head_tilde_is_nan(after: &str) -> bool {
         .is_some_and(|byte| byte.is_ascii_digit())
 }
 
+/// Returns `true` when `to` is a valid concrete version or snap hash for `bit revert`.
 #[inline]
 pub(super) fn valid_revert_version(to: &str) -> bool {
     let to = to.trim();

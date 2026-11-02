@@ -80,6 +80,7 @@ fn react_like(
     insert(peer, "react-dom", "^17.0.0 || ^18.0.0 || ^19.0.0");
 }
 
+/// Inserts `(name, version)` as a JSON string entry into `map`.
 #[inline]
 fn insert(map: &mut Map<String, Value>, name: &str, version: &str) {
     map.insert(name.to_owned(), Value::String(version.to_owned()));

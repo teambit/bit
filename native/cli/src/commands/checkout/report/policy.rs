@@ -68,7 +68,7 @@ fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     ))
 }
 
-/// Extracts the `(before, after)` version pair from an object or two-element array update entry.
+/// Extracts the `(before, after)` version pair from an object or two-element array update entry for [`updates`].
 #[inline]
 fn update_pair(value: &Value) -> io::Result<(&str, &str)> {
     let (before, after) = if let Some(object) = value.as_object() {

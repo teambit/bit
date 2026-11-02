@@ -61,6 +61,7 @@ pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::R
     Ok(())
 }
 
+/// Returns `true` when `marker` exists and parses as JSON with non-empty `originPath`, `createdAt`, and `kind` fields.
 #[inline]
 fn has_valid_origin_marker(marker: &Path) -> bool {
     fs::read(marker)

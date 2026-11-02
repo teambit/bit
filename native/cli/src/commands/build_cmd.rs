@@ -47,6 +47,7 @@ pub(super) struct PipelineFlags {
     pub include_tag: bool,
 }
 
+/// Combined CLI options for `bit build`, including [`PipelineFlags`] and [`CapsuleFlags`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

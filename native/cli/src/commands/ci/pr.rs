@@ -31,6 +31,7 @@ struct WorkspaceSnapshot {
 }
 
 impl WorkspaceSnapshot {
+    /// Reads `.bitmap`, `scope.json`, and `index.json` from `root` into memory before lane export.
     fn capture(root: &Path) -> Self {
         let scope_dir = bit_object_import::scope_path(root);
         Self {

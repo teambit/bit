@@ -84,6 +84,7 @@ fn matches_captured(row: &Value, expected: &str) -> bool {
             == Some(expected)
 }
 
+/// Rewrites `ENOTDIR` `mkdir` errors under `root/node_modules` for `components` into canonical Node-style messages.
 pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::Error) -> io::Error {
     if !mkdir_not_directory(&error) {
         return error;

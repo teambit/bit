@@ -44,6 +44,7 @@ fn has_colored_or_callback(error: &io::Error) -> bool {
     .take(32)
     .any(|inner| inner.is::<crate::host::callback_error::CallbackError>() || inner.is::<Colored>())
 }
+/// Returns `true` when `message` matches a canonical `ENOTDIR`, `EISDIR`, or `EPERM` filesystem diagnostic.
 #[inline]
 fn filesystem_message(message: &str) -> bool {
     let trimmed = message.trim_start();

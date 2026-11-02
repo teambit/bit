@@ -42,6 +42,7 @@ struct Removed {
     origin_path: Option<String>,
 }
 
+/// Aggregated `bit capsule prune` report of [`Removed`] entries and byte totals before and after pruning.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PruneReport {

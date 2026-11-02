@@ -49,6 +49,7 @@ fn read(path: &Path) -> io::Result<Value> {
         Err(error) => Err(error),
     }
 }
+/// Validates that all [`Compiled`] component identities are non-empty and output paths do not collide or escape.
 pub(super) fn outputs(compiled: &[Compiled]) -> io::Result<()> {
     let total_files = compiled
         .iter()

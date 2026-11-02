@@ -87,6 +87,7 @@ fn environment_options(
     Ok(tracking)
 }
 
+/// Builds the `.bitmap` aspect configuration object from resolved `--env` `facts` for [`environment_options`].
 #[inline]
 fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
     let configured = extract_env_id(facts, "configuredId")
