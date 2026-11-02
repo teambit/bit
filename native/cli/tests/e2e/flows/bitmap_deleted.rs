@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/bitmap-deleted.e2e.ts` for deleted `.bitmap` `bit init --force` parity ([`tagging_a_component_then_deleting_bitmap_file_init_force`]).
+//!
+//! Tests `bit init` error reporting and `bit init --force` recovery when `.bitmap` is missing but scope objects exist.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 

@@ -1,4 +1,6 @@
 //! Real [`Registry`] facts leave semantic version planning and writes in Rust.
+//!
+//! Tests npm registry version conflict checks during `bit tag` against a local mock HTTP [`Registry`].
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::{FOO_FIXTURE, Helper, config};

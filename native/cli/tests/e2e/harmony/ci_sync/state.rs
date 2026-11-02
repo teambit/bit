@@ -1,6 +1,6 @@
 //! End-to-end tests for `bit ci sync — state model v2` ([`ci_sync_developer_snapping_and_exporting_from_branch_advances_state`]: developer branch snaps, cold runners, single-branch clones, and untracked files).
 //!
-//! Ported from:
+//! Ported from `e2e/harmony/ci-sync-state.e2e.ts` for native `bit ci sync` parity:
 //! - `e2e/harmony/ci-sync-state.e2e.ts`
 
 use super::support::{

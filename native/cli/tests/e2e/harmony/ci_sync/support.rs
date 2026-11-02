@@ -1,6 +1,6 @@
 //! Shared fixture helpers mirroring `e2e/harmony/ci-sync-support.ts` for `bit ci sync` tests ([`NO_GIT_HOST_WARNING`], [`comp1_src`], [`comp2_src`], [`setup_git_remote`]).
 //!
-//! Provides bare git remote setup, lane creation/edit helpers, branch inspection, and pre-push hook utilities.
+//! Provides bare git remote setup, lane creation and edit helpers, branch inspection, and pre-push hook utilities.
 
 use crate::helper::{Helper, config, parse, strip_ansi};
 use serde_json::{Value, json};

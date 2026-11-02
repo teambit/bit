@@ -1,4 +1,6 @@
 //! Qualify ([`compare_hidden_lane`]) the upstream `version-history` deduplication against the older pinned and current [`Helper`] releases.
+//!
+//! Ensures hidden-lane head traversal matches upstream `VersionHistory` construction.
 
 use crate::{
     commands::move_paths::support::tree,

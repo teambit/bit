@@ -1,4 +1,6 @@
 //! End-to-end tests comparing `bit run-action <action-name> <remote> <options>` against the released Node.js CLI via [`Server`].
+//!
+//! Verifies HTTP action dispatch, payload forwarding, and status handling in workspaces and bare scopes.
 
 use crate::helper::{Helper, action_server::Server};
 use serde_json::{Value, json};

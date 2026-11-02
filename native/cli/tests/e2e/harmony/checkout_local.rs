@@ -1,6 +1,6 @@
 //! Local `bit checkout` and `bit revert` of versions stored without a remote mapping ([`checkout_reset_uses_local_history_without_a_remote_mapping`]).
 //!
-//! Verifies `checkout reset`, stored version checkout, and `revert` against local scope history and mapped remotes.
+//! Verifies `bit checkout reset`, stored version checkout, and `bit revert` against local scope history and mapped remotes.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{ffi::OsStr, fs, path::PathBuf};

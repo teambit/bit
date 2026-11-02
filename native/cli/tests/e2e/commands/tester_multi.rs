@@ -1,4 +1,6 @@
 //! Multi-component `bit test --summary` comparisons ([`summary_order`], [`sort_component_pair`]) preserve all fields and workspace effects.
+//!
+//! Normalizes two-component summary ordering while asserting identical test counts and exit codes.
 
 use super::move_paths::support;
 use serde_json::Value;

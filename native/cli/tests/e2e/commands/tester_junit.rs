@@ -1,4 +1,6 @@
 //! End-to-end tests verifying released `JUnit` (`--junit`) files ([`project`], [`compare`]) preserve test details, timestamps, and observable writes.
+//!
+//! Checks `reports/test.xml` generation, RFC 3339 timestamp bounds, and suite XML fidelity.
 
 use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};

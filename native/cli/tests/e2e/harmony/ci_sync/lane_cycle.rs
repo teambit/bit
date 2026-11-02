@@ -3,7 +3,7 @@
 //! Ported from:
 //! - `e2e/harmony/ci-sync-lane-cycle.e2e.ts`
 //!
-//! Exercises `import-lane`, `export-branch`, `merge-diverged`, conflict halts, `close-pr`, and multi-lane `--all` runs.
+//! Exercises `import-lane`, `export-branch`, `merge-diverged`, conflict halts, `close-pr`, and multi-lane `--all` runs in `bit ci sync`.
 
 use super::support::{
     NO_GIT_HOST_WARNING, branch_paths_matching, branch_side_commit, branch_tip_message,

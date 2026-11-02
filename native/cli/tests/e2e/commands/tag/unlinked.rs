@@ -1,4 +1,6 @@
 //! Tagging creates the generated component [`package`] when `bit link` has not run ([`compare`]).
+//!
+//! Confirms `bit tag` materializes `node_modules` package links and `package.json` metadata for unlinked components.
 
 use crate::helper::{FOO_FIXTURE, Helper, config};
 use std::{ffi::OsStr, fs, path::Path};

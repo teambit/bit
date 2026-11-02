@@ -1,4 +1,6 @@
 //! Detailed multi-component `bit test --json` reports ([`detail_order`]) retain each component's files, errors, and coverage.
+//!
+//! Verifies per-component test file results and coverage payloads across multiple components.
 
 use super::{move_paths::support, tester::timings};
 use serde_json::Value;

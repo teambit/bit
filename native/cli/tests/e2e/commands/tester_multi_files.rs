@@ -1,4 +1,6 @@
 //! Explicit test files across components ([`fixture`], [`assert_effects`]) keep exact selection, deduplication, and command effects.
+//!
+//! Ensures file-pattern filters run only matching spec files and deduplicate overlapping patterns.
 
 use super::{move_paths::support, tester::timings, tester_multi_junit};
 use crate::helper::Helper;

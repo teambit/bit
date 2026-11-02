@@ -1,6 +1,6 @@
 //! `bit checkout` workspace policy updates follow the published Node.js CLI ([`node`], [`source`]).
 //!
-//! Verifies `workspace.jsonc` dependency policy updates, conflict strategies, and `JSONC` comment preservation on `checkout head`.
+//! Verifies `workspace.jsonc` dependency policy updates, conflict strategies, and `JSONC` comment preservation on `bit checkout head`.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

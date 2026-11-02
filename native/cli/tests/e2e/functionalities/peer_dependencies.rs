@@ -1,6 +1,6 @@
 //! Port of `e2e/functionalities/peer-dependencies.e2e.ts` for package peer dependency tracking ([`peer_dependencies_regular_and_unused_in_code`]).
 //!
-//! Covers package and component peer dependencies across `tag`, `snap`, `show`, `cat-component`, and `import`.
+//! Covers package and component peer dependencies across `bit tag`, `bit snap`, `bit show`, `bit cat-component`, and `bit import`.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

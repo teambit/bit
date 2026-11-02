@@ -1,4 +1,6 @@
 //! Pending-directory probes ([`normalize`]) append same-category answers in asynchronous completion order.
+//!
+//! Provides deterministic output normalization for two-scope asynchronous `bit resume-export` probes.
 
 pub(super) fn normalize(output: &str, mixed_scope: Option<&str>) -> String {
     let Some(scope) = mixed_scope else { return output.to_owned() };

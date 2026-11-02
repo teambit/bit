@@ -1,6 +1,6 @@
 //! Port of `e2e/flows/remote-commands-outside-workspace.e2e.ts` for outside-workspace remote commands ([`case_globals`], [`cmd_with_globals`]).
 //!
-//! Covers `status`, `list`, `show`, and `delete` invocations outside a workspace against a global remote.
+//! Covers `remote`, `list`, `show`, and `delete` invocations outside a workspace against a global remote.
 
 use crate::helper::{FOO_FIXTURE, Helper, Run, parse, setup};
 use std::{

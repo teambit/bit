@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/id-with-wildcard.e2e.ts` for wildcard component ID matching in tag, remove, and untag ([`setup_wildcard_workspace`], [`wildcard_tag_remove_and_untag`]).
+//!
+//! Verifies namespace glob patterns across `bit tag`, `bit remove`, `bit untag`, and `bit export`.
 
 use crate::helper::{Helper, config, parse, remote};
 use std::ffi::OsStr;

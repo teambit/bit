@@ -7,6 +7,7 @@ use crate::{
     commands::move_paths::support::{self, aspect, bitmap, json, successful},
     helper::{Helper, remote},
 };
+
 fn exported() -> Helper {
     let helper = support::workspace(3, true);
     successful(&helper, "deprecate comp2");
@@ -14,6 +15,7 @@ fn exported() -> Helper {
     remote::publish(&helper);
     helper
 }
+
 #[test]
 fn exported_deprecation_clears_bitmap_config_and_is_reported_by_remote_list_and_import() {
     let helper = exported();

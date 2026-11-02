@@ -1,4 +1,6 @@
 //! End-to-end tests for `bit tag --soft` followed by `bit tag --persist=skip-build` ([`compare_command`], [`bitmap`]) on a workspace and `.bitmap`.
+//!
+//! Verifies `.bitmap` `nextVersion` staging and subsequent tag persistence parity with Node.js.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::{ffi::OsStr, path::Path};

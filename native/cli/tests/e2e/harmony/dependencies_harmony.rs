@@ -7,7 +7,7 @@
 //! - `e2e/harmony/installing-component-dependency.e2e.ts`
 //! - `e2e/harmony/imported-component-deps.e2e.ts`
 //!
-//! Exercises env dependency injection, dynamic imports, peer dependencies, `deps write`, `pkg` manifest customization, and `--add-missing-deps`.
+//! Exercises env dependency injection, dynamic imports, peer dependencies, `bit deps write`, `pkg` manifest customization, and `--add-missing-deps`.
 
 use crate::{
     helper::{Helper, config, parse},

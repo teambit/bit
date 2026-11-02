@@ -1,4 +1,6 @@
 //! End-to-end tests ensuring built-in `bit test` JSON ([`timings`], [`component_timings`]) compares command fields, source/scope bytes, and loader caches.
+//!
+//! Validates Jest test runner invocation, timing normalization, and workspace side-effect parity.
 
 use super::move_paths::support;
 use serde_json::Value;

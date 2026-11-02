@@ -7,6 +7,7 @@ use crate::{
     commands::move_paths::support::{self, aspect, json, successful},
     helper::{Helper, remote},
 };
+
 fn two_versions() -> Helper {
     let helper = support::workspace(2, true);
     helper.append_file("comp1/index.js", "\n// second\n");
@@ -14,6 +15,7 @@ fn two_versions() -> Helper {
     support::tag(&helper);
     helper
 }
+
 #[test]
 fn unstaged_ranges_are_reflected_in_log_and_undeprecation_clears_them() {
     let helper = two_versions();

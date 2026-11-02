@@ -1,4 +1,4 @@
-//! End-to-end tests for dependency graphs, `deps debug`, capsules, cyclic isolation, and global virtual store ([`core_manifest_setup`]):
+//! End-to-end tests for dependency graphs, `bit deps debug`, capsules, cyclic isolation, and global virtual store ([`core_manifest_setup`], [`deps_debug_duplicate_runtime_dev_plus_matches_node`]):
 //! - `e2e/harmony/deps-graph.e2e.ts`
 //! - `e2e/harmony/deps-graph-isolation.e2e.ts`
 //! - `e2e/harmony/deps-graph-reimport.e2e.ts`

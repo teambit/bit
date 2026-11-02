@@ -1,4 +1,6 @@
 //! Shared identity-operation oracle ([`compare`], [`workspace`], [`setup`]): same-path replay plus an untouched remote scope for [`Helper`] runs.
+//!
+//! Provides deterministic comparison helpers for `bit move`, `bit remove`, and `bit recover` suites.
 
 use crate::{
     commands::add::support,

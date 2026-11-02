@@ -1,12 +1,13 @@
 //! Environment and variant policy tests for Harmony `bit add` ([`root_env_is_explicit_empty_while_regular_component_keeps_default_env`]).
 //!
-//! Ensures `bit add --root` assigns `teambit.harmony/empty-env` and suppresses toolchain/dependency issues.
+//! Ensures `bit add --root` assigns `teambit.harmony/empty-env` and suppresses toolchain and dependency issues.
 
 use crate::{
     commands::add::support::{compare, workspace},
     helper::config,
 };
 use serde_json::json;
+
 #[test]
 fn root_env_is_explicit_empty_while_regular_component_keeps_default_env() {
     let helper = workspace();

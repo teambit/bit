@@ -1,4 +1,4 @@
-//! End-to-end tests for `bit ci sync: main-scope reconciliation` (`--main`, `--dry-run`, `direct-push`, and `--init` via [`SYNC_BRANCH_MAIN`]).
+//! End-to-end tests for `bit ci sync: main-scope reconciliation` (`--main`, `--dry-run`, `direct-push`, and `--init` via [`SYNC_BRANCH_MAIN`], [`ci_sync_main_scope_sync_and_dry_run`]).
 //!
 //! Ported from:
 //! - `e2e/harmony/ci-sync-main.e2e.ts`

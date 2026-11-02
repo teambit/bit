@@ -1,4 +1,6 @@
 //! Built-in `bit test` summary and coverage modes retain complete reports and command filesystem effects ([`builtin_test_summary_counts_statuses_and_preserves_exit_codes`]).
+//!
+//! Exercises `--summary`, `--verbose`, `--coverage`, and `--unmodified` flags on `bit test`.
 
 use super::{move_paths::support, tester::timings};
 

@@ -1,4 +1,6 @@
 //! End-to-end tests for whole-operation `bit remove` batching, `--track`, and provider mutation parity ([`patterned_new_batch_removes_once_and_preserves_excluded_components`]).
+//!
+//! Verifies pattern exclusions, `--keep-files`, `--track`, and provider hooks during component removal.
 
 use crate::{
     commands::move_paths::support::{self, bitmap, setup, successful},

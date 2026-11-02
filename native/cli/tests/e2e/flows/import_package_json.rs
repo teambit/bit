@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/import-package-json.e2e.ts` for default `package.json` exclusion during tracking ([`should_not_track_the_package_json_file`]).
+//!
+//! Ensures `bit add` ignores component directory `package.json` files by default.
 
 use crate::helper::{Helper, parse};
 

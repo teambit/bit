@@ -1,4 +1,6 @@
 //! End-to-end port of `e2e/commands/list.e2e.ts` for native `bit list` local, remote, and `--outdated` ([`outdated`], [`parity`]) parity.
+//!
+//! Covers local-scope listing, remote listing, JSON output, and outdated version reporting.
 
 mod parity;
 

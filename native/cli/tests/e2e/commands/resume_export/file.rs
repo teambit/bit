@@ -1,6 +1,9 @@
 //! End-to-end tests for file pending-object recovery (`bit resume-export`) against restored scopes and the released CLI ([`order`]).
+//!
+//! Verifies `--delete`, `--force`, and pending-export cleanup on filesystem-backed remote scopes.
 
 mod order;
+
 use crate::helper::{Helper, Run};
 use std::{
     collections::BTreeMap,

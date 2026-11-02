@@ -1,6 +1,6 @@
 //! Port of `e2e/functionalities/repository-hooks-aspects.e2e.ts` for aspect repository hooks ([`repository_hooks_aspect_use_and_tag`]).
 //!
-//! Verifies registering a repository-hooks aspect in `workspace.jsonc` via `bit use`.
+//! Verifies registering a repository-hooks aspect in `workspace.jsonc` via native `bit use`.
 
 use crate::helper::Helper;
 

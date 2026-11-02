@@ -6,7 +6,7 @@
 //! - `e2e/harmony/ci-sync-state.e2e.ts`
 //! - `e2e/harmony/ci-sync-main.e2e.ts`
 //!
-//! Groups lane/branch reconciliation, ownership, convergence, main-scope sync, and onboarding suites.
+//! Groups lane and branch reconciliation, ownership, convergence, main-scope sync, and onboarding suites.
 
 mod branch_ownership;
 mod convergence;

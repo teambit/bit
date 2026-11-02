@@ -1,4 +1,6 @@
 //! End-to-end tests verifying `Scope.get` imports missing models before the separate nonpersisting remote peek during `bit recover` ([`history`]).
+//!
+//! Covers remote soft-deleted component recovery and undeleted remote rejection behavior.
 
 pub(super) mod history;
 

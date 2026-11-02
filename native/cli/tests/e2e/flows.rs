@@ -1,4 +1,6 @@
 //! End-to-end multi-command workflow suites (`e2e/flows/`: [`big_file`], [`bitmap_deleted`], [`cyclic_dependencies`], [`delete_files`], [`id_with_wildcard`], [`import_package_json`], [`out_of_sync_components`], [`remote_commands_outside_workspace`], [`same_name_different_scopes`], [`sort_components_output`]) for native CLI parity.
+//!
+//! Groups cross-command flow integration tests ported from the upstream `e2e/flows/` suite.
 
 mod big_file;
 mod bitmap_deleted;

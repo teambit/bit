@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/delete.e2e.ts` for deleted component import and recovery parity ([`import_a_scope_with_deleted_components`]).
 //!
-//! Covers wildcard import exclusion of deleted components, `checkout reset` after local delete, recreation warnings, and `remove` after delete.
+//! Covers wildcard import exclusion of deleted components, `bit checkout reset` after local delete, recreation warnings, and `bit remove` after delete.
 
 use crate::helper::{Helper, remote};
 

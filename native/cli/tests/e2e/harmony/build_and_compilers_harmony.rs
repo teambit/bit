@@ -1,4 +1,4 @@
-//! Ported cases from `e2e/harmony/build-cmd.e2e.ts`, `babel.e2e.ts`, and `multiple-compilers.e2e.ts` for build and compiler pipelines ([`setup_custom_new_env`], [`setup_build_outside_pipelines`]).
+//! Ported cases from `e2e/harmony/build-cmd.e2e.ts`, `babel.e2e.ts`, and `multiple-compilers.e2e.ts` for build and compiler pipelines ([`MULTI_TSCONFIG`], [`setup_custom_new_env`], [`setup_build_outside_pipelines`]).
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

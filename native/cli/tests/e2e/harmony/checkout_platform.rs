@@ -1,8 +1,9 @@
 //! Real repository checkout preserves platform bytes and removes obsolete component sources ([`license`], [`versions`], [`compare`]).
 //!
-//! Covers CRLF/binary preservation, obsolete file cleanup, corrupt object atomicity, `.git/bit` scopes, and root checkout.
+//! Covers CRLF and binary preservation, obsolete file cleanup, corrupt object atomicity, `.git/bit` scopes, and root checkout.
 
 mod license;
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs, path::PathBuf};
 

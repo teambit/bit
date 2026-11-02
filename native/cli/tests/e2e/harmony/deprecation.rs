@@ -1,10 +1,12 @@
 //! Local deprecation, persisted ranges, and the published downstream readers ([`lifecycle`], [`ranges`], [`DEPRECATION`]).
 //!
-//! Covers `bit deprecate` and `bit undeprecate` on single and wildcard targets, `--new-id` replacement metadata, and `checkout reset`.
+//! Covers `bit deprecate` and `bit undeprecate` on single and wildcard targets, `--new-id` replacement metadata, and `bit checkout reset`.
 
 mod lifecycle;
 mod ranges;
+
 use crate::commands::move_paths::support::{self, aspect, bitmap, compare, json, successful};
+
 const DEPRECATION: &str = "teambit.component/deprecation";
 
 #[test]

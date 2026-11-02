@@ -1,6 +1,6 @@
 //! Port of `e2e/flows/same-name-different-scopes.e2e.ts` for same-name components across scopes ([`create_bare_scope`], [`add_remote`]).
 //!
-//! Verifies `.bitmap` scope-qualified keys, `status`, `list`, `tag`, and `export` when two scopes share a component name.
+//! Verifies `.bitmap` scope-qualified keys, `status`, `list`, `tag`, and `export` when two remotes share a component name.
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::{Value, json};

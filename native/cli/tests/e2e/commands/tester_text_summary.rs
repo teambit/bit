@@ -1,4 +1,6 @@
 //! Text `--summary` behavior ([`without_duration`]) against the released `bit test` runner.
+//!
+//! Tests human-readable `--summary` pass, fail, pending, and repeated test execution output.
 
 use super::move_paths::support;
 

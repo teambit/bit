@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/big-file.e2e.ts` for CRLF large file tracking and tagging parity ([`fixture_content`], [`setup_big_file`]).
+//!
+//! Verifies that Windows-formatted (`\r\n`) large text files tag and export without corruption.
 
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{fs, path::Path};

@@ -1,6 +1,6 @@
 //! Port of `e2e/functionalities/merge.e2e.ts` for component version merge behavior ([`re_exporting_and_importing_an_existing_version`]).
 //!
-//! Tests version conflict rejection on export/import and `import --merge` strategies (`manual`, `theirs`, `ours`).
+//! Tests version conflict rejection on export/import and `bit import --merge` strategies (`manual`, `theirs`, `ours`).
 
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;

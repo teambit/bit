@@ -1,4 +1,6 @@
 //! End-to-end local and remote `bit recover -x` parity tests ([`compare_result`], [`batch`], [`providers`], [`remote`]) against the pinned Node.js CLI.
+//!
+//! Validates soft-deleted component restoration across local workspaces and remote scopes.
 
 mod batch;
 mod providers;

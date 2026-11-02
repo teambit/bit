@@ -1,4 +1,6 @@
 //! New snapshots recreate an unlinked component package and source links ([`compare`], [`application`], [`sources`], [`unmerged`]).
+//!
+//! Validates `bit snap` package materialization, source symlinks, and hash metadata against Node.js.
 
 mod application;
 mod sources;

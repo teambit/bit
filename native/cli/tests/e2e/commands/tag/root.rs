@@ -1,4 +1,6 @@
 //! A changed workspace-root ([`workspace`], [`provenance`]) joins members without inheriting their release request.
+//!
+//! Validates `--root` component version bump isolation when tagging alongside regular workspace members.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::{Helper, parse};

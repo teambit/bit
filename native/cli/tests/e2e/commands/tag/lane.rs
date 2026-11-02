@@ -1,4 +1,6 @@
 //! Released lane tagging supports a pending soft tag ([`soft_tag_populates_missing_lane_history_once_with_released_full_state`]), while persisting a `SemVer` tag is rejected.
+//!
+//! Verifies `bit tag --soft` on a lane populates `VersionHistory` and rejects non-soft lane tags.
 
 use super::soft::bitmap;
 use crate::helper::{FOO_FIXTURE, Helper};

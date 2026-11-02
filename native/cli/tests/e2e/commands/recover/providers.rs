@@ -1,4 +1,6 @@
 //! End-to-end tests ensuring recovery classifies the provider's authoritative `.bitmap` and retains its source effects ([`recovery_preserves_provider_configuration_and_new_source_files`]).
+//!
+//! Verifies custom aspect provider mutations survive `bit recover` execution.
 
 use crate::{
     commands::move_paths::support::{bitmap, setup, successful, workspace},

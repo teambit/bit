@@ -1,4 +1,6 @@
 //! Ordinary `bit test` text output ([`jest_times`]) preserves Jest's separate stdout and stderr streams.
+//!
+//! Verifies human-readable Jest output, stream separation, and timing line normalization.
 
 use super::{move_paths::support, tester_text_summary::without_duration};
 

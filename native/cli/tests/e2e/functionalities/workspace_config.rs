@@ -1,6 +1,6 @@
 //! Port of `e2e/functionalities/workspace-config.e2e.ts` for workspace dependency policy and variants ([`OVERRIDE_EXTENSION`], [`set_policy_to_variant`]).
 //!
-//! Tests variant-level dependency overrides (`"-"`, `"+"`, explicit versions) across `show`, `status`, `tag`, and `diff`.
+//! Tests variant-level dependency overrides (`"-"`, `"+"`, explicit versions) across `bit show`, `bit status`, `bit tag`, and `bit diff`.
 
 use crate::helper::{Helper, parse, strip_ansi};
 

@@ -1,4 +1,4 @@
-//! End-to-end parity coverage for `details`, `globals`, `system`, `version`, `version-history` ([`remote_history`], [`upstream_history`]), `git`, and `scope trust`.
+//! End-to-end parity coverage for `details`, `globals`, `system`, `version`, `version-history` ([`remote_history`], [`upstream_history`], [`version_history_rejects_no_color_before_changing_history`]), `git`, and `scope trust`.
 
 mod remote_history;
 mod upstream_history;

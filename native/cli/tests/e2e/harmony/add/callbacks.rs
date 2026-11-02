@@ -1,6 +1,6 @@
 //! Published callbacks ([`configured`]) observe the same newly tracked classes before generated packages are linked.
 //!
-//! Verifies `onLoad` and package extension callbacks and rollback behavior on callback or filesystem link failure.
+//! Verifies `onLoad` and package extension callbacks and rollback behavior on callback or filesystem link failure during `bit add`.
 
 use crate::{
     commands::add::support::{compare, node, workspace},

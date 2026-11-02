@@ -1,4 +1,6 @@
 //! End-to-end `ListCmd` (`bit list`) output and read-only [`inventory`] / [`capture`] parity tests.
+//!
+//! Verifies that native `bit list` matches Node.js output and never mutates workspace or scope state.
 
 use crate::helper::{Helper, Run};
 use serde_json::json;

@@ -1,4 +1,6 @@
 //! End-to-end port of `e2e/commands/remote.e2e.ts` for native `bit remote` add, del, and list parity ([`case_globals`], [`native_with_globals`]).
+//!
+//! Tests local and `--global` remote scope registration, removal, and tabular listing.
 
 use crate::helper::{Helper, Run, setup};
 use std::{

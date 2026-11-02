@@ -1,4 +1,6 @@
 //! End-to-end tests verifying unrelated `.bitmap` states (`local-only`) do not prevent versioning other components ([`compare_snap`]).
+//!
+//! Ensures `local-only` components are excluded from `bit snap`, `bit tag --soft`, and `bit tag --persist`.
 
 use super::soft::{bitmap, compare_command};
 use crate::helper::Helper;

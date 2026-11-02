@@ -1,4 +1,6 @@
 //! End-to-end tests verifying published identity operations retain `.bitTmp` consumer temporary files, including successful noops ([`successful_move_retains_existing_consumer_temporary_files`]).
+//!
+//! Ensures `bit move`, `bit deprecate`, and `bit undeprecate` preserve unrelated consumer temp directories.
 
 use super::support::{compare, successful, workspace};
 use std::fs;

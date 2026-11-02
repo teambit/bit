@@ -1,6 +1,6 @@
 //! Upstream `3b52056c6` removes duplicate pending-import errors after released `2.2.146` ([`verify`], [`verify_text`]).
 //!
-//! Verifies JSON and text `status` output when a scoped component is missing local objects (`importPendingComponents`).
+//! Verifies JSON and text `bit status` output when a scoped component is missing local objects (`importPendingComponents`).
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

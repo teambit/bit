@@ -1,4 +1,6 @@
 //! Port of `e2e/flows/out-of-sync-componets.e2e.ts` for out-of-sync `.bitmap` and scope state ([`consumer_with_a_new_component_and_scope_with_the_same_component_as_staged`]).
+//!
+//! Verifies `.bitmap` synchronization during `bit tag`, `bit status`, and `bit import` when local scope objects are ahead.
 
 use crate::helper::Helper;
 

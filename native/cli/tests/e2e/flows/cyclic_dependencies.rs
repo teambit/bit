@@ -1,4 +1,4 @@
-//! Port of `e2e/flows/cyclic-dependencies.e2e.ts` for circular dependency analysis (`bit deps circular`) and tagging ([`insights_circular_two_workspace_cycles_match_node`]).
+//! Port of `e2e/flows/cyclic-dependencies.e2e.ts` for circular dependency analysis (`bit deps circular`, `bit insights circular`) and tagging ([`insights_circular_two_workspace_cycles_match_node`]).
 
 use crate::helper::{Helper, parse};
 use std::ffi::OsStr;
