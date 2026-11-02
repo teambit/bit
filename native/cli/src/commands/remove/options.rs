@@ -44,6 +44,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     silent.then_some(options)
 }
 
+/// Returns whether `value` is a non-flag, non-empty pattern token within length bounds.
 #[inline]
 fn is_valid_pattern(value: &str) -> bool {
     !value.starts_with('-')

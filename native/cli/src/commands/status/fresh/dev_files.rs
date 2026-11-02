@@ -73,6 +73,7 @@ pub fn is_dev_file(file: &str) -> bool {
     matches(file, names())
 }
 
+/// Returns `true` when relative path `file` matches any segment [`Regex`] in `regexes` without dot-prefixed parent segments.
 fn matches(file: &str, regexes: &[Regex]) -> bool {
     let file = file.trim().trim_start_matches("./");
     if file.is_empty() {

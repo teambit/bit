@@ -74,6 +74,7 @@ fn inventory(root: &Path) -> io::Result<(Workspace, Value, Engine)> {
     ))
 }
 
+/// Validates that `facts["inventoryReadSet"]` files have not changed on disk since inventory capture.
 #[inline]
 fn validate_inventory(engine: &mut Engine, facts: &Value) -> io::Result<()> {
     let reads = facts["inventoryReadSet"]

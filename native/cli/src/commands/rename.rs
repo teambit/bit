@@ -66,6 +66,7 @@ fn is_ci_active() -> bool {
         })
 }
 
+/// Emits the failure report when `bit rename` is invoked outside a Bit workspace.
 #[inline]
 fn run_outside_workspace(
     cwd: &std::path::Path,

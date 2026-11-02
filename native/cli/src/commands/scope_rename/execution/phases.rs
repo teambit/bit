@@ -64,6 +64,7 @@ fn load_added(
     print!("{}", linker.take_stdout());
     Ok(Some(rows))
 }
+/// Collects `(sourcePackage, targetPackage)` pairs across all staged entries in `entries`.
 pub(super) fn pairs(entries: &Entries) -> io::Result<Vec<(String, String)>> {
     entries.facts
         .iter()

@@ -81,6 +81,7 @@ impl Issue {
         }
     }
 
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for legacy status [`Issue`] variants.
     #[inline]
     const fn legacy_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

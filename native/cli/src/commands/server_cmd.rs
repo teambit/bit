@@ -59,6 +59,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("server execution delegated".into()))
 }
 
+/// Parses a positive 16-bit TCP port number from `raw`.
 #[inline]
 fn parse_nonzero_port(raw: &str) -> Option<u16> {
     raw.trim()

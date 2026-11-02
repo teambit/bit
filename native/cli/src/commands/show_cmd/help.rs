@@ -38,6 +38,7 @@ fn is_positional_id(token: &str) -> bool {
     !trimmed.is_empty() && !trimmed.starts_with('-')
 }
 
+/// Extracts a leading or trailing positional component ID from `argv` and returns `(has_id, remaining_flags)`.
 #[inline]
 fn split_id_from_argv<'a>(argv: &'a [&'a str]) -> (bool, &'a [&'a str]) {
     match argv {

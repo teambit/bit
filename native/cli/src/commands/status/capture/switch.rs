@@ -39,6 +39,7 @@ pub(super) fn scan(scan: Scan<'_>, targets: &[Value], capture: &mut Capture) -> 
 }
 
 impl Session<'_> {
+    /// Runs the switch capture session over `targets` into `capture`, returning `Ok(true)` when ordered callbacks ran.
     fn run(&mut self, targets: &[Value], capture: &mut Capture) -> io::Result<bool> {
         let Some(order) = self.order(targets)? else {
             self.plain(targets, capture)?;

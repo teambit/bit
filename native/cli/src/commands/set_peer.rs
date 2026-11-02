@@ -35,6 +35,7 @@ enum PeerAction {
     Unset { component_id: String },
 }
 
+/// Staged `.bitmap` mutation and output summary for `bit set-peer` or `bit unset-peer`.
 struct Prepared {
     mutation: BitmapMutation,
     summary: &'static str,

@@ -45,6 +45,7 @@ impl Issue {
         })
     }
 
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for this [`Issue`].
     #[inline]
     pub(super) const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

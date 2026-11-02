@@ -66,6 +66,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("run execution delegated".into()))
 }
 
+/// Prints `unsupported_help` to stdout and exits with `ExitCode::FAILURE`.
 #[inline]
 fn print_unsupported_help(unknown: &str, chalk: Chalk) -> io::Result<Outcome> {
     io::stdout()

@@ -47,6 +47,7 @@ pub(in crate::commands) struct Environments {
 }
 
 impl Environments {
+    /// Creates a new [`Environments`] session with no active [`Host`] and issue facts enabled.
     #[inline]
     pub(super) fn new() -> Self {
         Self {

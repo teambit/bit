@@ -79,6 +79,7 @@ fn load_failures(
     Ok(())
 }
 
+/// Appends a `RemovedEnv` issue onto `dependencies` when `facts["envId"]` is locally removed in `context`.
 fn removed(context: &Value, facts: &Value, dependencies: &mut Value) -> io::Result<()> {
     if let Some(env) = facts["envId"]
         .as_str()

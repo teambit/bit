@@ -60,6 +60,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute_local_search(&root, args, &parsed)
 }
 
+/// Executes a `--local-only` component search in `root` and writes JSON or formatted output.
 fn execute_local_search(
     root: &Path,
     args: &[OsString],

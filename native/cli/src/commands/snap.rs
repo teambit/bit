@@ -79,6 +79,7 @@ fn outside_workspace_snap(
     })
 }
 
+/// Returns `true` when neither `--message` nor an `--editor` workflow is configured.
 #[inline]
 fn should_warn_message(options: &options::Options, workflow: &resolve::workflow::Workflow) -> bool {
     options.message

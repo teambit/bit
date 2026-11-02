@@ -92,6 +92,7 @@ pub(super) fn publish_import_dependencies(
     Ok(())
 }
 
+/// Returns `true` when checkout should reset the whole dependency cache on [`commit`].
 #[inline]
 fn checkout_reset(capture: &Capture) -> bool {
     capture.cache.reset && capture.environment_facts["checkoutLoaderCacheChecked"] != true

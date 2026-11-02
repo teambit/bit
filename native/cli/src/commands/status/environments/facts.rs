@@ -48,6 +48,7 @@ struct ProviderFacts {
     load_failures: Value,
 }
 
+/// Queries `providerFacts` on `host` for `env_id` and merges optional `manifest` policy fields into [`ProviderFacts`].
 fn provider_facts(
     host: &Host,
     env_id: &str,

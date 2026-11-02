@@ -80,7 +80,7 @@ impl Scan<'_> {
     }
 
     /// `verifyFreshDependencies`: the cached dependencies detected again;
-    /// any difference in metadata or issues declines.
+    /// any difference in metadata or issues declines via [`policy::current_metadata`].
     #[inline]
     fn verified(
         &mut self,

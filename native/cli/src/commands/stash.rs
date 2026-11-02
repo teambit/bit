@@ -56,7 +56,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         execute(&root, args, prepared, output)
     })
 }
-
+/// Prepared stash subcommand state ready to execute after startup reconciliation.
 enum Prepared {
     Save(Box<Save>),
     List(Vec<Value>),

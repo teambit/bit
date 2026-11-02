@@ -48,6 +48,7 @@ pub(super) fn status_pending(
     Ok(true)
 }
 
+/// Records an incomplete reset entry in `captured` when `enabled` is `true` and `directory` is missing on disk.
 #[inline]
 pub(super) fn capture(
     root: &Path,

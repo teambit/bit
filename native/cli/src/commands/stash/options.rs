@@ -60,6 +60,7 @@ fn save(args: &[&str]) -> Option<Options> {
     Some(Options::Save { include_new, message })
 }
 
+/// Applies a single `bit stash save` flag (`-i`/`--include-new` or `-m`/`--message`).
 fn apply_save_arg<'a>(
     include_new: &mut bool,
     message: &mut Option<String>,

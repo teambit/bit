@@ -51,6 +51,7 @@ pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)>
     Ok((entry.identity.clone(), bitmap.lane.is_some()))
 }
 
+/// Resolves all `.bitmap` component identities on the current lane matching `pattern`.
 pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();
     let bitmap = bitmap::read(root)?;

@@ -61,8 +61,7 @@ pub struct Capture {
     /// What the commit writes to the dependency cache.
     pub cache: CacheWrites,
 }
-
-/// The dependency cache entries a capture's commit writes.
+/// The dependency cache entries a capture's [`commit`] writes.
 #[derive(Default)]
 pub struct CacheWrites {
     /// Fresh detections whose cache entries are written on commit.

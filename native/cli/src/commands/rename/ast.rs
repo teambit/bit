@@ -67,6 +67,7 @@ pub(super) fn transform(
     read_transformed_inputs(&spool.0, &inputs, plan)
 }
 
+/// Reads transformed source files back from `spool_dir` and records them into `plan`.
 #[inline]
 fn read_transformed_inputs(
     spool_dir: &Path,

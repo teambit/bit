@@ -28,6 +28,7 @@ impl Reader {
         let context = engine.request(&json!({"kind":"statusContext", "root":root, "home":workspace_command::home(), "history":false}))?;
         Ok(Self { engine, context, files: Vec::new() })
     }
+    /// Returns the load-free package name and extension policy metadata for `identity`, if eligible.
     #[inline]
     pub(super) fn metadata(&self, identity: &str) -> Option<Value> {
         let target = self.target(identity)?;

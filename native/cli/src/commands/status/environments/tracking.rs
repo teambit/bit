@@ -35,7 +35,7 @@ impl Environments {
         }
     }
 
-    /// Start a tracking callback session before installing its projected bitmap.
+    /// Starts a tracking callback session ([`Environments::new`]) before installing its projected bitmap.
     #[inline]
     pub(in crate::commands) fn for_tracking() -> Self {
         Self::new()

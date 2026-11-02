@@ -35,6 +35,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute::run(args, &options)
 }
 
+/// Parses CLI arguments after `bit resume-export` into [`Options`].
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut export_id = None;
     let mut remotes = Vec::with_capacity(args.len());

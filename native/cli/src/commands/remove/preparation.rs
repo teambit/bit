@@ -26,6 +26,7 @@ pub(super) fn prepare(
 ) -> io::Result<LocalBatch> {
     LocalBatch::prepare(root, ids, options.keep, options.track, &facts(rows))
 }
+/// Partitions `selected` component IDs into `(unmodified_removable, modified_blocked)` lists.
 #[inline]
 pub(super) fn classify(selected: &[String], rows: &[Value]) -> (Vec<String>, Vec<String>) {
     selected

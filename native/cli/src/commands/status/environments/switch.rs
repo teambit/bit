@@ -29,6 +29,7 @@ impl Environments {
         self.host.as_ref().ok_or_else(|| decline("switch callback host"))
     }
 
+    /// Invokes [`callbacks::switch_one`] on the active checkout callback [`Host`] for `identity`.
     #[inline]
     pub(in crate::commands::status) fn switch_one(
         &self,

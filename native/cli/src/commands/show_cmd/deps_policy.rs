@@ -39,7 +39,7 @@ fn apply_legacy_pkg_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut 
         }
     }
 }
-
+/// Applies legacy `dependencies`, `devDependencies`, and `peerDependencies` arrays onto `deps`.
 fn apply_legacy_comp_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
     let comp_fields =
         [("dependencies", "runtime"), ("devDependencies", "dev"), ("peerDependencies", "peer")];

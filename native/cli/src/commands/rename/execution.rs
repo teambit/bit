@@ -73,6 +73,7 @@ fn refreshed_files(prepared: &mut Prepared, captured: &[serde_json::Value]) -> i
     }
     Ok(())
 }
+/// Captures dependent components and rewrites their import specifiers during `bit rename --refactor`.
 fn refactor_load(
     root: &Path,
     prepared: &mut Prepared,

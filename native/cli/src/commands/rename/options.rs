@@ -34,6 +34,7 @@ fn consume_trailing_positions<'a>(
     Some(())
 }
 
+/// Applies a single `bit rename` flag or positional component name onto `options` and `positions`.
 fn apply_rename_arg<'a>(
     argument: &'a str,
     arguments: &mut impl Iterator<Item = &'a str>,

@@ -90,7 +90,7 @@ impl Pending {
         }
     }
 
-    /// `<id>@<version>`.
+    /// `<id>@<version>` of this [`Pending`] cache entry.
     #[must_use]
     #[inline]
     pub fn identity(&self) -> &str {

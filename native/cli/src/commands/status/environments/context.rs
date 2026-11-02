@@ -67,6 +67,7 @@ struct ContextSetup {
     inherited: Option<Environments>,
 }
 
+/// Initializes [`Environments`] and captures workspace status controls according to `setup`.
 fn read_context_with(
     engine: &mut crate::commands::engine::Engine,
     root: &Path,

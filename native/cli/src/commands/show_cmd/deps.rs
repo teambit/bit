@@ -59,7 +59,7 @@ impl Identity<'_> {
             && eq_or_subpath(rest, &self.name.replace('/', "."))
     }
 }
-
+/// Returns `true` when `candidate` equals `target` or is a `/`-delimited subpath of `target`.
 #[inline]
 fn eq_or_subpath(candidate: &str, target: &str) -> bool {
     candidate == target

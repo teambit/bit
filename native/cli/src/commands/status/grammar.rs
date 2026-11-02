@@ -57,6 +57,7 @@ pub fn dependency(values: &Value) -> Value {
     Value::Object(result)
 }
 
+/// Recursively appends every string slice inside `value` onto `strings`.
 #[inline]
 fn visit<'v>(value: &'v Value, strings: &mut Vec<&'v str>) {
     match value {

@@ -73,6 +73,7 @@ fn pattern(text: &str) -> bool {
 }
 
 impl Options {
+    /// Consumes non-flag arguments after `--` as the positional component pattern.
     #[inline]
     fn trailing_positionals(&mut self, trailing: &[&str]) -> Option<()> {
         for &pos in trailing {

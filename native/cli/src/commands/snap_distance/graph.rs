@@ -68,6 +68,7 @@ pub(super) fn build_parents_map(vh_val: &Value) -> Option<HashMap<&str, Vec<&str
     Some(parents_map)
 }
 
+/// Extracts a non-empty parent hash string from a string or `{"hash": ...}` JSON [`Value`].
 #[inline]
 fn parent_hash(parent: &Value) -> Option<&str> {
     parent

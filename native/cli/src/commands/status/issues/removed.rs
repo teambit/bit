@@ -46,6 +46,7 @@ fn missing_packages(rows: &[Value]) -> HashSet<&str> {
         .collect()
 }
 
+/// Returns `<scope>/<name>@<version>` when locally removed `target` is referenced by `component` or `packages`.
 fn removed_id(target: &Value, component: &Component, packages: &HashSet<&str>) -> Option<String> {
     let raw = target["identity"]
         .as_str()

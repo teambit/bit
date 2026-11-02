@@ -63,6 +63,7 @@ fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     range_matches(model, full_id, &extension["config"])
 }
 
+/// Looks up the [`DEPRECATION`] aspect extension entry on `model`'s head version in `context`.
 #[inline]
 fn head_deprecation<'c>(
     context: &'c Value,

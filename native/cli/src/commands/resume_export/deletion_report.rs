@@ -40,6 +40,7 @@ fn failed_section(formatter: &Formatter, failed: &IndexMap<String, String>) -> S
     )
 }
 
+/// Formats a yellow warning line prefixed with `formatter.warn_symbol()`.
 #[inline]
 fn warning(formatter: &Formatter, message: &str) -> String {
     format!("{} {}", formatter.warn_symbol(), formatter.chalk.yellow(message))

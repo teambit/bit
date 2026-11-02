@@ -32,6 +32,7 @@ const MISSING_SCRIPT_ERR: &str = "script name is required. Use --list to see ava
 /// Warning message emitted when `teambit.workspace/scripts` has no configured environments.
 const NO_ENVS_CONFIG_MSG: &str = "no envs configured. Add to workspace.jsonc:\n{\n  \"teambit.workspace/scripts\": {\n    \"envs\": [\"your-scope/your-env\"]\n  }\n}";
 
+/// Parsed command-line options for `bit script`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub script_name: Option<String>,

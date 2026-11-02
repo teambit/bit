@@ -87,6 +87,7 @@ fn confirm(formatter: &Formatter, export_id: &str, count: usize) -> io::Result<(
     Ok(())
 }
 
+/// Returns whether environment variable `key` is set to a non-empty, non-falsy value.
 #[inline]
 fn is_truthy_env(key: &str) -> bool {
     env::var_os(key)

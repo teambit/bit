@@ -75,6 +75,7 @@ fn prepare(
     Ok(Entries { batch: Batch::prepare(root, plans)?, facts })
 }
 
+/// Prints any buffered stdout from `linker` to the process stdout.
 #[inline]
 fn flush_stdout(linker: &mut ProjectedLinker) {
     let stdout = linker.take_stdout();

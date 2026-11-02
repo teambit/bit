@@ -48,6 +48,7 @@ pub(super) struct DiffOptions {
     pub json: bool,
 }
 
+/// Dispatched `bit schema` command variant (`Schema` inspection or `Diff` comparison).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ParsedCommand {
     Schema(Options),

@@ -28,6 +28,7 @@ pub(in crate::commands) struct EnvScripts {
     pub scripts: Vec<ParsedScript>,
 }
 
+/// Scans source files in `dir` in priority order and returns the first [`EnvScripts`] definition found.
 pub(in crate::commands) fn parse_env_scripts_in_dir(dir: &Path) -> EnvScripts {
     let mut files = collect_source_files(dir);
     files.sort_by_key(|path| file_sort_key(path));

@@ -28,6 +28,7 @@ impl CacheWrites {
         self.callbacks.snapshot_data.insert(identity.trim().to_owned(), data);
     }
 
+    /// Retains `directory` for the lifetime of this [`CacheWrites`] so callback temp dirs are not deleted prematurely.
     #[inline]
     pub(in crate::commands::status) fn retain_callback_directory(
         &mut self,

@@ -38,6 +38,7 @@ fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String
         items.join("\n"),
     )
 }
+/// Formats the error section listing modified components skipped because `--force` was not passed.
 fn modified_section(format: &Formatter, ids: &[String]) -> String {
     if ids.is_empty() {
         return String::new();

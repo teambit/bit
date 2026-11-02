@@ -33,6 +33,7 @@ struct EnvGroup<'a> {
     env_scripts: EnvScripts,
 }
 
+/// Loads [`WorkspaceConfig`] and [`Workspace`] from `root` and promotes `.bit-env.` plugin components.
 pub(in crate::commands) fn resolve_workspace_components(
     root: &Path,
 ) -> io::Result<(WorkspaceConfig, Workspace)> {

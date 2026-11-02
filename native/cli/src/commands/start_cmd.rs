@@ -48,6 +48,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("start server execution delegated".into()))
 }
 
+/// Returns `true` when `cwd` is inside neither a Bit workspace nor a local/bare scope.
 #[must_use]
 #[inline]
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {

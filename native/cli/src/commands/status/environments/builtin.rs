@@ -77,6 +77,7 @@ pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
 }
 
 impl Environments {
+    /// Creates an [`Environments`] session with built-in [`Services::Tools`] enabled.
     #[inline]
     pub(in crate::commands) fn for_builtin_services() -> Self {
         Self { builtin_services: Services::Tools, ..Self::new() }

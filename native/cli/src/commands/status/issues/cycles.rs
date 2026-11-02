@@ -72,7 +72,7 @@ fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
 }
 
 /// Components in a dependency cycle, self-dependencies included: the
-/// members of strongly connected components larger than one node.
+/// members of strongly connected [`Component`] sets larger than one node.
 #[must_use]
 pub fn cyclic(components: &[Component]) -> HashSet<&str> {
     let mut index: HashMap<&str, usize> = HashMap::with_capacity(components.len() * 2);

@@ -43,6 +43,7 @@ pub fn no_fs_cache(root: &Path) -> bool {
         })
 }
 
+/// Returns `true` when `value` contains the [`NO_FS_CACHE`] token in a delimited feature list.
 #[inline]
 fn mentions_no_fs_cache(value: &str) -> bool {
     value

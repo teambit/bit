@@ -29,7 +29,7 @@ use kinds::Issue;
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// Aspect ID for the component issues extension (`teambit.component/issues`).
 const ISSUES: &str = "teambit.component/issues";
-/// `ISSUE_FORMAT_SPACE`.
+/// `ISSUE_FORMAT_SPACE` indentation prefix used when formatting status issue blocks.
 const SPACE: &str = "          ";
 
 /// One captured component: its full identity and its detection results.
