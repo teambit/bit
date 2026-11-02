@@ -76,6 +76,7 @@ struct Record {
     planned: Option<PreparedPlan>,
     history: history::State,
 }
+/// Planned workspace command artifacts (`plan`, `bitmap`, `snap_bitmap`, `reset_config`, `checkout_policy`, `switch_completion`).
 struct PreparedPlan {
     plan: planning::Planned,
     bitmap: bitmap::Prepared,
@@ -84,6 +85,7 @@ struct PreparedPlan {
     checkout_policy: Option<checkout_policy::Prepared>,
     switch_completion: Option<switch_completion::Retained>,
 }
+/// Prepares a workspace command transaction in `state` from `request`.
 #[inline]
 pub(super) fn prepare(
     request: Prepare,
@@ -93,6 +95,7 @@ pub(super) fn prepare(
     setup::run(request, state, pool)
 }
 
+/// Deserialized `commandPlan` request (`token`, `current` status rows, etc.).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Plan {

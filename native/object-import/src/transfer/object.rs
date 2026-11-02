@@ -84,6 +84,7 @@ pub(crate) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::V
     parse_metadata(bytes, hash).map(|(value, _, _)| value)
 }
 
+/// Inflates `bytes`, verifies the header against `hash`, and returns `(json_value, inflated_size, kind)`.
 fn parse_metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<(serde_json::Value, usize, String)> {
     let inflated =
         crate::metadata::inflate(bytes).ok_or_else(|| invalid("unsupported transfer object"))?;

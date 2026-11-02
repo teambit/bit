@@ -1,4 +1,4 @@
-//! Read the local remote-lane ref ([`remote_head`], [`exported_head`], [`baseline`]) that bounds reset's removable snap chain.
+//! Read the local remote-lane ref ([`remote_head`], [`exported_head`], [`baseline`], [`head_for`]) that bounds reset's removable snap chain.
 
 use super::{BitmapState, invalid, proofs};
 use serde_json::Value;

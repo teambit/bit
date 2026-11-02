@@ -60,6 +60,7 @@ fn retain(path: &Path, bytes: Option<&[u8]>, proofs: &mut ReadSet) -> io::Result
     Ok(())
 }
 
+/// Reads and decodes loose object `hash` of `kind` in `objects`, recording its preimage in `proofs`.
 pub(super) fn object(
     objects: &Path,
     hash: &str,
@@ -76,6 +77,7 @@ pub(super) fn object(
     Ok(value)
 }
 
+/// Revalidates that every file in `proofs` still matches its recorded preimage bytes.
 pub(super) fn verify(proofs: &ReadSet) -> io::Result<()> {
     for (path, expected) in proofs {
         if regular(path)? != *expected {
@@ -85,6 +87,7 @@ pub(super) fn verify(proofs: &ReadSet) -> io::Result<()> {
     Ok(())
 }
 
+/// Captures read proofs for all reachable `Version` ancestors of `repository`'s active heads.
 pub(super) fn capture(repository: &Repository) -> io::Result<ReadSet> {
     let mut heads = vec![repository.heads.current.clone()];
     heads.extend(repository.heads.baseline.iter().cloned());

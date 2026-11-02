@@ -59,6 +59,7 @@ fn validate(plan: &Plan) -> io::Result<()> {
     }
     Ok(())
 }
+/// Returns whether `plan` creates a detached head (`parent != head` with `detach_head: true`).
 fn detached(plan: &Plan) -> io::Result<bool> {
     let (Some(parent_hash), Some(head_hash)) = (plan.parent.as_deref(), plan.head.as_deref())
     else {
@@ -74,6 +75,7 @@ fn detached(plan: &Plan) -> io::Result<bool> {
     }
     Ok(true)
 }
+/// Resolves the effective parent hash (`parent` or `head`) to record on the new `Version`.
 fn parent(plan: &Plan) -> Option<&str> {
     let head = plan.head
         .as_deref()

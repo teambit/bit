@@ -74,6 +74,7 @@ fn increment_parts(parts: &[Value]) -> io::Result<Vec<Value>> {
     }
     Ok(values)
 }
+/// Applies optional prerelease `identifier` to `values`, resetting to `[identifier, 0]` when mismatched.
 fn select_identifier(values: &mut Vec<Value>, identifier: Option<&str>) -> io::Result<()> {
     if let Some(identifier) = identifier.filter(|value| !value.is_empty()) {
         identifier_valid(identifier)?;
@@ -89,6 +90,7 @@ fn select_identifier(values: &mut Vec<Value>, identifier: Option<&str>) -> io::R
     }
     Ok(())
 }
+/// Splits dot-delimited prerelease segments and normalizes numeric parts in `values`.
 fn parsed_parts(values: Vec<Value>) -> Vec<Value> {
     let mut parsed = Vec::with_capacity(values.len());
     for value in values {

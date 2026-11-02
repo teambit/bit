@@ -92,6 +92,7 @@ impl Plan {
     }
 }
 
+/// Selects an unscoped `.bitmap` `row` with a non-empty `version` for `bit reset --never-exported`.
 fn select_row(objects_dir: &Path, key: &str, row: &Value) -> io::Result<Option<SelectedRow>> {
     let key = key.trim();
     if is_ignored_row(key, row) {

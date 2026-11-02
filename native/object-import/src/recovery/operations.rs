@@ -77,6 +77,7 @@ impl State {
     }
 }
 impl Operation {
+    /// Validates paths and distinctness invariants for `self` before registering a recovery queue.
     fn validate(&self) -> io::Result<()> {
         match self {
             Self::Copy { source, destination } => {
@@ -90,6 +91,7 @@ impl Operation {
             Self::Remove { path: filename } | Self::EnsureDir { path: filename } => path(filename),
         }
     }
+    /// Executes the filesystem mutation represented by `self`.
     fn apply(&self) -> io::Result<()> {
         match self {
             Self::Copy { source, destination } => copy::file(source, destination),

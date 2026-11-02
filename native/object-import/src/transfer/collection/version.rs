@@ -1,4 +1,4 @@
-//! Repository [`Version`] manifest loading ([`load`], [`Loaded`]) and `Source`/artifact [`References`] extraction.
+//! Repository [`Version`] manifest loading ([`load`], [`Loaded`], [`extract`], [`artifacts`]) and `Source`/artifact [`References`] extraction.
 
 use std::{io, path::Path};
 

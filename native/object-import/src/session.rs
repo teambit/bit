@@ -1,4 +1,4 @@
-//! Persistent workspace protocol session state ([`WorkspaceSession`], [`shared_pool`]) and shared `Rayon` worker-pool management.
+//! Persistent workspace protocol session state ([`WorkspaceSession`], [`shared_pool`], [`POOLS`]) and shared `Rayon` worker-pool management.
 
 #[cfg(test)]
 mod tests;

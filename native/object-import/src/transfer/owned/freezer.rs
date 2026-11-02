@@ -1,4 +1,4 @@
-//! Bounded compressed object freezing ([`freeze`], [`Frozen`]) and optional missing-object skipping for transfers.
+//! Bounded compressed object freezing ([`freeze`], [`Frozen`], [`entry`]) and optional missing-object skipping for transfers.
 
 use std::{collections::HashSet, io, path::Path};
 

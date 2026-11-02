@@ -94,6 +94,7 @@ impl Plan {
         })
     }
 
+    /// Revalidates the live workspace and publishes all prepared `main`-lane reset changes.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         publication::commit(self, file_id)
     }

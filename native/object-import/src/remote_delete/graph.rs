@@ -84,6 +84,7 @@ fn add_component(
     Ok(())
 }
 
+/// Records reverse dependency edges from `version`'s dependencies to `node` in `reverse`.
 fn record_dependencies(reverse: &mut Reverse, node: &str, version: &Value) {
     reverse.entry(node.to_owned()).or_default();
     for dependency in dependencies(version) {
@@ -94,6 +95,7 @@ fn record_dependencies(reverse: &mut Reverse, node: &str, version: &Value) {
     }
 }
 
+/// Enqueues validated parent and unrelated `Version` hashes from `version` onto `queue`.
 fn enqueue_parents(queue: &mut VecDeque<String>, version: &Value) -> io::Result<()> {
     for parent in version["parents"]
         .as_array()

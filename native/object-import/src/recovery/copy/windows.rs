@@ -2,10 +2,15 @@
 
 use std::{fs::OpenOptions, io, os::windows::fs::OpenOptionsExt, path::Path};
 
+/// Windows file-attribute flag bit (`FILE_ATTRIBUTE_DEVICE`) for device files.
 const DEVICE: u64 = 0x0040;
+/// Windows file-attribute flag bit (`FILE_ATTRIBUTE_DIRECTORY`) for directories.
 const DIRECTORY: u64 = 0x0010;
+/// Windows file-attribute flag bit (`FILE_ATTRIBUTE_OFFLINE`) for offline files.
 const OFFLINE: u64 = 0x1000;
+/// Windows `CreateFile` flag (`FILE_FLAG_OPEN_REPARSE_POINT`) disabling reparse-point traversal.
 const OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+/// Windows file-attribute flag bit (`FILE_ATTRIBUTE_REPARSE_POINT`) for symlinks and junctions.
 const REPARSE_POINT: u64 = 0x0400;
 
 /// Returns whether `path` is a single-link regular file without reparse-point or device attributes.

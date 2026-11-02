@@ -1,4 +1,4 @@
-//! Workspace file, repository object, and hex-body `Source` payload loading ([`read`]) and `SHA-1` verification.
+//! Workspace file, repository object, and hex-body `Source` payload loading ([`read`], [`workspace`], [`hex`]) and `SHA-1` verification.
 
 #[cfg(test)]
 #[path = "source_tests.rs"]

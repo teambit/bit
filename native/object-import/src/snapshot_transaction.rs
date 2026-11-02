@@ -64,6 +64,7 @@ fn object_bytes(objects: &[objects::Prepared]) -> usize {
         .sum()
 }
 
+/// Validates, compresses, and stages snapshot objects on disk under a fresh session token.
 fn serialize(input: &Value, state: &mut State) -> io::Result<Value> {
     let request = wire::Serialize::deserialize(input).map_err(io::Error::other)?;
     if request.objects.len() > MAX_OBJECTS {

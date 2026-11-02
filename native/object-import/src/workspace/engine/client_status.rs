@@ -39,11 +39,13 @@ pub(super) struct Prepare {
     root: PathBuf,
     home: PathBuf,
 }
+/// Deserialized `clientStatusScan` request (`rootPolicy`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Scan {
     root_policy: Value,
 }
+/// Deserialized `clientStatusFinish` request (`token`, `combined`, `hard`, `own`, `ignoredRoot`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Finish {
@@ -53,6 +55,7 @@ pub(super) struct Finish {
     own: Value,
     ignored_root: Vec<String>,
 }
+/// Prepares an incremental client status [`Plan`] in `state` from `input`.
 pub(super) fn prepare(input: Prepare, state: &mut State) -> io::Result<(usize, Value)> {
     state.plan = None;
     super::path(&input.root)?;
@@ -75,6 +78,7 @@ pub(super) fn prepare(input: Prepare, state: &mut State) -> io::Result<(usize, V
     });
     Ok((count, output))
 }
+/// Begins an inventory scan for the next component [`Target`] in `state.plan`.
 pub(super) fn scan(
     input: &Scan,
     state: &mut State,

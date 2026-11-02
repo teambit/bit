@@ -86,6 +86,7 @@ impl State {
         Ok(crate::validate::hexadecimal(&digest.finalize()))
     }
 
+    /// Initializes a new multi-scope export [`transaction::Transaction`] in `self`.
     pub(super) fn transaction(&mut self, input: &Value) -> io::Result<Value> {
         let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         let bytes = serde_json::to_vec(input).map_err(io::Error::other)?;
@@ -96,6 +97,7 @@ impl State {
         Ok(output)
     }
 
+    /// Advances the active export [`transaction::Transaction`] with step receipt `input`.
     pub(super) fn receipt(&mut self, input: &Value) -> io::Result<Value> {
         let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         let output = self.transaction

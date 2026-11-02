@@ -94,6 +94,7 @@ fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bo
     Ok(false)
 }
 
+/// Returns `true` when `row` is unscoped with `defaultScope == scope`.
 #[inline]
 fn can_promote_default_scope(row: &Value, scope: &str) -> bool {
     row["scope"]

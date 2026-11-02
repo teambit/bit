@@ -86,6 +86,7 @@ fn add_detached(repository: &Repository, local: &mut Vec<String>) -> io::Result<
     Ok(())
 }
 
+/// Returns `true` when `Version` `hash` originated on a lane (or is the active head or squashed).
 fn eligible(repository: &Repository, hash: &str) -> io::Result<bool> {
     if hash.trim().eq_ignore_ascii_case(repository.heads.current.trim()) {
         return Ok(true);

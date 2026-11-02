@@ -57,11 +57,13 @@ struct Response {
     data: Option<Value>,
 }
 impl Response {
+    /// Constructs a successful `BSS1` [`Response`] with `completed` count and `data`.
     #[inline]
     #[must_use]
     const fn success(id: u32, completed: usize, data: Value) -> Self {
         Self { version: 1, id, completed, skipped: Vec::new(), failed: false, data: Some(data) }
     }
+    /// Constructs a failed `BSS1` [`Response`] for request `id`.
     #[inline]
     #[must_use]
     const fn failure(id: u32) -> Self {

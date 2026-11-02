@@ -72,6 +72,7 @@ pub(super) fn find_key(
     found.map(str::to_owned).ok_or_else(|| invalid("reset bitmap identity absent"))
 }
 
+/// Returns `true` when `(key, row)` is a component object entry in `.bitmap` (not `$schema-version`, `_bit_lane`, or `version`).
 #[inline]
 fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
     let key = key.trim();
@@ -82,6 +83,7 @@ fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
         && row.is_object()
 }
 
+/// Verifies that `row` is available on `main`, not lane-only, and not soft-deleted.
 #[inline]
 fn validate_row(row: &Value) -> io::Result<()> {
     if row["isAvailableOnCurrentLane"] == false

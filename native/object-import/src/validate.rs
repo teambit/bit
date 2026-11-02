@@ -82,6 +82,7 @@ fn header(bytes: &[u8], expected: &str) -> Result<usize, &'static str> {
     Ok(end + 1)
 }
 
+/// Inflates a compressed `Source` object, verifies its header and `SHA-1` digest, and returns the inflated byte count.
 fn source(
     compressed: &[u8],
     expected_hex: &str,

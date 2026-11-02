@@ -91,6 +91,7 @@ fn id(row: &Value) -> io::Result<String> {
     Ok(String::new())
 }
 
+/// Strips internal (`__specific` and `"-"`-valued) properties from sorted extension config `value`.
 fn without_internal(value: &Value) -> io::Result<Value> {
     let Value::Object(fields) = value else {
         return Err(invalid("sorted config object"));

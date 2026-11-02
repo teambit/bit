@@ -1,4 +1,4 @@
-//! Bounded repository object metadata reads ([`read_scope_object`], [`read_object_directory`], [`read_raw_scope_object`]) shared by VCS operations and diagnostics.
+//! Bounded repository object metadata reads ([`read_scope_object`], [`read_object_directory`], [`read_raw_scope_object`], [`invalid`]) shared by VCS operations and diagnostics.
 use crate::{checkout::repository, merge_history};
 use serde_json::Value;
 use std::{io, path::Path};

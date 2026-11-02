@@ -45,6 +45,7 @@ struct Params {
     pre_release_id: Option<String>,
     has_tag_data: bool,
 }
+/// Resolved version-bump strategy (`release`, `exact`, `count`, `pre`, `soft`) for a single [`Component`].
 #[derive(Debug, Default, Clone, PartialEq)]
 struct Choice<'a> {
     release: &'a str,
@@ -54,6 +55,7 @@ struct Choice<'a> {
     soft: bool,
 }
 
+/// Computes the next published version for every component in a `snapshotFutureVersions` `input`.
 pub(super) fn plan(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     if request.components.len() > 4096 {
@@ -66,6 +68,7 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
     }
     Ok(json!({"versions":versions}))
 }
+/// Selects the version-bump [`Choice`] for `component` given `params` and `semver`.
 fn choice<'a>(
     component: &'a Component,
     params: &'a Params,

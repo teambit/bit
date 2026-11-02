@@ -1,4 +1,4 @@
-//! Private staging-file spooling ([`write`], [`Entry`]) with rollback cleanup on failed collection attempts.
+//! Private staging-file spooling ([`write`], [`Pending`], [`Entry`]) with rollback cleanup on failed collection attempts.
 use super::{Entry, invalid};
 use std::{
     fs,

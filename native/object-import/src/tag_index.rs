@@ -1,4 +1,4 @@
-//! Index snapshot hashes ([`TagIndex`]) by their newest normal or orphaned tag label.
+//! Index snapshot hashes ([`TagIndex`], [`TagIndex::model`], [`TagIndex::insert`], [`TagIndex::get`]) by their newest normal or orphaned tag label.
 #[cfg(test)]
 mod tests;
 

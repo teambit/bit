@@ -34,16 +34,19 @@ impl Observation {
     pub(super) fn directory(&self) -> &Path {
         &self.directory
     }
+    /// Returns the sorted map of stash `.json` filenames to raw bytes.
     #[inline]
     #[must_use]
     pub(super) fn files(&self) -> &BTreeMap<String, Vec<u8>> {
         &self.files
     }
+    /// Looks up raw stash file bytes by `name` in `self.files`.
     #[inline]
     #[must_use]
     pub(super) fn file(&self, name: &str) -> Option<&[u8]> {
         self.files.get(name.trim()).map(Vec::as_slice)
     }
+    /// Returns the lexically latest stash `.json` filename in `self.files`.
     #[inline]
     #[must_use]
     pub(super) fn latest(&self) -> Option<&str> {

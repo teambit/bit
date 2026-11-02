@@ -95,6 +95,7 @@ pub(super) fn publish_sources(plan: &mut planning::Planned, root: &Path) -> io::
     }
     Ok(())
 }
+/// Formats the `.bitmap` history metadata label (`checkout`, `merge`, `switch`, etc.) for `record` and `plan`.
 fn reason(record: &Record, plan: &planning::Planned) -> String {
     if super::checkout_stash::loading(&record.request.options) {
         return String::new();

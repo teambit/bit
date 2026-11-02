@@ -82,6 +82,7 @@ impl Store {
         Ok(())
     }
 
+    /// Clears the per-batch deduplication map of written loose object hashes.
     pub(crate) fn finish_batch(&self) -> io::Result<()> {
         self.written
             .lock()
@@ -96,6 +97,7 @@ impl Store {
         Self::validate_metadata_write(&scope.join("index.json"))
     }
 
+    /// Atomically writes `contents` to `index.json` in the scope parent directory of `self.directory`.
     pub(crate) fn write_index(&self, contents: &[u8]) -> io::Result<()> {
         self.validate_index_write()?;
         let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;

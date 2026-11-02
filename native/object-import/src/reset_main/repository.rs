@@ -74,6 +74,7 @@ impl Repository {
         crate::scope_path(&self.root).join("objects")
     }
 
+    /// Projects `selected` onto `self.component` and `self.index`, returning the `Component` and optional `index.json` changes.
     pub(super) fn project(
         mut self,
         selected: &Selection,

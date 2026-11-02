@@ -84,6 +84,7 @@ impl Repository {
         })
     }
 
+    /// Projects `selection` onto `self.lane`'s component or `updateDependents` membership.
     pub(super) fn project_lane(&mut self, selection: &Selection) -> io::Result<()> {
         let scope = self.model["scope"]
             .as_str()

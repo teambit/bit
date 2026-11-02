@@ -79,6 +79,7 @@ fn staged_repository(
     Repository::staged(root, bitmap, scope, name)
 }
 
+/// Returns `true` when `repository` has unexported lane snaps beyond `baseline` and records read proofs.
 fn staged(repository: &Repository, result: &mut Discovery) -> io::Result<bool> {
     if repository.heads.baseline.as_deref() == Some(repository.heads.current.as_str()) {
         return Ok(false);
@@ -95,6 +96,7 @@ fn staged(repository: &Repository, result: &mut Discovery) -> io::Result<bool> {
         .is_empty())
 }
 
+/// Collects all visible and hidden `<scope>/<name>` component identities referenced by `lane`.
 fn membership(lane: &Value) -> io::Result<HashSet<String>> {
     let components = lane["components"].as_array().ok_or_else(|| invalid("lane candidate rows"))?;
     let dependents = lane["updateDependents"].as_array();

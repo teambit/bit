@@ -47,6 +47,7 @@ const REPOSITORY: &[&str] = &[
 pub(super) struct State {
     journals: HashMap<String, Journal>,
 }
+/// Active transaction execution journal tracking current `phase`, item `index`, and `revision`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Journal {
     token: String,
@@ -57,6 +58,7 @@ struct Journal {
     revision: u32,
     terminal: bool,
 }
+/// Deserialized `snapshotTransactionBegin` or `snapshotRepositoryBegin` request (`soft`, `count`).
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {
@@ -64,6 +66,7 @@ pub(super) struct Begin {
     soft: bool,
     count: usize,
 }
+/// Deserialized phase step receipt (`token`, `revision`, `completed`, `failed`, `nextCount`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Receipt {
@@ -74,6 +77,7 @@ pub(super) struct Receipt {
     next_count: Option<usize>,
 }
 impl State {
+    /// Registers a new transaction or repository persistence [`Journal`] under `token`.
     pub(super) fn begin(
         &mut self,
         input: Value,

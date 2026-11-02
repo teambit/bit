@@ -1,4 +1,4 @@
-//! Restore `.bitmap` aspect settings ([`read`]) saved by `version-maker.updateVersions` during a snap.
+//! Restore `.bitmap` aspect settings ([`read`], [`removed_lane_row`]) saved by `version-maker.updateVersions` during a snap.
 
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};

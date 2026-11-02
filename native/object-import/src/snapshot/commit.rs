@@ -60,12 +60,14 @@ struct Workspace {
     path: PathBuf,
     hash: String,
 }
+/// Zlib-compressed loose object bytes and inflated size prepared for [`Store::write`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Prepared {
     hash: String,
     compressed: Vec<u8>,
     inflated_size: usize,
 }
+/// Serialized summary of a committed snapshot object (`hash`, `inflatedSize`, `compressedSize`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Written {
@@ -74,6 +76,7 @@ struct Written {
     compressed_size: usize,
 }
 
+/// Validates, compresses, and atomically writes `objects` into `directory` via [`Store`].
 pub(super) fn commit(
     id: u32,
     directory: &Path,

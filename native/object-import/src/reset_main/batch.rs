@@ -58,6 +58,7 @@ impl Batch {
         Self::prepare_with(root, head_only, Some(Selected { identities: normalized, force }))
     }
 
+    /// Discovers candidate `main`-lane components and prepares per-component reset plans.
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
         let mut ids = candidates(root)?;
         if let Some(selected) = &selected {
@@ -83,12 +84,14 @@ impl Batch {
         Ok(Self { root: root.to_owned(), head_only, selected, items, bitmap, index, controls })
     }
 
+    /// Iterates over `(identity, reset_version_labels)` pairs across all prepared [`Plan`] items.
     pub fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
         self.items
             .iter()
             .map(|item| (item.input.identity.as_str(), item.selection.labels.as_slice()))
     }
 
+    /// Revalidates the live workspace and publishes all prepared `main`-lane batch reset changes.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         super::validate_file_id(file_id)?;
         let fresh = Self::prepare_with(&self.root, self.head_only, self.selected.clone())?;

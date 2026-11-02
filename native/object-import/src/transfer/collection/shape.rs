@@ -47,6 +47,7 @@ fn prepare(value: &Value, artifacts: bool) -> io::Result<()> {
     crate::merge_history::metadata::validate(&clean)
 }
 
+/// Validates `dependencies` and `devDependencies` arrays on `value` and clears them on `clean`.
 fn dependencies(value: &Value, clean: &mut Value) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {
         if let Some(items) = array(value, field)? {
@@ -59,6 +60,7 @@ fn dependencies(value: &Value, clean: &mut Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates `flattenedDependencies` and `flattenedDevDependencies` arrays on `value` and clears them on `clean`.
 fn flattened(value: &Value, clean: &mut Value) -> io::Result<()> {
     for field in ["flattenedDependencies", "flattenedDevDependencies"] {
         let Some(items) = array(value, field)? else { continue };
@@ -73,6 +75,7 @@ fn flattened(value: &Value, clean: &mut Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Extracts optional array `field` from `value`, enforcing [`MAX_VERSION_ARRAY`].
 fn array<'a>(value: &'a Value, field: &str) -> io::Result<Option<&'a Vec<Value>>> {
     let Some(value) = value.get(field) else { return Ok(None) };
     let items = value.as_array().ok_or_else(|| invalid("unsupported Version array"))?;
@@ -82,6 +85,7 @@ fn array<'a>(value: &'a Value, field: &str) -> io::Result<Option<&'a Vec<Value>>
     Ok(Some(items))
 }
 
+/// Validates a `{ scope, name, version }` component identity object on a `Version` dependency entry.
 fn identity(value: Option<&Value>) -> io::Result<()> {
     let value = value
         .and_then(Value::as_object)

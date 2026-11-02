@@ -49,6 +49,7 @@ enum Phase {
 }
 
 impl Transaction {
+    /// Validates `input` and initializes a multi-scope export [`Transaction`] under `token`.
     pub(super) fn initialize(input: &Initialize, token: String) -> io::Result<Self> {
         if input.scopes.is_empty()
             || input.scopes.len() > MAX_OBJECTS
@@ -81,6 +82,7 @@ impl Transaction {
         })
     }
 
+    /// Validates `input` against `self.token` and `self.revision`, advancing `self.phase`.
     pub(super) fn receipt(&mut self, input: &Receipt) -> io::Result<Value> {
         if input.token.trim() != self.token
             || input.revision != self.revision
@@ -96,6 +98,7 @@ impl Transaction {
         Ok(self.output())
     }
 
+    /// Computes the next [`Phase`] transition from `self.phase` given step `success`.
     fn next(&self, success: bool) -> Phase {
         match &self.phase {
             Phase::Push(index) if !success => cleanup((0..*index).collect(), "push"),

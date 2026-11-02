@@ -78,6 +78,7 @@ struct Selection {
     provenance: Option<Value>,
     common: bool,
 }
+/// Selects the replacement head [`Selection`] for `input` when `needed` is `true`.
 fn select(input: &Value, needed: bool) -> io::Result<Selection> {
     let none = Selection { hash: None, provenance: None, common: false };
     if !needed {

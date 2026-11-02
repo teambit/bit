@@ -81,6 +81,7 @@ pub(super) fn with_population(
     })
 }
 
+/// Attaches read `proofs` to an existing [`CanonicalError`] without altering its message or writes.
 pub(super) fn with_reads(error: io::Error, proofs: super::proofs::ReadSet) -> io::Error {
     let Some(canonical) = error.get_ref().and_then(|error| error.downcast_ref::<CanonicalError>())
     else {

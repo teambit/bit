@@ -45,6 +45,7 @@ pub(super) struct Repository {
     pub(super) hash: String,
 }
 
+/// Deserialized `snapshotCommit` request (`token`, `objectsDirectory`, optional `owner`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Commit {
@@ -54,6 +55,7 @@ pub(super) struct Commit {
     pub(super) owner: Option<Owner>,
 }
 
+/// Deserializes and validates a non-empty snapshot staging `token` without path-traversal characters.
 #[inline]
 fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
 where
@@ -71,6 +73,7 @@ where
     Ok(if trimmed.len() == token.len() { token } else { trimmed.to_owned() })
 }
 
+/// Optional POSIX `(uid, gid)` ownership applied when committing staged snapshot objects.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Owner {
@@ -78,6 +81,7 @@ pub(super) struct Owner {
     pub(super) gid: u32,
 }
 
+/// BOM and end-of-line normalization mode (`Workspace` or `LinuxEol`) for `Source` inputs.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) enum Normalization {

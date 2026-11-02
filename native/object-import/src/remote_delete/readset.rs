@@ -49,10 +49,12 @@ impl Readset {
         self.watch(&object_path(&self.objects, hash))
     }
 
+    /// Records the current preimage bytes of `path` in `self`.
     pub(super) fn watch(&mut self, path: &Path) -> io::Result<()> {
         self.record(path.into(), optional(path)?)
     }
 
+    /// Revalidates that every recorded path in `self.entries` still matches its captured preimage bytes.
     pub(super) fn validate(&self) -> io::Result<()> {
         for (path, bytes) in &self.entries {
             if optional(path)? != *bytes {
@@ -62,6 +64,7 @@ impl Readset {
         Ok(())
     }
 
+    /// Appends `(path, bytes)` to `self.entries` within the 128 MiB / 32,768-entry readset budget.
     fn record(&mut self, path: PathBuf, bytes: Option<Vec<u8>>) -> io::Result<()> {
         if let Some((_, previous)) = self.entries
             .iter()

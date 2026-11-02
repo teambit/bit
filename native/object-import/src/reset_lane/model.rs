@@ -86,6 +86,7 @@ fn remove_pending_state(model: &mut Value, labels: &[String]) -> io::Result<()> 
     Ok(())
 }
 
+/// Prunes `removed` hashes from `model["detachedHeads"]` and deletes `detachedHeads` when empty.
 fn remove_detached(model: &mut Value, removed: &[String]) -> io::Result<()> {
     let Some(fields) = model.get_mut("detachedHeads").and_then(Value::as_object_mut) else {
         return Ok(());

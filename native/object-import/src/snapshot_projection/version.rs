@@ -1,4 +1,4 @@
-//! Canonical `Version` object field ordering ([`KEYS`], [`project`], [`field`]), dependency normalization, and extension [`Value`] projection.
+//! Canonical `Version` object field ordering ([`KEYS`], [`project`], [`field`], [`rows`]), dependency normalization, and extension [`Value`] projection.
 
 use std::io;
 

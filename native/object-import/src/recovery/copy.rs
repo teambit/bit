@@ -67,6 +67,7 @@ fn links(_path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     }
     Ok(())
 }
+/// Verifies that `path` is a single-link regular file on Windows platforms.
 #[cfg(windows)]
 fn links(path: &Path, _metadata: &fs::Metadata) -> io::Result<()> {
     if !windows::single(path)? {

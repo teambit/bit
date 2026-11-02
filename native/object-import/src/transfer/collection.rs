@@ -61,6 +61,7 @@ pub(crate) fn select(
     }
 }
 
+/// Selects `Version`, required `Source`/edge/graph, and artifact [`Descriptor`]s for an export transfer.
 fn export(
     directory: &Path,
     versions: &[Version],

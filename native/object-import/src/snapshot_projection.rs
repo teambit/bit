@@ -92,6 +92,7 @@ pub fn serialize(kind: &str, fields: &Value, pretty: bool) -> io::Result<Vec<u8>
     stringify(&project(kind, fields)?, pretty)?.ok_or_else(|| invalid("missing serialization"))
 }
 
+/// Looks up property `name` on object `fields`, returning [`Value::Undefined`] when absent.
 fn get<'a>(fields: &'a Value, name: &str) -> &'a Value {
     static UNDEFINED: Value = Value::Undefined;
     let Value::Object(fields) = fields else {

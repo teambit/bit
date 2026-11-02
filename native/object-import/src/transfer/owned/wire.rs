@@ -82,6 +82,7 @@ pub(super) struct Version {
     expected: Option<References>,
 }
 
+/// Expected outgoing `Source`, artifact, `edges`, and `graph` hash strings for a `Version` entry.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct References {
@@ -92,6 +93,7 @@ struct References {
 }
 
 impl Version {
+    /// Converts this deserialized [`Version`] wire entry into a [`collection::Version`].
     #[inline]
     pub(super) fn convert(&self) -> std::io::Result<collection::Version> {
         let expected = self.expected

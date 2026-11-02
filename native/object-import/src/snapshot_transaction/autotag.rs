@@ -83,6 +83,7 @@ fn walk(
     }
     Ok(())
 }
+/// Returns `true` when `changed` has a version greater than or equal to `dependency` according to `semver`.
 fn qualifies(changed: &Value, dependency: &Value, semver: &Value) -> io::Result<bool> {
     let left = version_str(changed);
     let right = version_str(dependency);
@@ -94,6 +95,7 @@ fn qualifies(changed: &Value, dependency: &Value, semver: &Value) -> io::Result<
     }
     Ok(true)
 }
+/// Extracts the non-empty version string from component `id` (`id["version"]` or `@version` suffix).
 fn version_str(id: &Value) -> Option<&str> {
     id["version"]
         .as_str()

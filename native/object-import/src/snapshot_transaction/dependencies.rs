@@ -87,6 +87,7 @@ fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Valu
     }
     Ok(output)
 }
+/// Extracts the target version or head string from component `id`.
 fn target_version(id: &Value) -> io::Result<String> {
     non_empty_str(&id["version"])
         .or_else(|| non_empty_str(&id["head"]))

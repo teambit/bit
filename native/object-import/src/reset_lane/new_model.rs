@@ -5,6 +5,8 @@ use serde_json::Value;
 use std::{fs, io, path::Path};
 
 /// Prepares deletion of the `Component` [`ObjectChange`] and `index.json` [`BytesChange`] for a lane-only component reset.
+///
+/// Validates both `index.json` and `Component` object byte budgets before removing the index row.
 pub(super) fn remove_new_model(
     root: &Path,
     scope: &str,

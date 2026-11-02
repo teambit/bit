@@ -82,6 +82,7 @@ impl Plan {
         })
     }
 
+    /// Revalidates `.bitmap`, backs up `.bitmap-<file_id>`, and writes the updated `.bitmap` bytes.
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         crate::reset_main::validate_file_id(file_id)?;
         let current =
@@ -94,6 +95,7 @@ impl Plan {
     }
 }
 
+/// Clears `nextVersion` on matching `.bitmap` `rows` and returns the affected [`Entry`] list.
 fn select(
     rows: &mut serde_json::Map<String, Value>,
     pattern: Option<&str>,

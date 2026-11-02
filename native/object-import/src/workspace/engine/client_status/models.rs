@@ -1,4 +1,4 @@
-//! Stored model file reference resolution and hashing ([`files`]) for client status [`Target`]s.
+//! Stored model file reference resolution and hashing ([`files`], [`read_component`], [`index_component_hash`]) for client status [`Target`]s.
 
 use super::{Target, invalid};
 use crate::{checkout::repository, merge_history, read_version};

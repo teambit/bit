@@ -91,6 +91,7 @@ fn parent_entry(hash: &str, version: &Value, parents: &[Value]) -> Value {
     entry
 }
 
+/// Projects `VersionHistory` object changes for all unselected components on `lane`.
 pub(super) fn pending_histories(
     objects: &Path,
     lane: &Value,

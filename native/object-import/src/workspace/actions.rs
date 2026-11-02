@@ -1,4 +1,4 @@
-//! Sequential workspace filesystem action frame handler ([`serve`]: `copy`, `remove`, `ensureDir`, `symlink`).
+//! Sequential workspace filesystem action frame handler ([`serve`], [`Action`]: `copy`, `remove`, `ensureDir`, `symlink`).
 
 #[cfg(test)]
 mod tests;
