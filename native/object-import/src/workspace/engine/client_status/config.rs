@@ -50,6 +50,7 @@ const ISSUE_CLASSES: [&str; 24] = [
     "LoadFailures",
 ];
 
+/// Loads and validates `workspace.jsonc` from `root` for status queries.
 #[inline]
 pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
     configuration_for_command(root, false)

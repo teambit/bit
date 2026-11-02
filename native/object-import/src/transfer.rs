@@ -31,6 +31,7 @@ pub(crate) enum Body {
     Metadata(Vec<u8>),
 }
 
+/// Per-object transfer descriptor pairing a 20-byte SHA-1 `hash`, optional `scope`, mtime `seconds`, and [`Body`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Descriptor {
     pub(crate) hash: [u8; 20],

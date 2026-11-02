@@ -13,6 +13,7 @@ struct Request {
     params: Params,
     semver: Value,
 }
+/// Per-component version history and tag flags in a `snapshotFutureVersions` request.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Component {

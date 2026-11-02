@@ -31,6 +31,7 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
     fs::write(plan.input.root.join(".bitmap"), &plan.bitmap.after)
 }
 
+/// Writes or deletes the scope loose object described by `object` under `root`.
 pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()> {
     let path = object_path(root, &object.hash);
     if let Some(bytes) = &object.after {

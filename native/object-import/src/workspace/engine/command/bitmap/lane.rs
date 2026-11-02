@@ -55,6 +55,7 @@ pub(super) fn switch_visibility(
     }
     Ok(())
 }
+/// Computes `(is_available_on_current_lane, on_lanes_only)` flags for `component` when switching to `name`.
 fn switch_flags(
     context: &Value,
     component: &str,

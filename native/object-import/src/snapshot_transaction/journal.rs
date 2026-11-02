@@ -28,6 +28,7 @@ const FULL: &[&str] = &[
     "linkWorkspace",
     "clearCache",
 ];
+/// Ordered phase sequence required for a soft-tag transaction (`snapshotTransactionBegin` with `soft: true`).
 const SOFT: &[&str] = &["initialize", "preSnap", "prepareVersions", "captureLane", "softTag"];
 const REPOSITORY: &[&str] = &[
     "deleteObjects",

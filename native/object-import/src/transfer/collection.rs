@@ -18,6 +18,7 @@ pub(crate) struct References {
     pub(crate) graph: Option<[u8; 20]>,
 }
 
+/// `Version` object selection input with its 20-byte `hash`, `locally_changed` flag, and optional expected [`References`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Version {
     pub(crate) hash: [u8; 20],

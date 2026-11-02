@@ -27,6 +27,7 @@ pub(super) struct Prepared {
     pub(super) path: PathBuf,
 }
 
+/// Validates, projects, and zlib-compresses `objects` into [`Prepared`] snapshot records.
 pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Vec<Prepared>> {
     let mut total = 0;
     let mut input_compressed = 0;

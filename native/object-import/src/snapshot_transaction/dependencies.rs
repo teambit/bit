@@ -36,6 +36,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     }
     Ok(json!({"components":output}))
 }
+/// Computes aligned `dependencies`, `extensions`, and `resolver` rows for `component` at `index`.
 fn row(index: usize, component: &Value, components: &[Value]) -> io::Result<Value> {
     let dependencies = dependency_rows(component, components)?;
     let extensions = extension_rows(component, components)?;

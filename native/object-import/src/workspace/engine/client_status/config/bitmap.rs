@@ -44,6 +44,7 @@ fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     }
     Ok(targets)
 }
+/// Validates and inserts a single `.bitmap` component entry into `targets`, rejecting numeric aliases and duplicates.
 fn insert_target(
     key: &str,
     value: &Value,

@@ -28,6 +28,7 @@ pub(super) fn prepare(scope: &Path, ids: &[String], force: bool) -> io::Result<P
     })
 }
 
+/// Resolves and validates the `Lane` object hashes and merge eligibility for `ids`.
 fn select_lanes(
     scope: &Path,
     ids: &[String],

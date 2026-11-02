@@ -22,6 +22,7 @@ pub(super) struct Readset {
 }
 
 impl Readset {
+    /// Creates an empty [`Readset`] rooted at `scope/objects`.
     #[inline]
     pub(super) fn new(scope: &Path) -> Self {
         Self { objects: scope.join("objects"), entries: Vec::new(), bytes: 0 }

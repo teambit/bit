@@ -22,6 +22,7 @@ pub(super) struct Object {
     body: Option<String>,
     workspace: Option<Workspace>,
 }
+/// Supported repository object kind in a `BSS1` snapshot commit request.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 enum Kind {
     Source,

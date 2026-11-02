@@ -18,7 +18,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Retained bare-scope hard-delete plan moving selected `Component`, `Version`, or `Lane` refs to trash.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     scope: PathBuf,

@@ -37,6 +37,7 @@ pub(super) fn component(fields: &Value) -> io::Result<Value> {
     Ok(output)
 }
 
+/// Projects the `detachedHeads` object (`heads`, `deleted`, `current`), returning `Value::Undefined` when empty.
 fn detached(value: &Value) -> io::Result<Value> {
     object(value)?;
     let mut output = Value::Object(Vec::with_capacity(3));

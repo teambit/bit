@@ -27,6 +27,7 @@ pub(super) struct Entry {
     pub(super) path: Option<PathBuf>,
 }
 
+/// Frozen transfer plan containing ordered object [`Entry`] items and their combined `objects_hash`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     pub(super) entries: Vec<Entry>,

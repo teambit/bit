@@ -18,6 +18,7 @@ pub(super) fn remove(path: &Path) -> io::Result<()> {
     prune_empty_parent(parent)
 }
 
+/// Removes `parent` when it is an empty non-symlink directory.
 fn prune_empty_parent(parent: &Path) -> io::Result<()> {
     if parent.is_symlink() {
         return Ok(());

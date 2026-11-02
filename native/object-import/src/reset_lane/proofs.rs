@@ -16,6 +16,7 @@ pub(super) fn read(path: &Path, proofs: &mut ReadSet) -> io::Result<Option<Vec<u
     Ok(bytes)
 }
 
+/// Reads an ordinary regular file at `path` (up to 96 MiB), returning `None` when absent.
 fn regular(path: &Path) -> io::Result<Option<Vec<u8>>> {
     let bytes = match fs::symlink_metadata(path) {
         Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {

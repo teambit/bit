@@ -27,6 +27,7 @@ impl fmt::Display for CanonicalError {
 }
 impl std::error::Error for CanonicalError {}
 
+/// Constructs a [`CanonicalError`] `io::Error` with `message` and empty population writes.
 #[inline]
 pub(super) fn error(message: impl Into<String>) -> io::Error {
     io::Error::other(CanonicalError {

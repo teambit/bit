@@ -27,6 +27,7 @@ pub(super) fn hidden_head(lane: &Value, identity: &str) -> io::Result<Option<Str
     Ok(found.map(str::to_owned))
 }
 
+/// Updates or removes the component or `updateDependents` entry for `(scope, name)` on `lane`.
 pub(super) fn project(
     lane: &mut Value,
     scope: &str,

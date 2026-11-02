@@ -33,6 +33,7 @@ impl Discovery {
     }
 }
 
+/// Discovers all staged lane components at `root` in `index.json` order and records read proofs.
 pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
     let mut bitmap = context(root)?;
     let mut retained = vec![(root.join(".bitmap"), Some(bitmap.before.clone()))];

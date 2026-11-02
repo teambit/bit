@@ -26,6 +26,7 @@ struct Selected {
 }
 
 impl Batch {
+    /// Prepares a silent `main`-lane reset across all staged components at `root`.
     #[inline]
     pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
         Self::prepare_with(root, head_only, None)

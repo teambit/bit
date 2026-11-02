@@ -67,6 +67,7 @@ impl PreparedLoad {
         fs::remove_file(self.observation.directory().join(&self.filename))
     }
 }
+/// Maximum byte size (32 MiB) and entry count (4,096) enforced via [`Observation`] on `.bit/stash`.
 /// Project the published list result in stash filename discovery order.
 pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
     let observation = Observation::read(scope)?;

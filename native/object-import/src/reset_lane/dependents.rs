@@ -34,6 +34,7 @@ pub(super) fn validate(
     Ok(())
 }
 
+/// Finds all indexed component IDs whose `Version` flattened dependencies reference `identity@label`.
 fn immediate(
     objects: &Path,
     references: &[(String, String)],

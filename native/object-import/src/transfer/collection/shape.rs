@@ -15,6 +15,7 @@ pub(super) fn eligible(value: &Value) -> io::Result<()> {
     prepare(value, true)
 }
 
+/// Validates that `value` satisfies `Version` history structural eligibility without requiring builder artifacts.
 #[inline]
 pub(crate) fn history(value: &Value) -> io::Result<()> {
     prepare(value, false)

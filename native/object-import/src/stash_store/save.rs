@@ -28,6 +28,7 @@ impl PreparedSave {
         }
         Ok(Self { observation, filename, bytes })
     }
+    /// Returns the selected `stash-<index>.json` filename for this prepared save.
     #[inline]
     #[must_use]
     pub fn filename(&self) -> &str {

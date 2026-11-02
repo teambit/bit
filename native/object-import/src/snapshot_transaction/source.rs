@@ -43,6 +43,7 @@ pub(super) fn read(
     Ok(bytes)
 }
 
+/// Reads a workspace `source` file within `maximum` bytes, strips optional BOM, and normalizes line endings.
 fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     path(&source.path)?;
     if source.path.parent().is_none_or(std::path::Path::is_symlink) {

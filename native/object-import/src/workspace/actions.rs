@@ -36,6 +36,7 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
     protocol::respond(writer, &response)
 }
 
+/// Reads and validates a batch of sequential workspace filesystem [`Action`]s from `reader`.
 fn request(reader: &mut impl Read) -> io::Result<Vec<Action>> {
     let count = protocol::word(reader)?;
     if !(1..=MAX_FILES).contains(&count) {

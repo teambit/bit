@@ -31,6 +31,7 @@ pub(super) fn increment(
     }
     Ok(next)
 }
+/// Increments `version` to a stable `major`, `minor`, or `patch` release and clears `prerelease`.
 fn stable(version: &mut Value, release: &str) -> io::Result<()> {
     let prerelease = !array(version)?.is_empty();
     let minor = number(version, "minor")?;

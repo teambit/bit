@@ -32,6 +32,7 @@ pub(crate) struct State {
     repository: journal::State,
 }
 
+/// Retained list of [`objects::Prepared`] entries staged under a snapshot serialization token.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Plan {
     objects: Vec<objects::Prepared>,

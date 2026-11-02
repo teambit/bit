@@ -48,7 +48,7 @@ pub fn read_object_directory(
     Ok(Some((kind.to_owned(), value)))
 }
 
-/// Read the raw header parts and uncompressed body of a scope object by 40-char hex hash.
+/// Read the raw header parts and uncompressed body of a scope object by 40-char hex hash (see [`read_scope_object`]).
 pub fn read_raw_scope_object(
     scope: &Path,
     identity: &str,

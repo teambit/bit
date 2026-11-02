@@ -8,6 +8,7 @@ use std::collections::HashMap;
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct TagIndex(HashMap<String, (String, bool)>);
 impl TagIndex {
+    /// Builds a [`TagIndex`] from a `ModelComponent` JSON value (`versions` and `orphanedVersions`).
     pub(crate) fn model(model: &serde_json::Value) -> Self {
         let capacity = ["orphanedVersions", "versions"]
             .into_iter()

@@ -24,6 +24,7 @@ pub(super) fn dependents(
     Ok(Value::Object(result))
 }
 
+/// Builds the reverse dependency index across all non-symlink `components` in `index`.
 fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
     let rows = index["components"]
         .as_array()

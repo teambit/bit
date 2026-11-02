@@ -46,6 +46,7 @@ pub(super) fn remote_head(
     head_for(rows, scope, name)
 }
 
+/// Finds the unique `head` hash for `(scope, name)` in a remote-lane ref `rows` array.
 fn head_for(rows: &[Value], scope: &str, name: &str) -> io::Result<Option<String>> {
     let mut found = None;
     for row in rows {

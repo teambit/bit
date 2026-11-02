@@ -37,6 +37,7 @@ pub fn select(component: &Value, objects: &Path, head_only: bool) -> io::Result<
     Ok(Selection { removed, labels, next_head })
 }
 
+/// Collects the map of local-only version hashes to tag/snap labels from `component["state"]["versions"]`.
 fn local_refs(component: &Value) -> io::Result<HashMap<String, String>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset versions map"))?;

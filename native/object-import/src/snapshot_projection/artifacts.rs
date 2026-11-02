@@ -22,6 +22,7 @@ pub(super) fn convert(data: &Value) -> io::Result<Value> {
         .collect::<io::Result<Vec<_>>>()?;
     replace(data, "artifacts", Value::Array(artifacts))
 }
+/// Projects a single `teambit.pipelines/builder` artifact descriptor and its `files` references.
 fn artifact(artifact: &Value) -> io::Result<Value> {
     object(artifact)?;
     let files = get(artifact, "files");

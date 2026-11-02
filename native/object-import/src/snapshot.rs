@@ -30,6 +30,7 @@ enum Request {
     Index { components: Vec<Value>, lanes: Vec<Value>, objects: Vec<Value> },
     IndexWrite { objects_directory: PathBuf, owner: Option<Owner>, contents: String },
 }
+/// Optional POSIX `(uid, gid)` ownership applied to newly created scope objects and `index.json`.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Owner {

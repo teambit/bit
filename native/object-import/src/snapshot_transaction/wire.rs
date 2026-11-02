@@ -13,6 +13,7 @@ pub(super) struct Serialize {
     pub(super) pretty: bool,
 }
 
+/// Single snapshot object entry (`type`, optional `hash`, `fields`, `source`, `repository`, or `body`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Object {

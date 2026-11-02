@@ -38,6 +38,7 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Verifies that `metadata` describes an ordinary regular file within the 32 MiB recovery budget.
 fn regular(path: &Path, metadata: fs::Metadata) -> io::Result<fs::Metadata> {
     if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > 32 * 1024 * 1024
     {

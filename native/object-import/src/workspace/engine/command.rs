@@ -47,6 +47,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::io;
 
+/// Session-scoped state holding active workspace command records, recovery, resolve, transfer, stash, and history contexts.
 #[derive(Default)]
 pub(crate) struct State {
     sequence: u64,

@@ -16,6 +16,7 @@ struct Request {
     chown: Option<Owner>,
 }
 
+/// POSIX `(uid, gid)` ownership pair applied when writing objects into a pending directory.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Owner {

@@ -58,6 +58,7 @@ impl WorkspaceSession {
         })
     }
 
+    /// Validates frame size, reads the 4-byte magic header, and routes `frame` to the matching handler.
     fn dispatch(&mut self, frame: &[u8]) -> io::Result<Vec<u8>> {
         if frame.len() < 4 || frame.len() > crate::protocol::MAX_BATCH_BYTES {
             return Err(io::Error::other("workspace frame exceeds byte limit"));

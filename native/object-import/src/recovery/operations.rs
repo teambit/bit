@@ -18,6 +18,7 @@ pub(crate) enum Operation {
     Remove { path: PathBuf },
     EnsureDir { path: PathBuf },
 }
+/// Session-scoped crash-recovery operation queue tracking active `token`, `index`, and `revision`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     token: Option<String>,

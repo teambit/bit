@@ -18,6 +18,7 @@ pub(super) struct Initialize {
     resuming: bool,
 }
 
+/// Deserialized step receipt (`token`, `revision`, `success`) reported to advance a [`Transaction`].
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Receipt {

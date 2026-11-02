@@ -25,6 +25,7 @@ pub(crate) struct Store {
 }
 
 impl Store {
+    /// Creates a loose-object [`Store`] rooted at `directory` after verifying it is an absolute path without `..` segments.
     pub(crate) fn new(directory: PathBuf, owner: Option<(u32, u32)>) -> io::Result<Self> {
         if !directory.is_absolute()
             || directory

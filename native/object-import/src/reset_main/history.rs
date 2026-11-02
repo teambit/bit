@@ -41,6 +41,7 @@ pub(super) fn pending(
     Ok(Some(ObjectChange { hash, before, after: Some(after) }))
 }
 
+/// Appends any `selection.removed` refs not yet present in `history["versions"]`.
 fn append_removed(objects: &Path, history: &mut Value, selection: &Selection) -> io::Result<bool> {
     let versions =
         history["versions"].as_array_mut().ok_or_else(|| invalid("reset history versions"))?;

@@ -46,6 +46,7 @@ pub(super) fn plan(input: &Value) -> io::Result<Value> {
     }
     Ok(output)
 }
+/// Returns whether the component remains in the scope after applying `selection` and `tags`.
 fn outcome(
     input: &Value,
     selection: &Selection,

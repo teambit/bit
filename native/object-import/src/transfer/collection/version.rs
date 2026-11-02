@@ -14,6 +14,7 @@ pub(super) struct Loaded {
     pub(super) references: References,
 }
 
+/// Loads and validates `Version` objects from `directory` together with their extracted [`References`].
 pub(super) fn load(directory: &Path, versions: &[Version]) -> io::Result<Vec<Loaded>> {
     let mut bytes = 0;
     let mut result = Vec::with_capacity(versions.len());

@@ -20,6 +20,7 @@ pub(crate) struct Outcome {
     pub(crate) metadata: Option<String>,
 }
 
+/// Formats `bytes` as a lowercase hexadecimal string (`2 * bytes.len()` ASCII characters).
 #[inline]
 pub(crate) fn hexadecimal(bytes: &[u8]) -> String {
     const HEX: &[u8; 16] = b"0123456789abcdef";

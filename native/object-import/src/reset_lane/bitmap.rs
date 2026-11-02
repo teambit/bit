@@ -22,6 +22,7 @@ pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> 
     found.map(str::to_owned).ok_or_else(|| invalid("lane reset bitmap identity absent"))
 }
 
+/// Extracts `(scope, name)` from a `.bitmap` entry `key` and `row` object.
 #[must_use]
 pub(crate) fn row_identity<'a>(key: &'a str, row: &'a Value) -> (Option<&'a str>, &'a str) {
     let key = key.trim();

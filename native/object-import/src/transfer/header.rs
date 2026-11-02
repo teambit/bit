@@ -38,6 +38,7 @@ pub(super) fn encode(name: &str, size: usize, seconds: u32) -> io::Result<[u8; 5
     Ok(block)
 }
 
+/// Splits a tar entry path into `(prefix, name)` components that fit within `USTAR` 155/100-byte limits.
 fn split(mut name: &str) -> io::Result<(&str, &str)> {
     let original = name;
     let mut length = 0;

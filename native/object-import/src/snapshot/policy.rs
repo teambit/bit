@@ -18,6 +18,7 @@ pub(super) struct Plan {
     #[serde(flatten)]
     head_policy: HeadPolicy,
 }
+/// Head-update policy flags (`setHeadAsParent`, `detachHead`, `overrideHead`) for [`Plan`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HeadPolicy {

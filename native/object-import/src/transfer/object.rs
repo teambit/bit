@@ -28,6 +28,7 @@ pub(super) fn name(item: &Descriptor) -> io::Result<String> {
     }
 }
 
+/// Reads and validates a transfer object's compressed payload, returning `(compressed_bytes, inflated_bytes, kind)`.
 pub(crate) fn read(
     directory: &Path,
     item: &Descriptor,
