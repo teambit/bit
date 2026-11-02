@@ -44,7 +44,7 @@ impl fmt::Display for UnsupportedPattern {
 
 impl std::error::Error for UnsupportedPattern {}
 
-/// The module state of node-ignore: its replacer tables and regex cache.
+/// The module state of `node-ignore`: its [`Step`] replacer tables and [`Regex`] source cache.
 #[derive(Debug, Clone)]
 pub struct Compiler {
     blank_line: Regex,

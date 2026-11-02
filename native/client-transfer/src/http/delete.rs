@@ -3,7 +3,7 @@
 //! cancellation, status or parse error after invocation may hide a committed
 //! delete; callers must never replay it through another implementation.
 //!
-//! Extends [`Network`] with [`Network::delete_scope`] and [`Network::delete_scope_lanes`] over [`Response`] streams.
+//! Extends [`Network`] with [`Network::delete_scope`], [`Network::delete_scope_lanes`], and [`Network::delete_hub`] over [`Response`] streams.
 #[cfg(test)]
 mod tests;
 

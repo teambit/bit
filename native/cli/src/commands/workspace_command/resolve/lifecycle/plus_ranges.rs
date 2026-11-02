@@ -86,6 +86,7 @@ fn plan_identity(value: &Value) -> Option<String> {
     )
 }
 
+/// Extracts the unversioned `<scope>/<name>` identity from a captured component `row`.
 #[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     non_empty_str(&row["identity"])
@@ -94,6 +95,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .filter(|bare| !bare.is_empty())
 }
 
+/// Collects `+^` and `+~` dependency range strings configured on `component` (`identity`).
 fn component_usages(
     session: &Session<'_>,
     identity: &str,

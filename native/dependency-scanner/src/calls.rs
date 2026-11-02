@@ -41,7 +41,7 @@ pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
         ),
     )
 }
-/// Returns `true` when `node` is a `require` or `require.resolve` / `import.meta.resolve` call accepted by the scanner.
+/// Returns `true` when `node` is a `require` or `require.resolve` / `import.meta.resolve` [`CallExpression`] accepted by the scanner.
 #[inline]
 pub(crate) fn accepted(node: &CallExpression<'_>, ts: bool) -> bool {
     let callee = node.callee.without_parentheses();

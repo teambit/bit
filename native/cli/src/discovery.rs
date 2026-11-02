@@ -74,13 +74,16 @@ pub struct Environment {
 
 /// Error message returned when no Node.js Bit CLI [`Target`] can be discovered.
 const NOT_FOUND: &str = "the Node.js Bit CLI was not found. Set BIT_NODE_CLI to the path of @teambit/bit's bin/bit (or a checkout's bin/bit.js), install bit with bvm, or put the Node.js bit on PATH";
+/// Relative path to the Bit CLI entry script inside a package installation (`node_modules/@teambit/bit/bin/bit`).
 const ENTRY_IN_PACKAGE: &str = "node_modules/@teambit/bit/bin/bit";
 
+/// Discovers the Node.js Bit CLI [`Target`] from the current process environment.
 #[inline]
 pub fn find() -> io::Result<Target> {
     find_in(&Environment::from_process())
 }
 
+/// Discovers the Node.js Bit CLI [`Target`] from the provided [`Environment`].
 pub fn find_in(environment: &Environment) -> io::Result<Target> {
     let cli = from_env(environment)
         .or_else(|| beside_executable(environment))

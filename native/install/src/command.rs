@@ -38,7 +38,7 @@ pub struct InstallSummary {
     pub old_non_loaded_envs: Vec<String>,
 }
 
-/// The result of one `bit install` invocation.
+/// The result of one `bit install` invocation, including [`InstallSummary`] on completion.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Outcome {
     Installed(InstallSummary),

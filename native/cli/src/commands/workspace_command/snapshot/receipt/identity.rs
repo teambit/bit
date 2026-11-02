@@ -30,11 +30,13 @@ struct Failure {
 }
 
 impl Cache {
+    /// Creates an empty [`Cache`] cell.
     #[inline]
     const fn new() -> Self {
         Self { value: OnceLock::new() }
     }
 
+    /// Loads or initializes the cached [`User`] identity using `factory`.
     fn load(&self, factory: impl FnOnce() -> io::Result<User>) -> io::Result<User> {
         self.value
             .get_or_init(|| {

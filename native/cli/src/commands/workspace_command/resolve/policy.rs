@@ -89,6 +89,7 @@ impl Policy {
         self.flag(flag, next).map(Some)
     }
 
+    /// Applies `flag` (and optional `next` argument for `--ignore-issues`) onto `self`, returning the number of extra tokens consumed.
     #[inline]
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
         match flag {

@@ -16,7 +16,7 @@ use super::session::{Loaded, Session};
 use crate::{engine, manifests::semver};
 use std::io;
 
-/// Validate CLI package arguments for `bit install`, resolving component IDs to their package names.
+/// Validate CLI package arguments for `bit install`, resolving component IDs against [`Loaded`] to their package names.
 pub fn validate(packages: &[String], loaded: &Loaded) -> io::Result<Vec<String>> {
     packages
         .iter()

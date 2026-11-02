@@ -6,8 +6,11 @@ use std::{error::Error, fmt, io};
 /// Adapter failure wrapper preserving buffered startup and callback stdout alongside the [`io::Error`] cause.
 #[derive(Debug)]
 pub(crate) struct CallbackError {
+    /// Buffered startup output emitted before the callback failure.
     pub startup: String,
+    /// Buffered callback stdout emitted before the callback failure.
     pub output: String,
+    /// Underlying [`io::Error`] cause.
     cause: io::Error,
 }
 

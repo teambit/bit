@@ -31,7 +31,7 @@ pub struct Installed {
     pub old_non_loaded_envs: Vec<String>,
 }
 
-/// Installs the workspace dependencies and converges manifests across legacy environments.
+/// Installs the workspace dependencies for [`Session`] and converges [`Calculated`] manifests across legacy environments.
 pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<Installed> {
     if let Some(allow_scripts) = &session.options.allow_scripts {
         persist_allow_scripts(session, &loaded, allow_scripts)?;

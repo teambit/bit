@@ -17,6 +17,7 @@ use std::io;
 
 /// Policy preparation output holding the updated plan [`Value`] and [`Pending`] caches.
 pub struct Prepared {
+    /// Updated merge plan [`Value`] incorporating policy and dependency resolutions.
     pub plan: Value,
     /// `dependencyCaches`: the cache entries of the merged versions.
     pub caches: Vec<Pending>,

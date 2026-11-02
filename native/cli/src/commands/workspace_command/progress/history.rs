@@ -1,6 +1,6 @@
 //! `ObjectFetcher` may fail after announcing an historical checkout's actual requested IDs.
 //!
-//! Extends [`Progress`] with [`Progress::render_history_pending`] over [`Output`] and [`Value`].
+//! Extends [`Progress`] with [`Progress::render_history_pending`] and [`unexpected_history_fields`] over [`Output`] and [`Value`].
 use super::{Progress, decline, import, import_message};
 use bit_install::output::Output;
 use serde_json::{Value, json};

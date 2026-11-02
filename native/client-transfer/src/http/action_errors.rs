@@ -97,6 +97,7 @@ pub fn action_conflict(error: &io::Error) -> Option<&Value> {
 struct ActionConflict(Value);
 
 impl std::fmt::Display for ActionConflict {
+    /// Formats the conflict error message or serialized JSON payload.
     #[inline]
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(non_empty_str(&self.0["message"]).unwrap_or("remote merge conflict"))

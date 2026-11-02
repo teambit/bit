@@ -21,7 +21,9 @@ const ERROR: &str = ".BIT.ERROR";
 const SCHEMA: &str = "1.0.0";
 /// Maximum total byte size (`512 MiB`) permitted for a remote object tar archive.
 pub const MAX_ARCHIVE_BYTES: usize = 512 * 1024 * 1024;
+/// Maximum compressed byte size (`128 MiB`) permitted for a single remote object entry.
 const MAX_OBJECT_BYTES: usize = 128 * 1024 * 1024;
+/// Maximum number of objects (`16384`) permitted in a single remote object tar archive.
 const MAX_OBJECTS: usize = 16384;
 
 /// A compressed object received from (or served by) a remote.

@@ -31,8 +31,11 @@ const CLOUD_TIMEOUT: Duration = Duration::from_secs(30);
 /// The components a snap writes: identities, new hashes and dependency graphs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Snapped<'s> {
+    /// Component identities being snapped (`scope/name`).
     pub identities: &'s [String],
+    /// Newly allocated SHA-1 snap hashes corresponding to `identities`.
     pub hashes: &'s [String],
+    /// Optional serialized dependency graphs corresponding to `identities`.
     pub graphs: &'s [Option<String>],
 }
 

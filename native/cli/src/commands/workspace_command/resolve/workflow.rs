@@ -15,8 +15,11 @@ use std::{collections::HashSet, io, path::Path};
 /// Parsed snapshot workflow options (`--build`, `--editor`, and build pipeline flags).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Workflow {
+    /// Whether local build pipeline execution (`--build` / `force_local_build`) is enabled.
     pub build: bool,
+    /// Optional editor command or boolean flag from `--editor`.
     pub editor: Option<String>,
+    /// Parsed build [`Pipeline`] task and error-handling flags.
     pipeline: Pipeline,
 }
 

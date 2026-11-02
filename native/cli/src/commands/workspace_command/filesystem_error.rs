@@ -80,11 +80,13 @@ pub(in crate::commands) fn paired_failure(
     make(error, operation, source, Some(target))
 }
 
+/// Wraps `error` into a [`Failure`] for a single-operand filesystem `operation` on `path`.
 #[must_use]
 #[inline]
 pub(in crate::commands) fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     make(error, operation, path, None)
 }
+/// Constructs an [`io::Error`] wrapping a [`Failure`] for `operation` on `path` (and optional `destination`).
 fn make(error: io::Error, operation: &str, path: &Path, destination: Option<&Path>) -> io::Error {
     let (code, message) = match error.kind() {
         io::ErrorKind::NotFound => ("ENOENT", "no such file or directory"),

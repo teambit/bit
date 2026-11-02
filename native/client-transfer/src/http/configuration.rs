@@ -1,6 +1,6 @@
 //! Published network, proxy and TLS client configuration.
 //!
-//! [`sockets`] configures `reqwest::ClientBuilder` from [`GlobalConfig`] with [`Proxy`], [`NoProxy`], [`Certificate`], and [`Identity`] ([`invalid`]).
+//! [`sockets`], [`proxy`], and [`tls`] configure `reqwest::ClientBuilder` from [`GlobalConfig`] with [`Proxy`], [`NoProxy`], [`Certificate`], and [`Identity`] ([`invalid`]).
 use crate::{GlobalConfig, invalid};
 use reqwest::{Certificate, Identity, NoProxy, Proxy};
 use serde_json::Value;

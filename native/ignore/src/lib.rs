@@ -21,7 +21,7 @@ mod tests;
 use serde::Serialize;
 use std::sync::{Mutex, OnceLock, PoisonError};
 
-/// One rule of an ignore instance (`_rules[i]`).
+/// One compiled rule of an [`Ignore`] instance (`_rules[i]`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Rule {
     /// `rule.regex.source`.

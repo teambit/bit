@@ -3,7 +3,7 @@
 //! The `bit` executable ([`main`]). Commands implemented in Rust ([`commands`], [`native`]) run in this process;
 //! every other command runs the Node.js Bit CLI ([`delegate`]), found by [`discovery`], with
 //! the same arguments, terminal, environment and [`ExitCode`]. Nothing in the
-//! Node.js CLI knows about this binary. See `docs/rust-cli.md`.
+//! Node.js CLI knows about this binary. See `docs/rust-cli.md` and [`run`].
 
 mod commands;
 mod delegate;

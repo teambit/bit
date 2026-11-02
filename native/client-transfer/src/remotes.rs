@@ -63,7 +63,7 @@ impl Remote {
     }
 }
 
-/// The remotes a workspace scope knows: `scope.json` remotes over the global remotes.
+/// The remotes a workspace scope knows: `scope.json` remotes layered over [`GLOBAL_REMOTES`] and [`Resolver`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Remotes {
     hosts: IndexMap<String, String>,

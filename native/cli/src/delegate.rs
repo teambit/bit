@@ -84,6 +84,7 @@ pub fn path_with(dir: &Path, path: Option<OsString>) -> OsString {
     joined
 }
 
+/// Formats `command`'s program and arguments as a space-separated string for trace logging.
 #[inline]
 fn describe(command: &Command) -> String {
     std::iter::once(command.get_program())
@@ -93,6 +94,7 @@ fn describe(command: &Command) -> String {
         .join(" ")
 }
 
+/// Replaces the current process image with `command` via `execvp` on Unix.
 #[cfg(unix)]
 fn exec(mut command: Command) -> io::Result<ExitCode> {
     use std::os::unix::process::CommandExt;

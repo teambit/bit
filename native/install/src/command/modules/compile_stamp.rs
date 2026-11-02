@@ -76,7 +76,7 @@ pub(super) fn path(scope_path: &Path) -> PathBuf {
     scope_path.join("cache/native-install/after-install.json")
 }
 
-/// Files to restore when the stamp matches current inputs and outputs are intact/restorable.
+/// [`Restore`] files when the [`Stamp`] matches current [`Inputs`] and [`Output`] entries are intact or restorable.
 pub(super) fn check(stamp: &Path, inputs: &Inputs<'_>) -> io::Result<Option<Vec<Restore>>> {
     let Some(stored) = read(stamp) else { return Ok(None) };
     if stored.version != VERSION || stored.inputs != fingerprint(inputs)? {

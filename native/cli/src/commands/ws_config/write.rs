@@ -30,6 +30,7 @@ const STYLE_DTS_CONTENT: &str = "declare module '*.module.css' {\n  const classe
 
 const PRETTIER_REAL_CONTENT: &str = "module.exports = {\n  \"trailingComma\": \"es5\",\n  \"tabWidth\": 2,\n  \"singleQuote\": true\n}";
 
+/// Generates standard `TypeScript`, `ESLint`, and Prettier config files in `root` for `opts`.
 pub(super) fn write_workspace_configs(
     root: &Path,
     env_ids: &[String],

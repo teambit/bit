@@ -52,7 +52,7 @@ impl Calculated {
     }
 }
 
-/// Calculate the policies, dependencies and manifests of the workspace.
+/// Calculate the policies, dependencies, and [`ManifestOutcome`] of the workspace for [`Session`].
 pub async fn calculate(
     session: &Session<'_>,
     loaded: &Loaded,

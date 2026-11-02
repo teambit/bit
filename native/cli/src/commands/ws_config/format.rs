@@ -48,6 +48,7 @@ pub(super) struct EnvsWrittenRealConfigFile {
     pub written_real_config_file: WrittenConfigFile,
 }
 
+/// Metadata and content of a generated real or extending workspace configuration file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct WrittenConfigFile {
@@ -57,6 +58,7 @@ pub(super) struct WrittenConfigFile {
     pub content: String,
 }
 
+/// Environment IDs paired with their shared [`WrittenExtendingConfigFile`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct EnvsWrittenExtendingConfigFile {

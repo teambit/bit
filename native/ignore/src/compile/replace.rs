@@ -91,6 +91,7 @@ fn arguments<'text>(text: &'text str, found: &Match, length: usize) -> Found<'te
     }
 }
 
+/// Advances `index` to the next UTF-8 scalar boundary in `text` (or `index + 1` at the end of `text`).
 #[inline]
 fn next_boundary(text: &str, index: usize) -> usize {
     text.get(index..)

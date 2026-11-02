@@ -45,7 +45,7 @@ pub fn root_links(
     Ok(links)
 }
 
-/// `linkCodemods`: links every workspace component as a package in `node_modules`.
+/// `linkCodemods`: links every [`WorkspaceComponent`] in `components` as a package in `node_modules`.
 pub async fn link_components(
     session: &Session<'_>,
     loaded: &Loaded,

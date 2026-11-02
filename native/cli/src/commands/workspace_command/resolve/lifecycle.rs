@@ -85,7 +85,7 @@ pub(super) fn issue_progress(
     startup.snapshot_tail = Some(tail);
     Ok(())
 }
-
+/// Pairs `loads` stages with captured `snapshotLoadOutput` entries and appends them onto `startup.snapshot_events`.
 fn load_events(
     mut progress: Value,
     loads: &[Value],

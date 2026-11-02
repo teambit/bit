@@ -89,7 +89,7 @@ fn load_package_json(path: &Path) -> io::Result<(String, Value)> {
     Ok((text, manifest))
 }
 
-/// Ask whether to switch to Bit's package manager; switch or fail.
+/// Ask whether to switch to Bit's package manager (`handleExternalPackageManagerPrompt`); switch or fail.
 pub async fn switch(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     let output = &session.output;
     output.stop();

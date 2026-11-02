@@ -17,6 +17,7 @@ const SNAP_PREFIX: &str = "0.0.0-";
 /// One workspace component: its package, id and version.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkspaceComponent<'c> {
+    /// Resolved npm package name for the workspace component.
     pub package_name: &'c str,
     /// `scope/name`.
     pub identity: &'c str,

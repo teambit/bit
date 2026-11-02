@@ -57,7 +57,7 @@ async fn feed(
     }
     Ok(())
 }
-/// Blocking [`Read`] adapter pulling byte chunks from an async [`mpsc::Receiver`].
+/// Blocking [`Read`] adapter pulling byte chunks from an async [`mpsc::Receiver`] via an in-memory [`io::Cursor`].
 #[derive(Debug)]
 struct Chunks {
     receiver: mpsc::Receiver<Vec<u8>>,

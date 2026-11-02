@@ -96,6 +96,7 @@ fn render_rows(rows: &[Import], output: &Output, wildcard: bool, on_lane: bool) 
     }
 }
 
+/// Emits the initial `importing N components` status for a dependency-import `row` when applicable.
 fn announce_dependency(
     row: &Import,
     requested: Option<&Import>,

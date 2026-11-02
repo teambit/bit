@@ -27,7 +27,9 @@ use std::{collections::HashSet, io, path::Path};
 pub struct Snapped<'s> {
     /// `componentMap.rootDir`.
     pub directory: &'s str,
+    /// Resolved npm package name for the snapped component.
     pub package_name: &'s str,
+    /// Configured environment aspect ID for the snapped component.
     pub env_id: &'s str,
 }
 

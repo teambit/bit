@@ -2,7 +2,7 @@
 //! [`commands`] table implements runs in process via [`run`] into [`Outcome`] unless it
 //! declines its input or `BIT_NATIVE=off` is set.
 //!
-//! Emits dispatch diagnostics via [`trace`] when `BIT_NATIVE_TRACE=1` is enabled.
+//! Emits dispatch diagnostics via [`trace`] and [`warn_fallback`] when `BIT_NATIVE_TRACE=1` is enabled.
 
 #[cfg(test)]
 mod native_tests;

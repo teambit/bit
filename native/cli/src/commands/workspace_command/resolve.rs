@@ -2,7 +2,7 @@
 //! planned by the [`Engine`]'s `command{Snap,Tag,Resolve}*` requests on top of
 //! the status [`Capture`] and the [`snapshot`] receipt merges use.
 //!
-//! Re-exports [`policy`], [`workflow`], [`render_build_output`], [`render_events`], and [`component_receipts`] ([`Planned`]).
+//! Re-exports [`policy`], [`workflow`], [`render_build_output`], [`render_events`], and [`component_receipts`] ([`Planned`], [`ResolveRequest`]).
 
 pub(in crate::commands) mod policy;
 pub(in crate::commands) mod workflow;

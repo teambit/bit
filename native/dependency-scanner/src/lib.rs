@@ -77,6 +77,7 @@ struct Specifier {
     #[serde(skip_serializing_if = "Option::is_none")]
     exported: Option<bool>,
 }
+/// Oxc AST visitor state accumulating [`Dependency`] entries and line numbers for a single source file.
 #[derive(Debug, Default, Clone)]
 struct Scanner {
     line_starts: Vec<u32>,
@@ -86,6 +87,7 @@ struct Scanner {
     deps: IndexMap<String, Dependency>,
     unsupported: bool,
 }
+/// Computes the byte offsets of the start of each line in `source`.
 #[inline]
 fn line_starts(source: &str) -> Vec<u32> {
     std::iter::once(0)

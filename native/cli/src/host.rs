@@ -81,6 +81,7 @@ struct Session {
     _script: tempfile::TempPath,
 }
 
+/// JSON-RPC response frame deserialized from the Node.js host child process stdout.
 #[derive(Deserialize)]
 struct Response {
     id: Option<u64>,

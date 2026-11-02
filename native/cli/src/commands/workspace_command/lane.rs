@@ -3,7 +3,7 @@
 //! cannot know about the lane objects it writes: history keys, logs and
 //! squash dates (`commandLaneReceipt`).
 //!
-//! Extends [`Steps`] with [`validate`], lane merge finalization, and [`receipt`] generation ([`Map`] / [`Value`]).
+//! Extends [`Steps`] with [`validate`], [`pattern_ids`], lane merge finalization, and [`receipt`] generation ([`Map`] / [`Value`]).
 
 #[cfg(test)]
 mod lane_tests;

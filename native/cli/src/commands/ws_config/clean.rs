@@ -65,6 +65,7 @@ pub(super) fn format_list_json(env_ids: &[String]) -> io::Result<String> {
     serde_json::to_string_pretty(&entries).map_err(io::Error::other)
 }
 
+/// Formats the list of deleted (or dry-run target) config file `paths` for `bit ws-config clean`.
 #[must_use]
 #[inline]
 pub(super) fn format_clean_output(paths: &[String], dry_run: bool, chalk: Chalk) -> String {
@@ -73,6 +74,7 @@ pub(super) fn format_clean_output(paths: &[String], dry_run: bool, chalk: Chalk)
     format!("{header}\n  {}\n", paths.join("\n  "))
 }
 
+/// Finds and optionally deletes generated workspace config files matching `writers` in `root`.
 #[inline]
 pub(super) fn clean_workspace_configs(
     root: &Path,

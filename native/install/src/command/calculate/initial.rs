@@ -12,7 +12,7 @@ use std::io;
 /// Phase identifier (`"linking"`) passed when loading [`Session`] components for initial codemod linking.
 const LINKING_PHASE: &str = "linking";
 
-/// Performs initial codemod linking (`calculateLinks`) before calculating workspace manifests via [`calculate`].
+/// Performs initial codemod linking (`calculateLinks`) via [`resolve`] before calculating workspace manifests via [`calculate`].
 pub(in crate::command) async fn calculate_linked(
     session: &Session<'_>,
     loaded: &Loaded,

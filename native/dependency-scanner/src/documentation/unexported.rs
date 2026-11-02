@@ -18,7 +18,7 @@ pub(super) fn proven(program: &Program<'_>) -> bool {
     proof.visit_program(program);
     proof.accepted
 }
-/// Bounded AST visitor state proving that a program contains no module exports.
+/// Bounded AST visitor state proving that a [`Program`] contains no module exports.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Proof {
     accepted: bool,

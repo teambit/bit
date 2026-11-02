@@ -38,6 +38,7 @@ fn module_exports(expression: &Expression<'_>) -> bool {
 fn attached(object: &Expression<'_>) -> bool {
     identifier(object, "exports") || module_exports(object)
 }
+/// Returns `true` when [`AssignmentTarget`] `target` assigns to `exports`, `module.exports`, or a property thereof.
 #[inline]
 pub(crate) fn is_exports(target: &AssignmentTarget<'_>) -> bool {
     match target {

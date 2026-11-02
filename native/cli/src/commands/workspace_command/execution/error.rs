@@ -21,6 +21,7 @@ impl fmt::Display for WithDetails {
     }
 }
 impl std::error::Error for WithDetails {
+    /// Returns the wrapped [`io::Error`] as the underlying error source.
     #[inline]
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         Some(&self.error)

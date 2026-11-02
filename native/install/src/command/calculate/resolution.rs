@@ -13,7 +13,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::io;
 
-/// Aggregated environment policies, workspace root policy, and per-component dependencies.
+/// Aggregated [`EnvPolicy`] map, workspace root [`PolicyEntry`] list, and per-component [`ComponentDependencies`].
 pub(super) struct Resolved {
     pub(super) env_policies: IndexMap<String, EnvPolicy>,
     pub(super) workspace_policy: Vec<PolicyEntry>,

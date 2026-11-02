@@ -89,6 +89,7 @@ fn capture_reader(
     Ok(reader.finish(capture, selector_loads, docs))
 }
 
+/// Loads documentation metadata for `targets` during `checkout` or `switch` preparation.
 fn load_docs(
     root: &Path,
     request: &Request<'_>,

@@ -29,7 +29,7 @@ const NO_MATCHING_VERSION: [&str; 3] = [
     "ERR_PNPM_SPEC_NOT_SUPPORTED_BY_ANY_RESOLVER",
 ];
 
-/// Run the engine on the calculated projects.
+/// Run the [`engine`] on the [`Calculated`] projects and return the [`EngineResult`].
 pub async fn run(
     session: &Session<'_>,
     loaded: &Loaded,

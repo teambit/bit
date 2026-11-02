@@ -2,7 +2,7 @@
 //! validated, and the snaps section
 //! of `mergeReport`.
 //!
-//! [`Snaps`] formats snapped [`Id`] rows via [`rows`] and [`Formatter`].
+//! [`Snaps`], [`SnapError`], [`snaps`], and [`snap_error`] format snapped [`Id`] rows via [`rows`] and [`Formatter`].
 
 use super::rows;
 use crate::commands::{

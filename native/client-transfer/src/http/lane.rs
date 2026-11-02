@@ -66,6 +66,7 @@ fn parse_lanes_response(bytes: &[u8]) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Splits a string or `{ scope, name }` remote lane `id` [`Value`] into validated `(scope, name)` slices.
 #[inline]
 fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {
@@ -92,6 +93,7 @@ fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     }
 }
 
+/// Projects a single remote lane `GraphQL` object `lane` into `{ id: { name, scope }, components }`.
 #[inline]
 fn lane_projection(lane: &Value) -> io::Result<Value> {
     let (scope, name) = parse_lane_id(&lane["id"])?;

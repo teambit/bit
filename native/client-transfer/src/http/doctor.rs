@@ -1,6 +1,6 @@
 //! `Http.doctor` projects diagnostic metadata without transferring scope objects.
 //!
-//! Extends [`Network`] with [`Network::doctor`] to execute [`QUERY`] and bound the returned JSON [`Value`] payload.
+//! Extends [`Network`] with [`Network::doctor`] and [`projection`] to execute [`QUERY`] and bound the returned JSON [`Value`] payload.
 use super::Network;
 use crate::invalid;
 use futures_util::StreamExt;

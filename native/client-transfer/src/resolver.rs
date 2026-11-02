@@ -41,7 +41,7 @@ Promise.resolve(load(path)(scope, thisScope || undefined, token || undefined)).t
 (url) => process.stdout.write(String(url)),\
 (error) => { process.stderr.write(String((error && error.message) || error)); process.exit(1); });";
 
-/// The configured resolver of the workspace scope.
+/// The configured custom remote resolver (`resolverPath`) of the workspace scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Resolver {
     pub path: String,

@@ -38,8 +38,11 @@ const RESULT_KEYS: [&str; 13] = [
 /// `bit details` shows.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Report {
+    /// Formatted command output written to stdout.
     pub data: String,
+    /// Process exit code (`0` on success, non-zero on failure).
     pub code: i32,
+    /// Optional detailed output persisted for `bit details`.
     pub details: Option<String>,
 }
 

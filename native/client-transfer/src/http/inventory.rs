@@ -38,6 +38,7 @@ const LIST_DELETED_QUERY: &str = r#"query list($namespaces: [String!], $includeD
 /// `GraphQL` query (`getLatestVersions`) for resolving the latest version of each component ID.
 const LATEST_VERSIONS_QUERY: &str =
     "query getLatestVersions($ids: [String]!) { scope { _legacyLatestVersions(ids: $ids) } }";
+/// Maximum buffered response size (`8 MiB`) for remote `inventory` and `latestVersions` `GraphQL` queries.
 const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;
 
 impl Network {

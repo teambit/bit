@@ -92,6 +92,7 @@ pub(crate) fn classify(program: &Program<'_>) -> Classification {
     classifier.classification
 }
 
+/// Maps [`classify`] on `program` to an early [`crate::Outcome`] when the module format is unsupported or empty.
 #[inline]
 pub(crate) fn classification_outcome(
     file: &crate::File,

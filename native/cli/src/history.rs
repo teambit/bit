@@ -20,7 +20,9 @@ use std::{
 /// Workspace `<scope>/command-history` logger handle for recording start and completion entries.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct History {
+    /// Absolute path to `<scope>/command-history`.
     file: PathBuf,
+    /// Single-line sanitized command argument string recorded in each log entry.
     command: String,
 }
 

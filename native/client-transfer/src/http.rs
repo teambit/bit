@@ -52,9 +52,13 @@ const LIST_QUERY: &str = "query list($namespaces: [String!]) { scope { component
 /// One component of a remote `list`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Listed {
+    /// Remote scope name owning the component.
     pub scope: String,
+    /// Component name within `scope`.
     pub name: String,
+    /// Optional latest version string reported by the remote scope.
     pub version: Option<String>,
+    /// Whether `deprecation.isDeprecate` is `true` for the component.
     pub deprecated: bool,
 }
 

@@ -66,14 +66,17 @@ pub const SOFT_TAG: Labels = Labels {
     ..TAG
 };
 
+/// Report label preset for `bit tag --persist`.
 pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
 
 impl Labels {
+    /// Returns `true` when `self` represents a `bit tag --soft` report.
     #[must_use]
     #[inline]
     pub(super) fn soft(&self) -> bool {
         self.tag && self.verb == "soft-tagged"
     }
+    /// Returns the `(section_title, section_description)` pair for `new` (`true`) or changed (`false`) components.
     #[must_use]
     #[inline]
     pub(super) fn section(&self, new: bool) -> (&'static str, &'static str) {

@@ -62,12 +62,14 @@ impl Cancellation {
     pub fn new() -> Self {
         Self::default()
     }
+    /// Signals cancellation and wakes all tasks awaiting [`Self::cancelled`].
     #[inline]
     pub fn cancel(&self) {
         if !self.0.cancelled.swap(true, Ordering::AcqRel) {
             self.0.changed.notify_waiters();
         }
     }
+    /// Returns `true` when [`Self::cancel`] has been invoked on this token.
     #[inline]
     #[must_use]
     pub fn is_cancelled(&self) -> bool {
@@ -82,6 +84,7 @@ impl Cancellation {
             changed.await;
         }
     }
+    /// Races `future` against [`Self::cancelled`], returning an `Interrupted` [`io::Error`] if cancelled.
     pub(crate) async fn run<ResultValue>(
         &self,
         future: impl Future<Output = ResultValue>,

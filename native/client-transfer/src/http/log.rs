@@ -74,6 +74,7 @@ fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Validates that a `getLogs` row object has the required schema and strips `__typename`.
 #[inline]
 fn validate_row(mut row: Value) -> io::Result<Value> {
     let Some(object) = row.as_object() else { return Err(invalid("remote log row")) };
