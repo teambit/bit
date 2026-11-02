@@ -45,7 +45,7 @@ pub(super) fn assign(
     Ok(directories)
 }
 
-/// `incrementPathRecursively`: `<path>_1`, or the first free `<path>_<n>`.
+/// `incrementPathRecursively`: `<path>_1`, or the first free `<path>_<n>` not in `all`.
 #[inline]
 fn increment_path(path: &str, all: &[String]) -> String {
     let mut number = 1;

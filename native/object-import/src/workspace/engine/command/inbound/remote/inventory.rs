@@ -37,7 +37,7 @@ pub(in crate::workspace::engine) struct Request {
     #[serde(flatten)]
     transport: super::super::Transport,
 }
-
+/// Mode and filter selection fields for a remote inventory query [`Request`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Selection {

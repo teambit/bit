@@ -35,6 +35,7 @@ pub(in crate::workspace::engine::command) struct Prepared {
     copies: Vec<(PathBuf, PathBuf)>,
     package_creates: Vec<PathBuf>,
 }
+/// Prepares post-merge `staged-snaps`, `staged-config`, and `node_modules` package updates for `inputs`.
 pub(in crate::workspace::engine::command) fn prepare(
     root: &Path,
     inputs: &[Input<'_>],

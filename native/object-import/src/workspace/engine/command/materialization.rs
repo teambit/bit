@@ -18,6 +18,7 @@ pub(super) struct Prepared {
     pub(super) files: Vec<Value>,
     writes: Writes,
 }
+/// Staged transition request, file removals, and optional `LICENSE` write for a [`Prepared`] component.
 struct Writes {
     request: Value,
     removals: Vec<String>,

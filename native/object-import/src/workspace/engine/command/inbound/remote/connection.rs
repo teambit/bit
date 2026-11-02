@@ -53,7 +53,7 @@ pub(super) fn with_home(
     Ok((remotes, network, global, local.to_owned()))
 }
 
-/// A bare scope has scope and global settings, but no workspace policy layer.
+/// A bare scope has scope and global settings, but no workspace policy layer (`workspace.jsonc`).
 pub(super) fn bare(
     directory: &Path,
     transport: &Transport,

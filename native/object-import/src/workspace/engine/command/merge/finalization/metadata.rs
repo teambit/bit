@@ -60,6 +60,7 @@ fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
     Err(io::Error::other("package temporary allocation limit"))
 }
 
+/// Copies `uid` and `gid` from `metadata` onto `path` on Unix platforms.
 #[inline]
 fn preserve_owner(path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     #[cfg(unix)]

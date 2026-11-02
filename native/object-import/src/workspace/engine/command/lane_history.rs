@@ -41,6 +41,7 @@ pub(super) struct Phase {
     pub(super) versions: Vec<(String, String)>,
     pub(super) revert: bool,
 }
+/// Retained phased lane-history checkout session tracking `lane_id`, `lane_hash`, `phases`, and `proofs`.
 pub(super) struct Retained {
     root: PathBuf,
     token: String,

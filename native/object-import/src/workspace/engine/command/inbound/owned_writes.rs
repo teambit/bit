@@ -48,6 +48,7 @@ fn normalize_receipt(receipt: &Value) -> io::Result<(String, Value, Value)> {
     Ok((path, before, after))
 }
 
+/// Extracts the normalized digest value from `direct_key` or nested `nested_key` fields of `receipt`.
 #[inline]
 fn digest(receipt: &Value, direct_key: &str, nested_key: &str) -> Value {
     let has_value = |val: &Value| {

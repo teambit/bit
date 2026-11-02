@@ -50,6 +50,7 @@ impl Objects<'_> {
             .any(|dependency| !self.built(dependency))
     }
 
+    /// Returns the `flattenedDependencies` array of `version`, resolving `flattenedDependenciesRef` when needed.
     fn flattened_dependencies<'b>(&self, version: &'b Value) -> Option<Cow<'b, [Value]>> {
         if let Some(rows) = version["flattenedDependencies"].as_array()
             && (!rows.is_empty() || !version["flattenedDependenciesRef"].is_string())

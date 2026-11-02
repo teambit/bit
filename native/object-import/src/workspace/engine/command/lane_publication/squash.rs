@@ -64,6 +64,7 @@ pub(super) fn prepare(
     Ok(Some(Prepared { identity, hash: hash.trim().to_owned(), version: value, replacement }))
 }
 impl Prepared {
+    /// Returns `Some(self.hash)` when this squashed `Version` requires a replacement commit message.
     #[inline]
     pub(super) fn message_hash(&self) -> Option<&str> {
         self.replacement.as_ref().map(|_| self.hash.as_str())

@@ -78,6 +78,7 @@ fn selected(
     Ok(selected)
 }
 
+/// Strips any trailing `@<version>` suffix from `raw` and returns the trimmed bare identity.
 #[inline]
 fn bare_id(raw: &str) -> &str {
     let raw = raw.trim();

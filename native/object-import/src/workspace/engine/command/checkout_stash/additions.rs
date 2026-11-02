@@ -58,6 +58,7 @@ fn identities(bitmap: &Value) -> io::Result<HashSet<String>> {
         .collect())
 }
 
+/// Extracts a trimmed string field `key` from `row` or returns an invalid-input error with `message`.
 #[inline]
 fn trimmed_field<'a>(row: &'a Value, key: &str, message: &str) -> io::Result<&'a str> {
     row[key]

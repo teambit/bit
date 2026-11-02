@@ -56,6 +56,7 @@ pub(in crate::workspace::engine) fn complete(
     Ok((targets.len(), result))
 }
 
+/// Parses the `importedIds` array from `receipt` into validated [`super::Target`] entries.
 #[inline]
 fn imported_targets(receipt: &Value) -> io::Result<Vec<super::Target>> {
     receipt["importedIds"]

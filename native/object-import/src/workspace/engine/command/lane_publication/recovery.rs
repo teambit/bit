@@ -56,6 +56,7 @@ impl Recovery {
         output.validate()?;
         Ok(output)
     }
+    /// Encodes and retains `main-components/<index>` backups for `models` when merging on `main`.
     pub(super) fn main_components(&mut self, models: &[Value]) -> io::Result<()> {
         if models.len() > 4096 {
             return Err(invalid("lane recovery component budget"));

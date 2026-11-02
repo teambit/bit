@@ -39,6 +39,7 @@ fn prepare_file(
     finish(import, choice, id, input)
 }
 
+/// Prepares an HTTP-remote lane workspace import for `id`, fetching any `main`-only selected targets.
 fn prepare_http(
     input: &Prepare,
     roots: &[Target],

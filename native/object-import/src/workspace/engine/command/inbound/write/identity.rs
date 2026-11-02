@@ -31,6 +31,7 @@ fn row_effective_scope<'a>(row_scope: Option<&'a str>, row: &'a Value) -> Option
         })
 }
 
+/// Returns `true` when `rows` contains an unscoped component entry with `name`.
 pub(super) fn has_unscoped_entry(rows: &Map<String, Value>, name: &str) -> bool {
     let name = name.trim();
     rows.iter()

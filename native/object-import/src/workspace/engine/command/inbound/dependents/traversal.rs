@@ -22,6 +22,7 @@ impl Queue {
         }
         Ok(queue)
     }
+    /// Appends `id` onto `path` and enqueues the extended path if node and byte budgets permit.
     pub(super) fn push(&mut self, path: &[String], id: &str) -> io::Result<()> {
         let id = id.trim();
         if id.is_empty() || path.len() >= 4096 || id.contains(char::is_control) {

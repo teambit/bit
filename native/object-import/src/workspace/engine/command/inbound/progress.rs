@@ -62,6 +62,7 @@ fn latest_root_count(roots: &[Target], depth: bool) -> usize {
         .count()
 }
 
+/// Adjusts component and object counts on a single progress `row` for depth or head-dependency fetches.
 fn adjust(
     row: &mut Value,
     roots: &[Target],

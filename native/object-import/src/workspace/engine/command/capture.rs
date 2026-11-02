@@ -32,6 +32,7 @@ pub(super) fn all(
     all_with(root, inputs, snapshots, pool, false)
 }
 
+/// Captures component files and metadata for `inputs`, permitting workspace-root (`.`) directories for snapshots.
 #[inline]
 pub(super) fn all_for_snapshot(
     root: &Path,

@@ -46,6 +46,7 @@ fn policy_rows(policy: &Value, rows: &mut Vec<Value>) -> io::Result<()> {
     Ok(())
 }
 
+/// Collects non-extension, non-peer external npm dependency ranges from `facts["components"]`.
 fn component_rows(
     facts: &Value,
     root_names: &HashSet<&str>,

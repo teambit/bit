@@ -43,6 +43,7 @@ impl State {
         }
         crate::merge_history::status::distance(&history["versions"], heads[0], heads[1])
     }
+    /// Loads the `VersionHistory` object for `identity` into `self.values` if not already cached.
     fn load(
         &mut self,
         identity: &str,

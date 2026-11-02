@@ -41,6 +41,7 @@ pub(super) fn index(path: &Path) -> io::Result<Vec<Value>> {
         .collect())
 }
 
+/// Collects [`Listed`] components from `rows` whose `<scope>/<name>` matches `pattern`.
 fn collect(path: &Path, scope: &str, pattern: &Regex, rows: &[Value]) -> io::Result<Vec<Listed>> {
     let mut seen = HashSet::new();
     let mut compressed = 0;

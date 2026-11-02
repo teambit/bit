@@ -14,6 +14,7 @@ pub(super) fn validate(input: &Prepare) -> io::Result<()> {
 pub(super) fn local(input: &Prepare) -> io::Result<()> {
     validate_phase(input, false)
 }
+/// Validates path, operation, override, merge, dependency, lane, and adoption invariants on `input`.
 fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     for path in
         [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]

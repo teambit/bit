@@ -53,6 +53,7 @@ pub(super) struct Attributes {
     pub(super) backup: Option<fs::Metadata>,
 }
 impl Attributes {
+    /// Captures initial filesystem metadata for `root/.bitmap` and optional existing `backup`.
     fn prepare(root: &Path, backup: &Path) -> io::Result<Self> {
         let source = fs::symlink_metadata(root.join(".bitmap"))?;
         if !source.is_file()

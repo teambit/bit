@@ -61,6 +61,7 @@ pub(super) fn prepare(
     lanes.imported.validate()?;
     Ok((context, Some(lanes.imported)))
 }
+/// Loads current and incoming lane records and resolves squash eligibility for `request`.
 fn load_lanes(request: &Prepare, bitmap: &Value) -> io::Result<Lanes> {
     let options = request.options.lane.as_ref().ok_or_else(|| invalid("command lane options"))?;
     let mut imported = command_import::prepare_lane(&request.root, &request.global_remotes_file)?;

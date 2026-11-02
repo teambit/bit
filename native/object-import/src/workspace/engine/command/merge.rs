@@ -40,6 +40,7 @@ impl State {
         }
         Ok(Self { native, journal })
     }
+    /// Returns the active merge transaction token from `self.journal`.
     #[inline]
     pub(super) fn owner(&self) -> &Value {
         &self.journal["token"]

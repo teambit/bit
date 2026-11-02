@@ -74,6 +74,7 @@ impl Prepared {
         Ok(())
     }
 
+    /// Locates the index in `self.writes` of the `package.json` entry matching `identity`.
     #[inline]
     fn manifest_index(&self, identity: &str) -> io::Result<usize> {
         self.writes

@@ -85,6 +85,7 @@ fn select(
     output["committed"] = json!(committed);
     Ok((count, output))
 }
+/// Reads the local `LaneHistory` object for `hash`, returning an empty history map if not found.
 #[inline]
 fn read(root: &std::path::Path, hash: &str) -> io::Result<Value> {
     match crate::lane_history::read(root, hash.trim()) {

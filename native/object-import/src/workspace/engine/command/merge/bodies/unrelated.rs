@@ -34,6 +34,7 @@ impl Prepared {
     }
 }
 
+/// Resolves the effective version name for an unrelated-history merge from `current` or `output`.
 #[inline]
 fn version_name(current: &Captured, output: &Value) -> String {
     Some(current.target.version.trim())

@@ -49,6 +49,7 @@ fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<(read::Metadata,
     Ok((metadata, contents))
 }
 
+/// Returns whether `(directory, file)` points to the workspace root `.bitmap` file.
 #[inline]
 pub(super) fn is_root_bitmap(directory: &str, file: &str) -> bool {
     let clean_dir = directory

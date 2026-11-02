@@ -56,6 +56,7 @@ fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
     (version, semantic.unwrap_or(hash))
 }
 
+/// Parses `<scope>/<name>[@<version>]` into trimmed `(scope, name)` slices for `componentId`.
 #[inline]
 fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
     let identity = identity.trim();

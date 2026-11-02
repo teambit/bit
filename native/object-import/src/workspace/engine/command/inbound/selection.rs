@@ -60,6 +60,7 @@ pub(super) fn requested_target(id: &str) -> io::Result<Target> {
     Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: version.to_owned() })
 }
 
+/// Returns whether `(scope, name, raw_version)` satisfy length, character, and path-segment bounds.
 #[inline]
 fn valid_target_parts(scope: &str, name: &str, raw_version: &str) -> bool {
     let valid_segment = |part: &str| {

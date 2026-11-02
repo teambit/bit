@@ -61,6 +61,7 @@ fn membership(bitmap: &Value, settings: &Value) -> io::Result<HashSet<String>> {
         .collect())
 }
 
+/// Updates the retained `.bitmap` proof in `proofs` after verifying `receipt`'s `beforeHash` and `afterHash`.
 pub(super) fn accept_bitmap(proofs: &mut [proof::Proof], receipt: &Value) -> io::Result<()> {
     let path = receipt["path"]
         .as_str()

@@ -50,6 +50,7 @@ pub(super) fn lane_targets(
     Ok((hash, targets))
 }
 
+/// Locates the single `Lane` object matching `id` in `items` and returns its `(hash, entries)`.
 pub(super) fn remote_lane(
     id: &lane::Id,
     items: &[ObjectItem],

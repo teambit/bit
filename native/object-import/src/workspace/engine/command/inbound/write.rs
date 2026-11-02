@@ -72,7 +72,7 @@ struct History {
     file_id: String,
     post_write_backup: bool,
 }
-
+/// Prepares retained workspace file, `.bitmap`, history, and policy writes for imported `targets`.
 pub(super) fn prepare(
     root: &Path,
     targets: &[Target],

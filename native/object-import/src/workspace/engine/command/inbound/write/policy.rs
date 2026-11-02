@@ -49,6 +49,7 @@ impl super::Prepared {
         self.policy_input.as_ref()
     }
 
+    /// Completes pending checkout policy planning using `semver` resolution results.
     pub(in super::super) fn complete_policy(&mut self, semver: Value) -> io::Result<Option<Value>> {
         self.policy
             .as_mut()

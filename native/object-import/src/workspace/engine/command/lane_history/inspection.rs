@@ -33,6 +33,7 @@ pub(in crate::workspace::engine) struct Apply {
     token: String,
 }
 
+/// Retained lane-history inspection refresh state awaiting [`Apply`].
 pub(in crate::workspace::engine::command) struct Retained {
     token: String,
     import: command_import::PreparedImport,

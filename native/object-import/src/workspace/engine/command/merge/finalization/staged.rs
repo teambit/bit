@@ -85,6 +85,7 @@ fn config(
     Ok(())
 }
 
+/// Marks newly snapped components in `identities` as `onLanesOnly` inside the queued `staged-config` write.
 pub(super) fn mark_lane_new(
     root: &Path,
     identities: &[String],

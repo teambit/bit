@@ -33,7 +33,7 @@ pub(in crate::workspace::engine::command) fn prepare(
     imported.validate()?;
     Ok((context, Some(imported)))
 }
-/// Attaches `historicalVersion` fields onto `context["targets"]` from `phase.versions`.
+/// Attaches `historicalVersion` fields onto `context["targets"]` from [`super::Phase::versions`].
 #[inline]
 fn attach_versions(phase: &super::Phase, context: &mut Value) -> io::Result<()> {
     for row in context["targets"].as_array_mut().ok_or_else(|| invalid("history targets"))? {

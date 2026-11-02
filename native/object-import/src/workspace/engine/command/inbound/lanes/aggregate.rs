@@ -56,6 +56,7 @@ fn connected(
     )
 }
 
+/// Builds a pending inbound [`receipt`] for a single group of `targets`.
 #[inline]
 fn group(
     input: &Prepare,

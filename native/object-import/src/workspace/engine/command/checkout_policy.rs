@@ -34,6 +34,7 @@ impl Prepared {
         Ok(Self { input: receipt, publication, ready: false })
     }
 
+    /// Creates a ready checkout policy [`Prepared`] state from an already-computed merge policy `plan`.
     pub(super) fn merged(root: &Path, plan: &Value) -> io::Result<Self> {
         let mut prepared = Self::new(root, Value::Null)?;
         prepared.publication.prepare(&json!({"updates":plan["updates"],

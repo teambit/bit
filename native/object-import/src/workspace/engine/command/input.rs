@@ -27,6 +27,7 @@ pub(super) enum Operation {
     Merge,
     Switch,
 }
+/// Command-specific target, pattern, strategy, lane, scope, and stash options for [`Prepare`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {

@@ -29,6 +29,7 @@ impl Prepared {
         Ok(Self { path, before, after: None })
     }
 
+    /// Prepares the updated `workspace.jsonc` text and policy report from `plan`.
     pub(super) fn prepare(&mut self, plan: &Value) -> io::Result<Option<Value>> {
         let updates =
             plan["updates"].as_array().ok_or_else(|| invalid("command policy updates"))?;

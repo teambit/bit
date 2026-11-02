@@ -39,6 +39,7 @@ pub(super) fn read(
     status_context::metadata_with_targets(&input, pool, settings, targets)
 }
 
+/// Strips any trailing `@<version>` suffix from `raw` and returns `Some(base)` when non-empty.
 #[inline]
 fn bare_identity(raw: &str) -> Option<&str> {
     let raw = raw.trim();

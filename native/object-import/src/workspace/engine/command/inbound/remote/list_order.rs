@@ -38,7 +38,7 @@ pub(super) async fn main(
     }
 }
 
-/// Sorts file-scope [`Listed`] rows by uppercase UTF-16 code units of `name` to match `ForkingMain`.
+/// Sorts file-scope [`Listed`] rows by uppercase UTF-16 code units of `name` to match `ForkingMain` order.
 #[inline]
 pub(super) fn file_order(rows: &mut [Listed]) {
     if rows.len() <= 1 {

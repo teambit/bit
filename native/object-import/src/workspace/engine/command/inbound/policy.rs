@@ -13,7 +13,7 @@ pub(in crate::workspace::engine) struct Complete {
     semver: Value,
 }
 
-/// Completes `ConfigMerger` workspace policy planning for an active inbound import and commits if already applied.
+/// Completes `ConfigMerger` workspace policy planning for [`Complete`] on [`State`] and commits if already applied.
 #[inline]
 pub(in crate::workspace::engine) fn complete(
     input: Complete,

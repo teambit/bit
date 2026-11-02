@@ -8,7 +8,7 @@ use super::{Captured, comparison, invalid};
 use serde_json::{Value, json};
 use std::io;
 
-/// An incoming-only component has no current Consumer contents or version.
+/// An incoming-only component has no current `Consumer` contents or version.
 /// Its destination is prepared from canonical workspace directory configuration.
 pub(in crate::workspace::engine::command) fn capture(
     identity: &str,

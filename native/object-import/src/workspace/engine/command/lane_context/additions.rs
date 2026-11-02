@@ -83,6 +83,7 @@ fn relocate_nested<'a>(
     }
     Err(invalid("switch destination collision budget"))
 }
+/// Projects incoming lane `additions` that are absent from `.bitmap` and the current lane into target rows.
 pub(in crate::workspace::engine::command) fn targets(
     additions: &[Value],
     selected: &[Value],

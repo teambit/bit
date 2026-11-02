@@ -59,6 +59,7 @@ fn resolve_alias(
     Ok(format!("{remote_scope}/{remote_lane}"))
 }
 
+/// Lists tracked remote lane IDs under `refs/remotes` using the platform path separator.
 #[inline]
 fn tracked(root: &Path) -> io::Result<Vec<String>> {
     tracked_for_separator(root, std::path::MAIN_SEPARATOR)

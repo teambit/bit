@@ -34,6 +34,7 @@ pub(super) fn prepare(input: &Input<'_>, license: Option<&str>) -> io::Result<Op
 }
 
 impl Prepared {
+    /// Revalidates that `self.path` remains an ordinary destination under `root`.
     #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         validate_destination(&self.path, root)

@@ -68,7 +68,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
-// `ComponentMap.toPlainObject()` reconstructs every imported row, including authored rows.
+/// `ComponentMap.toPlainObject()` reconstructs every imported row, including authored rows.
 fn reorder_bitmap(bitmap: &mut Value) -> io::Result<()> {
     let old = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap row"))?;
     let mut reordered = Map::with_capacity(old.len());

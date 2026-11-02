@@ -52,6 +52,7 @@ fn results(finished: Vec<io::Result<(usize, Vec<String>)>>) -> io::Result<Vec<Va
         .collect())
 }
 
+/// Groups requested component IDs by scope in insertion order within the 4,096-ID limit.
 fn jobs(input: &Request) -> io::Result<Vec<(String, Vec<String>)>> {
     if input.selection.ids.len() > 4096 {
         return Err(invalid("remote latest versions id limit"));

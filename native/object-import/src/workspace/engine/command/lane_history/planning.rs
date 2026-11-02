@@ -79,6 +79,7 @@ fn row_bare_id(row: &Value) -> Option<&str> {
                 .filter(|id| !id.is_empty())
         })
 }
+/// Returns a synthetic target selection for an incoming historical component when `captured.added` is `true`.
 #[inline]
 pub(in crate::workspace::engine::command) fn added(
     target: &Value,
