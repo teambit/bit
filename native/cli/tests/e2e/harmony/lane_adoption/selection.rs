@@ -25,6 +25,7 @@ fn workspace_only_switches_existing_component_without_adding_new_lane_rows() {
     assert!(bitmap.get("comp2").is_none());
 }
 
+/// Verifies that ordinary `bit switch` without `--workspace-only` adds all lane components to `.bitmap`.
 #[test]
 fn ordinary_switch_adds_components_omitted_by_workspace_only() {
     let helper = exported(2);

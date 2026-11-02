@@ -26,6 +26,7 @@ fn source_object(helper: &Helper) -> PathBuf {
         .join(&reference[..2])
         .join(&reference[2..])
 }
+/// Verifies remote `bit fork` fails cleanly without tracking the target when a `Source` object is missing.
 #[test]
 fn missing_remote_source_keeps_the_released_error_and_no_tracked_target() {
     let helper = support::exported(1);

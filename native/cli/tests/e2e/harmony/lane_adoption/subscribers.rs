@@ -13,6 +13,7 @@ fn install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_fie
     install_subscribers(false);
 }
 
+/// Verifies that `preInstall` subscribers mutate installer arguments and retain reassigned fields in CI mode.
 #[test]
 fn ci_install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_fields() {
     install_subscribers(true);

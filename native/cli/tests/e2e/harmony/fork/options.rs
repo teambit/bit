@@ -28,6 +28,7 @@ fn local_path_scope_and_preserve_copy_source_without_renaming_its_identifiers() 
     );
     assert!(support::ids(&helper).contains(&"target.scope/new-widget".into()));
 }
+/// Verifies `--skip-config` retains `forkedFrom` provenance while `--env` overrides the source environment.
 #[test]
 fn skip_config_retains_fork_provenance_and_explicit_env_overrides_source_env() {
     let helper = support::exported(1);

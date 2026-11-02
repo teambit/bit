@@ -36,6 +36,7 @@ fn resetting_a_new_lane_preserves_its_exported_main_base() {
     fixture::version(&helper, "comp1", "0.0.1");
 }
 
+/// Verifies that resetting a lane forked from an exported lane removes only its local snap.
 #[test]
 fn a_forked_exported_lane_resets_only_its_single_local_snap() {
     let helper = fixture::workspace(1, false);

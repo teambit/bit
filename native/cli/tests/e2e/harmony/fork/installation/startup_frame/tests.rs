@@ -11,6 +11,7 @@ fn banner() -> String {
     )
 }
 
+/// Verifies [`project`] normalizes a single-package zero-add redraw before [`BANNER`] and preserves clean frames.
 #[test]
 fn observed_redraw_and_no_redraw_preserve_the_identical_complete_banner_and_later_transition() {
     let expected = format!("unchanged prefix\n{START}{}", banner());

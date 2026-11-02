@@ -28,6 +28,7 @@ fn diverged(no_snap: bool) -> (Helper, String, String) {
     (helper, before, merged)
 }
 
+/// Verifies that `bit reset --silent` rewinds a two-parent merge while keeping merged files and objects intact.
 #[test]
 fn all_reset_removes_a_two_parent_merge_and_preserves_merged_bytes_and_objects() {
     let (helper, before, merged) = diverged(false);

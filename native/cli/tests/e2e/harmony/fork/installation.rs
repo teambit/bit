@@ -2,6 +2,7 @@
 //!
 //! Verifies package installation and compilation output after remote `bit fork`.
 
+/// Coalescible pnpm startup-frame progress redraw normalization helpers.
 mod startup_frame;
 
 use super::support;

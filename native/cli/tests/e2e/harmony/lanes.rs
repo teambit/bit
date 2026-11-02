@@ -2,7 +2,9 @@
 //!
 //! Covers lane creation, diffing, export, import, merge, and removal parity across Harmony lane workspaces.
 
+/// End-to-end tests for `bit lane merge-abort`.
 mod abort_merge_lane;
+/// End-to-end tests for `bit checkout` on lanes.
 mod bit_checkout_on_lanes;
 mod bit_import_on_lanes;
 mod bit_remove_on_lanes;

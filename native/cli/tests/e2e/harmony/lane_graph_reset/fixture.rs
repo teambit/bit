@@ -25,6 +25,7 @@ pub(super) fn workspace(count: usize, tagged: bool) -> Helper {
     helper
 }
 
+/// Snaps components in `helper` with `--ignore-issues * --message graph-reset` and extra `options`.
 pub(super) fn snap(helper: &Helper, options: &str) {
     support::setup(helper, &format!("snap --ignore-issues * --message graph-reset {options}"));
 }

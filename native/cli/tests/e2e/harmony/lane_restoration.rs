@@ -23,6 +23,7 @@ fn checkout_restores_deleted_components_at_the_historical_versions() {
     }
 }
 
+/// Verifies that `bit lane revert` without `--restore-deleted-components` leaves deleted components removed.
 #[test]
 fn revert_without_restoration_leaves_deleted_components_deleted() {
     let fixture = fixture::deleted(false);

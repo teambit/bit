@@ -34,6 +34,7 @@ fn corrupt_restored_source_fails_after_the_existing_component_revert_is_persiste
     }
 }
 
+/// Overwrites the `Source` object for `comp1/index.js` in both local and remote scopes with invalid bytes.
 fn corrupt_source(fixture: &fixture::Fixture) -> [PathBuf; 2] {
     let version = fixture.original["comp1"].as_str().unwrap();
     let object = support::json(&fixture.helper, &format!("cat-component comp1@{version} --json"));

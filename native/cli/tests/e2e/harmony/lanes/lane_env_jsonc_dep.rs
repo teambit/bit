@@ -98,6 +98,7 @@ fn env_with_workspace_component_as_peer_dep_in_env_jsonc_on_lane() {
     assert!(!diff_output.contains("0.0.1"), "{diff_output}");
 }
 
+/// Verifies that a `+^` peer dependency range in `env.jsonc` survives bare-scope release and capsule builds.
 #[test]
 fn lane_peer_plus_range_survives_a_bare_scope_release_and_capsule_build() {
     use crate::helper::{config, parse, setup};

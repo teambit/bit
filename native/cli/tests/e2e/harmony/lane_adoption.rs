@@ -34,6 +34,8 @@ fn exported(count: usize) -> Helper {
     remote::publish(&helper);
     helper
 }
+
+/// Re-initializes `helper` as an empty workspace connected to its remote scope.
 fn empty(helper: &Helper) {
     helper.re_init_workspace_with(false);
     helper.add_remote_scope();

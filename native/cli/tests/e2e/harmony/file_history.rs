@@ -16,6 +16,7 @@ fn log_file_loads_multiple_versions_with_exact_published_cache() {
     assert!(result.stdout.contains("tag 0.0.2"));
 }
 
+/// Verifies `bit log-file` displays a single tagged version's file history matching `Node.js`.
 #[test]
 fn log_file_loads_tagged_history_with_exact_published_cache() {
     let helper = support::workspace(1, true);

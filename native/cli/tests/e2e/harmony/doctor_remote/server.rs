@@ -20,6 +20,7 @@ pub(super) struct Request {
 }
 
 impl Request {
+    /// Filters `self.headers` to `x-*`, `authorization`, and `content-type` headers for parity assertions.
     pub fn semantic_headers(&self) -> BTreeMap<String, String> {
         self.headers
             .iter()

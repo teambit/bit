@@ -52,6 +52,7 @@ pub(super) fn configure(helper: &Helper) {
     helper.output_file("quiet-reporter-active", "active");
 }
 
+/// Registers a `link:` dependency policy entry pointing to `quiet-reporter` in `workspace.jsonc`.
 fn link_reporter_policy(helper: &Helper) {
     let workspace = helper.scopes.local_path.join("workspace.jsonc");
     let mut resolver =

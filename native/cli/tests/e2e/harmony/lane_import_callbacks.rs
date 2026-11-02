@@ -5,6 +5,9 @@
 use crate::commands::move_paths::support;
 use std::fs;
 
+/// Marker file recording how many times the configured aspect provider started during `bit lane import`.
+const STARTUP_MARKER_FILE: &str = "lane-import-provider-startups";
+
 /// Verifies that `bit lane import` on an active lane starts the configured aspect provider once like Node.
 #[test]
 fn active_lane_import_with_configured_provider_matches_released_node() {
@@ -33,8 +36,5 @@ fn active_lane_import_with_configured_provider_matches_released_node() {
     let native = support::compare_with_stdout(&helper, "lane import dev", str::to_owned);
     assert!(native.status.success(), "{} {}", native.stdout, native.stderr);
     assert_eq!(native.stdout.matches("fixture provider startup").count(), 1);
-    assert_eq!(
-        fs::read(helper.scopes.local_path.join("lane-import-provider-startups")).unwrap(),
-        b"x",
-    );
+    assert_eq!(fs::read(helper.scopes.local_path.join(STARTUP_MARKER_FILE)).unwrap(), b"x",);
 }

@@ -55,6 +55,7 @@ fn run(hub: &Hub, root: &Path, node: bool) -> Output {
     output.stdout = reader.join().unwrap();
     output
 }
+/// Reads `stdout` on a background thread and signals the returned receiver once the exporter receives objects.
 fn output_reader(stdout: ChildStdout) -> (thread::JoinHandle<Vec<u8>>, mpsc::Receiver<()>) {
     let (ready, receiver) = mpsc::channel();
     let reader = thread::spawn(move || {

@@ -17,6 +17,7 @@ fn configured() -> Helper {
     finish_configured(helper)
 }
 
+/// Creates a minimal single-component `empty-env` workspace with empty dependency policy and `env/install-compat`.
 fn minimal_merge_configured() -> Helper {
     let helper = support::workspace(1, false);
     config::set_component_env(&helper.scopes.local_path, "comp1", "teambit.harmony/empty-env");

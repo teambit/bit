@@ -22,6 +22,7 @@ fn prepared() -> (Helper, String) {
     (helper, history)
 }
 
+/// Verifies that `bit lane revert` runs `onLoad`, `preInstall`, `postInstall`, and `compile` in one provider session.
 #[test]
 fn historical_revert_installs_and_compiles_in_the_same_real_provider_session() {
     let (helper, history) = prepared();

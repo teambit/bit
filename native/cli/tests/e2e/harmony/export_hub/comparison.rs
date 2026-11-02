@@ -23,6 +23,7 @@ pub(in crate::harmony) fn controls(root: &Path, oracle: &Path) {
     }
 }
 
+/// Validates HTTP upload request headers, `UUIDv4` request IDs, and retry idempotency in `rows`.
 pub(in crate::harmony) fn requests(rows: &[Value], retry: bool) {
     let uploads: Vec<_> = rows
         .iter()

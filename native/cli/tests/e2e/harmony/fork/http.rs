@@ -17,6 +17,7 @@ fn http_single_fork_preserves_private_capture_and_original_provenance() {
     assert_eq!(inventory(&objects), before, "remote fork must not publish its private closure");
     assert_eq!(support::ids(&helper), ["my-scope/comp-copy"]);
 }
+/// Verifies HTTP pattern `bit fork` preserves batch ordering without importing remote objects into `.bit/objects`.
 #[test]
 fn http_pattern_batch_keeps_ordered_results_and_does_not_publish_remote_objects() {
     let helper = support::remote_workspace(2);

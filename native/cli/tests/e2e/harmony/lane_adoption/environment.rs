@@ -9,6 +9,9 @@ use crate::{
 };
 use serde_json::json;
 
+/// Custom environment component directory and ID used in the peer `+` resolution fixture.
+const EMPTY_ENV_ID: &str = "empty-env";
+
 /// Verifies that patterned `bit lane import -p` resolves `+` peer versions before handling unpublished peer errors.
 #[test]
 fn patterned_lane_import_resolves_peer_plus_before_graceful_unpublished_peer_failure() {
@@ -18,8 +21,8 @@ fn patterned_lane_import_resolves_peer_plus_before_graceful_unpublished_peer_fai
         "export class EmptyEnv {}\nexport default new EmptyEnv();\n",
     );
     helper.output_file("empty-env/index.ts", "export { EmptyEnv } from './empty-env.bit-env';\n");
-    support::setup(&helper, "add empty-env");
-    config::set_component_env(&helper.scopes.local_path, "empty-env", "teambit.envs/env");
+    support::setup(&helper, &format!("add {EMPTY_ENV_ID}"));
+    config::set_component_env(&helper.scopes.local_path, EMPTY_ENV_ID, "teambit.envs/env");
     helper.output_file(
         "empty-env/env.jsonc",
         &json!({"policy":{"peers":[{

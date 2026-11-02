@@ -21,6 +21,7 @@ fn missing_history_id_reports_the_current_lane_and_preserves_every_control() {
     }
 }
 
+/// Verifies that running `bit lane checkout` or `bit lane revert` while on `main` fails before history lookup.
 #[test]
 fn main_lane_error_precedes_history_resolution_and_preserves_the_workspace() {
     let helper = support::workspace(1, false);

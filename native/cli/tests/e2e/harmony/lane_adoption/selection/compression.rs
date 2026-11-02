@@ -33,6 +33,7 @@ fn main_switch_canonicalizes_an_unchanged_main_only_component_zlib_stream() {
     assert_eq!(inflate(&after), before);
 }
 
+/// Looks up the object hash of `comp2` in the local scope's `index.json`.
 fn model_hash(helper: &Helper) -> String {
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     let index: serde_json::Value =

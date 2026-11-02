@@ -2,6 +2,7 @@
 //!
 //! Covers HTTP and file-remote `bit doctor` invocations, error handling, and request headers.
 
+/// Local test HTTP `GraphQL` server and request capture helpers for remote `bit doctor`.
 mod server;
 
 use crate::helper::{Helper, config};

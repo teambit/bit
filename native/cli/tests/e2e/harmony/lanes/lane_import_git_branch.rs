@@ -16,6 +16,7 @@ fn git(cwd: &std::path::Path, args: &[&str]) -> String {
     String::from_utf8_lossy(&out.stdout).into_owned()
 }
 
+/// Initializes a Git repository on branch `main` with `.gitignore` and an initial commit.
 fn init_new_git_repo(helper: &Helper) {
     let cwd = &helper.scopes.local_path;
     git(cwd, &["init", "-b", "main"]);

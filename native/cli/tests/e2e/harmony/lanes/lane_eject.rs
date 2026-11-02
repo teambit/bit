@@ -5,6 +5,9 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
+/// Active lane name used in the `bit lane eject` end-to-end tests.
+const DEV_LANE: &str = "dev";
+
 /// Verifies `bit eject` on a lane for components with and without a `main` version.
 #[test]
 fn lane_eject_when_no_main_version() {
@@ -27,7 +30,7 @@ fn lane_eject_when_no_main_version() {
     helper.populate_components(3, true, "");
     helper.native("tag --skip-tests");
     helper.native("export");
-    helper.create_lane("dev", "");
+    helper.create_lane(DEV_LANE, "");
     helper.native("snap --skip-tests --unmodified");
     helper.native("export");
     config::update_scope_json(&helper.scopes.local_path.join(".bit/scope.json"), |scope| {

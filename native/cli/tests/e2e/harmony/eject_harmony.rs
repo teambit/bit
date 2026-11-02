@@ -5,6 +5,9 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
+/// Substring expected in `bit eject` stdout when components are ejected.
+const EJECT_SUCCESS: &str = "successfully ejected the following components";
+
 /// Verifies `bit eject` default and `--keep-files` behavior on exported components with dependencies.
 #[test]
 fn eject_components_with_dependencies_after_export() {
@@ -34,7 +37,7 @@ fn eject_components_with_dependencies_after_export() {
     let scope_before_eject = helper.clone_workspace();
 
     let eject_out = helper.native("eject comp1");
-    assert!(eject_out.contains("successfully ejected the following components"), "{eject_out}");
+    assert!(eject_out.contains(EJECT_SUCCESS), "{eject_out}");
 
     let ws_json = helper.read_workspace_jsonc();
     let pkg_name = format!("@ci/{scope_without_owner}.comp1");

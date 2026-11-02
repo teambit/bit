@@ -54,6 +54,7 @@ fn http_export_log_import_remove_and_lane_list() {
     );
 }
 
+/// Verifies exporting components to a new lane and deleting a component over HTTP.
 #[test]
 fn export_to_new_lane_and_delete_component() {
     let helper = Helper::new();

@@ -21,6 +21,7 @@ fn local_pattern_forks_both_sources_in_the_selected_scope() {
     }
 }
 
+/// Verifies a mixed local-and-remote pattern forks local matches before remote matches.
 #[test]
 fn mixed_pattern_finishes_local_copies_before_remote_copies() {
     let helper = support::remote_workspace(2);

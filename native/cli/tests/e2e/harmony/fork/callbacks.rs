@@ -28,6 +28,7 @@ fn configured() -> Helper {
     helper.output_file("fork-active", "active");
     helper
 }
+/// Verifies local `bit fork` copies in-memory `onLoad` mutations and invokes `onAdd` in canonical order.
 #[test]
 fn local_fork_copies_actual_loaded_memory_and_runs_registered_onadd_in_order() {
     let helper = configured();

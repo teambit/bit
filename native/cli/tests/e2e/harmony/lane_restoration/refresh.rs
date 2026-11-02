@@ -24,6 +24,7 @@ fn checkout_refreshes_remote_lane_history_before_resolving_the_requested_entry()
     );
 }
 
+/// Verifies that `bit lane checkout` refreshes uncached remote `LaneHistory` natively in CI mode.
 #[test]
 fn ci_uncached_file_remote_history_refresh_remains_native_and_restores_exact_sources() {
     let fixture = stale_file_remote();

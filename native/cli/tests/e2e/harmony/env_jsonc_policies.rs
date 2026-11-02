@@ -8,6 +8,9 @@ use crate::{
 };
 use serde_json::json;
 
+/// Aspect ID for dependency-resolver inspection in `env.jsonc` policy tests.
+const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
+
 /// Verifies peer, dev, and runtime dependency policies and `extends` inheritance from `env.jsonc`.
 #[test]
 fn env_jsonc_policies_peers_devs_runtime_and_extends() -> KnownResult<()> {
@@ -58,7 +61,7 @@ fn env_jsonc_policies_peers_devs_runtime_and_extends() -> KnownResult<()> {
     helper.run("add comp1");
     helper.run(&format!("env set comp1 {full_env_id}"));
 
-    let conf = helper.show_aspect_config("comp1", "teambit.dependencies/dependency-resolver");
+    let conf = helper.show_aspect_config("comp1", DEPENDENCY_RESOLVER_ASPECT);
     let deps = conf["data"]["dependencies"].as_array().unwrap();
     assert!(
         deps.iter()

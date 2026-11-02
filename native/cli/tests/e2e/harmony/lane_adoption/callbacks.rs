@@ -34,6 +34,7 @@ fn active_lane_import_preserves_real_provider_startup_and_config_mutation() {
     );
 }
 
+/// Configures and snaps or tags the `env/lane-adoption` provider aspect in `helper`.
 fn configure(helper: &crate::helper::Helper, active_lane: bool) {
     let source = include_str!("callbacks.cjs");
     helper.output_file("lane-provider/index.js", source);

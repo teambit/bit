@@ -16,6 +16,7 @@ pub(super) struct Fixture {
     pub original: Value,
 }
 
+/// Creates a three-component `empty-env` workspace snapped and exported on a `dev` lane.
 pub(super) fn initial() -> Fixture {
     let helper = support::workspace(3, false);
     for name in ["comp1", "comp2", "comp3"] {

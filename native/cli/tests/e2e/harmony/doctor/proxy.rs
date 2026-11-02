@@ -19,6 +19,7 @@ pub(super) struct Proxy {
 }
 
 impl Proxy {
+    /// Starts a [`Proxy`] serving a stable `99.0.0` BVM release entry.
     pub fn new() -> Self {
         Self::catalog(r#"[{"version":"99.0.0","stable":true,"date":"2026-01-01"}]"#)
     }

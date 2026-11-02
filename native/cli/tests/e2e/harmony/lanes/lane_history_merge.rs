@@ -4,6 +4,9 @@
 
 use crate::helper::{Helper, parse};
 
+/// Source lane merged via fast-forward into `lane-a`.
+const MERGED_LANE: &str = "lane-b";
+
 /// Verifies that a fast-forward `bit lane merge` records a merge entry in `bit lane history --json`.
 #[test]
 fn lane_history_records_fast_forward_merge_entry() {
@@ -18,7 +21,7 @@ fn lane_history_records_fast_forward_merge_entry() {
     let before_json = parse(&helper.native("lane history --json"));
     let before = before_json.as_array().unwrap();
 
-    helper.native("lane create lane-b");
+    helper.native(&format!("lane create {MERGED_LANE}"));
     helper.populate_components(2, true, "v2");
     helper.native(r#"snap -m "changes on lane-b""#);
     helper.native("export");

@@ -4,6 +4,7 @@
 //!
 //! Used by `bit fork` installation parity assertions.
 
+/// Unit tests for pnpm startup-frame redraw normalization.
 mod tests;
 
 /// Spinner startup prefix preceding pnpm progress output.

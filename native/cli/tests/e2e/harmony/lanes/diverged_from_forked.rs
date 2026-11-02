@@ -4,6 +4,9 @@
 
 use crate::helper::{Helper, parse};
 
+/// Relative file path added on `lane-a` after `lane-b` is forked from it.
+const LANE_A_NEW_FILE: &str = "comp1/new-file.ts";
+
 /// Verifies `updatesFromForked` in `bit status --lanes` and two-parent merge commits when forked lanes diverge.
 #[test]
 fn lane_b_was_forked_from_lane_a_and_they_are_now_diverged() {
@@ -17,7 +20,7 @@ fn lane_b_was_forked_from_lane_a_and_they_are_now_diverged() {
     helper.native("snap --skip-tests --unmodified");
     helper.native("export");
     helper.switch_local_lane("lane-a", "");
-    helper.write_file("comp1/new-file.ts", "");
+    helper.write_file(LANE_A_NEW_FILE, "");
     helper.native("snap --skip-tests");
     let head_on_lane_a = helper.get_head_from_lane("lane-a", "comp1");
     helper.native("export");

@@ -16,6 +16,7 @@ fn fixture() -> Helper {
     helper
 }
 
+/// Runs `bit doctor "validate scope objects" --json` and asserts canonical loader recovery and `.bit/index.json` parity.
 fn compare_recovery(helper: &Helper, oracle: &Path) {
     let command = r#"doctor "validate scope objects" --json"#;
     let actual = Helper::cmd_in_with(

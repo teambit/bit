@@ -29,6 +29,8 @@ pub(super) fn expected(helper: &Helper) -> BTreeMap<String, Vec<u8>> {
         ("last-merged/main-components/0:mode".into(), mode(&fs::metadata(path).unwrap())),
     ])
 }
+
+/// Encodes the platform file permission mode of `metadata` into little-endian bytes.
 fn mode(metadata: &fs::Metadata) -> Vec<u8> {
     #[cfg(unix)]
     {

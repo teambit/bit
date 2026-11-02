@@ -30,6 +30,7 @@ fn selected_introduced_member_leaves_the_other_lane_member_and_main_versions_int
     fixture::version(&helper, "comp2", "0.0.1");
 }
 
+/// Verifies that `bit reset comp1 --head` keeps the `main` parent version as a member of the lane.
 #[test]
 fn head_only_introduced_member_keeps_the_main_parent_as_a_lane_member() {
     let helper = fixture::workspace(1, true);

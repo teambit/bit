@@ -2,8 +2,10 @@
 //!
 //! Validates main and lane central-hub exports, retries, subset acknowledgments, and job URLs.
 
+/// Scope object and control file comparison helpers for central-hub `bit export` tests.
 pub(super) mod comparison;
 
+/// Terminal `SIGINT` interrupt tests for acknowledged central-hub `bit export` runs.
 #[cfg(unix)]
 mod interrupt;
 

@@ -34,6 +34,7 @@ fn mixed_revert_keeps_the_existing_version_and_restores_historical_file_bytes() 
     );
 }
 
+/// Verifies that `bit lane checkout` works on a local-only lane without requiring a remote lane object.
 #[test]
 fn local_new_lane_history_does_not_require_a_published_remote_lane() {
     let fixture = fixture::initial();

@@ -9,13 +9,20 @@ use crate::{
 };
 use std::fs;
 
+/// Component ID of the selected local member added on top of the inherited lane fixture.
+const SELECTED_MEMBER: &str = "comp2";
+
 /// Verifies that resetting a selected local component succeeds even when an unselected lane member has no base head.
 #[test]
 fn selected_local_member_resets_while_unselected_inherited_member_has_no_replacement() {
     let helper = fixture::unknown_inherited();
     helper.output_file("comp2/index.js", "module.exports='selected local member';\n");
     support::setup(&helper, "add comp2 -i comp2");
-    config::set_component_env(&helper.scopes.local_path, "comp2", "teambit.harmony/empty-env");
+    config::set_component_env(
+        &helper.scopes.local_path,
+        SELECTED_MEMBER,
+        "teambit.harmony/empty-env",
+    );
     fixture::snap(&helper, "comp2 --skip-auto-snap");
     let failure =
         support::prepare_history(&helper, || node(&helper.scopes.local_path, "reset --silent"));

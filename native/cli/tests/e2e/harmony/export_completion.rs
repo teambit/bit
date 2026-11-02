@@ -2,6 +2,7 @@
 //!
 //! Covers multi-version reconciliation, `--resume`, lane readmes, and package regeneration.
 
+/// Recursive `node_modules` package tree comparison helpers for `bit export`.
 mod packages;
 
 use crate::helper::{Helper, config};
