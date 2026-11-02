@@ -38,6 +38,7 @@ pub(crate) fn colors(args: &[OsString]) -> bool {
 
 /// ANSI SGR open and close escape sequences for cyan table headers.
 const CYAN: (&str, &str) = ("\u{1b}[36m", "\u{1b}[39m");
+/// ANSI SGR open and close escape sequences for grey table borders.
 const GREY: (&str, &str) = ("\u{1b}[90m", "\u{1b}[39m");
 
 /// `colors[style](text)`: the close codes inside become open codes.

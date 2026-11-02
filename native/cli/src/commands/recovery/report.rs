@@ -31,6 +31,7 @@ pub(super) fn format_result(result: &Value, kind: Kind, chalk: Chalk) -> io::Res
     if kind == Kind::Lane { format_lane(result, chalk) } else { format_component(result, chalk) }
 }
 
+/// Formats the `merge aborted` report for component-level merge aborts (`bit merge --abort`).
 pub(super) fn format_component(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let map = object(result)?;
     let rows = array(map.get("abortedComponents"), "aborted components")?;

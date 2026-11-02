@@ -44,6 +44,7 @@ fn deleted_report(conflicts: &[Value], updates: &[Value], chalk: Chalk, output: 
     }
 }
 
+/// Appends the version-conflict resolution instructions for non-deleted `conflicts` to `output`.
 fn conflict_report(conflicts: &[Value], chalk: Chalk, output: &mut Vec<String>) {
     let conflicts: Vec<_> = conflicts
         .iter()

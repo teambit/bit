@@ -49,6 +49,7 @@ fn valid_alias_token(token: &str) -> bool {
     !trimmed.is_empty() && !trimmed.starts_with('-') && trimmed.len() <= 1024
 }
 
+/// Validates the alias target inside `root`, persists `scope.json`, and emits the [`Report`].
 fn run_in_workspace(
     root: &std::path::Path,
     args: &[OsString],

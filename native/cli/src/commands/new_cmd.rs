@@ -32,6 +32,7 @@ pub(super) struct Options {
 /// Built-in workspace starter template names recognized without `--aspect`.
 const BUILTIN_WORKSPACE_TEMPLATES: &[&str] = &["basic", "react", "platform", "harmony"];
 
+/// Entry point for `bit new` that validates workspace and template preconditions before delegating.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("new arguments are not UTF-8".into()));

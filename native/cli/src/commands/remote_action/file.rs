@@ -62,6 +62,7 @@ pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Va
     Ok(json!({"existed":existed}))
 }
 
+/// Validates the `clientId` string in `value` and returns its `pending-objects/<clientId>` path under `scope`.
 #[inline]
 fn pending_path(scope: &Path, value: Option<&Value>) -> io::Result<PathBuf> {
     let valid = value

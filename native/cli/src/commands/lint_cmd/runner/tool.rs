@@ -37,6 +37,7 @@ impl Session {
         Ok(session)
     }
 
+    /// Spawns a Node.js child process running the embedded `tool.cjs` `ESLint` harness.
     fn spawn(colors: bool) -> io::Result<Self> {
         let Target::Entry(cli) = discovery::find()? else {
             return Err(invalid("linter tool installation"));

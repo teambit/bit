@@ -1,6 +1,6 @@
 //! `MergingMain.throwForFailures`: reject failed components before workspace publication.
 //!
-//! [`check`] inspects `failedComponents` entries ([`array`]) and formats abort errors with [`Chalk`].
+//! [`check`] and [`row_identity`] inspect `failedComponents` entries ([`array`]) and format abort errors with [`Chalk`].
 use crate::commands::{color::Chalk, status::js::array};
 use serde_json::Value;
 use std::io;

@@ -65,6 +65,7 @@ fn outside_workspace_import(
     workspace_command::execute_failure_scope(cwd, args, "import", false, "", io::Error::other(msg))
 }
 
+/// Starts a retained [`ProjectedLinker`] session when the workspace requires canonical aspect providers.
 #[inline]
 fn bootstrap(root: &std::path::Path) -> io::Result<Option<ProjectedLinker>> {
     // Main-lane import is handed to switch's own retained host. Active-lane

@@ -81,6 +81,7 @@ impl Merge<'_> {
         ])
     }
 
+    /// Returns the [`Chalk`] instance stored on the underlying [`Formatter`].
     #[inline]
     fn chalk(&self) -> Chalk {
         self.format.chalk

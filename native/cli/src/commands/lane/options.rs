@@ -46,6 +46,7 @@ const EXTRA_BOOLEANS: [&str; 8] = [
     "--detach-head",
     "--loose",
 ];
+/// CLI flags that consume a string argument in `bit lane merge`.
 const VALUED: [&str; 3] = ["--auto-merge-resolve", "--message", "--pattern"];
 
 /// `args` starts after `lane merge`.

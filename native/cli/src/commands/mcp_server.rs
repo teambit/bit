@@ -24,7 +24,7 @@ use std::{
 };
 /// Descriptor for the `bit mcp-server` CLI command.
 pub const COMMAND: Command = Command { name: "mcp-server", aliases: &[], run };
-
+/// Supported editor identifiers for `bit mcp-server setup`.
 const SETUP_EDITORS: &[&str] = &["vscode", "cursor", "windsurf", "roo", "cline", "claude-code"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]

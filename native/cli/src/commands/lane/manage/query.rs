@@ -80,6 +80,7 @@ fn updates_in_scope(
     Ok(Outcome::Declined("lane updates remote lookup delegated".into()))
 }
 
+/// Parses the optional positional lane name and `--json` flag for `bit lane updates`.
 #[inline]
 fn parse_updates_args<'a>(lane_args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     let mut lane_name = None;

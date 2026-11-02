@@ -52,6 +52,7 @@ fn local_version(row: &Row) -> &str {
         .unwrap_or("<new>")
 }
 
+/// Returns the workspace-used version string of `row` or `"N/A"` when absent.
 #[inline]
 fn current_version(row: &WorkspaceRow) -> &str {
     row.used

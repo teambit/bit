@@ -40,7 +40,7 @@ enum Kind {
     Component,
     Lane,
 }
-
+/// Parsed CLI flags for `bit merge --abort` or `bit lane merge-abort`.
 pub(super) struct Options {
     kind: Kind,
     pattern: Option<String>,

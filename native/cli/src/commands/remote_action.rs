@@ -42,6 +42,7 @@ enum Target {
 }
 
 impl Plan {
+    /// Returns the local filesystem scope path when `self.target` is [`Target::File`].
     #[inline]
     pub(super) fn file_scope(&self) -> Option<&Path> {
         match &self.target {

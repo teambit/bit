@@ -77,6 +77,7 @@ fn text_report(
     }
 }
 
+/// Tuple of projected remote [`LaneData`] entries, active lane `(id, alias)`, and optional raw HTTP rows.
 type Prepared = (Vec<LaneData>, (Value, String), Option<Vec<Value>>);
 
 fn prepare(

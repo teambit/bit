@@ -76,6 +76,7 @@ fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -
     Ok(())
 }
 
+/// Builds the `--json` payload [`Value`] for `bit lane current`.
 #[inline]
 fn current_json(name: &str, scope: &str, full: &str, alias: &str, is_main: bool) -> Value {
     if is_main {

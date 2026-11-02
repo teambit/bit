@@ -37,6 +37,7 @@ fn parse_move_args<'a>(args: &[&'a str]) -> Option<(&'a str, &'a str)> {
     let to = to.trim();
     (!from.is_empty() && !to.is_empty()).then_some((from, to))
 }
+/// Returns whether the `CI` environment variable is set to a truthy value.
 #[inline]
 fn ci_enabled() -> bool {
     env::var_os("CI")

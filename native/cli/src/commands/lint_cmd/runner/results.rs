@@ -52,6 +52,7 @@ pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
     Ok(result)
 }
 
+/// Projects a single raw `ESLint` file diagnostic entry into the normalized `bit lint` file schema.
 #[inline]
 fn file(raw: &Value) -> Value {
     let file_path = raw["filePath"]

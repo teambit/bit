@@ -28,7 +28,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Embedded JSON array of core Bit aspect IDs linked into workspace `node_modules`.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 /// Top-level `package.json` keys preserved when regenerating linked component manifests.

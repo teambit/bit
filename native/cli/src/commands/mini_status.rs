@@ -29,6 +29,7 @@ pub const COMMAND: Command = Command { name: "mini-status", aliases: &["ms"], ru
 /// Maximum workspace component count accepted before declining to the Node.js CLI.
 const MAX_COMPONENTS: usize = 4096;
 
+/// Entry point for `bit mini-status` (`bit ms`).
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(json) = parse_json_flag(args) else {
         return Ok(Outcome::Declined("only `--json` or no flags run natively".to_string()));

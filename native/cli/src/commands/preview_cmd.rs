@@ -30,6 +30,7 @@ pub(super) struct GenerateOptions {
     pub name: Option<String>,
 }
 
+/// Parsed CLI options for `bit serve-preview`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct ServeOptions {
     pub port: Option<u16>,

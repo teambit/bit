@@ -63,6 +63,7 @@ fn sequence(pattern: &str) -> io::Result<Option<(usize, usize, Sequence)>> {
     Ok(None)
 }
 
+/// Parsed numeric or single-letter `{start..end[..step]}` brace range specification.
 struct Sequence {
     start: i64,
     end: i64,

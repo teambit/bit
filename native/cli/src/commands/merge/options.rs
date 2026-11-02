@@ -19,6 +19,7 @@ pub struct Options {
 
 /// Supported boolean CLI flags for `bit merge`.
 const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--verbose", "--no-snap"];
+/// CLI flags that consume a string argument in `bit merge`.
 const VALUED: [&str; 2] = ["--auto-merge-resolve", "--message"];
 
 /// When `args` fails validation in `MergeCmd.report`, return the error message.

@@ -79,6 +79,7 @@ fn consume_trailing_resolve(tail: &[&str], options: &mut Options) -> Option<()> 
     Some(())
 }
 
+/// Supported CLI flags for `bit merge --resolve`.
 const FLAGS: [&str; 4] = ["--message", "--resolve", "--skip-dependency-installation", "--build"];
 
 fn apply_resolve_flag<'a>(

@@ -70,6 +70,7 @@ fn run_in_workspace(
     }
 }
 
+/// Renders and returns a canonical lane-history failure [`Outcome`] after running pre-checkout lifecycle hooks.
 #[inline]
 fn failure(
     root: &Path,

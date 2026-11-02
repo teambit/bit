@@ -52,6 +52,7 @@ pub(super) fn render_json(summary: &LinkSummary) -> Value {
     Value::Object(map)
 }
 
+/// Converts [`ComponentLinkItem`] entries into the `legacyLinkResults` JSON array.
 #[inline]
 fn legacy_links_json(items: &[ComponentLinkItem]) -> Vec<Value> {
     items

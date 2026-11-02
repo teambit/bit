@@ -53,6 +53,7 @@ pub(super) struct LaneData {
 }
 
 impl LaneData {
+    /// Returns whether this [`LaneData`] entry represents the default `main` lane.
     #[inline]
     pub(super) const fn is_main(&self) -> bool {
         self.lane.is_none()

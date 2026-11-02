@@ -79,6 +79,7 @@ fn continue_snapshot(
     Ok(())
 }
 
+/// Builds the `mergeSnapResults` object from `resolved` component versions after auto-snapping.
 fn snap_results(resolved: &Planned) -> io::Result<Value> {
     let versions = array(resolved.plan.get("allocatedVersions"), "merge allocated versions")?;
     let snapped =

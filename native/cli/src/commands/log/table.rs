@@ -44,6 +44,7 @@ fn log_field<'a>(row: &'a Value, field: &str) -> &'a str {
         .unwrap_or("")
 }
 
+/// Formats `rows` into a borderless single-space-separated table using [`table_with_separator`].
 #[inline]
 pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
     table_with_separator(rows, " ")

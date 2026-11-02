@@ -51,6 +51,7 @@ fn unknown_subcommand_message(subcommand: &str, chalk: Chalk) -> String {
     ))
 }
 
+/// Parses the single positional subcommand token following `bit npmrc`.
 #[inline]
 fn parse_subcommand(args: &[OsString]) -> Option<String> {
     let tokens = args

@@ -52,6 +52,7 @@ pub(super) fn change_scope(args: &[OsString], lane_args: &[&str]) -> io::Result<
     })
 }
 
+/// Parses the positional target and optional `--lane-name` (`-l`) flag for `rename` or `change-scope`.
 fn parse_lane_target_args<'a>(args: &[&'a str]) -> Option<(&'a str, Option<&'a str>)> {
     let mut target = None;
     let mut lane_name = None;

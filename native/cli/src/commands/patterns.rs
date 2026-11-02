@@ -86,7 +86,7 @@ fn supported(glob: &str) -> io::Result<()> {
 }
 
 /// `minimatch(path, glob)`: segment by segment, `**` spanning any number of
-/// segments, neither matching a dot segment.
+/// segments, neither matching a dot segment ([`match_segment`]).
 fn match_segments(path: &[&str], glob: &[&str]) -> bool {
     let Some((first, rest)) = glob.split_first() else { return path.is_empty() };
     if *first == "**" {

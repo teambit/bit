@@ -40,6 +40,7 @@ pub(super) struct Prepared {
 }
 
 impl Prepared {
+    /// Persists all staged file writes in `self.writes`, creating parent directories as needed.
     #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         for (path, bytes) in &self.writes {

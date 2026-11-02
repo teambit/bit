@@ -91,6 +91,7 @@ fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outc
     )
 }
 
+/// Returns whether the `CI` environment variable is set to a truthy value.
 #[inline]
 fn is_ci_environment() -> bool {
     std::env::var_os("CI")

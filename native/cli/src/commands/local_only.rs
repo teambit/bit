@@ -41,6 +41,7 @@ enum Prepared {
     Unrecognized { sub: String },
 }
 
+/// Entry point for `bit local-only <set|unset|list>`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(args) else {
         return Ok(Outcome::Declined(

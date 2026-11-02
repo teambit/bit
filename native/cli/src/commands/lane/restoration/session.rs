@@ -78,6 +78,7 @@ impl Session {
         )
     }
 
+    /// Validates `historyToken` and returns the ordered checkout `phases` from `selection`.
     fn phases(&self) -> io::Result<Vec<Value>> {
         if self.selection["historyToken"]
             .as_str()

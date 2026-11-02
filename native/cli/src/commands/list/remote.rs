@@ -63,6 +63,7 @@ pub(super) fn list(
         .collect()
 }
 
+/// Splits a remote component `id` string into `(scope/name, optional_version)`.
 #[inline]
 fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
     let id = value["id"]

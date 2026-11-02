@@ -58,6 +58,7 @@ fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::
     Ok(Formatter::join(&sections))
 }
 
+/// Formats the per-component header and diagnostic output block for a dirty component `row`.
 fn component(row: &Value, formatter: &Formatter) -> io::Result<String> {
     let id = &row["componentId"];
     let (scope, name) = if let Some(raw) = id.as_str() {

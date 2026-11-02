@@ -11,6 +11,7 @@ use std::{
 /// Supported editor names for `bit mcp-server rules`.
 const RULES_EDITORS: &[&str] = &["vscode", "cursor", "roo", "cline", "claude-code"];
 
+/// Embedded Markdown rules template for consumer (non-Bit-workspace) projects.
 const TEMPLATE_CONSUMER: &str =
     include_str!("../../../../../components/mcp/mcp-config-writer/bit-rules-consumer-template.md");
 const TEMPLATE_GIT: &str =

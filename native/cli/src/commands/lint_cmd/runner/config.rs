@@ -49,6 +49,7 @@ impl Config {
         Ok(Self { path, bytes, existing })
     }
 
+    /// Writes the temporary `tsconfig` file to `node_modules/.cache` if not already present.
     #[inline]
     pub(super) fn publish(&self) -> io::Result<Option<Value>> {
         if !self.existing {

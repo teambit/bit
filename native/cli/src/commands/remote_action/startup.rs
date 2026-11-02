@@ -24,6 +24,7 @@ pub(in crate::commands) fn service_supported(root: &Path, config: &Value) -> io:
     supported_workspace(root, config, true, Installer::needs_service_callbacks(root))
 }
 
+/// Checks whether workspace `root` and `config` can run a remote action without aspect callbacks or lane hydration.
 fn supported_workspace(
     root: &Path,
     config: &Value,

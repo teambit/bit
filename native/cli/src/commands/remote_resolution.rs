@@ -48,6 +48,7 @@ impl Session {
         }
     }
 
+    /// Creates a remote-resolution [`Session`] rooted at a bare `scope_root` directory.
     #[inline]
     pub(super) fn for_scope(scope_root: &Path, args: &[OsString]) -> Self {
         Self {

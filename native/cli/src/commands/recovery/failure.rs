@@ -28,6 +28,7 @@ pub(super) fn preflight(request: &Value) -> io::Result<()> {
         _ => Ok(()),
     }
 }
+/// Wrapper error carrying a partially restored lane-abort [`Value`] payload.
 #[derive(Debug)]
 struct Restored(Value);
 impl fmt::Display for Restored {

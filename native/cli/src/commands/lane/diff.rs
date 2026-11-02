@@ -88,6 +88,7 @@ fn outside_workspace_diff(cwd: &Path, args: &[OsString], values: &[&str]) -> io:
     )
 }
 
+/// Returns a deterministic error message when `values` or the active workspace lane cannot be diffed.
 fn validate_workspace_diff(root: &Path, values: &[&str]) -> Option<String> {
     if values.len() > 2 {
         return Some(format!(

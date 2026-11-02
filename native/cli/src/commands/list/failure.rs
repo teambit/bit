@@ -49,6 +49,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+/// Emits a workspace or bare-scope `bit list` failure report for `msg`.
 #[inline]
 fn emit_error(
     cwd: &Path,

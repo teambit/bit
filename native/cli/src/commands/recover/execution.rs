@@ -77,6 +77,7 @@ fn import(
     };
     plan.after_import(&bitmap)
 }
+/// Formats the recovery [`Report`] listing all component IDs restored by `plan`.
 #[inline]
 fn report(options: &Options<'_>, plan: &Batch, args: &[OsString]) -> io::Result<Report> {
     let format = Formatter::new(Chalk::detect(args));

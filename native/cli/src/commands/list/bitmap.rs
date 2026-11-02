@@ -68,7 +68,7 @@ pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
     Ok(Bitmap { entries, lane })
 }
 
-/// `{ scope, name }` of `_bit_lane.id`.
+/// `{ scope, name }` of `_bit_lane.id` parsed from `.bitmap`.
 fn lane_id(lane: &Value) -> io::Result<Value> {
     let id = &lane["id"];
     let (scope, name) = if let Some(raw) = id.as_str() {

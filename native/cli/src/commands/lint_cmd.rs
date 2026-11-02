@@ -22,7 +22,7 @@ use serde_json::{Map, Value};
 use std::{env, ffi::OsString, fs, io, path::Path};
 /// Descriptor for the `bit lint` CLI command.
 pub const COMMAND: Command = Command { name: "lint", aliases: &[], run };
-
+/// Error message emitted when `bit lint` runs outside a workspace or valid bare scope.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

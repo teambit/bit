@@ -55,6 +55,7 @@ fn read(path: &Path, bare: bool) -> io::Result<ScopeRoot> {
     Ok(ScopeRoot { path: path.to_owned(), bare })
 }
 
+/// Verifies that `index.json` inside a bare scope `directory` is within size limits and has a valid shape.
 fn validate_bare_index(directory: &Path) -> io::Result<()> {
     let path = directory.join("index.json");
     if !path.is_file() {

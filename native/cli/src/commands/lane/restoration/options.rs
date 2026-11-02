@@ -76,6 +76,7 @@ impl Options {
         Some(())
     }
 
+    /// Returns the subcommand name (`"revert"` or `"checkout"`) for lifecycle reporting.
     #[must_use]
     #[inline]
     pub const fn command(&self) -> &'static str {

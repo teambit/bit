@@ -67,6 +67,7 @@ fn remove_directory(path: &Path) -> io::Result<()> {
     }
 }
 
+/// Formats `error` as a Node.js-compatible `errno` message (`EACCES`, `ENOENT`, `ENOTEMPTY`, etc.) for `operation` on `path`.
 fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     let (code, message) = match error.kind() {
         io::ErrorKind::PermissionDenied if cfg!(windows) => ("EPERM", "operation not permitted"),

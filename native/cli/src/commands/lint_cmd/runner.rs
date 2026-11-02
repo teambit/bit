@@ -41,6 +41,7 @@ fn elapsed_millis(started: &Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
 }
 
+/// Constructs an [`io::Error`] with `message` (defaulting to `"linter failure"` when blank).
 #[inline]
 fn invalid(message: &'static str) -> io::Error {
     let trimmed = message.trim();

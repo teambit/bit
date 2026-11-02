@@ -57,6 +57,7 @@ fn section(value: Option<&Value>, formatter: &Formatter, updates: bool) -> io::R
     Ok(format!("{}\n{}", formatter.title(title), rows.join("\n")))
 }
 
+/// Formats an `{ oldVersion, newVersion }` or two-element array dependency update into `"old => new"`.
 #[inline]
 fn update_pair(value: &Value) -> io::Result<String> {
     if let Some(from) = value

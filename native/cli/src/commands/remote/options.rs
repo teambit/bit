@@ -48,6 +48,7 @@ impl Options {
     }
 }
 
+/// Splits the leading `bit remote` subcommand (`list`, `add`, `del`, or default `"remote"`) from `tokens`.
 #[inline]
 fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a str])> {
     match tokens.split_first() {

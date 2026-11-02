@@ -70,6 +70,7 @@ fn compile(
     Ok(())
 }
 
+/// Extracts an optional compiler error message from a `switchCompile` receipt [`Value`].
 #[inline]
 fn compiler_error(value: &Value) -> io::Result<Option<&str>> {
     match value {

@@ -1,6 +1,6 @@
 //! Native installer preparation before the retained merge lifecycle starts.
 //!
-//! [`start`] initializes an optional [`Installer`] when `--skip-dependency-installation` (`skip`) is not requested.
+//! [`start`] initializes an optional [`Installer`] at [`Path`] when `--skip-dependency-installation` (`skip`) is not requested.
 use crate::commands::installation::Installer;
 use std::{io, path::Path};
 
