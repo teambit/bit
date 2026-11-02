@@ -28,7 +28,7 @@ fn component_version(version: Option<&str>) -> String {
     version.map_or_else(|| "0.0.1-new".to_string(), snap_to_semver)
 }
 
-/// Component manifests keyed by component dir, conflicting env peers injected.
+/// Build component [`Manifest`]s keyed by component directory with conflicting [`EnvRoot`] peers injected.
 pub(super) fn component_manifests(
     input: &ManifestInput<'_>,
     deduped: &Deduped,

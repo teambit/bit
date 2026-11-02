@@ -79,6 +79,7 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     canonical(file, raw)
 }
 
+/// Read and verify a current workspace file under a shared parallel [`Budget`].
 #[inline]
 fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usize)> {
     let raw_hash = file.raw_hash.trim();
@@ -92,6 +93,7 @@ fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usi
     canonical(file, raw).map(|loaded| (loaded, length))
 }
 
+/// Strip any leading UTF-8 BOM and normalize `.bitmap` schema or line endings into a [`Loaded`] snapshot.
 #[inline]
 fn canonical(file: &wire::Current, mut raw: Vec<u8>) -> io::Result<Loaded> {
     if raw.starts_with(b"\xef\xbb\xbf") {

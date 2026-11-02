@@ -12,8 +12,8 @@ use super::scope_model::ScopeObjects;
 use crate::model::WorkspaceComponent;
 use std::io;
 
-/// The env IDs whose components are aspects: `core` plus the envs of
-/// components whose stored descriptor says `aspect`.
+/// The env IDs whose [`WorkspaceComponent`]s are aspects: `core` plus the envs of
+/// components whose stored [`ScopeObjects`] descriptor says `aspect`.
 pub fn aspect_env_ids(
     components: &[WorkspaceComponent],
     objects: &ScopeObjects,

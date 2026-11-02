@@ -60,7 +60,7 @@ pub(crate) fn satisfies(version: &str, range: &str) -> bool {
         })
 }
 
-/// `semver.satisfies(version, range, { includePrerelease: true })` of semver 7.
+/// `semver.satisfies(version, range, { includePrerelease: true })` of `semver` 7 using [`SemVer`] and [`Range`].
 #[inline]
 pub(crate) fn satisfies_including_prerelease(version: &str, range: &str) -> bool {
     SemVer::parse(version.trim())

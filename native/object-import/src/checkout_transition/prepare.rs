@@ -79,6 +79,7 @@ fn parse_request(input: &Value) -> io::Result<wire::Prepare> {
     validate(&request)?;
     Ok(request)
 }
+/// Validate snapshot directory emptiness, manifest file paths, and count bounds on `request`.
 fn validate(request: &wire::Prepare) -> io::Result<()> {
     if !request.snapshot_directory.is_absolute()
         || !fs::symlink_metadata(&request.snapshot_directory)?.is_dir()

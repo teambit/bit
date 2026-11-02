@@ -78,6 +78,7 @@ pub(crate) fn ranges_intersect(left: &str, right: &str) -> io::Result<bool> {
     Range::parse(left.trim(), Flavor::V6)?.intersects(&Range::parse(right.trim(), Flavor::V6)?)
 }
 
+/// Return `true` when every pair of [`Range`]s in `ranges` has a non-empty intersection.
 #[inline]
 fn all_pairs_intersect(ranges: &[Range]) -> io::Result<bool> {
     for (index, a) in ranges.iter().enumerate() {

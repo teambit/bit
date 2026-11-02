@@ -81,6 +81,7 @@ pub(crate) fn prepare_status_with_virtual(
     )
 }
 
+/// Internal traversal flags controlling missing-component handling, history collection, and dependency fetching.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Mode {
     ignore_missing: bool,
@@ -89,6 +90,7 @@ struct Mode {
     graph_versions: bool,
 }
 
+/// Prepare a read-only [`PreparedImport`] plan for `targets` using `virtual_remotes` and `mode`.
 fn prepare_with_virtual_options(
     root: &Path,
     global_remotes_file: &Path,

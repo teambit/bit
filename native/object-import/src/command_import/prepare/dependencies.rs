@@ -6,7 +6,7 @@ use super::{
 };
 use serde_json::Value;
 use std::{collections::HashSet, io};
-/// Traverse and stage the transitive `flattenedDependencies` closure of `target`.
+/// Traverse and stage the transitive `flattenedDependencies` closure of [`Target`] into [`PreparedImport`].
 pub(super) fn closure(
     plan: &mut PreparedImport,
     target: &Target,

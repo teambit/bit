@@ -74,6 +74,7 @@ fn retained_indices(plan: &plan::Plan) -> HashMap<&str, usize> {
     }
     indices
 }
+/// Reuse existing [`plan::Body`] indices for matching hashes and create new spooled [`plan::Body`] entries for added contents.
 fn additions(
     plan: &plan::Plan,
     contents: Vec<Vec<u8>>,
@@ -96,6 +97,7 @@ fn additions(
     }
     (indices, added)
 }
+/// Load or reuse target `Source` file bodies for `request.target` within the remaining byte budget.
 fn load(
     request: &Request,
     retained: usize,

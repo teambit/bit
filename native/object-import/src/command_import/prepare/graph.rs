@@ -17,7 +17,7 @@ impl PreparedImport {
         }
         Ok(())
     }
-    /// Filter `targets` to those whose `Component` model or target `Version` object is missing locally.
+    /// Filter [`Target`]s to those whose `Component` model or target `Version` object is missing locally.
     #[inline]
     pub(crate) fn missing_graph_versions(&mut self, targets: &[Target]) -> io::Result<Vec<Target>> {
         if targets.is_empty() {

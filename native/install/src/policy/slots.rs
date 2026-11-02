@@ -91,8 +91,8 @@ fn may_register(
     Ok(!is_env_plugin(id, components, objects)?)
 }
 
-/// The env's own env is `teambit.envs/env`: a workspace env by its loaded env, any
-/// other by its scope objects. An env the scope does not hold is loaded to find out.
+/// The env's own env is [`ENV_OF_ENVS`] (`teambit.envs/env`): a workspace env by its loaded env, any
+/// other by its [`ScopeObjects`]. An env the scope does not hold is loaded to find out.
 #[inline]
 fn is_env_plugin(
     env_id: &str,

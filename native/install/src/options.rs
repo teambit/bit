@@ -90,7 +90,7 @@ pub struct InstallOptions {
 }
 
 /// What adding a package already in the workspace policy does
-/// (`WorkspacePolicy.add` options).
+/// (`WorkspacePolicy.add` options) for [`InstallOptions::existing_entries`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ExistingEntries {

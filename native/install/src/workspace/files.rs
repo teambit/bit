@@ -83,6 +83,7 @@ pub struct FileRules {
 }
 
 impl FileRules {
+    /// Load workspace [`FileRules`] from `root`'s user ignore list, default Bit exclusions, and `ignored_files`.
     #[inline]
     pub fn load(root: &Path, ignored_files: &[String], track_all_files: bool) -> io::Result<Self> {
         let mut git_ignore = Ignore::new();

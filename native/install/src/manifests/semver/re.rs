@@ -47,33 +47,39 @@ fn prerelease() -> String {
     format!(r"(?:-({id}(?:\.{id})*))")
 }
 
+/// Format the `(?:-?({id}(?:\.{id})*))` loose prerelease regex fragment.
 #[inline]
 fn prerelease_loose() -> String {
     let id = format!("(?:{NUMERIC_LOOSE}|{NON_NUMERIC})");
     format!(r"(?:-?({id}(?:\.{id})*))")
 }
 
+/// Format the `(?:\+({BUILD_IDENTIFIER}(?:\.{BUILD_IDENTIFIER})*))` build metadata regex fragment.
 #[inline]
 fn build() -> String {
     format!(r"(?:\+({BUILD_IDENTIFIER}(?:\.{BUILD_IDENTIFIER})*))")
 }
 
+/// Format the unanchored strict `v?M.m.p(-pre)?(+build)?` semver regex fragment.
 #[inline]
 fn full_plain() -> String {
     format!("v?{}{}?{}?", main_version(NUMERIC), prerelease(), build())
 }
 
+/// Format the unanchored loose `[v=\s]*M.m.p(-pre)?(+build)?` semver regex fragment.
 #[inline]
 fn loose_plain() -> String {
     format!(r"[v=\s]*{}{}?{}?", main_version(NUMERIC_LOOSE), prerelease_loose(), build())
 }
 
+/// Format the unanchored X-range (`1.x`, `1.2.*`, etc.) regex fragment.
 #[inline]
 fn xrange_plain() -> String {
     let id = format!(r"{NUMERIC}|x|X|\*");
     format!(r"[v=\s]*({id})(?:\.({id})(?:\.({id})(?:{})?{}?)?)?", prerelease(), build())
 }
 
+/// Return the uncompiled regular expression source string for `token`.
 fn source(token: Token) -> String {
     match token {
         Token::Full => format!("^{}$", full_plain()),

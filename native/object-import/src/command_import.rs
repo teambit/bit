@@ -52,6 +52,7 @@ impl Overlay {
     pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
         self.objects.keys().map(String::as_str)
     }
+    /// Read a staged metadata object of type `kind` by `hash` from this overlay.
     #[inline]
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
         let kind = kind.trim();
@@ -65,6 +66,7 @@ impl Overlay {
             })
             .transpose()
     }
+    /// Borrow the raw `Source` file payload for `hash` when staged in this overlay.
     #[inline]
     pub(crate) fn source(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash.trim()).and_then(|record| record.source.as_deref())

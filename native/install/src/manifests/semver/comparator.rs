@@ -77,11 +77,13 @@ impl Comparator {
         matches!(self.operator.trim(), ">=" | ">")
     }
 
+    /// Return `true` when `self.operator` is an upper-bound operator (`"<="` or `"<"`).
     #[inline]
     fn decreasing(&self) -> bool {
         matches!(self.operator.trim(), "<=" | "<")
     }
 
+    /// Return `true` when `self.operator` includes equality (`">="` or `"<="`).
     #[inline]
     fn inclusive(&self) -> bool {
         matches!(self.operator.trim(), ">=" | "<=")

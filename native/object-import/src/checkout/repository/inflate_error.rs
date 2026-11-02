@@ -2,7 +2,7 @@
 //!
 //! Wraps `flate2::DecompressError` in [`io::Error`] via [`retain`] so callers can inspect the underlying zlib [`message`].
 use std::{fmt, io};
-/// Decompression error wrapper preserving the underlying `flate2::DecompressError`.
+/// Decompression error wrapper preserving the underlying [`flate2::DecompressError`] for [`message`].
 #[derive(Debug)]
 struct Failure(flate2::DecompressError);
 impl fmt::Display for Failure {

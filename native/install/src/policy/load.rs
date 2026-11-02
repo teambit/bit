@@ -41,7 +41,7 @@ pub fn is_core_env(id: &str) -> bool {
     CORE_ENVS.contains(&split_version(id).0)
 }
 
-/// `scope/name@version` → (`scope/name`, `version`).
+/// Split `scope/name@version` into `("scope/name", Some("version"))` (or `(id, None)` when unversioned).
 #[must_use]
 #[inline]
 pub fn split_version(id: &str) -> (&str, Option<&str>) {

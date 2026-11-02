@@ -32,8 +32,8 @@ fn found_version(deps: &ComponentDependencies, name: &str) -> Option<String> {
         .filter(|version| !version.is_empty())
 }
 
-/// The env's own peers minus workspace packages, `+` resolved from the
-/// component's dependencies (`*` when it has none).
+/// The env's own peers minus workspace packages, with `+` resolved from
+/// [`ComponentDependencies`] (`*` when `component` has none).
 pub(super) fn legacy_env_peers(
     component: &WorkspaceComponent,
     deps: &ComponentDependencies,

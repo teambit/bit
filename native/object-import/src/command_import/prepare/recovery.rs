@@ -92,6 +92,7 @@ pub(super) fn record_local_main(
     Ok(())
 }
 
+/// Retain locally cached `Component`, `Version`, and `Source` objects for `targets`, fetching any missing entries from remotes.
 pub(super) fn retain_cached_versions(
     plan: &mut PreparedImport,
     targets: &[Target],

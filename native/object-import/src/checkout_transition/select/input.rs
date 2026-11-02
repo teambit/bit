@@ -33,6 +33,7 @@ pub(super) struct Component {
 pub(super) struct Model {
     pub(super) has_main_head: bool,
 }
+/// Checkout selection options combining boolean [`Flags`], ancestor distance, and explicit version overrides.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {
@@ -42,6 +43,7 @@ pub(super) struct Options {
     pub(super) version: Option<String>,
     pub(super) version_per_id: Option<Value>,
 }
+/// Boolean checkout mode flags (`--reset`, `--head`, `--main`, `--latest`, etc.).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Flags {

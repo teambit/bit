@@ -10,9 +10,13 @@ use std::io;
 /// Options controlling version key, lifecycle, source, and `force` flag in `entriesFromKey`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct KeyOptions {
+    /// Primary JSON property key storing the version range (`"version"` or `"supportedRange"`).
     version_key: &'static str,
+    /// Target [`Lifecycle`] assigned to parsed [`PolicyEntry`] items.
     lifecycle: Lifecycle,
+    /// Policy source tag (`"env"` or `"env-own"`).
     source: &'static str,
+    /// Optional override for [`PolicyEntry::force`].
     force: Option<bool>,
 }
 

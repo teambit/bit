@@ -77,6 +77,7 @@ fn initial(
     insert_statuses(&mut status, removal_rows, "checkout removal path")?;
     Ok((files, status, removal))
 }
+/// Insert `(relativePath, status)` pairs from `rows` into `status`, returning an error with `message` if any path is missing.
 #[inline]
 fn insert_statuses(
     status: &mut serde_json::Map<String, Value>,
@@ -96,6 +97,7 @@ fn insert_statuses(
     }
     Ok(())
 }
+/// Resolve the target or current relative path referenced by a three-way merge `row` in `plan`.
 #[inline]
 pub(super) fn path<'a>(plan: &'a plan::Plan, row: &Value) -> io::Result<&'a str> {
     if let Some(index) = row["current"].as_u64() {

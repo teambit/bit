@@ -72,7 +72,7 @@ fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
     peers
 }
 
-/// Envs whose required `version` the candidate satisfies.
+/// Count how many environments in `versions` have their required version satisfied by `candidate` (`coerced`).
 #[inline]
 fn satisfied_envs(
     candidate: &str,

@@ -34,7 +34,7 @@ pub(super) fn load_order(components: &[WorkspaceComponent]) -> Vec<&WorkspaceCom
     first_places(order)
 }
 
-/// The workspace envs of workspace components, in their layers.
+/// Collect the workspace environment [`WorkspaceComponent`]s of workspace components in [`env_layers`] order.
 #[inline]
 fn env_components<'c>(
     components: &'c [WorkspaceComponent],

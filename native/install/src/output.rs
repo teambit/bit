@@ -75,13 +75,17 @@ pub struct Output {
 /// the package manager step stops whichever is spinning.
 static LOADER: LazyLock<Mutex<Spinner>> = LazyLock::new(Mutex::default);
 
-/// `logger.off()` and `logger.on()` switch that one loader for every `Output`: until
-/// either runs, each `Output` follows whether its command started a loader.
+/// `logger.off()` and `logger.on()` switch that one loader for every [`Output`]: until
+/// either runs, each [`Output`] follows whether its command started a loader.
 static SWITCHED: AtomicU8 = AtomicU8::new(UNSWITCHED);
+/// Default state before `logger.on()` or `logger.off()` is invoked.
 const UNSWITCHED: u8 = 0;
+/// Explicit `logger.on()` state enabling status and success lines.
 const SWITCHED_ON: u8 = 1;
+/// Explicit `logger.off()` state suppressing status and success lines.
 const SWITCHED_OFF: u8 = 2;
 
+/// Mutable state of the process-wide `ora`-compatible terminal spinner ([`LOADER`]).
 #[derive(Default)]
 struct Spinner {
     text: String,

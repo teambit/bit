@@ -69,11 +69,13 @@ fn numeric_segment(value: &str) -> bool {
             .is_ok_and(|number| number <= 9_007_199_254_740_991)
 }
 
+/// Return `true` when every dot-separated segment in `value` is a valid prerelease or build identifier.
 #[inline]
 fn identifiers(value: &str, numeric_strict: bool) -> bool {
     value.split('.').all(|segment| valid_identifier_segment(segment, numeric_strict))
 }
 
+/// Return `true` when `segment` is non-empty, ASCII alphanumeric/hyphenated, and obeys `numeric_strict` leading-zero rules.
 #[inline]
 fn valid_identifier_segment(segment: &str, numeric_strict: bool) -> bool {
     !segment.is_empty()

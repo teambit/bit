@@ -39,6 +39,7 @@ pub(super) struct Current {
     pub(super) shares_buffer: bool,
     pub(super) raw_hash: String,
 }
+/// Spooled checkout file payload and its SHA-1 digest.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Body {
     pub(super) offset: Option<usize>,
@@ -47,6 +48,7 @@ pub(super) struct Body {
     pub(super) hash: String,
 }
 impl Body {
+    /// Construct a [`Body`] from `contents` and compute its hexadecimal SHA-1 digest.
     #[inline]
     pub(super) fn new(contents: Vec<u8>) -> Self {
         let hash = crate::validate::hexadecimal(&Sha1::digest(&contents));

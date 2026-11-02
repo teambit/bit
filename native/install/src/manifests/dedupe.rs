@@ -24,15 +24,20 @@ pub(super) struct Item {
 /// All requirements of one package, plus the workspace policy version to keep.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct IndexEntry {
+    /// Per-component dependency range items requesting this package.
     pub(super) items: Vec<Item>,
+    /// Optional preserved workspace policy `(version, field)` override.
     pub(super) preserved: Option<(String, Field)>,
 }
 
 /// The dedupe result (`DedupedDependencies`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Deduped {
+    /// Hoisted root manifest dependencies (`rootDependencies`).
     pub(super) root: DepsObject,
+    /// Remaining unhoisted per-component dependency maps keyed by component package name.
     pub(super) components: IndexMap<String, DepsObject>,
+    /// Formatted peer dependency conflict warnings emitted during deduplication.
     pub(super) peer_conflicts: Vec<String>,
 }
 

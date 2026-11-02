@@ -32,7 +32,7 @@ fn strip_prerelease(comparator: &Comparator) -> String {
         .unwrap_or_default()
 }
 
-/// `isSameVersionEqualsLikeComparator`.
+/// `isSameVersionEqualsLikeComparator`: check whether `left` and `right` are `=`-like comparators with identical versions.
 #[inline]
 pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) -> bool {
     let equals_like = |comparator: &Comparator| {

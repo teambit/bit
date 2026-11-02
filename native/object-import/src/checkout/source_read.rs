@@ -46,6 +46,7 @@ fn read(
         inflated: source.inflated_size,
     }))
 }
+/// Read uncached `Source` [`Record`]s for `request` in parallel on `pool` under shared [`MAX_BYTES`] budgets.
 fn records(
     request: &Request,
     state: &cache::State,
@@ -71,6 +72,7 @@ fn records(
             .collect()
     })
 }
+/// Read uncached `Source` [`Record`]s for `request` sequentially within [`MAX_BYTES`] budgets.
 #[inline]
 fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Option<Record>>> {
     let mut raw = 0_usize;

@@ -34,6 +34,7 @@ fn canonical_dir(directory: &Path) -> PathBuf {
 }
 
 impl State {
+    /// Look up a cached `Source` object body for `(directory, hash)`.
     #[inline]
     pub(crate) fn get(&self, directory: &Path, hash: [u8; 20]) -> Option<&Vec<u8>> {
         if self.sources.is_empty() {
@@ -41,6 +42,7 @@ impl State {
         }
         self.sources.get(&(canonical_dir(directory), hash))
     }
+    /// Insert `body` for `(directory, hash)` into the cache, clearing all entries if byte or count budgets are exceeded.
     #[inline]
     pub(crate) fn insert(&mut self, directory: &Path, hash: [u8; 20], body: Vec<u8>) {
         let dir = canonical_dir(directory);

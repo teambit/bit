@@ -54,6 +54,7 @@ impl PreparedImport {
     ) -> io::Result<Record> {
         self.fetch_lane_with_policy(id, supplied_hash, true, false)
     }
+    /// Fetch the remote [`Record`] for `id` and stage its component closure using `prefer_graph` and `delta` policies.
     fn fetch_lane_with_policy(
         &mut self,
         id: &Id,

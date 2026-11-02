@@ -30,7 +30,9 @@ pub(super) struct Dep<'a> {
     pub(super) optional: bool,
     /// Set for component dependencies.
     pub(super) component: Option<&'a ComponentId>,
+    /// Whether this component dependency originates from a configured aspect extension.
     pub(super) is_extension: bool,
+    /// Whether this dependency is hidden by a component or environment policy.
     pub(super) hidden: bool,
 }
 

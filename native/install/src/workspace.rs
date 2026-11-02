@@ -72,7 +72,9 @@ pub struct Workspace {
 
 /// `component.json` (`ComponentConfigFile`).
 struct ComponentJson {
+    /// Aspect configurations declared under `"extensions"` in `component.json`.
     extensions: Map<String, Value>,
+    /// Whether `component.json` enables parent configuration propagation (`"propagate": true`).
     propagate: bool,
 }
 

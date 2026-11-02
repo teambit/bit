@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
-    /// Stage artifact `Source` objects for `versions` on the fetched lane before publication.
+    /// Stage artifact `Source` objects for `versions` on the fetched lane via [`artifact_refs`] before publication.
     pub(crate) fn prepare_lane_artifacts(&mut self, versions: &[String]) -> io::Result<()> {
         let Some(lane) = &self.cache.fetched_lane else {
             return Ok(());

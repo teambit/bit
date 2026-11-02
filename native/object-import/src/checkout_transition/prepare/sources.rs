@@ -56,6 +56,7 @@ fn load_files(
     Ok(files)
 }
 
+/// Load and verify `manifests` in parallel via [`read_batch`], falling back to [`serial_batch`] on error.
 fn parallel(
     directory: &Path,
     manifests: &[wire::Manifest],
@@ -76,6 +77,7 @@ fn parallel(
     }
     Ok(files)
 }
+/// Read `batch` in parallel from `directory` under shared raw and compressed [`MAX_BYTES`] budgets.
 #[inline]
 fn read_batch(
     directory: &Path,

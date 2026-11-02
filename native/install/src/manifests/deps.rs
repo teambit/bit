@@ -64,16 +64,19 @@ pub(super) struct DepsObject {
 }
 
 impl DepsObject {
+    /// Borrow the [`DependencyMap`] for `field`.
     #[inline]
     pub(super) fn get(&self, field: Field) -> &DependencyMap {
         &self.fields[field.index()]
     }
 
+    /// Mutably borrow the [`DependencyMap`] for `field`.
     #[inline]
     pub(super) fn get_mut(&mut self, field: Field) -> &mut DependencyMap {
         &mut self.fields[field.index()]
     }
 
+    /// Replace the [`DependencyMap`] for `field` with `map`.
     #[inline]
     pub(super) fn set(&mut self, field: Field, map: DependencyMap) {
         self.fields[field.index()] = map;

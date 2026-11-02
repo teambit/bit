@@ -74,7 +74,7 @@ fn parse_part(range: &str, flavor: Flavor) -> io::Result<Vec<Comparator>> {
     Ok(by_value.into_values().collect())
 }
 
-/// semver 7 drops null sets, and collapses to `*` when any set is `*`.
+/// Simplify `set` under `semver` 7 rules: drop [`NULL_SET`] clauses and collapse to `*` when any clause is universal.
 fn simplify_v7(set: Vec<Vec<Comparator>>) -> Vec<Vec<Comparator>> {
     if set.len() <= 1 {
         return set;

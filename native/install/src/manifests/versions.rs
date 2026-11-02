@@ -34,7 +34,7 @@ fn trailing_version() -> &'static Regex {
 }
 
 /// `isRange` of the dedupe: whether `version` is a range rather than an exact
-/// version. Throws (`Err`) on a spec that is neither a range nor a hash,
+/// version. Returns `Err` on a spec that is neither a [`valid_range`] nor a hash ([`is_hash`]),
 /// `workspace:`, `npm:` or `+`.
 pub(super) fn is_range(version: &str, origin: &str) -> io::Result<bool> {
     let trimmed = version.trim();

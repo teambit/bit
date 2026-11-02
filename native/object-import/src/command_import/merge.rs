@@ -7,7 +7,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
-/// `mergeOne(incoming, isIncomingFromOrigin, existing)`. A model a remote
+/// `mergeOne(incoming, isIncomingFromOrigin, existing)`. A model [`Value`] a remote
 /// serves from its cache of a dependent's dependencies is not from its origin:
 /// its tags become orphaned versions and its head is not taken.
 pub(super) fn model_from(

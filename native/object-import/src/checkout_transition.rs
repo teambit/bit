@@ -53,6 +53,7 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     prepare::prepare(input, &mut state.plans, Some(snapshots))
 }
+/// Prepare a checkout plan in `state` using optional workspace `snapshots` and an import `overlay`.
 #[inline]
 pub(crate) fn prepare_with_overlay(
     input: &Value,
@@ -62,6 +63,7 @@ pub(crate) fn prepare_with_overlay(
 ) -> io::Result<Value> {
     prepare::prepare_with_overlay(input, &mut state.plans, snapshots, Some(overlay))
 }
+/// Evaluate whether `checkoutApplyDecision` should retain current workspace files (`keepOurs`).
 #[inline]
 fn decision(input: &Value) -> io::Result<Value> {
     let current =

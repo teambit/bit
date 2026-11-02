@@ -22,7 +22,7 @@ fn in_workspace(input: &ManifestInput<'_>, id_without_version: &str) -> bool {
         .any(|component| component.id.to_string_without_version() == id_without_version)
 }
 
-/// `getRootComponentDirByRootId`: workspace ids drop their version, `/` becomes `_`.
+/// `getRootComponentDirByRootId`: workspace IDs drop their version via [`without_version`], and `/` becomes `_`.
 #[inline]
 fn root_dir(input: &ManifestInput<'_>, id: &str) -> PathBuf {
     let bare = without_version(id);

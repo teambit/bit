@@ -45,6 +45,7 @@ struct Record {
     current: CurrentState,
 }
 impl State {
+    /// Start a new component version selection session from `input` and return its initial directive.
     pub(super) fn begin(&mut self, input: &Value) -> io::Result<Value> {
         let request: Begin = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         validate(&request)?;
@@ -80,6 +81,7 @@ impl State {
         }
         Ok(output)
     }
+    /// Advance an active selection [`Record`] using the observation [`Receipt`] in `input`.
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
         let token = request.token.trim();

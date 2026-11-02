@@ -43,6 +43,7 @@ struct Input {
     prefer_cached: bool,
 }
 impl Input {
+    /// Look up `self.hash` in `state` when `use_cache` or `self.prefer_cached` is enabled.
     #[inline]
     fn cached<'a>(
         &self,
@@ -55,12 +56,14 @@ impl Input {
             .flatten()
     }
 }
+/// Decoded binary checkout or source-read request header and file list.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Request {
     id: u32,
     directory: PathBuf,
     files: Vec<Input>,
 }
+/// Serialized checkout batch completion status and failure summary.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,

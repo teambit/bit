@@ -15,10 +15,10 @@ use crate::{
 use indexmap::IndexMap;
 use std::io;
 
-/// The package of every external env the components use, keyed by the env id
-/// without its version: the name the scope records for the env at its version
+/// The package of every external env the [`WorkspaceComponent`]s use, keyed by the env ID
+/// without its version: the name [`ScopeObjects`] records for the env at its version
 /// (its `dependency-resolver` data, else its `teambit.pkg/pkg` config and binding
-/// prefix), or the default name when the scope does not hold the env.
+/// prefix), or [`default_package_name`] when the scope does not hold the env.
 pub fn external_env_packages(
     components: &[WorkspaceComponent],
     objects: &ScopeObjects,

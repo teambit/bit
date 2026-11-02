@@ -46,6 +46,7 @@ pub(super) struct Capture {
     raw_bytes: usize,
 }
 impl Capture {
+    /// Update the recorded SHA-256 proof for `path` after an owned in-process write of `bytes`.
     #[inline]
     pub(super) fn accept_known(&mut self, path: &Path, bytes: &[u8]) {
         if let Some(proof) = self.proofs.get_mut(path) {
@@ -54,6 +55,7 @@ impl Capture {
         }
     }
 
+    /// Register a pre-fetched virtual file at `path` within [`MAX_RECORDS`] and [`MAX_BYTES`] budgets.
     #[inline]
     pub(super) fn virtual_file(&mut self, path: PathBuf, bytes: Vec<u8>) -> io::Result<()> {
         if self.virtual_files.len() >= MAX_RECORDS

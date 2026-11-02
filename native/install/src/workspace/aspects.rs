@@ -43,6 +43,7 @@ impl AspectEntry {
         self.config.as_str().map(str::trim) == Some("-")
     }
 
+    /// Extract a non-empty `"env"` string property from `self.config`, if present.
     #[inline]
     fn env_config(&self) -> Option<&str> {
         self.config

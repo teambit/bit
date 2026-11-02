@@ -78,16 +78,19 @@ fn text_bom(bytes: &[u8]) -> bool {
     .iter()
     .any(|bom| bytes.starts_with(bom))
 }
+/// Return `true` when `byte` is a UTF-8 continuation byte (`0x80..0xC0`).
 #[inline]
 fn continuation(byte: u8) -> bool {
     (128..192).contains(&byte)
 }
 
+/// Normalize text line endings in `bytes` to the current host platform convention (`CRLF` on Windows, `LF` elsewhere).
 #[inline]
 pub(crate) fn auto(bytes: Vec<u8>) -> Vec<u8> {
     normalize(bytes, cfg!(windows))
 }
 
+/// Normalize text line endings in `bytes` to `CRLF` when `windows` is `true` or `LF` otherwise, leaving binary buffers untouched.
 #[inline]
 pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
     if bytes.is_empty()

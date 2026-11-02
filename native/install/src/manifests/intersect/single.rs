@@ -31,7 +31,7 @@ impl fmt::Display for Single {
     }
 }
 
-/// `new SingleRange(lower, upper)`, which throws when the bounds do not intersect.
+/// Construct `new SingleRange(lower, upper)` ([`Single::Range`]), returning an error when the bounds do not intersect.
 #[inline]
 fn new_range(lower: Comparator, upper: Comparator) -> io::Result<Single> {
     if !lower.intersects(&upper)? {

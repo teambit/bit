@@ -65,8 +65,11 @@ impl ComponentId {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Lifecycle {
+    /// Runtime dependency (`dependencies`).
     Runtime,
+    /// Development dependency (`devDependencies`).
     Dev,
+    /// Peer dependency (`peerDependencies`).
     Peer,
 }
 

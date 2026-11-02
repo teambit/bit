@@ -81,6 +81,7 @@ fn record_request(plan: &mut PreparedImport, target: &Target, scope: &str) -> io
     Ok(())
 }
 
+/// Refresh `target`'s `main` head from `directory` and collect its ancestor closure when `all_history` is enabled.
 #[inline]
 fn refresh_with_history(
     plan: &mut PreparedImport,
@@ -96,6 +97,7 @@ fn refresh_with_history(
     Ok(present)
 }
 
+/// Refresh `target`'s `Component` model and `main` head `Version` from `directory`, returning `false` when absent under `ignore_missing`.
 fn refresh(
     plan: &mut PreparedImport,
     target: &Target,

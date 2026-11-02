@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 impl PreparedImport {
-    /// Synchronize unexported external targets against `global_remotes_file` before checkout.
+    /// Synchronize unexported external [`Target`]s against `global_remotes_file` before checkout.
     pub(crate) fn sync_unexported(
         &mut self,
         global_remotes_file: &Path,

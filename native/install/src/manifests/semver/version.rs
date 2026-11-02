@@ -69,6 +69,7 @@ impl SemVer {
         (self.major, self.minor, self.patch).cmp(&(other.major, other.minor, other.patch))
     }
 
+    /// Compare the prerelease identifier lists of `self` and `other` (`semver.comparePre`).
     fn compare_pre(&self, other: &Self) -> Ordering {
         match (self.prerelease.is_empty(), other.prerelease.is_empty()) {
             (false, true) => return Ordering::Less,

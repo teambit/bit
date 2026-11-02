@@ -66,7 +66,7 @@ fn add_one_occurrence_to_root(deduped: &mut Deduped, name: &str, items: &[Item])
     false
 }
 
-/// `handlePeersOnly`: peers stay with their components; conflicts are reported.
+/// `handlePeersOnly`: keep peer-only [`Item`]s in their components and record conflicts in [`Deduped`].
 fn handle_peers_only(deduped: &mut Deduped, name: &str, items: &[Item]) -> io::Result<bool> {
     if items
         .iter()

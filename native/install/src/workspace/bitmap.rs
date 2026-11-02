@@ -50,12 +50,15 @@ pub struct BitmapEntry {
     pub key: String,
     /// Parsed component identifier (`scope/name@version`).
     pub id: ComponentId,
+    /// Relative path to the component's main entry file within `root_dir`.
     pub main_file: String,
     /// `/`-separated, relative to the workspace; `.` for the workspace root.
     pub root_dir: String,
     /// The entry's `config`: aspect id → config or `"-"`.
     pub config: Option<Map<String, Value>>,
+    /// Lane-specific availability and export flags for this entry.
     pub lanes: LaneFlags,
+    /// Optional `nextVersion` metadata scheduled for the next snap or tag.
     pub next_version: Option<Value>,
 }
 

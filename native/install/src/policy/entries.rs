@@ -69,8 +69,8 @@ pub fn uniq(entries: Vec<PolicyEntry>) -> Vec<PolicyEntry> {
     result
 }
 
-/// `WorkspacePolicyFactory.fromConfigObject`: `dependencies` (runtime) and
-/// `peerDependencies`, values a range or `{ version, preserve }`. The merge-config
+/// `WorkspacePolicyFactory.fromConfigObject`: `dependencies` ([`Lifecycle::Runtime`]) and
+/// `peerDependencies` ([`Lifecycle::Peer`]), values a range or `{ version, preserve }`. The merge-config
 /// form, an array of `{ name, version }`, is accepted as well.
 #[must_use]
 pub fn from_workspace_config(config: &Value) -> Vec<PolicyEntry> {

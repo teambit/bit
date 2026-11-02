@@ -63,7 +63,7 @@ fn first_env(
     Ok(None)
 }
 
-/// `teambit.envs/envs` names the env, or the default env is configured itself.
+/// Return `true` when [`ENVS_ASPECT`] (`teambit.envs/envs`) names an env or [`DEFAULT_ENV`] is configured directly.
 #[inline]
 fn has_configured_env(component: &WorkspaceComponent) -> bool {
     component.config

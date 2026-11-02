@@ -67,8 +67,8 @@ pub fn component_policy(
     merge(vec![env_policy.component.clone(), own, slots, config])
 }
 
-/// `toManifest()` of a workspace policy: `[dependencies, peerDependencies]` with
-/// snap versions converted to semver.
+/// `toManifest()` of a workspace [`PolicyEntry`] slice: `[dependencies, peerDependencies]` with
+/// snap versions converted to semver via [`scope::snap_to_semver`].
 #[must_use]
 #[inline]
 pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String, String>; 2] {

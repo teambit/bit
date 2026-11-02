@@ -35,6 +35,7 @@ pub(super) struct Manifest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) test: Option<bool>,
 }
+/// Tracked current workspace file entry and its expected raw and snapshot SHA-1 hashes.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Current {
@@ -48,6 +49,7 @@ pub(super) struct Current {
     #[serde(default)]
     pub(super) bitmap: bool,
 }
+/// Conflict marker label strings (`<<<<<<< current` and `>>>>>>> other`) for three-way merges.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Labels {
