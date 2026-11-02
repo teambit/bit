@@ -14,6 +14,7 @@ struct Inputs<'a> {
     statuses: &'a [Value],
 }
 
+/// Selected component status indices and excluded component rows after lane filtering.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Filtered {
     pub(super) indices: Vec<usize>,

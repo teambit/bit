@@ -1,4 +1,4 @@
-//! Three-way merge [`BodyInput`] planning, [`unrelated`] handling, and [`paths`] validation.
+//! Three-way merge [`BodyInput`], [`VersionSide`], and [`Prepared`] planning with [`unrelated`] and [`paths`] validation.
 mod paths;
 mod reload;
 mod unrelated;

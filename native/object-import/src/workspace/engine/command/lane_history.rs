@@ -16,6 +16,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
+/// Deserialized request to prepare a phased lane-history checkout or revert operation.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(in crate::workspace::engine) struct Prepare {

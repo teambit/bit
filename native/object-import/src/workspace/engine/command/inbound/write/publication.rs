@@ -10,6 +10,7 @@ use std::{
 };
 
 impl Prepared {
+    /// Atomically publishes prepared component files, `.bitmap`, and history backups after object commit.
     pub(in super::super) fn commit(&self) -> io::Result<()> {
         self.validate_policy()?;
         self.check_bitmap("before publication")?;

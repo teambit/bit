@@ -1,4 +1,4 @@
-//! Materialize a remote `Version` ([`Input`], [`Resolution`]) over an imported workspace [`Target`] component.
+//! Materialize a remote `Version` ([`Input`], [`Resolution`], [`prepare`]) over an imported workspace [`Target`] component.
 
 #[cfg(test)]
 mod tests;

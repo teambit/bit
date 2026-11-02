@@ -4,6 +4,7 @@ use super::{Options, Target, directories, existing, invalid, new_directory, targ
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Validates local `.bitmap`, directory templates, and existing target directories before remote provider calls.
 pub(in super::super) fn check(
     root: &Path,
     targets: &[Target],

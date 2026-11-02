@@ -12,6 +12,7 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Captured component state, comparison target, metadata, and file contents for command planning.
 pub(super) struct Captured {
     pub(super) hidden: bool,
     pub(super) model_backed: bool,

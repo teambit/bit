@@ -6,6 +6,7 @@ use std::{collections::VecDeque, io};
 const MAX_NODES: usize = 262_144;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
+/// Bounded breadth-first path queue enforcing node and byte budgets during dependent traversal.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Queue {
     paths: VecDeque<Vec<String>>,

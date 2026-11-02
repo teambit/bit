@@ -1,4 +1,5 @@
 //! Object-backed capture ([`from_model`], [`Captured`], [`Repository`]) for hidden lane dependents outside workspace directories.
+//! Retains `Source` blob proofs without exposing private token paths to workspace materialization.
 
 #[cfg(test)]
 mod tests;

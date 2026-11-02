@@ -13,6 +13,7 @@ use std::{
 
 type Adjacency = HashMap<String, Vec<Target>>;
 
+/// Expands root import [`Target`] entries with flattened or depth-bounded dependencies from [`PreparedImport`].
 pub(super) fn expand(
     input: &Prepare,
     roots: &[Target],

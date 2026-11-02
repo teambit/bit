@@ -6,6 +6,7 @@ use crate::component_tracking::observe::Observed;
 use serde_json::{Map, Value};
 use std::{collections::HashSet, fs, io, path::Path};
 
+/// Retained filesystem observations and relocation warnings for occupied target directories.
 #[derive(Default)]
 pub(super) struct Retained {
     observed: Observed,

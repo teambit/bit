@@ -1,5 +1,5 @@
 //! Where imported components are written ([`assign`], [`Target`]): the workspace's `defaultDirectory`,
-//! with the fixes `ComponentWriter` applies when directories collide.
+//! with the fixes `ComponentWriter` applies when directories collide ([`directory`]).
 
 #[cfg(test)]
 mod tests;

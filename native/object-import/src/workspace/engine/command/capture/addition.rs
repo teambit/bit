@@ -1,4 +1,5 @@
 //! Destination capture ([`capture`], [`Captured`]) for incoming-only components added during lane operations.
+//! Validates relative destination roots and rejects workspace-root (`.`) additions.
 
 #[cfg(test)]
 mod tests;

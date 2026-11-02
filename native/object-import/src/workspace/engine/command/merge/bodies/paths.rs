@@ -8,6 +8,7 @@ use std::{
     path::{Component, Path},
 };
 
+/// Validates that `path` is a canonical relative ordinary destination under `root`.
 #[inline]
 pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;

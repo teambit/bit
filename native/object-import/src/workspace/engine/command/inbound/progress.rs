@@ -5,6 +5,7 @@ use crate::command_import::PreparedImport;
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
+/// Formats progress rows from [`PreparedImport`] to match the CLI's prefetch phases.
 pub(super) fn rows(
     import: &PreparedImport,
     roots: &[Target],

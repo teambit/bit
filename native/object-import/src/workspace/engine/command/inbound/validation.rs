@@ -4,6 +4,7 @@ use super::{Prepare, invalid};
 use serde_json::Value;
 use std::io;
 
+/// Validates [`Prepare`] for a full inbound import including workspace publication eligibility.
 #[inline]
 pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     validate_phase(input, true)

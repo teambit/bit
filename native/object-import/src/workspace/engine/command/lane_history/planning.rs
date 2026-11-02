@@ -5,6 +5,7 @@ use crate::workspace::engine::command::{Record, capture, planning::Planned};
 use serde_json::{Value, json};
 use std::io;
 
+/// Attaches captured targets and absent additions for the active historical phase into `plan`.
 pub(in crate::workspace::engine::command) fn attach(
     record: &mut Record,
     plan: &mut Planned,

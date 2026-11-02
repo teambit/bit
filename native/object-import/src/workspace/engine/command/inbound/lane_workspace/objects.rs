@@ -7,6 +7,7 @@ use std::{
     io,
 };
 
+/// Prepares an objects-only lane import retaining both lane heads and distinct tracked versions.
 pub(super) fn prepare(
     input: &Prepare,
     roots: &[Target],

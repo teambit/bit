@@ -4,6 +4,7 @@ use super::{comparison, read};
 use crate::workspace::snapshots;
 use std::{collections::HashSet, io, path::Path};
 
+/// Reads target files within budget, canonicalizing root `.bitmap` sources alongside physical proofs.
 pub(super) fn read(
     root: &Path,
     targets: &[comparison::Target],

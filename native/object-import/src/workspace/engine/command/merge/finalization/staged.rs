@@ -4,6 +4,7 @@ use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Value, json as value};
 use std::{io, path::Path};
 
+/// Prepares `staged-snaps` and `unmerged.json` updates in `output` for finalized `inputs`.
 pub(super) fn prepare(
     root: &Path,
     inputs: &[Input<'_>],

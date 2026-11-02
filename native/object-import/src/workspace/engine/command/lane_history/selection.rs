@@ -4,6 +4,7 @@ use super::{Phase, invalid, proof};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
+/// Partitions a `LaneHistory` entry's components into existing and restored-deleted [`Phase`] entries.
 pub(super) fn phases(
     item: &Value,
     bitmap: &Value,

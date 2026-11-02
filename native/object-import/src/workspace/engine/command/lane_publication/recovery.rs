@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained pre-merge `.bitmap`, `workspace.jsonc`, and lane object snapshots for `last-merged`.
 pub(super) struct Recovery {
     directory: PathBuf,
     files: Vec<(String, Vec<u8>)>,

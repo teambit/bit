@@ -10,6 +10,7 @@ use super::{Record, invalid, merge::snapshot, repository::Repository};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Retained lane object updates, squash plans, and `last-merged` recovery state before publication.
 pub(super) struct Prepared {
     context: Value,
     current: Value,

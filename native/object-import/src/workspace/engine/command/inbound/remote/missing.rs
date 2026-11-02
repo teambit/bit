@@ -1,6 +1,6 @@
 //! `findMissingExternalsRecursively` ([`requests`], [`ObjectItem`]) with `preferDependencyGraph`, over what a fetch
 //! without dependencies returned: the requested components to fetch again with their
-//! dependencies, as `importMany` does after `importWithoutDeps`.
+//! dependencies, as `importMany` does after `importWithoutDeps` ([`Objects`]).
 
 #[cfg(test)]
 mod tests;

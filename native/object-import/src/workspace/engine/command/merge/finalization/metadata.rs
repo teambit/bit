@@ -11,6 +11,7 @@ use std::{
 
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
+/// Atomically replaces an ordinary file at `path` with `bytes`, preserving permissions and ownership.
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
     if path.as_os_str().is_empty() || bytes.len() > 16 * 1024 * 1024 {
         return Err(io::Error::other("generated package metadata budget"));

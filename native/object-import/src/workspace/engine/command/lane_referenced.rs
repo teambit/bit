@@ -1,4 +1,5 @@
 //! Prepare referenced lane objects on [`Record`] via [`prepare`] after squash-rebase [`planning`].
+//! Fetches missing referenced `Version` and `Source` objects before any workspace publication.
 
 use super::{Record, invalid, planning, repository::Repository};
 use serde_json::Value;

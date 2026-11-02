@@ -14,6 +14,7 @@ use std::{
     io,
 };
 
+/// Selects ordered dependent [`Target`] entries along paths from `sources` to `targets`, optionally filtered by `via`.
 fn select(
     adjacency: &HashMap<String, Vec<Target>>,
     sources: &[String],

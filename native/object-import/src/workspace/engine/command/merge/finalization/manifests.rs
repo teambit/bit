@@ -8,6 +8,7 @@ use serde_json::{Value, json as value};
 use std::{collections::HashSet, io};
 
 impl Prepared {
+    /// Extracts component identity and parsed `package.json` manifest plans from queued writes.
     pub(in crate::workspace::engine::command) fn package_manifest_plans(
         &self,
     ) -> io::Result<Vec<Value>> {

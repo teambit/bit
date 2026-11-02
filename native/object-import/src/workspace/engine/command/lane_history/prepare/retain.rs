@@ -14,6 +14,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Retains prepared [`Phase`] entries and filesystem proofs in `state.histories.checkout`.
 pub(super) fn run(
     input: Prepare,
     state: &mut State,

@@ -4,6 +4,7 @@ use super::{Listed, ObjectItem, VirtualRemote, invalid};
 use crate::command_import::lane;
 use std::io;
 
+/// Projects non-hidden [`lane::Entry`] rows into [`Listed`] items for remote lane listing.
 #[inline]
 pub(super) fn visible(entries: Vec<lane::Entry>) -> io::Result<Vec<Listed>> {
     entries

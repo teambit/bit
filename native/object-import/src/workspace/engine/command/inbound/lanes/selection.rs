@@ -5,6 +5,7 @@ mod tests;
 use super::super::{Prepare, config, invalid};
 use std::{fs, io, path::Path};
 
+/// Resolves explicit or tracked remote lane identifiers and aliases for [`Prepare`].
 pub(super) fn ids(input: &Prepare) -> io::Result<Vec<String>> {
     if input.ids.is_empty() {
         return tracked(&input.root);

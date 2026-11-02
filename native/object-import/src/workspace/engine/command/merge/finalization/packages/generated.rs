@@ -1,4 +1,5 @@
 //! Default Node environment `package.json` [`manifest`] synthesis for unlinked [`Input`] components.
+//! Validates default environment compatibility, main/types paths, and dependency maps.
 
 use super::{Input, Map, Value, invalid, value};
 use std::io;

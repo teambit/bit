@@ -4,6 +4,7 @@ use super::{Captured, Conflict, Destinations, Prepared};
 use serde_json::{Value, json};
 
 impl Prepared {
+    /// Builds a [`Prepared`] merge result for a component resolved across unrelated histories.
     pub(in crate::workspace::engine::command) fn unrelated(
         current: &Captured,
         version: Value,

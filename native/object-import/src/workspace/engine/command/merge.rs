@@ -14,6 +14,7 @@ use super::super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
+/// Retained native `merge_transaction` state and journal token for workspace merge planning.
 pub(super) struct State {
     pub(super) native: crate::merge_transaction::State,
     journal: Value,

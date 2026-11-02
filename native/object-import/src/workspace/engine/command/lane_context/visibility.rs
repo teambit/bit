@@ -10,6 +10,7 @@ use crate::command_import::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Projects `.bitmap` component entries with effective default scopes and canonical names.
 pub(in crate::workspace::engine::command) fn identity_bitmap(
     bitmap: &Value,
     settings: &Value,

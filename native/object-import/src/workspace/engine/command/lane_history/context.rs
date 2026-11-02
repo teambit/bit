@@ -10,6 +10,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Prepares workspace context and imported lane objects for a historical [`Phase`] checkout.
 pub(in crate::workspace::engine::command) fn prepare(
     request: &super::super::input::Prepare,
     pool: &rayon::ThreadPool,

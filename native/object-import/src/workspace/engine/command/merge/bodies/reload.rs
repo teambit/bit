@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retains surviving unmodified workspace files alongside merged output `files` when not hidden.
 #[inline]
 pub(super) fn files(
     input: &BodyInput<'_>,

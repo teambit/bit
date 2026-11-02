@@ -9,6 +9,7 @@ use std::{fs, io, path::Path};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
+/// Writes deduplicated `dependencies` into `package.json` or `workspace.jsonc` at `root`.
 pub(super) fn write(
     root: &Path,
     target: &str,

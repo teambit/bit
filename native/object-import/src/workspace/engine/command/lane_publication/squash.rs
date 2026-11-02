@@ -8,6 +8,7 @@ use super::super::{invalid, merge::snapshot, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
 
+/// Prepared `Version` parent rewrite and optional replacement hash for a squashed lane component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     identity: String,

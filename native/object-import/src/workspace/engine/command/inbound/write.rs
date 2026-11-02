@@ -26,7 +26,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// The component file bytes one import holds until publication.
+/// Maximum total component file bytes one import holds until [`Prepared`] publication.
 const MAX_WRITTEN_BYTES: usize = 512 * 1024 * 1024;
 
 pub(super) struct Prepared {

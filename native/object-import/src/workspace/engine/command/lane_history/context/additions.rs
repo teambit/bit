@@ -8,6 +8,7 @@ use crate::workspace::engine::command::{
 };
 use serde_json::{Value, json};
 use std::io;
+/// Attaches historical [`Phase`] components missing from `.bitmap` into `context["laneAdditions"]`.
 pub(super) fn attach_missing(
     request: &Prepare,
     bitmap: &Value,

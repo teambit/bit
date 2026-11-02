@@ -1,4 +1,5 @@
 //! Multiple named lanes ([`Selection`], [`prepare`]) share one retained inbound publication.
+//! Preserves component closure and remote refs without publishing the `Lane` into the local index.
 
 mod aggregate;
 mod selection;

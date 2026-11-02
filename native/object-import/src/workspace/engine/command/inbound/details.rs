@@ -1,4 +1,5 @@
 //! The `importDetails` ([`model`], [`Target`]) of an inbound receipt (`_getImportDetails`).
+//! Resolves transferred overlay models or validated local component models for reporting.
 
 use super::{Target, invalid, write};
 use crate::{command_import, workspace::engine::client_status::config::is_extension_aspect};
