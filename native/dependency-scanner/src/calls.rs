@@ -28,7 +28,7 @@ pub(crate) fn in_optional_chain(node: &CallExpression<'_>) -> bool {
         };
     }
 }
-/// Literals whose legacy `value` becomes a coerced dependency key (`import(5)` yields `"5"`).
+/// Return `true` when `argument` is a non-string literal (`import(5)` coerced to `"5"`).
 #[inline]
 pub(crate) fn nonstring_literal(argument: Option<&Argument<'_>>) -> bool {
     matches!(

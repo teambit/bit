@@ -15,7 +15,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// `FILE_CHANGES_CHECKOUT_MSG`.
+/// Section title (`FILE_CHANGES_CHECKOUT_MSG`) for components with file changes.
 pub const FILE_CHANGES: &str = "components with file changes";
 const RESULT_KEYS: [&str; 13] = [
     "components",

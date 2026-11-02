@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Captured workspace state, engine session, and docs prepared before checkout planning.
 pub(super) struct Prepared {
     pub engine: Engine,
     pub home: PathBuf,

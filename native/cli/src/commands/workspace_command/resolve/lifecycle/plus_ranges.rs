@@ -5,6 +5,7 @@ use super::{Session, capture};
 use serde_json::{Value, json};
 use std::{env, fs, io, path::Path};
 
+/// Validate that `+^` and `+~` dependency version ranges are gated by the `plus-range-versions` feature.
 pub(super) fn validate(session: &Session<'_>, plan: &Value) -> io::Result<()> {
     if enabled()? {
         return Ok(());

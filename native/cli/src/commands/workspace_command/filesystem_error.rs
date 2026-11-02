@@ -9,6 +9,7 @@ use std::{
     path::Path,
 };
 
+/// Normalized filesystem failure record with errno, code, syscall, and operand paths.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Failure {
     errno: Option<i32>,

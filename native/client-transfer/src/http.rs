@@ -2,7 +2,7 @@
 //! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
 //! symphony `GraphQL` for hub scope resolution.
 //!
-//! Re-exports [`LaneNotFound`], [`action_conflict`], [`is_action_not_found`], [`HubReply`], and [`old_server_fallback`].
+//! Re-exports [`LaneNotFound`], [`action_conflict`], [`is_action_not_found`], [`HubReply`], and [`old_server_fallback`] over [`Network`].
 
 pub use action_errors::{LaneNotFound, action_conflict, is_action_not_found};
 pub use hub::HubReply;

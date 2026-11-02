@@ -5,6 +5,7 @@
 
 use std::{env, fmt::Display};
 
+/// Return `true` when `BIT_NATIVE_TRACE` is set to an active truthy value.
 #[must_use]
 #[inline]
 pub fn enabled() -> bool {

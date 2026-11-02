@@ -16,6 +16,7 @@ mod workspace;
 
 use std::{env, ffi::OsString, process::ExitCode};
 
+/// Entry point of the native `bit` CLI binary.
 fn main() -> ExitCode {
     // pnpm's cached umask read briefly changes the process-wide mask. Initialize
     // it before workers can create directories with an unmasked mode.

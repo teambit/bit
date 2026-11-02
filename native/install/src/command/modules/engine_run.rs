@@ -16,6 +16,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::{io, time::Instant};
 
+/// Progress status message displayed while running pre-install subscribers.
 const PRE_SUBSCRIBERS: &str = "running pre install subscribers";
 const RUNNING: &str = "running package installation using pnpm";
 const POST_SUBSCRIBERS: &str = "running post install subscribers";

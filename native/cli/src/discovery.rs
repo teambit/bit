@@ -24,7 +24,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// How a delegated command runs.
+/// Resolved Node.js Bit CLI launch target (`node <entry>` or wrapper executable).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Target {
     /// `node <entry> <args>`.

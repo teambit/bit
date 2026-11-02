@@ -29,7 +29,7 @@ pub struct Rule {
     pub negative: bool,
 }
 
-/// `ignore()`: rules in the order they were added.
+/// Ordered collection of compiled `node-ignore` [`Rule`] entries (`ignore()`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Ignore {
     rules: Vec<Rule>,

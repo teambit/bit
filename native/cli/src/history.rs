@@ -17,6 +17,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+/// Workspace `<scope>/command-history` logger handle for recording start and completion entries.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct History {
     file: PathBuf,

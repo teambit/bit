@@ -7,6 +7,7 @@ use futures_util::StreamExt;
 use std::io::{self, Read};
 use tokio::sync::mpsc;
 
+/// Stream bounded HTTP [`Response`] chunks into a blocking tar archive reader.
 pub(super) async fn read(
     response: Response,
     maximum: usize,

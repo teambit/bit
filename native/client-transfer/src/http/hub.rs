@@ -14,6 +14,7 @@ use std::{io, time::Duration};
 const MAX_LINE: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
+/// Parsed response and progress messages returned by `Http.pushToCentralHub`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HubReply {
     pub data: Value,

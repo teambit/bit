@@ -1,6 +1,7 @@
 //! Published `is-binary-path` uses binary-extensions 2.3.0, not source-byte heuristics.
 //!
 //! [`note`] checks [`EXTENSIONS`] to return a binary guidance message for unmerged file paths.
+/// Embedded list of binary file extensions from `binary-extensions` 2.3.0.
 const EXTENSIONS: &str = include_str!("binary_extensions.txt");
 
 #[must_use]

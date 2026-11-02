@@ -11,7 +11,7 @@ use crate::commands::status::js::decline;
 use regress::Regex;
 use std::{collections::HashMap, io};
 
-/// `SNAP_VERSION_PREFIX`.
+/// Semver prefix (`SNAP_VERSION_PREFIX`) prepended to snap hashes in lockfile graphs.
 const SNAP_PREFIX: &str = "0.0.0-";
 
 /// One workspace component: its package, id and version.

@@ -24,7 +24,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-/// How long the Bit Cloud user lookup may take; Node's `fetch` has no limit.
+/// Maximum duration (`30s`) for a Bit Cloud user identity lookup; Node's `fetch` has no limit.
 const CLOUD_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The receipt for snapping `identities`.

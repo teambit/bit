@@ -20,6 +20,7 @@ pub struct Found<'text> {
 /// a slash that is not its last character.
 type Replacement = fn(&Found<'_>, bool) -> String;
 
+/// Single regex replacement step in `node-ignore`'s rule compilation pipeline.
 #[derive(Debug, Clone)]
 pub struct Step {
     regex: Regex,

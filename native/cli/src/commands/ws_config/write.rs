@@ -15,6 +15,7 @@ use bit_install::policy::scope::hex_sha1;
 use serde_json::json;
 use std::{fs, io, path::Path};
 
+/// Precomputed SHA-1 content hash of the standard `tsconfig.json` template.
 const TS_RAW_HASH: &str = "8a8e26913a6191740f6dc8052f5cd46e8179d403";
 const ASSET_DTS_HASH: &str = "567ee21978cbce56ebd1a166885c6d74665e7d8f";
 const STYLE_DTS_HASH: &str = "b31200bf25de0be451df15ad5c78e4e81a227cae";

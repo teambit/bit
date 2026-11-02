@@ -8,6 +8,7 @@ use super::Failure;
 use crate::commands::color::Chalk;
 use std::fmt::Write;
 
+/// Render a Node-style `[Error: ...] { ... }` inspection block for `error`.
 #[must_use]
 #[inline]
 pub(super) fn render(error: &Failure, chalk: Chalk) -> String {

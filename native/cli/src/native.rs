@@ -15,7 +15,7 @@ use std::{
     process::ExitCode,
 };
 
-/// What a native command did with its arguments.
+/// Dispatch outcome of a native command: an [`ExitCode`] or a [`Outcome::Declined`] fallback reason.
 #[derive(Debug, Clone)]
 pub enum Outcome {
     /// The command ran; exit with this code.

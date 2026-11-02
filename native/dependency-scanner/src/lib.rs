@@ -31,6 +31,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
+/// Deserialized batch dependency scan request containing version, ID, files, and options.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Request {
@@ -41,6 +42,7 @@ struct Request {
     #[serde(default)]
     options: BTreeMap<String, Value>,
 }
+/// Single file entry in a batch dependency scan request with optional inline source and kind.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File {

@@ -30,7 +30,7 @@ const PROTOTYPE_KEYS: &[&str] = &[
     "valueOf",
 ];
 
-/// A pattern node-ignore cannot compile into a working rule.
+/// Error returned when a pattern cannot be compiled into a valid `node-ignore` rule.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnsupportedPattern(pub String);
 

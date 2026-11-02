@@ -21,6 +21,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io, path::Path, time::Instant};
 
+/// Maximum number of manifest recalculation and installation convergence cycles.
 const MAX_CYCLES: usize = 5;
 
 /// What the installation did, for the summary.

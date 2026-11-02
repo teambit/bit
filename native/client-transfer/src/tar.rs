@@ -11,6 +11,7 @@ use crate::{invalid, is_hash};
 use serde_json::Value;
 use std::io::{self, Read};
 
+/// Sentinel tar entry name (`.BIT.START`) marking the start of a remote object stream.
 const START: &str = ".BIT.START";
 const END: &str = ".BIT.END";
 const ERROR: &str = ".BIT.ERROR";

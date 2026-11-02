@@ -27,6 +27,7 @@ use crate::{
 use session::{Loaded, Session};
 use std::{fs, io, path::Path, sync::OnceLock, time::Instant};
 
+/// Deprecation warning emitted when `--update-existing` is passed to `bit install`.
 const UPDATE_EXISTING: &str = r#"--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default"#;
 
 /// What the command did, for the final summary line.

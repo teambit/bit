@@ -14,7 +14,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Detached objects and metadata remain retained until command execution starts.
+/// Prepared `bit stash` save transaction holding detached objects and workspace metadata.
 pub(in crate::commands) struct Save {
     engine: Engine,
     token: String,

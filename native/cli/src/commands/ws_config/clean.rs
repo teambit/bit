@@ -7,6 +7,7 @@ use bit_install::{config::aspect_id_without_version, workspace::Workspace};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
+/// Built-in environment aspect IDs that register standard workspace config writers.
 const STANDARD_WRITER_ENVS: &[&str] = &[
     "teambit.harmony/node",
     "teambit.react/react",

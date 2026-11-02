@@ -12,6 +12,7 @@ use bit_install::config::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Parsed snapshot workflow options (`--build`, `--editor`, and build pipeline flags).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Workflow {
     pub build: bool,

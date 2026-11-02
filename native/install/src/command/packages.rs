@@ -16,7 +16,7 @@ use super::session::{Loaded, Session};
 use crate::{engine, manifests::semver};
 use std::io;
 
-/// Validate the package arguments; a component id becomes its package name.
+/// Validate CLI package arguments for `bit install`, resolving component IDs to their package names.
 pub fn validate(packages: &[String], loaded: &Loaded) -> io::Result<Vec<String>> {
     packages
         .iter()

@@ -7,6 +7,7 @@ use futures_util::StreamExt;
 use serde_json::{Value, json};
 use std::io;
 
+/// `GraphQL` query for listing remote lanes and their component IDs.
 const LANES_QUERY: &str = "query Lanes($ids: [String!]) { lanes { list(ids: $ids) { id { name scope } components: laneComponentIds { name scope version } } } }";
 const MAX_LANE_BYTES: usize = 4 * 1024 * 1024;
 

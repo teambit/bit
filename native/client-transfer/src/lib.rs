@@ -13,6 +13,7 @@ pub mod tar;
 
 pub use cancellation::Cancellation;
 
+/// Global Bit configuration map preserving key insertion order.
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 
 #[inline]

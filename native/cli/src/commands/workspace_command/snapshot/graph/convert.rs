@@ -13,7 +13,7 @@ use std::{collections::HashSet, io};
 
 const SCHEMA_VERSION: &str = "2.0";
 const ROOT_EDGE_ID: &str = ".";
-/// The lockfile package fields a graph package keeps, in `pick` order.
+/// Lockfile package fields retained in a serialized dependency graph, in `pick` order.
 const PACKAGE_FIELDS: [&str; 12] = [
     "bundledDependencies",
     "cpu",

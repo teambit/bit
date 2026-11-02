@@ -17,6 +17,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Build the lifecycle hook parameter [`Value`] map for a planned [`ResolveRequest`].
 #[inline]
 pub(super) fn planned(
     root: &Path,

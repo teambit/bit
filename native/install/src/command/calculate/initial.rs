@@ -9,6 +9,7 @@ use crate::{
 };
 use std::io;
 
+/// Phase identifier (`"linking"`) passed when loading components for initial codemod linking.
 const LINKING_PHASE: &str = "linking";
 
 /// The initial `calculateLinks` performs codemod linking before calculating manifests.

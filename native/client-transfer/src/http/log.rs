@@ -9,6 +9,7 @@ use reqwest::Response;
 use serde_json::{Value, json};
 use std::io;
 
+/// `GraphQL` query (`getLogs`) for fetching a component's version log history from a remote scope.
 const LOG_QUERY: &str = "query getLogs($id: String!) { scope { getLogs(id: $id) { message username email date hash tag } } }";
 const MAX_LOG_BYTES: usize = 8 * 1024 * 1024;
 

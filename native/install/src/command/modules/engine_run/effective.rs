@@ -10,6 +10,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Apply pre-install subscriber mutations from `receipt` to the [`InstallPlan`] and [`EngineSettings`].
 pub(super) fn apply(
     root: &Path,
     calculated: &Calculated,

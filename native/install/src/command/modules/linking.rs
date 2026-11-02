@@ -12,6 +12,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::{io, time::Instant};
 
+/// Progress status message displayed while linking workspace components.
 const LINKING: &str = "linking components";
 
 /// Core envs of type `aspect`; the stored env descriptors of the components

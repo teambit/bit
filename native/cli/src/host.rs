@@ -24,6 +24,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// Concatenated `JavaScript` source of the embedded Node.js host scripts.
 const SCRIPT: &str = concat!(
     include_str!("host/host.js"),
     "\n",

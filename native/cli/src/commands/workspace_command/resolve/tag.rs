@@ -14,7 +14,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
-/// The release types a pattern may carry in place of a version.
+/// Release types (`major`, `minor`, `patch`, etc.) a tag pattern may carry in place of a semver version.
 const RELEASE_TYPES: [&str; 7] =
     ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
 

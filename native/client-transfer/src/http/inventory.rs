@@ -9,6 +9,7 @@ use crate::invalid;
 use serde_json::{Map, Value, json};
 use std::io;
 
+/// Marker error wrapper indicating that the legacy server fallback warning was already printed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct OldServerFallbackError(String);
 impl std::fmt::Display for OldServerFallbackError {

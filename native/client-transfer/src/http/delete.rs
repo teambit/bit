@@ -14,6 +14,7 @@ use reqwest::Response;
 use serde_json::Value;
 use std::io;
 
+/// Maximum buffered response payload size (`8 MiB`) for remote delete requests.
 const MAX_DELETE_BYTES: usize = 8 * 1024 * 1024;
 const MAX_DELETE_LINES: usize = 4096;
 

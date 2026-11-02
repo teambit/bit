@@ -8,6 +8,7 @@ use oxc_ast::{
 };
 use oxc_ast_visit::Visit;
 
+/// Module format classification (`None`, `Supported`, or `Fallback`) for an AST program.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Classification {
     #[default]

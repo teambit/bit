@@ -6,6 +6,7 @@ use oxc_ast::ast::{AssignmentTarget, Expression};
 
 // Match ast-module-types' Babel shapes, including computed identifier properties.
 // A string property named "exports" intentionally does not match that classifier.
+/// Strip outer parenthesized expressions from `expression`.
 #[inline]
 fn peel<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
     expression.without_parentheses().get_inner_expression()

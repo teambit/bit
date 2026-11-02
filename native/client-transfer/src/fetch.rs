@@ -4,7 +4,7 @@ use crate::GlobalConfig;
 use serde::Serialize;
 use serde_json::Value;
 
-/// `CURRENT_FETCH_SCHEMA`.
+/// Current remote fetch wire schema version (`CURRENT_FETCH_SCHEMA`).
 const FETCH_SCHEMA: &str = "0.0.3";
 
 /// `FETCH_OPTIONS` as sent to a remote.

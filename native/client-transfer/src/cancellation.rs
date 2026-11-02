@@ -16,6 +16,7 @@ use std::{
 };
 use tokio::sync::Notify;
 
+/// Cloneable cooperative cancellation token backed by an atomic flag and [`Notify`].
 #[derive(Debug, Default, Clone)]
 pub struct Cancellation(Arc<State>);
 #[derive(Debug, Default)]
