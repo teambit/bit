@@ -79,7 +79,7 @@ fn xrange_plain() -> String {
     format!(r"[v=\s]*({id})(?:\.({id})(?:\.({id})(?:{})?{}?)?)?", prerelease(), build())
 }
 
-/// Return the uncompiled regular expression source string for `token`.
+/// Return the uncompiled regular expression source string for [`Token`] `token`.
 fn source(token: Token) -> String {
     match token {
         Token::Full => format!("^{}$", full_plain()),

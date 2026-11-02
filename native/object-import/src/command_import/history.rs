@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
-/// Compute the `BitObject.hash()` SHA-1 digest (`sha1("<component>:VersionHistory")`) for a `VersionHistory` object.
+/// Compute the `BitObject.hash()` [`Sha1`] digest (`sha1("<component>:VersionHistory")`) for a `VersionHistory` object.
 #[inline]
 pub(super) fn identity(component: &str) -> String {
     let mut hasher = Sha1::new();

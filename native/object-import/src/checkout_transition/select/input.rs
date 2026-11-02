@@ -33,7 +33,7 @@ pub(super) struct Component {
 pub(super) struct Model {
     pub(super) has_main_head: bool,
 }
-/// Checkout selection options combining boolean [`Flags`], ancestor distance, and explicit version overrides.
+/// Checkout selection options combining boolean [`Flags`], ancestor distance, and explicit version [`Value`] overrides.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {

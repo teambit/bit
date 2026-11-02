@@ -12,7 +12,7 @@ use crate::manifests::{
 };
 use std::io;
 
-/// Add the items `hoisted` rejects to their components (`addToComponentDependenciesMapInDeduped`).
+/// Add the [`Item`] entries `hoisted` rejects to their components in [`Deduped`] (`addToComponentDependenciesMapInDeduped`).
 #[inline]
 fn keep_in_components(
     deduped: &mut Deduped,

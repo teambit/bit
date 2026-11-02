@@ -5,7 +5,7 @@ use super::{PreparedImport, Target, invalid, object_hash, read_model, transfer, 
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Partition `targets` into locally staged recovery targets and remote refresh candidates.
+/// Partition [`Target`] `targets` on [`PreparedImport`] into locally [`staged`] recovery targets and remote refresh candidates.
 pub(super) fn retain<'a>(
     plan: &mut PreparedImport,
     targets: &[&'a Target],

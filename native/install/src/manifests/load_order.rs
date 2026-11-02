@@ -56,7 +56,7 @@ fn first_places(mut order: Vec<&WorkspaceComponent>) -> Vec<&WorkspaceComponent>
     order
 }
 
-/// The env ids of `components`, versioned when the env is.
+/// The env ids ([`HashSet`]) of [`WorkspaceComponent`] `components`, versioned when the env is.
 #[inline]
 fn envs_of(components: &[WorkspaceComponent]) -> HashSet<&str> {
     components

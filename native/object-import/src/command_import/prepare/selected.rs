@@ -81,7 +81,7 @@ impl PreparedImport {
         self.environment.remotes = remotes.clone();
         Ok(remotes)
     }
-    /// Checkout's cache=true importWithoutDeps stage, after status selection.
+    /// Checkout's `cache=true` `importWithoutDeps` stage for [`Target`] `targets`, after status selection.
     #[inline]
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)

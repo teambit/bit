@@ -16,7 +16,7 @@ use crate::{
 };
 use std::io;
 
-/// Assign fallback environment IDs (`findFirstEnv`) to components whose env comes from a configured env aspect.
+/// Assign fallback environment IDs (`findFirstEnv`) via [`first_env`] to [`WorkspaceComponent`]s whose env comes from a configured env aspect.
 #[inline]
 pub fn resolve(
     components: &mut [WorkspaceComponent],

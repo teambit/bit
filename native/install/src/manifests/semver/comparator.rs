@@ -57,7 +57,7 @@ impl Comparator {
         Comparator { operator: operator.to_string(), semver, value }
     }
 
-    /// `comparator.test(version)`.
+    /// `comparator.test(version)` against a [`SemVer`] target.
     #[inline]
     pub(crate) fn test(&self, version: &SemVer) -> bool {
         let Some(semver) = &self.semver else { return true };

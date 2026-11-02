@@ -88,7 +88,7 @@ impl SemVer {
             .cmp(&other.prerelease.len())
     }
 
-    /// `semver.compare(a, b)`.
+    /// `semver.compare(a, b)` returning an [`Ordering`] across main and prerelease identifiers.
     #[inline]
     pub(crate) fn compare(&self, other: &Self) -> Ordering {
         self.compare_main(other)

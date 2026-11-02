@@ -26,7 +26,7 @@ impl PreparedImport {
         let directory = remote(self, &remotes, scope)?;
         self.capture.object(&directory, hash, "Lane")
     }
-    /// Fetch the remote [`Record`] for `id` (at `supplied_hash` or head) and its full component closure.
+    /// Fetch the remote [`Record`] for [`Id`] `id` (at `supplied_hash` or head) and its full component closure.
     #[inline]
     pub(crate) fn fetch_lane_contents_at_hash(
         &mut self,

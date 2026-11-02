@@ -5,7 +5,7 @@ mod history;
 use super::{PreparedImport, Target, invalid, read_model, receive, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
-/// Remote lane object staging and `main` head refresh methods on [`PreparedImport`].
+/// Remote lane ([`Id`], [`Record`]) object staging and `main` head refresh methods on [`PreparedImport`].
 impl PreparedImport {
     /// Stage missing `Version` or `Source` objects for `hashes` from `scope` via [`Self::prepare_lane_missing_objects`].
     #[inline]

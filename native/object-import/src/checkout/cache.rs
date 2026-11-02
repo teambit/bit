@@ -34,7 +34,7 @@ fn canonical_dir(directory: &Path) -> PathBuf {
 }
 
 impl State {
-    /// Look up a cached `Source` object body for `(directory, hash)`.
+    /// Look up a cached `Source` object body for `(directory, hash)` via [`canonical_dir`].
     #[inline]
     pub(crate) fn get(&self, directory: &Path, hash: [u8; 20]) -> Option<&Vec<u8>> {
         if self.sources.is_empty() {

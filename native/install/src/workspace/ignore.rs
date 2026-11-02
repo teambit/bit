@@ -18,7 +18,7 @@ struct Rule {
     negative: bool,
 }
 
-/// An ordered rule set with node-ignore's per-path cache.
+/// An ordered [`Rule`] set with `node-ignore`'s per-path [`HashMap`] cache.
 #[derive(Debug, Default, Clone)]
 pub struct Ignore {
     rules: Vec<Rule>,

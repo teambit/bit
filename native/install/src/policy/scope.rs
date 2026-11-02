@@ -75,7 +75,7 @@ impl Scope {
         &self.path
     }
 
-    /// `<scope>/cache/components/deps`, Bit's dependency cache.
+    /// `<scope>/cache/components/deps` ([`PathBuf`]), Bit's dependency cache.
     #[must_use]
     #[inline]
     pub fn dependency_cache(&self) -> PathBuf {

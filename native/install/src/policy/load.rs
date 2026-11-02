@@ -34,7 +34,7 @@ pub const CORE_ENVS: [&str; 10] = [
 /// Maximum recursion depth (`16`) when following `extends` chains in `env.jsonc`.
 const MAX_EXTENDS: usize = 16;
 
-/// Whether `id` (with or without a version) is a core env.
+/// Whether `id` (with or without a version) is one of [`CORE_ENVS`].
 #[must_use]
 #[inline]
 pub fn is_core_env(id: &str) -> bool {

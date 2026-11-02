@@ -22,7 +22,7 @@ pub(crate) struct State {
     /// Prepared checkout plans retained by plan token.
     plans: plan::State,
 }
-/// Dispatch a checkout transition operation (`kind`) against `state`.
+/// Dispatch a checkout transition operation (`kind`) with [`Value`] `input` against [`State`].
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind.trim() {
         "checkoutApply" => apply::apply(input, &state.plans),

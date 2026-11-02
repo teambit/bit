@@ -1,7 +1,7 @@
 //! Package names of external envs: envs that are neither core envs nor
 //! workspace components, as `getPackageName` names the env component.
 //!
-//! Resolves external environment package names from [`ScopeObjects`] metadata or [`default_package_name`] rules via [`external_env_packages`].
+//! Resolves external environment package names from [`ScopeObjects`] metadata or [`default_package_name`] rules via [`external_env_packages`] (using [`bare_id`]).
 
 #[cfg(test)]
 mod tests;

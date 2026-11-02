@@ -26,7 +26,7 @@ struct Output {
     binary_bytes: usize,
     data: Vec<Option<[usize; 4]>>,
 }
-/// Read an uncached `Source` [`Record`] for `input` from disk within `remaining_raw` and `compressed` budgets.
+/// Read an uncached `Source` [`Record`] for `input` from [`cache::State`] or disk via [`repository::read_source_record`] within `remaining_raw` and `compressed` budgets.
 #[inline]
 fn read(
     request: &Request,

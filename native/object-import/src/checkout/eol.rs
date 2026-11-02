@@ -84,7 +84,7 @@ fn continuation(byte: u8) -> bool {
     (128..192).contains(&byte)
 }
 
-/// Normalize text line endings in `bytes` to the current host platform convention (`CRLF` on Windows, `LF` elsewhere).
+/// Normalize text line endings in `bytes` via [`normalize`] to the current host platform convention (`CRLF` on Windows, `LF` elsewhere).
 #[inline]
 pub(crate) fn auto(bytes: Vec<u8>) -> Vec<u8> {
     normalize(bytes, cfg!(windows))

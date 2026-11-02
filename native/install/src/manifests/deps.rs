@@ -82,7 +82,7 @@ impl DepsObject {
         self.fields[field.index()] = map;
     }
 
-    /// `deps[name] || devDeps[name] || peerDeps[name]` (JavaScript truthiness).
+    /// `deps[name] || devDeps[name] || peerDeps[name]` (`JavaScript` [`truthy`] check).
     #[inline]
     pub(super) fn has_direct(&self, name: &str) -> bool {
         [Field::Dependencies, Field::DevDependencies, Field::PeerDependencies]

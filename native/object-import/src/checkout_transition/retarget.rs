@@ -17,7 +17,7 @@ struct Request {
     target: wire::Version,
     known_bodies: Option<usize>,
 }
-/// Retarget an active checkout plan to a new target `Version` manifest and spool added file bodies.
+/// Retarget an active checkout [`plan::Plan`] in [`plan::State`] to a new target `Version` manifest and spool added file bodies.
 pub(super) fn apply_with_overlay(
     input: Value,
     state: &mut plan::State,

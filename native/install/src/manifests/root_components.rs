@@ -14,7 +14,7 @@ use indexmap::IndexMap;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 
-/// Return `true` when `id_without_version` matches a component in `input.components`.
+/// Return `true` when `id_without_version` matches a [`WorkspaceComponent`] in `input.components` ([`ManifestInput`]).
 #[inline]
 fn in_workspace(input: &ManifestInput<'_>, id_without_version: &str) -> bool {
     input.components

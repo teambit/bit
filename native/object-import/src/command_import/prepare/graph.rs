@@ -5,7 +5,7 @@ use super::{PreparedImport, Target, VirtualRemote, read_model, read_version, ver
 use std::{io, path::Path};
 
 impl PreparedImport {
-    /// Record versionless (`""`, `"latest"`, `"head"`) graph target IDs in the unbuilt seeder set.
+    /// Record versionless (`""`, `"latest"`, `"head"`) graph [`Target`] IDs in the unbuilt seeder set.
     #[inline]
     pub(super) fn prime_versionless_graph_ids(&mut self, targets: &[&Target]) -> io::Result<()> {
         for target in targets {

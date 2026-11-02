@@ -41,7 +41,7 @@ pub(super) struct Deduped {
     pub(super) peer_conflicts: Vec<String>,
 }
 
-/// `rootPolicy.toManifest()`: `dependencies` and `peerDependencies`, snaps as semver.
+/// `rootPolicy.toManifest()`: `dependencies` and `peerDependencies` from [`PolicyEntry`] items into [`DepsObject`], snaps as semver.
 #[inline]
 pub(super) fn policy_manifest(policy: &[PolicyEntry]) -> DepsObject {
     let mut object = DepsObject::default();

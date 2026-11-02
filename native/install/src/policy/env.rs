@@ -84,7 +84,7 @@ fn legacy_peers(config: &Value) -> Vec<PolicyEntry> {
         .collect()
 }
 
-/// Parse the array of [`PolicyEntry`] items under `config[key]` using `options`.
+/// Parse the array of [`PolicyEntry`] items under `config[key]` ([`Value`]) using [`KeyOptions`].
 #[inline]
 fn from_key(config: &Value, key: &str, options: &KeyOptions) -> io::Result<Vec<PolicyEntry>> {
     let Some(items) = config.get(key).and_then(Value::as_array) else {

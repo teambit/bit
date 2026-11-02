@@ -22,7 +22,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Return the component's manifest version: its snap as semver, or `"0.0.1-new"` when new.
+/// Return the component's manifest version: its snap as semver ([`snap_to_semver`]), or `"0.0.1-new"` when new.
 #[inline]
 fn component_version(version: Option<&str>) -> String {
     version.map_or_else(|| "0.0.1-new".to_string(), snap_to_semver)

@@ -38,7 +38,7 @@ pub(super) fn apply(
     }
     Ok(None)
 }
-/// Apply a single merge row `kind` effect onto `files` and `status`.
+/// Apply a single merge row `kind` effect onto [`File`] `files` and `status` ([`Map`] / [`Value`]).
 #[inline]
 fn effect(
     kind: &str,

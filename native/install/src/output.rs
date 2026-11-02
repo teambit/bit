@@ -49,7 +49,7 @@ impl Style {
     }
 }
 
-/// Receives every chunk of terminal output. The JavaScript entry point writes
+/// Receives every chunk of terminal output. The `JavaScript` entry point writes
 /// it to `process.stdout`, so output stays ordered with Node's own writes and
 /// follows the CLI server's stream (as `@pnpm/napi`'s `onOutput` does).
 pub type Sink = Arc<dyn Fn(&str) + Send + Sync>;

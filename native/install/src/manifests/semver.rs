@@ -40,7 +40,7 @@ impl Flavor {
     }
 }
 
-/// Parse and format `range` using `semver` 7 rules (`semver.validRange(range)`), returning `None` if invalid.
+/// Parse and format `range` using `semver` 7 rules ([`Range::parse`] with [`Flavor::V7`]), returning `None` if invalid.
 #[inline]
 pub(crate) fn valid_range(range: &str) -> Option<String> {
     let range = Range::parse(range.trim(), Flavor::V7).ok()?;

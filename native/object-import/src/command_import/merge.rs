@@ -59,7 +59,7 @@ struct MergePlan {
     deleted: [Vec<String>; 2],
     local: Vec<String>,
 }
-/// Build a [`MergePlan`] reconciling `existing` and `incoming` component tags and detached heads.
+/// Build a [`MergePlan`] reconciling `existing` and `incoming` [`Value`] component tags and detached heads.
 fn plan(existing: &Value, incoming: &Value, origin: bool) -> io::Result<MergePlan> {
     let local: Vec<_> = existing["state"]["versions"]
         .as_object()

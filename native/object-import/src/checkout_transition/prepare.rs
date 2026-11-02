@@ -9,7 +9,7 @@ use super::{invalid, plan, wire};
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, io};
 
-/// Prepare a checkout plan from `input` without an import overlay.
+/// Prepare a checkout plan from [`Value`] `input` in [`plan::State`] via [`prepare_with_overlay`] without an import overlay.
 #[inline]
 pub(super) fn prepare(
     input: &Value,

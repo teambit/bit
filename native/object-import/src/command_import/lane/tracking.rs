@@ -41,7 +41,7 @@ impl SwitchTracking {
 }
 
 impl PreparedImport {
-    /// Resolve the target [`Record`] for `bit switch`, falling back to local lane state with a warning when the remote is unreachable.
+    /// Resolve the target [`Record`] for [`Id`] during `bit switch`, falling back to local lane state with a warning when the remote is unreachable.
     pub(crate) fn resolve_switch_lane(
         &mut self,
         id: &Id,

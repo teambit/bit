@@ -71,7 +71,7 @@ impl PreparedImport {
         merge::remote_refs(self, record)
     }
 
-    /// Lane import retains the fetched Lane in the local index as well as its refs.
+    /// Lane import retains the fetched `Lane` [`Record`] for [`Id`] in the local index as well as its refs.
     #[inline]
     pub(crate) fn publish_imported_lane(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
         let old = self.load_lane(id)?;

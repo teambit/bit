@@ -24,7 +24,7 @@ pub struct VariantOptions {
     pub hidden: Option<bool>,
 }
 
-/// A policy entry with every flag off.
+/// A [`PolicyEntry`] for `name`, `version`, and [`Lifecycle`] with every boolean flag off.
 #[must_use]
 #[inline]
 pub fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEntry {

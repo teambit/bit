@@ -52,7 +52,7 @@ impl Overlay {
     pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
         self.objects.keys().map(String::as_str)
     }
-    /// Read a staged metadata object of type `kind` by `hash` from this overlay.
+    /// Read a staged metadata [`Object`] of type `kind` by `hash` as a [`Value`] from this overlay.
     #[inline]
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
         let kind = kind.trim();

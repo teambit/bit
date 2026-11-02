@@ -44,7 +44,7 @@ fn lane_field(lane: &Value, key: &str, msg: &'static str) -> io::Result<String> 
         .map(str::to_owned)
         .ok_or_else(|| invalid(msg))
 }
-/// Extract artifact `Source` SHA-1 references from `version`'s `teambit.pipelines/builder` aspect.
+/// Extract artifact `Source` SHA-1 references from `version`'s `teambit.pipelines/builder` aspect via [`collect_builder_references`].
 #[inline]
 fn artifact_refs(version: &Value) -> io::Result<Vec<String>> {
     let Some(extensions) = version

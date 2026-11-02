@@ -53,7 +53,7 @@ pub struct InstallOptions {
     pub lockfile_only: bool,
     /// `--restore`
     pub restore: bool,
-    /// `--allow-scripts a,b` and `--disallow-scripts c`; disallow wins.
+    /// `--allow-scripts a,b` and `--disallow-scripts c` ([`IndexMap`]); disallow wins.
     pub allow_scripts: Option<IndexMap<String, bool>>,
     /// Arguments after `--`.
     pub package_manager_args: Vec<String>,

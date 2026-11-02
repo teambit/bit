@@ -78,7 +78,7 @@ fn cached(
     let hash = version_ref(&incoming, &target.version)?;
     receive_dependency(plan, &directory, target, &incoming, &hash)
 }
-/// Load [`Target`]'s `Component` model and `Version` object from local scope or `remotes`.
+/// Load [`Target`]'s `Component` model and `Version` [`Value`] object on [`PreparedImport`] from local scope or `remotes`.
 fn load(
     plan: &mut PreparedImport,
     target: &Target,

@@ -26,7 +26,7 @@ use std::{
     path::Path,
 };
 use transfer::receive;
-/// Prepare a read-only [`PreparedImport`] plan for `targets` from local and `file://` remotes.
+/// Prepare a read-only [`PreparedImport`] plan for [`Target`] `targets` from local and `file://` remotes via [`prepare_with_virtual`].
 #[inline]
 pub(crate) fn prepare(
     root: &Path,

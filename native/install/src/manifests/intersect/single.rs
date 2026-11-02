@@ -46,7 +46,7 @@ fn new_range(lower: Comparator, upper: Comparator) -> io::Result<Single> {
     Ok(Single::Range(lower, upper))
 }
 
-/// Return the `(lower, upper)` comparator pair when `single` is a [`Single::Range`].
+/// Return the `(lower, upper)` [`Comparator`] pair when `single` is a [`Single::Range`].
 #[inline]
 fn bounds(single: &Single) -> Option<(&Comparator, &Comparator)> {
     match single {

@@ -2,5 +2,5 @@
 //!
 //! Re-exports [`VariantConfig`] and [`by_root_dir_and_name`] from `bit_workspace_config::variants` for workspace loading.
 
-/// Re-exported [`VariantConfig`] and [`by_root_dir_and_name`] workspace variant matchers from `bit_workspace_config::variants`.
+/// Re-exported [`VariantConfig`] and [`by_root_dir_and_name`] workspace variant matchers from `bit_workspace_config::variants` for `bit install`.
 pub use bit_workspace_config::variants::{VariantConfig, by_root_dir_and_name};

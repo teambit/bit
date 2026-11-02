@@ -54,7 +54,7 @@ impl Dep<'_> {
     }
 }
 
-/// The component's `DependencyList`: component dependencies, then packages, unique by id.
+/// The component's `DependencyList` ([`Dep`] entries from [`ComponentDependencies`]): component dependencies, then packages, unique by id.
 pub(super) fn dependency_list(deps: &ComponentDependencies) -> Vec<Dep<'_>> {
     let components = deps.components
         .iter()

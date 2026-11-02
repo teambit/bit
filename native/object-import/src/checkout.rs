@@ -43,7 +43,7 @@ struct Input {
     prefer_cached: bool,
 }
 impl Input {
-    /// Look up `self.hash` in `state` when `use_cache` or `self.prefer_cached` is enabled.
+    /// Look up `self.hash` in [`cache::State`] `state` when `use_cache` or `self.prefer_cached` is enabled.
     #[inline]
     fn cached<'a>(
         &self,

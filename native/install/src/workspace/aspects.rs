@@ -88,7 +88,7 @@ pub fn from_config_object(config: &Map<String, Value>, core_ids: &[String]) -> V
         .collect()
 }
 
-/// A Version's stored `extensions`.
+/// A Version's stored `extensions` [`Value`] array parsed into [`AspectEntry`] items.
 #[must_use]
 pub fn from_model(extensions: &[Value]) -> Vec<AspectEntry> {
     extensions

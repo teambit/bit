@@ -23,7 +23,7 @@ pub(crate) fn prepare_inbound_with_virtual(
     )
 }
 
-/// Prepare an inbound import plan that enables `graph_versions` when `fetch_dependencies` is `false`.
+/// Prepare an inbound [`PreparedImport`] plan for [`Target`]s with [`VirtualRemote`]s that enables `graph_versions` when `fetch_dependencies` is `false`.
 #[inline]
 pub(crate) fn prepare_graph_inbound_with_virtual(
     root: &Path,
