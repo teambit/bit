@@ -92,7 +92,7 @@ fn assert_outside_pnpm_workspace(dir: &Path) {
     );
 }
 
-/// `BIT_E2E_NODE_CLI`, else the bvm installation of [`BIT_VERSION`].
+/// `BIT_E2E_NODE_CLI`, else the bvm installation of [`BIT_VERSION`] on disk.
 fn node_cli() -> PathBuf {
     if let Some(cli) = env::var_os("BIT_E2E_NODE_CLI").filter(|cli| !cli.is_empty()) {
         return PathBuf::from(cli);

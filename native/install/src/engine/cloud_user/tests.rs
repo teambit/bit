@@ -60,6 +60,7 @@ async fn asks_the_cloud_for_the_logged_in_user() {
     assert!(request.contains("query GET_ME"));
 }
 
+/// Verifies that [`cloud_username`] returns `None` when unauthenticated, unauthorized, or unreachable.
 #[tokio::test]
 async fn stays_anonymous_without_a_token_or_an_answer() {
     assert_eq!(cloud_username(&global("http://127.0.0.1:1", None), LOOKUP_TIMEOUT).await, None);

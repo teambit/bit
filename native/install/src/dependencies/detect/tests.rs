@@ -51,7 +51,7 @@ fn aspect(root: &Path, name: &str) -> CoreAspect {
     }
 }
 
-/// Runs [`detect`] on the first component in `components` against `aspects`.
+/// Runs [`detect`] on the first component in `components` against `aspects` using [`Resolver`].
 fn detect_provider(
     root: &Path,
     components: &[crate::model::WorkspaceComponent],

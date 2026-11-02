@@ -59,6 +59,7 @@ fn dep(version: &str, lifecycle: Lifecycle) -> Dep<'static> {
     }
 }
 
+/// Verifies that [`update_version`] ignores special component policy markers (`-`, `+`, `+^`, `+~`, `*`, `""`).
 #[test]
 fn special_component_policy_versions_are_ignored() {
     for special in ["-", "+", "+^", "+~", "*", ""] {

@@ -67,6 +67,7 @@ fn populated(count: usize) -> Helper {
     helper
 }
 
+/// Creates a 3-component workspace with `comp3` tagged and modified for quick `status` tests.
 fn quick() -> Helper {
     let helper = populated(3);
     helper.tag_without_build("comp3", "");

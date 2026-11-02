@@ -11,7 +11,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// Verifies that failed object uploads are not retried even when fetch retries are configured.
+/// Verifies that failed [`Network::push`] object uploads are not retried even when fetch retries are configured.
 #[test]
 fn failed_upload_is_not_replayed_even_when_fetch_retries_are_enabled() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

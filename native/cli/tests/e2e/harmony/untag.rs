@@ -40,6 +40,7 @@ fn remote_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     files
 }
 
+/// Initializes a workspace with a remote scope and adds a single `comp1` component.
 fn setup_component(helper: &Helper) {
     helper.set_workspace_with_remote_scope();
     helper.output_file("comp1/index.js", "module.exports = 'v1';");

@@ -67,6 +67,7 @@ fn lane_object(name: &str, components: &[(&str, &str)], hidden: &[&str]) -> Valu
     object
 }
 
+/// Writes `object` as a `Lane` into `repo` and registers its `IndexRow::Lane` entry.
 fn local_lane(repo: &Repo, hash: &str, object: &Value) {
     write(repo, "Lane", hash, object);
     repo.index_add(&[IndexRow::Lane {

@@ -63,6 +63,7 @@ fn existing_entries_update_skip_or_fail_by_name_in_any_lifecycle() {
     assert!(admits(&policy, "lodash", ExistingEntries::Fail).unwrap());
 }
 
+/// Verifies that `remove_from_document` deletes specified packages from `workspace.jsonc` while retaining remaining entries.
 #[test]
 fn removes_specified_packages_and_retains_others() {
     let text = r#"{

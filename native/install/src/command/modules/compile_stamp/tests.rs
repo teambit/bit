@@ -69,6 +69,7 @@ impl Fixture {
         Inputs { root: &self.root, bit_version, components: &self.components }
     }
 
+    /// Returns `true` when [`check`] reports the compile stamp is valid with no pending restores.
     fn fresh(&self) -> bool {
         check(&self.stamp, &self.inputs("1.0.0"))
             .unwrap()

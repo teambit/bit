@@ -56,6 +56,7 @@ fn replaces_existing_entries_unless_already_valid() {
     assert_eq!(inode(), before, "a valid link is kept");
 }
 
+/// Verifies that [`hard_link_directory`] mirrors files by inode, preserves symlinks, and skips `node_modules` and broken links.
 #[test]
 fn hard_link_directory_mirrors_files_and_skips_node_modules() {
     use std::os::unix::fs::{MetadataExt, symlink};

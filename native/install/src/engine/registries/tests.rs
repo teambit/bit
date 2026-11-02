@@ -34,6 +34,7 @@ fn the_cloud_registry_follows_the_configured_domain() {
     );
 }
 
+/// Verifies that [`resolve`] replaces `registry.npmjs.org` with Bit's cloud registry and attaches `user.token`.
 #[test]
 fn npmjs_is_replaced_by_the_bit_registry_with_the_user_token() {
     let registries = resolve(

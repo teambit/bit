@@ -71,6 +71,7 @@ fn add_ignore_appends_rules_in_order() {
     assert_eq!(sources, [r"(?:^|\/)a(?=$|\/)", r"(?:^|\/)b(?=$|\/)"]);
 }
 
+/// Verifies that `Object.prototype` property names (`constructor`, `__proto__`) return [`UnsupportedPattern`].
 #[test]
 fn object_prototype_names_are_unsupported() {
     let mut compiler = Compiler::new();

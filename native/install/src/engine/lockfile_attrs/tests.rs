@@ -45,6 +45,7 @@ fn reads_the_bit_block() {
     );
 }
 
+/// Verifies that [`merge`] retains the recorded `depsRequiringBuild` list when no new list is computed.
 #[test]
 fn an_uncomputed_list_keeps_the_recorded_one() {
     let pre = object(json!({ "depsRequiringBuild": ["a"], "restoredFromModel": true }));

@@ -49,6 +49,7 @@ fn entries(dir: &Path) -> HashSet<String> {
         .collect()
 }
 
+/// Verifies that [`prune_modules`] removes unreferenced virtual-store directories while keeping lockfile and loaded entries.
 #[test]
 fn removes_directories_the_current_lockfile_does_not_list() {
     let dir = tempfile::tempdir().expect("temp dir");

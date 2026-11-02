@@ -96,7 +96,7 @@ fn strip_comments(text: &str) -> String {
     out
 }
 
-/// Advances `chars` past a `//` line comment up to the next newline.
+/// Advances `chars` past a `//` line comment up to the next newline character.
 fn skip_line(chars: &mut impl Iterator<Item = char>) {
     for char in chars.by_ref() {
         if char == '\n' {

@@ -8,7 +8,7 @@ use std::{
     thread,
 };
 
-/// Verifies that failed HTTP uploads preserve published server exception messages and fallback status text.
+/// Verifies that failed HTTP [`Network::push`] uploads preserve published server exception messages and fallback status text.
 #[test]
 fn unsuccessful_uploads_preserve_published_exception_primary_messages() {
     for (body, expected) in [

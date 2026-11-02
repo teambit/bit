@@ -79,6 +79,7 @@ fn restoring_remote_contents_preserves_a_locked_root_without_retaining_outputs()
     fs::remove_dir(&root).unwrap();
 }
 
+/// Verifies that [`contents`] clears read-only child directories without traversing external symlinks.
 #[cfg(unix)]
 #[test]
 fn restoring_remote_contents_clears_readonly_children_without_following_links() {

@@ -42,6 +42,7 @@ fn package(dir: &Path) {
     fs::write(dir.join("package.json"), "{}").unwrap();
 }
 
+/// Builds an [`IndexMap`] mapping component `id` to a [`ComponentDependencies`] entry containing `policy`.
 fn dependencies(id: &str, policy: Vec<PolicyEntry>) -> IndexMap<String, ComponentDependencies> {
     IndexMap::from([(id.to_owned(), ComponentDependencies { policy, ..Default::default() })])
 }

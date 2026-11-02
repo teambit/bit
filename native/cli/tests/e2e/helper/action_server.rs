@@ -48,6 +48,7 @@ impl Server {
         Self { url, worker }
     }
 
+    /// Joins the server worker thread and returns all captured HTTP [`Request`] items.
     pub fn finish(self) -> Vec<Request> {
         self.worker.join().unwrap()
     }

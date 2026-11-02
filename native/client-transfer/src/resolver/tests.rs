@@ -41,6 +41,7 @@ fn only_a_configured_resolver_path_is_used() {
     }
 }
 
+/// Verifies that the resolver script receives `(scope, thisScope, token)` arguments with missing tokens passed as `undefined`.
 #[test]
 fn the_module_gets_the_scope_this_scope_and_the_configured_token() {
     let dir = TempDir::new().unwrap();

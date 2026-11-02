@@ -48,6 +48,7 @@ fn keys(manifest: &Map<String, Value>) -> Vec<&str> {
         .collect()
 }
 
+/// Verifies that a newly tracked component without a scope or version generates `0.0.1-new` without `homepage`.
 #[test]
 fn new_component_is_0_0_1_new_without_homepage() {
     let manifest = generate(&component(None, None), &context(Value::Null));

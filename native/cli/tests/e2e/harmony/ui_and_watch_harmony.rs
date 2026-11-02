@@ -45,6 +45,7 @@ fn watch_compiles_modified_and_new_files_and_tracks_add_remove() {
     assert!(show2.is_array());
 }
 
+/// Verifies that adding and removing components in `.bitmap` regenerates and cleans up `node_modules` `package.json` links.
 #[test]
 fn watch_recognizes_bitmap_changes_and_regenerates_package_json() {
     let helper = Helper::new();

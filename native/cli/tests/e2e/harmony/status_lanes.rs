@@ -38,6 +38,7 @@ fn assert_status_variants(helper: &Helper) {
     }
 }
 
+/// Verifies `unavailableOnMain` reporting in `bit status` and `bit status --lanes` against `Node.js`.
 #[test]
 fn unavailable_on_main_matches_node() {
     let helper = Helper::new();

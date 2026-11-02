@@ -74,6 +74,7 @@ fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).unwrap()
 }
 
+/// Verifies that `bit ms --json` runs natively from a subdirectory and records command history.
 #[test]
 fn reports_new_components_natively() {
     let workspace = Workspace::new();

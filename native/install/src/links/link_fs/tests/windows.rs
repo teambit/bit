@@ -37,6 +37,7 @@ fn symlink_kind_links_a_directory() {
     assert_eq!(fs::read_to_string(dest.join("index.ts")).unwrap(), "ts");
 }
 
+/// Verifies that [`remove_path`] deletes a Windows directory junction without removing files in its target directory.
 #[test]
 fn a_junction_is_removed_without_touching_its_target() {
     let dir = tempfile::tempdir().unwrap();

@@ -54,6 +54,7 @@ fn the_pnpm_cascade_proxy_comes_before_the_global_one() {
     assert_eq!(settings.https_proxy.as_deref(), Some("http://npmrc:2"));
 }
 
+/// Verifies that [`GlobalConfig`] proxy settings are used when neither [`DependencyResolverConfig`] nor `.npmrc` sets a proxy.
 #[test]
 fn the_global_proxy_is_the_last_resort() {
     let settings = proxy(

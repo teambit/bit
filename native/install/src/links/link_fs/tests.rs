@@ -53,6 +53,7 @@ fn remove_path_deletes_trees_and_ignores_missing_paths() {
     remove_path(&tree).unwrap();
 }
 
+/// Verifies that [`may_link_target`] rejects existing real directories unless `installed_locally` is `true`.
 #[test]
 fn may_link_target_refuses_real_directories_unless_installed_locally() {
     let dir = tempfile::tempdir().unwrap();

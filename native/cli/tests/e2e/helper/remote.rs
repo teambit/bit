@@ -75,6 +75,7 @@ fn seed_selected_to(helper: &Helper, workspace: &Path, remote: &Path, identities
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
 
+/// Runs `bit export` via the `Node.js` CLI in `helper`'s default local workspace.
 pub(crate) fn node_export(helper: &Helper) {
     node_export_at(&helper.scopes.local_path);
 }

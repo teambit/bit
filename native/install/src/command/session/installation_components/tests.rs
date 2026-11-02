@@ -6,7 +6,7 @@ use crate::model::WorkspaceComponent;
 use serde_json::json;
 use std::path::Path;
 
-/// Constructs a minimal [`WorkspaceComponent`] fixture for `name` under `scope`.
+/// Constructs a minimal [`WorkspaceComponent`] fixture for `name` under `scope` (`1.0.0`).
 fn component(name: &str) -> WorkspaceComponent {
     serde_json::from_value(json!({
         "id":{"scope":"scope","defaultScope":null,"name":name,"version":"1.0.0"},

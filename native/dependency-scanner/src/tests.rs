@@ -48,6 +48,7 @@ fn ignores_only_real_typescript_comments() {
     assert_eq!(result.dependencies.len(), 0);
 }
 
+/// Verifies that literal `require`, `require.resolve`, and `import()` calls are extracted while interpolated templates are ignored.
 #[test]
 fn extracts_literal_calls_without_interpolated_or_dynamic_require() {
     let result = scan(

@@ -55,6 +55,7 @@ fn creates_the_package_json_and_its_dependencies() {
     assert!(write_package_json_dependencies(root.path(), &DependencyMap::new()).is_err());
 }
 
+/// Verifies that [`disable_in_config`] removes `externalPackageManager` and enables `rootComponent` and `enableWorkspaceConfigWrite`.
 #[test]
 fn disables_the_mode_in_the_config() {
     let mut document = Document::parse(

@@ -37,6 +37,7 @@ fn ranges_are_intersected() {
     );
 }
 
+/// Verifies that [`safe_intersect`] returns `None` when peer ranges have no common satisfying version.
 #[test]
 fn disjoint_ranges_conflict() {
     assert_eq!(safe_intersect(["^1.0.0", "^2.0.0"].into_iter()), None);

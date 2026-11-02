@@ -64,6 +64,7 @@ fn plan(root: &Path) -> InstallPlan {
     }
 }
 
+/// Verifies that [`install`] links local workspace projects, writes core removal overrides, and is idempotent on repeat runs.
 #[tokio::test]
 async fn installs_local_projects_with_core_removal_overrides() {
     let dir = tempfile::tempdir().expect("temp dir");

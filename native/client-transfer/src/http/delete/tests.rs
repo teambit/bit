@@ -76,6 +76,7 @@ fn serve(reply: Option<&'static str>) -> (String, thread::JoinHandle<(String, bo
     (url, handle)
 }
 
+/// Builds a single-threaded Tokio runtime for synchronous HTTP deletion test execution.
 fn runtime() -> tokio::runtime::Runtime {
     tokio::runtime::Builder::new_current_thread()
         .enable_all()

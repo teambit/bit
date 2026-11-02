@@ -64,6 +64,7 @@ fn cleanup_removes_readonly_fixture_outputs_without_following_symlinks() {
     fs::set_permissions(&external, fs::Permissions::from_mode(0o755)).unwrap();
 }
 
+/// Verifies that [`Helper::npm_add_fake_package`] replaces symlinks or hardlinks without mutating external store files.
 #[cfg(unix)]
 #[test]
 fn fake_package_does_not_modify_linked_or_hardlinked_store_files() {

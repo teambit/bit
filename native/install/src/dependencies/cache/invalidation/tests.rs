@@ -40,6 +40,7 @@ fn workspace_changes_before_the_oldest_entry_keep_the_cache() {
     assert!(deps_dir(root).exists());
 }
 
+/// Verifies that a workspace file modification newer than the oldest cache entry drops the dependency cache.
 #[test]
 fn a_workspace_change_after_the_oldest_entry_drops_the_cache() {
     let temp = tempfile::tempdir().expect("tempdir");

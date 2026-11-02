@@ -95,6 +95,7 @@ fn missing_or_invalid_workspace_jsonc_fails() {
     );
 }
 
+/// Verifies [`aspect_id_without_version`] strips `@version` suffixes while preserving bare aspect IDs.
 #[test]
 fn aspect_ids_without_version() {
     assert_eq!(aspect_id_without_version("teambit.react/react@1.2.3"), "teambit.react/react");

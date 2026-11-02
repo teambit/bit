@@ -52,6 +52,7 @@ fn root_project() -> Project {
     Project { dir: "/ws".into(), manifest }
 }
 
+/// Verifies [`parse`] on scoped dependency paths with patch hashes, peer suffixes, and `file:` specifiers.
 #[test]
 fn parses_dependency_paths() {
     let parsed = parse("@s/a@1.0.0(patch_hash=abc)(b@2.0.0)");

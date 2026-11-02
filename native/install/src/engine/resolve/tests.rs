@@ -4,7 +4,7 @@
 use super::parse_package_name;
 use pretty_assertions::assert_eq;
 
-/// Wraps `(name, version)` into an owned `Some((String, String))` tuple for assertions.
+/// Wraps `(name, version)` into an owned `Some((String, String))` tuple for [`parse_package_name`] assertions.
 fn parsed(name: &str, version: &str) -> Option<(String, String)> {
     Some((name.to_string(), version.to_string()))
 }

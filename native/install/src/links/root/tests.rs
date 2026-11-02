@@ -60,6 +60,7 @@ fn link(path: &Path) -> String {
     format!("link:{}", path.display())
 }
 
+/// Creates a temporary directory and an initialized `ws` workspace subdirectory inside it.
 fn workspace() -> (tempfile::TempDir, PathBuf) {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path().join("ws");

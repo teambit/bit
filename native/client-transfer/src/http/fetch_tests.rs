@@ -79,6 +79,7 @@ fn serve(body: Vec<u8>, cancellation: Option<Cancellation>) -> (String, thread::
     });
     (url, worker)
 }
+/// Verifies that fragmented tar responses parse incrementally and truncated streams discard all objects.
 #[test]
 fn fragmented_response_is_parsed_incrementally_and_truncation_discards_all_objects() {
     let runtime = tokio::runtime::Builder::new_current_thread()

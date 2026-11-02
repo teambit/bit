@@ -29,7 +29,7 @@ use indexmap::IndexMap;
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, io, path::Path};
-/// Creates parent directories and writes `contents` to `path` on disk.
+/// Creates parent directories and writes `contents` to `path` on disk for [`fixture`].
 fn write(path: &Path, contents: &str) {
     fs::create_dir_all(path.parent().expect("parent")).expect("dir");
     fs::write(path, contents).expect("write");

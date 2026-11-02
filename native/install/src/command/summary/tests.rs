@@ -29,6 +29,7 @@ fn formats_the_summary() {
     );
 }
 
+/// Verifies that [`format`] prompts for another `bit install` when legacy environments failed to load.
 #[test]
 fn asks_for_another_install_when_legacy_envs_did_not_load() {
     let text = format(&output(), 1, Duration::from_secs(1), false, &["org.scope/env".into()]);

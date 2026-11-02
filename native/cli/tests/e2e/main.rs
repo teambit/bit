@@ -9,6 +9,7 @@
 mod commands;
 /// End-to-end multi-command workflow parity suites.
 mod flows;
+/// End-to-end cross-feature functionality parity suites.
 mod functionalities;
 mod harmony;
 mod helper;

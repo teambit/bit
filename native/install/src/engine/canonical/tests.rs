@@ -49,6 +49,7 @@ fn declines_unknown_package_option_before_native_install() {
     assert!(Request::new(&input).is_none());
 }
 
+/// Verifies that [`Request::new`] declines requests with an empty `manifestsByPaths` map.
 #[test]
 fn declines_incomplete_manifest_inventory_before_native_install() {
     let dir = tempfile::tempdir().expect("private root");

@@ -46,6 +46,7 @@ fn the_global_virtual_store_follows_env_then_config_then_global_config() {
     assert!(!enable_global_virtual_store(&hoisted, &global_on, &on));
 }
 
+/// Verifies that [`package_extensions`] injects built-in `@teambit/react.react-env@1` rules only when the global virtual store is enabled.
 #[test]
 fn built_in_package_extensions_apply_under_the_global_virtual_store_only() {
     let configured =

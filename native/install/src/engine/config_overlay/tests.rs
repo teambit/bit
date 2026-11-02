@@ -84,6 +84,7 @@ fn root_components_are_not_hoisted() {
     assert!(!config.prefer_frozen_lockfile);
 }
 
+/// Verifies that [`install_config`] pins `user.token` to the default registry auth header.
 #[test]
 fn the_default_registry_token_is_pinned_to_the_default_registry() {
     let global = GlobalConfig::from([("user.token".to_string(), json!("tok"))]);

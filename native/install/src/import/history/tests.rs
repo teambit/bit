@@ -39,6 +39,7 @@ fn a_history_with_every_ancestor_is_complete() {
     assert_eq!(check(&history(&versions, &["b"]), "b"), Completeness::Recorded);
 }
 
+/// Verifies that [`check`] returns [`Completeness::Incomplete`] when any parent or root version is missing from `versions`.
 #[test]
 fn a_missing_ancestor_or_version_is_incomplete() {
     let versions = json!([

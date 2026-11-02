@@ -42,6 +42,7 @@ fn splits_peer_suffixes() {
     assert!(split_peer_ids("a@1.0.0").is_empty());
 }
 
+/// Verifies that [`merge`] updates direct root dependencies and prunes unreachable package nodes.
 #[test]
 fn merges_direct_dependencies_and_prunes_unreachable_nodes() {
     let mut base = graph(

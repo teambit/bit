@@ -39,6 +39,7 @@ fn a_forced_harmony_version_is_kept() {
     assert_eq!(hooks.apply(manifest.clone(), None), manifest);
 }
 
+/// Verifies that `root_components: true` drops `workspace:*` dependencies from workspace projects while keeping peer dependencies.
 #[test]
 fn root_components_drop_workspace_deps_of_workspace_projects() {
     let hooks = BitHooks { root_components: true, ..hooks() };

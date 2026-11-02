@@ -75,6 +75,7 @@ fn declined(output: &Output, reason: &str) {
     assert!(stderr.contains("`status` declined") && stderr.contains(reason), "{stderr}");
 }
 
+/// Verifies that unrecognized `bit status` flags decline to the `Node.js` CLI before any workspace side effects.
 #[test]
 fn other_flags_decline() {
     let dir = workspace();

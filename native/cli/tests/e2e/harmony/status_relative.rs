@@ -40,6 +40,7 @@ fn relative_component_commonjs_matches_node() {
     parity(&helper);
 }
 
+/// Verifies that relative `ECMAScript` named imports across components match `Node.js` `status --json`.
 #[test]
 fn relative_component_named_import_matches_node() {
     let helper = Helper::new();

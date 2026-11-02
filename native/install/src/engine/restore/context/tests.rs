@@ -19,7 +19,7 @@ fn legacy_checksums_become_overrides_only_without_explicit_overrides() {
     }
 }
 
-/// Verifies that merging a link-only lockfile side preserves the other side's resolution settings and overrides.
+/// Verifies that [`merge`] on a link-only lockfile side preserves the other side's resolution settings and overrides.
 #[test]
 fn link_only_sides_do_not_invalidate_the_other_sides_resolution_settings() {
     for existing_resolutions in [false, true] {

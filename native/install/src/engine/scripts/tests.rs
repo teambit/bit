@@ -36,6 +36,7 @@ fn trusted_packages_are_allowed_unless_configured() {
     assert_eq!(policy.allow_builds.get("@airbnb/node-memwatch"), Some(&true));
 }
 
+/// Verifies that [`resolve`] disallows untrusted packages unless explicitly set to `true` in `allowScripts`.
 #[test]
 fn untrusted_packages_are_disallowed_unless_explicitly_allowed() {
     let configured = allow(&[("core-js", json!(true)), ("less", json!("warn"))]);

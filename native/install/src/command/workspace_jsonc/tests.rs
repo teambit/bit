@@ -5,7 +5,7 @@ use super::edit;
 use serde_json::json;
 use std::fs;
 
-/// Verifies that `workspace.jsonc` edits preserve comments and archive the prior file in history.
+/// Verifies that [`edit`] preserves `JSONC` comments and archives the prior `workspace.jsonc` file in history.
 #[test]
 fn edits_keep_comments_and_back_up_the_previous_file() {
     let root = tempfile::tempdir().unwrap();
