@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/lanes/bit-checkout-on-lanes.e2e.ts` for `bit checkout` on lanes ([`parity_bugs`]).
 //!
-//! Covers merge-pending checkout guards and `main` availability after remote lane merges.
+//! Covers merge-pending checkout guards and `main` version availability after remote lane merges.
 
 mod parity_bugs {
     use crate::helper::{FOO_FIXTURE, Helper, config, parse, remote};

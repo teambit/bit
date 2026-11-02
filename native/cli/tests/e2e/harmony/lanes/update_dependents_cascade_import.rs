@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/update-dependents-cascade-import.e2e.ts` for hidden dependent imports ([`merge`], [`objects`], [`build_base_remote_state`]).
+//!
 //! Covers importing hidden `updateDependents` entries and cross-scope merge interactions.
 
 mod merge;

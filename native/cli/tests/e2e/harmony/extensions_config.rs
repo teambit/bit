@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/extensions-config.e2e.ts` for core and custom extension configuration ([`persist_core_extension_config_to_models`]).
 //!
-//! Validates persisting core and third-party extension configurations across tag, export, and import.
+//! Validates persisting core and third-party extension configurations across `bit tag`, `bit export`, and `bit import`.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

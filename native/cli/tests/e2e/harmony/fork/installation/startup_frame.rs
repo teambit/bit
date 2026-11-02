@@ -5,6 +5,7 @@
 //! Used by `bit fork` installation parity assertions.
 
 mod tests;
+
 const START: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 const COUNTERS: &str = "Progress: resolved 1, reused 0, downloaded 0, added 0";
 const TWO_COUNTERS: &str = "Progress: resolved 2, reused 0, downloaded 0, added 0";

@@ -1,6 +1,6 @@
 //! Merged lane and [`diverged`] parent reset tests for `bit reset`.
 //!
-//! Covers two-parent merge resets, `--head` multi-parent errors, `--no-snap`, and fast-forwards.
+//! Covers two-parent merge resets, `--head` multi-parent errors, `--no-snap`, and fast-forwards on lanes.
 
 use super::fixture;
 use crate::{

@@ -1,10 +1,11 @@
 //! Canonical index repair ([`fixture`], [`compare_recovery`]) is selected before native `bit doctor` output or writes.
 //!
-//! Ensures stale or missing `.bit/index.json` state is reconciled identically to Node.
+//! Ensures stale or missing `.bit/index.json` state is reconciled identically to Node.js.
 
 use crate::helper::Helper;
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
+
 fn fixture() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
@@ -13,6 +14,7 @@ fn fixture() -> Helper {
     helper.tag_without_build("bar/foo", "--message diagnosis");
     helper
 }
+
 fn compare_recovery(helper: &Helper, oracle: &Path) {
     let command = r#"doctor "validate scope objects" --json"#;
     let actual = Helper::cmd_in_with(

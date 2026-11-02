@@ -8,18 +8,22 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::fs;
+
 pub(super) const FORK: &str = "teambit.component/forking";
+
 pub(in crate::harmony) fn exported(count: usize) -> Helper {
     let helper = support::workspace(count, true);
     remote::publish(&helper);
     helper
 }
+
 pub(in crate::harmony) fn remote_workspace(count: usize) -> Helper {
     let helper = exported(count);
     helper.re_init_workspace_with(false);
     helper.add_remote_scope();
     helper
 }
+
 pub(super) fn target(helper: &Helper, name: &str) -> std::path::PathBuf {
     let map = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     let row = map

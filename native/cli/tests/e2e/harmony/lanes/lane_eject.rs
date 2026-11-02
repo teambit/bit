@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-eject.e2e.ts` for `bit eject` on a lane ([`lane_eject_when_no_main_version`]).
 //!
-//! Covers ejecting lane components with main versions and rejecting components without main versions.
+//! Covers ejecting lane components with `main` versions and rejecting components without `main` versions.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

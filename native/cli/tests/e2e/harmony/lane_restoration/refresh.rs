@@ -1,6 +1,6 @@
 //! Only the local `LaneHistory` is stale; component `Version`s and `VersionHistory` stay consistent ([`checkout_refreshes_remote_lane_history_before_resolving_the_requested_entry`]).
 //!
-//! Ensures `bit lane checkout` refreshes stale local `LaneHistory` objects from the remote scope.
+//! Ensures `bit lane checkout` refreshes stale local `LaneHistory` objects from the remote scope before materialization.
 
 use super::fixture;
 use crate::{

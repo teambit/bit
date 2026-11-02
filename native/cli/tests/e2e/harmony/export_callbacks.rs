@@ -3,6 +3,7 @@
 //! Verifies package generation, post-export hooks, lane classes, and JSON output parity.
 
 mod remote;
+
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
@@ -15,6 +16,7 @@ fn node(helper: &Helper, command: &str) {
     );
     assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
 }
+
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

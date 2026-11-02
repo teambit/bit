@@ -19,6 +19,7 @@ fn remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance()
     assert_eq!(support::ids(&helper), ["my-scope/comp1"]);
     support::assert_origins(&helper, &["comp1"]);
 }
+
 #[test]
 fn remote_wildcard_forks_each_matching_component_into_the_requested_scope() {
     let helper = support::remote_workspace(2);

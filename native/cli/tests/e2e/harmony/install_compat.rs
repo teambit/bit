@@ -1,4 +1,6 @@
 //! Actual published `InstallMain` slots and mutable dependency-installer subscribers ([`main_snapshot`], [`configured`], [`minimal_merge_configured`]).
+//!
+//! Verifies custom aspect installer hooks, pre/post-install lifecycle slots, and scope snapshot backups.
 
 mod main_snapshot;
 

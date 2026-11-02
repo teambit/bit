@@ -3,6 +3,7 @@
 //! Covers skipped main components, removed lane components, and bracket pattern selection.
 
 mod compression;
+
 use super::{empty, exported, lane};
 use crate::{
     commands::move_paths::support,

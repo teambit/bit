@@ -3,9 +3,7 @@
 //! Verifies package installation and compilation output after remote `bit fork`.
 
 mod startup_frame;
-pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {
-    startup_frame::project(text)
-}
+
 use super::support;
 use crate::{
     commands::{
@@ -14,6 +12,11 @@ use crate::{
     },
     helper::{config, remote},
 };
+
+pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {
+    startup_frame::project(text)
+}
+
 #[test]
 fn remote_single_fork_runs_real_installation_after_native_materialization() {
     let helper = crate::commands::move_paths::support::workspace(1, false);

@@ -1,6 +1,6 @@
 //! Remote divergence and exported-head tests ([`exported_ahead`]) for `bit reset` on a lane.
 //!
-//! Verifies diverged exported lanes, sparse fork history, and `import` before local `snap`.
+//! Verifies diverged exported lanes, sparse fork history, and `bit import` before local `bit snap`.
 
 use super::fixture;
 use crate::{

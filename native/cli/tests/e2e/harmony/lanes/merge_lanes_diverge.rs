@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/merge-lanes-diverge.e2e.ts` for diverged lane merge behavior ([`setup_diverged_lane`]).
+//!
 //! Covers manual snap, auto-snap, and conflict handling when merging a diverged lane.
 
 use crate::helper::{Helper, parse};

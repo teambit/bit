@@ -1,7 +1,7 @@
 //! Callback qualification ([`start`], [`Remote`]) uses the released HTTP publisher, whose `ObjectList`
 //! reaches `saveObjects` directly instead of the pinned broken file-pending glob.
 //!
-//! Spawns a local HTTP [`Remote`] server backed by the bare remote scope.
+//! Spawns a local HTTP [`Remote`] server backed by the bare remote scope for `bit export` tests.
 
 use crate::helper::Helper;
 use std::process::Child;

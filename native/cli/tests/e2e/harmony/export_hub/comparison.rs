@@ -1,6 +1,6 @@
 //! Scope object and control file comparison helpers ([`controls`], [`requests`]) for central-hub `bit export` tests.
 //!
-//! Normalizes only expected timestamps and concurrent remote index/history orderings.
+//! Normalizes only expected timestamps and concurrent remote index and history orderings.
 
 use crate::helper::config;
 use serde_json::Value;

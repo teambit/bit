@@ -8,6 +8,7 @@ use crate::{
     helper::Helper,
 };
 use std::{fs, path::PathBuf};
+
 fn source_object(helper: &Helper) -> PathBuf {
     let version: serde_json::Value =
         serde_json::from_str(&setup(helper, "cat-component comp1@0.0.1 --json")).unwrap();

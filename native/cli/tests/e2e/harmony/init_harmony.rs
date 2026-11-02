@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/init-harmony.e2e.ts` for Harmony `bit init` parity ([`init_reset_new_resets_bitmap_and_clears_objects`], [`delete_objects_dir_after_initiating_with_git`]).
 //!
-//! Validates `init --reset-new`, missing `.git/bit/objects` recovery, and invalid `default-scope`.
+//! Validates `bit init --reset-new`, missing `.git/bit/objects` recovery, and invalid `default-scope`.
 
 use crate::helper::{Helper, config, remote};
 use std::fs;

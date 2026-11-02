@@ -1,8 +1,9 @@
 //! Actual published remote `bit doctor` queries and result rendering match across transports ([`server`], [`response`], [`http`]).
 //!
-//! Covers HTTP and file-remote doctor invocations, error handling, and request headers.
+//! Covers HTTP and file-remote `bit doctor` invocations, error handling, and request headers.
 
 mod server;
+
 use crate::helper::{Helper, config};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs, time::Duration};
@@ -13,6 +14,7 @@ fn response() -> Value {
         "metaData":{"nodeVersion":"v22.22.0","runningTimestamp":1,"platform":"linux","bitVersion":"2.2.94","npmVersion":"10.9.4","yarnVersion":null,"userDetails":"fixture<fixture@example.test>"}
     }}}})
 }
+
 fn http(command: &str, response: &Value) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

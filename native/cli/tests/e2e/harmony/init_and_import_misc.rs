@@ -3,7 +3,7 @@
 //! - `e2e/commands/init.e2e.ts`
 //! - `e2e/performance/filesystem-read.e2e.ts`
 //!
-//! Covers corrupt config errors, `--reset-hard`, external package manager mode, and read budgets.
+//! Covers corrupt config errors, `bit init --reset-hard`, external package manager mode, and filesystem read budgets.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::json;

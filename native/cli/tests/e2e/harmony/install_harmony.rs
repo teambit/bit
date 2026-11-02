@@ -2,7 +2,7 @@
 //! - `e2e/harmony/install.e2e.ts`
 //! - `e2e/harmony/install-and-compile.e2e.ts`
 //!
-//! Covers `--recurring-install`, `--no-optional`, `--lockfile-only`, and `--skip-compile`.
+//! Covers `--recurring-install`, `--no-optional`, `--lockfile-only`, and `--skip-compile` on `bit install`.
 
 use crate::helper::{Helper, parse};
 use serde_json::json;

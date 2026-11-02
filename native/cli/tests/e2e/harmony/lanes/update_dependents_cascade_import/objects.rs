@@ -1,5 +1,6 @@
 //! Object-only imports preserve workspace roots while refreshing lane metadata ([`compare`], [`no_id_lane_import_matches_released_output_and_keeps_workspace_versions`]).
-//! Verifies no-ID lane `import` parity across standard, CI, and `--all-history` modes.
+//!
+//! Verifies no-ID lane `bit import` parity across standard, CI, and `--all-history` modes.
 
 use crate::helper::{Helper, Run, parse};
 use serde_json::{Value, json};

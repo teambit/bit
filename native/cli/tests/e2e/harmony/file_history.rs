@@ -1,4 +1,6 @@
 //! Published file-history readers retain the tagged source after deprecation is staged ([`log_file_loads_multiple_versions_with_exact_published_cache`]).
+//!
+//! Verifies `bit log-file` across multi-version histories and staged deprecation states.
 
 use crate::commands::move_paths::support::{self, bitmap, compare};
 

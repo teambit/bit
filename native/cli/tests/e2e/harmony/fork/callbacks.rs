@@ -9,6 +9,7 @@ use crate::{
 };
 use serde_json::json;
 use std::fs;
+
 fn configured() -> Helper {
     let helper = support::exported(1);
     let source = include_str!("callbacks.cjs");

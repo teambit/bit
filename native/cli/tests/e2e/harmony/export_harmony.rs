@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/export-harmony.e2e.ts` for native `bit export` parity ([`export_reinit_remote_scope_tag_and_export`], [`export_tag_and_export`]).
 //!
-//! Covers re-initialized remote scopes, multi-tag exports, and out-of-date version history.
+//! Covers re-initialized remote scopes, `--all-versions`, multi-tag exports, and out-of-date version history.
 
 use crate::helper::{Helper, remote};
 

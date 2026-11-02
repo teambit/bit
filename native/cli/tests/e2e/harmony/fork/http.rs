@@ -5,6 +5,7 @@
 use super::support;
 use crate::commands::{diff_completion::http as server, move_paths::support::successful};
 use std::{collections::BTreeMap, fs, path::Path};
+
 #[test]
 fn http_single_fork_preserves_private_capture_and_original_provenance() {
     let helper = support::remote_workspace(1);

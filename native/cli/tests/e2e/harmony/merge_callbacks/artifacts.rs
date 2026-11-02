@@ -1,4 +1,5 @@
 //! Compare artifact payloads ([`normalize`]) while excluding timestamps and allocation-derived archive digests.
+//!
 //! Normalizes `teambit.pipelines/builder` task timings and archive digests for parity checks.
 
 use super::fixture;

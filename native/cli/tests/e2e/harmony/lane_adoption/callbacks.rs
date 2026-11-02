@@ -1,6 +1,6 @@
 //! Provider callback and configuration mutation tests for `bit lane import` and `bit switch` ([`active_lane_import_preserves_real_provider_startup_and_config_mutation`]).
 //!
-//! Verifies provider startup, `onLoad`/`preInstall`/`postInstall`/`compile` ordering, and throttling.
+//! Verifies provider startup, `onLoad`, `preInstall`, `postInstall`, and `compile` ordering, and throttling.
 
 use super::exported;
 use crate::{commands::move_paths::support, helper::config};

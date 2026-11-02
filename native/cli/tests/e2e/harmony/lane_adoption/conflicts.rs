@@ -1,6 +1,6 @@
 //! Merge conflict and workspace state tests ([`fixture`], [`automatic_conflict_preserves_local_bytes_and_current_lane`]) during `bit lane import` and `bit switch`.
 //!
-//! Validates automatic conflict rejection and explicit `--auto-merge-resolve` strategies.
+//! Validates automatic conflict rejection and explicit `--auto-merge-resolve` strategies (`theirs`, `ours`, `manual`).
 
 use crate::{
     commands::move_paths::support,

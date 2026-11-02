@@ -7,6 +7,7 @@ pub(crate) fn durations(text: &str) -> String {
         .map(completion)
         .collect()
 }
+
 fn completion(line: &str) -> String {
     let (body, newline) = if let Some(body) = line.strip_suffix("\r\n") {
         (body, "\r\n")
@@ -21,6 +22,7 @@ fn completion(line: &str) -> String {
     let start = body.len() - duration.len() - 1;
     format!("{}<duration>){newline}", &body[..start])
 }
+
 fn completion_duration(body: &str) -> Option<&str> {
     for symbol in ["✔", "✓"] {
         for action in [

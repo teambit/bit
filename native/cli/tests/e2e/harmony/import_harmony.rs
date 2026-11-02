@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/import-harmony.e2e.ts` for Harmony `bit import` parity ([`workspace_with_ts_components_import_and_build_one_graph`]).
 //!
-//! Covers `--fetch-deps`, delta imports, nested directory collisions, placeholders, and policy merges.
+//! Covers `--fetch-deps`, delta imports, nested directory collisions, placeholders, and `workspace.jsonc` policy merges.
 
 use crate::{
     helper::{Helper, config, parse},

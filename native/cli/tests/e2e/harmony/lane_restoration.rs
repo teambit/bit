@@ -1,6 +1,6 @@
 //! Historical lane checkout and revert retain released bytes, versions, and publication prefixes ([`callbacks`], [`errors`], [`fixture`], [`inflate_origin`], [`phase_failure`], [`refresh`], [`versions`]).
 //!
-//! Covers `bit lane checkout` and `bit lane revert` with deleted component restoration and `--json`.
+//! Covers `bit lane checkout` and `bit lane revert` with deleted component restoration and `--json` output.
 
 mod callbacks;
 mod errors;

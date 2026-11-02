@@ -1,6 +1,6 @@
 //! A workspace-only subscriber ([`configure`]) stays unloaded during released empty-workspace adoption.
 //!
-//! Configures a linked workspace reporter aspect and verifies it is not invoked on empty switch.
+//! Configures a linked workspace reporter aspect and verifies it is not invoked on empty `bit switch`.
 
 use crate::{
     commands::move_paths::support,

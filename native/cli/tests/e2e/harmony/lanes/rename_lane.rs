@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/rename-lane.e2e.ts` for `bit lane rename` parity ([`rename_local_lane_switch_to_main_and_switch_back`]).
+//!
 //! Verifies that renaming a local lane preserves unexported status across switches.
 
 use crate::helper::{Helper, config};

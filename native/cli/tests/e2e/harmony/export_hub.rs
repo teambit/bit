@@ -3,8 +3,10 @@
 //! Validates main and lane central-hub exports, retries, subset acknowledgments, and job URLs.
 
 pub(super) mod comparison;
+
 #[cfg(unix)]
 mod interrupt;
+
 use crate::helper::{Helper, config, setup};
 use serde_json::{Value, json};
 use std::{
@@ -21,6 +23,7 @@ struct Hub {
     journal: PathBuf,
     ci: bool,
 }
+
 impl Hub {
     fn start(helper: &Helper, mode: &str) -> Self {
         let shared = setup::shared();

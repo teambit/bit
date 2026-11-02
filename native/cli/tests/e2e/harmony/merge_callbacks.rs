@@ -1,10 +1,12 @@
 //! One retained published provider session spans native merge, pre-snap, and builder phases ([`artifacts`], [`fixture`], [`original`], [`package`]).
+//!
 //! Covers component merge and lane merge callback retention and `--build` execution.
 
 mod artifacts;
 mod fixture;
 mod original;
 mod package;
+
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
@@ -18,10 +20,12 @@ fn component_merge_retains_one_provider_through_native_continuation() {
 fn lane_merge_retains_one_compiled_provider_through_snapshot() {
     qualify("lane merge dev --auto-merge-resolve theirs -m merged -x", false, false);
 }
+
 #[test]
 fn lane_merge_build_uses_the_published_pipeline_once() {
     qualify("lane merge dev --auto-merge-resolve theirs --build -m merged -x", false, true);
 }
+
 #[test]
 fn force_local_build_is_honored_for_configured_lane_merge() {
     let helper = fixture::lane();

@@ -1,4 +1,5 @@
 //! Port of `e2e/harmony/lanes/skip-publish-unpublished-dep.e2e.ts` for snapping with unpublished dependencies ([`snap_dependent_of_unmodified_unpublished_dependency`]).
+//!
 //! Verifies snapping a dependent when its dependency is built on a lane rather than published.
 
 use crate::helper::Helper;

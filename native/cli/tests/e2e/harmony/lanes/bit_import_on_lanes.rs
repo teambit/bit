@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/lanes/bit-import-on-lanes.e2e.ts` for `bit import` on lanes ([`importing_component_when_checked_out_to_a_lane`]).
 //!
-//! Covers `--save-in-lane`, cross-scope imports, `fetch --lanes`, and `--lane-only` wildcards.
+//! Covers `--save-in-lane`, cross-scope imports, `bit fetch --lanes`, and `--lane-only` wildcards.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;

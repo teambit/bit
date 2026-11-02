@@ -1,6 +1,6 @@
 //! Capture the published `GraphQL` [`Request`] body and semantic HTTP headers.
 //!
-//! Provides a local test [`Server`] and [`Request`] inspector for remote doctor tests.
+//! Provides a local test [`Server`] and [`Request`] inspector for remote `bit doctor` tests.
 
 use serde_json::Value;
 use std::{
@@ -11,11 +11,13 @@ use std::{
     thread,
     time::Duration,
 };
+
 #[derive(Debug)]
 pub(super) struct Request {
     pub body: Value,
     pub headers: BTreeMap<String, String>,
 }
+
 impl Request {
     pub fn semantic_headers(&self) -> BTreeMap<String, String> {
         self.headers

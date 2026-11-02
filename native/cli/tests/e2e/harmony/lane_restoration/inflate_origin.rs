@@ -1,6 +1,6 @@
 //! Qualify ([`qualified_errors`]) the released stream's two exact corruption errors against the fixture scope.
 //!
-//! Runs the `ObjectFetcher` stream conformance probe to obtain expected corruption diagnostics.
+//! Runs the `ObjectFetcher` stream conformance probe to obtain expected corruption diagnostics for `lane_restoration`.
 
 use crate::helper::{Helper, setup};
 use std::{env, path::PathBuf, process::Command};

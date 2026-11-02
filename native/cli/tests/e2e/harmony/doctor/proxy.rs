@@ -1,6 +1,6 @@
 //! An offline `CONNECT` proxy ([`Proxy`]) serving the published BVM request over real HTTPS.
 //!
-//! Provides deterministic catalog responses and request counting for [`Proxy`] fixtures.
+//! Provides deterministic catalog responses and request counting for [`Proxy`] `bit doctor` fixtures.
 
 use crate::helper::setup;
 use std::{
@@ -10,11 +10,13 @@ use std::{
     path::PathBuf,
     process::{Child, Command, Stdio},
 };
+
 pub(super) struct Proxy {
     pub url: String,
     child: Child,
     journal: tempfile::TempDir,
 }
+
 impl Proxy {
     pub fn new() -> Self {
         Self::catalog(r#"[{"version":"99.0.0","stable":true,"date":"2026-01-01"}]"#)
