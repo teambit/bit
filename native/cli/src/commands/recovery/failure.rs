@@ -1,6 +1,6 @@
 //! A lane abort reports checkout failure after its control restoration has committed.
 //!
-//! [`preflight`] verifies recovery eligibility ([`array`], [`decline`]) through [`Engine`] and [`Startup`] autosync.
+//! [`preflight`] ([`restored`], [`result`], [`retain`]) verifies recovery eligibility ([`array`], [`decline`]) through [`Engine`] and [`Startup`] autosync.
 use super::{Engine, array, decline};
 use crate::commands::status::autosync::Startup;
 use serde_json::Value;

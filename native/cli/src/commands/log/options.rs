@@ -15,7 +15,7 @@ pub(super) struct Options<'a> {
     pub(super) remote: bool,
 }
 
-/// Parses CLI arguments after `bit log` into [`Options`], returning `None` if no valid component ID is given.
+/// Parses CLI arguments after `bit log` into [`Options`] via [`apply_log_arg`] and [`consume_trailing_id`], returning `None` if no valid component ID is given.
 #[inline]
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();

@@ -34,7 +34,7 @@ pub struct Options {
     pub message: Option<String>,
 }
 
-/// `args` starts after the command name; `None` without `--resolve`.
+/// `args` starts after the command name; `None` without `--resolve`, or [`Options`] parsed via [`apply_resolve_flag`].
 #[must_use]
 pub fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

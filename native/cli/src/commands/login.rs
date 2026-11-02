@@ -29,7 +29,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
-/// Entry point for `bit login` that validates CLI flags before delegating interactive browser login.
+/// Entry point for `bit login` ([`COMMAND`]) that validates [`Options`] CLI flags before delegating interactive browser login.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("login arguments are not UTF-8".into()));

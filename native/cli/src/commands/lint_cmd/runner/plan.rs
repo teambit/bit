@@ -1,6 +1,6 @@
 //! Linter component selection, cache lookup, and `ESLint` execution plan for `bit lint`.
 //!
-//! [`Plan`] (`prepare`, `run`) coordinates [`Loaded`] component state, [`Selection`], [`Config`] generation, and [`Session`] execution.
+//! [`Plan`] ([`Plan::prepare`], [`Plan::run`], [`Plan::lint_components`]) coordinates [`Loaded`] component state, [`Selection`], [`Config`] generation, and [`Session`] execution.
 use super::{Options, Value, config::Config, invalid, json, results, tool::Session};
 use crate::commands::{
     color::Chalk,

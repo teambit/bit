@@ -26,7 +26,7 @@ struct Options<'a> {
     json: bool,
 }
 
-/// Parses `args` into [`Options`] when they fit the native `bit lane history` grammar.
+/// Parses `args` into [`Options`] via [`apply_history_arg`] when they fit the native `bit lane history` grammar.
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { lane: None, id: None, json: false };
     let mut iter = args.iter().copied();

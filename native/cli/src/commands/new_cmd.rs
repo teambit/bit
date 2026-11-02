@@ -4,7 +4,7 @@
 //! and `--load-from` preconditions natively before delegating starter template
 //! execution to the Node.js CLI when needed.
 //!
-//! Exposes [`COMMAND`], [`Options`], and [`BUILTIN_WORKSPACE_TEMPLATES`] for top-level command dispatch.
+//! Exposes [`COMMAND`], [`Options`], [`validate_options`], and [`BUILTIN_WORKSPACE_TEMPLATES`] for top-level command dispatch.
 
 #[cfg(test)]
 mod tests;

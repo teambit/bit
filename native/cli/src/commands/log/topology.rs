@@ -22,7 +22,7 @@ pub(super) enum LocalTarget {
     UserError(String),
 }
 
-/// Resolves `raw_id` against `.bitmap` ([`bitmap::Bitmap`]) and scope objects into a [`LocalTarget`].
+/// Resolves `raw_id` against `.bitmap` ([`bitmap::Bitmap`]) and scope objects into a [`LocalTarget`] via [`resolve_from_bitmap`] and [`resolve_from_scope_index`].
 pub(super) fn resolve_local_target(
     root: &Path,
     bitmap: &bitmap::Bitmap,

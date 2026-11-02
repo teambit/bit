@@ -1,7 +1,7 @@
 //! `cli-table` 0.3.6 as `listTemplate` uses it: a cyan head, grey borders
 //! (both from `colors` 1.0.3), one padded cell per column.
 //!
-//! Exposes [`colors`], [`strip_sgr`], and ASCII table rendering helpers ([`IsTerminal`]) shared across list commands.
+//! Exposes [`colors`], [`strip_sgr`], [`CYAN`], [`GREY`], and ASCII table rendering helpers ([`IsTerminal`]) shared across list commands.
 
 use std::{env, ffi::OsString, io::IsTerminal};
 

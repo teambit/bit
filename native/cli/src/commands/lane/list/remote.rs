@@ -21,7 +21,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Executes `bit lane list --remote <scope>` against a configured file or HTTP remote.
+/// Executes `bit lane list --remote <scope>` against a configured file or HTTP remote via [`prepare`] and [`text_report`].
 pub(super) fn run(
     scope_root: &super::super::scope_root::ScopeRoot,
     args: &[OsString],

@@ -25,7 +25,7 @@ struct Options<'a> {
     fork_lane_new_scope: bool,
 }
 
-/// Parses `args` into [`Options`] when they fit the native `bit lane create` grammar.
+/// Parses `args` into [`Options`] via [`apply_create_flag`] and [`set_lane_name`] when they fit the native `bit lane create` grammar.
 fn parse<'a>(args: &'a [&'a str]) -> Option<Options<'a>> {
     let mut options = Options { name: "", scope: None, alias: None, fork_lane_new_scope: false };
     let mut rest = args.iter().copied();

@@ -1,6 +1,6 @@
 //! Published list option selection, with unsupported grammar delegated before effects.
 //!
-//! Defines [`Options`] (`step`, `flag`), [`parse`], and [`long_flag`] command-line flag validation for `bit list`.
+//! Defines [`Options`] ([`Options::step`], [`Options::flag`]), [`parse`], and [`long_flag`] command-line flag validation for `bit list`.
 
 /// Parsed command-line flags that `ListCmd` supports natively.
 #[derive(Debug, Default, PartialEq, Eq)]

@@ -13,7 +13,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io};
 
-/// Executes `bit lane alias <lane-name> <alias>` and updates local lane tracking metadata.
+/// Executes `bit lane alias <lane-name> <alias>` via [`run_in_workspace`] and updates local lane tracking metadata.
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some(tokens) = crate::commands::scope_set::collect_non_flag_tokens(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane alias grammar".into()));

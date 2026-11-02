@@ -1,6 +1,6 @@
 //! Restore removed components through one retained import and bitmap publication owner.
 //!
-//! Coordinates [`COMMAND`], [`run`], [`options`], [`execution`], [`Batch`], and [`ProjectedLinker`] to produce a [`Report`].
+//! Coordinates [`COMMAND`], [`run`], [`needs_installation`], [`options`], [`execution`], [`Batch`], and [`ProjectedLinker`] to produce a [`Report`].
 mod execution;
 mod options;
 

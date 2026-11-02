@@ -6,7 +6,7 @@ use super::{Options, Row, WorkspaceRow, table};
 use crate::commands::color::Chalk;
 use serde_json::{Map, Value, json};
 
-/// Formats `ListCmd.json`: the component ID array when `ids` is set, or `listTemplate(results, true, false)`.
+/// Formats `ListCmd.json`: the component ID array when `ids` is set, or `listTemplate(results, true, false)` via [`local_version`], [`current_version`], and [`remote_version`].
 pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
     if ids {
         return json!(

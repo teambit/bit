@@ -1,6 +1,6 @@
 //! Native `bit lint [component-pattern]` (`scopes/defender/linter/lint.cmd.ts`).
 //!
-//! Parses [`Options`] CLI flags ([`COMMAND`], [`validate_lint_pattern`], [`bare_scope_error`]) and dispatches workspace or bare-scope linting through [`runner`].
+//! Parses [`Options`] CLI flags ([`COMMAND`], [`validate_lint_pattern`], [`bare_scope_error`], [`consume_trailing_internalize`]) and dispatches workspace or bare-scope linting through [`runner`].
 
 mod runner;
 #[cfg(test)]

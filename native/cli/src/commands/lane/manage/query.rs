@@ -16,7 +16,7 @@ use crate::{
 };
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Validates scope and lane presence for `bit lane updates [lane-name]`.
+/// Validates scope and lane presence for `bit lane updates [lane-name]` via [`parse_updates_args`] and [`updates_in_scope`].
 pub(in crate::commands::lane) fn updates(
     args: &[OsString],
     lane_args: &[&str],

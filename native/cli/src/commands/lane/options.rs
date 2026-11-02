@@ -49,7 +49,7 @@ const EXTRA_BOOLEANS: [&str; 8] = [
 /// CLI flags that consume a string argument in `bit lane merge`.
 const VALUED: [&str; 3] = ["--auto-merge-resolve", "--message", "--pattern"];
 
-/// `args` starts after `lane merge`.
+/// `args` starts after `lane merge` and parses into [`Options`].
 #[must_use]
 #[inline]
 pub fn parse(args: &[&str]) -> Option<Options> {

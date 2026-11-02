@@ -1,6 +1,6 @@
 //! Relative-to-module path codemod (`bit link --rewire`, `codemod-components.ts`).
 //!
-//! [`rewire_components`] rewrites relative component imports across [`Workspace`] source files into [`CodemodResult`] package specifiers.
+//! [`rewire_components`] and [`rewire_component`] rewrite relative component imports across [`Workspace`] source files into [`CodemodResult`] package specifiers.
 
 use bit_install::{model::WorkspaceComponent, workspace::Workspace};
 use std::{

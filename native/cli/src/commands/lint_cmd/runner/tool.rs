@@ -1,6 +1,6 @@
 //! Keep the external `ESLint` process alive across native cache publication.
 //!
-//! [`Session`] ([`LIMIT`]) spawns and communicates with the Node.js `ESLint` worker [`Child`] process over stdio.
+//! [`Session`] ([`Session::prepare`], [`Session::run`], [`LIMIT`]) spawns and communicates with the Node.js `ESLint` worker [`Child`] process over stdio.
 use super::{Value, invalid};
 use crate::discovery::{self, Target};
 use std::{

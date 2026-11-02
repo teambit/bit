@@ -24,7 +24,7 @@ use std::{
     process::ExitCode,
 };
 
-/// `LaneShowCmd` for a local lane, main, or a configured file remote.
+/// `LaneShowCmd` for a local lane, main, or a configured file remote via [`outside_scope_show`] and [`emit_selected`].
 pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some((name, json, remote)) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane show flags outside the native grammar".into()));

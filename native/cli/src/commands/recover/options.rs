@@ -1,6 +1,6 @@
 //! `RecoverCmd`'s two installation controls apply only to grouped imports.
 //!
-//! Defines [`Options`], [`parse`], and [`is_valid_pattern_token`] for `bit recover <pattern>` CLI flags.
+//! Defines [`Options`], [`parse`], [`consume_trailing_pattern`], and [`is_valid_pattern_token`] for `bit recover <pattern>` CLI flags.
 /// Parsed CLI options for `bit recover <pattern>`.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {

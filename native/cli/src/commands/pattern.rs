@@ -1,6 +1,6 @@
 //! Native `bit pattern <pattern>` (`PatternCommand` in `scopes/workspace/workspace/pattern.cmd.ts`).
 //!
-//! Evaluates component pattern expressions ([`COMMAND`], [`Options`]) against workspace or remote ids via [`Engine`] and [`patterns`].
+//! Evaluates component pattern expressions ([`COMMAND`], [`Options`], [`Failure`], [`run`]) against workspace or remote ids via [`Engine`] and [`patterns`].
 
 #[cfg(test)]
 mod tests;

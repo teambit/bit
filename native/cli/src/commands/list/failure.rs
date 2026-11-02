@@ -1,6 +1,6 @@
 //! Render a failed inventory after a resolver callback or remote request owns the command.
 //!
-//! [`preflight`] formats error diagnostics ([`REMOTE_LOCAL_CONFLICT_ERR`]) or partial [`Row`] results for [`Options`] into [`Outcome`].
+//! [`preflight`] and [`owned`] format error diagnostics ([`REMOTE_LOCAL_CONFLICT_ERR`], [`emit_error`]) or partial [`Row`] results for [`Options`] into [`Outcome`].
 use super::{
     Chalk, History, Options, Outcome, Row, Session, json_report, report, table, workspace_command,
 };

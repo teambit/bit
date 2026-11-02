@@ -1,6 +1,6 @@
 //! Native `bit publish <component-pattern>` (`scopes/pkg/pkg/publish.cmd.ts`).
 //!
-//! Validates [`COMMAND`] workspace [`selection`] and [`active_component_count`] preconditions before package publication.
+//! Validates [`COMMAND`] ([`Options`], [`NO_CANDIDATES_MSG`]) workspace [`selection`] and [`active_component_count`] preconditions before package publication.
 
 #[cfg(test)]
 mod tests;

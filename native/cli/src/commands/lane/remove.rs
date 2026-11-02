@@ -1,6 +1,6 @@
 //! Local lane removal after selecting and validating every target.
 //!
-//! [`run`] ([`all_scoped_remote_lanes`], [`outside_workspace_remove`]) validates local lanes via [`list`] and [`Plan`] and produces a deletion [`Report`] with [`Chalk`].
+//! [`run`] ([`all_scoped_remote_lanes`], [`outside_workspace_remove`], [`ci_enabled`]) validates local lanes via [`list`] and [`Plan`] and produces a deletion [`Report`] with [`Chalk`].
 
 use super::{
     super::{

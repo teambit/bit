@@ -1,6 +1,6 @@
 //! Built-in pending-directory actions for file remotes, without loading the published runtime.
 //!
-//! [`supports`], [`prepare`], and [`action`] coordinate staged object commits and [`removal`] cleanup across local file-remote directories.
+//! [`supports`], [`prepare`], [`action`], and [`pending_path`] coordinate staged object commits and [`removal`] cleanup across local file-remote directories.
 mod removal;
 
 use serde_json::{Value, json};

@@ -30,7 +30,7 @@ pub(super) fn create(
     Ok(Report { data, code, details: None })
 }
 
-/// Formats the human-readable terminal report for `bit lint` from `result` and `progress`.
+/// Formats the human-readable terminal report for `bit lint` from `result` and `progress` via [`component`] and [`summary`].
 fn text(result: &Value, progress: &Progress, chalk: Chalk, elapsed: u64) -> io::Result<String> {
     let formatter = Formatter::new(chalk);
     let rows = result["results"].as_array().ok_or_else(|| invalid("linter report rows"))?;

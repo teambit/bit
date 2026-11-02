@@ -3,7 +3,7 @@
 //! 3.1.5 over the ids. The globs `*`, `?` and `**` and `!` negation are
 //! ported; classes, braces and extglobs are left to Node.
 //!
-//! Exposes [`split`], [`matching`], [`supported`], and [`extended`] for comma, version, and brace-expanded pattern matching.
+//! Exposes [`split`], [`matching`], [`supported`], [`match_segments`], and [`extended`] for comma, version, and brace-expanded pattern matching.
 
 pub mod extended;
 

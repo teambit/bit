@@ -1,6 +1,6 @@
 //! Released lane checkout/revert grammar; JSON belongs only to lane revert.
 //!
-//! Defines [`Options`] (`parse`, `command`) for `bit lane checkout` and `bit lane revert` invocations.
+//! Defines [`Options`] ([`Options::parse`], [`Options::command`], [`Options::apply_arg`]) for `bit lane checkout` and `bit lane revert` invocations.
 
 /// Parsed CLI options for `bit lane checkout` and `bit lane revert` invocations.
 pub(super) struct Options {

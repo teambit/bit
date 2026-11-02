@@ -54,7 +54,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     )
 }
 
-/// Emits a deterministic flag-conflict error when `raw_args` fails `MergeCmd` validation outside CI.
+/// Emits a deterministic flag-conflict error via [`options::validate_error`] when `raw_args` fails `MergeCmd` validation outside CI.
 fn fallback_merge_error(args: &[OsString], raw_args: &[&str]) -> io::Result<Outcome> {
     let Some(err_msg) = options::validate_error(raw_args) else {
         return Ok(Outcome::Declined("outside the native merge grammar".into()));

@@ -1,6 +1,6 @@
 //! Scalar published remote resolution for read-only native inventory.
 //!
-//! [`Session`] ([`MAX_SCOPE_CONFIG`]) resolves [`Remotes`] and [`GlobalConfig`] via [`Host`] when needed for read-only remote queries.
+//! [`Session`] ([`MAX_SCOPE_CONFIG`]) resolves [`Remotes`] and [`GlobalConfig`] via [`Host`] and [`Target`] when needed for read-only remote queries.
 use super::{color::Chalk, status::cache::cache_root};
 use crate::{
     discovery::{self, Target},

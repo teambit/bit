@@ -76,7 +76,7 @@ pub(super) fn link_to_target(
     Ok(results)
 }
 
-/// Collects deduplicated peer dependency package names across `selected` components and their envs.
+/// Collects deduplicated peer dependency package names across `selected` components and their envs for [`link_to_target`].
 fn collect_peers(
     root: &Path,
     ws_config: &WorkspaceConfig,

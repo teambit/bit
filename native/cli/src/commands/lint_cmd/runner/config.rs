@@ -1,6 +1,6 @@
 //! `ESLintLinter.createTempTsConfigFile`: generated include/exclude paths and cache bytes.
 //!
-//! [`Config`] computes deterministic configuration digests via [`hash`] and writes temporary `TypeScript` configs.
+//! [`Config`] ([`Config::prepare`], [`Config::publish`]) computes deterministic configuration digests via [`hash`] and writes temporary `TypeScript` configs.
 mod hash;
 #[cfg(test)]
 mod tests;

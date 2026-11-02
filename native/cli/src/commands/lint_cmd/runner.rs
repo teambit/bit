@@ -11,7 +11,7 @@ use crate::{commands::workspace_command, native::Outcome};
 use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path, time::Instant};
 
-/// Prepares and runs workspace component linting via [`plan::Plan`] and formats the resulting report with [`report::create`].
+/// Prepares and runs workspace component linting for [`Options`] via [`plan::Plan`] and formats the resulting report with [`report::create`].
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, args, options) {

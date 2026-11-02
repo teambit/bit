@@ -6,7 +6,7 @@ use serde_json::Value;
 use std::io;
 use unicode_width::UnicodeWidthStr;
 
-/// Formats component log [`Value`] rows into a single-line borderless table string.
+/// Formats component log [`Value`] rows into a single-line borderless [`table`] string using [`log_field`].
 #[inline]
 pub(super) fn one_line(logs: &[Value]) -> io::Result<String> {
     let fields = ["hash", "tag", "username", "date", "message"];

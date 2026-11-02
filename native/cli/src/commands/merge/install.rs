@@ -4,7 +4,7 @@
 use crate::commands::installation::Installer;
 use std::{io, path::Path};
 
-/// Starts an optional background [`Installer`] for `root` ([`Path`]) unless `skip` is true or inputs are empty.
+/// Starts an optional background [`Installer`] ([`Installer::start`]) for `root` ([`Path`]) unless `skip` is true or inputs are empty.
 #[inline]
 pub(in crate::commands) fn start(
     root: &Path,

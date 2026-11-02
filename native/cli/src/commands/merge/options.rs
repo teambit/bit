@@ -1,7 +1,7 @@
 //! The native merge grammar: the unambiguous subset of
 //! `bit merge [component-pattern]` that native planning accepts.
 //!
-//! Defines [`Options`] and [`validate_error`] and serializes merge flags into engine request [`Value`] payloads.
+//! Defines [`Options`], [`validate_error`], [`BOOLEAN`], and [`VALUED`] and serializes merge flags into engine request [`Value`] payloads.
 
 use serde_json::{Value, json};
 

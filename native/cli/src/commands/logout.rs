@@ -24,7 +24,7 @@ use std::{
 /// Descriptor for the native `bit logout` command.
 pub const COMMAND: Command = Command { name: "logout", aliases: &[], run };
 
-/// Entry point for `bit logout` that clears authentication keys in [`global_config_dir`].
+/// Entry point for `bit logout` ([`COMMAND`]) that validates [`valid_args`] and clears authentication keys in [`global_config_dir`] via [`clear_auth_config`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     if !valid_args(args) {
         return Ok(Outcome::Declined("arguments outside the native `logout` grammar".to_owned()));

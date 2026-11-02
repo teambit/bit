@@ -76,7 +76,7 @@ const RESULT_FIELDS: [&str; 14] = [
     "mergeSnapError",
 ];
 
-/// Projects a raw restoration result [`Value`] into the public `bit lane revert --json` schema.
+/// Projects a raw restoration result [`Value`] into the public `bit lane revert --json` schema using [`RESULT_FIELDS`].
 #[inline]
 fn project(result: &Value, id: &str, chalk: Chalk) -> io::Result<Value> {
     let mut projected = serde_json::Map::with_capacity(RESULT_FIELDS.len() + 3);

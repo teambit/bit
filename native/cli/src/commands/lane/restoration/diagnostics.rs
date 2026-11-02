@@ -19,7 +19,7 @@ pub(super) fn requires_node(root: &Path, history: &str) -> bool {
         .unwrap_or(true)
 }
 
-/// Returns whether the `CI` environment variable is set to a truthy non-empty value.
+/// Returns whether the `CI` environment variable is set to a truthy non-empty value for [`requires_node`].
 #[inline]
 fn is_ci_enabled() -> bool {
     env::var_os("CI")

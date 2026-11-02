@@ -23,7 +23,7 @@ use bit_object_import::{
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Executes `bit lane rename <new-name>` on an unexported local lane.
+/// Executes `bit lane rename <new-name>` on an unexported local lane via [`parse_lane_target_args`] and [`Change::Rename`].
 pub(super) fn rename(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some((new_name, lane_name)) = parse_lane_target_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane rename grammar".into()));

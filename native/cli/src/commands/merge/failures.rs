@@ -37,7 +37,7 @@ pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> 
     )))
 }
 
-/// Extracts the formatted component ID string from a `failedComponents` entry `row`.
+/// Extracts the formatted component ID string from a `failedComponents` entry `row` for [`check`].
 fn row_identity(row: &Value) -> Option<String> {
     if let Some(identity) = row["id"]
         .as_str()
