@@ -1,6 +1,6 @@
 //! Native `bit run-action <action-name> <remote> <options>` (`scopes/scope/actions/run-action.cmd.ts`).
 //!
-//! Resolves [`scope_root`] and executes remote actions via [`remote_action`].
+//! Resolves [`scope_root`] and executes [`Options`] remote actions ([`COMMAND`]) via [`remote_action`].
 
 #[cfg(test)]
 mod tests;

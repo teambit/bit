@@ -1,6 +1,6 @@
 //! Native `bit scope trust [action] [pattern]` (`ScopeTrustCmd`).
 //!
-//! Manages trusted scope entries in `workspace.jsonc` and formats a [`Report`] with [`Formatter`].
+//! Manages trusted scope entries ([`Action`], [`TRUSTED_SCOPES_KEY`], [`BUILTIN_TRUSTED_PATTERNS`]) in `workspace.jsonc` and formats a [`Report`] with [`Formatter`].
 
 #[cfg(test)]
 mod tests;

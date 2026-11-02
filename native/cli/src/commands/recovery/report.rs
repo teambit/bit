@@ -1,6 +1,6 @@
 //! Canonical component and lane abort reports and preparation helpers.
 //!
-//! Extracts [`install_ids`] and formats [`Kind`] recovery results into a [`Report`].
+//! Extracts [`install_ids`] and [`format_result`] to render [`Kind`] recovery results into a [`Report`].
 use super::{
     Chalk, Engine, Formatter, HostInfo, Id, Installer, Kind, Options, Path, Report, Startup, Value,
     array, cache, checkout, decline, dependency_grammar, environments, installation, io, json,

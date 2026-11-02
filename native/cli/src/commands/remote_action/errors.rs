@@ -1,6 +1,6 @@
 //! `MergeConflictOnRemote` terminal formatting for structured HTTP action failures.
 //!
-//! [`format`] decorates remote merge conflict payloads with [`Chalk`] colors.
+//! [`format`] decorates remote merge conflict payloads ([`deleted_report`]) with [`Chalk`] colors.
 use crate::commands::color::Chalk;
 use serde_json::Value;
 use std::{env, io};

@@ -1,4 +1,4 @@
-//! Native `bit snap-distance <component-id> [source-snap] [target-snap]` (`scopes/component/snapping/snap-distance-cmd.ts`) via [`compute_snap_distance`].
+//! Native `bit snap-distance <component-id> [source-snap] [target-snap]` (`scopes/component/snapping/snap-distance-cmd.ts`, [`COMMAND`]) via [`compute_snap_distance`].
 
 mod graph;
 #[cfg(test)]

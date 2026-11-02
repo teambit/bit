@@ -3,7 +3,7 @@
 //! `dependencyCacheNeedsInvalidation` lives with the dependency cache in
 //! `bit_install::dependencies::cache::invalidation`.
 //!
-//! Resolves feature flags from [`global_config_dir`] and environment variables.
+//! [`no_fs_cache`] ([`NO_FS_CACHE`]) resolves feature flags from [`global_config_dir`] and environment variables.
 
 pub use bit_workspace_config::cache_root;
 

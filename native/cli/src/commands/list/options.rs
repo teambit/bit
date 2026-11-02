@@ -1,6 +1,6 @@
 //! Published list option selection, with unsupported grammar delegated before effects.
 //!
-//! Defines [`Options`] and command-line flag validation for `bit list`.
+//! Defines [`Options`] and [`parse`] command-line flag validation for `bit list`.
 
 /// The flags `ListCmd` takes that run natively.
 #[derive(Debug, Default, PartialEq, Eq)]

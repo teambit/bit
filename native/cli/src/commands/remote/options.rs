@@ -1,6 +1,6 @@
 //! Narrow grammar of `RemoteCmd` and its `add`, `del`, and `list` subcommands.
 //!
-//! Defines [`Action`] and [`Options`] parsed from [`OsString`] CLI arguments.
+//! Defines [`Action`] (`List`, `Add`, `Del`) and [`Options`] parsed from [`OsString`] CLI arguments.
 
 use std::ffi::OsString;
 

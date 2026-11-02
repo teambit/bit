@@ -1,6 +1,6 @@
 //! Native `bit pack <componentId> [scopePath]` (`scopes/pkg/pkg/pack.cmd.tsx`).
 //!
-//! Validates pack arguments and creates component tarballs through `packer` into [`Outcome`].
+//! Validates [`Options`] pack arguments ([`COMMAND`]) and creates component tarballs through [`packer`] into [`Outcome`].
 
 mod packer;
 #[cfg(test)]

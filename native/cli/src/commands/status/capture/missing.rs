@@ -1,6 +1,6 @@
 //! Missing current directories and intentionally incomplete reset captures.
 //!
-//! [`status_removed`] and missing-directory helpers record removed or absent [`Component`] entries in [`Capture`].
+//! [`status_removed`] and [`status_pending`] record removed or absent [`Component`] entries in [`Capture`].
 
 use super::{Capture, Component, decline, full_identity, text};
 use serde_json::{Value, json};

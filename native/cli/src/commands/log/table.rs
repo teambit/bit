@@ -1,6 +1,6 @@
 //! Borderless cli-table layout used by local and remote one-line history.
 //!
-//! [`one_line`] formats log [`Value`] entries using display column widths from [`UnicodeWidthStr`].
+//! [`one_line`] and [`log_field`] format log [`Value`] entries using display column widths from [`UnicodeWidthStr`].
 
 use serde_json::Value;
 use std::io;

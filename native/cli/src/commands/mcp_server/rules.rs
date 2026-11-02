@@ -1,6 +1,6 @@
 //! Agent instruction rule file templates and editor path resolution for `bit mcp-server rules`.
 //!
-//! Writes consumer or aspect rule templates and formats output with [`Chalk`] and [`editor_display_name`].
+//! Writes consumer or aspect rule templates ([`RulesOptions`]) and formats output with [`Chalk`] and [`editor_display_name`].
 use super::editor_display_name;
 use crate::commands::{color::Chalk, workspace_command};
 use std::{

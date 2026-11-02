@@ -1,6 +1,6 @@
 //! `RecoverCmd`'s two installation controls apply only to grouped imports.
 //!
-//! Defines [`Options`] and [`parse`] for `bit recover <pattern>` flags.
+//! Defines [`Options`] and [`parse`] for `bit recover <pattern>` CLI flags.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub pattern: &'a str,

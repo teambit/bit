@@ -1,6 +1,6 @@
 //! Canonical reset summaries and detached-reset object helpers.
 //!
-//! [`soft_report`] and related formatters render [`SoftPlan`] results into a [`Report`] with [`Formatter`].
+//! [`soft_report`] and related formatters render [`SoftPlan`] results into a [`Report`] with [`Formatter`] and [`Chalk`].
 use crate::commands::{
     color::Chalk,
     workspace_command::{format::Formatter, results::Report},

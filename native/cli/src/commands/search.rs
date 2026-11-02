@@ -1,6 +1,6 @@
 //! Native `bit search` command (`scopes/component/lister/search.cmd.ts`).
 //!
-//! Executes local or remote component search queries and formats output via [`Formatter`].
+//! Executes [`COMMAND`] local or remote component search queries ([`SearchArgs`]) and formats output via [`Formatter`].
 
 #[cfg(test)]
 mod tests;

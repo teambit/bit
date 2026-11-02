@@ -1,7 +1,7 @@
 //! Native `bit snap [component-pattern]`: the engine plans and writes the
 //! snaps ([`resolve`]), with the snap [`options`] and [`Report`].
 //!
-//! Coordinates [`Startup`] autosync, [`Planned`] execution, and [`versions`] output formatting.
+//! Coordinates [`COMMAND`], [`MESSAGE_WARNING`], [`Startup`] autosync, [`Planned`] execution, and [`versions`] output formatting.
 
 mod options;
 

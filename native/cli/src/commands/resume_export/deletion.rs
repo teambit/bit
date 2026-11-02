@@ -1,6 +1,6 @@
 //! Probe pending exports before deleting, retaining per-scope failures and old-server answers.
 //!
-//! Uses [`Plan`], [`install`], and [`deletion_report`] to delete pending export directories for [`Options`].
+//! [`run`] uses [`Answers`], [`Plan`], [`install`], and [`deletion_report`] to delete pending export directories for [`Options`].
 use super::{Options, deletion_report};
 use crate::commands::{
     color::Chalk, install, remote_action::Plan, workspace_command::format::Formatter,

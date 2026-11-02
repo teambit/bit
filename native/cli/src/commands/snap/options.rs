@@ -1,7 +1,7 @@
 //! The native snap grammar: ordinary snaps only. Build, editor and
 //! hook-altering flags stay with the Node.js CLI.
 //!
-//! Defines [`Options`] and serializes snap arguments into JSON [`Value`] payloads.
+//! Defines [`Options`] and [`parse`] and serializes snap arguments into JSON [`Value`] payloads.
 
 use serde_json::Value;
 

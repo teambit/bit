@@ -1,6 +1,6 @@
 //! Identity projection from detected dependency lifecycles.
 //!
-//! [`record`] populates [`Component`] comparison and identity entries inside [`Capture`].
+//! [`record`] populates [`Component`] comparison and [`full_identity`] entries inside [`Capture`].
 
 use super::{Capture, Component, array, decline, full_identity, js, policy, text};
 use serde_json::{Value, json};

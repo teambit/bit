@@ -1,6 +1,6 @@
 //! Native `bit npmrc` (`NpmrcCmd` in `scopes/cloud/cloud/npmrc.cmd.ts`).
 //!
-//! Dispatches `npmrc` subcommands and records invocations in [`History`] into [`Outcome`].
+//! Dispatches `npmrc` subcommands ([`COMMAND`]) and records invocations in [`History`] into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

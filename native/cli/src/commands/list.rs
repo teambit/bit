@@ -3,7 +3,7 @@
 //! `scopeList` reads the scope's models; [`bitmap`] gives the workspace ids.
 //! On a lane, the components' heads are their lane heads.
 //! Rust reads scalar remote inventory and latest versions without importing
-//! objects; unsupported input and diagnostics delegate before effects via [`table`].
+//! objects; unsupported input and diagnostics delegate before effects via [`COMMAND`], [`Options`], and [`table`].
 
 pub(in crate::commands) mod bitmap;
 pub(super) mod table;

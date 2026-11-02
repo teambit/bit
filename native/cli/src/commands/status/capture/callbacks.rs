@@ -1,6 +1,6 @@
 //! Retain permitted callback state and output alongside the native capture.
 //!
-//! [`Callbacks`] stores retained host sessions, temporary directories, and [`CacheWrites`] for [`Capture`].
+//! [`Callbacks`] stores retained host sessions, temporary directories, and [`CacheWrites`] (`retain_snapshot_data`) for [`Capture`].
 
 use super::{CacheWrites, Capture};
 use serde_json::Value;

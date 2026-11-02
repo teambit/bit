@@ -4,7 +4,7 @@
 //! own (configured extensions, global `.bitrc.jsonc`, more than 4096
 //! components) and every other flag decline to the Node.js CLI.
 //!
-//! Queries [`Engine`] with [`Inventory`] and [`Options`] to emit mini-status payloads.
+//! Queries [`Engine`] ([`COMMAND`], [`MAX_COMPONENTS`]) with [`Inventory`] and [`Options`] to emit mini-status payloads.
 
 use super::{
     color::Chalk,

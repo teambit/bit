@@ -1,6 +1,6 @@
 //! Provider facts are retained while native sources, identities and configs are published.
 //!
-//! Executes [`Prepared`] rename [`Plan`] and [`Options`] with [`ProjectedLinker`] into a [`Report`].
+//! [`run`] executes [`Prepared`] rename [`Plan`] and [`Options`] with [`ProjectedLinker`] into a [`Report`].
 use super::preparation::Prepared;
 use crate::commands::{
     add::ProjectedLinker,

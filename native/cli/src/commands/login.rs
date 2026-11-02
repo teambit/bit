@@ -1,6 +1,6 @@
 //! Native `bit login` (`scopes/cloud/cloud/login.cmd.ts`).
 //!
-//! Handles non-interactive token/CI login flows or delegates interactive browser login.
+//! Handles non-interactive token/CI login flows ([`COMMAND`], [`Options`], [`CONFLICTING_DOMAIN_ERR`]) or delegates interactive browser login.
 
 #[cfg(test)]
 mod tests;

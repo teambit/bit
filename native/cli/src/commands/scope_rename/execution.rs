@@ -1,6 +1,6 @@
 //! Scope rename execution across [`Batch`] planning, AST refactoring, and [`ProjectedLinker`] updates.
 //!
-//! Coordinates `phases` and [`report`] to produce a [`Report`] for [`Options`].
+//! [`run`] coordinates [`phases`] and [`report`] to produce a [`Report`] for [`Options`].
 mod phases;
 use super::report;
 use crate::commands::{

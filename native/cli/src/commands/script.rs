@@ -1,6 +1,6 @@
 //! Native `bit script [script-name]` (`scopes/workspace/scripts/script.cmd.ts`).
 //!
-//! Re-exports [`ScriptHandler`], [`parse_env_scripts_in_dir`], and [`resolve_workspace_components`].
+//! Re-exports [`COMMAND`], [`ScriptHandler`], [`parse_env_scripts_in_dir`], and [`resolve_workspace_components`].
 
 pub(in crate::commands) use self::{
     parser::{ScriptHandler, parse_env_scripts_in_dir},
