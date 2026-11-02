@@ -82,6 +82,7 @@ fn snap_new_unlinked_component_matches_node() {
     assert_eq!(native.stderr, node.stderr);
 }
 
+/// Verifies `bit snap` on a previously snapped component with a missing `node_modules` package recreates it.
 #[test]
 fn snap_existing_component_without_generated_package_matches_node() {
     let helper = Helper::new();

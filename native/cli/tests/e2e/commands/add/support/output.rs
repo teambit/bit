@@ -30,6 +30,7 @@ impl Comparison<'_> {
     }
 }
 
+/// Asserts that both `actual` and `expected` match one of the two distinct error `variants`.
 pub(super) fn assert_errors(actual: &str, expected: &str, variants: &[String; 2]) {
     assert!(!variants[0].is_empty() && !variants[1].is_empty());
     assert_ne!(variants[0], variants[1], "independent Node stream states must differ");

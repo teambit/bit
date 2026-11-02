@@ -78,6 +78,7 @@ fn node_command(helper: &Helper) -> Command {
     command
 }
 
+/// Resolves the `Node.js` executable path from `BIT_NODE_BINARY` or the BVM `nodejs/` directory.
 pub(super) fn node_binary(entry: &Path) -> PathBuf {
     if let Some(node) = std::env::var_os("BIT_NODE_BINARY") {
         return node.into();

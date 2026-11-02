@@ -53,6 +53,7 @@ fn fixture(advanced: bool) -> (Helper, String, PathBuf, String) {
     (helper, origin, origin_path, head)
 }
 
+/// Compares `bit fetch <remote>/dev --lanes` against `Node.js` for the cross-scope lane fixture.
 fn compare(helper: &Helper, origin: &str, origin_path: &Path, head: &str) {
     let baseline = helper.clone_workspace();
     let remote = helper.clone_remote_scope();

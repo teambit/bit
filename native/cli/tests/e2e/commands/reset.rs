@@ -14,7 +14,7 @@ fn cat_component(helper: &Helper, id: &str) -> Value {
     parse(&helper.native(&format!("cat-component {id} --json")))
 }
 
-/// `listLocalScope()`.
+/// Runs `bit list --local-scope` natively (`listLocalScope()`).
 fn list_local_scope(helper: &Helper) -> String {
     helper.native("list --local-scope")
 }

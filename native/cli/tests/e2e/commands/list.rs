@@ -47,6 +47,7 @@ mod outdated {
             .clone()
     }
 
+    /// Finds the JSON object in `list` whose `"id"` field equals `id`.
     fn entry<'a>(list: &'a [Value], id: &str) -> &'a Value {
         list.iter()
             .find(|item| item["id"] == id)

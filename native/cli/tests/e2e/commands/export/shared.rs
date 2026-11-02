@@ -64,6 +64,7 @@ fn decoded(path: &Path, compressed: &[u8]) -> (String, Value) {
     (kind.to_owned(), value)
 }
 
+/// Normalizes `date` timestamps in `remotes`, `scopeList`, and `scopesList` rows across `left` and `right`.
 fn normalized_clock(left: &mut Value, right: &mut Value, node: (u128, u128), rust: (u128, u128)) {
     for key in ["remotes", "scopeList", "scopesList"] {
         let (Some(node_rows), Some(rust_rows)) =

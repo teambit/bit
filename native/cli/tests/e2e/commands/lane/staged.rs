@@ -87,6 +87,7 @@ fn compare(native: &Path, oracle: &Path, versions: &[String]) {
     );
 }
 
+/// Loads and normalizes the `LaneHistory` object for lane `hash` under `root`.
 fn history(root: &Path, hash: &str) -> Value {
     let history_hash = format!("{:x}", Sha1::digest(format!("{hash}:LaneHistory").as_bytes()));
     let mut value = normalize(object(root, &history_hash, "LaneHistory"), hash);

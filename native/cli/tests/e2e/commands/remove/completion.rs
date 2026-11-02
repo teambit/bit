@@ -30,6 +30,7 @@ fn track_keeps_tracking_and_packages_with_and_without_source_files() {
         assert_eq!(helper.scopes.local_path.join("comp1/index.js").exists(), !keep.is_empty());
     }
 }
+/// Verifies `bit remove` reports modified components while removing clean batch members.
 #[test]
 fn modified_members_are_reported_while_clean_batch_members_are_removed() {
     let helper = support::workspace(2, true);

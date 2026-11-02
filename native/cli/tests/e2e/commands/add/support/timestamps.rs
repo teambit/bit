@@ -18,6 +18,7 @@ struct Entry {
 pub(super) struct Snapshot(BTreeMap<PathBuf, Entry>);
 
 impl Snapshot {
+    /// Reads and records all non-symlink file modification times and directory permissions under `root`.
     pub(super) fn read(root: &Path) -> Self {
         let mut snapshot = Self(BTreeMap::new());
         snapshot.visit(root, root);

@@ -9,6 +9,7 @@ use std::{fmt::Write as _, fs, path::Path};
 const FIRST: &str = "2026-10-18-12-0-0";
 /// Second backup timestamp fixture (`2026-10-18-12-0-1`).
 const SECOND: &str = "2026-10-18-12-0-1";
+/// Third backup timestamp fixture (`2026-10-18-12-0-2`).
 const THIRD: &str = "2026-10-18-12-0-2";
 const FOURTH: &str = "2026-10-18-12-0-3";
 

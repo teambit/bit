@@ -16,6 +16,7 @@ fn parity_status(helper: &Helper, command: &str, success: bool) {
     parity_options(helper, command, success, false);
 }
 
+/// Runs `command` against `Node.js` and native CLIs and compares the resulting workspace [`comparison::tree`].
 fn parity_options(helper: &Helper, command: &str, success: bool, rebuilt_index: bool) {
     let baseline = helper.clone_workspace();
     let root = &helper.scopes.local_path;

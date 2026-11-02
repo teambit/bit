@@ -42,6 +42,7 @@ fn early_move_layout_errors_delegate_without_starting_sibling_moves() {
         early_move_error(directory);
     }
 }
+/// Exercises [`early_move_error`] when `deleted-objects` is blocked by either a file or a directory.
 fn early_move_error(directory: bool) {
     let helper = fixture();
     let scope = &helper.scopes.remote_path;

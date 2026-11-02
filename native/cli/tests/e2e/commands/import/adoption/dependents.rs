@@ -46,6 +46,7 @@ fn silent_dependents_imports_all_paths_to_the_workspace_without_unrelated_branch
     super::successful(&helper, &command(&helper, "comp4", "--dependents --silent"));
     assert_components(&helper, &["comp1", "comp2", "comp3", "comp4", "comp-a", "comp-a2"]);
 }
+/// Verifies `bit import --dependents-via <remote>/comp2 --silent` imports only paths through `comp2`.
 #[test]
 fn silent_dependents_via_limits_paths_to_the_requested_intermediate_component() {
     let helper = graph();

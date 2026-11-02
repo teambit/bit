@@ -27,6 +27,7 @@ fn list_config_locally(helper: &Helper, origin: &str) -> Value {
     serde_json::from_str(&out.stdout).unwrap()
 }
 
+/// Verifies `bit config set`, `bit config get`, and `bit config del` round-trip via [`run_config`].
 #[test]
 fn set_get_and_delete_configs() {
     let helper = Helper::new();

@@ -63,6 +63,7 @@ fn parity(version: &str, flags: &str) {
     assert_eq!(read_jsonc(&helper.scopes.local_path.join(".bitmap")), bitmap);
 }
 
+/// Verifies that an imported automatic dependency updates the workspace's `^1.0.0` policy range.
 #[test]
 fn imported_automatic_dependency_updates_workspace_range() {
     parity("^1.0.0", "");

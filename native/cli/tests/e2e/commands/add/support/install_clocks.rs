@@ -51,6 +51,7 @@ fn window(timestamp: i64, started: i64, ended: i64) {
         "pnpm clock outside actual command window: {timestamp} not in {started}..={ended}",
     );
 }
+/// Replaces the single root JSON field `key` (`value`) in `bytes` with `replacement`.
 fn replace(bytes: &mut Vec<u8>, key: &str, value: &Value, replacement: &str) {
     let text = std::str::from_utf8(bytes).expect("metadata UTF-8");
     let prefix = format!("\n  \"{key}\": ");

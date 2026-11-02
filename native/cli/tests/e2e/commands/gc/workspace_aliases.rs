@@ -41,6 +41,7 @@ fn workspace_collection_does_not_resolve_a_missing_scope_by_another_models_name(
     assert!(objects::path(&scope, "deleted-objects", &hash).is_file());
 }
 
+/// Builds a workspace fixture with `boxed` legacy alias dependencies referencing `requested_scope`.
 fn alias_fixture(boxed: bool, requested_scope: &str) -> Helper {
     let helper = fixture();
     objects::alias_graph(&helper, boxed);

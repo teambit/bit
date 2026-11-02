@@ -57,6 +57,7 @@ fn invalid_file_export_ids_preserve_every_pending_directory() {
     }
 }
 
+/// Verifies `bit resume-export` without `--delete` on a file remote declines before mutating any state.
 #[test]
 fn file_pending_deletion_declines_persistence_before_any_write() {
     let helper = fixture(true);

@@ -65,6 +65,7 @@ fn lane_object(scope: &std::path::Path) -> serde_json::Value {
     panic!("exported lane missing from fixture");
 }
 
+/// Verifies `bit gc --verbose --dry-run` reports stored object identities across `Version`, `ScopeMeta`, `Symlink`, `VersionHistory`, and `LaneHistory`.
 #[test]
 fn verbose_bare_collection_reports_stored_object_type_identities() {
     let helper = fixture();

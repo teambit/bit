@@ -61,6 +61,7 @@ fn bare_collection_keeps_exported_ancestry_and_moves_unreachable_objects_without
     assert!(restored.status.success(), "{restored:?}");
     assert!(!scope.join("deleted-objects").exists());
 }
+/// Verifies bare-scope `bit gc` preserves live lane history and colored terminal output via [`compare`].
 #[test]
 fn bare_collection_preserves_live_lane_history_in_color() {
     let helper = fixture();

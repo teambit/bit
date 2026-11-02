@@ -66,6 +66,7 @@ fn run_unsupported_help_matches_node() -> KnownResult<()> {
     Ok(())
 }
 
+/// Verifies `bit run` in `CI=1` without registered applications matches `Node.js` diagnostics and exit codes.
 #[test]
 fn run_without_apps_in_ci_matches_node() -> KnownResult<()> {
     let helper = Helper::new();

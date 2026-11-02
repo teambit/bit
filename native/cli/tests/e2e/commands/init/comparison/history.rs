@@ -18,6 +18,7 @@ struct History {
     normalized: Vec<u8>,
 }
 impl Histories {
+    /// Waits until all existing backup timestamps under `root` are strictly in the past.
     pub(super) fn wait_past_setup(root: &Path) {
         clock::wait(&Self::read(root));
     }

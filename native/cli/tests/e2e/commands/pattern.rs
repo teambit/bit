@@ -76,6 +76,7 @@ fn general_pattern_matching() {
     assert!(!non_matching.status.success());
 }
 
+/// Verifies `bit pattern` negation (`!`) exclusions across wildcard and explicit component IDs.
 /// pattern exclusion with negation (!) › basic exclusion patterns › should exclude comp1 when using pattern "**, !**/comp1"
 /// pattern exclusion with negation (!) › full component ID exclusion › should exclude comp1 when using pattern with just "!scope-name/comp1"
 /// pattern exclusion with negation (!) › full component ID exclusion › should exclude both components when using "!scope-name/comp1, !scope-name/comp2"

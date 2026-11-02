@@ -15,7 +15,7 @@ use std::{
     thread,
     time::Duration,
 };
-/// Guard holding the child process of an ephemeral remote `bit start` HTTP scope server.
+/// Guard holding the child [`Child`] process of an ephemeral remote `bit start` HTTP scope server.
 struct RemoteScopeServer(Child);
 
 impl Drop for RemoteScopeServer {

@@ -23,6 +23,7 @@ pub(super) fn path(scope: &Path, directory: &str, hash: &str) -> PathBuf {
         .join(&hash[..2])
         .join(&hash[2..])
 }
+/// Writes a `zlib`-compressed scope object of `kind` and `hash` with payload `body` into `scope/objects`.
 pub(super) fn write(scope: &Path, kind: &str, hash: &str, body: &[u8]) {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();

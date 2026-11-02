@@ -65,6 +65,7 @@ fn removal_order(output: &str) -> String {
     )
 }
 
+/// Verifies [`compare_file_remote`] for `bit delete --hard --silent` on an exported component.
 #[test]
 fn exported_component_hard_delete_matches_released_node() {
     let helper = Helper::new();

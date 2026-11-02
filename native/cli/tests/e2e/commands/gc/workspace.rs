@@ -76,6 +76,7 @@ fn workspace_backup_failure_after_stray_cleanup_is_owned_in_json_and_ci() {
         assert!(source.is_file());
     }
 }
+/// Sets the modification time of `path` to two hours in the past so workspace GC treats it as eligible.
 fn old(path: &Path) {
     let time = SystemTime::now() - Duration::from_hours(2);
     fs::File::open(path)

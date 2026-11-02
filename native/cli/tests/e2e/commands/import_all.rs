@@ -53,8 +53,7 @@ fn modified_locally() -> (Helper, PathBuf) {
     (helper, clone)
 }
 
-/// with components in bit.map when they are modified locally › without any flag › should
-/// not display a warning saying it was unable to import; should display a successful message
+/// Verifies `bit import` without IDs imports missing objects when components are modified locally.
 #[test]
 fn import_without_ids_imports_objects() {
     let (helper, _) = modified_locally();

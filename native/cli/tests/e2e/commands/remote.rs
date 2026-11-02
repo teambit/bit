@@ -34,6 +34,7 @@ fn native_with_globals(helper: &Helper, globals: &Path, line: &str) -> String {
     run.stdout
 }
 
+/// Runs `bit <line>` natively with `BIT_GLOBALS_DIR=globals` and returns the raw [`Run`].
 fn native_run_with_globals(helper: &Helper, globals: &Path, line: &str) -> Run {
     let run = Helper::cmd_in_with(
         &helper.scopes.local_path,

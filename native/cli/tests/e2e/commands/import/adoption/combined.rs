@@ -26,6 +26,7 @@ fn stale_target() -> Helper {
     );
     helper
 }
+/// Verifies `--override --dependents --write-deps package.json` updates `comp4` to [`UPDATED`].
 #[test]
 fn override_dependents_then_package_dependency_writes_keep_the_exact_owned_source_transition() {
     combined("package.json");

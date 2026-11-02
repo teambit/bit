@@ -42,6 +42,7 @@ fn move_rereads_provider_bitmap_and_sources_before_publication() {
         "module.exports=42;\n",
     );
 }
+/// Verifies `bit deprecate` re-reads provider configuration without overwriting unrelated aspect keys.
 #[test]
 fn deprecation_rereads_provider_configuration_without_overwriting_it() {
     let helper = configured(true);

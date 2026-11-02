@@ -29,6 +29,7 @@ fn exported(count: usize) -> Helper {
 fn command(helper: &Helper, id: &str, flags: &str) -> String {
     format!("import {}/{id} -x {flags}", helper.scopes.remote)
 }
+/// Removes `name` from `helper`'s `.bitmap` and returns its removed entry [`Value`].
 fn untrack(helper: &Helper, name: &str) -> Value {
     let mut bitmap = support::bitmap(helper);
     let entry = bitmap

@@ -61,8 +61,7 @@ fn deleted_remote_component_is_imported_then_its_removal_is_overridden() {
     );
 }
 
-// Import work is measured independently by each real process. Preserve every
-// completion line and byte except its validated pretty-time numeric token.
+/// Normalizes import completion duration tokens (`<duration>`) while preserving all other output bytes.
 pub(super) fn stable(text: &str) -> String {
     text.split_inclusive('\n')
         .fold(String::new(), |mut output, line| {

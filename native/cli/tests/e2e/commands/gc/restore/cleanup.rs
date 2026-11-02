@@ -28,6 +28,7 @@ fn bare_restore_reports_failed_backup_cleanup_and_keeps_the_recovery_directory()
         assert!(!scope.join("deleted-objects").exists());
     }
 }
+/// Captures a [`Snapshot`] of `bit gc --restore` when `deleted-objects/<bucket>` is read-only.
 fn capture(
     helper: &Helper,
     baseline: &Path,

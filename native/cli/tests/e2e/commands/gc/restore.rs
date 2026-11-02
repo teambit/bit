@@ -42,6 +42,7 @@ fn bare_restore_preserves_backed_up_symbolic_links() {
     );
 }
 
+/// Verifies `bit gc --restore` treats dangling destination symlinks as existing entries unless `--restore-overwrite` is set.
 #[test]
 fn bare_restore_treats_dangling_destination_links_as_existing_entries() {
     for command in ["gc --restore", "gc --restore-overwrite"] {

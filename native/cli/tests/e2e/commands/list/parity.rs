@@ -77,10 +77,12 @@ pub(super) fn compare(helper: &Helper, command: &str) -> Run {
     compare_with_ownership(helper, command, true)
 }
 
+/// Runs `command` expecting native CLI delegation to `Node.js` while asserting read-only state.
 fn compare_declined(helper: &Helper, command: &str) -> Run {
     compare_with_ownership(helper, command, false)
 }
 
+/// Initializes a workspace with `bar/foo` and `ui/button` tagged and exported to the remote scope.
 fn two_components(helper: &Helper) {
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = 'foo';");

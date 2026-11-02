@@ -38,6 +38,7 @@ fn directory_move_changes_physical_sources_and_bitmap_root() {
         );
     }
 }
+/// Verifies moving `bar` to `bar2` succeeds without treating the shared prefix as a nested path.
 #[test]
 fn destination_sharing_the_source_prefix_is_not_a_nested_directory() {
     let helper = workspace();

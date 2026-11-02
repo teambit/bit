@@ -31,6 +31,7 @@ pub(crate) fn setup(helper: &Helper, command: &str) -> String {
     assert!(output.status.success(), "{command}: {} {}", output.stdout, output.stderr);
     output.stdout
 }
+/// Compares native and `Node.js` `command` execution while asserting the remote scope remains untouched.
 pub(crate) fn compare(helper: &Helper, command: &str) -> Run {
     let remote = tree(&helper.scopes.remote_path);
     let actual = support::compare(helper, command);

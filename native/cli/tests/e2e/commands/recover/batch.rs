@@ -34,6 +34,7 @@ fn wildcard_restores_all_locally_deleted_sources_in_one_batch() {
     }
 }
 
+/// Verifies `bit recover` overwrites tracked source files while preserving untracked files in the root.
 #[test]
 fn recovery_overwrites_selected_sources_and_keeps_untracked_companions() {
     let helper = workspace(1, true);

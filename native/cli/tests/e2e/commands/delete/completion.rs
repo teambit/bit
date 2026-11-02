@@ -30,6 +30,7 @@ fn deletion_preserves_unrelated_configured_aspects() {
         "preserved",
     );
 }
+/// Verifies [`successful`] `bit delete --snaps <hash>` records the snap in [`bitmap`] config while keeping source files.
 #[test]
 fn historic_snap_selection_only_marks_config_and_keeps_current_sources() {
     let helper = support::workspace(1, true);

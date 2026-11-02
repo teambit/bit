@@ -72,6 +72,7 @@ fn history_fixture() -> (Helper, Vec<String>) {
     (helper, hashes)
 }
 
+/// Verifies `bit fetch -c <remote>/comp1 --all-history` retains all parent versions and source blobs.
 #[test]
 fn fetch_all_history_retains_parent_versions_and_sources() {
     let (helper, hashes) = history_fixture();

@@ -37,6 +37,7 @@ fn date(id: &str) -> NaiveDateTime {
         .and_then(|day| day.and_hms_opt(fields[3], fields[4], fields[5]))
         .expect("invalid setup backup date")
 }
+/// Returns `true` when `latest` is `None` or strictly earlier than `now` truncated to whole seconds.
 fn past(latest: Option<NaiveDateTime>, now: NaiveDateTime) -> bool {
     latest.is_none_or(|latest| now.with_nanosecond(0).unwrap() > latest)
 }

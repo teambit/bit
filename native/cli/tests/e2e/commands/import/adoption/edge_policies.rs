@@ -23,6 +23,7 @@ fn empty_environment() -> Helper {
     assert!(!helper.scopes.local_path.join("package.json").exists());
     helper
 }
+/// Verifies `--write-deps package.json` in [`empty_environment`] creates `package.json` with empty `dependencies`.
 #[test]
 fn empty_dependency_set_creates_the_missing_root_package_without_inventing_dependencies() {
     let helper = empty_environment();

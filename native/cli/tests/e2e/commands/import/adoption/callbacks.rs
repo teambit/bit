@@ -44,6 +44,7 @@ fn configured_provider_source_changes_feed_the_authoritative_dependent_graph() {
     );
     dependents::assert_components(&helper, &["comp1", "comp2", "comp3", "comp4", "env/adoption"]);
 }
+/// Verifies `--write-deps` `onLoad` failure retains the imported component and provider output.
 #[test]
 fn write_deps_onload_failure_retains_the_published_import_prefix_and_provider_output() {
     let helper = exported(2);

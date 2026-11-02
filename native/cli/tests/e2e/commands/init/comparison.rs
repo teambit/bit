@@ -35,6 +35,7 @@ fn inventory(root: &Path, rebuilt_index: bool) -> BTreeMap<String, Vec<u8>> {
     visit(root, root, &mut result, rebuilt_index, &histories);
     result
 }
+/// Recursively visits `directory` and records files, symlinks, permissions, and normalized `histories` into `result`.
 fn visit(
     root: &Path,
     directory: &Path,

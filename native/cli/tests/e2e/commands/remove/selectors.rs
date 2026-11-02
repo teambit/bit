@@ -25,6 +25,7 @@ fn modified_and_file_only_selectors_remove_only_the_changed_member() {
         assert!(bitmap(&helper).get("comp2").is_some());
     }
 }
+/// Verifies ordered `$env` intersections and repeated unions preserve loader cache hits during removal.
 #[test]
 fn ordered_env_intersections_and_repeated_unions_preserve_cache_hits() {
     let helper = support::workspace(2, true);

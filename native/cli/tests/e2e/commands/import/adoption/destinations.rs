@@ -28,6 +28,7 @@ fn an_untracked_nonempty_destination_is_rejected_without_the_relocation_flag() {
     assert!(!result.status.success());
     assert!(result.stderr.contains("the directory is not empty"));
 }
+/// Verifies `--write-to-empty-dir` rejects conflicting `--override` and `--path` flags.
 #[test]
 fn write_to_empty_directory_rejects_override_and_explicit_path() {
     for (flag, message) in [

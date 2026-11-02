@@ -40,6 +40,7 @@ fn with_tagged_components_and_track_true() {
     assert!(status.contains("new components") || status.contains("bar/foo"));
 }
 
+/// Verifies `bit remove` against a remote component without dependencies removes it from the local scope.
 /// bit remove command › with remote scope without dependencies
 #[test]
 fn with_remote_scope_without_dependencies() {

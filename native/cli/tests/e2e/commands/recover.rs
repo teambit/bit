@@ -73,6 +73,7 @@ fn tagged_component_recovery_matches_node() {
     compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", None);
 }
 
+/// Verifies `bit recover` on an imported soft-deleted component matches `Node.js`.
 #[test]
 fn imported_component_recovery_matches_node() {
     let helper = Helper::new();

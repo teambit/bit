@@ -50,6 +50,7 @@ fn install(helper: &Helper, name: &str, flags: &str, count: usize) {
     assert!(helper.scopes.local_path.join("pnpm-lock.yaml").is_file());
     assert!(helper.scopes.local_path.join("node_modules/.modules.yaml").is_file());
 }
+/// Asserts that each component in `names` is tracked at `0.0.1` and linked under `node_modules`.
 fn assert_linked(helper: &Helper, names: &[&str]) {
     let bitmap = support::bitmap(helper);
     for name in names {
