@@ -57,6 +57,7 @@ fn compare_error(helper: &Helper, command: &str) -> Run {
     result
 }
 
+/// Projects `reports/test.xml` timestamps and durations with sorted suite order via [`project_with_order`].
 fn project(files: &mut BTreeMap<String, Vec<u8>>, run: &Run, started: i64, ended: i64) {
     project_with_order(files, run, started, ended, true);
 }

@@ -55,6 +55,7 @@ fn text_summary_preserves_nonzero_exit_and_test_effects() {
     assert_eq!(std::fs::read_to_string(helper.scopes.local_path.join("effect")).unwrap(), "x");
 }
 
+/// Verifies `bit test --summary` does not print a `Finished.` line when a test invokes `process.exit` directly.
 #[test]
 fn text_summary_direct_exit_does_not_print_a_final_report() {
     let helper = support::workspace(1, true);

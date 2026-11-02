@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse, remote};
 use std::ffi::OsStr;
 
-/// Initializes a workspace with `bar/foo`, `utils/is/*`, and `utils/fs/*` components and returns a baseline clone.
+/// Initializes a workspace with `bar/foo`, `utils/is/*`, and `utils/fs/*` components via [`Helper`] and returns a baseline clone.
 fn setup_wildcard_workspace() -> (Helper, std::path::PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

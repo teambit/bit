@@ -70,6 +70,7 @@ fn deleting_component_then_creating_a_new_one_with_same_name() {
     );
 }
 
+/// Verifies deleting a component, re-importing it, and running `bit remove` leaves `bit status` clean ([`remote`]).
 /// bit delete command › delete and then remove
 #[test]
 fn delete_and_then_remove() {

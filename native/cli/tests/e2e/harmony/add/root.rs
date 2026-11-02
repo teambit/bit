@@ -78,6 +78,7 @@ fn root_flag_id_and_existing_root_collisions_match_node() {
     }
 }
 
+/// Verifies that workspace-root sources do not trigger dependency detectors or policy callbacks during `bit add --root` ([`workspace`]).
 #[test]
 fn root_sources_do_not_invoke_dependency_detectors_or_policy_callbacks() {
     let helper = workspace();

@@ -65,7 +65,7 @@ fn after_tagging_exporting_removing_and_importing_component() {
     );
 }
 
-/// Verifies `init --reset` rebuilds an emptied `.bit/index.json` and `reset` updates stale index entries.
+/// Verifies `init --reset` rebuilds an emptied `.bit/index.json` and `reset` updates stale index entries ([`Helper`], [`parse`]).
 /// scope components index mechanism › changing the index.json file manually to be empty
 /// scope components index mechanism › outdated / out-of-sync index.json
 #[test]

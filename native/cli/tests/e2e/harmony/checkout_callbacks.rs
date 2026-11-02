@@ -88,6 +88,7 @@ fn failed_checkout_callback_is_not_replayed_and_keeps_the_workspace() {
     }
 }
 
+/// Asserts that a failing callback command produces matching exit codes and stderr and leaves `.bitmap` and `bar/foo.js` unchanged.
 fn failed_callback_command(
     helper: &Helper,
     oracle: &std::path::Path,

@@ -83,6 +83,7 @@ fn adding_bitignore_in_the_root_dir() {
     );
 }
 
+/// Verifies that an empty `.bitignore` in the root directory takes precedence over `.gitignore` ([`populate_comp1`], [`component_files`]).
 /// Bit Ignore functionality › adding .gitignore and an empty .bitignore in the root dir › should only consider the .bitignore and ignore the .gitignore file
 #[test]
 fn adding_gitignore_and_an_empty_bitignore_in_the_root_dir() {

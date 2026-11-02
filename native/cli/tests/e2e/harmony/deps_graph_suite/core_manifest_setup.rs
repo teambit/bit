@@ -1,6 +1,6 @@
 //! Capsule fixtures ([`prepare`]) do not need remote verification of built-in environment identities.
 //!
-//! Covers custom aspect assignment and no-network guard script generation for capsule tests.
+//! Covers custom aspect assignment ([`CUSTOM_ASPECT_ENV`]) and no-network guard script generation for capsule tests.
 
 use crate::helper::{Helper, config};
 use serde_json::json;

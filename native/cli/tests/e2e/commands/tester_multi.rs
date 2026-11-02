@@ -50,6 +50,7 @@ fn builtin_test_multi_summary_accounts_for_a_component_without_tests() {
     assert!(result.status.success());
 }
 
+/// Verifies multi-component `bit test --summary --coverage` executes each component's test suite once via [`summary_order`].
 #[test]
 fn builtin_test_multi_summary_coverage_executes_each_test_once() {
     let helper = support::workspace(2, true);

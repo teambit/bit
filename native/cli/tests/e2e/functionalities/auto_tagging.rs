@@ -25,7 +25,7 @@ fn with_dependencies_of_dependencies() {
     )
     .stdout;
 
-    // 1. should auto tag the dependencies and the nested dependencies
+    // 1. should auto-tag direct dependencies and nested transitive dependents
     assert!(tag_output.contains("auto-tagged dependents"));
     let details = Helper::cmd_in_with(
         &helper.scopes.local_path,

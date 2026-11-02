@@ -16,7 +16,9 @@ mod convergence;
 mod lane_cycle;
 /// End-to-end `bit ci sync --main` and `--dry-run` default-branch reconciliation tests.
 mod main_scope;
+/// End-to-end `bit ci sync --init` scaffolding and onboarding tests.
 mod onboarding;
+/// End-to-end cross-scope and foreign-scope lane reconciliation tests.
 mod scopes;
 mod state;
 mod support;

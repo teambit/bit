@@ -1,5 +1,5 @@
 //! Ported cases from `e2e/harmony/dependencies-cmd.e2e.ts`, `e2e/harmony/deps-write.e2e.ts`,
-//! and `e2e/harmony/diff-component-peer.e2e.ts` for `bit deps` and `bit dependencies` subcommands ([`DEP_RESOLVER`], [`bit_deps_blame_matches_node`]) across workspaces.
+//! and `e2e/harmony/diff-component-peer.e2e.ts` for `bit deps` and `bit dependencies` subcommands ([`DEP_RESOLVER`], [`bit_deps_blame_matches_node`], [`bit_deps_diagnose_package_matches_node`]) across workspaces.
 
 use crate::{
     helper::{Helper, config, parse},

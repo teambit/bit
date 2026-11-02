@@ -28,7 +28,7 @@ fn root_env_is_explicit_empty_while_regular_component_keeps_default_env() {
     );
 }
 
-/// Verifies `bit add --root` keeps environment policy and dependency issues empty for the root component.
+/// Verifies `bit add --root` keeps environment policy and dependency issues empty for the root component ([`assert_toolchain_issues`]).
 #[test]
 fn native_root_tracking_keeps_environment_policy_and_dependency_issues_empty() {
     let helper = workspace();

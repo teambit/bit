@@ -50,6 +50,7 @@ fn multi_test_files_combine_summary_and_coverage() {
     assert!(!helper.scopes.local_path.join("coverage").exists());
 }
 
+/// Verifies explicit multi-component test files generate `JUnit` suites for each selected component via [`tester_multi_junit::compare_file_order`].
 #[test]
 fn multi_test_files_generate_junit_for_each_selected_component() {
     let helper = fixture();

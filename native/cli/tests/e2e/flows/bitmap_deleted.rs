@@ -18,7 +18,7 @@ fn tagging_a_component_then_deleting_bitmap_file_init_force() {
     assert!(force_out.contains("successfully"), "{force_out}");
 }
 
-/// Verifies `bit init` without `--force` fails when `.bitmap` is deleted while scope objects remain.
+/// Verifies `bit init` without `--force` fails when `.bitmap` is deleted while scope objects remain ([`FOO_FIXTURE`]).
 /// user deleted only .bitmap file leaving the objects in place › tagging a component, then, deleting .bitmap file › bit init › should throw an error
 #[test]
 fn tagging_a_component_then_deleting_bitmap_file_init() {

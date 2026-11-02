@@ -28,7 +28,7 @@ fn ci_sync_developer_snapping_and_exporting_from_branch_advances_state() {
     );
     seed_sync(&helper, lane);
 
-    // 1. should read the pair as CONVERGED when the developer already did the sync, and write nothing
+    // 1. should read the pair as CONVERGED when the developer already completed the sync, and write nothing
     git_fetch(&helper);
     helper.git(&format!("checkout -f -B {lane} origin/{lane}"));
     helper.output_file("comp2/index.js", &comp2_src("dev-snapped-on-branch"));

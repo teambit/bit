@@ -41,6 +41,7 @@ fn after_adding_components_status_sorted() {
     assert_sorted_alphabetically(&output);
 }
 
+/// Verifies `bit list --local-scope` reports zero components before tagging ([`setup_populated_workspace`]).
 /// basic flow with dependencies › after adding components › bit list --local-scope should not show any component
 #[test]
 fn after_adding_components_list_empty() {

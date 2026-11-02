@@ -59,7 +59,7 @@ fn ci_sync_branch_ownership_decides_what_close_pr_may_delete() {
         git_fetch(helper);
     };
 
-    // 1. should ignore a branch that INHERITED a sync trailer, on the structural evidence, twice over
+    // 1. should ignore a branch that INHERITED a sync trailer on structural evidence across reruns
     let (output, exit_code) = sync_run(&helper, "--all");
     assert_eq!(exit_code, 0, "bit ci sync output:\n{output}");
     assert!(output.contains(&format!(

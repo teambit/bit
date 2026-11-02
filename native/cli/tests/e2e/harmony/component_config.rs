@@ -55,7 +55,7 @@ fn eject_config_for_new_component() {
     assert_eq!(comp_json_variant["extensions"], json!({}));
 }
 
-/// Verifies `bit eject-conf` on a tagged component includes model extensions in `component.json`.
+/// Verifies `bit eject-conf` on a tagged component includes model extensions in `component.json` ([`Helper`]).
 /// - `component config › eject config › eject for tagged component › should have extensions from models in component.json`
 #[test]
 fn eject_config_for_tagged_component() {

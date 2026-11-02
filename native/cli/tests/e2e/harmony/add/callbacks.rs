@@ -26,7 +26,7 @@ fn configured() -> (Helper, String) {
     (helper, id)
 }
 
-/// Verifies `onLoad` and package callbacks observe canonical component versions during `bit add`.
+/// Verifies `onLoad` and package callbacks observe canonical component versions during `bit add` ([`configured`]).
 #[test]
 fn explicit_identity_onload_and_package_callbacks_observe_canonical_class_versions() {
     let (helper, env) = configured();

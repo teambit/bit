@@ -90,6 +90,7 @@ fn assert_root_sources(helper: &Helper, node_workspace: &std::path::Path) {
     assert_eq!(bitmap_hash(&root_version), bitmap_hash(&oracle));
 }
 
+/// Verifies `bit snap` on a modified `--root` component records the allocated hash without package materialization.
 #[test]
 fn modified_root_snap_records_allocated_hash_without_package_materialization() {
     let helper = workspace();

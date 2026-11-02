@@ -50,6 +50,7 @@ fn builtin_test_json_cold_docs_passing_pending_and_todo_match_node() {
     assert!(!result.trace.contains("starting the JavaScript host"));
     support::compare_with_stdout(&helper, "test comp1 --json", timings);
 }
+/// Verifies `bit test --json` reports failed assertions and empty test bodies with exit code `1` via [`timings`].
 #[test]
 fn builtin_test_json_failed_assertion_and_empty_test_body_match_node() {
     let helper = support::workspace(1, true);

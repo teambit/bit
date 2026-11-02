@@ -49,6 +49,7 @@ fn undeprecation_clears_a_range_even_when_deprecate_boolean_is_false() {
     assert_eq!(config["deprecate"], false);
     assert!(config.get("range").is_none());
 }
+/// Verifies persisted `--range` deprecation applies only to matching versions and is reported on `bit import` ([`listed`]).
 #[test]
 fn persisted_ranges_deprecate_only_selected_versions_and_imports_report_them() {
     let helper = support::workspace(2, true);

@@ -51,6 +51,7 @@ fn run_with_globals(helper: &Helper, globals: &Path, line: &str) -> String {
     run.stdout
 }
 
+/// Exports `bar/foo` to a global remote and removes the local workspace directory so subsequent commands run outside any workspace.
 fn setup_outside_workspace() -> (Helper, PathBuf) {
     let helper = Helper::new();
     let globals = case_globals(&helper);

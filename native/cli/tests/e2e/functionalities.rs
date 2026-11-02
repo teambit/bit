@@ -10,7 +10,9 @@ mod binary_files;
 mod components_index;
 /// End-to-end dev-dependency resolution, deduplication, and tagging tests.
 mod dev_dependencies;
+/// End-to-end multi-level dynamic namespace component ID tests.
 mod dynamic_namespaces;
+/// End-to-end environment peer dependency installation and typechecking tests.
 mod env_peer_deps_install;
 mod merge;
 mod peer_dependencies;

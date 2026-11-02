@@ -10,7 +10,9 @@ mod add_harmony;
 mod aspect;
 /// End-to-end `.bitignore` and `.gitignore` tracking precedence tests.
 mod bit_ignore;
+/// End-to-end `.bitmap` status section parity tests (`localOnly`, `softTaggedComponents`, `importPendingComponents`).
 mod bitmap_states;
+/// End-to-end Harmony build and multi-compiler pipeline tests.
 mod build_and_compilers_harmony;
 mod checkout_callbacks;
 mod checkout_harmony;

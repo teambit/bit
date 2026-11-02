@@ -40,7 +40,7 @@ fn consumer_with_a_new_component_and_scope_with_the_same_component_as_staged() {
     assert!(output.contains("exported components (1)"), "{output}");
 }
 
-/// Verifies `tag` and `status` resynchronize `.bitmap` when local scope objects are exported ahead of `.bitmap`.
+/// Verifies `tag` and `status` resynchronize `.bitmap` when local scope objects are exported ahead of `.bitmap` via [`Helper`].
 #[test]
 fn consumer_with_a_tagged_component_and_scope_with_the_same_component_as_exported() {
     let helper = Helper::new();

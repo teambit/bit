@@ -5,7 +5,7 @@
 use crate::helper::{Helper, setup};
 use std::{ffi::OsStr, fs, path::Path};
 
-/// Runs `command` against native and Node with isolated global config dirs and asserts output and file parity.
+/// Runs `command` against native and `Node.js` with isolated global config dirs and asserts output and file parity ([`compare_files`], [`history`]).
 fn compare(helper: &Helper, oracle: &Path, command: &str, mode: &[(&str, &OsStr)]) {
     let actual_globals = helper.scopes.e2e_dir.join("native-globals");
     let expected_globals = helper.scopes.e2e_dir.join("node-globals");

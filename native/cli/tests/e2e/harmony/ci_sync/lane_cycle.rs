@@ -29,7 +29,7 @@ fn ci_sync_lane_branch_reconcile_cycle() {
         "",
     );
 
-    // A: a remote lane with no branch is imported onto a new branch, PR-less, content and pointer committed
+    // A: a remote lane with no branch is imported onto a new branch (PR-less) with content and pointer committed
     let (output, exit_code) = sync_run(&helper, lane);
     assert_eq!(exit_code, 0, "bit ci sync output:\n{output}");
     assert!(output.contains(&format!("{lane} -> import-lane")));

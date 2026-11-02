@@ -27,7 +27,7 @@ pub(super) fn verify(helper: &Helper) {
     verify_text(helper);
 }
 
-/// Asserts that native `bit status` omits the duplicate `ComponentsPendingImport` invalid-component block ([`Helper`]).
+/// Asserts that native `bit status` omits the duplicate `ComponentsPendingImport` invalid-component block ([`Helper`], [`verify`]).
 fn verify_text(helper: &Helper) {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status");

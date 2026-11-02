@@ -1,6 +1,6 @@
 //! Extended workspace-root component and lane cloning tests for `bit add` ([`root_snap_no_deps_and_cloning_workspace_from_root_and_lane`]).
 //!
-//! Exercises `trackAllFiles`, `bit clone` from a workspace-root component, and lane-scoped workspace cloning.
+//! Exercises `trackAllFiles`, `bit clone` from a workspace-root component, and lane-scoped workspace cloning (`e2e/harmony/add-harmony.e2e.ts`).
 
 use crate::helper::{Helper, config};
 use serde_json::Value;

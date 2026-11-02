@@ -63,6 +63,7 @@ fn stable_output(output: &str) -> String {
         .join("\n")
 }
 
+/// Verifies `bit checkout head` projects `workspace.jsonc` dependency policy updates and conflict strategies ([`source`], [`set_policy`], [`compare_policy`]).
 #[test]
 fn checkout_head_projects_workspace_policy_updates_and_conflicts() {
     let (helper, before) = source();

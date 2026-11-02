@@ -30,7 +30,7 @@ fn write_postinstall_dep(helper: &Helper, dir: &str, name: &str) {
     helper.output_file(&format!("{dir}/index.js"), "module.exports = 1;\n");
 }
 
-/// Verifies `allowScripts` default blocking, `workspace.jsonc` flags, and `BIT_ALLOW_SCRIPTS` env overrides.
+/// Verifies `allowScripts` default blocking, `workspace.jsonc` flags, and `BIT_ALLOW_SCRIPTS` env overrides ([`write_postinstall_dep`]).
 /// Covers:
 /// - `e2e/harmony/dependencies/allow-scripts.e2e.ts:26`
 ///   by default all scripts are blocked › should not build the dependency

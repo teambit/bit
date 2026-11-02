@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Minimal `CommonJS` module fixture used when testing `package.json` exclusion in `bar/`.
+/// Minimal `CommonJS` module fixture used when testing `package.json` exclusion in `bar/` in [`should_not_track_the_package_json_file`].
 const BAR_FOO_SOURCE: &str = "module.exports = {};";
 
 /// Verifies `bit add` ignores `package.json` inside a component directory by default ([`BAR_FOO_SOURCE`], [`parse`]).

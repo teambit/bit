@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Creates a bare scope named `name` under `helper.scopes.e2e_dir` from the shared template.
+/// Creates a bare scope named `name` under `helper.scopes.e2e_dir` from the shared template via [`json`].
 fn create_bare_scope(helper: &Helper, name: &str) -> PathBuf {
     let path = helper.scopes.e2e_dir.join(name);
     crate::helper::setup::copy_dir(&crate::helper::setup::shared().bare_scope_template, &path);

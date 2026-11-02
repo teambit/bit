@@ -48,7 +48,7 @@ fn ci_sync_main_scope_sync_and_dry_run() {
     helper.git(&format!("push origin {default_branch}"));
     git_fetch(&helper);
 
-    // F: --all --dry-run plans an action per target and leaves every ref on the git remote untouched
+    // F: --all --dry-run plans an action per target and leaves every ref on the Git remote untouched
     let refs_before = remote_refs(&helper);
     let (output, exit_code) = sync_run(&helper, "--all --dry-run");
     assert_eq!(exit_code, 0, "bit ci sync output:\n{output}");

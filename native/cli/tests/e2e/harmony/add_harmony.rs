@@ -20,7 +20,7 @@ fn workspace_root_component_bitmap_convergence_and_removing() {
     helper.add_component(".", "-i ws-root --root");
     helper.native(r#"snap --skip-tests --ignore-issues "*""#);
 
-    // should not be modified right after snapping, despite tracking .bitmap
+    // should not report modified components right after snapping, despite tracking .bitmap
     let status = helper.status_json();
     assert_eq!(status["modifiedComponents"].as_array().map(Vec::len), Some(0));
 

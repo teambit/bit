@@ -26,7 +26,7 @@ fn environment_with_compiler_and_tester() {
     helper.native("tag --skip-tests");
     let bar_foo = parse(&helper.cat_component("comp1@0.0.1"));
 
-    // 1. should not save the dev-dependencies because they are the same as dependencies
+    // 1. should not save dev-dependencies when they match runtime dependencies
     assert_eq!(
         bar_foo["devDependencies"]
             .as_array()

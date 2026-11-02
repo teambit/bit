@@ -35,7 +35,7 @@ pub(super) fn detail_order(output: &str) -> String {
     serde_json::to_string_pretty(&data).unwrap()
 }
 
-/// Verifies `bit test --unmodified --json` groups passing and failing test results by component.
+/// Verifies `bit test --unmodified --json` groups passing and failing test results by component via [`detail_order`].
 #[test]
 fn builtin_test_multi_details_group_pass_and_failure_by_component() {
     let helper = support::workspace(2, true);

@@ -1,6 +1,6 @@
 //! Discover and materialize new default-scope components during `bit checkout head` ([`checkout_head_includes_new_components_from_the_default_scope`]).
 //!
-//! Verifies `bit checkout head --include-new-from-scope` parity against the Node.js CLI.
+//! Verifies `bit checkout head --include-new-from-scope` ([`COMMAND`]) parity against the `Node.js` CLI.
 
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};

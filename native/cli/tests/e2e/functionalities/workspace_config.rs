@@ -7,7 +7,7 @@ use crate::helper::{Helper, parse, strip_ansi};
 /// Aspect ID for dependency-resolver variant overrides in `workspace.jsonc`.
 const OVERRIDE_EXTENSION: &str = "teambit.dependencies/dependency-resolver";
 
-/// Attaches a dependency-resolver `policy` object to `variant` in `workspace.jsonc`.
+/// Attaches a dependency-resolver `policy` object to `variant` in `workspace.jsonc` ([`OVERRIDE_EXTENSION`]).
 fn set_policy_to_variant(helper: &Helper, variant: &str, policy: serde_json::Value) {
     let mut config = serde_json::Map::new();
     config.insert("policy".to_owned(), policy);

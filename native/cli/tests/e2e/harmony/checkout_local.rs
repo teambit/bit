@@ -21,7 +21,7 @@ fn checkout_reset_uses_local_history_without_a_remote_mapping() {
     assert_eq!(source, fs::read_to_string(node_workspace.join("bar/foo.js")).unwrap());
 }
 
-/// Verifies that `bit checkout 0.0.1` selects a stored tag from the local repository without resolving a remote.
+/// Verifies that `bit checkout 0.0.1` selects a stored tag from the local repository without resolving a remote ([`checkout_like_node`]).
 #[test]
 fn checkout_stored_version_uses_local_history_without_a_remote_mapping() {
     let helper = Helper::new();

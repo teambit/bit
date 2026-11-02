@@ -10,6 +10,7 @@ mod registry;
 mod root;
 /// End-to-end tests for `bit tag --soft` and `bit tag --persist` `.bitmap` staging.
 mod soft;
+/// End-to-end tests for `.bitmap` state filtering (`local-only`) during `bit tag` and `bit snap`.
 mod states;
 mod unlinked;
 
