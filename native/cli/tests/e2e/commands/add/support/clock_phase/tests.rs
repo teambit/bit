@@ -3,6 +3,7 @@
 //! Verifies fork/recover gate classification and half-open launch window bounds.
 
 use super::{END, SECOND, START, delay, multiple_bitmap_writes};
+/// Verifies [`multiple_bitmap_writes`] gates only explicit `fork`, `scope fork`, and `recover` commands.
 #[test]
 fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
     for command in

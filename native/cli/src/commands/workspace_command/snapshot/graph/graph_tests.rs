@@ -5,6 +5,7 @@
 use super::{remove_workspace_package, snapshot_order};
 use serde_json::json;
 
+/// Verifies [`remove_workspace_package`] prunes non-injected workspace packages from importer dependencies.
 #[test]
 fn other_workspace_packages_are_removed_unless_injected_into_the_component() {
     let mut root = json!({

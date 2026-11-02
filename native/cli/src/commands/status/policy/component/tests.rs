@@ -5,6 +5,7 @@
 use super::Policy;
 use serde_json::{Value, json};
 
+/// Constructs a component dependency [`Policy`] from a `dependency-resolver` policy JSON object.
 fn policy(config: &Value) -> Policy {
     Policy::read(
         &json!({}),

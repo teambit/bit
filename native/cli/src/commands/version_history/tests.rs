@@ -4,6 +4,7 @@
 
 use super::{Subcommand, parse_subcommand};
 
+/// Verifies `bit version-history` [`Subcommand`] parsing via [`parse_subcommand`].
 #[test]
 fn parses_show_json_and_unrecognized_subcommands() {
     assert_eq!(

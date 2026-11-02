@@ -6,6 +6,7 @@ use super::{Action, Chalk, WorkspaceTrust, is_valid_pattern, parse_action, parse
 use crate::commands::workspace_command::format::Formatter;
 use std::{ffi::OsString, fs, path::Path};
 
+/// Converts string slice tokens into [`OsString`] vectors for [`parse_tokens`].
 fn os_args(items: &[&str]) -> Vec<OsString> {
     items
         .iter()

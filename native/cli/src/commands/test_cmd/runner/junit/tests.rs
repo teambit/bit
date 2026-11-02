@@ -5,6 +5,7 @@
 use super::render;
 use serde_json::json;
 
+/// Verifies [`render`] escapes XML attribute characters and emits `<failure>` and `<skipped>` nodes.
 #[test]
 fn renders_failure_and_skipped_cases_with_xml_escaping() {
     let data = json!([{"data":{"components":[{"componentId":"example.scope/sample@1.0.0","results":{"start":0,"testFiles":[{"file":"index.spec.js","tests":[{"name":"a & < b","status":"failed","duration":12,"failureErrOrStr":"failure\nmessage"},{"name":"later","status":"pending","duration":null}]}]}}]}}]);

@@ -5,6 +5,7 @@
 use super::{Mode, parse};
 use serde_json::json;
 
+/// Verifies `bit tag` release-level and prerelease option parsing via [`parse`].
 #[test]
 fn release_types_and_versions() {
     let options = parse(&["remote/two", "-m", "x"]).unwrap();

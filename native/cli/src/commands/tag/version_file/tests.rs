@@ -5,6 +5,7 @@
 use super::parse;
 use serde_json::json;
 
+/// Verifies `bit tag --versions-file` [`parse`] handles BOMs, comments, `DEFAULT:` entries, and malformed lines.
 #[test]
 fn comments_defaults_duplicates_and_exact_component_names() {
     let parsed=parse("\u{feff}# version plan\r\n DEFAULT: patch\n remote/foo: minor\n remote/foo: 2.0.0-beta.1\nDEFAULT: 4.0.0\n").unwrap();

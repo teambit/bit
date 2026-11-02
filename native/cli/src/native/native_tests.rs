@@ -4,6 +4,7 @@
 
 use super::fallback_message;
 
+/// Verifies [`fallback_message`] includes the command name and decline reason in `BIT_NATIVE_TRACE` format.
 #[test]
 fn the_fallback_warning_names_the_command_and_the_reason() {
     assert_eq!(

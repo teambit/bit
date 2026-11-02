@@ -5,6 +5,7 @@
 use super::parse;
 use serde_json::json;
 
+/// Verifies [`parse`] separates policy flag values from positional component patterns.
 #[test]
 fn policy_values_are_not_component_patterns() {
     let (policy, remaining) =

@@ -5,6 +5,7 @@
 use super::{entered_versions, planned_versions, selections};
 use serde_json::json;
 
+/// Verifies [`selections`] and [`entered_versions`] resolve component patterns and version suffixes.
 #[test]
 fn literal_patterns_select_one_component_with_its_version() {
     let context = json!({ "targets": [{ "identity": "s/ui/one" }, { "identity": "s/two" }] });

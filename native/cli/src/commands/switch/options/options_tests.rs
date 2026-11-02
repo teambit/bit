@@ -4,6 +4,7 @@
 
 use super::parse;
 
+/// Verifies `bit switch` [`parse`] accepts complete lane switches and rejects duplicate or unsupported flags.
 #[test]
 fn accepts_complete_switches_without_dependency_installation() {
     assert_eq!(parse(&["s/dev", "--skip-fetch", "-x"]).unwrap().lane, "s/dev");

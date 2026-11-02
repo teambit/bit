@@ -8,6 +8,7 @@ use std::{
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+/// Number of nanoseconds in one wall-clock second (`1_000_000_000`).
 const SECOND: u128 = 1_000_000_000;
 const START: u128 = 50_000_000;
 const END: u128 = 100_000_000;

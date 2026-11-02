@@ -5,6 +5,7 @@
 use super::{Options, has_no_workspace_dependencies, parse_options};
 use std::fs;
 
+/// Verifies `bit update` [`Options`] parsing via [`parse_options`] and empty dependency checks via [`has_no_workspace_dependencies`].
 #[test]
 fn parses_update_options_and_detects_empty_dependencies() {
     assert_eq!(

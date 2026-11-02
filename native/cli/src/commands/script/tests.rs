@@ -10,6 +10,7 @@ use super::{
 use crate::commands::color::Chalk;
 use std::fs;
 
+/// Verifies `bit script` [`Options`] flag and script-name parsing via [`parse_options`].
 #[test]
 fn parses_script_options() {
     assert_eq!(parse_options(&["-l"]), Some(Options { script_name: None, list: true }));

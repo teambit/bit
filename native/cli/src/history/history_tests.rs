@@ -6,6 +6,7 @@ use super::{History, iso};
 use std::{ffi::OsString, fs};
 use tempfile::TempDir;
 
+/// Verifies [`iso`] matches `JavaScript` `Date.prototype.toISOString` formatting.
 #[test]
 fn iso_matches_javascript() {
     assert_eq!(iso(0), "1970-01-01T00:00:00.000Z");

@@ -5,6 +5,7 @@
 use super::{Options, parse};
 use serde_json::json;
 
+/// Verifies ordinary `bit snap` [`Options`] flag and pattern parsing via [`parse`].
 #[test]
 fn ordinary_snaps() {
     assert_eq!(parse(&[]), Some(Options::default()));

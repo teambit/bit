@@ -5,6 +5,7 @@
 use super::{other_lane, pattern_ids, squash_hashes, validate};
 use serde_json::json;
 
+/// Canonical 40-hex snap hash fixture used in [`squash_hashes`] tests.
 const HASH: &str = "0123456789abcdef0123456789abcdef01234567";
 
 #[test]

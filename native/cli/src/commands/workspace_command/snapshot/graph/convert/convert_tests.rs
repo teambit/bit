@@ -8,6 +8,7 @@ use super::{
 };
 use serde_json::{Value, json};
 
+/// Verifies [`ref_to_relative`] resolves `pnpm` lockfile references into relative package keys.
 #[test]
 fn references_resolve_like_ref_to_relative() {
     assert_eq!(ref_to_relative("link:../a", "a"), None);

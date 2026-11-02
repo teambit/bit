@@ -7,6 +7,7 @@ use super::{core_package_name, dev_files::is_dev_file};
 /// `[path, matchPatterns(path, defaults)]` from `minimatch` 3.0.5.
 const MINIMATCH: &str = include_str!("minimatch_3_0_5.json");
 
+/// Verifies [`is_dev_file`] matches every entry in [`MINIMATCH`].
 #[test]
 fn dev_files_match_minimatch() {
     let rows: Vec<(String, bool)> = serde_json::from_str(MINIMATCH).unwrap();

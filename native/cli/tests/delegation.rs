@@ -9,6 +9,7 @@ use std::{
 };
 use tempfile::TempDir;
 
+/// Stub `Node.js` script that echoes `process.argv.slice(2)` as JSON and exits with `STUB_EXIT_CODE`.
 const STUB: &str = r"
 process.stdout.write(JSON.stringify(process.argv.slice(2)));
 process.exit(Number(process.env.STUB_EXIT_CODE ?? 0));

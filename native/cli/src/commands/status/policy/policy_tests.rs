@@ -5,6 +5,7 @@
 use super::names::package_name;
 use serde_json::json;
 
+/// Verifies [`package_name`] matches `componentIdToPackageName` across default and custom prefixes.
 #[test]
 fn package_name_matches_component_id_to_package_name() {
     assert_eq!(package_name("my.scope/ui/button", None), "@my/scope.ui.button");

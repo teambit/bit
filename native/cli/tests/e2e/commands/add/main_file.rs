@@ -5,6 +5,7 @@
 use super::support::{compare, workspace};
 use crate::helper::config;
 use std::fs;
+/// Verifies [`compare`] matches `{PARENT}` placeholder expansion and missing main-file errors.
 #[test]
 fn dynamic_parent_main_file_and_missing_directory_main_match_node() {
     for command in [

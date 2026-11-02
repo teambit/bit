@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit set-peer` and `bit unset-peer` [`PeerAction`] parsing via [`parse_set_args`] and [`parse_unset_args`].
 #[test]
 fn parses_set_and_unset_peer_arguments() {
     assert_eq!(

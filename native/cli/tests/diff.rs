@@ -12,6 +12,7 @@ use tempfile::TempDir;
 /// Echoes its arguments, so a delegated run is recognizable.
 const STUB: &str = "process.stdout.write(JSON.stringify(process.argv.slice(2)));";
 
+/// Writes `content` to `path`, creating parent directories as needed.
 fn write(path: &Path, content: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, content).unwrap();

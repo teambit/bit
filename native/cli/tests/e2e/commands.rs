@@ -2,6 +2,7 @@
 //!
 //! Organizes [`add`], [`diff_completion`], [`move_paths`], and individual command parity test suites.
 
+/// End-to-end parity tests for `bit add`.
 pub(crate) mod add;
 pub(crate) mod diff_completion;
 pub(crate) mod move_paths;

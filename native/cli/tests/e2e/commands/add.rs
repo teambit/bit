@@ -1,6 +1,7 @@
 //! End-to-end tests for original `bit add` command grammar, tracking, main-file, embedded-scope, and ignore contracts via [`compare`].
 //!
 //! Verifies [`workspace`] tracking, [`support`] replay comparisons, and `.bitmap` persistence.
+/// Replay comparison and workspace setup helpers for `bit add` end-to-end tests.
 pub(crate) mod support;
 
 mod cleanup;

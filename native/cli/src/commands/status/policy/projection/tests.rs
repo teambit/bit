@@ -4,6 +4,7 @@
 
 use serde_json::{Value, json};
 
+/// Canonical aspect ID for `teambit.dependencies/dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 fn target() -> Value {

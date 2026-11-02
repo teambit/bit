@@ -5,6 +5,7 @@
 use super::{Component, external_vertices, ordinary_heads_for, versioned};
 use serde_json::{Value, json};
 
+/// Canonical 40-hex snap hash fixture used in [`ordinary_heads`] tests.
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
 
 fn ordinary_heads(context: &Value, receipt: &Value) -> bool {

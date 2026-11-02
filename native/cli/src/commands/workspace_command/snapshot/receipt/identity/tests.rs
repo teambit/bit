@@ -10,6 +10,7 @@ use std::{
     time::Duration,
 };
 
+/// Verifies [`Cache`] resolves [`User`] identity once while allocating fresh timestamps per log entry.
 #[test]
 fn resolved_identity_is_stable_and_logs_keep_independent_messages() {
     let cache = Cache::new();

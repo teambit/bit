@@ -5,6 +5,7 @@
 use super::validate_removal_config;
 use serde_json::json;
 
+/// Verifies [`validate_removal_config`] accepts published `removed`, `range`, and `snaps` configurations.
 #[test]
 fn removal_configuration_accepts_published_range_snaps_and_false() {
     for config in [

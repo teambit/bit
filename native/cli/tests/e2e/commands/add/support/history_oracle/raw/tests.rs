@@ -7,6 +7,7 @@ use chrono::TimeZone;
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
+/// Returns synthetic `import` and `recover` history transition fixtures for [`parse`] tests.
 fn transitions() -> Vec<Value> {
     vec![
         json!({"reason":"import","preimage_hex":"61","mode":420}),

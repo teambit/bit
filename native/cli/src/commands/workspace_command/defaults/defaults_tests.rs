@@ -4,6 +4,7 @@
 
 use super::app_file;
 
+/// Verifies [`app_file`] recognizes `.bit-app.*` and `.*-app.*` filenames and rejects bare suffixes.
 #[test]
 fn app_files() {
     assert!(app_file("src/my.bit-app.ts"));

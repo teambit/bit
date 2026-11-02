@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Builds a synthetic [`NodeCli`] fixture pointing to `node` with [`Source::Env`].
 fn cli(node: &str) -> NodeCli {
     NodeCli {
         entry: PathBuf::from("/bvm/links/bit/node_modules/@teambit/bit/bin/bit"),

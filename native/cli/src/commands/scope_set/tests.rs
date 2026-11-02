@@ -5,6 +5,7 @@
 use super::{Options, parse_options};
 use std::ffi::OsString;
 
+/// Parses a slice of string tokens into [`Options`] via [`parse_options`].
 fn parse(words: &[&str]) -> Option<Options> {
     let args = words
         .iter()

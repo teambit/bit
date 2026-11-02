@@ -5,6 +5,7 @@
 use super::{Component, collect};
 use serde_json::{Value, json};
 
+/// Verifies root `ignoreIssues` settings suppress `MissingManuallyConfiguredPackages` during [`collect`].
 #[test]
 fn root_issue_setting_ignores_only_missing_manually_configured_packages() {
     let component = Component {

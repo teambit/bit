@@ -5,6 +5,7 @@
 use super::{Chalk, Parsed, format_unrecognized, parse_args};
 use std::ffi::OsString;
 
+/// Verifies `bit system` [`Parsed`] subcommand parsing via [`parse_args`].
 #[test]
 fn parses_system_subcommands() {
     assert_eq!(parse_args(&[OsString::from("system"), OsString::from("log")]), Some(Parsed::Log));

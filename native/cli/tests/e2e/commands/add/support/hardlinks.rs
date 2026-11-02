@@ -8,6 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Device and inode pair `(dev, ino)` identifying a hardlinked regular file.
 type Identity = (u64, u64);
 pub(super) struct Snapshot(Vec<Vec<PathBuf>>);
 impl Snapshot {

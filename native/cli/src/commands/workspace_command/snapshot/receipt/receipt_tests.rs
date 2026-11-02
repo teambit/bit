@@ -4,6 +4,7 @@
 
 use super::{new_snap_hash, uuid_v4};
 
+/// Verifies [`uuid_v4`] produces valid RFC 4122 version-4 UUID strings.
 #[test]
 fn uuids_are_version_4() {
     let uuid = uuid_v4().unwrap();

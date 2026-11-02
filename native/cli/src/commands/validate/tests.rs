@@ -9,6 +9,7 @@ use super::{
 };
 use std::fs;
 
+/// Verifies `bit validate` [`Options`] parsing via [`parse_options`].
 #[test]
 fn parses_validate_options() {
     assert_eq!(

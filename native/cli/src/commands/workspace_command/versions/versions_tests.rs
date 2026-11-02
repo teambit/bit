@@ -6,6 +6,7 @@ use super::{SNAP, TAG, format};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;
 
+/// Primary snapped component ID fixture used in [`format`] report tests.
 const ONE: &str = "s/a@0123456789abcdef0123456789abcdef01234567";
 const TWO: &str = "s/b@1123456789abcdef0123456789abcdef01234567";
 

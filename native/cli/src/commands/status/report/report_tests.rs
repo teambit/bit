@@ -6,6 +6,7 @@ use super::{Flags, parse, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::{Value, json};
 
+/// Verifies `bit status` [`Flags`] CLI option parsing via [`parse`].
 #[test]
 fn parses_the_report_flags() {
     assert_eq!(parse(&[]), Some(Flags::default()));

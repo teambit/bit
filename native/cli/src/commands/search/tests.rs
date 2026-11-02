@@ -6,6 +6,7 @@ use super::{match_queries, parse_args};
 use serde_json::json;
 use std::ffi::OsString;
 
+/// Converts string slice tokens into [`OsString`] vectors for [`parse_args`].
 fn os_args(args: &[&str]) -> Vec<OsString> {
     args.iter()
         .map(OsString::from)

@@ -4,6 +4,7 @@
 
 use super::{Replacer, WorkspaceComponent};
 
+/// Builds a test [`Replacer`] fixture with snapped and tagged [`WorkspaceComponent`] entries.
 fn replacer() -> Replacer {
     Replacer::new(&[
         WorkspaceComponent {

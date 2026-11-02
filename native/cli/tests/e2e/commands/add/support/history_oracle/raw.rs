@@ -15,6 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// Raw `.bit/bitmap-history` metadata, backup file bytes, and permission modes.
 #[derive(Clone)]
 pub(super) struct Snapshot {
     metadata: Vec<u8>,

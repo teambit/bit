@@ -10,6 +10,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+/// Builds a synthetic `pnpm` v9 lockfile JSON fixture for [`filter`] and [`graph`] reachability tests.
 fn fixture() -> Value {
     json!({
         "lockfileVersion":"9.0", "settings":{"autoInstallPeers":false}, "overrides":{"unused":"-"},

@@ -3,6 +3,7 @@
 //! Verifies `installationDirectoryEquals` across drive letters, UNC shares, and relative segments.
 use std::{env, process::Command};
 
+/// Verifies Windows installation directory receipts accept separator variations while rejecting distinct identities.
 #[test]
 fn windows_directory_receipts_accept_separators_but_reject_other_identities() {
     check(

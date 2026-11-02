@@ -4,6 +4,7 @@
 
 use super::{Options, parse_options};
 
+/// Verifies `bit run` [`Options`] flag parsing via [`parse_options`].
 #[test]
 fn parses_run_options() {
     assert_eq!(

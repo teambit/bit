@@ -4,7 +4,7 @@
 
 use super::compare;
 
-/// `[...ids].sort((a, b) => a.localeCompare(b))` in Node 22 with `LANG=en_US.UTF-8`.
+/// Verifies [`compare`] matches `[...ids].sort((a, b) => a.localeCompare(b))` in Node 22 with `LANG=en_US.UTF-8`.
 #[test]
 fn sorts_like_node_root_collation() {
     let mut ids = vec![

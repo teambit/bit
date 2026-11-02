@@ -5,6 +5,7 @@
 use super::{Options, compute_snap_distance, parse_options};
 use serde_json::json;
 
+/// Verifies 1-, 2-, and 3-positional argument [`Options`] parsing via [`parse_options`].
 #[test]
 fn parses_one_two_or_three_positional_arguments() {
     let s1 = "1111111111111111111111111111111111111111";

@@ -5,6 +5,7 @@
 use super::{Options, parse_options, report};
 use serde_json::json;
 
+/// Verifies `bit run-action` [`Options`] JSON payload parsing via [`parse_options`].
 #[test]
 fn parses_and_validates_run_action_json() {
     assert_eq!(parse_options(&["ExportPersist", "my-scope", "not-json"]), None);

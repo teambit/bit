@@ -11,6 +11,7 @@ use std::{
     time::Duration,
 };
 
+/// Verifies [`accept`] authenticates the control token and awaits delayed messages from the child stream.
 #[test]
 fn accepted_control_waits_for_delayed_messages() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

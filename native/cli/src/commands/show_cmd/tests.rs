@@ -10,6 +10,7 @@ use super::{
 use serde_json::json;
 use std::{fs, path::Path};
 
+/// Verifies `bit show` [`Options`] parsing via [`parse_options`] and host checks via [`missing_host_error`].
 #[test]
 fn parses_show_options_and_detects_missing_host_errors() {
     assert_eq!(parse_options(&[]), None);

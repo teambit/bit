@@ -9,6 +9,7 @@ use std::{
 };
 use tempfile::TempDir;
 
+/// Relative path to the `@teambit/bit` CLI entry script inside a BVM installation.
 const ENTRY: &str = "node_modules/@teambit/bit/bin/bit";
 const NODE: &str = if cfg!(windows) { "node.exe" } else { "bin/node" };
 

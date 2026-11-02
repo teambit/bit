@@ -4,6 +4,7 @@
 
 use super::{Plan, fs};
 
+/// Verifies [`Plan`] publication does not delete an existing temporary file when creation fails.
 #[test]
 fn existing_temporary_file_is_not_deleted_after_failed_creation() {
     let directory = tempfile::tempdir().unwrap();

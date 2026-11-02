@@ -3,6 +3,7 @@
 //! Verifies single, double, and backtick quote rules and control character formatting against `node`.
 use std::process::Command;
 
+/// Verifies error property quoting matches `Node.js` `util.inspect` across quotes and control characters.
 #[test]
 fn filesystem_error_strings_match_node_inspection() {
     let mut values = vec![

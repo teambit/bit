@@ -8,6 +8,7 @@ use super::{
 };
 use serde_json::json;
 
+/// Verifies [`pattern_ids`] selects matching workspace targets and rejects unmatched or special selectors.
 #[test]
 fn patterns_select_the_matching_targets() {
     let context = json!({ "targets": [{ "identity": "s/one" }, { "identity": "s/two" }, { "identity": "t/one" }] });

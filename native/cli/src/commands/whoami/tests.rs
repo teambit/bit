@@ -5,6 +5,7 @@
 use super::parse_args;
 use std::ffi::OsString;
 
+/// Converts string slice tokens into [`OsString`] vectors for [`parse_args`].
 fn os_args(args: &[&str]) -> Vec<OsString> {
     args.iter()
         .map(OsString::from)

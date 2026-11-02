@@ -4,6 +4,7 @@
 
 use super::{Options, parse_options};
 
+/// Verifies `bit resume-export` [`Options`] parsing via [`parse_options`].
 #[test]
 fn parses_resume_export_options() {
     assert_eq!(parse_options(&["id-1"]), None);

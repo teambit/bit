@@ -7,6 +7,7 @@ use crate::commands::color::Chalk;
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit test` [`Options`] CLI flag and pattern parsing via [`parse_options`].
 #[test]
 fn parses_test_arguments_and_options() {
     assert_eq!(
