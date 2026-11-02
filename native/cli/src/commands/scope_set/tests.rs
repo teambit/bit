@@ -27,6 +27,7 @@ fn parses_workspace_and_component_scope_set() {
     );
 }
 
+/// Verifies that [`parse`] returns `None` for missing, flag, `$modified`, or excess `bit scope set` arguments.
 #[test]
 fn declines_unsupported_scope_set_arguments() {
     assert_eq!(parse(&["scope", "set"]), None);

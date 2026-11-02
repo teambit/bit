@@ -62,6 +62,7 @@ fn compare_mode<const WRITE_COUNT: usize>(
         support::compare_with_history_ci(helper, command, stdout, &observe, ci)
     }
 }
+/// Prepares an [`Oracle`] by running `command` under [`observe`] and validating the resulting history entries.
 fn prepare<const WRITE_COUNT: usize>(
     helper: &Helper,
     command: &str,

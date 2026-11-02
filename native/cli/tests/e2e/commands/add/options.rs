@@ -31,6 +31,7 @@ fn track_all_files_retains_authored_manifests_and_tsconfig() {
     helper.output_file("comp1/tsconfig.json", "{}\n");
     compare(&helper, "add comp1 -i comp1");
 }
+/// Verifies [`compare`] updates `mainFile` on an existing component without overwriting `component.json`.
 #[test]
 fn existing_component_can_update_main_without_replacing_authored_config() {
     let helper = workspace();

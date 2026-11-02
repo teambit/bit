@@ -28,6 +28,7 @@ fn args(command: &std::process::Command) -> Vec<OsString> {
         .collect()
 }
 
+/// Verifies [`command`] runs [`Target::Entry`] with the configured `node` binary, entry script, and prefixed `PATH`.
 #[test]
 fn entry_runs_node_with_the_entry_and_all_arguments() {
     let target = Target::Entry(cli("/bvm/nodejs/22.22.0/bin/node"));

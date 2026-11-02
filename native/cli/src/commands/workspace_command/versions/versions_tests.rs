@@ -11,6 +11,7 @@ const ONE: &str = "s/a@0123456789abcdef0123456789abcdef01234567";
 /// Secondary snapped component ID fixture used in [`format`] auto-dependent report tests.
 const TWO: &str = "s/b@1123456789abcdef0123456789abcdef01234567";
 
+/// Verifies [`format`] reports `"nothing to snap"` for [`SNAP`] and `"nothing to tag"` for [`TAG`] on `null` results.
 #[test]
 fn nothing_to_snap() {
     assert_eq!(format(&json!(null), Chalk::new(false), &SNAP).unwrap().data, "nothing to snap");

@@ -47,6 +47,7 @@ fn computes_distance_and_common_ancestor() {
     assert_eq!(dist["commonSnapBeforeDiverge"], json!({ "hash": base }));
 }
 
+/// Verifies `bitmap_lane_scope_and_name` extracts `(scope, name)` from both object and string `_bit_lane` entries.
 #[test]
 fn bitmap_lane_helpers_accept_object_and_string_lane_ids() {
     let obj_bitmap = json!({

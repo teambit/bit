@@ -66,6 +66,7 @@ fn reachable_filter_preserves_cycles_aliases_and_packages_without_snapshots() {
     assert!(filtered["packages"].get("unrelated@1.0.0").is_none());
 }
 
+/// Converts `source` lockfile JSON into a serialized dependency [`graph`] for `@fixture/component`.
 fn converted(source: &Value) -> Value {
     let component = Snapped {
         directory: "component",

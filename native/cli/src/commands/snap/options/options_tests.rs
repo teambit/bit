@@ -36,6 +36,7 @@ fn everything_else_is_left_to_node() {
     assert!(parse(&["-u", "--unmodified"]).is_none());
 }
 
+/// Verifies that [`parse`] retains `$modified`, boolean, brace, and extglob selector patterns in [`Options`].
 #[test]
 fn component_selector_grammar_is_retained_for_native_selection() {
     for pattern in ["$modified", "a* AND !b*", "{foo,bar}/*", "@(foo|bar)/*"] {

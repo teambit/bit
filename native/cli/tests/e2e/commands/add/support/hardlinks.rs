@@ -13,6 +13,7 @@ type Identity = (u64, u64);
 /// Captured multi-path hardlink alias groups within a workspace directory tree.
 pub(super) struct Snapshot(Vec<Vec<PathBuf>>);
 impl Snapshot {
+    /// Scans `root` recursively and records all multi-path hardlink groups as a [`Snapshot`].
     pub(super) fn read(root: &Path) -> Self {
         let mut groups = BTreeMap::new();
         visit(root, root, &mut groups);

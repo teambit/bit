@@ -30,7 +30,7 @@ fn parses_bare_ripple_and_invalid_limit() {
     assert_eq!(parse_positive_int("-5"), None);
 }
 
-/// Verifies that [`parse_subcommand`] parses `simulate` without a `--lane` flag.
+/// Verifies that [`parse_subcommand`] parses `simulate` into [`Subcommand::Simulate`] without a `--lane` flag.
 #[test]
 fn parses_simulate_without_lane_flag() {
     assert_eq!(

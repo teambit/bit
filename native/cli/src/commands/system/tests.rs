@@ -32,6 +32,7 @@ fn formats_unrecognized_system_subcommand() {
     );
 }
 
+/// Verifies that [`parse_args`] returns `None` when given an empty argument slice.
 #[test]
 fn empty_slice_returns_none_for_system_command() {
     assert_eq!(parse_args(&[]), None);

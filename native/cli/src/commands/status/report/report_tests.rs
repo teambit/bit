@@ -66,6 +66,7 @@ fn result(fields: &Value) -> Value {
     result
 }
 
+/// Builds a sample status capture context with two `targets`, one model head, and merge history.
 fn context() -> Value {
     json!({
         "targets": [

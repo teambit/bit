@@ -60,6 +60,7 @@ fn invalid_or_canonical_flags_are_left_to_node() {
     }
 }
 
+/// Verifies that [`parse`] accepts `--persist`, `--persist skip-build`, and boolean `$modified` selector patterns.
 #[test]
 fn persist_optional_build_argument_and_state_patterns() {
     assert!(parse(&["--persist"]).is_some());

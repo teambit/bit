@@ -27,6 +27,7 @@ fn handles_cycles_without_recursion_and_rejects_ambiguous_rows() {
     assert_eq!(complete(&duplicates, "first"), None);
 }
 
+/// Verifies `row_scope_and_name` extracts `(scope, name)` from object and string `index.json` component IDs.
 #[test]
 fn row_scope_and_name_parses_object_and_string_ids() {
     let obj_row = json!({"id": {"scope": "my.scope", "name": "ui/button"}});

@@ -55,6 +55,7 @@ fn later_publication_failure_keeps_the_first_history() {
     assert_eq!(fs::read(temporary).unwrap(), b"collision");
 }
 
+/// Verifies that [`Plan`] rebuild failure after a trash move preserves the original object inside `trash/`.
 #[cfg(unix)]
 #[test]
 fn failed_rebuild_after_trash_move_keeps_the_original_in_trash() {

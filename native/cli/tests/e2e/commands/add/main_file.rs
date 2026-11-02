@@ -35,6 +35,7 @@ fn removed_main_can_be_replaced_by_a_new_explicit_main() {
         "foo-main2.js",
     );
 }
+/// Verifies [`compare`] matches platform case-sensitivity rules when resolving an explicit `-m` main file.
 #[test]
 fn platform_case_sensitivity_controls_explicit_main_lookup() {
     let helper = workspace();

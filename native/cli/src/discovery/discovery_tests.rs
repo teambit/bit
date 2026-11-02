@@ -14,6 +14,7 @@ const ENTRY: &str = "node_modules/@teambit/bit/bin/bit";
 /// Platform-specific relative path to the `Node.js` binary inside a BVM `nodejs/<version>` directory.
 const NODE: &str = if cfg!(windows) { "node.exe" } else { "bin/node" };
 
+/// Writes `content` to `path`, creating parent directories as needed.
 fn write(path: &Path, content: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, content).unwrap();

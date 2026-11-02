@@ -47,6 +47,7 @@ fn detects_unconfigured_envs_and_empty_workspace() {
     assert_eq!(empty_msg, "no components found");
 }
 
+/// Verifies [`parse_scripts_from_source`] and [`eval_function_logs`] on `.bit-env.ts` [`ParsedScript`] definitions.
 #[test]
 fn parses_scripts_from_bit_env_source_and_evaluates_logs() {
     let src = r"

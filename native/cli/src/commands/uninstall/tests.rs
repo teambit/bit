@@ -26,6 +26,7 @@ fn ignores_empty_package_string() {
     assert!(packages.is_none());
 }
 
+/// Verifies that [`parse_arguments`] rejects a flag-like package name following `--`.
 #[test]
 fn declines_flag_like_trailing_package_after_double_dash() {
     let args = [OsString::from("uninstall"), OsString::from("--"), OsString::from("-bad")];

@@ -19,7 +19,7 @@ fn parses_version_json_flags() {
     assert_eq!(parse_json_flag(&[OsString::from("version"), OsString::from("--help")]), None);
 }
 
-/// Verifies [`render_version`] in plain-text and JSON modes along with `--json=true` parsing.
+/// Verifies [`render_version`] in plain-text and JSON modes along with `--json=true` [`parse_json_flag`] parsing.
 #[test]
 fn renders_version_text_and_json() {
     assert_eq!(render_version("1.2.3", false).unwrap(), "1.2.3");

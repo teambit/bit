@@ -38,7 +38,7 @@ fn accepted_control_waits_for_delayed_messages() {
     child.wait().unwrap();
 }
 
-/// Verifies that [`accept`] rejects a control connection whose handshake token does not match the expected token.
+/// Verifies that [`accept`] rejects a TCP control connection whose handshake token does not match the expected token.
 #[test]
 fn mismatched_control_token_is_rejected_during_handshake() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

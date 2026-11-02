@@ -39,6 +39,7 @@ fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
     assert!(entered_versions(None).is_empty());
 }
 
+/// Verifies that [`selections`] preserves target component order and per-pattern version specs for bracket and negation globs.
 #[test]
 fn advanced_globs_preserve_component_order_and_per_pattern_versions() {
     let context =

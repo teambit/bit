@@ -33,6 +33,7 @@ fn pending_component_configuration_is_projected_by_origin() {
     );
 }
 
+/// Verifies that [`package_name`] replaces `/` separators in nested component namespaces with `.`.
 #[test]
 fn package_name_replaces_slashes_in_nested_namespaces_with_dots() {
     assert_eq!(package_name("scope/a/b/c", None), "@scope/a.b.c");

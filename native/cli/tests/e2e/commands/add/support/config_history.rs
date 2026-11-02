@@ -48,6 +48,7 @@ impl Snapshot {
         snapshot.validate();
         snapshot
     }
+    /// Asserts that every backup file in `self.files` is referenced in `metadata.txt` and vice versa.
     fn validate(&self) {
         let mut referenced = BTreeSet::new();
         for line in self.metadata.split_inclusive('\n') {

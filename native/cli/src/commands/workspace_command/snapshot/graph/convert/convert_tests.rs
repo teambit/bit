@@ -26,6 +26,7 @@ fn references_resolve_like_ref_to_relative() {
 /// Canonical 40-hex snap hash fixture used by [`replacer`] in lockfile conversion tests.
 const HASH: &str = "0123456789abcdef0123456789abcdef01234567";
 
+/// Builds a test [`Replacer`] mapping `@s/one` to [`HASH`] and `@s/two` to `1.0.0`.
 fn replacer() -> Replacer {
     Replacer::new(&[
         WorkspaceComponent { package_name: "@s/one", identity: "s/one", version: Some(HASH) },

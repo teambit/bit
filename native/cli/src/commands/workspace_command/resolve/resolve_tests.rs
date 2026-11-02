@@ -37,6 +37,7 @@ fn versions_are_collected_from_nested_versions_and_identities() {
     assert_eq!(versions.list, ["1.0.0", "2.0.0"]);
 }
 
+/// Verifies that [`validate_preparation`] requires `selectedIds` to be a subset of known workspace `targets`.
 #[test]
 fn preparations_must_select_known_targets() {
     let targets = json!([{ "identity": "s/a" }]);

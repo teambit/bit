@@ -49,6 +49,7 @@ fn filtered_snapshot_order_follows_pnpm_walker() {
     assert!(snapshot_order(&lockfile, &["missing".to_string()]).is_empty());
 }
 
+/// Verifies `environment_importer` resolves configured `.bit_roots` paths and prefers unversioned directories when present.
 #[test]
 fn component_environment_root_uses_configured_base_and_prefers_unversioned_directory() {
     let directory = tempfile::tempdir().unwrap();

@@ -28,6 +28,7 @@ fn policy() -> crate::commands::status::policy::Policy {
     }
 }
 
+/// Verifies default dev-file grouping for `.spec.ts` files and decline on `.docs.mdx` or `.node-app.ts` files.
 #[test]
 fn receipt_groups_test_files_and_declines_callback_files() {
     let target = serde_json::json!({ "identity": "remote/one" });

@@ -13,6 +13,7 @@ fn ordinary_heads(context: &Value, receipt: &Value) -> bool {
     ordinary_heads_for(context, receipt, None)
 }
 
+/// Constructs a test [`Component`] fixture with `identity` and `dependencies`.
 fn component(identity: &str, dependencies: &[&str]) -> Component {
     Component {
         ignored: Vec::new(),

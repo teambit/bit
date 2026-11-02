@@ -23,6 +23,7 @@ fn lane_patterns_match_the_lane_targets() {
     assert!(pattern_ids(&json!({ "lane": {}, "pattern": "x/*" }), &context).is_err());
 }
 
+/// Verifies that [`validate`] rejects `--no-snap` when `shouldSquash` is `true` unless squashing is already handled.
 #[test]
 fn squashing_without_snaps_is_left_to_node() {
     let squash = json!({ "lane": { "shouldSquash": true } });

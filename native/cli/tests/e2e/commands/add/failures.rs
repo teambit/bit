@@ -27,6 +27,7 @@ fn path_prefix_siblings_do_not_transfer_tracked_files() {
     helper.run("add foo -i foo");
     compare(&helper, "add foobar -i foobar");
 }
+/// Verifies `bit add` before `bit init` reports the released missing-workspace error without creating `.bitmap`.
 #[test]
 fn add_before_init_reports_the_released_workspace_error() {
     let helper = crate::helper::Helper::new();

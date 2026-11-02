@@ -64,6 +64,7 @@ fn sets_and_unsets_peer_in_bitmap() {
     assert_eq!(after["comp1"]["config"][DEP_RESOLVER_ID], json!({}));
 }
 
+/// Verifies that [`prepare`] updates `component.json` instead of `.bitmap` when `component.json` exists.
 #[test]
 fn sets_peer_in_component_json_when_present() {
     let dir = tempdir().expect("tempdir");

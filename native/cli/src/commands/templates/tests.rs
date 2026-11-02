@@ -53,6 +53,7 @@ fn selects_and_formats_workspace_and_component_templates() {
     assert_eq!(friendly_aspect_name("teambit.react/react"), "React");
 }
 
+/// Verifies [`can_use_builtin_workspace_templates`] declines when custom generator envs are configured in `workspace.jsonc`.
 #[test]
 fn detects_custom_generator_config_in_workspace() {
     let temp = tempfile::tempdir().unwrap();

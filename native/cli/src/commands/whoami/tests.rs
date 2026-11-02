@@ -27,6 +27,7 @@ fn parses_valid_args() {
     );
 }
 
+/// Verifies that [`parse_args`] rejects positional arguments, unknown flags, and missing `--token` values.
 #[test]
 fn rejects_invalid_args() {
     assert_eq!(parse_args(&os_args(&["whoami", "unexpected"])), None);

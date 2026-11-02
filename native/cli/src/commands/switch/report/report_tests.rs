@@ -55,6 +55,7 @@ fn reports_fetched_head() {
     assert!(!report.data.contains("local head"));
 }
 
+/// Verifies that [`format`] describes switching to the `local head` of the lane when `skip_fetch` is `true`.
 #[test]
 fn skip_fetch_reports_local_head_of_lane() {
     let report = format(

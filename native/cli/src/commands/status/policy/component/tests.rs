@@ -42,6 +42,7 @@ fn forced_component_policy_overrides_environment_and_keeps_removals() {
     );
 }
 
+/// Verifies that array-style [`policy`] entries retain the first duplicate and map `force: true` to manual policy.
 #[test]
 fn array_entries_keep_first_duplicate_and_force_controls_detection() {
     let policy = policy(&json!({"dependencies":[

@@ -57,7 +57,7 @@ fn sorts_like_node_root_collation() {
     );
 }
 
-/// Verifies that identical component ID strings compare as [`std::cmp::Ordering::Equal`] in [`compare`].
+/// Verifies that identical component ID strings compare as [`std::cmp::Ordering::Equal`] in root-locale [`compare`].
 #[test]
 fn equal_strings_compare_as_equal_in_root_collation() {
     assert_eq!(compare("my.scope/alpha", "my.scope/alpha"), std::cmp::Ordering::Equal);

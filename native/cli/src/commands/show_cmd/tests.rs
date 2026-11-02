@@ -78,6 +78,7 @@ fn write_fixture_workspace(root: &Path) {
     fs::write(root.join("comp1/index.js"), "import { a } from '@my-scope/comp1';\n").unwrap();
 }
 
+/// Verifies [`legacy_json`], [`harmony_json`], and [`text_report`] for a workspace component loaded via [`load_target_outcome`].
 #[test]
 fn renders_legacy_harmony_and_text_for_workspace_component() {
     let temp = tempfile::tempdir().unwrap();

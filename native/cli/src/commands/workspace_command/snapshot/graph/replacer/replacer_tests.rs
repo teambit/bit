@@ -37,6 +37,7 @@ fn file_versions_become_component_versions() {
     assert_eq!(replacer.component("lodash"), None);
 }
 
+/// Verifies that [`Replacer`] rewrites a versionless [`WorkspaceComponent`] (`version: None`) to `@undefined`.
 #[test]
 fn a_new_component_is_named_like_snap_to_semver_of_undefined() {
     let components =

@@ -24,6 +24,7 @@ fn core_package_names() {
     assert_eq!(core_package_name("teambit.a/b/c"), "@teambit/b.c");
 }
 
+/// Verifies that [`is_dev_file`] returns `false` for an ordinary source file (`src/index.ts`).
 #[test]
 fn ordinary_source_file_is_not_classified_as_dev_file() {
     assert!(!is_dev_file("src/index.ts"));

@@ -26,6 +26,7 @@ fn individual_files_and_missing_or_outside_paths_match_errors() {
         assert!(!compare(&helper, command).status.success());
     }
 }
+/// Verifies [`compare`] reports the parent component owner when adding a nested subdirectory (`comp1/foo`).
 #[test]
 fn tracking_inside_an_existing_component_reports_parent_owner() {
     let helper = workspace();

@@ -43,7 +43,7 @@ fn parses_update_options_and_detects_empty_dependencies() {
     assert_eq!(parse_options(&["--unknown"]), None);
 }
 
-/// Verifies that empty `bit update` arguments parse to default [`Options`] with no patterns.
+/// Verifies that [`parse_options`] parses empty `bit update` arguments to [`Options::default`].
 #[test]
 fn empty_update_args_parse_to_default_options() {
     assert_eq!(parse_options(&[]), Some(Options::default()));

@@ -70,6 +70,7 @@ fn declined(output: &Output, args: &str, reason: &str) {
     assert!(stderr.contains("`diff` declined") && stderr.contains(reason), "{stderr}");
 }
 
+/// Verifies that unsupported `bit diff` arguments decline to the [`STUB`] `Node.js` CLI.
 #[test]
 fn other_arguments_decline() {
     let dir = workspace();

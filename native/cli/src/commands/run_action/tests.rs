@@ -35,6 +35,7 @@ fn formats_action_results_like_command_runner() {
     assert_eq!((structured.data.as_str(), structured.code), ("custom", 2));
 }
 
+/// Verifies that [`parse_options`] rejects fewer than three positional arguments.
 #[test]
 fn rejects_too_few_run_action_positional_arguments() {
     assert_eq!(parse_options(&[]), None);

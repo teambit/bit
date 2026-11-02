@@ -22,7 +22,7 @@ fn tooling_flags_preserve_selection_and_release_arguments() {
     assert!(params.get("isSnap").is_none());
 }
 
-/// Verifies duplicate flag rejection, default `--editor` (`vim`), and command-specific `--disable-tag-pipeline` handling.
+/// Verifies duplicate flag rejection, default `--editor` (`vim`), and [`Kind`]-specific `--disable-tag-pipeline` handling in [`parse`].
 #[test]
 fn aliases_duplicates_optional_editor_and_command_specific_flags() {
     assert!(parse(&["-b", "--build"], Kind::Snap).is_none());

@@ -15,7 +15,7 @@ fn parses_and_validates_server_port() {
     assert_eq!(parse_options(&["--port=invalid"]), None);
 }
 
-/// Verifies inline `--port=<num>` and `--compile=false` flag parsing via [`parse_options`].
+/// Verifies inline `--port=<num>` and `--compile=false` [`Options`] flag parsing via [`parse_options`].
 #[test]
 fn parses_inline_port_and_compile_false_flag() {
     assert_eq!(

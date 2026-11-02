@@ -25,7 +25,7 @@ fn callbacks_replace_existing_types_and_precede_later_native_checks() {
     assert_eq!(issues, vec![replacement, custom, later]);
 }
 
-/// Verifies that [`merge`] leaves existing component issues untouched when the callback array is empty.
+/// Verifies that [`merge`] leaves existing component issues untouched when the callback array is empty (`[]`).
 #[test]
 fn empty_callback_array_leaves_existing_issues_unchanged() {
     let mut issues = vec![json!({"type":"MissingDists","data":true})];

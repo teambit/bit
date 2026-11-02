@@ -23,6 +23,7 @@ fn parses_search_flags() {
     assert!(parsed.json);
 }
 
+/// Verifies that [`parse_args`] accepts short `-l`, `-j`, and combined `-lj` flags.
 #[test]
 fn parses_short_flags() {
     let parsed = parse_args(&os_args(&["search", "foo", "-l", "-j"])).unwrap();

@@ -56,6 +56,7 @@ fn checkout_commit_keeps_the_entry_written_by_the_retained_loader_after_invalida
     assert!(!cache.exists());
 }
 
+/// Verifies that [`checkout_reset`] returns `false` when `checkoutLoaderCacheChecked` is `true` and `true` otherwise.
 #[test]
 fn checkout_reset_respects_checkout_loader_cache_checked_flag() {
     assert!(!checkout_reset(&capture(true)));

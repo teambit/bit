@@ -32,6 +32,7 @@ fn snap_hashes_are_sha1_hex() {
     );
 }
 
+/// Verifies `parse_git_config` splits at the first `=` per line and retains the last duplicate key.
 #[test]
 fn git_config_values_end_at_the_next_equals_sign_and_the_last_wins() {
     let config = super::parse_git_config(

@@ -27,6 +27,7 @@ fn sample(separate: bool) -> Snapshot {
         modes: BTreeMap::new(),
     }
 }
+/// Returns an empty baseline [`Snapshot`] with no metadata, files, or modes.
 fn baseline() -> Snapshot {
     Snapshot { metadata: Vec::new(), files: BTreeMap::new(), modes: BTreeMap::new() }
 }

@@ -50,6 +50,7 @@ fn initialization_failure_is_retained_like_a_rejected_identity_promise() {
     }
 }
 
+/// Verifies that concurrent [`Cache::load`] calls invoke the [`fallback`] factory only once.
 #[test]
 fn concurrent_identity_requests_run_one_factory_including_cloud_lookup_fallback() {
     let cache = Cache::new();

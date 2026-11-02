@@ -34,6 +34,7 @@ fn windows_directory_error_uses_node_directory_error_without_masking_permission_
     assert!(result.to_string().starts_with("error: you do not have permissions"));
 }
 
+/// Verifies that [`render`] formats an empty results array (`[]`) as a self-closing `<testsuites/>` document.
 #[test]
 fn empty_results_array_renders_empty_testsuites_element() {
     let xml = render("[]", &json!({})).unwrap();

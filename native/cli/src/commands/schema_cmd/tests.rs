@@ -57,6 +57,7 @@ fn extracts_stored_schema() {
     assert!(is_entry_modified_on_disk(temp.path(), temp.path(), &bitmap.entries[0], &ver_val));
 }
 
+/// Verifies [`resolve_scope_schema_json`] matches bare-scope components by glob, comma, and negation patterns.
 #[test]
 fn resolves_bare_scope_schemas_by_glob_comma_and_negation_patterns() {
     let temp = tempdir().expect("tempdir");

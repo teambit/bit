@@ -17,7 +17,7 @@ fn the_fallback_warning_names_the_command_and_the_reason() {
     );
 }
 
-/// Verifies that [`fallback_message`] starts with the warning symbol prefix.
+/// Verifies that [`fallback_message`] starts with the `\u{26A0} bit-native:` warning prefix.
 #[test]
 fn fallback_warning_starts_with_warning_symbol() {
     assert!(fallback_message("export", "unsupported flag").starts_with("\u{26A0} bit-native:"));

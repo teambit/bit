@@ -90,6 +90,7 @@ fn handles_empty_workspace_mixed_patterns_and_unowned_files() {
     assert_eq!(err, r#"unable to find any component matching the "ui/*" pattern"#);
 }
 
+/// Verifies that [`parse_options`] parses an empty argument slice into default [`Options`].
 #[test]
 fn empty_test_args_parse_to_default_options() {
     assert_eq!(

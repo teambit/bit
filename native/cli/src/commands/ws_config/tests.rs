@@ -63,6 +63,7 @@ fn parses_list_clean_and_write_subcommands() {
     );
 }
 
+/// Verifies [`clean_workspace_configs`], [`format_list_output`], [`format_list_json`], and [`format_clean_output`].
 #[test]
 fn cleans_only_bit_generated_config_files_and_formats_list() {
     let temp = tempfile::tempdir().unwrap();

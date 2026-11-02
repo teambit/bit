@@ -23,6 +23,7 @@ fn stub(dir: &Path) -> PathBuf {
     entry
 }
 
+/// Runs the compiled `bit` binary in `cwd` with `BIT_NODE_CLI` set to `entry` and custom `env` pairs.
 fn bit(cwd: &Path, entry: &Path, args: &[&str], env: &[(&str, &str)]) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_bit"));
     command

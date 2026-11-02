@@ -22,7 +22,7 @@ fn policy_values_are_not_component_patterns() {
     assert!(parse(&["--ignore-newest-version"], false).is_some());
 }
 
-/// Verifies that [`parse`] rejects duplicate `--no-lock-deps` policy flags.
+/// Verifies that [`parse`] returns `None` when `--no-lock-deps` is passed more than once.
 #[test]
 fn duplicate_no_lock_deps_is_rejected() {
     assert!(parse(&["--no-lock-deps", "--no-lock-deps"], false).is_none());

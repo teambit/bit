@@ -40,6 +40,7 @@ fn declined(output: &Output, args: &str, reason: &str) {
     assert!(stderr.contains("`checkout` declined") && stderr.contains(reason), "{stderr}");
 }
 
+/// Creates a temporary directory containing the [`STUB`] `bin/bit.js` and a minimal `ws/workspace.jsonc`.
 fn setup() -> TempDir {
     let dir = TempDir::new().unwrap();
     write(&dir.path().join("bin/bit.js"), STUB);

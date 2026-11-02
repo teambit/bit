@@ -30,6 +30,7 @@ fn tracks_named_namespaced_and_single_level_components() {
     }
 }
 
+/// Verifies [`compare`] warns when files are already owned by another component without creating a duplicate entry.
 #[test]
 fn already_owned_files_warn_without_creating_a_second_identity() {
     let helper = workspace();

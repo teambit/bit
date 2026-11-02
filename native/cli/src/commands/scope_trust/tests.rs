@@ -26,6 +26,7 @@ fn write_workspace(root: &Path, default_scope: &str) {
     .unwrap();
 }
 
+/// Verifies [`parse_tokens`] and [`parse_action`] across valid and invalid `bit scope trust` subcommands.
 #[test]
 fn parses_tokens_and_actions() {
     assert_eq!(parse_tokens(&os_args(&["scope", "trust"])), Some(Vec::new()));

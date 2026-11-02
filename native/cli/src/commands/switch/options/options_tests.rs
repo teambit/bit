@@ -65,6 +65,7 @@ fn switch_adoption_values_are_lane_scoped_and_strategy_is_checkout_scoped() {
     assert!(!parse(&["remote/dev", "-p", "foo AND bar"]).unwrap().supported_pattern());
 }
 
+/// Verifies that `parse_import` accepts `bit lane import` flags while rejecting `bit switch`-only flags.
 #[test]
 fn lane_import_has_its_own_flag_set_but_retains_semantic_errors() {
     let options = super::parse_import(&[

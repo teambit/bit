@@ -21,7 +21,7 @@ fn detection_issue_objects_match_released_node_classes() {
     }
 }
 
-/// Verifies that [`Issue::parse`] returns an error when given an unrecognized issue type name.
+/// Verifies that [`Issue::parse`] returns `Err` when given an unrecognized issue type name.
 #[test]
 fn unknown_issue_type_name_returns_error() {
     assert!(Issue::parse("NonexistentIssueType").is_err());
