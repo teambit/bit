@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 use std::io;
 
-/// Resolves ordered latest-version groups across HTTP and file remotes for [`Request`].
+/// Resolves ordered latest-version groups across HTTP and file [`Remotes`] for [`Request`].
 pub(super) async fn versions(
     input: &Request,
     remotes: &Remotes,

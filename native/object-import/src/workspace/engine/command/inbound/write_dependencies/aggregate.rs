@@ -7,7 +7,7 @@ use node_semver::npm;
 use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, collections::HashSet, io};
 
-/// Aggregates and deduplicates dependency ranges across root, variant, and component policies.
+/// Aggregates and deduplicates dependency ranges across root, variant, and component policies via [`dedupe`].
 pub(super) fn prepare(facts: &Value) -> io::Result<Map<String, Value>> {
     let root_entries = array(&facts["rootPolicy"]["entries"])?;
     let mut rows = Vec::with_capacity(root_entries.len());

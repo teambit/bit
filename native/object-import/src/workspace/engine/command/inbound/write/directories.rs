@@ -67,7 +67,7 @@ pub(super) fn fix_dirs_if_equal(targets: &[Target], directories: &mut [String]) 
     }
 }
 
-/// Move every target in `duplicate` to its owner's directory or a suffix.
+/// Move every [`Target`] in `duplicate` to its owner's directory or a numbered suffix via [`increment_path`].
 fn relocate(
     targets: &[Target],
     directories: &mut [String],

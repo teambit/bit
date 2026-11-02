@@ -3,7 +3,7 @@
 use super::{History, existing, invalid, safe_destination};
 use std::{fs, io, path::Path};
 
-/// Prepares `.bitmap` history backup and metadata preimages for `file_id` under `root`.
+/// Prepares `.bitmap` [`History`] backup and metadata preimages for `file_id` under `root`.
 pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History> {
     let file_id = file_id
         .map(str::trim)

@@ -3,7 +3,7 @@
 use super::{Planning, Replacement, WorkspaceFiles, existing, invalid, safe_destination};
 use std::{fs, io, path::PathBuf};
 
-/// Prepares additions and replacement preimages in `changes` for newly written component `files` under `context`.
+/// Prepares additions and replacement preimages in [`WorkspaceFiles`] for newly written component `files` under [`Planning`].
 #[inline]
 pub(super) fn prepare(
     context: &Planning<'_>,

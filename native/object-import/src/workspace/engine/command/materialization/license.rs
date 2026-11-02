@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Validated destination path and contents for a component `LICENSE` file write.
+/// Validated destination [`PathBuf`] and contents for a component `LICENSE` file write.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     path: PathBuf,

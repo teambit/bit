@@ -4,7 +4,7 @@ use super::{Target, invalid};
 use serde_json::{Map, Value};
 use std::io;
 
-/// Returns `true` when the `.bitmap` entry `(key, row)` matches the scope and name of `target`.
+/// Returns `true` when the `.bitmap` entry `(key, row)` matches the scope and name of [`Target`].
 pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
     if !is_component_bitmap_entry(key, row) {
         return false;

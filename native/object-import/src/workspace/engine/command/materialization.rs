@@ -8,7 +8,7 @@ use crate::{checkout_transition, workspace::snapshots};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Prepared component file writes, removals, `LICENSE` state, and output summary for one target.
+/// Prepared component file [`Writes`], removals, `LICENSE` state, and output summary for one target.
 pub(super) struct Prepared {
     pub(super) output: Value,
     pub(super) version: Value,

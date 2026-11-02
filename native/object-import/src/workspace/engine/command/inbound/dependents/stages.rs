@@ -12,7 +12,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
-/// Pending inbound dependent prefetch state awaiting workspace graph completion.
+/// Pending inbound dependent prefetch state ([`Prepare`], [`Target`]) awaiting workspace graph completion.
 #[derive(Clone)]
 pub(in super::super) struct Pending {
     input: Prepare,

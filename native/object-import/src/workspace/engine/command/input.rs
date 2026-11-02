@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
-/// Deserialized preparation request for a native workspace checkout, merge, or switch command.
+/// Deserialized preparation request for a native workspace [`Operation`] (`checkout`, `merge`, or `switch`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {

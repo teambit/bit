@@ -4,7 +4,7 @@ use super::{Prepared, invalid, lane, render_rows};
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
 
-/// Extracts and normalizes component rows from a schema-validated `.bitmap` object.
+/// Extracts and normalizes component rows from a schema-validated `.bitmap` object (rejecting missing `$schema-version`).
 pub(super) fn rows(bitmap: &Value) -> io::Result<Vec<Value>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("command bitmap object"))?;
     if bitmap["$schema-version"].as_str().is_none() {

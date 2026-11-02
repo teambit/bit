@@ -33,7 +33,7 @@ pub(super) fn expand(
     append(roots, dependencies)
 }
 
-/// Deduplicates `dependencies` by bare component identity and rewrites each target version to `"latest"`.
+/// Deduplicates `dependencies` by bare component [`identity`] and rewrites each target version to `"latest"`.
 fn heads(dependencies: Vec<Target>) -> io::Result<Vec<Target>> {
     let mut seen = HashSet::with_capacity(dependencies.len());
     let mut heads = Vec::with_capacity(dependencies.len());

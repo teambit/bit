@@ -27,7 +27,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub semantic_version: Option<&'a str>,
     pub version: &'a Value,
 }
-/// Retained proofs, file writes, symlinks, copies, and created package directories for post-merge finalization.
+/// Retained [`proof::Proof`] records, file writes, symlinks, copies, and created package directories for post-merge finalization.
 pub(in crate::workspace::engine::command) struct Prepared {
     proofs: Vec<proof::Proof>,
     writes: Vec<(PathBuf, Vec<u8>)>,

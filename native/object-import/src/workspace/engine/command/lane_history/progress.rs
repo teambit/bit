@@ -10,7 +10,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Imports `targets` into `record.imported` while preserving started import progress on failure.
+/// Imports [`command_import::Target`] entries into `record.repository` while preserving started import progress on failure.
 pub(in crate::workspace::engine::command) fn import(
     record: &mut Record,
     targets: &[command_import::Target],

@@ -4,7 +4,7 @@ use crate::workspace::engine::{command::Record, dependency_graph::proof, invalid
 use serde_json::Value;
 use std::io;
 
-/// Resolves the remote head hash for `identity` on the current lane from `refs/remotes`.
+/// Resolves the remote head hash for `identity` on the current lane of [`Record`] from `refs/remotes` (up to `4,096` rows).
 pub(in crate::workspace::engine::command) fn remote(
     record: &mut Record,
     identity: &str,

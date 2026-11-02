@@ -5,7 +5,7 @@ use super::{Record, invalid, planning, repository::Repository};
 use serde_json::Value;
 use std::io;
 
-/// Capture the canonical post-squash fetch before any publication.
+/// Capture the canonical post-squash fetch on [`Record`] for [`planning::Planned`] before any publication.
 pub(super) fn prepare(record: &mut Record, plan: &planning::Planned) -> io::Result<()> {
     let lane = &record.context["lane"];
     if lane["shouldSquash"] != true || lane["other"].is_null() {

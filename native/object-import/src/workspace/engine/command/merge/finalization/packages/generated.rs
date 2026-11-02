@@ -4,7 +4,7 @@
 use super::{Input, Map, Value, invalid, value};
 use std::io;
 
-/// `NodeModuleLinker.createPackageJson` for an unlinked component using the default Node env.
+/// `NodeModuleLinker.createPackageJson` for an unlinked [`Input`] component using the default Node env.
 pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) -> io::Result<Value> {
     let (scope, name) = parse_package_identity(input.identity)?;
     let main_file = input.version["mainFile"]

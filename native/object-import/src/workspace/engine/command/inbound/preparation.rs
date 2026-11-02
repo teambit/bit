@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Acquires target and dependency objects across recovery, lane-workspace, or standard remote imports.
+/// Acquires [`Target`] and dependency objects across recovery, lane-workspace, or standard remote imports.
 pub(super) fn prepare_targets(
     input: &Prepare,
     roots: &[Target],

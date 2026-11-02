@@ -4,7 +4,7 @@ use super::{Target, invalid};
 use crate::workspace::engine::client_status::config;
 use std::{io, path::Path};
 
-/// Extracts tracked scoped component [`Target`] entries from the workspace `.bitmap` file.
+/// Extracts tracked scoped component [`Target`] entries from the workspace `.bitmap` file under `root`.
 pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
     let bitmap = config::document(&root.join(".bitmap"))?;
     let rows = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap"))?;

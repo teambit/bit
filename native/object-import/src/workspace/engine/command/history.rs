@@ -11,7 +11,7 @@ use std::{
     path::Path,
 };
 
-/// Cached `VersionHistory` graphs and dirty component tracking for workspace commands.
+/// Cached `VersionHistory` graphs ([`HashMap`]) and dirty component tracking ([`HashSet`]) for workspace commands.
 #[derive(Debug, Default, Clone)]
 pub(super) struct State {
     values: HashMap<String, Value>,

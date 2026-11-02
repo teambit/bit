@@ -9,7 +9,7 @@ use std::{
     io,
 };
 
-/// Fetches `main` targets followed by selected lanes while preserving lane-first receipt ordering.
+/// Fetches `main` targets followed by selected lanes while preserving lane-first [`receipt`] ordering.
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
     let mut selection = select(input, None)?;
     let main = super::super::bitmap_targets(&input.root)?;

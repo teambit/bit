@@ -9,7 +9,7 @@ use super::{
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Returns `true` when the checkout options describe a stash load rather than a stash reset.
+/// Returns `true` when the checkout [`Options`] describe a stash load rather than a stash reset.
 #[inline]
 pub(super) fn loading(options: &Options) -> bool {
     options.stash.as_ref().is_some_and(|stash| stash.reset_ids.is_none())

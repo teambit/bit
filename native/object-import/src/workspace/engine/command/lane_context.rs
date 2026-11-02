@@ -14,7 +14,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Loaded current and target lane records and imported object state for command planning.
+/// Loaded current and target lane [`Record`] values, [`Id`] keys, and [`command_import::PreparedImport`] state for command planning.
 struct Lanes {
     imported: command_import::PreparedImport,
     current_id: Id,

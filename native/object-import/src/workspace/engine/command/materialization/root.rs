@@ -9,7 +9,7 @@ use std::{io, path::Path};
 
 const ASPECT: &str = "teambit.workspace/workspace-root";
 
-/// Verifies that a `Version` materialized at `.` carries the `teambit.workspace/workspace-root` aspect.
+/// Verifies that a `Version` materialized at `.` carries the [`ASPECT`] (`teambit.workspace/workspace-root`) extension.
 #[inline]
 pub(super) fn validate_version(version: &Value) -> io::Result<()> {
     let root = version["extensions"]
