@@ -1,4 +1,6 @@
 //! Unit tests for lane abort [`Operation`] restoration of `.bitmap` and `workspace.jsonc` via [`prepare`] and [`proof`].
+//!
+//! Checks that lane abort removes newly added component roots and restores backed-up configuration bytes.
 
 use super::{Operation, prepare, proof};
 use crate::workspace::engine::command::scratch;

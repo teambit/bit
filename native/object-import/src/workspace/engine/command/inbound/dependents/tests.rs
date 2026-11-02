@@ -1,4 +1,6 @@
 //! Unit tests for inbound dependent path [`select`] traversal, [`Target`] matching, and `--through` filtering.
+//!
+//! Verifies intermediate dependent path discovery and `through`-node filtering.
 
 use super::select;
 use crate::command_import::Target;

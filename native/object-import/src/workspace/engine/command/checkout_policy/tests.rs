@@ -1,4 +1,6 @@
 //! Unit tests for checkout dependency policy [`receipt_versions`] filtering in `bit-object-import`.
+//!
+//! Ensures checkout receipts include only non-hidden auto-detected dependencies overlapping workspace policy.
 
 use super::receipt_versions;
 use serde_json::json;

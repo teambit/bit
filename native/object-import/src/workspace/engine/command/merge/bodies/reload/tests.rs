@@ -1,4 +1,6 @@
 //! Unit tests for retaining surviving current sources via [`retain`] during merge reload in `bit-object-import`.
+//!
+//! Ensures merge reload preserves untouched local files without overwriting merged or removed paths.
 
 use super::retain;
 use serde_json::json;

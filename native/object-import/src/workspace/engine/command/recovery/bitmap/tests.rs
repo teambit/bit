@@ -1,4 +1,6 @@
 //! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`] in `bit-object-import`.
+//!
+//! Confirms that `.bitmap` config overrides are extracted cleanly and custom providers are rejected.
 
 use super::{project, project_snapshot};
 use serde_json::json;

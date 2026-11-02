@@ -1,4 +1,4 @@
-//! Unit tests for remote [`ScopeGuard`] deletion validation, readset tracking, and index row matching.
+//! Unit tests for remote [`ScopeGuard`] deletion validation, readset tracking, and index row matching in `bit-object-import`.
 
 use super::ScopeGuard;
 use std::fs;

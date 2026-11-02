@@ -1,4 +1,6 @@
 //! Unit tests for inbound dependent stage [`current_dependencies`] extraction in `bit-object-import`.
+//!
+//! Confirms that `resolvedDependencies` override legacy dependency arrays when present.
 
 use super::current_dependencies;
 use serde_json::json;

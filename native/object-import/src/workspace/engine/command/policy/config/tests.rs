@@ -1,4 +1,6 @@
 //! Unit tests for separating [`automatic`], [`normalized`], and [`projection`] forced merge dependency policies.
+//!
+//! Verifies that automatic dependency entries are extracted without mutating persisted merge config.
 
 use super::{automatic, normalized, projection};
 use serde_json::json;

@@ -1,4 +1,6 @@
 //! Unit tests for component version [`TagIndex`] hash indexing and tag precedence in `bit-object-import`.
+//!
+//! Confirms that normal tagged versions and newest tags take precedence over older or orphan entries.
 
 use super::TagIndex;
 #[test]

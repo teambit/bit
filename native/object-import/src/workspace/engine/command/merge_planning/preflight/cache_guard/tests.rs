@@ -1,4 +1,6 @@
 //! Unit tests for merge preflight cache rekey file classification, extension configuration, and policy guards in `bit-object-import`.
+//!
+//! Ensures cache rekeying requires identical file lists, `mainFile`, extension configs, and package dependencies.
 
 use serde_json::json;
 

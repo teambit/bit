@@ -1,4 +1,4 @@
-//! Unit tests for lazy base source reading during merge body preparation.
+//! Unit tests for lazy base source reading ([`apply`], [`State`]) during merge body preparation in `bit-object-import`.
 
 use super::{Fixture, State, apply};
 use serde_json::{Value, json};

@@ -1,4 +1,6 @@
 //! Seeded differential tests for [`future`] version increment and auto-tag graph policy in `bit-object-import`.
+//!
+//! Compares native future-version calculations against model component increment policy.
 
 use super::future;
 use serde_json::Value;

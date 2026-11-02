@@ -1,4 +1,6 @@
 //! Unit tests for workspace configuration [`extensions`] and [`ignored_issues`] validation in `bit-object-import`.
+//!
+//! Checks default workspace settings, disabled previews, and issue ignore lists.
 
 use super::{extensions, ignored_issues};
 use serde_json::json;

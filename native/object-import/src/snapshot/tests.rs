@@ -1,4 +1,4 @@
-//! Unit tests for snapshot object batch writing, header verification, and index updates via [`serve`] in `bit-object-import`.
+//! Unit tests for snapshot object batch writing, header verification, and index updates via [`serve`] in `bit-object-import` snapshot persistence.
 
 use super::serve;
 use flate2::read::ZlibDecoder;

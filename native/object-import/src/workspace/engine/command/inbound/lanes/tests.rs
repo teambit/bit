@@ -1,4 +1,6 @@
 //! Unit tests for inbound lane ID [`parse_id`], [`validate_virtual_bounds`], and [`VirtualRemote`] [`merge_remote`] merging.
+//!
+//! Checks distinct non-main lane ID validation and conflict-free virtual remote object merging.
 
 use super::{merge_remote, parse_id, validate_virtual_bounds};
 use crate::command_import::VirtualRemote;

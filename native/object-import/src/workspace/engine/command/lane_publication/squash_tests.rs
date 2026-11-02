@@ -1,4 +1,6 @@
 //! Unit tests for lane squash commit message replacement via [`replace_message`] and modification logs in `bit-object-import`.
+//!
+//! Ensures squash commit messages preserve original author details and append ordered modification records.
 
 use super::replace_message;
 use serde_json::json;

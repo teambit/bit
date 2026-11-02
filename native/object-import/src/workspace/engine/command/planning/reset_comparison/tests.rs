@@ -1,4 +1,6 @@
 //! Unit tests for proving file content or inventory changes during checkout reset via [`prove_changed`] in `bit-object-import`.
+//!
+//! Ensures checkout reset proceeds only when actual file contents or relative paths differ.
 
 use super::prove_changed;
 use serde_json::json;

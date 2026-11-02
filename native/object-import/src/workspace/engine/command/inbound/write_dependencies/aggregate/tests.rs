@@ -1,4 +1,6 @@
 //! Unit tests for `--write-deps` root precedence, ranges, and key ordering via [`prepare`] in `bit-object-import`.
+//!
+//! Checks that root policy entries, variant patterns, and component policies merge in precedence order.
 
 use super::prepare;
 use serde_json::json;

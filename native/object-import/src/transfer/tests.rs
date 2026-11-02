@@ -1,4 +1,6 @@
 //! Unit tests for transfer [`Descriptor`] preparation, tar header encoding, and source body streaming via [`prepare`] in `bit-object-import`.
+//!
+//! Checks tar archive framing and compressed object body extraction for object transfers.
 
 use std::{
     fs,

@@ -1,4 +1,6 @@
 //! Unit tests for incoming added component [`capture`] validation in `bit-object-import`.
+//!
+//! Ensures newly added components start with empty current contents and relative root directories.
 
 use super::{capture, json};
 #[test]

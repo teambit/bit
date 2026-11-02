@@ -1,4 +1,6 @@
 //! Unit tests for stash store [`list`] lexical ordering, metadata formatting, and [`PreparedLoad`]/[`PreparedSave`] consumption.
+//!
+//! Verifies double-digit stash ID rollover and atomic stash save/load transitions.
 
 use super::{PreparedLoad, PreparedSave, list};
 use serde_json::json;

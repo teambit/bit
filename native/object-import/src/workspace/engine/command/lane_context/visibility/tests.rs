@@ -1,4 +1,6 @@
 //! Unit tests for lane component visibility ([`targets`], [`inactive_targets`]) and [`switch_targets`] selection in `bit-object-import`.
+//!
+//! Ensures active and inactive `.bitmap` targets remain separated and lane switch reselects returning heads.
 
 use super::{inactive_targets, json, switch_targets, targets};
 use std::collections::HashSet;

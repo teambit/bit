@@ -1,4 +1,6 @@
 //! Unit tests for merge preflight [`validate_target`] file validation and dependent rejection in `bit-object-import`.
+//!
+//! Confirms that application files and dependencies awaiting future snapshot replacement decline during preflight.
 
 use super::validate_target;
 use serde_json::json;

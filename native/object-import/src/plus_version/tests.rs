@@ -1,4 +1,4 @@
-//! Unit tests for [`is_plus`] dependency version placeholder detection and [`resolve`] release range resolution.
+//! Unit tests for [`is_plus`] dependency version placeholder detection and [`resolve`] release range resolution in `bit-object-import`.
 
 use super::{is_plus, resolve};
 

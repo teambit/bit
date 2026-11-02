@@ -1,4 +1,4 @@
-//! Unit tests for recovery [`Operation`] and [`State`] token revision exhaustion and plan invalidation.
+//! Unit tests for recovery [`Operation`] and [`State`] token revision exhaustion and plan invalidation in `bit-object-import`.
 
 use super::{Operation, State};
 #[test]

@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction [`State`] body preparation, spool packing, and conflict markers.
+//! Unit tests for merge transaction [`State`] body preparation, spool packing, and conflict markers in `bit-object-import`.
 
 mod compact_receipts;
 mod parallel_reads;

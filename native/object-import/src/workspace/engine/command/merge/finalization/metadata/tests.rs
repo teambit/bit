@@ -1,4 +1,6 @@
 //! Unit tests for unlinking before replacing generated `package.json` manifests via [`replace`] in `bit-object-import`.
+//!
+//! Confirms that replacing generated manifests unlinks hardlinks before writing new bytes.
 
 use super::replace;
 use crate::workspace::engine::command::scratch;

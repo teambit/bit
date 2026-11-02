@@ -1,4 +1,6 @@
 //! Unit tests for command materialization ([`Input`], [`prepare`]), [`Captured`] retained files, and Harmony manifests.
+//!
+//! Validates retained body index mapping and Harmony version manifest schema normalization.
 
 use super::{Captured, Input, Repository, checkout_transition, prepare, snapshots};
 use serde_json::json;

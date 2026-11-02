@@ -1,4 +1,6 @@
 //! Unit tests for component aspect [`Defaults`], [`configured_entries`], [`extensions`], and [`dependencies`] policy projection.
+//!
+//! Checks unversioned aspect version preservation, slot data projection, and policy entry merging.
 
 use super::{Defaults, configured_entries, dependencies, extensions};
 use serde_json::{Value, json};

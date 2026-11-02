@@ -1,4 +1,6 @@
 //! Unit tests for depth-first flattened dependency edge projection ([`project`]), [`Row`], and [`Repository`] proofs.
+//!
+//! Validates flattened dependency rebuilding when lifecycles change or imports are removed.
 
 use super::{Repository, project};
 use crate::workspace::engine::command::{policy::Row, scratch};

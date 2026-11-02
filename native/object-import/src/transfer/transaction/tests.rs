@@ -1,4 +1,6 @@
 //! Unit tests for multi-scope transfer transaction [`State`] directives, [`apply`] retries, and cleanup in `bit-object-import`.
+//!
+//! Ensures failed uploads clean up only previously acknowledged remote scopes.
 
 use crate::transfer::{State, apply};
 use serde_json::{Value, json};

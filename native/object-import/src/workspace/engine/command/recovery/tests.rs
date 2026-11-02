@@ -1,4 +1,6 @@
 //! Unit tests for post-restore [`State`] stale source [`proof`] rejection and [`apply`] error receipts.
+//!
+//! Confirms that concurrent edits after restoration preparation fail closed with an error receipt.
 
 use super::{
     super::{PreparedPlan, bitmap, history, planning, repository, scratch},

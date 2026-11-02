@@ -1,4 +1,6 @@
 //! Unit tests for atomic concurrent object [`Store`] writes, metadata publication, and duplicate suppression in `bit-object-import`.
+//!
+//! Validates object persistence integrity across concurrent writers and duplicate hashes.
 
 use super::Store;
 use std::{

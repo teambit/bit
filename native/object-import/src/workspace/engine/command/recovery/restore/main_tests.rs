@@ -1,4 +1,6 @@
 //! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged` in `bit-object-import`.
+//!
+//! Validates unique model backups and matching `.bit/index.json` entries prior to restoration.
 
 use super::Main;
 use serde_json::json;

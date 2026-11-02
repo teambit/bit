@@ -1,4 +1,6 @@
 //! Unit tests for snapshot transaction journal [`State`] directive ordering and receipts in `bit-object-import`.
+//!
+//! Ensures callbacks and per-component effects follow canonical execution sequence.
 
 use super::State;
 use serde_json::{Value, json};

@@ -1,4 +1,6 @@
 //! Unit tests for snap dependency [`Baseline`] and [`Row`] issue filtering via [`capture_issues`].
+//!
+//! Confirms that ignored dependency issues do not block snap policy execution.
 
 use super::{
     super::{Baseline, Row},

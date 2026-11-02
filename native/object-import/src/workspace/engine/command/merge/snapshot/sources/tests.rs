@@ -1,4 +1,6 @@
 //! Unit tests for parallel merge snapshot source [`capture`], [`digest`], [`rekey`], and [`Budget`] enforcement.
+//!
+//! Verifies deterministic parallel source hashing and shared memory budget limits.
 
 use super::{super::PENDING_GRAPH_VERSION, Budget, capture, digest, rekey};
 use rayon::ThreadPoolBuilder;

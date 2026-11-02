@@ -1,4 +1,6 @@
 //! Unit tests for lane history phase [`selection`] and selected history proofs in `bit-object-import`.
+//!
+//! Checks restore/checkout phase partitioning, cross-scope versions, and duplicate detection.
 
 use super::selection;
 use serde_json::json;

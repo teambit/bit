@@ -1,4 +1,6 @@
 //! Unit tests for parallel hidden lane component source capture from [`Repository`] via [`from_model`] in `bit-object-import`.
+//!
+//! Confirms that hidden lane sources are retained in [`snapshots`] without requiring workspace files.
 
 use super::{Repository, from_model, json, snapshots};
 use flate2::{Compression, write::ZlibEncoder};

@@ -1,4 +1,6 @@
 //! Unit tests for inbound [`Prepared`] workspace file writing, [`bitmap_key`], [`safe_destination`], and [`History`] rollback.
+//!
+//! Exercises atomic inbound workspace file writes, backup history creation, and failure recovery.
 
 use super::{History, Prepared, Replacement, Target, WorkspaceFiles, bitmap_key, safe_destination};
 use serde_json::json;

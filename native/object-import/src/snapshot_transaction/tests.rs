@@ -1,4 +1,6 @@
 //! Unit tests for end-to-end snapshot transaction [`State`] staging, dependency updates, and publication via [`apply`].
+//!
+//! Exercises full snapshot staging, rollback, and workspace state publication flows.
 
 use super::{State, apply};
 use serde_json::{Value, json};

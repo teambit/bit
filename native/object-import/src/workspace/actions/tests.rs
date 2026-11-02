@@ -1,4 +1,6 @@
 //! Unit tests for workspace filesystem action batch execution, [`Directory`] fixtures, and frame validation via [`serve`].
+//!
+//! Verifies nested directory removal, missing-path tolerance, and binary frame parsing.
 
 use super::serve;
 use crate::workspace::tests::Directory;

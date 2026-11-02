@@ -1,4 +1,6 @@
 //! Unit tests for export and fetch object transfer collection ordering via [`select`] and [`prepare`] in `bit-object-import`.
+//!
+//! Ensures export grouping and version-last fetch ordering remain deterministic.
 
 use std::{fs, io::Write};
 

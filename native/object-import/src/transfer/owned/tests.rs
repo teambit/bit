@@ -1,4 +1,6 @@
 //! Unit tests for owned transfer initialization, spool lifecycle, and staged object streaming via [`apply`] in `bit-object-import`.
+//!
+//! Validates staged object collection and cleanup across owned transfer sessions.
 
 use std::{fs, io::Write, path::Path};
 
