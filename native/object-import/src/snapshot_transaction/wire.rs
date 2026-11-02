@@ -3,6 +3,7 @@
 use serde::Deserialize;
 use std::path::PathBuf;
 
+/// Deserialized `snapshotSerialize` request (`objects`, `stagingDirectory`, `pretty`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Serialize {

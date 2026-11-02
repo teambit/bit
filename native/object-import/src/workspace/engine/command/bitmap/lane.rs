@@ -4,6 +4,7 @@ use super::{super::repository, Update, identity, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+/// Returns whether the workspace `context` is currently checked out on a non-`main` lane.
 #[inline]
 pub(super) fn on_lane(context: &Value) -> bool {
     context["lane"]["currentId"]["name"]

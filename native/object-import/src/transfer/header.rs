@@ -2,7 +2,7 @@
 
 use std::io;
 
-/// Encode a 512-byte USTAR tar header for a transfer archive entry.
+/// Encodes a 512-byte `USTAR` tar header block for a transfer archive entry.
 pub(super) fn encode(name: &str, size: usize, seconds: u32) -> io::Result<[u8; 512]> {
     let name = name.trim().trim_matches('/');
     if name.is_empty()

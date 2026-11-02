@@ -10,6 +10,7 @@ use std::{collections::HashMap, io};
 
 use super::invalid;
 
+/// Ordered phase sequence required for a full snap/tag transaction (`snapshotTransactionBegin`).
 const FULL: &[&str] = &[
     "initialize",
     "preSnap",

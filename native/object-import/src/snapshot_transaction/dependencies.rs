@@ -4,6 +4,7 @@ use super::{autotag, invalid};
 use serde_json::{Value, json};
 use std::io;
 
+/// Aligns dependency versions across batch-tagged components (`snapshotDependencies`).
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     let components = array(input, "components")?;
     if components.len() > 4096 {

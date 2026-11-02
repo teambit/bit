@@ -8,6 +8,7 @@ use std::{
 
 pub(super) type ReadSet = Vec<(PathBuf, Option<Vec<u8>>)>;
 
+/// Reads regular file `path` and appends its preimage bytes to `proofs`.
 #[inline]
 pub(super) fn read(path: &Path, proofs: &mut ReadSet) -> io::Result<Option<Vec<u8>>> {
     let bytes = regular(path)?;

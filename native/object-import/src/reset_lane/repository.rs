@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Loaded `Component` and `Lane` JSON objects with their scope directory and lane hash.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Loaded {
     objects: PathBuf,

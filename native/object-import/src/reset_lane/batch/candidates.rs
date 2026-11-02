@@ -12,6 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Discovered staged lane component identities, cold `VersionHistory` population writes, and read proofs.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Discovery {
     pub(super) identities: Vec<String>,

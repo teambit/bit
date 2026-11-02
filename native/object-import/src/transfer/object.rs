@@ -8,6 +8,7 @@ use std::{
 
 use super::{Body, Descriptor, invalid};
 
+/// Formats the tar archive entry name (`<hash>` or `<scope>/<hash>`) for `item`.
 pub(super) fn name(item: &Descriptor) -> io::Result<String> {
     let hash = crate::validate::hexadecimal(&item.hash);
     match item.scope.as_deref().map(str::trim) {

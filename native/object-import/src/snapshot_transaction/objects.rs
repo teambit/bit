@@ -17,6 +17,7 @@ use std::{
 
 use super::{MAX_RAW, invalid, source, wire};
 
+/// Zlib-compressed snapshot object with its SHA-1 `hash`, `inflated_size`, and staging `path`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     pub(super) kind: String,

@@ -7,6 +7,7 @@ use std::{collections::VecDeque, io};
 
 type Reverse = IndexMap<String, IndexSet<String>>;
 
+/// Computes transitive reverse dependents across all indexed versions for `found` components.
 pub(super) fn dependents(
     readset: &mut Readset,
     index: &Value,

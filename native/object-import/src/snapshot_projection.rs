@@ -30,6 +30,7 @@ pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
     }
 }
 
+/// Computes the canonical repository identity string (`scope/name`, `hash`, etc.) for `kind`.
 pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Result<String> {
     let kind = kind.trim();
     object(fields)?;

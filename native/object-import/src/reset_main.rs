@@ -23,6 +23,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Preimage and postimage byte pair for `.bitmap` or `index.json` updates during a `main` reset.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BytesChange {
     before: Vec<u8>,

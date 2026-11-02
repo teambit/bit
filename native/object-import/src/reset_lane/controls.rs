@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained preimage/postimage byte pair for a scope control file (`unmerged.json`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct Control {
     path: PathBuf,

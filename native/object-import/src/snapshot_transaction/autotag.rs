@@ -8,6 +8,7 @@ use std::{
     io,
 };
 
+/// Component dependency-graph node with its ID, locator, and outgoing dependency keys.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Node {
     id: Value,

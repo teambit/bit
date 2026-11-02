@@ -4,6 +4,7 @@ mod tests;
 
 use std::collections::HashMap;
 
+/// Lookup table mapping lowercase 40-hex `Version` hashes to `(tag_label, is_normal_version)`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct TagIndex(HashMap<String, (String, bool)>);
 impl TagIndex {

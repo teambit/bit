@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{cmp::Ordering, io};
 
+/// Deserialized `snapshotFutureVersions` request (`components`, `params`, `semver`).
 #[derive(Debug, Default, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {

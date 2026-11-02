@@ -4,6 +4,7 @@ use super::{invalid, outbound, selection::Selection};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
+/// Rejects resetting `selection` of `identity` when any other indexed component depends on it.
 pub(super) fn validate(
     objects: &Path,
     components: &[Value],

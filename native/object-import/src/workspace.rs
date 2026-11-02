@@ -21,6 +21,7 @@ const MAX_FILES: u32 = 64;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_PATH: usize = 32_768;
 
+/// Single file write specification (`path`, `overwrite`, `contents`) in a workspace write frame.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct File {
     path: PathBuf,

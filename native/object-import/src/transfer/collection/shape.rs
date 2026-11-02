@@ -9,6 +9,7 @@ use crate::transfer::{MAX_OBJECTS, invalid};
 /// lists thousands of components.
 const MAX_VERSION_ARRAY: usize = 65_536;
 
+/// Validates that `value` satisfies full `Version` transfer eligibility (including builder artifacts).
 #[inline]
 pub(super) fn eligible(value: &Value) -> io::Result<()> {
     prepare(value, true)

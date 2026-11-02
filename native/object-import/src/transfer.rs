@@ -23,6 +23,7 @@ use std::{
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_OBJECTS: usize = 4096;
 
+/// Backing source of a transfer object's compressed payload (`Repository`, `Snapshot`, or `Metadata`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Body {
     Repository,

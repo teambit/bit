@@ -8,6 +8,7 @@ use std::{
     sync::{Arc, OnceLock},
 };
 
+/// Shared `Rayon` worker pools indexed by thread count (`1..=8`).
 static POOLS: [OnceLock<Arc<rayon::ThreadPool>>; 8] = [const { OnceLock::new() }; 8];
 
 /// A workspace protocol session whose state survives individual requests.

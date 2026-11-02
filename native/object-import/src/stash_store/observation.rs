@@ -8,6 +8,7 @@ use std::{
 };
 const LIMIT: usize = 32 * 1024 * 1024;
 const ENTRY_LIMIT: usize = 4096;
+/// Captured `.bit/stash` directory path and sorted filename-to-bytes map.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Observation {
     directory: PathBuf,

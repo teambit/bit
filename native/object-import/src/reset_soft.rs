@@ -16,6 +16,7 @@ pub struct Entry {
     pub version: String,
 }
 
+/// Retained `.bitmap` update plan for `bit reset --soft`.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

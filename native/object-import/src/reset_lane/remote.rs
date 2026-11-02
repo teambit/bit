@@ -4,6 +4,7 @@ use super::{BitmapState, invalid, proofs};
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Reads the local remote-tracking ref hash for `(scope, name)` on `(lane_scope, lane_name)`.
 pub(super) fn remote_head(
     root: &Path,
     lane_scope: &str,

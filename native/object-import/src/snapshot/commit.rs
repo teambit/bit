@@ -12,6 +12,7 @@ use std::{
     io::{self, Read, Write},
     path::{Path, PathBuf},
 };
+/// Single repository object descriptor (`type`, `hash`, `body`, `workspace`) in a snapshot commit.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Object {

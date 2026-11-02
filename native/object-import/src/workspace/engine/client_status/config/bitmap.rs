@@ -26,6 +26,7 @@ pub(in crate::workspace::engine) fn targets(
         .map(|(target, _)| target)
         .collect())
 }
+/// Validates `.bitmap` schema/count invariants and extracts all tracked [`Target`] entries.
 fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
     let metadata_rows = 1 + usize::from(entries.contains_key("_bit_lane"));

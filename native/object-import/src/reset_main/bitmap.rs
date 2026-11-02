@@ -4,6 +4,7 @@ use super::{BytesChange, invalid};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Captured `.bitmap` preimage, parsed JSONC document, component key, and optional staged config.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Bitmap {
     before: Vec<u8>,

@@ -16,6 +16,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Frozen transfer object entry with its 20-byte `hash`, `kind`, `compressed` bytes, and optional spool `path`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Entry {
     pub(super) hash: [u8; 20],

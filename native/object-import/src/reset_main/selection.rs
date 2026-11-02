@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-/// The local refs to remove, their user-facing labels, and the surviving head.
+/// Local `main` refs to remove, their user-facing tag/snap labels, and the surviving head.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Selection {
     pub removed: Vec<String>,

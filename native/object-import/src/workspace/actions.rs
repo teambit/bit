@@ -12,6 +12,7 @@ use std::{
 use super::{MAX_BYTES, MAX_FILES, MAX_PATH, Response, invalid};
 use crate::protocol;
 
+/// Decoded filesystem action (`copy`, `remove`, `ensureDir`, or `symlink`) in a workspace action frame.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Action {
     kind: u32,

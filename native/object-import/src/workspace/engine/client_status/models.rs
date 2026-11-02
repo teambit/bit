@@ -6,6 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
+/// Resolves `{ relativePath, hash }` entries from the stored `Version` object for `target`.
 pub(super) fn files(root: &Path, target: &Target) -> io::Result<Value> {
     if target.version.is_empty() {
         return Ok(json!([]));

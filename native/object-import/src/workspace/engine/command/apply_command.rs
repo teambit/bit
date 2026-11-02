@@ -9,6 +9,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Applies a planned workspace command (`input.token`), publishes files and `.bitmap`, and records receipts.
 pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)> {
     bitmap::validate_history_file_id(&input.file_id)?;
     proof::verify(&input.dependency_read_set)?;

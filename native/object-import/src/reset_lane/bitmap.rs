@@ -4,6 +4,7 @@ use super::invalid;
 use serde_json::{Map, Value};
 use std::io;
 
+/// Finds the unique `.bitmap` entry key matching `(scope, name)` or returns an error.
 pub(super) fn bitmap_key(rows: &Map<String, Value>, scope: &str, name: &str) -> io::Result<String> {
     let mut found = None;
     for (key, row) in rows {

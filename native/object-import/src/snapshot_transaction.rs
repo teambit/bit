@@ -23,6 +23,7 @@ use std::{collections::HashMap, fs, io, path::Path};
 const MAX_RAW: usize = 32 * 1024 * 1024;
 const MAX_OBJECTS: usize = 4096;
 
+/// Session-scoped snap/tag transaction state holding prepared object plans and phase journals.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     plans: HashMap<String, Plan>,

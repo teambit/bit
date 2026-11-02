@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained multi-component `main`-lane reset transaction publishing scope and `.bitmap` changes.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Batch {
     root: PathBuf,

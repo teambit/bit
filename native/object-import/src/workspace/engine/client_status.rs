@@ -10,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
+/// Session-scoped incremental client status state holding the active [`Plan`].
 #[derive(Default)]
 pub(crate) struct State {
     plan: Option<Plan>,

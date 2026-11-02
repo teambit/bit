@@ -4,6 +4,7 @@ mod tests;
 use super::invalid;
 use std::{fs, io, path::Path};
 
+/// Deletes loose object `path` and prunes its two-hex-character parent directory when empty.
 pub(super) fn remove(path: &Path) -> io::Result<()> {
     let parent = path.parent().ok_or_else(|| invalid("lane reset object parent"))?;
     if !path.is_absolute() || parent.is_symlink() || path.is_symlink() {

@@ -8,6 +8,7 @@ const OFFLINE: u64 = 0x1000;
 const OPEN_REPARSE_POINT: u32 = 0x0020_0000;
 const REPARSE_POINT: u64 = 0x0400;
 
+/// Returns whether `path` is a single-link regular file without reparse-point or device attributes.
 #[inline]
 pub(super) fn single(path: &Path) -> io::Result<bool> {
     let file = OpenOptions::new()

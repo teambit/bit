@@ -4,6 +4,7 @@ use super::{BytesChange, ObjectChange, invalid, object_path, unique_position};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Prepares deletion of the `Component` object and `index.json` entry for a lane-only component reset.
 pub(super) fn remove_new_model(
     root: &Path,
     scope: &str,

@@ -16,6 +16,7 @@ use std::{
 const MAX_JSON: usize = 4 * 1024 * 1024;
 const MAX_RAW: usize = 32 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
+/// Deserialized `BSS1` snapshot frame request (`Commit`, `Plan`, `Index`, or `IndexWrite`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",

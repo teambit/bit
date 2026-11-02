@@ -9,6 +9,7 @@ mod version;
 use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, invalid, object};
 use std::{collections::HashSet, io, path::Path};
 
+/// Outgoing `Source`, artifact, `flattenedEdges`, and `dependenciesGraph` SHA-1 digests referenced by a `Version`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct References {
     pub(crate) sources: Vec<[u8; 20]>,

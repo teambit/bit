@@ -15,6 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Retained multi-component lane reset transaction publishing `Lane`, `Component`, and `.bitmap` changes.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Batch {
     root: PathBuf,

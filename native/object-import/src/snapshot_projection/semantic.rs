@@ -9,6 +9,7 @@ use std::io;
 use super::{choose, get, hexadecimal, invalid, object, text};
 use crate::js_json::{Value, stringify};
 
+/// Canonical semantic JSON bytes, SHA-1 `hash`, and sorted extension config assignments for a `Version`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Semantic {
     pub bytes: Vec<u8>,

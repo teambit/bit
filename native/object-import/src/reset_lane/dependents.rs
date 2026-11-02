@@ -3,6 +3,7 @@ use super::{diagnostics, invalid, proofs};
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Rejects resetting `removed` versions of `identity` when other scope versions depend on them.
 pub(super) fn validate(
     root: &Path,
     identity: &str,

@@ -13,6 +13,7 @@ use std::{
 
 const MAX_READSET_BYTES: usize = 128 * 1024 * 1024;
 
+/// Preimage byte log of loose scope objects inspected during remote-delete planning.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Readset {
     objects: PathBuf,

@@ -12,6 +12,7 @@ use std::{
 
 type SelectedRow = (String, PathBuf, Option<Vec<u8>>);
 
+/// Retained `.bitmap` and loose-object preimage plan for `bit reset --never-exported`.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

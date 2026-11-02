@@ -9,6 +9,7 @@ use std::io;
 
 use super::{MAX_OBJECTS, invalid};
 
+/// Deserialized `transferTransactionBegin` request (`scopes`, `clientId`, `resuming`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Initialize {

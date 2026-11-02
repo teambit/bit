@@ -3,6 +3,7 @@ use crate::{checkout::repository, merge_history};
 use serde_json::Value;
 use std::{io, path::Path};
 
+/// Reads and decodes a scope object `(kind, metadata)` from `scope/objects` by `identity` hash.
 /// Read a scope object through the repository decoder. Missing files return `None`;
 /// malformed headers, compressed data and over-budget objects are errors. Source
 /// bodies are never projected into the diagnostic JSON metadata.

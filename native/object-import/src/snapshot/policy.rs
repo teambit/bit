@@ -4,6 +4,7 @@ use super::{hash, invalid};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
+/// Deserialized snapshot head, parent, and tag policy input (`snapshotPlan`).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Plan {

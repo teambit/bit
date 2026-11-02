@@ -5,6 +5,7 @@ use std::io;
 use super::{choose, get, invalid, object};
 use crate::js_json::Value;
 
+/// Ordered top-level property keys serialized on a canonical `Version` snapshot object.
 const KEYS: &[&str] = &[
     "files",
     "mainFile",

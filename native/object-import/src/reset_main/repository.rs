@@ -7,6 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Captured `index.json` and `Component` model state for a `main`-lane component reset.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Repository {
     root: PathBuf,
