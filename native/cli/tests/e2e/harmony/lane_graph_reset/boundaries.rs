@@ -63,6 +63,7 @@ fn a_forked_exported_lane_resets_only_its_single_local_snap() {
     fixture::unstaged(&helper);
 }
 
+/// Verifies resetting a lane merged without a known boundary preserves the fatal error.
 #[test]
 fn a_new_lane_merged_without_a_known_boundary_preserves_the_exact_fatal_error() {
     let helper = fixture::unknown_inherited();

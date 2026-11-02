@@ -20,6 +20,7 @@ fn observed_redraw_and_no_redraw_preserve_the_identical_complete_banner_and_late
     assert_eq!(project(&expected), expected);
 }
 
+/// Verifies [`project`] preserves banners when counter digits, escape codes, or surrounding lines differ.
 #[test]
 fn changed_counts_control_bytes_stage_or_intervening_lines_are_never_removed() {
     let repeated = format!("{START}{COUNTERS}{REDRAW}{}", banner());

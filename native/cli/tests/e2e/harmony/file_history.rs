@@ -24,6 +24,7 @@ fn log_file_loads_tagged_history_with_exact_published_cache() {
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
 }
 
+/// Verifies `bit log-file` reads file history when deprecation is staged in `.bitmap`.
 #[test]
 fn log_file_reads_staged_deprecation_with_exact_published_state() {
     let helper = support::workspace(1, true);

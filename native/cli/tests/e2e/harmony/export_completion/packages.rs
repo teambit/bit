@@ -26,7 +26,7 @@ pub(super) fn compare(actual: &Path, expected: &Path) {
     }
 }
 
-/// Recursively compares directory entries, symlink metadata, and file contents between `actual` and `expected`.
+/// Recursively compares directory entries, symlink metadata, and file contents between `actual` and `expected` ([`Path`]).
 fn compare_tree(actual: &Path, expected: &Path) {
     let read = |path| {
         fs::read_dir(path)

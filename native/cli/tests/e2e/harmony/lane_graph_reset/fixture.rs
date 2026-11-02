@@ -30,6 +30,7 @@ pub(super) fn snap(helper: &Helper, options: &str) {
     support::setup(helper, &format!("snap --ignore-issues * --message graph-reset {options}"));
 }
 
+/// Returns the head snap hash for component `name` on `lane` from `bit cat-lane`.
 pub(super) fn head(helper: &Helper, lane: &str, name: &str) -> String {
     let lane = support::json(helper, &format!("cat-lane {lane}"));
     lane["components"]

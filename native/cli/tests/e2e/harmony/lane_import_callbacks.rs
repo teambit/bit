@@ -8,7 +8,7 @@ use std::fs;
 /// Marker file recording how many times the configured aspect provider started during `bit lane import`.
 const STARTUP_MARKER_FILE: &str = "lane-import-provider-startups";
 
-/// Verifies that `bit lane import` on an active lane starts the configured aspect provider once like Node.
+/// Verifies that `bit lane import` on an active lane starts the configured aspect provider once like Node ([`STARTUP_MARKER_FILE`]).
 #[test]
 fn active_lane_import_with_configured_provider_matches_released_node() {
     let helper = super::snapshot_environments::callback_workspace(false);

@@ -17,6 +17,7 @@ fn response() -> Value {
     }}}})
 }
 
+/// Runs `command` against a local [`server::Server`] returning `response` and asserts parity with `Node.js`.
 fn http(command: &str, response: &Value) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

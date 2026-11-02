@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::json;
 
-/// Verifies that core extension configuration in `variants` is persisted to the model without adding dev dependencies.
+/// Verifies that core extension configuration in `variants` is persisted to the model without adding dev dependencies ([`Helper`]).
 #[test]
 fn persist_core_extension_config_to_models() {
     let helper = Helper::new();

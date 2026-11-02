@@ -23,6 +23,7 @@ impl Proxy {
     pub fn new() -> Self {
         Self::catalog(r#"[{"version":"99.0.0","stable":true,"date":"2026-01-01"}]"#)
     }
+    /// Starts a [`Proxy`] serving an empty BVM release catalog (`[]`).
     pub fn empty() -> Self {
         Self::catalog("[]")
     }

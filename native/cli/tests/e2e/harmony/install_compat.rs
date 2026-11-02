@@ -30,6 +30,7 @@ fn minimal_merge_configured() -> Helper {
     finish_configured(helper)
 }
 
+/// Completes `env/install-compat` provider configuration, publishes `helper`, and activates the hook.
 fn finish_configured(helper: Helper) -> Helper {
     configure_provider(&helper);
     let bitmap_path = helper.scopes.local_path.join(".bitmap");

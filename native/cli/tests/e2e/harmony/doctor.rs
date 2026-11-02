@@ -28,6 +28,7 @@ fn compare(helper: &Helper, oracle: &Path, command: &str, environment: &[(&str, 
     assert_eq!(actual.stdout, expected.stdout, "{command}: native stderr {}", actual.stderr);
     assert_eq!(actual.stderr, expected.stderr, "{command}");
 }
+/// Verifies `bit doctor --list` text, JSON, and colored output match `Node.js`.
 #[test]
 fn diagnosis_listing_matches_node_text_json_and_colors() {
     let helper = Helper::new();

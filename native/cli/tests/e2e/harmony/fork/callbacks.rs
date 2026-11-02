@@ -47,6 +47,7 @@ fn local_fork_copies_actual_loaded_memory_and_runs_registered_onadd_in_order() {
         "observed\n",
     );
 }
+/// Verifies `onAdd` failure during `bit fork` retains the written target and original source files.
 #[test]
 fn onadd_failure_retains_the_canonical_written_target_and_original_source() {
     let helper = configured();

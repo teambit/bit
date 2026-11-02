@@ -27,6 +27,7 @@ fn init_new_git_repo(helper: &Helper) {
     git(cwd, &["commit", "-m", "initial commit"]);
 }
 
+/// Verifies `bit lane import --branch` creates and checks out the matching Git branch when absent.
 #[test]
 fn importing_an_exported_lane_into_a_git_repo_when_no_git_branch_exists() {
     let helper = Helper::new();

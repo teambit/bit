@@ -19,6 +19,7 @@ fn ci_install_subscribers_mutate_original_inputs_and_retain_reassigned_argument_
     install_subscribers(true);
 }
 
+/// Verifies package installation failure during `bit switch` resumes compilation without replaying `preInstall`.
 #[test]
 fn package_install_failure_resumes_original_lifecycle_without_replay() {
     let helper = installation_fixture();

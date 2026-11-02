@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, config, parse};
 
-/// Verifies that `bit fetch <lane> --lanes` imports lane objects into the local scope without modifying `.bitmap`.
+/// Verifies that `bit fetch <lane> --lanes` imports lane objects into the local scope without modifying `.bitmap` ([`Helper`]).
 #[test]
 fn fetching_lanes_objects_without_writing_to_workspace() {
     let helper = Helper::new();

@@ -34,6 +34,7 @@ fn revert_without_restoration_leaves_deleted_components_deleted() {
     assert!(!fixture.helper.scopes.local_path.join("comp2/index.js").exists());
 }
 
+/// Verifies `bit lane revert --restore-deleted-components` restores deleted components without changing the active lane.
 #[test]
 fn revert_restores_deleted_components_without_changing_the_active_lane() {
     let fixture = fixture::deleted(false);

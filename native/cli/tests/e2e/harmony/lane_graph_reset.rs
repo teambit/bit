@@ -6,6 +6,7 @@
 mod boundaries;
 /// Remote divergence and exported-head tests for `bit reset` on a lane.
 mod divergence;
+/// Shared workspace, snap, and scope object helpers for lane `bit reset` tests.
 mod fixture;
 mod hidden;
 mod merged;

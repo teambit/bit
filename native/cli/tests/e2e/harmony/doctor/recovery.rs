@@ -35,6 +35,7 @@ fn compare_recovery(helper: &Helper, oracle: &Path) {
     assert!(!actual.native, "{}", actual.trace);
     assert!(actual.trace.contains("doctor preflight"), "{}", actual.trace);
 }
+/// Verifies stale `.bit/index.json` entries are repaired by the canonical loader before native effects.
 #[test]
 fn stale_index_is_repaired_by_the_canonical_loader_before_any_native_effect() {
     let helper = fixture();

@@ -25,6 +25,7 @@ fn completion(line: &str) -> String {
     format!("{}<duration>){newline}", &body[..start])
 }
 
+/// Extracts the `(completed in ...)` suffix from recognized spinner completion lines.
 fn completion_duration(body: &str) -> Option<&str> {
     for symbol in ["✔", "✓"] {
         for action in [

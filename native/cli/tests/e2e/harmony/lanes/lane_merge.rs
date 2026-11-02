@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse, remote};
 use std::path::PathBuf;
 
-/// Creates a two-component workspace with `0.0.1` on `main`, an exported `dev` lane snap, and switches back to `main`.
+/// Creates a two-component workspace with `0.0.1` on `main`, an exported `dev` lane snap, and switches back to `main` ([`PathBuf`]).
 fn setup_exported_lane_and_switch_to_main() -> (Helper, PathBuf, PathBuf) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

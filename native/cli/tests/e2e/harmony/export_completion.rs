@@ -21,6 +21,7 @@ fn pending() -> Helper {
     helper
 }
 
+/// Asserts native `bit export` parity with `Node.js` for `command` via [`compare`].
 fn parity(helper: &Helper, command: &str) {
     compare(helper, command, true);
 }

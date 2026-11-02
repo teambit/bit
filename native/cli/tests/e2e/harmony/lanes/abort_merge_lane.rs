@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;
 
-/// Populates `count` chained components (`comp1` -> ... -> `compN`) with optional `link --rewire` and source `suffix`.
+/// Populates `count` chained components (`comp1` -> ... -> `compN`) with optional `link --rewire` and source `suffix` ([`Helper`]).
 fn populate(helper: &Helper, count: usize, rewire: bool, suffix: &str) {
     for index in 1..=count {
         let content = if index == count {

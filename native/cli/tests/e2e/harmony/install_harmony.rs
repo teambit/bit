@@ -8,7 +8,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::fs;
 
-/// Reads the `version` field from the JSON file at `rel` in the local workspace.
+/// Reads the `version` field from the JSON file at `rel` in the local workspace via [`parse`].
 fn read_pkg_version(helper: &Helper, rel: &str) -> String {
     let content = fs::read_to_string(helper.scopes.local_path.join(rel)).unwrap();
     parse(&content)["version"]

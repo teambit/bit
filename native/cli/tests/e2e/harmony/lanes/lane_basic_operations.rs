@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, config, parse, remote, strip_ansi};
 
-/// Verifies `bit lane current`, `lane create`, `lane list`, `lane show`, and `lane change-scope` on an empty lane.
+/// Verifies `bit lane current`, `lane create`, `lane list`, `lane show`, and `lane change-scope` on an empty lane ([`Helper`]).
 #[test]
 fn create_lane_without_component_and_lane_current() {
     let helper = Helper::new();

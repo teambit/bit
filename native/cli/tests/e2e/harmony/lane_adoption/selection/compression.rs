@@ -49,6 +49,7 @@ fn model_hash(helper: &Helper) -> String {
         .to_owned()
 }
 
+/// Resolves the loose object file path under `scope/objects` for `hash`.
 fn object(scope: &Path, hash: &str) -> PathBuf {
     scope
         .join("objects")

@@ -56,6 +56,7 @@ fn reset_a_diverged_exported_lane_uses_its_remote_boundary_and_preserves_disk_by
     );
 }
 
+/// Verifies resetting a lane with sparse fork history preserves remote ancestor objects.
 #[test]
 fn sparse_fork_history_reset_preserves_remote_ancestor_objects() {
     let (helper, remote_head, absent) = sparse_fork();

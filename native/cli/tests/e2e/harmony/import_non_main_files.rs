@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, issue_types, parse};
 
-/// Verifies that importing a non-main `.js` file triggers an `ImportNonMainFiles` issue in `bit status`.
+/// Verifies that importing a non-main `.js` file triggers an `ImportNonMainFiles` issue in `bit status` ([`issue_types`]).
 #[test]
 fn importing_non_main_js_file_shows_issue_and_path() {
     let helper = Helper::new();

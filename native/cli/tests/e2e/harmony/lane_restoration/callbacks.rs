@@ -42,6 +42,7 @@ fn historical_revert_installs_and_compiles_in_the_same_real_provider_session() {
     );
 }
 
+/// Asserts that `onLoad`, `preInstall`, `postInstall`, and `compile` phases ran in order on `dev`.
 fn assert_phase_order(helper: &Helper) {
     let text = std::fs::read_to_string(helper.scopes.local_path.join("lane-adoption-phases.jsonl"))
         .unwrap();

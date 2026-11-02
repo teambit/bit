@@ -34,6 +34,7 @@ fn main_lane_error_precedes_history_resolution_and_preserves_the_workspace() {
     }
 }
 
+/// Verifies `bit lane checkout --json` is declined before mutating `.bitmap`.
 #[test]
 fn checkout_json_remains_an_explicit_pre_effect_unsupported_option() {
     let fixture = fixture::initial();

@@ -12,7 +12,7 @@ pub(super) struct Remote {
     pub(super) url: String,
 }
 
-/// Spawns `server.cjs` in `"callback"` mode and clears local `scope.json` `remotes`.
+/// Spawns `server.cjs` in `"callback"` mode and clears local `scope.json` `remotes` for [`Remote`].
 pub(super) fn start(helper: &Helper) -> Remote {
     use crate::helper::{config, setup};
     use std::{

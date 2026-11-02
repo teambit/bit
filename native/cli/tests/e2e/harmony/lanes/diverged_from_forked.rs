@@ -7,7 +7,7 @@ use crate::helper::{Helper, parse};
 /// Relative file path added on `lane-a` after `lane-b` is forked from it.
 const LANE_A_NEW_FILE: &str = "comp1/new-file.ts";
 
-/// Verifies `updatesFromForked` in `bit status --lanes` and two-parent merge commits when forked lanes diverge.
+/// Verifies `updatesFromForked` in `bit status --lanes` and two-parent merge commits when forked lanes diverge ([`LANE_A_NEW_FILE`]).
 #[test]
 fn lane_b_was_forked_from_lane_a_and_they_are_now_diverged() {
     let helper = Helper::new();

@@ -55,6 +55,7 @@ fn all_reset_removes_a_two_parent_merge_and_preserves_merged_bytes_and_objects()
     fixture::modified_only(&helper, 0);
 }
 
+/// Verifies `bit reset --head` on a two-parent merge retains the released multi-parent failure.
 #[test]
 fn head_only_reset_keeps_the_released_multiple_parent_failure() {
     let (helper, _, merged) = diverged(false);

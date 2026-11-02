@@ -42,6 +42,7 @@ fn ci_uncached_file_remote_history_refresh_remains_native_and_restores_exact_sou
     );
 }
 
+/// Builds a [`fixture::Fixture`] whose local `LaneHistory` omits the intermediate remote snap entry.
 fn stale_file_remote() -> fixture::Fixture {
     let fixture = fixture::initial();
     fixture.helper.output_file("comp3/index.js", "module.exports='remote-history';\n");

@@ -30,7 +30,7 @@ pub(super) fn expected(helper: &Helper) -> BTreeMap<String, Vec<u8>> {
     ])
 }
 
-/// Encodes the platform file permission mode of `metadata` into little-endian bytes.
+/// Encodes the platform file permission mode of `metadata` into little-endian bytes for [`expected`].
 fn mode(metadata: &fs::Metadata) -> Vec<u8> {
     #[cfg(unix)]
     {

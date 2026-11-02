@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;
 
-/// Verifies `bit import` on an active lane with and without `--save-in-lane`.
+/// Verifies `bit import` on an active lane with and without `--save-in-lane` ([`Helper`]).
 #[test]
 fn importing_component_when_checked_out_to_a_lane() {
     let helper = Helper::new();

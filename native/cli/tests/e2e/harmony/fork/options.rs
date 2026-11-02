@@ -51,6 +51,7 @@ fn skip_config_retains_fork_provenance_and_explicit_env_overrides_source_env() {
         "teambit.harmony/empty-env",
     );
 }
+/// Verifies `bit fork --refactor` updates dependent import paths while keeping the original component.
 #[test]
 fn local_refactor_updates_dependents_but_keeps_the_original_component() {
     let helper = support::exported(1);

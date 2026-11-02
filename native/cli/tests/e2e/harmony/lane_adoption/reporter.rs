@@ -70,6 +70,7 @@ fn link_reporter_policy(helper: &Helper) {
     );
 }
 
+/// Asserts that `quiet-reporter` remained installed on disk without writing a receipt file.
 pub(super) fn assert_not_invoked(helper: &Helper) {
     assert!(helper.scopes.local_path.join("quiet-reporter-active").is_file());
     assert!(helper.scopes.local_path.join("quiet-reporter/package.json").is_file());

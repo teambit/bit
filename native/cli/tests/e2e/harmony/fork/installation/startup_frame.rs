@@ -19,6 +19,7 @@ const REDRAW: &str = "\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 const BANNER: &str =
     "Packages are hard linked from the content-addressable store to the virtual store.\n";
 
+/// Projects `text` by removing a single clock-controlled zero-add redraw before [`BANNER`].
 pub(super) fn project(text: &str) -> String {
     let Some((prefix, rest)) = text.split_once(START) else { return text.into() };
     if text.matches(START).count() != 1 || (!prefix.is_empty() && !prefix.ends_with('\n')) {

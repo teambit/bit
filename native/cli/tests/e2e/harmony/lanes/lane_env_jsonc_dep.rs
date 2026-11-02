@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Verifies workspace component peer dependency resolution from `env.jsonc` when snapping on a lane.
+/// Verifies workspace component peer dependency resolution from `env.jsonc` when snapping on a lane ([`Helper`]).
 #[test]
 fn env_with_workspace_component_as_peer_dep_in_env_jsonc_on_lane() {
     let helper = Helper::new();

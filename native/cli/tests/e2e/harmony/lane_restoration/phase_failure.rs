@@ -60,6 +60,7 @@ fn corrupt_source(fixture: &fixture::Fixture) -> [PathBuf; 2] {
     paths
 }
 
+/// Asserts that `comp3` retains `version` in `.bitmap` and `historical` source contents on disk.
 fn assert_existing_prefix(helper: &Helper, version: &Value, historical: &str) {
     assert_eq!(fixture::version(helper, "comp3"), *version);
     assert_eq!(

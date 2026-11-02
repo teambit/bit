@@ -34,6 +34,7 @@ pub(super) fn initial() -> Fixture {
     Fixture { helper, history, original }
 }
 
+/// Creates a [`Fixture`] where `comp1` and `comp2` are deleted on `dev` after the initial history entry.
 pub(super) fn deleted(modified: bool) -> Fixture {
     let fixture = initial();
     if modified {

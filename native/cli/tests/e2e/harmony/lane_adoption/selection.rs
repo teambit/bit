@@ -35,6 +35,7 @@ fn ordinary_switch_adds_components_omitted_by_workspace_only() {
     assert!(support::bitmap(&helper).get("comp2").is_some());
 }
 
+/// Verifies `bit switch main` reports lane-unmodified components as skipped and supports `bit details`.
 #[test]
 fn main_switch_reports_components_not_snapped_on_the_lane_as_skipped() {
     let helper = support::workspace(2, true);

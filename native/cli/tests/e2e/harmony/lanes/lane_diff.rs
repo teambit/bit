@@ -18,6 +18,7 @@ fn expect_main_to_dev_diff(diff: &str) {
     assert!(diff.contains("+module.exports = function foo() { return 'got foo v2'; }"), "{diff}");
 }
 
+/// Verifies `bit lane diff` against `main` on the workspace and bare scope ([`FOO_V2`]).
 #[test]
 fn diffing_the_current_lane_against_main() {
     let helper = Helper::new();

@@ -8,7 +8,7 @@ use serde_json::json;
 /// Substring expected in `bit eject` stdout when components are ejected.
 const EJECT_SUCCESS: &str = "successfully ejected the following components";
 
-/// Verifies `bit eject` default and `--keep-files` behavior on exported components with dependencies.
+/// Verifies `bit eject` default and `--keep-files` behavior on exported components with dependencies ([`EJECT_SUCCESS`]).
 #[test]
 fn eject_components_with_dependencies_after_export() {
     let helper = Helper::new();

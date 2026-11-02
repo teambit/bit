@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use std::fs;
 
-/// Verifies exporting a lane, updating `.bitmap` `_bit_lane`, and importing lane components into a fresh workspace.
+/// Verifies exporting a lane, updating `.bitmap` `_bit_lane`, and importing lane components into a fresh workspace ([`Helper`]).
 #[test]
 fn exporting_the_lane_and_importing_component() {
     let helper = Helper::new();

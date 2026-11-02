@@ -40,6 +40,7 @@ fn empty(helper: &Helper) {
     helper.re_init_workspace_with(false);
     helper.add_remote_scope();
 }
+/// Formats the `<remote>/dev` remote lane identifier for `helper`.
 fn lane(helper: &Helper) -> String {
     format!("{}/dev", helper.scopes.remote)
 }

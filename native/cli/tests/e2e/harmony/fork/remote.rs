@@ -40,6 +40,7 @@ fn remote_wildcard_forks_each_matching_component_into_the_requested_scope() {
     );
     support::assert_origins(&helper, &["comp1", "comp2"]);
 }
+/// Verifies comma-separated remote component IDs fork only the specified components into `--scope`.
 #[test]
 fn comma_separated_remote_ids_fork_only_the_requested_components() {
     let helper = support::remote_workspace(3);

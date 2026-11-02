@@ -39,6 +39,7 @@ fn local_fork_creates_a_new_component_with_sanitized_original_provenance() {
     assert_eq!(bitmap(&helper)["comp1"], before);
 }
 
+/// Verifies `bit fork --no-link` omits `forkedFrom` provenance while creating the target package link.
 #[test]
 fn no_link_omits_only_original_provenance_not_the_new_package_link() {
     let helper = support::exported(1);

@@ -19,6 +19,7 @@ pub(in crate::harmony) fn exported(count: usize) -> Helper {
     helper
 }
 
+/// Creates an empty workspace connected to a remote scope containing `count` exported components.
 pub(in crate::harmony) fn remote_workspace(count: usize) -> Helper {
     let helper = exported(count);
     helper.re_init_workspace_with(false);

@@ -33,6 +33,7 @@ impl Request {
             .collect()
     }
 }
+/// Local HTTP `GraphQL` server fixture capturing incoming [`Request`] payloads.
 pub(super) struct Server {
     pub url: String,
     pub requests: mpsc::Receiver<Request>,

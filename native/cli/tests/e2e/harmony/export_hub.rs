@@ -28,6 +28,7 @@ struct Hub {
 }
 
 impl Hub {
+    /// Spawns a local central-export [`Hub`] server in `mode` for `helper`.
     fn start(helper: &Helper, mode: &str) -> Self {
         let shared = setup::shared();
         let configuration = helper.scopes.e2e_dir.join("hub.json");

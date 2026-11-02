@@ -51,6 +51,7 @@ pub(in crate::harmony) fn requests(rows: &[Value], retry: bool) {
     }
 }
 
+/// Compares `index.json` and raw `.bit/objects` inventory between `root` and `oracle`.
 pub(in crate::harmony) fn objects(root: &Path, oracle: &Path) {
     assert_eq!(fs::read(root.join("index.json")).ok(), fs::read(oracle.join("index.json")).ok());
     compare_inventory(root, &inventory(root), &inventory(oracle));

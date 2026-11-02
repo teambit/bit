@@ -33,6 +33,7 @@ fn http_pattern_batch_keeps_ordered_results_and_does_not_publish_remote_objects(
     );
     support::assert_origins(&helper, &["comp1", "comp2"]);
 }
+/// Collects all relative file paths and contents under `root` into a [`BTreeMap`].
 fn inventory(root: &Path) -> BTreeMap<String, Vec<u8>> {
     let mut files = BTreeMap::new();
     if root.exists() {

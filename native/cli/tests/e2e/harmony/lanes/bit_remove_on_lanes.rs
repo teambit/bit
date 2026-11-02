@@ -30,7 +30,7 @@ fn is_remove_on_main_in_show(helper: &Helper, id: &str) -> bool {
     remove_flag_in_show(helper, id, "removeOnMain")
 }
 
-/// bit lane command › remove components when on a lane
+/// bit lane command › remove components when on a lane ([`is_removed_in_show`], [`is_remove_on_main_in_show`])
 /// bit lane command › remove a new component on a lane
 /// bit lane command › exporting a lane after snapping and then removing a component
 #[test]

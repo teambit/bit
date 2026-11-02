@@ -66,6 +66,7 @@ fn configure(helper: &crate::helper::Helper, active_lane: bool) {
     helper.output_file("lane-adoption-provider-active", "active");
 }
 
+/// Configures `env/lane-adoption`'s `teambit.pkg/pkg` entry in `.bitmap` to point `main` at `dist/index.js`.
 fn configure_package(helper: &crate::helper::Helper) {
     let path = helper.scopes.local_path.join(".bitmap");
     let mut bitmap = config::read_jsonc(&path);

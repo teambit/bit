@@ -75,6 +75,7 @@ fn output_reader(stdout: ChildStdout) -> (thread::JoinHandle<Vec<u8>>, mpsc::Rec
     });
     (reader, receiver)
 }
+/// Verifies `SIGINT` during central-hub `bit export` warns and completes publication once like `Node.js`.
 #[test]
 fn sigint_during_hub_export_warns_and_publishes_once_like_node() {
     let helper = pending(false, "interrupt");

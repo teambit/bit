@@ -19,6 +19,7 @@ pub(in crate::harmony) fn project_startup_frame(text: &str) -> String {
     startup_frame::project(text)
 }
 
+/// Verifies remote single-component `bit fork` runs package installation and compilation after materialization.
 #[test]
 fn remote_single_fork_runs_real_installation_after_native_materialization() {
     let helper = crate::commands::move_paths::support::workspace(1, false);

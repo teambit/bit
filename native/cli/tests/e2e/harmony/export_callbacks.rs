@@ -19,6 +19,7 @@ fn node(helper: &Helper, command: &str) {
     assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
 }
 
+/// Creates a workspace with `bar/foo` configured to use a custom `env/export` callback aspect.
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
