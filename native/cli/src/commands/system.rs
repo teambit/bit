@@ -16,7 +16,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the native `bit system` command.
+/// Descriptor for the native `bit system` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "system", aliases: &[], run };
 
 /// Parsed subcommand for `bit system`.

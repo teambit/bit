@@ -5,7 +5,7 @@ use super::{Value, invalid, json};
 use crate::commands::add::docs::{CatDocs, cat_prepare};
 use std::{io, path::Path};
 
-/// Prepares [`CatDocs`] documentation-cache proofs for `components` in `root`, declining on cache misses.
+/// Prepares [`CatDocs`] documentation-cache proofs for `components` ([`Value`]) in `root` ([`Path`]), declining on cache misses.
 pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDocs>> {
     components
         .iter()

@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Collects sorted `(lane_name, head_hash)` pairs for `scope`/`component` from tracked remote lanes in `root`.
+/// Collects sorted `(lane_name, head_hash)` pairs for `scope`/`component` from tracked remote lanes in `root` ([`Path`]).
 pub(super) fn lanes(root: &Path, scope: &str, component: &str) -> Option<Vec<(String, String)>> {
     let mut lanes = Vec::new();
     for (name, path) in lane_paths(root)? {

@@ -34,7 +34,7 @@ impl Status<'_> {
             .collect()
     }
 
-    /// `getWorkspaceIssuesOutput()` formatted with a `"workspace issues"` title.
+    /// `getWorkspaceIssuesOutput()` formatted with a `"workspace issues"` title via [`Formatter::title`].
     #[inline]
     pub(super) fn workspace_issues(&self) -> io::Result<String> {
         let issues: Vec<&str> = ids(self.result, "workspaceIssues")?

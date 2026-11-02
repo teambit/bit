@@ -55,7 +55,7 @@ fn policy_entries() -> Value {
     ])
 }
 
-/// The receipt for `target` with `files`; compositions, docs and app files,
+/// The receipt for `target` ([`Value`]) with `files`; compositions, docs and app files,
 /// which need their aspects' callbacks, decline.
 pub fn receipt(target: &Value, policy: &Policy, files: &[String]) -> io::Result<Value> {
     if text(target.get("identity"))?.trim() == NODE_ENV {

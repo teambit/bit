@@ -14,7 +14,7 @@ type Main = (Value, Value, usize, usize);
 /// Engine, token, update payload, and component count for a forked-lane status refresh.
 type Forked = (Engine, Value, Value, usize);
 
-/// Prepared main-lane and forked-lane head refreshes for `bit status --lanes`.
+/// Prepared main-lane and forked-lane head refreshes for `bit status --lanes` ([`Main`], [`Forked`]).
 pub(super) struct Refreshes {
     main: Option<Main>,
     forked: Option<Forked>,

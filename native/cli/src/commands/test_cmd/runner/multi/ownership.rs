@@ -4,7 +4,7 @@
 use super::{Component, Path, invalid, io};
 use std::fs;
 
-/// Validates that all `components` in `root` have non-empty, non-overlapping, symlink-free directories.
+/// Validates that all `components` ([`Component`]) in `root` ([`Path`]) have non-empty, non-overlapping, symlink-free directories.
 pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> {
     if components
         .iter()

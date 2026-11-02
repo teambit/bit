@@ -9,7 +9,7 @@ mod selection;
 use serde_json::{Value, json};
 use std::io;
 
-/// Component selection options for a built-in environment service (`compile`, `lint`, `format`, `check-types`, `test`).
+/// Component selection options for a built-in environment service (`compile`, `lint`, `format`, `check-types`, `test`; [`Loaded`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Selection {
     pub pattern: Option<String>,

@@ -18,7 +18,7 @@ use std::{
     sync::Arc,
 };
 
-/// Runs the command loader (`running command "<command>"...`), invokes `work`, and prints `report` (or formats `work` errors with exit code 1).
+/// Runs the command loader (`running command "<command>"...`), invokes `work`, and prints `report` ([`Report`]) via [`execute_then`].
 #[inline]
 pub fn execute_with(
     root: &Path,

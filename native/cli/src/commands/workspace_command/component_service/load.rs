@@ -62,7 +62,7 @@ impl Loaded {
             })
             .collect()
     }
-    /// Prepares a [`Loaded`] component-service context for `options` ([`super::Selection`]) in `root`.
+    /// Prepares a [`Loaded`] component-service context for `options` ([`super::Selection`]) in `root` ([`Path`]).
     pub(in crate::commands) fn prepare(
         root: &Path,
         options: &super::Selection,

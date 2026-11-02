@@ -19,7 +19,7 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::{component_remove::select_ids, parse_jsonc};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Descriptor for the native `bit validate` command.
+/// Descriptor for the native `bit validate` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "validate", aliases: &[], run };
 
 /// Error message emitted when `bit validate` is run outside a workspace.

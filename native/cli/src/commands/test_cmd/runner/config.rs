@@ -10,7 +10,7 @@ use bit_install::{
 };
 use std::{fs, io, path::Path};
 
-/// Builds the Jest worker request [`Value`] for `selected` when matching test files exist.
+/// Builds the Jest worker request [`Value`] for `selected` ([`Component`]) when matching test files exist.
 #[inline]
 pub(super) fn request(
     root: &Path,

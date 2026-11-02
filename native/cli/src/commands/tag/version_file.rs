@@ -18,7 +18,7 @@ pub(super) struct Captured {
     pub(super) proof: Value,
 }
 
-/// Reads and validates the `--versions-file` at `entered` relative to `root` into a [`Captured`] receipt.
+/// Reads and validates the `--versions-file` at `entered` relative to `root` ([`Path`]) into a [`Captured`] receipt.
 pub(super) fn read(root: &Path, entered: &str) -> io::Result<Captured> {
     let entered = entered.trim();
     if entered.is_empty() {

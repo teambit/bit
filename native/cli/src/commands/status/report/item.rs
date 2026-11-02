@@ -8,7 +8,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
 impl Status<'_> {
-    /// Formats each component in `componentsDuringMergeState` as a status item line.
+    /// Formats each component in `componentsDuringMergeState` as a status item line via [`Status::item`].
     #[inline]
     pub(super) fn during_merge_items(&self) -> std::io::Result<Vec<String>> {
         Ok(super::ids(self.result, "componentsDuringMergeState")?

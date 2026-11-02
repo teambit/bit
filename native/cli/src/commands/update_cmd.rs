@@ -25,7 +25,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the native `bit update` (`up`) command.
+/// Descriptor for the native `bit update` (`up`) command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "update", aliases: &["up"], run };
 
 /// Message printed when no workspace dependencies match the user's filter patterns.

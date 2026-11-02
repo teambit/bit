@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Content-addressed directory containing materialized Jest runner helper scripts.
+/// Content-addressed directory ([`PathBuf`]) containing materialized Jest runner helper scripts ([`FILES`]).
 pub(super) struct Assets {
     pub root: PathBuf,
 }

@@ -34,7 +34,7 @@ const STRINGS: [&str; 7] = [
     "--versions-file",
 ];
 
-/// Parsed command-line options for the native `bit tag` command.
+/// Parsed command-line options for the native `bit tag` command ([`TagSelection`], [`Release`], [`Mode`]).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Options {
     pub message: Option<String>,

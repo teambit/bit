@@ -26,7 +26,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the native `bit templates` command.
+/// Descriptor for the native `bit templates` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "templates", aliases: &[], run };
 
 /// Embedded JSON array of built-in core aspect IDs.

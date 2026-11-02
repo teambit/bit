@@ -9,7 +9,7 @@ mod xml;
 use serde_json::Value;
 use std::{fmt::Write, io};
 
-/// Renders the `JUnit` XML report string from tester JSON `data` and raw Jest `raw` results.
+/// Renders the `JUnit` XML report string from tester JSON `data` and raw Jest `raw` ([`Value`]) results via [`suite`].
 pub(super) fn render(data: &str, raw: &Value) -> io::Result<String> {
     let data: Value = serde_json::from_str(data)?;
     let components = data[0]["data"]["components"]

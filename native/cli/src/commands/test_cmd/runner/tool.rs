@@ -12,7 +12,7 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
-/// Active Jest worker process session running in either buffered (`Quiet`) or inherited-stdio (`Stream`) mode.
+/// Active Jest worker process session running in either buffered ([`Quiet`]) or inherited-stdio ([`stream::Stream`]) mode.
 pub(super) struct Session {
     inner: Inner,
 }

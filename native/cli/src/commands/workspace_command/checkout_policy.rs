@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::io;
 
 impl Steps<'_> {
-    /// Completes `checkoutPolicyPreparation` on `plan` by computing [`semver`] grammar inputs and calling the engine.
+    /// Completes `checkoutPolicyPreparation` on `plan` ([`Value`]) by computing [`semver`] grammar inputs and calling the engine.
     #[inline]
     pub(super) fn checkout_policy(&mut self, plan: &mut Value) -> io::Result<()> {
         let Some(receipt) = plan.get("checkoutPolicyPreparation") else { return Ok(()) };

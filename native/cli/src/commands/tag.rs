@@ -16,7 +16,7 @@ use options::{Mode, Options};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the native `bit tag` (`t`) command.
+/// Descriptor for the native `bit tag` (`t`) command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "tag", aliases: &["t"], run };
 
 /// The warning `bit tag` prints without `--message`.

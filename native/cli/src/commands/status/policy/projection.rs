@@ -23,7 +23,7 @@ const CORES: &str =
 /// Aspect ID for the workspace variants extension (`teambit.workspace/variants`).
 const VARIANTS: &str = "teambit.workspace/variants";
 
-/// Merges stored model, variant, `component.json`, and `.bitmap` aspect configurations for `target`.
+/// Merges stored model, variant, `component.json`, and `.bitmap` aspect configurations for `target` via [`Merger`].
 pub(super) fn extensions(
     context: &Value,
     target: &Value,

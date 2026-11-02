@@ -77,7 +77,7 @@ pub(super) fn target(_root: &Path, _source: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Verifies `plan` proofs and moves the existing `VersionHistory` object into `root/trash`.
+/// Verifies `plan` ([`Plan`]) proofs and moves the existing `VersionHistory` object into `root/trash` ([`Path`]).
 pub(super) fn move_history(plan: &mut Plan, root: &Path) -> io::Result<()> {
     verify_proofs(plan)?;
     let target =

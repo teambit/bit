@@ -16,7 +16,7 @@ use bit_install::policy::scope::read_proof;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Borrowed preparation state for deferred checkout/merge target capture.
+/// Borrowed preparation state for deferred checkout/merge target capture ([`Environments`], [`Startup`]).
 pub(super) struct Prepared<'a> {
     pub token: &'a str,
     pub context: &'a Value,

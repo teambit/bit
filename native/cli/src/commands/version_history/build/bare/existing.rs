@@ -3,7 +3,7 @@
 //! [`valid_rows`] and [`canonical`] validate stored version-history [`Value`] rows using a [`HashSet`].
 use super::{HashSet, Value, json};
 
-/// Validates that `rows` has at most 128 canonical, unique version-history entries.
+/// Validates that `rows` ([`Value`]) has at most 128 canonical, unique version-history entries via [`canonical`].
 #[inline]
 pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     if rows.len() > 128 {

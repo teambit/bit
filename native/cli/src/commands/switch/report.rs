@@ -17,7 +17,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// Formats the `SwitchCmd.report` human-readable [`Report`] for a lane switch `result` [`Value`].
+/// Formats the `SwitchCmd.report` human-readable [`Report`] for a lane switch `result` [`Value`] and [`Options`].
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     if options.lane.trim().is_empty() {
         return Err(decline("native switch lane name"));

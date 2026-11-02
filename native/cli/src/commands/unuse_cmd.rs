@@ -16,7 +16,7 @@ use bit_workspace_config::jsonc::Document;
 use serde_json::Value;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Descriptor for the native `bit unuse` command.
+/// Descriptor for the native `bit unuse` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "unuse", aliases: &[], run };
 
 /// Error classification distinguishing declined fallback cases from user-facing errors.

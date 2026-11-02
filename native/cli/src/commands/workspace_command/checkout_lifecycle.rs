@@ -15,7 +15,7 @@ use std::{
     path::Path,
 };
 
-/// Runs checkout [`preflight`] checks and initializes the [`Environments`] session for `request`.
+/// Runs checkout [`preflight`] checks and initializes the [`Environments`] session for `request` ([`super::Request`]).
 pub(super) fn bootstrap(
     engine: &mut Engine,
     root: &Path,

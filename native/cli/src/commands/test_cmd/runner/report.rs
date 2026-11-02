@@ -5,7 +5,7 @@ use crate::commands::workspace_command::results::Report;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Projects raw Jest worker output `raw` for `identity` into the `--json` tester [`Report`].
+/// Projects raw Jest worker output `raw` ([`Value`]) for `identity` into the `--json` tester [`Report`].
 pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
     if let Some(error) = raw.get("error") {
         return environment_error(error, &raw["exitCode"]);

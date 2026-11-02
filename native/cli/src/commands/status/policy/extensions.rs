@@ -34,7 +34,7 @@ const CORES: [&str; 13] = [
     "teambit.pipelines/builder",
 ];
 
-/// Core/custom aspect configurations after the shared native origin merge.
+/// Core/custom aspect configurations after the shared native origin merge ([`projected_extension`]).
 #[inline]
 pub fn status_extensions(target: &Value) -> io::Result<Vec<Value>> {
     array(target.get("projectedExtensions"), "projected extensions")?

@@ -7,7 +7,7 @@ use bit_install::config::MergeConfig;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Collects workspace-level merge-conflict and Harmony callback load diagnostics for `root`.
+/// Collects workspace-level [`MergeConfig`] and Harmony callback load diagnostics for `root` ([`Path`]).
 pub(super) fn collect(root: &Path, capture: &Capture) -> io::Result<Vec<String>> {
     let mut issues = Vec::new();
     if MergeConfig::load(root)?.has_conflict("WORKSPACE") {

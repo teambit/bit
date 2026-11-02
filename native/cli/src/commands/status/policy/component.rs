@@ -14,7 +14,7 @@ use std::{collections::HashSet, io};
 /// Three-element array of [`Map`] values corresponding to [`FIELDS`] (`dependencies`, `devDependencies`, `peerDependencies`).
 type Fields = [Map<String, Value>; 3];
 
-/// Merged manual, automatic, and environment-owned dependency policies for one component across [`FIELDS`].
+/// Merged manual, automatic, and environment-owned dependency policies for one component across [`FIELDS`] ([`Fields`]).
 pub(super) struct Policy {
     pub(super) manual: Fields,
     pub(super) automatic: Fields,

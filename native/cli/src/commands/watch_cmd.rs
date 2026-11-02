@@ -9,7 +9,7 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the native `bit watch` command.
+/// Descriptor for the native `bit watch` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "watch", aliases: &[], run };
 
 /// Error message emitted when `bit watch` is run outside a workspace.

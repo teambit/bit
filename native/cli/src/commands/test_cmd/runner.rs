@@ -30,7 +30,7 @@ struct Execution {
     empty: bool,
 }
 
-/// Prepares and runs the native `bit test` [`plan::Plan`] for `options` in `root`.
+/// Prepares and runs the native `bit test` [`plan::Plan`] for `options` ([`Options`]) in `root` ([`Path`]).
 pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let started = Instant::now();
     let mut plan = match plan::Plan::prepare(root, args, options) {

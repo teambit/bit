@@ -12,7 +12,7 @@ use super::{
 };
 use std::{ffi::OsString, io};
 
-/// Renders the human-readable `version-history show` graph output for `id` in `root`.
+/// Renders the human-readable `version-history show` graph output for `id` in `root` ([`ScopeRoot`]) into [`Outcome`].
 pub(super) fn run(
     root: &ScopeRoot,
     args: &[OsString],

@@ -17,7 +17,7 @@ pub(super) struct Progress {
     pub(super) forked_id: Option<String>,
 }
 
-/// Emits `fetching status`, component load counts, and lane import [`Progress`] messages onto `output` ([`Output`]).
+/// Emits `fetching status`, component load counts, and lane import [`Progress`] messages onto `output` ([`Output`]) via [`render_loads`].
 pub(super) fn render(
     output: &Output,
     loaded: usize,

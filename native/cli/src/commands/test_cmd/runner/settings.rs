@@ -27,7 +27,7 @@ pub(super) struct Settings {
     pub environment: Option<String>,
 }
 impl Settings {
-    /// Parses CLI `args` and `options` into validated tester [`Settings`] for `root`.
+    /// Parses CLI `args` and `options` ([`Options`]) into validated tester [`Settings`] for `root` ([`Path`]).
     pub(super) fn parse(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
         let selected = files::select(root, &options.user_pattern)?;
         let mut settings = Self {

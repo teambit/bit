@@ -14,7 +14,7 @@ pub(super) struct Workspace {
     pub(super) package_json: [Map<String, Value>; 3],
 }
 
-/// Reads and merges the workspace dependency resolver policy with the root `package.json` dependency fields.
+/// Reads and merges the workspace dependency resolver policy with the root `package.json` dependency fields into [`Workspace`].
 pub(super) fn read(context: &Value) -> io::Result<Workspace> {
     let policy = configured_policy(context)?;
     let package_json = nullish(context.get("packageJson"));

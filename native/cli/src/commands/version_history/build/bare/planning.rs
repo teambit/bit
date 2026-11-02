@@ -19,7 +19,7 @@ struct Target {
     proofs: Proofs,
 }
 
-/// Prepares a bare-scope version-history rebuild [`Plan`] for `id` in `root`.
+/// Prepares a bare-scope version-history rebuild [`Plan`] for `id` in `root` ([`ScopeRoot`]).
 pub(super) fn prepare(
     root: &ScopeRoot,
     id: &str,

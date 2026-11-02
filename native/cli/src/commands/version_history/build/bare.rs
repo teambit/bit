@@ -19,7 +19,7 @@ use std::{
     io::{self, Write},
     path::{Path, PathBuf},
 };
-/// Prepared atomic bare-scope `VersionHistory` publication plan and preflight proofs.
+/// Prepared atomic bare-scope `VersionHistory` publication plan and preflight proofs ([`PathBuf`]).
 pub(super) struct Plan {
     path: PathBuf,
     identity: String,

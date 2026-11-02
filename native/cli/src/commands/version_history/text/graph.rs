@@ -11,7 +11,7 @@ pub(super) struct Node {
     pub edges: Vec<(usize, &'static str)>,
 }
 
-/// Directed acyclic version-history graph reproducing `cleargraph` insertion and topological order.
+/// Directed acyclic version-history graph reproducing `cleargraph` insertion and topological order over [`Node`] vertices.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Graph {
     pub nodes: Vec<Node>,

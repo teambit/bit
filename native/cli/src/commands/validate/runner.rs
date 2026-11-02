@@ -27,7 +27,7 @@ use std::{ffi::OsString, fs, io, path::Path};
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
-/// Attempts to run `bit validate` natively in `root` for `options`, returning `Ok(None)` when delegation is needed.
+/// Attempts to run `bit validate` natively in `root` ([`Path`]) for `options` ([`Options`]), returning `Ok(None)` when delegation is needed.
 pub(super) fn try_run(
     root: &Path,
     args: &[OsString],

@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Explicit test file paths and their owning component identities resolved from CLI patterns.
+/// Explicit test file paths ([`PathBuf`]) and their owning component identities resolved from CLI patterns.
 pub(super) struct Selected {
     pub identities: Vec<String>,
     pub paths: Vec<PathBuf>,

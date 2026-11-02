@@ -9,7 +9,7 @@ use super::{Command, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the native `bit ui-build` command.
+/// Descriptor for the native `bit ui-build` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "ui-build", aliases: &[], run };
 
 /// Error message emitted when `bit ui-build` is run outside a workspace and scope.

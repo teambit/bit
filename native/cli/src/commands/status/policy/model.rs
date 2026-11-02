@@ -36,7 +36,7 @@ pub(in crate::commands::status) fn model_of<'c>(
         })
 }
 
-/// The stored `Version` [`Value`] object that `target`'s `.bitmap` version refers to.
+/// The stored `Version` [`Value`] object that `target`'s `.bitmap` version refers to ([`resolve_tag_reference`]).
 pub(super) fn stored_version<'c>(
     context: &'c Value,
     target: &Value,

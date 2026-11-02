@@ -7,7 +7,7 @@ use crate::commands::workspace_command::{component_service::Component, results::
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Builds a combined multi-component Jest worker request [`Value`] for `components` when any component has tests.
+/// Builds a combined multi-component Jest worker request [`Value`] for `components` ([`Component`]) when any component has tests.
 pub(super) fn request(
     root: &Path,
     components: &[Component],

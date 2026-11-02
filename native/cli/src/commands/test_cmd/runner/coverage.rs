@@ -11,7 +11,7 @@ use std::{
 /// Coverage metric keys (`lines`, `functions`, `statements`, `branches`) projected from `coverage-summary.json`.
 const METRICS: [&str; 4] = ["lines", "functions", "statements", "branches"];
 
-/// Reads and consumes the coverage summary for a single component at `directory` / `main`.
+/// Reads and consumes the coverage summary [`Value`] for a single component at `directory` / `main` via [`read_many`].
 #[inline]
 fn read(root: &Path, directory: &str, main: &str) -> io::Result<Value> {
     let component =

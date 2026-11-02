@@ -20,7 +20,7 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Descriptor for the native `bit test` (`at`) command.
+/// Descriptor for the native `bit test` (`at`) command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "test", aliases: &["at"], run };
 
 /// Error message emitted when `bit test` is run outside a workspace.

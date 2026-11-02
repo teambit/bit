@@ -18,7 +18,7 @@ use std::{
 /// Descriptor for the native `bit version` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "version", aliases: &[], run };
 
-/// Entry point for `bit version`.
+/// Entry point for `bit version` ([`COMMAND`]).
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(json) = parse_json_flag(args) else {
         return Ok(Outcome::Declined("arguments outside the native `version` grammar".to_owned()));

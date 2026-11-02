@@ -10,7 +10,7 @@ use std::io;
 pub(super) const UPDATES_FROM_MAIN: &str = r#"(use "bit lane merge main" to merge the changes)"#;
 
 impl Status<'_> {
-    /// Formats the `pendingUpdatesFromMain` entries for `bit status --lanes`.
+    /// Formats the `pendingUpdatesFromMain` entries for `bit status --lanes` via [`Status::updates`].
     #[inline]
     pub(super) fn updates_from_main(&self) -> io::Result<Vec<String>> {
         self.updates("pendingUpdatesFromMain", "main")

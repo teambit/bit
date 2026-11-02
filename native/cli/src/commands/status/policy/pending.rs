@@ -11,7 +11,7 @@ use bit_install::{
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Projects pending merge configurations (`AspectsMerger.getMergeConfigCombined`) onto `context`.
+/// Projects pending merge configurations (`AspectsMerger.getMergeConfigCombined`) onto `context` via [`Inputs`].
 pub(in crate::commands::status) fn context(root: &Path, context: &Value) -> io::Result<Value> {
     let input = Inputs::read(root)?;
     let rows = array(Some(&input.unmerged), "unmerged configuration")?;

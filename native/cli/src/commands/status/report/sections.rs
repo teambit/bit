@@ -21,7 +21,7 @@ const LOCALLY_REMOVED: &str = r#"(tag/snap and export the components to update t
 const REMOTELY_REMOVED: &str = r#"(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)"#;
 
 impl<'r> Status<'r> {
-    /// Returns the ordered status output sections for `joinSections` (version sections followed by workspace sections).
+    /// Returns the ordered status output sections for `joinSections` ([`Status::version_sections`] followed by [`Status::workspace_sections`]).
     #[inline]
     pub(super) fn sections(&self) -> io::Result<Vec<String>> {
         let mut sections = self.version_sections()?;

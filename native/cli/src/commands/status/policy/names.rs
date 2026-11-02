@@ -21,7 +21,7 @@ pub(super) fn default_prefix(identity: &str) -> String {
     )
 }
 
-/// Computes `packageName(id, storedPrefix)` from `identity` and an optional `stored_prefix`.
+/// Computes `packageName(id, storedPrefix)` from `identity` and an optional `stored_prefix` (fallback to [`default_prefix`]).
 pub(super) fn package_name(identity: &str, stored_prefix: Option<&str>) -> String {
     let identity = identity.trim();
     let scope = identity
