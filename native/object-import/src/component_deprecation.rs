@@ -82,6 +82,7 @@ impl Plan {
     pub fn unchanged(&self) -> &[String] {
         &self.unchanged
     }
+    /// Return the projected `.bitmap` JSON [`Value`] after applying deprecation edits.
     #[must_use]
     #[inline]
     pub const fn bitmap(&self) -> &Value {

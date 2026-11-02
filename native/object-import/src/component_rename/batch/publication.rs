@@ -1,4 +1,4 @@
-//! Control-JSON recursive merging ([`merge`]) and `.bitmap` publication ([`write`]) for batch component renames.
+//! Control-JSON recursive merging ([`merge`], [`merge_entry`]) and `.bitmap` publication ([`write`]) for batch component renames.
 //!
 //! Ensures `.bitmap` preimages match before writing updated workspace control state.
 

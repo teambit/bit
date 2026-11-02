@@ -91,6 +91,7 @@ fn filtered(
     Ok(kept)
 }
 
+/// Return `true` when `path` is a root-level tooling configuration file in [`ROOT_ONLY`] inside `directory`.
 #[inline]
 fn is_root_only(directory: &str, path: &str) -> bool {
     let rel = if directory == "." {

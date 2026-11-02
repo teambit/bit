@@ -70,6 +70,7 @@ fn source_version(source: &Value) -> Option<&str> {
         })
         .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"))
 }
+/// Copy truthy aspect configurations from `source` (`sourceConfigs` or `current.extensions`) into `output`.
 fn copy(output: &mut Value, source: &Value) -> io::Result<()> {
     if let Some(configs) = source.get("sourceConfigs") {
         return copy_configs(output, configs);

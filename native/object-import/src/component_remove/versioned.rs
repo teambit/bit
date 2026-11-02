@@ -1,4 +1,4 @@
-//! Local removal ([`VersionedPlan`]) of a staged tagged or imported `Component` object.
+//! Local removal ([`VersionedPlan`], [`publish`]) of a staged tagged, lane-snapped, or imported `Component` object.
 
 pub(super) use publication::publish;
 

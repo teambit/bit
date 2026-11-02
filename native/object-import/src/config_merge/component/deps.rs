@@ -1,6 +1,6 @@
 //! Three-way `teambit.dependencies/dependency-resolver` configuration and data merge strategy ([`merge`], [`State`]).
 //!
-//! Combines explicit policy configurations ([`config`]) and auto-detected dependency data ([`data`]).
+//! Combines explicit policy configurations ([`config`]) and auto-detected dependency data ([`data`]) into lifecycle policy arrays ([`append`], [`field`]).
 
 pub(super) use model::State;
 

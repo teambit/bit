@@ -160,6 +160,7 @@ fn receive_history(
     plan.overlay.objects.insert(hash, object);
     Ok(())
 }
+/// Stage a `Version` object's file and dependency-graph `Source` blobs into `plan`.
 #[inline]
 pub(super) fn receive_sources(
     plan: &mut PreparedImport,

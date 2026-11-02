@@ -103,6 +103,7 @@ fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
         .min_by_key(|file| file.matches('/').count())
         .cloned()
 }
+/// Resolve an explicit `--main` path or DSL pattern relative to `cwd` against `files`.
 pub(super) fn resolve(
     root: &Path,
     cwd: &Path,

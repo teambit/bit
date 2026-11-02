@@ -1,4 +1,4 @@
-//! Published `bit add` [`Options`] and workspace-root tracking validation.
+//! Published `bit add` [`Options`] and workspace-root tracking validation ([`Options::validate`], [`existing_root`]).
 //!
 //! Enforces mutual exclusion between `--id` and `--namespace` and validates `--root` directory targets.
 

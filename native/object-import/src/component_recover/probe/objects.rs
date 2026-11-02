@@ -104,6 +104,7 @@ fn validate_file_sources(scope: &Path, version: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+/// Inspect an HTTP-fetched tar [`ObjectItem`] slice to determine whether component `id` is soft-deleted.
 pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<bool> {
     let (objects, model) = decode(items, id)?;
     let model = model.ok_or_else(|| missing(id))?;

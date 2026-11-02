@@ -123,6 +123,7 @@ pub(super) fn scope(
     }
     Ok(scope.into())
 }
+/// Look up the `teambit.workspace/workspace` aspect configuration object in `workspace`.
 #[inline]
 pub(crate) fn workspace_aspect(workspace: &Value) -> &Value {
     workspace

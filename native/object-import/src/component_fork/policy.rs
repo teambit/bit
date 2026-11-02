@@ -1,4 +1,6 @@
 //! `ForkingMain.extractDeps` projection ([`dependency_policy`]) of captured resolver dependencies without importing components.
+//!
+//! Filters excluded dependencies ([`excluded_dependency`]) and normalizes semver/snap prefixes ([`version_with_prefix`]).
 use super::unsupported;
 use serde_json::{Value, json};
 use std::io;

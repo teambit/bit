@@ -110,6 +110,7 @@ pub(crate) fn select(bitmap: &Value, pattern: &str) -> io::Result<Vec<String>> {
     }
     Ok(result)
 }
+/// Reject unsupported `$`-prefixed state selectors other than `"$deprecated"`.
 fn validate_pattern(pattern: &str) -> io::Result<()> {
     if pattern.contains('$') && pattern != "$deprecated" {
         return Err(io::Error::new(

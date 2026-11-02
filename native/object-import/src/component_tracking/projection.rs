@@ -127,6 +127,7 @@ fn shorten(
     }
     Ok(())
 }
+/// Reject batch tracking when two [`Candidate`] entries resolve to the same `(scope, name)` identity.
 fn duplicates(candidates: &[Candidate]) -> io::Result<()> {
     let mut seen = HashSet::new();
     for candidate in candidates {

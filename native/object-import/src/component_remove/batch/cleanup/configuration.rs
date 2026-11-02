@@ -62,6 +62,7 @@ impl Configuration {
         writeln!(metadata, "{file_id} remove components")
     }
 }
+/// Remove top-level aspect entries and `teambit.generator/generator` `envs` matching `identity` from `document`.
 fn remove(document: &mut Document, identity: &str) -> bool {
     let value = document.value();
     let keys: Vec<_> = value

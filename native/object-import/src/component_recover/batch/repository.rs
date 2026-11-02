@@ -83,6 +83,7 @@ pub(crate) fn row_id_parts(id: &Value) -> (&str, &str) {
     (scope, name)
 }
 
+/// Attempt to read a `Component` model object by hashing `bare` (or `local_name`) with SHA-1 when absent from `index.json`.
 fn fallback_model(
     batch: &mut Batch,
     bare: &str,

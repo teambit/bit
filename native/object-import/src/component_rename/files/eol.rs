@@ -1,4 +1,4 @@
-//! `RenamingMain` end-of-line policy ([`Writer`]): `ComponentWriter` normalization only for unversioned, non-preserved targets.
+//! `RenamingMain` end-of-line policy ([`Writer`], [`Writer::target`], [`Writer::contents`]): `ComponentWriter` normalization only for unversioned, non-preserved targets.
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Preimage capture, selection validation, and `.bitmap` projection ([`prepare`]) for [`LocalBatch`]es.
+//! Preimage capture, selection validation ([`entry`]), and `.bitmap` projection ([`prepare`], [`packages`]) for [`LocalBatch`]es.
 
 use super::{Cleanup, LocalBatch};
 use crate::component_remove::{RowKind, Selected, VersionedPlan, batch, invalid, select};

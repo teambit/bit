@@ -1,4 +1,4 @@
-//! File-ownership filtering ([`filter`]) and already-used warning generation for `bit add` [`Candidate`]s.
+//! File-ownership filtering ([`filter`], [`existing_root`], [`is_owned_by_other`]) and already-used [`warning`] generation for `bit add` [`Candidate`]s.
 
 use super::{Candidate, Plan, error, rows};
 use serde_json::{Value, json};

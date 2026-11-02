@@ -1,4 +1,4 @@
-//! `WorkspaceConfig.write` backup and default-scope update ([`publish`]) for `workspace.jsonc`.
+//! `WorkspaceConfig.write` backup ([`backup`]) and default-scope update ([`publish`]) for `workspace.jsonc`.
 //!
 //! Preserves JSONC comments and platform line endings while recording a backup entry in `.bit/workspace-config-history`.
 use std::{

@@ -25,6 +25,7 @@ pub(crate) struct Conflict {
 #[derive(Debug, PartialEq, Eq)]
 struct Directory(PathBuf);
 impl Directory {
+    /// Create a unique temporary directory under `std::env::temp_dir()` for `git merge-file` inputs.
     fn new() -> io::Result<Self> {
         for _ in 0..64 {
             let path = std::env::temp_dir()

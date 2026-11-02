@@ -98,6 +98,7 @@ fn reason(
     Ok(Some("conflicted in data since base-version".into()))
 }
 
+/// Return `true` when `left` and `right` have equal `data` and `dataUndefinedKeys`.
 #[inline]
 fn equal(left: &serde_json::Value, right: &serde_json::Value) -> bool {
     left["data"] == right["data"]

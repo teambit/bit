@@ -84,6 +84,7 @@ pub(crate) fn remove_path(path: &Path) -> io::Result<()> {
     }
 }
 
+/// Validate that `value` is a 6-part hyphen-separated numeric `.bitmap` history receipt ID (`<= 32` bytes).
 #[inline]
 pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
     let value = value.trim();

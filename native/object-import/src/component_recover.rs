@@ -1,4 +1,4 @@
-//! Restore a locally soft-deleted component ([`Plan`], [`Batch`]) from verified scope `Source` objects and its `main` or lane head.
+//! Restore a locally soft-deleted component ([`Plan`], [`Batch`], [`Action`]) from verified scope `Source` objects and its `main` or lane head.
 
 pub(crate) mod probe;
 

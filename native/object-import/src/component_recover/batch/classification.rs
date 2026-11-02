@@ -97,6 +97,7 @@ pub(super) fn has_remove_info(config: &Value) -> bool {
                     })
             })
 }
+/// Apply `item`'s recovery classification to `bitmap` by clearing or updating its `teambit.component/remove` config.
 pub(super) fn update(bitmap: &mut Value, item: &Item) -> io::Result<()> {
     if item.configuration.is_some() || matches!(item.action, Action::None | Action::ProbeRemote) {
         return Ok(());

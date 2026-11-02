@@ -109,6 +109,7 @@ pub(super) fn normalize(path: &Path) -> PathBuf {
     }
     output
 }
+/// Expand a glob `pattern` under `root`, recording traversed directory listings in `observed`.
 fn expand(root: &Path, pattern: &Path, observed: &mut Observed) -> io::Result<Vec<PathBuf>> {
     let pattern = relative(root, pattern)?;
     if pattern.len() > 4096 || pattern.matches('{').count() > 8 || pattern.matches("**").count() > 8

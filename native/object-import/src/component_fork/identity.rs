@@ -95,6 +95,7 @@ fn is_active_named(key: &str, row: &Value, name: &str) -> bool {
         && !crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
         && crate::component_rename::copy_refactor::row_name(key, row) == name
 }
+/// Verify that no active component in `bitmap` conflicts with the target `name`, `scope`, or `target` ID.
 fn available(
     bitmap: &Value,
     name: &str,

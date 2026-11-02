@@ -1,4 +1,4 @@
-//! Retained component identity ([`Identity`]), source refactoring ([`PreparationContext`]), and `.bitmap` publication ([`Plan`], [`Options`]) for `rename`.
+//! Retained component identity ([`Identity`]), source refactoring ([`PreparationContext`]), and `.bitmap` publication ([`Plan`], [`Options`], [`batch`]) for `rename`.
 pub mod batch;
 /// Shared pure ordered source, filename and package refactoring for new component copies.
 pub(crate) mod copy_refactor {

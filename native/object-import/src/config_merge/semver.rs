@@ -73,6 +73,7 @@ pub(super) fn satisfies(input: &Value, version: &str, range: &str) -> io::Result
     }
     Ok(false)
 }
+/// Return `true` when `candidate` satisfies all comparators in `comparators` and `SemVer` prerelease tag rules.
 fn matches_set(candidate: &Value, comparators: &[Value]) -> io::Result<bool> {
     for comparator in comparators {
         if !matches_comparator(candidate, comparator)? {

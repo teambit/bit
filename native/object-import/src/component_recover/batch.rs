@@ -49,6 +49,7 @@ struct Configuration {
     path: PathBuf,
     bytes: Vec<u8>,
 }
+/// Staged source file destination path, content bytes, scope loose object path, and preimage proof.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct File {
     path: PathBuf,

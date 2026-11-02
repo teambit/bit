@@ -59,6 +59,7 @@ impl<'a> Engine<'a> {
             None => json!({"level":level,"message":message,"metaUndefined":true}),
         });
     }
+    /// Return the configured merge strategy (`"ours"`, `"theirs"`, or default `"manual"`).
     #[inline]
     pub(super) fn strategy(&self) -> &str {
         self.input["strategy"]

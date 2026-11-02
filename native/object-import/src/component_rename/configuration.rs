@@ -104,6 +104,7 @@ fn exported_config(plan: &Plan, target: &mut Value, facts: &Value) -> io::Result
     target["config"] = Value::Object(config);
     Ok(())
 }
+/// Extract and filter copied aspect configurations from `facts` (`sourceConfigs` or `sourceExtensions`).
 fn copied_config(facts: &Value) -> io::Result<serde_json::Map<String, Value>> {
     let mut config = serde_json::Map::new();
     if let Some(entries) = facts["sourceConfigs"].as_array() {

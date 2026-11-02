@@ -92,6 +92,7 @@ fn read_lane(root: &Path, scope: &str, name: &str) -> io::Result<Lane> {
     Ok(Lane { scope: scope.into(), name: name.into(), hash, path, before, index_before, value })
 }
 
+/// Resolve the unique 40-hex `Lane` object hash for `(scope, name)` from `index_before` (`index.json`).
 fn find_lane_hash(index_before: &[u8], scope: &str, name: &str) -> io::Result<String> {
     let index: Value = crate::parse_jsonc(index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;

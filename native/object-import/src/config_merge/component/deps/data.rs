@@ -105,6 +105,7 @@ fn one(state: &mut State<'_, '_>, id: &str) -> io::Result<()> {
     };
     paired(state, id, &current, &other, base.as_ref())
 }
+/// Merge an auto-detected dependency `id` present in both `current` and `other` against optional `base`.
 fn paired(
     state: &mut State<'_, '_>,
     id: &str,

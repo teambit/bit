@@ -1,6 +1,6 @@
 //! `Scope.getRemoteComponent` immutable object fetching ([`RemoteCapture`]) without publishing a local scope import.
 //!
-//! Supports both single-component ([`RemoteCapture::fetch`]) and per-scope batched ([`RemoteCapture::fetch_many`]) remote captures.
+//! Supports both single-component ([`RemoteCapture::fetch`]) and per-scope batched ([`RemoteCapture::fetch_many`]) remote captures via [`objects`].
 mod objects;
 #[cfg(test)]
 mod tests;

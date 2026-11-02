@@ -1,4 +1,4 @@
-//! `ComponentConfigFile` replacement ([`prepare`]) of the [`REMOVE`] aspect while preserving JSON indentation and newlines.
+//! `ComponentConfigFile` replacement ([`prepare`], [`projection`]) of the [`REMOVE`] aspect while preserving JSON indentation and newlines.
 use super::{Action, Batch, Configuration, Item, REMOVE, Value, invalid, selection};
 use bit_workspace_config::package_json::{detect_indent, detect_newline, stringify_package};
 use std::io;

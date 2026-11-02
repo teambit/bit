@@ -81,6 +81,7 @@ impl ContentMatcher {
         Ok(text.into_bytes())
     }
 }
+/// Replace occurrences of package `source` with `target` in non-binary `bytes`.
 #[inline]
 pub(crate) fn package(bytes: &[u8], source: &str, target: &str) -> io::Result<Vec<u8>> {
     PackageMatcher::new(source, target).apply(bytes)

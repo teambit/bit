@@ -106,6 +106,7 @@ fn one(state: &mut State<'_, '_>, name: &str) -> io::Result<()> {
     }
     resolve(state, name, &current.clone(), &other.clone())
 }
+/// Apply the configured merge strategy (`"theirs"`, `"ours"`, or `"manual"` conflict) to a diverged policy `name`.
 fn resolve(
     state: &mut State<'_, '_>,
     name: &str,

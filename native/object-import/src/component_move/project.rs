@@ -103,6 +103,7 @@ fn identity(key: &str, row: &Value) -> io::Result<String> {
     let scope = row_scope.ok_or_else(|| unsupported("unscoped move component"))?;
     Ok(format!("{scope}/{row_name}"))
 }
+/// Format `identity` with the `.bitmap` row or key version suffix when present.
 #[inline]
 fn id(key: &str, identity: &str, row: &Value) -> String {
     row["version"]

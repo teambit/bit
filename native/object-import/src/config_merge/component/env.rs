@@ -96,6 +96,7 @@ pub(super) fn merge(engine: &mut Engine<'_>) -> io::Result<()> {
     }
     engine.basic("teambit.envs/envs", &current_selector, &other_selector, Some(&base_selector))
 }
+/// Resolve `teambit.envs/envs` monotonically by semver version when `current` and `other` share the same environment ID.
 fn monotonic(engine: &mut Engine<'_>) -> io::Result<bool> {
     let current = &engine.envs[0];
     let other = &engine.envs[1];

@@ -95,6 +95,7 @@ impl Plan {
     pub fn configuration(&self) -> &Value {
         &self.bitmap[&self.identity.key]["config"]
     }
+    /// Re-verify that all observed workspace and source files match their captured preimages.
     #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()

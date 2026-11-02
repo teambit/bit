@@ -86,6 +86,7 @@ pub(super) fn select(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>
     });
     Ok(result)
 }
+/// Collect component identities from `.bitmap` that are soft-removed in `.bitmap` or at their local head.
 fn bitmap_pool(batch: &mut Batch) -> io::Result<Vec<String>> {
     let rows = batch.bitmap
         .as_object()

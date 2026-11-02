@@ -102,6 +102,7 @@ fn write_lanes(plans: &[VersionedPlan]) -> io::Result<()> {
     });
     fs::write(&first.path, outbound::encode_object(&first.hash, "Lane", &value)?)
 }
+/// Remove a loose object file at `path` and prune its two-hex shard directory if now empty.
 fn remove_object(path: &std::path::Path) -> io::Result<()> {
     match fs::remove_file(path) {
         Ok(()) => {}

@@ -113,6 +113,7 @@ fn ranges(
     );
     Ok(())
 }
+/// Handle a concrete `component` version compared against a `workspace` semver range in `plan`.
 fn component_version_range(
     plan: &mut Plan,
     input: &Value,

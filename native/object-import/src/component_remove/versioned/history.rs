@@ -99,6 +99,7 @@ pub(super) fn write(state: &HistoryState) -> io::Result<()> {
     Ok(())
 }
 
+/// Verify that `path` does not exist on disk before writing a new `VersionHistory` object.
 #[inline]
 fn ensure_absent(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {

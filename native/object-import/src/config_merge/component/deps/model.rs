@@ -86,6 +86,7 @@ impl<'a, 'b> State<'a, 'b> {
         );
         Ok(())
     }
+    /// Return `true` when `current` auto-detected dependencies already satisfy `(name, version)` (unless `force` is set).
     fn current_satisfies(&self, name: &str, version: &str, force: bool) -> io::Result<bool> {
         if let Some(current) = self.data[0]
             .iter()

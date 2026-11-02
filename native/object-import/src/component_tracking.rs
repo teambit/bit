@@ -1,6 +1,6 @@
 //! Retained component tracking plans ([`Plan`], [`Options`], [`identity`], [`observe`]) publishing `.bitmap` only after linking succeeds.
 //!
-//! Captures directory listings and file SHA-256 preimages before computing projected `.bitmap` entries.
+//! Captures directory listings and file SHA-256 preimages ([`Plan::prepare`], [`Plan::validate`]) before computing projected `.bitmap` entries ([`Plan::commit`]).
 pub(crate) mod identity;
 pub(crate) mod observe;
 

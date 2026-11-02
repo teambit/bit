@@ -1,6 +1,6 @@
-//! Nested component directory and workspace-root ownership validation ([`validate`]) for `bit add`.
+//! Nested component directory and workspace-root ownership validation ([`validate`], [`root_owner`]) for `bit add`.
 //!
-//! Prevents nesting components under non-root components or claiming the workspace-root component's `mainFile`.
+//! Prevents nesting components under non-root components or claiming the workspace-root component's `mainFile` ([`contains_root_main_file`]).
 
 use super::{Plan, error};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! `Repository.deleteRecordsFromUnmergedComponents` writes ([`prepare`]) when a removed model had a pending record.
+//! `Repository.deleteRecordsFromUnmergedComponents` writes ([`prepare`], [`matches_selected_record`]) when a removed model had a pending record.
 //!
 //! Preserves trailing newline and CRLF/LF line endings when updating `.bit/unmerged.json` during removal.
 use super::{Change, read_optional};

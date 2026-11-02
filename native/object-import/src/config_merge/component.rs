@@ -1,4 +1,4 @@
-//! Per-component aspect configuration and data merge planning ([`plan`], `ConfigMerger`) via [`Engine`].
+//! Per-component aspect configuration and data merge planning ([`plan`], [`current`], [`other`], `ConfigMerger`) via [`Engine`].
 
 pub(super) use engine::Engine;
 

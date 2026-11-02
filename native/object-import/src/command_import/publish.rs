@@ -108,6 +108,7 @@ impl PreparedImport {
         }
         Ok(())
     }
+    /// Write all staged remote `main` and lane reference files under `.bit/refs/remotes`.
     fn publish_refs(&self) -> io::Result<()> {
         let remotes_dir = self.environment.local_directory
             .parent()

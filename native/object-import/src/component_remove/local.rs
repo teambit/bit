@@ -61,6 +61,7 @@ impl LocalBatch {
             .map(|model| model.identity().to_owned())
             .collect()
     }
+    /// Verify that no newly created aspect component in this batch is still used by retained `components`.
     pub fn check_aspect_usage(&self, components: &[Value]) -> io::Result<()> {
         if components.is_empty() {
             return Ok(());

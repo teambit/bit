@@ -105,6 +105,7 @@ pub(super) fn observe_tree(root: &Path, path: &Path, observed: &mut Observed) ->
     }
     Ok(())
 }
+/// Record ancestor and directory preimages for the nearest existing parents of `source` and `destination`.
 pub(super) fn observe_parents(
     root: &Path,
     source: &Path,

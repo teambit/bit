@@ -1,4 +1,4 @@
-//! `Workspace.idsByPattern` resolution ([`select_ids`]) of exact names before matching full scoped pattern IDs.
+//! `Workspace.idsByPattern` resolution ([`select_ids`], [`matching`]) of exact names before matching full scoped pattern IDs.
 use super::invalid;
 use std::{fs, io, path::Path};
 /// Resolves a component ID or glob `pattern` against `.bitmap` in `Workspace.idsByPattern` order.
