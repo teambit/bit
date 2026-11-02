@@ -4,6 +4,7 @@
 use super::{ExistingEntries, InstallOptions, Parsed, parse};
 use indexmap::IndexMap;
 
+/// Parses CLI `args` into [`InstallOptions`], panicking if `--help` was requested.
 fn options(args: &[&str]) -> InstallOptions {
     let argv: Vec<String> = args
         .iter()

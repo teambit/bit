@@ -3,6 +3,7 @@
 
 use super::{Js, align_files, array, get, text};
 use serde_json::json;
+/// Builds a UTF-16 [`Js::Object`] file entry with `relativePath`, `name`, and `test: false`.
 fn row(path: Js, name: &str) -> Js {
     Js::Object(vec![
         ("relativePath".encode_utf16().collect(), path),

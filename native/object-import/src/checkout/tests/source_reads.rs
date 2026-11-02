@@ -6,6 +6,7 @@ use crate::checkout::{cache, read_sources};
 use serde_json::Value;
 use std::{fs, io::Cursor};
 
+/// Invokes [`read_sources`] on `bytes` and splits the response into its JSON header and raw payload bytes.
 fn response(bytes: Vec<u8>, state: &mut cache::State) -> (Value, Vec<u8>) {
     let mut output = Vec::new();
     read_sources(&mut Cursor::new(bytes), &mut output, state, pool()).unwrap();

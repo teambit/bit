@@ -12,6 +12,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Creates an isolated temporary workspace directory with `.bit`, `workspace.jsonc`, and `.bitmap`.
 pub(super) fn fixture() -> PathBuf {
     let root = std::env::temp_dir()
         .join(format!(

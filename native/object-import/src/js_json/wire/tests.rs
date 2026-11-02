@@ -3,6 +3,7 @@
 
 use super::Value;
 use serde_json::json;
+/// Verifies that compact UTF-8 and legacy UTF-16 code-unit [`Value`] representations serialize identically.
 #[test]
 fn compact_and_legacy_strings_have_identical_javascript_serialization() {
     let compact = json!({"kind":"object", "value":[

@@ -11,6 +11,7 @@ use std::{
 
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
+/// Temporary workspace scratch directory that cleans up on drop.
 struct Scratch(PathBuf);
 impl Scratch {
     fn new() -> Self {

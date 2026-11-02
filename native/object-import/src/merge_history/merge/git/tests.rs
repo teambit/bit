@@ -3,6 +3,7 @@
 
 use super::workspace_merge_for_platform;
 
+/// Verifies that [`workspace_merge_for_platform`] keeps shared prefixes outside conflict markers with CRLF on Windows.
 #[test]
 fn mixed_windows_newlines_keep_the_common_prefix_outside_conflict_markers() {
     let (merged, conflict) = workspace_merge_for_platform(

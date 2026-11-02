@@ -4,6 +4,7 @@
 use super::{DependencyComponent, latest, validate_graph};
 use serde_json::json;
 
+/// Verifies that [`latest`] selects the highest semver tag from active `versions` and ignores `orphanedVersions`.
 #[test]
 fn only_active_main_tags_participate_in_pinning() {
     let model = json!({"versions":{"0.0.1":"a","1.0.0-beta.1":"b","0.2.0":"c"},"orphanedVersions":{"9.0.0":"d"}});

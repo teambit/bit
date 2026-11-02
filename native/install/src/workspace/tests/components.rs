@@ -23,6 +23,7 @@ const CORE: [&str; 8] = [
     "teambit.workspace/workspace",
 ];
 
+/// Returns [`CORE`] aspect IDs as an owned `Vec<String>`.
 fn core() -> Vec<String> {
     CORE.iter()
         .map(|id| (*id).to_owned())

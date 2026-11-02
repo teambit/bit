@@ -4,6 +4,7 @@
 use super::{digest, wire};
 use crate::workspace::snapshots::{Observation, State};
 
+/// Retains `bytes` in a snapshot [`State`] and returns the corresponding [`wire::Current`] descriptor.
 fn observed(bytes: &[u8]) -> (wire::Current, State) {
     let path = std::env::temp_dir().join("bit-retained-current-does-not-need-a-disk-file");
     let mut snapshots = State::default();

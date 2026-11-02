@@ -3,6 +3,7 @@
 
 use super::Writer;
 
+/// Verifies that [`Writer::target`] normalizes newlines to the platform EOL for new unpreserved targets.
 #[test]
 fn component_writer_uses_platform_eol_for_new_nonpreserved_targets() {
     let writer = Writer::target(false, false);

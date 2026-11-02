@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Creates a temporary workspace fixture populated with `alpha` and `beta` components and loose scope objects.
 fn fixture() -> PathBuf {
     let root = std::env::temp_dir()
         .join(format!(

@@ -7,6 +7,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use serde_json::json;
 use std::io::Write;
 
+/// Compresses `body` into `store` as a `Source` object and returns its [`wire::Model`] descriptor at `index`.
 fn store(store: &crate::store::Store, body: &[u8], index: usize) -> wire::Model {
     let identity = hash(body);
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

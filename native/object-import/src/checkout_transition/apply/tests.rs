@@ -2,6 +2,7 @@
 //! in `bit-object-import` transitions.
 
 use super::error_path_for_platform;
+/// Verifies that [`error_path_for_platform`] formats nested paths with platform-specific separators.
 #[test]
 fn canonical_error_paths_preserve_nested_platform_separators() {
     assert_eq!(error_path_for_platform("nested/deep/file.ts", true), r"nested\deep\file.ts");

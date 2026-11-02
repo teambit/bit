@@ -2,6 +2,7 @@
 //! configuration updates ([`set_config`], [`validate_range`], [`selection`], [`ASPECT`]) in `bit-object-import` deprecation commands.
 
 use super::{ASPECT, Value, json, selection, set_config, validate_range};
+/// Builds a baseline `.bitmap` JSON fixture containing `foo` and `bar` entries.
 fn bitmap() -> Value {
     json!({"foo":{"name":"foo","scope":"scope","version":"1.0.0","rootDir":"foo"},"bar":{"name":"bar","defaultScope":"scope","rootDir":"bar"}})
 }

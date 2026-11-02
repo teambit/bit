@@ -3,6 +3,7 @@
 
 mod compression;
 use serde_json::Value;
+/// SHA-1 object hash for the captured `comp-a2` `Component` golden fixture.
 const HASH: &str = "1916562e4f80016ca7cfb37975c8257ab52506d8";
 const BODY: &str = r#"{"name":"comp-a2","scope":"25412c31-remote","versions":{"0.0.1":"173108081623a641493cb6a1c777c4d7d01d04a0"},"lang":"javascript","deprecated":false,"bindingPrefix":"@25412c31-remote","remotes":[{"url":"file:///var/tmp/bit-native-e2e/3972936/case-AkphF3/25412c31-remote","name":"25412c31-remote","date":"1792308099002"}],"schema":"2.0.0","head":"173108081623a641493cb6a1c777c4d7d01d04a0"}"#;
 const GOLDEN: &str = concat!(

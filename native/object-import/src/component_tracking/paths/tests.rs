@@ -4,6 +4,7 @@
 use super::{diagnostic, display, relative};
 use std::path::Path;
 
+/// Verifies that [`diagnostic`] and [`display`] render platform separators without mutating stored slash paths.
 #[test]
 fn diagnostics_use_platform_paths_without_changing_stored_paths() {
     let stored = "bar/nested/foo.js";

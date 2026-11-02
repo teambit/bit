@@ -5,6 +5,7 @@ use super::{Options, Plan};
 use serde_json::{Value, json};
 use std::{fs, io};
 
+/// Creates a temporary workspace fixture, default fork [`Options`], and source metadata for local fork tests.
 fn fixture() -> (tempfile::TempDir, Options, Value) {
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path();

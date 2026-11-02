@@ -6,6 +6,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use sha1::{Digest, Sha1};
 use std::{fs, io::Write, path::Path};
 
+/// Encodes `body` as a zlib-compressed `Source` object at `compression` level and returns `(hash, bytes)`.
 fn source(body: &[u8], compression: Compression) -> (String, Vec<u8>) {
     let hash = crate::validate::hexadecimal(&Sha1::digest(body));
     let mut encoder = ZlibEncoder::new(Vec::new(), compression);

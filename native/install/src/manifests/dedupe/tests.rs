@@ -10,6 +10,7 @@ use indexmap::IndexMap;
 
 const DEP: &str = "package-dependency";
 
+/// Formats a synthetic dependent component ID (`dependent-component-{index}`).
 fn origin(index: usize) -> String {
     format!("dependent-component-{index}")
 }

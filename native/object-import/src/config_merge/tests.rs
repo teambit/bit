@@ -5,6 +5,7 @@ use super::semver;
 use serde_json::{Value, json};
 use std::cmp::Ordering;
 
+/// Builds a `1.2.3` semver JSON object with the given `prerelease` array.
 fn version(prerelease: Value) -> Value {
     let mut result = json!({"major":1,"minor":2,"patch":3});
     result["prerelease"] = prerelease;

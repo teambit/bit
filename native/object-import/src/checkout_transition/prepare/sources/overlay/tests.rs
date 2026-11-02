@@ -7,6 +7,7 @@ use serde_json::json;
 use sha1::{Digest, Sha1};
 use std::{io::Write, path::Path};
 
+/// Compresses `bytes` with a `<kind> <hash> <len>\0` Bit object header using default zlib compression.
 fn compressed(kind: &str, hash: &str, bytes: &[u8]) -> Vec<u8> {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", bytes.len()).unwrap();

@@ -6,6 +6,7 @@ use crate::inspection::{hash, tests::Fixture};
 use serde_json::json;
 use std::fs;
 
+/// Writes `bodies` into `fixture` and constructs a [`wire::Begin`] inspection capture request.
 fn request(fixture: &Fixture, bodies: &[&[u8]]) -> wire::Begin {
     let directory = fixture.directory("snapshots");
     let files: Vec<_> = bodies

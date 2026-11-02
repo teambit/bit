@@ -13,6 +13,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+/// Temporary test directory that removes itself when dropped.
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

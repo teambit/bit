@@ -4,6 +4,7 @@
 use super::{additions, plan, statuses, wire};
 use serde_json::json;
 use std::path::{Path, PathBuf};
+/// Builds a baseline [`plan::Plan`] holding two identical `retained` file bodies.
 fn retained_plan() -> plan::Plan {
     plan::Plan {
         bodies: vec![plan::Body::new(b"retained".to_vec()), plan::Body::new(b"retained".to_vec())],

@@ -5,6 +5,7 @@ use super::Observed;
 use crate::component_tracking::tests::fixture;
 use std::fs;
 
+/// Verifies that re-reading a modified control file fails and invalidates the [`Observed`] preimage.
 #[test]
 fn a_repeated_control_read_cannot_replace_the_original_preimage() {
     let root = fixture();

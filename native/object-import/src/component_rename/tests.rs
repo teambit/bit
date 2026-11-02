@@ -3,6 +3,7 @@
 
 use super::{identity, refactor};
 
+/// Verifies that [`refactor::content`] and [`refactor::filename`] apply kebab, camel, and Pascal case replacements in order.
 #[test]
 fn class_and_filename_replacements_follow_the_published_order() {
     let result =

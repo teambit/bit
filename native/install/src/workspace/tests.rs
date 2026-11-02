@@ -7,7 +7,7 @@ mod matching;
 
 use std::{fs, path::Path};
 
-/// Write `files` (path → contents) under `root`, creating parents.
+/// Writes `files` (path → contents) under `root`, creating parent directories as needed.
 fn write(root: &Path, files: &[(&str, &str)]) {
     for (path, contents) in files {
         let path = root.join(path);

@@ -3,6 +3,7 @@
 
 use super::{State, apply};
 use serde_json::{Value, json};
+/// Invokes [`apply`] with `kind` and `input` on a fresh [`State`].
 fn call(kind: &str, input: Value) -> Value {
     apply(kind, input, &mut State::default()).expect("native policy")
 }

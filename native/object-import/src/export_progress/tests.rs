@@ -4,6 +4,7 @@
 use super::{Event, emit, scope};
 use std::sync::{Arc, Barrier, mpsc::sync_channel};
 
+/// Verifies that [`scope`] restores the outer progress observer channel after an inner scope panics.
 #[test]
 fn nested_observer_unwind_restores_the_outer_operation() {
     let (outer, outer_events) = sync_channel(4);

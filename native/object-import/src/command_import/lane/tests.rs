@@ -4,6 +4,7 @@
 use super::{Id, entries, resolve_local};
 use serde_json::json;
 
+/// Verifies that [`resolve_local`] prefers `scope.json` tracking entries and rejects missing or ambiguous lane names.
 #[test]
 fn alias_resolution_prefers_tracking_and_rejects_ambiguous_names() {
     let scope = json!({"name":"local.scope","lanes":{"tracking":[{"localLane":"dev","remoteLane":"feature","remoteScope":"remote.scope"}]}});

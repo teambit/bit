@@ -12,6 +12,7 @@ use std::{
 /// Spinner frame interval used by the loader test harness.
 const FRAME: Duration = Duration::from_millis(80);
 
+/// Creates an in-memory [`Sink`] and shared buffer for capturing spinner and console output.
 fn recorder() -> (Sink, Arc<Mutex<String>>) {
     let written = Arc::new(Mutex::new(String::new()));
     let target = Arc::clone(&written);

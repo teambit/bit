@@ -3,6 +3,7 @@
 
 use super::{Fixture, prepare, prepare_cached};
 
+/// Verifies that cached graph imports skip remote fetcher phases and treat versionless roots as already satisfied.
 #[test]
 fn cached_graph_import_has_no_fetcher_phase_and_versionless_roots_are_not_unbuilt_requests() {
     let fixture = Fixture::new();

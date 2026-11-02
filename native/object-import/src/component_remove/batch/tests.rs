@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Creates a temporary workspace fixture with two new components (`alpha` and `beta`) in `.bitmap`.
 fn fixture() -> PathBuf {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);
     let root =

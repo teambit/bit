@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Isolated workspace and file-remote scope fixture for lane history diagnostic tests.
 #[derive(Debug)]
 struct Fixture {
     temporary: tempfile::TempDir,

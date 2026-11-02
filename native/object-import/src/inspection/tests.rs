@@ -8,6 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory fixture that removes its root on drop.
 #[derive(Debug)]
 pub(super) struct Fixture(pub(super) std::path::PathBuf);
 impl Fixture {

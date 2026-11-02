@@ -10,6 +10,7 @@ pub(in crate::manifests) fn golden() -> Value {
     serde_json::from_str(include_str!("golden.json")).expect("golden fixture")
 }
 
+/// Converts a JSON string [`Value`] to `Option<String>`, returning `None` for non-strings.
 fn text(value: &Value) -> Option<String> {
     value.as_str().map(str::to_string)
 }

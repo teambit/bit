@@ -9,6 +9,7 @@ use std::{
 };
 
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory fixture for parallel current workspace file reading tests.
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {

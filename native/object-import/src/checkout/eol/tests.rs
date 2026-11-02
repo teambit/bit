@@ -2,6 +2,7 @@
 //! `bit-object-import` source materialization ([`detects_binary_nuls_pdfs_controls_and_suspicious_byte_density`]).
 
 use super::{binary, normalize};
+/// Verifies that [`binary`] detects NULs, PDF headers, control characters, and high non-printable byte density.
 #[test]
 fn detects_binary_nuls_pdfs_controls_and_suspicious_byte_density() {
     for bytes in [b"\0".as_slice(), b"%PDF-1.7\n", b"\xff\xff\xff", b"\x01\x02\x03"] {

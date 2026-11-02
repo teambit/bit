@@ -6,6 +6,7 @@ use crate::workspace::snapshots::{Observation, State as Reads};
 use serde_json::{Value, json};
 use std::{fs, path::Path, sync::Arc};
 
+/// Retains `raw` bytes for `path` in `reads` (stripping a single UTF-8 BOM) and returns the read token.
 fn observe(reads: &mut Reads, path: &Path, raw: &[u8]) -> u64 {
     let contents = raw.strip_prefix(b"\xef\xbb\xbf").unwrap_or(raw);
     reads

@@ -11,6 +11,7 @@ use std::{
 };
 
 static COUNTER: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory guard for component rename batch tests.
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

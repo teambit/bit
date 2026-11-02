@@ -2,6 +2,7 @@
 //! validation in `bit-object-import` `bit add` planning.
 
 use super::{Plan, facts, fixture, options, source};
+/// Verifies that [`Plan::prepare`] leaves `.bitmap` untouched until [`Plan::commit`] is called.
 #[test]
 fn tracking_is_read_only_until_commit() {
     let root = fixture();

@@ -4,6 +4,7 @@
 use super::State;
 use serde_json::{Value, json};
 
+/// Builds a checkout selection begin request JSON object for `scope/name@1.0.0` with `reset`.
 fn input(reset: bool) -> Value {
     json!({"component":{"id":"scope/name@1.0.0","idWithoutVersion":"scope/name","componentVersion":"1.0.0","hasBitmap":true,"currentExists":true,"isRemoved":false},"model":{"hasMainHead":true},"options":{"reset":reset,"head":false,"main":false,"latest":false,"forceOurs":false,"forceTheirs":false,"revert":false,"loadStash":false}})
 }

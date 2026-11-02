@@ -6,6 +6,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use serde_json::json;
 use std::{fs, io::Write};
 
+/// Verifies that `inspectionDiff` diffs captured workspace snapshot bytes against verified repository `Source` objects.
 #[test]
 fn diff_uses_captured_workspace_bytes_and_verified_repository_sources() {
     let fixture = super::tests::Fixture::new();

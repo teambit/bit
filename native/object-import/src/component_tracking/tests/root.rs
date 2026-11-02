@@ -4,6 +4,7 @@
 use super::{Plan, facts, fixture, options, source};
 use crate::component_tracking::{Options, identity, main_file};
 use serde_json::json;
+/// Verifies that tracking `.` as the workspace root fails without an explicit `--root` flag.
 #[test]
 fn root_requires_explicit_intent() {
     let root = fixture();

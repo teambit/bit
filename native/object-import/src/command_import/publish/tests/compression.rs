@@ -4,6 +4,7 @@
 //! process or host system zlib is required when these cross-platform tests run.
 //! Each test verifies byte-identical compressed output against the released wire stream.
 
+/// Verifies that `ScopeMeta` serialization compresses to the exact Node.js `zlib.deflate` stream.
 #[test]
 fn scope_metadata_matches_the_released_node_compressed_stream() {
     exact(

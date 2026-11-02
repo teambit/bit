@@ -5,6 +5,7 @@ use super::{Fixture, object_hash, prepare_cached, publish};
 use flate2::{Compression, write::ZlibEncoder};
 use std::{fs, io::Write};
 
+/// Verifies that equal-head lane main refresh canonicalizes non-standard compressed streams without fetching sources.
 #[test]
 fn equal_head_main_refresh_canonicalizes_both_alternative_streams_without_fetching_sources() {
     let fixture = Fixture::new();

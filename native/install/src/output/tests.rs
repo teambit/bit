@@ -9,6 +9,7 @@ use std::{
 
 static STATUS_TEST: Mutex<()> = Mutex::new(());
 
+/// Creates an in-memory [`Sink`] and shared buffer for inspecting rendered CLI output.
 fn recorder() -> (Sink, Arc<Mutex<String>>) {
     let written = Arc::new(Mutex::new(String::new()));
     let target = Arc::clone(&written);

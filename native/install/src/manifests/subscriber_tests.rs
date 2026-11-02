@@ -5,6 +5,7 @@ use super::subscriber_links;
 use crate::model::{InstallPlan, Project};
 use serde_json::json;
 
+/// Verifies that subscriber link replacements use unlinked manifests without overwriting declared dependencies.
 #[test]
 fn replacing_links_uses_unlinked_manifests_without_overwriting_declared_dependencies() {
     let directory = tempfile::tempdir().unwrap();

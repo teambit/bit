@@ -13,6 +13,7 @@ use std::{
     path::Path,
 };
 
+/// Compresses and writes a loose Bit object (`kind`, `hash`, `body`) under `root/objects` and returns its [`ObjectItem`].
 fn object(root: &Path, kind: &str, hash: &str, body: &[u8]) -> ObjectItem {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();

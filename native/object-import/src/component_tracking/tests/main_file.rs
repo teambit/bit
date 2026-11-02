@@ -5,6 +5,7 @@ use super::{
     super::main_file::{choose, resolve},
     fixture, source,
 };
+/// Resolves the main file for `scope/bar/foo` from `files`, optional explicit `main`, and `existing` `.bitmap` entry.
 fn find(files: &[&str], main: Option<&str>, existing: Option<&str>) -> std::io::Result<String> {
     choose(
         "scope/bar/foo",

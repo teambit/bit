@@ -1,5 +1,5 @@
 //! End-to-end cases of [`plan`], [`manifests_hash`], and [`ManifestOutcome`], with expectations traced through the
-//! `TypeScript` `WorkspaceManifestFactory` sources.
+//! `TypeScript` `WorkspaceManifestFactory` implementation.
 
 use super::{
     ManifestContext, ManifestInput, ManifestOptions, ManifestOutcome, Policies, RemoteFilter,

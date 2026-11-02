@@ -4,6 +4,7 @@
 use super::{Engine, other_id};
 use serde_json::json;
 
+/// Verifies that [`other_id`] resolves an added versioned aspect to its versioned workspace identity.
 #[test]
 fn added_versioned_other_aspect_uses_versioned_workspace_identity() {
     let identity = "scope/env/install-compat";

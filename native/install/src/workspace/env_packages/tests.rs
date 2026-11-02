@@ -10,6 +10,7 @@ use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
 use std::{fs, io::Write, path::Path};
 
+/// Compresses and writes a loose Bit object (`kind`, `hash`, `body`) into `scope/objects`.
 fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     let body = body.to_string();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

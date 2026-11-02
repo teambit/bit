@@ -11,6 +11,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary directory fixture for checkout transition state and publication tests.
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {
