@@ -71,7 +71,7 @@ fn ordinary_model(
         .all(|(head, expected)| ordinary_head(head, expected, check_issues))
 }
 
-/// Resolves `<scope>/<name>` for `model` from its own scope field, `context["targets"]`, or `defaultScope`.
+/// Resolves `<scope>/<name>` for `model` from its own `scope` field, `context["targets"]`, or `defaultScope`.
 fn model_identity(context: &Value, model: &Value) -> Option<String> {
     let name = model["name"]
         .as_str()

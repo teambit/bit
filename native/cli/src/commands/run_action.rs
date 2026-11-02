@@ -89,6 +89,7 @@ fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Out
     )
 }
 
+/// Parses `bit run-action <action-name> <remote> <options-json>` tokens into [`Options`].
 #[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let filtered = super::scope_set::collect_non_flag_tokens(args)?;

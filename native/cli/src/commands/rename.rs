@@ -13,7 +13,7 @@ use std::{env, ffi::OsString, io};
 
 /// Descriptor for the native `bit rename` command.
 pub const COMMAND: Command = Command { name: "rename", aliases: &[], run };
-/// Entry point for `bit rename`.
+/// Entry point for `bit rename` that prepares [`ProjectedLinker`] and runs [`execution::run`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("rename arguments are not UTF-8".into()));

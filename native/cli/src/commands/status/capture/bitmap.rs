@@ -6,7 +6,7 @@ use super::{Capture, missing, text};
 use serde_json::Value;
 use std::io;
 
-/// Captures locally removed or pending-import `.bitmap` targets into `captured` when applicable.
+/// Captures locally removed or pending-import `.bitmap` targets into `captured` via [`missing`].
 #[inline]
 pub(super) fn capture_special(
     context: &Value,

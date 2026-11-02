@@ -83,6 +83,7 @@ impl Environments {
         Self { builtin_services: Services::Tools, ..Self::new() }
     }
 
+    /// Creates an [`Environments`] session with built-in [`Services::Compiler`] enabled.
     #[inline]
     pub(in crate::commands) fn for_compiler_services() -> Self {
         Self { builtin_services: Services::Compiler, ..Self::new() }

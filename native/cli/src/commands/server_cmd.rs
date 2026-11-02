@@ -68,6 +68,7 @@ fn parse_nonzero_port(raw: &str) -> Option<u16> {
         .filter(|&port| port >= 1)
 }
 
+/// Parses `--compile` (`-c`) and `--port` (`-p`) flags for `bit server` into [`Options`].
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut idx = 0;

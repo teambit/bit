@@ -20,7 +20,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Parsed command-line options for `bit scope set <scope-name> [pattern]`.
+/// Parsed command-line options for `bit scope set <scope-name> [pattern]` (`ScopeSetCmd`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Options {
     scope_name: String,

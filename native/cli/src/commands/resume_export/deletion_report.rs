@@ -46,6 +46,7 @@ fn warning(formatter: &Formatter, message: &str) -> String {
     format!("{} {}", formatter.warn_symbol(), formatter.chalk.yellow(message))
 }
 
+/// Formats the `"no pending objects"` summary when no remote scopes hold pending objects for `export_id`.
 #[inline]
 pub(super) fn nothing(formatter: &Formatter, export_id: &str, probe: &Answers) -> String {
     let export_id = export_id.trim();

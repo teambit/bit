@@ -78,6 +78,7 @@ fn parent_hash(parent: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Selects the lowest common ancestor snap from `common_snaps` reachable from `source` and `target`.
 fn find_closest_common<'a>(
     parents_map: &HashMap<&'a str, Vec<&'a str>>,
     source: &'a str,

@@ -21,7 +21,7 @@ pub(in crate::commands) struct Startup {
     pub(in crate::commands) snapshot_tail: Option<Value>,
 }
 
-/// Runs `.bitmap` auto-synchronization against `.git` when `workspace.bitmapAutoSync` is enabled.
+/// Runs `.bitmap` auto-synchronization against `.git` via [`Engine`] when `workspace.bitmapAutoSync` is enabled.
 #[inline]
 pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
     if !root.join(".git").exists() {

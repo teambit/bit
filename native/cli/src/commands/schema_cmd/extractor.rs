@@ -69,6 +69,7 @@ pub(super) fn diagnose_workspace_diff_error(
     }
 }
 
+/// Diagnoses missing-component or pattern-mismatch errors for `bit schema` in a bare scope at `scope_dir`.
 pub(super) fn diagnose_scope_schema_error(scope_dir: &Path, pattern: &str) -> Option<String> {
     if pattern.contains(['$', ':']) || pattern.contains(" AND ") {
         return None;

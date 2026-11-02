@@ -74,6 +74,7 @@ fn target_directory(root: &Path, target: &Value) -> io::Result<std::path::PathBu
     Ok(root.join(dir))
 }
 
+/// Joins each non-empty relative path in `files` under `directory`.
 #[inline]
 fn target_file_paths(directory: &Path, files: &[String]) -> Vec<std::path::PathBuf> {
     files

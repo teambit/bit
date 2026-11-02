@@ -37,6 +37,7 @@ impl CacheWrites {
         self.callbacks.directories.push(directory);
     }
 
+    /// Retains the active [`crate::host::Host`] session inside `self.callbacks`.
     #[inline]
     pub(in crate::commands::status) fn retain_callback_host(
         &mut self,

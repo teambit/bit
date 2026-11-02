@@ -67,7 +67,7 @@ impl Node {
         Ok(names)
     }
 
-    /// The Node binary from [`NodeCli`], resolved through `PATH` when discovery left it bare.
+    /// Resolves the Node binary path from [`NodeCli`], searching `PATH` when discovery left it bare.
     fn binary(&self) -> io::Result<PathBuf> {
         let node = &self.cli.node;
         if node.is_absolute() || (node.components().count() > 1 && node.is_file()) {

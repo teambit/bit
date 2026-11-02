@@ -75,7 +75,7 @@ fn parse_bare_literal(pattern: &str) -> Result<&str, Failure> {
     Ok(bare)
 }
 
-/// Resolves a single literal component path, name, or scoped ID against `bitmap`.
+/// Resolves a single literal component path, name, or scoped ID against `bitmap` [`BitmapEntry`] records.
 fn resolve_literal_entry<'a>(
     root: &Path,
     bitmap: &'a Bitmap,

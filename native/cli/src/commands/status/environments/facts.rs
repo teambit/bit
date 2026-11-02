@@ -80,6 +80,7 @@ fn provider_facts(
     })
 }
 
+/// Extracts required property `name` from `provider` or returns an error when omitted.
 #[inline]
 fn provider_fact(provider: &Value, name: &str) -> io::Result<Value> {
     provider

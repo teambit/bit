@@ -62,6 +62,7 @@ impl Environments {
         }
     }
 
+    /// Resolves environment facts for `component` via built-in service tables or [`facts::read`].
     fn component_facts(
         &mut self,
         root: &Path,

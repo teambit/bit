@@ -94,6 +94,7 @@ fn apply_save_arg<'a>(
     Some(())
 }
 
+/// Parses `bit stash load` (`pop`) flags and optional stash ID into [`Options`].
 fn load(args: &[&str]) -> Option<Options> {
     let mut flags = LoadFlags::default();
     let mut iter = args.iter().copied();

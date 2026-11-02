@@ -44,6 +44,7 @@ pub(in crate::commands) fn resolve_workspace_components(
     Ok((ws_config, ws))
 }
 
+/// Promotes components containing `.bit-env.` files to environment components and assigns them to consumers.
 #[inline]
 fn promote_bit_env_plugin_components(ws: &mut Workspace, core_ids: &[String]) {
     let plugin_envs = collect_plugin_env_ids(ws);

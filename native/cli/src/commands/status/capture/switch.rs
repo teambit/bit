@@ -60,6 +60,7 @@ impl Session<'_> {
         Ok(true)
     }
 
+    /// Resolves and validates `switchStatusLoadOrder` against `targets` when checkout callbacks are active.
     fn order(&self, targets: &[Value]) -> io::Result<Option<Vec<String>>> {
         if !self.environments.is_checkout() || !self.behavior.callbacks {
             return Ok(None);

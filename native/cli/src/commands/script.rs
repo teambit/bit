@@ -39,6 +39,7 @@ pub(super) struct Options {
     pub list: bool,
 }
 
+/// Entry point for `bit script` that validates workspace/scope state and executes [`execute`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("script arguments are not UTF-8".into()));

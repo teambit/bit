@@ -89,6 +89,7 @@ async fn persist(
     Ok(ids)
 }
 
+/// Runs `ExportValidate` across all remote `plans` in parallel for `client_id`.
 async fn validate(plans: &[Arc<Plan>], client_id: &str) -> io::Result<()> {
     let mut tasks = JoinSet::new();
     for plan in plans {

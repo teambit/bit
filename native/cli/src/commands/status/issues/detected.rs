@@ -58,6 +58,7 @@ impl Issue {
         }
     }
 
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for source-level [`Issue`] variants.
     #[inline]
     const fn source_class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

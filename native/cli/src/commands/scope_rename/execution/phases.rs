@@ -83,6 +83,7 @@ pub(super) fn pairs(entries: &Entries) -> io::Result<Vec<(String, String)>> {
         })
         .collect()
 }
+/// Captures target component rows and applies AST/package rewrites across `entries`.
 pub(super) fn targets(
     root: &Path,
     entries: &mut Entries,

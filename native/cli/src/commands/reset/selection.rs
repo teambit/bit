@@ -85,6 +85,7 @@ pub(super) fn identities(root: &Path, pattern: &str) -> io::Result<Vec<String>> 
         .collect())
 }
 
+/// Returns `true` when `CI` is set to a non-empty, non-falsy environment value.
 #[inline]
 pub(super) fn ci_active() -> bool {
     std::env::var_os("CI")

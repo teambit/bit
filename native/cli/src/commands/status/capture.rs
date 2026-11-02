@@ -83,7 +83,7 @@ pub struct CacheWrites {
 }
 
 impl CacheWrites {
-    /// Tracking loads can acquire link issues before their generated packages exist.
+    /// Marks dependency cache entries matching `identities` (via [`base_identity`]) as blocked from cache persistence.
     #[inline]
     pub(in crate::commands) fn block_dependencies(
         &mut self,

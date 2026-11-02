@@ -20,7 +20,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the native `bit ripple` command.
+/// Descriptor for the native `bit ripple` CLI command (`RippleCmd`).
 pub const COMMAND: Command = Command { name: "ripple", aliases: &[], run };
 /// Diagnostic emitted when `bit ripple` is invoked without a subcommand.
 const BARE_RIPPLE_MSG: &str =

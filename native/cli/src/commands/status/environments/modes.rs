@@ -45,6 +45,7 @@ impl Environments {
         Ok(self.for_snapshot_build(build))
     }
 
+    /// Configures this [`Environments`] session for snapshot creation with optional `build` execution.
     #[inline]
     pub(in crate::commands) fn for_snapshot_build(mut self, build: bool) -> Self {
         self.snapshot = true;

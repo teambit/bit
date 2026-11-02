@@ -41,6 +41,7 @@ pub(super) fn classify(selected: &[String], rows: &[Value]) -> (Vec<String>, Vec
                 })
         })
 }
+/// Filters `ids` down to components in `bitmap` whose `mainFile` exists on disk under `root`.
 pub(in crate::commands) fn loadable(
     root: &Path,
     bitmap: &Value,

@@ -85,6 +85,7 @@ pub(super) fn text_report(loaded: &LoadedComponent) -> String {
     lines.join("\n")
 }
 
+/// Formats the sorted dependency lines belonging to `lifecycle` (`runtime`, `dev`, or `peer`).
 fn format_lifecycle_deps(deps: &[DepEntry], lifecycle: &str) -> String {
     let mut filtered = deps
         .iter()

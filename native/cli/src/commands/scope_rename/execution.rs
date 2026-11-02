@@ -84,6 +84,7 @@ fn flush_stdout(linker: &mut ProjectedLinker) {
     }
 }
 
+/// Runs scope-rename dependency installation via [`ProjectedLinker::install_scope_rename`] and reports failures to `renameTooling`.
 fn install(root: &Path, linker: &mut ProjectedLinker) -> io::Result<()> {
     if let Err(error) = linker.install_scope_rename(root) {
         let text = error.to_string();

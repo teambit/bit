@@ -41,6 +41,7 @@ struct Prepared {
     summary: &'static str,
 }
 
+/// Entry point for `bit set-peer` that parses `<component-id> <range>` and delegates to [`run_action`].
 fn run_set(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("set-peer arguments are not UTF-8".into()));

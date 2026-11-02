@@ -83,7 +83,7 @@ impl Options {
         Some(())
     }
 
-    /// The one pattern.
+    /// Records the single positional component pattern into `self.pattern`.
     #[inline]
     fn positional(&mut self, text: &str) -> Option<()> {
         if self.pattern.is_some() || !pattern(text) {

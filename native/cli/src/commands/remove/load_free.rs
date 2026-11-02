@@ -37,6 +37,7 @@ impl Reader {
             json!({"identity": identity, "packageName": policy.package_name, "current": {"extensions":policy.extensions}}),
         )
     }
+    /// Returns `Some(true)` if `identity` is modified, `Some(false)` if unmodified, or `None` if load-free status is inconclusive.
     #[inline]
     pub(super) fn status(&mut self, root: &Path, bitmap: &Value, identity: &str) -> Option<bool> {
         self.status_checked(root, bitmap, identity)

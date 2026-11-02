@@ -24,7 +24,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Aspect ID for the `teambit.envs/envs` aspect.
+/// Aspect ID constant for the `teambit.envs/envs` environment aspect.
 const ENVS_ASPECT: &str = "teambit.envs/envs";
 /// Aspect ID for the `teambit.component/remove` aspect.
 const REMOVE_ASPECT: &str = "teambit.component/remove";

@@ -52,6 +52,7 @@ fn apply_legacy_comp_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut
     }
 }
 
+/// Upserts a single legacy package dependency entry (`pkg_name`, `ver_item`, `lifecycle`) onto `deps`.
 fn apply_legacy_pkg_dep(
     pkg_name: &str,
     ver_item: &Value,

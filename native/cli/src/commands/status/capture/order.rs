@@ -30,7 +30,7 @@ pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     Ok(())
 }
 
-/// Extracts and normalizes a non-empty relative file path from a string or object [`Value`] manifest entry.
+/// Extracts and normalizes a non-empty relative file path from a string or object [`Value`] manifest entry via [`text`].
 #[inline]
 fn snapshot_file_path(file: &Value) -> io::Result<String> {
     let value = if file.is_string() {

@@ -64,6 +64,7 @@ pub(super) fn capture(
     Ok(true)
 }
 
+/// Records a `ComponentNotFoundInPath` invalid entry in `captured` when `directory` is missing on disk.
 pub(super) fn status_invalid(
     root: &Path,
     target: &Value,

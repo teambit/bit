@@ -85,6 +85,7 @@ fn read_transformed_inputs(
     Ok(())
 }
 
+/// Extracts the trailing non-empty slash segment of a component `name` after stripping `@version`.
 #[inline]
 fn short_component_name(name: &str) -> Option<&str> {
     let trimmed = name.trim();

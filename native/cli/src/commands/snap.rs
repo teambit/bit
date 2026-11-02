@@ -90,6 +90,7 @@ fn should_warn_message(options: &options::Options, workflow: &resolve::workflow:
             .is_none_or(|editor| editor.trim().is_empty())
 }
 
+/// Executes `bit snap` inside workspace `root` with the parsed [`options::Options`], `workflow`, and `policy`.
 fn run_workspace(
     root: &Path,
     args: &[OsString],

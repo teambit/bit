@@ -66,7 +66,7 @@ pub fn group_files(files: &[String], group: Group) -> Vec<String> {
         .collect()
 }
 
-/// `file` is a relative path with `/` separators.
+/// Returns `true` when relative `/` path `file` matches any default dev-file pattern in [`names`].
 #[must_use]
 #[inline]
 pub fn is_dev_file(file: &str) -> bool {

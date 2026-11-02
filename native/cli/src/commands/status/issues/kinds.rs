@@ -54,7 +54,7 @@ impl Issue {
         })
     }
 
-    /// `type`, `description`, `solution` and `isTagBlocker` of the issue class.
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for this status [`Issue`] class.
     #[inline]
     pub(super) const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

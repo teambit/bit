@@ -10,7 +10,7 @@ use bit_object_import::component_scope_rename::Selection;
 use std::{env, ffi::OsString, io};
 /// Descriptor for the native `bit scope` command family (`rename`, `rename-owner`, `fork`, `set`, `trust`).
 pub const COMMAND: Command = Command { name: "scope", aliases: &[], run };
-/// Entry point for `bit scope`.
+/// Entry point for `bit scope` that dispatches `fork`, `set`, `trust`, `rename`, and `rename-owner`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let first = first_subcommand(args);
     if first.as_deref() == Some("fork") {

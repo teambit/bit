@@ -81,6 +81,7 @@ fn checked_cache(host: &Host, capture: &mut Capture) -> io::Result<()> {
     Ok(())
 }
 
+/// Temporary callback directory and issue-slot flag for an active ordered switch load stage.
 pub(in crate::commands::status) struct SwitchStage {
     directory: tempfile::TempDir,
     pub(super) issues: bool,

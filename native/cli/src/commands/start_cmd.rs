@@ -63,6 +63,7 @@ pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
             })
 }
 
+/// Parses `bit start [component-pattern]` flags and positional pattern into [`Options`].
 #[must_use]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

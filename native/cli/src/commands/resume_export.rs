@@ -24,7 +24,7 @@ pub(super) struct Options {
     pub force: bool,
 }
 
-/// Entry point for `bit resume-export`.
+/// Entry point for `bit resume-export` that parses [`Options`] and delegates to [`execute::run`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("resume-export arguments are not UTF-8".into()));

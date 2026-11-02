@@ -92,6 +92,7 @@ fn execute_local_search(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Matches `ids` case-insensitively against `queries` and returns `(all_unique_matches, per_query_results)`.
 fn match_queries(ids: &[String], queries: &[String]) -> (Vec<String>, Vec<serde_json::Value>) {
     let mut all_set = BTreeSet::new();
     let unique_queries = deduplicate_preserve_order(queries);

@@ -75,6 +75,7 @@ fn print_unsupported_help(unknown: &str, chalk: Chalk) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::FAILURE))
 }
 
+/// Formats [`command_help`] followed by a yellow `unknown` flag diagnostic line.
 #[inline]
 pub(super) fn unsupported_help(command: &str, unknown: &str, chalk: Chalk) -> String {
     let unknown = chalk.yellow(unknown);

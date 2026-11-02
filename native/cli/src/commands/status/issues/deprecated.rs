@@ -89,6 +89,7 @@ fn head_deprecation<'c>(
         .find(|extension| crate::commands::update_cmd::matches_aspect(extension, DEPRECATION)))
 }
 
+/// Returns `true` when `full_id`'s version satisfies the deprecation semver `range` in `config`.
 fn range_matches(model: &Value, full_id: &str, config: &Value) -> io::Result<bool> {
     let Some(range) = config["range"]
         .as_str()

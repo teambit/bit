@@ -78,7 +78,7 @@ impl Pending {
         self.cacheable = false;
     }
 
-    /// The same entry under another identity.
+    /// Clones this [`Pending`] cache entry under a new `<id>@<version>` `identity`.
     #[must_use]
     #[inline]
     pub fn renamed(&self, identity: String) -> Self {

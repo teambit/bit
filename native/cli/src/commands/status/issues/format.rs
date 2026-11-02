@@ -20,7 +20,7 @@ pub(super) fn join(data: &Value) -> io::Result<String> {
     Ok(items.join(", "))
 }
 
-/// `componentIssueToString`: arrays joined, strings as they are.
+/// Formats `value` (`componentIssueToString`): arrays joined via [`join`], scalar values via [`item_text`].
 #[inline]
 pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
     match value {

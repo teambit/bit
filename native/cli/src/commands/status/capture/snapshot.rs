@@ -84,6 +84,7 @@ fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()
     Ok(())
 }
 
+/// Replaces any read receipt matching `before` with `after` across `capture.cache` pending entries and environment reads.
 #[inline]
 fn replace_single_proof(capture: &mut Capture, before: &Value, after: &Value) {
     for entry in capture.cache.pending.iter_mut().chain(&mut capture.cache.replacements) {

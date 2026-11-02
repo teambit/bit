@@ -60,6 +60,7 @@ fn apply_rename_arg<'a>(
     Some(())
 }
 
+/// Applies an inline `--scope=`/`--path=` flag or positional component token onto `options` and `positions`.
 #[inline]
 fn apply_inline_or_positional(
     argument: &str,

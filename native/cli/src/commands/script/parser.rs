@@ -44,6 +44,7 @@ pub(in crate::commands) fn parse_env_scripts_in_dir(dir: &Path) -> EnvScripts {
     EnvScripts::default()
 }
 
+/// Computes the deterministic `(priority, file_name, path)` sort key for candidate script source files.
 #[inline]
 fn file_sort_key(path: &Path) -> (u8, String, String) {
     let name = path
