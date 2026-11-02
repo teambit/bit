@@ -16,6 +16,7 @@ fn history(rows: Vec<Value>) -> Value {
     value
 }
 
+/// Verifies that [`merge`] places incoming `VersionHistory` rows first while retaining existing-only rows in order.
 #[test]
 fn large_history_merge_preserves_incoming_overrides_and_existing_only_order() {
     let old = history((0..40000).map(row).collect());

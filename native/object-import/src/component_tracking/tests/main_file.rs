@@ -23,6 +23,7 @@ fn find(files: &[&str], main: Option<&str>, existing: Option<&str>) -> std::io::
 fn existing_main_wins_without_explicit_override() {
     assert_eq!(find(&["new.js"], None, Some("old.js")).unwrap(), "old.js");
 }
+/// Verifies that an explicit `--main` path overrides an existing `.bitmap` `mainFile` entry.
 #[test]
 fn explicit_override_wins() {
     assert_eq!(find(&["old.js", "new.js"], Some("new.js"), Some("old.js")).unwrap(), "new.js");

@@ -28,6 +28,7 @@ fn preflight_reuses_verified_bytes_only_with_explicit_cache_authority() {
     assert_eq!(cached_response(&directory.0, &[(hash, &target, 3, 0)], &mut state)["completed"], 1);
     assert!(!target.exists());
 }
+/// Verifies that parallel preflight checks validate uncached inputs even when mixed with cached authority entries.
 #[test]
 fn mixed_parallel_preflight_does_not_share_authority_with_uncached_inputs() {
     let directory = Directory::new();

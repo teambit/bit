@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic counter for unique versioned-remove history scratch directory names.
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
 /// Temporary workspace scratch directory that cleans up on drop.

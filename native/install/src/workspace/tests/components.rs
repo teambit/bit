@@ -43,6 +43,7 @@ fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     fs::write(dir.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
+/// Sample `.bitmap` fixture with local, env, imported, and removed components on lane `org.local/dev`.
 const BITMAP: &str = r#"/**
  * The Bitmap file is an auto generated file used by Bit to track all your Bit components.
  */

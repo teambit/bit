@@ -50,6 +50,7 @@ fn component(name: &str, env_id: &str, is_env: bool, config: &Value) -> Workspac
     }
 }
 
+/// Verifies that [`resolve`] selects the first configured workspace environment aspect as the component's `env_id`.
 #[test]
 fn the_first_configured_env_component_is_the_env() {
     let scope = tempfile::tempdir().unwrap();

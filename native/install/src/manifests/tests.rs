@@ -101,7 +101,7 @@ pub(super) fn env_peer(name: &str, version: &str) -> PolicyEntry {
     }
 }
 
-/// Owned inputs of one `plan` call.
+/// Owned inputs of one [`plan`] call in manifest planning unit tests.
 pub(super) struct Fixture {
     pub(super) components: Vec<WorkspaceComponent>,
     pub(super) dependencies: IndexMap<String, ComponentDependencies>,

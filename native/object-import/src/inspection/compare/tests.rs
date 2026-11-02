@@ -5,7 +5,7 @@ use super::plan;
 use serde_json::Value;
 use std::process::Command;
 
-/// Verifies that [`plan`] matches `isComponentModified` and `isComponentSourceCodeModified` (and SHA-1 version hashes) across 400 seeded `Version` pairs.
+/// Verifies that [`plan`] matches `Consumer.isComponentModified` and `isComponentSourceCodeModified` across 400 seeded `Version` pairs.
 #[test]
 fn seeded_comparison_matches_actual_consumer_modified_policy() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

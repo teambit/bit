@@ -33,6 +33,7 @@ fn root_flag_rejects_ordinary_directory() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that [`main_file::choose`] selects `workspace.jsonc` as the default main file for the workspace root component.
 #[test]
 fn root_main_is_workspace_configuration() {
     assert_eq!(

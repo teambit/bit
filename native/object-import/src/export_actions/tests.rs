@@ -9,7 +9,7 @@ use std::{
     thread,
 };
 
-/// Verifies that [`scope`] restores the outer thread-local [`Handler`] via [`current`] even when a nested scope unwinds.
+/// Verifies that [`scope`] restores the outer thread-local [`Handler`] via [`current`] even when a nested adapter panics.
 #[test]
 fn nested_and_unwound_adapters_restore_their_operation_owner() {
     let handler = Handler::new(|_, name, options| Ok(json!({"name":name,"options":options})));

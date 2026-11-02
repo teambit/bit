@@ -44,6 +44,7 @@ fn retained_current_uses_the_observed_bytes_without_reopening_the_workspace() {
     assert_eq!(total, 16);
 }
 
+/// Verifies that stale or mismatched snapshot observations fail immediately without falling back to disk reads.
 #[test]
 fn stale_or_mismatched_observations_never_fall_back_to_a_new_disk_read() {
     let (mut file, snapshots) = observed(b"original");

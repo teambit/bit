@@ -15,6 +15,7 @@ fn row(path: Js, name: &str) -> Js {
 fn files(rows: Vec<Js>) -> Js {
     Js::Object(vec![("files".encode_utf16().collect(), Js::Array(rows))])
 }
+/// Verifies that [`align_files`] aligns current files to their first matching model path while preserving UTF-16 code units.
 #[test]
 fn alignment_preserves_first_duplicates_unmatched_rows_and_utf16_identity() {
     let model = files(vec![

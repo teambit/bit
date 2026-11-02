@@ -17,6 +17,7 @@ fn recorder() -> (Sink, Arc<Mutex<String>>) {
     (Arc::new(move |text: &str| target.lock().unwrap().push_str(text)), written)
 }
 
+/// Verifies that [`pretty_time`] formats durations using the largest whole unit (`ms`, `s`, `m`, `h`).
 #[test]
 fn pretty_time_uses_the_largest_whole_unit() {
     assert_eq!(pretty_time(Duration::from_millis(5)), "5ms");

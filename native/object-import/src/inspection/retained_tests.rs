@@ -26,6 +26,7 @@ fn request(fixture: &Fixture, token: u64, raw: &[u8]) -> Value {
         "readToken":token}],"workspaceRoot":false,"snapshotDirectory":fixture.directory("snapshots")})
 }
 
+/// Verifies that [`begin`] reuses the retained [`Observation`] without stripping a second UTF-8 BOM.
 #[test]
 fn explicit_read_receipt_keeps_the_original_observation_without_stripping_a_second_bom() {
     let fixture = Fixture::new();

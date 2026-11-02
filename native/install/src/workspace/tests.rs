@@ -3,6 +3,7 @@
 
 /// Workspace component and `.bitmap` loading unit tests.
 mod components;
+/// Component file discovery and ignore rule rebasing unit tests.
 mod files;
 mod matching;
 

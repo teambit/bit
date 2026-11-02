@@ -52,6 +52,7 @@ fn fixture() -> (tempfile::TempDir, Vec<ObjectItem>) {
     .unwrap();
     (directory, items)
 }
+/// Verifies that `objects::file` and `objects::http` extract identical `Version` and binary `Source` payloads without staging snaps.
 #[test]
 fn file_and_http_capture_preserve_identical_version_and_binary_source_without_publication() {
     let (directory, items) = fixture();

@@ -28,6 +28,7 @@ fn current(hash: &str) -> plan::Current {
         raw_hash: hash.to_owned(),
     }
 }
+/// Builds a [`wire::Manifest`] entry for `path` and `hash` without optional `name` or `test` fields.
 fn target(path: &str, hash: &str) -> wire::Manifest {
     wire::Manifest { hash: hash.to_owned(), relative_path: path.to_owned(), name: None, test: None }
 }

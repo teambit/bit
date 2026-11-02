@@ -4,7 +4,7 @@
 use super::bitmap::normalize;
 use serde_json::Value;
 use std::process::Command;
-/// Verifies that [`normalize`] matches `normalizeBitmapContentForVersioning` across 400 seeded `.bitmap` inputs with comments and trailing commas.
+/// Verifies that [`normalize`] matches `@teambit/legacy.bit-map` `normalizeBitmapContentForVersioning` across 400 seeded `.bitmap` inputs.
 #[test]
 fn seeded_root_bitmap_normalization_matches_actual_canonical_function() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

@@ -7,6 +7,7 @@ use std::{
     fs,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter for unique workspace inspection test directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory fixture that removes its root on drop.
 #[derive(Debug)]

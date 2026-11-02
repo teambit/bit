@@ -31,6 +31,7 @@ fn mixed_key_encodings_cannot_hide_duplicate_javascript_properties() {
     .unwrap();
     assert!(crate::js_json::stringify(&value, false).is_err());
 }
+/// Verifies that compact [`Value`] deserialization rejects out-of-range UTF-16 code units and non-string object keys.
 #[test]
 fn compact_wire_rejects_invalid_code_units_and_non_string_keys() {
     for value in [json!([-1]), json!([65536]), json!([1.5]), json!(["a"]), json!(true), json!(null)]

@@ -41,6 +41,7 @@ fn local_fork_preserves_source_names_bytes_and_original_bitmap_entry() {
     assert_eq!(fs::read(root.join("components/target/source.js")).unwrap(), original);
     assert_eq!(fs::read(root.join("original/source.js")).unwrap(), original);
 }
+/// Verifies that remote forks refactor component ID strings and filenames while preserving local names when requested.
 #[test]
 fn remote_fork_refactors_id_names_and_filename_while_preserve_only_keeps_names() {
     let (directory, mut options, source) = fixture();

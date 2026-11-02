@@ -8,6 +8,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter for unique new-component remove batch test directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Creates a temporary workspace fixture with two new components (`alpha` and `beta`) in `.bitmap`.
 fn fixture() -> PathBuf {

@@ -31,6 +31,7 @@ fn shared_inflation_charges_exact_body_bytes_across_chunks_and_records() {
     );
 }
 
+/// Verifies that [`super::inflate_with`] rejects oversized headers and trailing compressed bytes.
 #[test]
 fn shared_inflation_rejects_unbounded_headers_and_trailing_compressed_data() {
     let invalid = [vec![b'x'; 256], vec![0]].concat();

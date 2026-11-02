@@ -24,7 +24,7 @@ use std::{collections::HashMap, fs, io, io::Write, path::Path, sync::Mutex};
 #[derive(Debug, Default)]
 pub struct TestHost {
     pub policies: HashMap<String, Value>,
-    /// `env_policy` calls: environments loaded to read their policy.
+    /// Recorded `env_policy` IPC calls for environments loaded to read their policy.
     pub calls: Mutex<Vec<String>>,
     /// `registered_env_policy` calls, with the workspace aspects sent along.
     pub registered: Mutex<Vec<(String, Vec<String>)>>,

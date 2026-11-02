@@ -39,6 +39,7 @@ fn alias_collision_updates_the_existing_row_without_reordering_other_tracking() 
     assert_eq!(scope["lanes"]["tracking"][1]["localLane"], "other");
 }
 
+/// Verifies that [`super::SwitchTracking::commit`] rejects publication if `scope.json` changed after staging.
 #[test]
 fn deferred_alias_requires_its_exact_scope_preimage_before_publication() {
     let directory = tempfile::tempdir().unwrap();

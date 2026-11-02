@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic counter for unique component rename batch test directory names.
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory guard for component rename batch tests.
 struct Directory(PathBuf);

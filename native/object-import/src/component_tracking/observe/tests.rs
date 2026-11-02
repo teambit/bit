@@ -35,6 +35,7 @@ fn a_repeated_directory_read_cannot_replace_the_original_inventory() {
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Verifies that [`Observed::ancestors`] rejects symlinked ancestor directories before reading component sources.
 #[cfg(any(unix, windows))]
 #[test]
 fn an_existing_symlink_ancestor_declines_before_source_capture() {

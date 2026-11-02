@@ -18,7 +18,7 @@ fn mixed_windows_newlines_keep_the_common_prefix_outside_conflict_markers() {
     assert_eq!(merged, b"shared\r\n<<<<<<< current modified\r\n// local\r\n=======\r\n// remote\r\n>>>>>>> incoming\r\n");
 }
 
-/// Verifies that [`workspace_merge_for_platform`] emits LF conflict markers on Unix (`windows = false`) for mixed-newline inputs.
+/// Verifies that [`workspace_merge_for_platform`] emits LF conflict markers on Unix (`windows = false`) for mixed-newline three-way merges.
 #[test]
 fn the_same_merge_keeps_lf_output_on_unix() {
     let (merged, conflict) = workspace_merge_for_platform(

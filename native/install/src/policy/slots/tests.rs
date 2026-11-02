@@ -46,6 +46,7 @@ fn configured(id: &str, extensions: &[&str]) -> WorkspaceComponent {
     subject
 }
 
+/// Verifies that [`component_slots`] applies registered policies only to components configuring the aspect.
 #[test]
 fn applies_the_registered_policy_only_to_components_configuring_the_aspect() {
     let bar = configured("my-scope/bar/foo", &["my-scope/extension-add-dependencies"]);

@@ -12,6 +12,7 @@ fn input(reset: bool) -> Value {
 fn receipt(state: &mut State, previous: &Value, value: &Value) -> Value {
     state.receipt(json!({"token":previous["token"],"revision":previous["revision"],"observation":previous["directive"]["observation"],"value":value})).expect("valid receipt")
 }
+/// Verifies that `--reset` observes `unmerged` and `modified` checkpoints and stops before removal when unmodified.
 #[test]
 fn reset_observes_unmerged_and_stops_before_target_removal_when_unmodified() {
     let mut state = State::default();

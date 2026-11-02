@@ -30,6 +30,7 @@ fn bom_overrides_and_only_first_512_bytes_match_canonical_classifier() {
     bytes.push(0);
     assert!(!binary(&bytes));
 }
+/// Verifies that [`normalize`] converts CRLF, CR, and LF to the target platform's line endings while preserving binary payloads.
 #[test]
 fn normalizes_all_newline_styles_on_both_platforms_and_preserves_binary() {
     let bytes = b"a\r\nb\rc\nd".to_vec();

@@ -25,6 +25,7 @@ fn exported_and_preserved_target_writes_retain_exact_source_eol() {
     }
 }
 
+/// Verifies that [`Writer::Workspace`] preserves exact source newline bytes on both Unix and Windows.
 #[test]
 fn refactored_dependents_use_workspace_write_on_both_platforms() {
     let source = b"const value = require('@scope/new');\r\nmodule.exports = value;\n";

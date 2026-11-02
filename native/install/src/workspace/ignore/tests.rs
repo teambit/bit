@@ -32,6 +32,7 @@ fn filters_match_node_ignore() {
     }
 }
 
+/// Verifies that [`Ignore::extend`] appends rules, resets cached state, and handles empty or prototype keys safely.
 #[test]
 fn extend_appends_rules_and_resets_the_cache() {
     let mut base = Ignore::new();

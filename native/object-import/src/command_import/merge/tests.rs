@@ -21,7 +21,7 @@ fn omitted_schema_with_head_matches_canonical_harmony_parse_default() {
     assert!(model_from(None, &legacy, true).is_err());
 }
 
-/// Verifies that [`model_from`] moves newly discovered remote tags into `orphanedVersions` during cached merges.
+/// Verifies that [`model_from`] moves newly discovered remote tags into `orphanedVersions` during cached `ModelComponent` merges.
 #[test]
 fn a_cached_model_orphans_new_tags_and_keeps_the_head() {
     let head = "a".repeat(40);

@@ -34,6 +34,7 @@ fn updated_hidden_component_moves_to_end_like_canonical_lane() {
     );
 }
 
+/// Verifies that [`super::index_entry`] serializes new and renamed lane index rows with canonical JSON field order.
 #[test]
 fn new_and_renamed_lane_index_rows_keep_canonical_serialized_member_order() {
     let mut index = json!({"components":[],"lanes":[]});

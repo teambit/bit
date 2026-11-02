@@ -29,6 +29,7 @@ fn scope_selection_keeps_namespaces_and_forces_owner_preservation() {
     assert!(selected[0].refactor);
 }
 
+/// Verifies that [`selection::validate_scope`] enforces Bit's single-owner-dot lowercase scope grammar.
 #[test]
 fn scope_validation_matches_published_single_owner_separator_grammar() {
     for scope in ["owner.scope", "ab", "$scope!"] {

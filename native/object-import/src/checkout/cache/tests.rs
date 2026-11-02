@@ -31,6 +31,7 @@ fn empty_sources_and_large_keys_cannot_grow_unbounded() {
     state.insert(Path::new(&large_key), [2; 20], Vec::new());
     assert_eq!(state.sources.len(), 1);
 }
+/// Verifies that [`State`] evicts older entries before exceeding [`super::MAX_BYTES`] and rejects oversize sources.
 #[test]
 fn evicts_before_exceeding_byte_budget_and_never_retains_oversize_sources() {
     let directory = std::env::temp_dir();

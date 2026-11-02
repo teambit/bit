@@ -37,6 +37,7 @@ fn fixture() -> (Overlay, wire::Version) {
     (overlay, manifest)
 }
 
+/// Verifies that [`super::super::load_with_overlay`] reads `Version` and `Source` objects from an [`Overlay`] without local disk objects.
 #[test]
 fn imported_version_and_sources_need_no_published_local_objects() {
     let (overlay, version) = fixture();

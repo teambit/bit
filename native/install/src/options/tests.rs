@@ -35,6 +35,7 @@ fn parses_packages_and_switches() {
     assert!(!parsed.skip_dedupe);
 }
 
+/// Verifies parsing of value-taking flags (`-t`, `--save-prefix`) and short boolean aliases (`-a`).
 #[test]
 fn parses_values_and_aliases() {
     let parsed = options(&["install", "-t", "peer", "--save-prefix=~", "-a", "is-odd"]);

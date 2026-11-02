@@ -51,6 +51,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Executes [`super::super::tests::load`] inside a 4-thread Rayon pool and verifies `compressed` is unchanged.
 fn load(files: &[wire::Current], total: &mut usize) -> std::io::Result<Vec<super::Loaded>> {
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(4)

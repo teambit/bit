@@ -4,7 +4,7 @@
 use super::{Fixture, object_hash, publish};
 use std::fs;
 
-/// Verifies that restored recovery model objects are validated by `accept_recovery_objects` and not overwritten by pending import commits.
+/// Verifies that restored recovery model objects are validated by `accept_recovery_objects` and not overwritten by pending [`publish`] commits.
 #[test]
 fn restored_models_are_verified_and_not_replayed_by_the_pending_import() {
     let fixture = Fixture::new();

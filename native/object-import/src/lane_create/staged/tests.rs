@@ -5,6 +5,7 @@ use crate::lane_create::{Options, Plan, outbound};
 use serde_json::{Value, json};
 use std::{fs, path::Path};
 
+/// Synthetic 40-hex-character `Component` model object hash for staged lane creation tests.
 const MODEL: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const FIRST: &str = "1111111111111111111111111111111111111111";
 const SECOND: &str = "2222222222222222222222222222222222222222";

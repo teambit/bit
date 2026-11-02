@@ -12,7 +12,7 @@ fn only_active_main_tags_participate_in_pinning() {
     assert_eq!(latest(&json!({"versions":{}})).unwrap(), None);
 }
 
-/// Verifies that [`validate_graph`] requires every workspace `.bitmap` component and its dependencies to be covered.
+/// Verifies that [`validate_graph`] requires every workspace `.bitmap` component and its [`DependencyComponent`] edges to be covered.
 #[test]
 fn capture_must_cover_every_workspace_component_and_dependency() {
     let bitmap =

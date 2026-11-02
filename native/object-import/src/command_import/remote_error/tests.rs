@@ -13,7 +13,7 @@ fn remote_inflate_keeps_legacy_display_but_exposes_real_scoped_zlib_failure() {
         "remote actual.remote responded with the following error:\nfatal: zlib.inflate has failed with an error: \"incorrect header check\"\ntry running bit import --all-history to fix the corrupted objects",
     );
 }
-/// Verifies that local inflate errors and non-inflate remote errors are not reclassified as remote zlib failures.
+/// Verifies that local inflate errors and non-inflate remote errors are not reclassified by [`mark`] or [`message`].
 #[test]
 fn local_and_non_inflate_failures_are_not_reclassified() {
     let error = crate::checkout::repository::inflate(b"invalid", 1024).unwrap_err();

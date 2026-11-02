@@ -33,6 +33,7 @@ impl Drop for Directory {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Compresses and writes a loose Bit object (`kind`, `hash`, `body`) into `directory`.
 fn store(directory: &Path, hash: &str, kind: &str, body: &[u8]) {
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0", body.len()).unwrap();

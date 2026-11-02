@@ -24,6 +24,7 @@ fn binary_sources_and_package_prefix_lookalikes_are_preserved() {
         b"'@org/new' '@org/new/sub' '@org/older'",
     );
 }
+/// Verifies that [`identity::validate_name`] rejects scope dots, uppercase characters, and empty path segments.
 #[test]
 fn invalid_new_names_are_rejected_before_sources_are_read() {
     assert!(identity::validate_name("valid/component").is_ok());

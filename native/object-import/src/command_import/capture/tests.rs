@@ -20,6 +20,7 @@ fn object_path(directory: &Path, hash: &str) -> std::path::PathBuf {
         .join(&hash[..2])
         .join(&hash[2..])
 }
+/// Verifies that [`Capture::sources`] preserves exact wire-compressed bytes for both file-backed and virtual sources.
 #[test]
 fn file_and_virtual_sources_preserve_received_compressed_bytes() {
     let root = tempfile::tempdir().unwrap();

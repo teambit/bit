@@ -69,6 +69,7 @@ fn cached_key_stays_native_without_contacting_an_http_remote() {
     assert!(!fixture.global.exists());
 }
 
+/// Verifies that [`ci_requires_published_diagnostic`] proves `file://` remote history keys without mutating local objects or refs.
 #[test]
 fn file_remote_key_is_proved_without_publishing_history_or_refs() {
     let fixture = Fixture::new();

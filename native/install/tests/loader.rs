@@ -24,6 +24,7 @@ fn take(written: &Mutex<String>) -> String {
     std::mem::take(&mut *written.lock().unwrap())
 }
 
+/// Verifies that a single process-wide spinner coordinates status updates, `loader_off`/`loader_on`, and console output.
 #[test]
 fn one_loader_serves_every_output() {
     let (sink, written) = recorder();

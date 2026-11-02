@@ -45,6 +45,7 @@ fn concurrent_export_owners_do_not_receive_each_others_events() {
     );
 }
 
+/// Emits a hub message event and panics to exercise [`scope`] unwind restoration.
 fn panic_inner() {
     assert!(emit(Event::HubMessage("inner".to_owned())));
     panic!("fixture observer unwind");

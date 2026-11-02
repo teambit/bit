@@ -11,6 +11,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter for unique component tracking test directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Creates an isolated temporary workspace directory with `.bit`, `workspace.jsonc`, and `.bitmap`.
 pub(super) fn fixture() -> PathBuf {

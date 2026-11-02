@@ -7,6 +7,7 @@ use serde_json::Value;
 const HASH: &str = "1916562e4f80016ca7cfb37975c8257ab52506d8";
 /// Raw JSON body for the captured `comp-a2` `Component` golden fixture.
 const BODY: &str = r#"{"name":"comp-a2","scope":"25412c31-remote","versions":{"0.0.1":"173108081623a641493cb6a1c777c4d7d01d04a0"},"lang":"javascript","deprecated":false,"bindingPrefix":"@25412c31-remote","remotes":[{"url":"file:///var/tmp/bit-native-e2e/3972936/case-AkphF3/25412c31-remote","name":"25412c31-remote","date":"1792308099002"}],"schema":"2.0.0","head":"173108081623a641493cb6a1c777c4d7d01d04a0"}"#;
+/// Hex-encoded compressed zlib stream for the captured `comp-a2` `Component` golden fixture.
 const GOLDEN: &str = concat!(
     "789c9590b14ec4301044f994d3d6c9796d2776ec0a84444d8f2836f6e6ce9038516222a413ff8e0ee8aea21bcd",
     "6846bbef719e9639732e07e9a4698de266e810a50964c3d06beb6c1b3ad55aea5bd5a289dd4177e6ee02992606",

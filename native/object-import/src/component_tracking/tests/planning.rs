@@ -25,6 +25,7 @@ fn stale_source_prevents_publication() {
     assert!(plan.validate().is_err());
     std::fs::remove_dir_all(root).unwrap();
 }
+/// Verifies that tracking multiple directories with identical basenames preserves their parent namespaces in `.bitmap`.
 #[test]
 fn multiple_components_keep_namespaces_for_duplicate_basenames() {
     let root = fixture();

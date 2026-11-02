@@ -18,6 +18,7 @@ fn removed_candidates_compare_only_original_components() {
         json!({"missing":[0,2]}),
     );
 }
+/// Verifies that `historyResetLocalAppend` and `historyResetLocalVersions` preserve ref provenance and update `lastFoundTag`.
 #[test]
 fn local_append_and_tag_cache_preserve_original_ref_provenance() {
     let first_hash = "a".repeat(40);

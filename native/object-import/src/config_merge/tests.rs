@@ -31,6 +31,7 @@ fn prerelease_numeric_identifiers_match_npm_number_coercion() {
         Ordering::Greater,
     );
 }
+/// Verifies that [`semver::satisfies`] excludes prereleases unless a comparator shares the same major/minor/patch tuple.
 #[test]
 fn range_excludes_prerelease_without_same_core_explicit_comparator() {
     let candidate = version(json!(["beta", 1]));

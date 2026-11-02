@@ -40,6 +40,7 @@ fn parallel_raw_source_reads_preserve_original_bytes_and_distinct_occurrences() 
     }
     assert!(!target.exists());
 }
+/// Verifies that cache authority (`3`) returns null on cache hits while uncached (`1`) reads fail on missing disk objects.
 #[test]
 fn cached_read_authority_is_explicit_and_never_hides_an_uncached_missing_file() {
     let directory = Directory::new();

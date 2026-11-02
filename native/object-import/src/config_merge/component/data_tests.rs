@@ -24,6 +24,7 @@ fn undefined_sets_and_object_properties_ignore_order() {
     assert!(!equal(&left, &json!({"data":{},"dataUndefinedKeys":["name","description"]})));
 }
 
+/// Verifies that `validate::component` rejects duplicate, non-string, or present keys in `dataUndefinedKeys`.
 #[test]
 fn invalid_undefined_metadata_declines_before_planning() {
     for keys in [json!(["name", "name"]), json!([1]), json!(["present"]), json!(null)] {

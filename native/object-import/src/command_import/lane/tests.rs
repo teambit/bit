@@ -41,6 +41,7 @@ fn stored_hidden_ids_keep_version_and_decline_overlapping_buckets() {
     );
 }
 
+/// Verifies that [`Id::validate`] rejects path traversal segments, slashes, and empty lane names before remote lookup.
 #[test]
 fn lane_path_segments_are_validated_before_remote_lookup() {
     for name in ["../escape", ".", "..", "/absolute", r"a\b", ""] {

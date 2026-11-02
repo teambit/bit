@@ -16,6 +16,7 @@ fn origin(index: usize) -> String {
     format!("dependent-component-{index}")
 }
 
+/// Converts version `ranges` into indexed [`Item`] entries for `field`.
 fn items(ranges: &[&str], field: Field) -> Vec<Item> {
     ranges
         .iter()

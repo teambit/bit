@@ -47,6 +47,7 @@ fn component(name: &str, version: Option<&str>, env_id: &str) -> WorkspaceCompon
     }
 }
 
+/// Verifies that [`aspect_env_ids`] includes environments whose components store an `aspect` descriptor in [`ScopeObjects`].
 #[test]
 fn envs_whose_components_store_an_aspect_descriptor_are_aspect_envs() {
     let scope = tempfile::tempdir().unwrap();

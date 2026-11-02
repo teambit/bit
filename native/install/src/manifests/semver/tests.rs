@@ -24,6 +24,7 @@ fn valid_range_matches_semver_7() {
     }
 }
 
+/// Verifies [`satisfies`] output against npm `semver` 7.7.1 golden cases.
 #[test]
 fn satisfies_matches_semver_7() {
     for case in golden()["satisfies"].as_array().unwrap() {
