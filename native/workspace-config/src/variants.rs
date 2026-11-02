@@ -27,6 +27,7 @@ struct MatchedVariant<'a> {
     config: &'a Map<String, Value>,
 }
 
+/// Sentinel [`ItemMatch`] returned when a variant pattern item does not match.
 const NO_MATCH: ItemMatch = ItemMatch { matched: false, specificity: -1.0, excluded: false };
 
 /// The variants matching a component, merged.

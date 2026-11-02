@@ -45,6 +45,7 @@ pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
     parse_items(rows)
 }
 
+/// Parses and deduplicates non-symlink [`Item`] entries from `index.json` `rows`.
 #[inline]
 fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
     let mut seen = HashSet::with_capacity(rows.len());

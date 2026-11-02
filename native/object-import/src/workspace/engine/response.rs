@@ -40,6 +40,7 @@ pub(super) fn with_progress(error: io::Error, progress: serde_json::Value) -> io
     })
 }
 
+/// Extracts the `{ "progress": ... }` failure payload from a [`CanonicalError`] wrapped in `error`.
 #[inline]
 pub(super) fn failure_data(error: &io::Error) -> Option<serde_json::Value> {
     let canonical = error.get_ref()?.downcast_ref::<CanonicalError>()?;

@@ -11,6 +11,7 @@ use std::{
 };
 
 /// Reads and validates remote `main` head references under `refs/remotes` for `models`.
+/// Enforces a 4 MiB read budget across all referenced remote scope ref files.
 pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, String>> {
     let scopes = models
         .iter()

@@ -54,6 +54,7 @@ pub(in crate::workspace::engine) fn read_overlay(
     ))
 }
 
+/// Loads the `(from, to)` `Version` object pair for `request` from the local scope or `overlay`.
 fn load_pair(
     request: &Request,
     pool: &ThreadPool,

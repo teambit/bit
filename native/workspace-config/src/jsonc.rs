@@ -76,6 +76,7 @@ impl Document {
     }
 
     /// The object at `path`, created (replacing non-objects) along the way.
+    /// Reuses an existing trimmed key when an exact key is absent.
     fn object_mut(&mut self, path: &[&str]) -> &mut Object {
         let mut node = &mut self.root;
         for key in path {

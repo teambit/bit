@@ -11,8 +11,7 @@ use std::{
 };
 
 /// Resolves a relative `TypeScript` 5.9 `Node10` module specifier from `parent` under `budget`.
-// Node10 resolution with the canonical lookup's fixed { module: CommonJS } options.
-// Missing results retain canonical lookup, including its CommonJS fallback.
+/// Uses fixed `{ module: CommonJS }` semantics and falls back to `CommonJS` resolution when untyped.
 pub(super) fn lookup(
     dependency: &str,
     parent: &Path,

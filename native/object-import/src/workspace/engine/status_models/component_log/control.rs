@@ -60,6 +60,7 @@ impl Control {
             }
         }
     }
+    /// Returns `true` when `row` matches the configured removal semver range or snap list.
     #[inline]
     fn removed(&self, row: &Value) -> bool {
         if let Some(tag) = row["tag"]

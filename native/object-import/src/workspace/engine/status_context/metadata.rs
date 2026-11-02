@@ -66,6 +66,7 @@ pub(super) fn component(
 }
 
 /// Returns `true` when `component["componentId"]` matches `target_identity` without version.
+/// Accepts both string `"scope/name@ver"` and object `{ scope, defaultScope, name }` shapes.
 fn component_id_matches(component: &Value, target_identity: &str) -> bool {
     let target_identity = target_identity.trim();
     let id = &component["componentId"];

@@ -69,6 +69,7 @@ fn load_or_init_history(
     Ok(history)
 }
 /// Populates missing ancestor `Version` edges for `head` into `history` when `stage` is enabled.
+/// Records read-set proofs for every traversed `Version` object in `proofs`.
 fn populate(
     reader: &Reader<'_>,
     history: &mut Value,

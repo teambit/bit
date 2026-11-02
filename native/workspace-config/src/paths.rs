@@ -2,6 +2,7 @@
 use std::{env, path::PathBuf};
 
 /// `GLOBAL_CONFIG` contains `config.json` below [`cache_root`].
+/// Always appends `"config"` to the resolved [`cache_root`] directory.
 #[must_use]
 #[inline]
 pub fn global_config_dir() -> PathBuf {

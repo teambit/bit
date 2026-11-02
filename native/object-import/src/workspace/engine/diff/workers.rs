@@ -9,6 +9,7 @@ use std::{
 };
 
 /// Executes `git diff` across `files` using a bounded worker pool and preserves input order.
+/// Caps parallel worker count at four and short-circuits remaining work on the first error.
 pub(super) fn execute(
     files: &[Prepared],
     directory: Option<&Path>,

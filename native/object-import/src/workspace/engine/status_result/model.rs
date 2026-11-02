@@ -58,6 +58,7 @@ fn append_staged(
 fn is_staged(model: &Value, tracked: bool, hidden: bool, source: &[Value]) -> bool {
     if tracked || hidden { !source.is_empty() } else { local(model) }
 }
+/// Appends snapped, merge-pending, and outdated status entries for a tracked `target`.
 fn tracked(
     output: &mut Value,
     model: &Value,

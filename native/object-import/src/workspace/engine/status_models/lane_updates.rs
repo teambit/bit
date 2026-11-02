@@ -75,6 +75,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((count, json!({"pendingUpdatesFromMain":pending})))
 }
 
+/// Computes pending updates from `request.forked_lane_id` against `current` and `overlay`.
 fn forked_updates(
     request: &Request,
     overlay: &Overlay,

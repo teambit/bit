@@ -55,6 +55,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((output.len(), json!({"versions":output})))
 }
 
+/// Resolves the component head SHA-1 on `request.lane`, if a lane was specified.
 fn lane_head(request: &Request) -> io::Result<Option<String>> {
     let Some(id) = &request.lane else { return Ok(None) };
     let scope = id.scope.trim();

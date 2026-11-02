@@ -28,6 +28,7 @@ struct Component {
 /// Adjacency map from versioned component identity to its direct dependency identities.
 type Graph = HashMap<String, Vec<String>>;
 
+/// Builds the status dependency graph and loads external component models for `request`.
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     super::path(&request.root)?;
     if request.versions.len() > 4096 || request.components.len() > 4096 {

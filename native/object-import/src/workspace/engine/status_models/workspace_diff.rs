@@ -61,6 +61,7 @@ pub(in crate::workspace::engine) fn read_overlay(
     Ok((comparisons.len(), json!({"comparisons":comparisons})))
 }
 
+/// Remaining raw, packed, and output byte budgets for workspace diff execution.
 struct Budgets {
     raw: Budget,
     packed: Budget,

@@ -73,6 +73,7 @@ fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> 
     selected.sort_by_key(|(directory, _)| directory.split('/').count());
     selected
 }
+/// Reads `.bitignore` if present at `root`, or falls back to `.gitignore`.
 #[inline]
 pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> {
     let bit = root.join(".bitignore");

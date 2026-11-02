@@ -41,6 +41,7 @@ struct Prepared {
     right: Vec<u8>,
     same: bool,
 }
+/// Computed file diff containing left/right content, unified diff text, and equality flag.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct FileDiff {

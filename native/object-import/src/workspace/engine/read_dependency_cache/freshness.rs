@@ -50,6 +50,7 @@ fn milliseconds(time: Duration) -> f64 {
     time.as_secs() as f64 * 1000.0 + f64::from(time.subsec_nanos()) / 1_000_000.0
 }
 
+/// Bounded depth-first directory traversal state for dependency cache freshness checks.
 struct Directories {
     pending: Vec<PathBuf>,
     paths: Vec<PathBuf>,

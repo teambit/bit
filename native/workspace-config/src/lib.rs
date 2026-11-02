@@ -103,7 +103,7 @@ pub fn effective_with_environment(
     values
 }
 
-/// JavaScript truthiness used by config get's `value || ''` report.
+/// `JavaScript` truthiness used by `config get`'s `value || ''` report.
 #[must_use]
 #[inline]
 pub fn truthy(value: &Value) -> bool {

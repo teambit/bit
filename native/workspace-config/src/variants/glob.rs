@@ -73,6 +73,7 @@ fn segments(pattern: &[&str], name: &[&str]) -> bool {
     }
 }
 
+/// Matches a single `/`-delimited `pattern` segment against `name`, rejecting leading-dot mismatches.
 #[inline]
 fn segment_matches(pattern: &str, name: &str) -> bool {
     if name.starts_with('.') && !pattern.starts_with('.') {

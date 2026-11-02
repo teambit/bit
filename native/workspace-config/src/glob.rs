@@ -72,6 +72,7 @@ fn match_segment(pattern: &str, segment: &str) -> bool {
     glob(&pattern, &text)
 }
 
+/// Matches `pattern` characters against `text` characters with `*`, `?`, `[...]`, and extglobs.
 fn glob(pattern: &[char], text: &[char]) -> bool {
     let Some((&first, rest)) = pattern.split_first() else { return text.is_empty() };
     if let Some(close) = extglob_end(pattern) {

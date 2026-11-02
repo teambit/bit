@@ -29,7 +29,7 @@ pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> 
 
 /// `detect-newline` 3: the more frequent of CRLF and LF, `None` without newlines.
 ///
-/// Ties between CRLF and LF resolve to LF (`"\n"`).
+/// Ties between CRLF (`"\r\n"`) and LF (`"\n"`) resolve to LF (`"\n"`).
 #[must_use]
 #[inline]
 pub fn detect_newline(text: &str) -> Option<&'static str> {

@@ -25,6 +25,7 @@ pub(super) struct Request {
 }
 
 /// Capture current configuration and model metadata without loading Harmony.
+///
 /// Unsupported extension providers decline before the caller emits output.
 pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     super::path(&request.root)?;

@@ -82,6 +82,7 @@ fn fields(model: &Value) -> io::Result<Map<String, Value>> {
     }
     Ok(fields)
 }
+/// Returns `true` when `value` is JSON `null`, `false`, `0`, or `""`.
 #[inline]
 fn falsy(value: &Value) -> bool {
     match value {

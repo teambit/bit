@@ -33,6 +33,7 @@ pub(super) fn identity(component: &str) -> String {
     hasher.update(b":VersionHistory");
     crate::validate::hexadecimal(&hasher.finalize())
 }
+/// Validates all staged `VersionHistory` plans and read-set proofs in `request`.
 #[inline]
 pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {
     prepare(request)?;

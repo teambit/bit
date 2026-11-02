@@ -26,6 +26,7 @@ pub(super) struct Sources {
     pub(super) model: Vec<String>,
     pub(super) component_config: Versions,
 }
+/// Manual, env-own, workspace, automatic, and merge version policies with optional range prefix.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Policy {

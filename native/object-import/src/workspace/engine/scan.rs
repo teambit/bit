@@ -66,6 +66,7 @@ fn validate(root: &Path, excluded: &[PathBuf], workspace_root: bool) -> io::Resu
     }
 }
 impl Scan<'_> {
+    /// Classifies and records a single directory `entry` under the traversal budget.
     fn entry(&mut self, entry: &fs::DirEntry) -> io::Result<()> {
         self.entries += 1;
         if self.entries > 65536 {

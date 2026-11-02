@@ -91,6 +91,7 @@ fn defaults(output: &mut Value) {
     }
 }
 
+/// Validates and normalizes a `{ scope, name, version? }` dependency identity object.
 #[inline]
 fn identity(value: &Value) -> io::Result<Value> {
     let scope = value["scope"].as_str().ok_or_else(|| invalid("Harmony dependency scope"))?;

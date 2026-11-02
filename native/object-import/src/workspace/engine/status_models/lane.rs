@@ -70,6 +70,7 @@ fn remote_with_parent(
     Ok(remotes)
 }
 
+/// Parses and validates `updateDependents` `<scope>/<name>@<sha1>` entries from `lane`.
 fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
     let Some(value) = lane
         .get("updateDependents")

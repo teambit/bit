@@ -30,6 +30,7 @@ pub(super) fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message.into())
 }
 
+/// Stateful `JSONC` lexer tracking the 1-based line number across input characters.
 struct Lexer<'a> {
     text: &'a str,
     chars: Peekable<CharIndices<'a>>,

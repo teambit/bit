@@ -62,6 +62,7 @@ impl Spool {
         }
         Ok(bytes)
     }
+    /// Returns the declared byte length of the spooled slice.
     #[inline]
     pub(super) fn len(&self) -> u64 {
         self.size

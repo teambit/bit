@@ -76,6 +76,7 @@ fn append_target_sources(
     }
     Ok(())
 }
+/// Builds the serialized `files` JSON array for `target` from `captured` metadata records.
 #[inline]
 fn build_target_files(
     target: &Target,

@@ -30,8 +30,8 @@ pub enum Node {
     Object(Object),
 }
 
-/// A JSONC object. `entries` keeps insertion order; serialization applies
-/// JavaScript's property order (array indexes first).
+/// A `JSONC` object. `entries` keeps insertion order; serialization applies
+/// `JavaScript`'s property order (array indexes first).
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Object {
     pub entries: IndexMap<String, Node>,

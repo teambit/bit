@@ -70,6 +70,7 @@ fn row(target: &Target) -> io::Result<Value> {
         .collect::<io::Result<_>>()?;
     Ok(json!({"id":id(&target.identity, &target.version)?,"dependencies":dependencies}))
 }
+/// Parses and validates a `<scope>/<name>[@<version>]` identity into a `{ scope, name, version? }` JSON object.
 #[inline]
 fn id(identity: &str, version: &str) -> io::Result<Value> {
     let identity = identity.trim();

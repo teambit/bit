@@ -35,6 +35,7 @@ enum Entry {
     Source(source::Spool),
     Removed,
 }
+/// Lightweight file or directory metadata summary resolved through a [`SourceOverlay`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Metadata {
     length: u64,

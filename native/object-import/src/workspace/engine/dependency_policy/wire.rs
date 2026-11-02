@@ -23,6 +23,7 @@ pub(super) struct Missing {
     pub(super) is_dev_file: bool,
     pub(super) missing_packages: Vec<String>,
 }
+/// Runtime and peer package version policy maps.
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Policy {

@@ -59,6 +59,7 @@ pub(super) fn parse(text: &str) -> io::Result<Parsed> {
 }
 
 impl Parser {
+    /// Returns the token at the current cursor position, if any.
     #[inline]
     fn current(&self) -> Option<&Token> {
         self.tokens.get(self.index)

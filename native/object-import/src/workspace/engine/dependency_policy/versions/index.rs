@@ -7,6 +7,7 @@ use super::{
 use std::collections::{HashMap, HashSet};
 
 /// Build once per calculation; dependency aliases still resolve in their original order.
+/// Ambiguous bitmap entries map to `None` so downstream selectors do not pick a conflicting pin.
 pub(super) struct Index<'a> {
     pub(super) request: &'a Request,
     pub(super) bitmap: HashMap<&'a str, Option<&'a str>>,

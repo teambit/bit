@@ -86,6 +86,7 @@ fn model_identity(model: &Value, targets: &HashMap<&str, &str>) -> io::Result<St
     Ok(identity)
 }
 
+/// Computes status and merge version-history distances for `model` when tracked on `lane`.
 fn compare_lane(
     reader: &Reader<'_>,
     model: &Value,

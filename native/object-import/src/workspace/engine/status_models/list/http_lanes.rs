@@ -83,6 +83,7 @@ fn lane_network(request: &Request, local: &str, scope_config: &Value) -> io::Res
     Network::new(&global, request.bit_version.trim(), Some(local), None)
 }
 
+/// Resolves the configured [`Remote`] endpoint for `scope` from local `scope.json` or `global_remotes_file`.
 pub(super) fn configured_remote(
     root: &Path,
     scope: &str,

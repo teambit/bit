@@ -59,6 +59,7 @@ impl SourceOverlay {
             .take_while(|(name, _)| name.starts_with(path))
             .any(|(_, entry)| !matches!(entry, Entry::Removed))
     }
+    /// Maps `path` through any symlinked ancestor inside `physical_root` and records its metadata proof.
     fn alias(&self, path: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<Option<PathBuf>> {
         for ancestor in path.ancestors() {
             let Some(metadata) = disk_metadata(ancestor)? else { continue };

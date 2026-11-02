@@ -40,6 +40,7 @@ pub(super) struct Begin {
     exclude_dirs: Vec<PathBuf>,
     root_policy: Policy,
 }
+/// Wire input for completing a retained workspace or component inventory scan.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Finish {

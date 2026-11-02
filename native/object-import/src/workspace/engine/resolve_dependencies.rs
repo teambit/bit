@@ -67,6 +67,7 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
     Ok((resolved.len(), json!({"resolved":resolved})))
 }
 
+/// Resolves a single `dependency` specifier from `parent` under `budget` and `mode`.
 pub(super) fn resolve_one(
     dependency: &str,
     parent: &Path,

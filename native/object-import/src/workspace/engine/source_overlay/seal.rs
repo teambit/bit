@@ -9,6 +9,7 @@ use std::{
 };
 
 /// Captures and deduplicates read-set [`proof::Proof`] records for all entries in `data`.
+/// Enforces entry-count and aggregate byte budgets before reading spooled source slices.
 pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
     if data.entries.len() > 8192 {
         return Err(invalid("overlay entry budget"));
