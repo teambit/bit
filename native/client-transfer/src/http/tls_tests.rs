@@ -17,6 +17,7 @@ impl Drop for Server {
         let _ = self.0.wait();
     }
 }
+/// Verifies that mutual-TLS client certificates and keys work under both `network.*` and legacy `proxy.*` config keys.
 #[test]
 fn network_certificate_and_legacy_proxy_fallback_authenticate_mutual_tls() {
     let root = tempfile::tempdir().unwrap();

@@ -10,7 +10,9 @@ use crate::import::{
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
+/// Default remote scope name for lane merge tests.
 const SCOPE: &str = "org";
+/// Default lane name for lane merge tests.
 const LANE: &str = "dev";
 
 /// Compresses and writes a typed Bit object (`kind`, `hash`, `value`) into `repo`.

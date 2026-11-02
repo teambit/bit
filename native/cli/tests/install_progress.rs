@@ -21,6 +21,7 @@ fn startup_timer_sample_projects_to_the_identical_banner_and_remaining_output() 
     );
 }
 
+/// Verifies that non-default counters, control sequences, or duplicate progress frames remain untouched.
 #[test]
 fn changed_counters_controls_positions_and_duplicate_samples_remain_observable() {
     for text in [

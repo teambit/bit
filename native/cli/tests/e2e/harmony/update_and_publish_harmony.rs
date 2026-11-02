@@ -43,6 +43,7 @@ fn updates_policies_added_by_user_to_latest_versions() {
     );
 }
 
+/// Verifies that `bit update <pattern>` updates only matching dependencies while preserving `JSONC` comments.
 #[test]
 fn updates_selected_patterns_and_preserves_comments() {
     let helper = Helper::new();

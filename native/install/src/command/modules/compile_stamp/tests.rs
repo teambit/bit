@@ -42,6 +42,7 @@ struct Fixture {
 }
 
 impl Fixture {
+    /// Initializes a temporary workspace with one compiled component and writes its initial compile stamp.
     fn new() -> Self {
         let dir = TempDir::new().unwrap();
         let root = dir.path().to_path_buf();

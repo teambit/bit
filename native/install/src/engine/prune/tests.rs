@@ -30,6 +30,7 @@ snapshots:
   b@2.0.0: {}
 ";
 
+/// Returns the `node_modules/.pnpm` virtual store path under `root`.
 fn virtual_store(root: &Path) -> std::path::PathBuf {
     root.join("node_modules").join(".pnpm")
 }

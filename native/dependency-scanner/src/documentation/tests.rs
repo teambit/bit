@@ -27,6 +27,7 @@ fn unexported_test_callbacks_and_definitions_match_released_empty_documentation(
     assert!(!proves_empty_docs(b"exports.Example = () => null;", "index.js"));
 }
 
+/// Verifies that ordinary `CommonJS` data exports and literal `require` modules are proven to have empty docs.
 #[test]
 fn ordinary_commonjs_data_and_literal_dependency_modules_are_empty() {
     for source in [

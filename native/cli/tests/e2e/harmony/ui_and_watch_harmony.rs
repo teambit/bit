@@ -16,6 +16,7 @@ fn scope_ui_on_bare_scope() {
     assert!(out.contains("start"));
 }
 
+/// Verifies `bit start --help` output in a populated Harmony workspace.
 #[test]
 fn workspace_ui() {
     let helper = Helper::new();

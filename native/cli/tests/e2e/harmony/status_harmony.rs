@@ -23,6 +23,7 @@ fn status_json_parity(helper: &Helper) {
     assert_eq!(parse(&native.stdout), parse(&node.stdout));
 }
 
+/// Compares the plain-text `bit status` report against the Node.js CLI on fresh workspace copies.
 fn status_text_parity(helper: &Helper) {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status");

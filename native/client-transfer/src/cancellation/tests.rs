@@ -19,6 +19,7 @@ fn cancelled_operations_never_poll_the_transport() {
         .unwrap_err();
     assert_eq!(error.kind(), io::ErrorKind::Interrupted);
 }
+/// Verifies that cancelling an active token wakes an already pending transport future with `Interrupted`.
 #[test]
 fn cancellation_wakes_an_already_pending_operation() {
     let cancellation = Cancellation::new();

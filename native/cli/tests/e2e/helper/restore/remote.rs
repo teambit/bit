@@ -36,6 +36,7 @@ pub(in crate::helper) fn contents(path: &Path) {
         "fixture restoration retained children",
     );
 }
+/// Removes a file, symlink, or Windows directory junction at `path`.
 fn remove_file_or_link(path: &Path, kind: fs::FileType) {
     #[cfg(windows)]
     {

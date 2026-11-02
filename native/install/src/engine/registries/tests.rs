@@ -16,6 +16,7 @@ fn global(entries: &[(&str, &str)]) -> GlobalConfig {
         .collect()
 }
 
+/// Returns a default [`pnpm_config::Config`] pointing at `https://registry.npmjs.org/`.
 fn npmjs_config() -> pnpm_config::Config {
     pnpm_config::Config {
         registry: "https://registry.npmjs.org/".to_string(),

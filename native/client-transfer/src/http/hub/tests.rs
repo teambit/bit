@@ -23,6 +23,7 @@ fn streamed_messages_keep_wire_order_and_last_terminal_result() {
     assert_eq!(messages, ["receiving objects", "first result", "persisting scope", "done"]);
 }
 
+/// Verifies that missing terminal `data` fields, non-200 server errors, and malformed JSON lines return errors.
 #[test]
 fn missing_terminal_data_and_server_failure_never_become_success() {
     let missing =

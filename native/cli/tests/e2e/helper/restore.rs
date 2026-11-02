@@ -17,6 +17,7 @@ pub(super) fn remove(path: &Path) {
     assert!(!path.exists(), "fixture restoration retained {}", path.display());
 }
 
+/// Recursively restores owner read/write/execute permissions on directories under `path`.
 fn writable_directories(path: &Path) {
     let metadata = fs::symlink_metadata(path).expect("fixture metadata");
     if !metadata.is_dir() {

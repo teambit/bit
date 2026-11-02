@@ -14,6 +14,7 @@ fn extracts_package_names() {
     assert_eq!(extract_package_name("lodash"), "lodash");
 }
 
+/// Verifies npm package name validation rules including legacy uppercase and underscore allowances.
 #[test]
 fn validates_like_valid_for_old_packages() {
     assert!(is_valid_package_name("lodash"));

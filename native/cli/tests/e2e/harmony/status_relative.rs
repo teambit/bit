@@ -15,6 +15,7 @@ fn parity(helper: &Helper) {
     assert_eq!(actual.stderr, expected.stderr);
 }
 
+/// Verifies that nested and repeated untracked relative imports match the Node.js CLI `status --json` report.
 #[test]
 fn nested_and_repeated_untracked_files_match_node() {
     let helper = Helper::new();

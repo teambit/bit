@@ -23,6 +23,7 @@ fn reads_the_recorded_virtual_store_dir() {
     assert_eq!(recorded_virtual_store_dir("{}"), None);
 }
 
+/// Verifies that [`assert_safe_transition`] rejects switching virtual store layouts when Bit is self-hosted in `node_modules`.
 #[test]
 fn a_self_hosted_bit_cannot_switch_layouts() {
     let dir = tempfile::tempdir().expect("temp dir");

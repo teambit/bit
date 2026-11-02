@@ -11,6 +11,7 @@ fn is_link(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())
 }
 
+/// Verifies that [`LinkKind::Symlink`] links a file so source updates are reflected at the destination on Windows.
 #[test]
 fn symlink_kind_links_a_file_whether_or_not_symlinks_are_permitted() {
     let dir = tempfile::tempdir().unwrap();

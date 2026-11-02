@@ -44,6 +44,7 @@ fn serve_once(body: &'static str) -> (String, thread::JoinHandle<String>) {
     (url, handle)
 }
 
+/// Verifies that `Network::list` posts a `GraphQL` query with `node-fetch` and `x-verb: read` headers.
 #[test]
 fn lists_a_remote_scope_with_node_fetch_headers() {
     let (url, server) = serve_once(

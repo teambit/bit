@@ -14,6 +14,7 @@ fn inflated(path: &Path) -> Vec<u8> {
     body
 }
 
+/// Runs `command` in both native and Node.js modes and asserts identical exit codes and output.
 fn assert_command_parity(helper: &Helper, node_root: &Path, command: &str) -> serde_json::Value {
     let node = Helper::cmd_in_with(node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     let native = helper.native_run(command);

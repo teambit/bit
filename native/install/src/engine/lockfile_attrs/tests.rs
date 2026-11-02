@@ -23,6 +23,7 @@ bit:
   restoredFromModel: true
 ";
 
+/// Extracts the inner [`Map`] from a JSON object [`Value`], panicking if it is not an object.
 fn object(value: Value) -> Map<String, Value> {
     match value {
         Value::Object(object) => object,

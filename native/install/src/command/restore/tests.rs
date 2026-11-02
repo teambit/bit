@@ -25,6 +25,7 @@ fn an_explicit_graph_is_restored_best_effort_unless_restore_is_set() {
     assert!(explicit(&strict).expect("explicit graph").fail_on_error);
 }
 
+/// Builds a schema `2.0` serialized dependency graph JSON value from `packages` and `edges`.
 #[expect(clippy::needless_pass_by_value, reason = "test fixtures read best as json! literals")]
 fn graph(packages: serde_json::Value, edges: serde_json::Value) -> serde_json::Value {
     json!({ "schemaVersion": "2.0", "packages": packages, "edges": edges, "pnpmfileChecksum": "bit-1" })

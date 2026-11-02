@@ -1,6 +1,7 @@
 //! End-to-end tests for `e2e/harmony/tag-harmony.e2e.ts` ([`extra`], [`workspace_with_standard_components_and_tag_on_harmony`]).
 //! Covers `bit tag` creation, auto-tag cascades, `--soft` / `--persist`, and component schema `2.0.0`.
 
+/// Detached-head branch tagging and export flow tests.
 #[path = "tag_harmony/extra.rs"]
 mod extra;
 

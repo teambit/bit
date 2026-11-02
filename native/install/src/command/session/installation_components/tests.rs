@@ -17,6 +17,7 @@ fn component(name: &str) -> WorkspaceComponent {
     .expect("component fixture")
 }
 
+/// Verifies that [`ordered`] reorders workspace components to match the host's class order while keeping native metadata.
 #[test]
 fn actual_class_order_preserves_native_component_metadata() {
     let root = std::env::temp_dir();

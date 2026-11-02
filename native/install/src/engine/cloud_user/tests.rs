@@ -38,6 +38,7 @@ fn serve_once(body: &'static str) -> (String, thread::JoinHandle<String>) {
     (url, handle)
 }
 
+/// Builds a [`GlobalConfig`] with `symphony_url` and an optional `user.token`.
 fn global(symphony: &str, token: Option<&str>) -> GlobalConfig {
     let mut global = GlobalConfig::new();
     global.insert("symphony_url".into(), json!(symphony));

@@ -17,6 +17,7 @@ fn write(path: &Path, content: &str) {
     fs::write(path, content).unwrap();
 }
 
+/// Runs the `bit` binary in `cwd` with `args` and custom environment overrides.
 fn bit(dir: &TempDir, cwd: &Path, args: &[&str], env: &[(&str, &str)]) -> Output {
     let home = dir.path().join("home");
     let mut command = Command::new(env!("CARGO_BIN_EXE_bit"));

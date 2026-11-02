@@ -23,6 +23,7 @@ fn engine_settings(
     (dir, settings)
 }
 
+/// Verifies that [`install_config`] applies Bit's fixed pnpm layout, peer, registry, and override defaults.
 #[test]
 fn applies_bits_fixed_install_options() {
     let (_dir, settings) =

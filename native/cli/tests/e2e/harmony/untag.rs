@@ -22,6 +22,7 @@ fn capture(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>)
     }
 }
 
+/// Snapshots `.bitmap`, `.bit`, `workspace.jsonc`, and `comp1` files under `root`.
 fn workspace_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     let mut files = BTreeMap::new();
     for relative in [".bitmap", ".bit/index.json", ".bit/objects", "workspace.jsonc", "comp1"] {

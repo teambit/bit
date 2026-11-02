@@ -37,6 +37,7 @@ fn matches_node_ignore_sources_and_cache() {
     }
 }
 
+/// Verifies that a negated rule immediately following its positive counterpart reuses the compiled regex source.
 #[test]
 fn negation_after_positive_reuses_the_positive_source() {
     let mut compiler = Compiler::new();

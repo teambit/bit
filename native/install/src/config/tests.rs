@@ -46,6 +46,7 @@ const WORKSPACE: &str = r#"/**
   "file:/tmp/aspect": {},
 }"#;
 
+/// Verifies parsing of workspace settings, dependency policies, variants, and user aspects from `workspace.jsonc`.
 #[test]
 fn loads_workspace_jsonc() {
     let dir = tempdir().unwrap();

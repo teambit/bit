@@ -16,6 +16,7 @@ fn fixture(peer: bool) -> Value {
             "fixture-leaf@2.0.0":{}}})
 }
 
+/// Verifies that [`dedupe`] drops duplicate snapshot dependencies matching root policies or peers unless overridden.
 #[test]
 fn root_versions_and_peers_win_without_overriding_explicit_overrides() {
     let cases = [false, true]

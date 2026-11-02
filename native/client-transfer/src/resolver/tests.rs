@@ -15,6 +15,7 @@ fn runtime() -> tokio::runtime::Runtime {
         .unwrap()
 }
 
+/// Writes a `resolver.js` script into `dir` and constructs a configured [`Resolver`].
 fn resolver(dir: &TempDir, body: &str, token: Option<&str>) -> Resolver {
     let path = dir.path().join("resolver.js");
     fs::write(&path, body).unwrap();

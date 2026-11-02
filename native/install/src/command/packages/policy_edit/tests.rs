@@ -23,6 +23,7 @@ fn added_entries_win_and_fields_are_sorted() {
     assert_eq!(serde_json::to_value(&peers).unwrap(), json!({ "react": "18" }));
 }
 
+/// Verifies that [`update_config_policy`] creates missing lifecycle maps while preserving `JSONC` comments.
 #[test]
 fn creates_missing_fields_and_keeps_comments() {
     let text = r#"{

@@ -29,6 +29,7 @@ fn archive(end: bool) -> Vec<u8> {
     }
     tar.into_inner().unwrap()
 }
+/// Consumes the HTTP request headers and body from `socket`.
 fn request(socket: &TcpStream) {
     let mut reader = BufReader::new(socket.try_clone().unwrap());
     let mut length = 0usize;

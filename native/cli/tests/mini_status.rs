@@ -63,6 +63,7 @@ impl Workspace {
     }
 }
 
+/// Creates parent directories and writes `content` to `path`.
 fn write(path: &Path, content: &str) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, content).unwrap();

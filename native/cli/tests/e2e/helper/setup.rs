@@ -19,6 +19,7 @@ const GLOBAL_CONFIG: &str = r#"{
     "user.email": "ci@bit.dev"
 }"#;
 
+/// Process-wide Node.js CLI path, global config root, and pre-initialized workspace/scope templates.
 pub struct Shared {
     pub node_cli: PathBuf,
     /// The test process's directory: the home, the global config, the templates and

@@ -30,6 +30,7 @@ fn list_puts_components_first_and_is_unique_by_id() {
     assert_eq!(names, [("@org-ui/button", "1.0.0"), ("lodash", "1.0.0")]);
 }
 
+/// Verifies that [`to_deps_object`] converts snap hashes to `0.0.0-<hash>` while preserving semver ranges.
 #[test]
 fn manifest_object_snaps_versions() {
     let deps = ComponentDependencies {

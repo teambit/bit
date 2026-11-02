@@ -18,6 +18,7 @@ fn omitted_namespace_is_not_serialized_as_null() {
     assert_eq!(list_variables(Some("ui/**"), false), json!({"namespaces":["ui/**"]}));
 }
 
+/// Reads HTTP request headers and body from `stream` into a single string.
 fn request(stream: &TcpStream) -> String {
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut headers = String::new();

@@ -24,7 +24,7 @@ use crate::{
 };
 use serde_json::json;
 use std::fs;
-
+/// Aspect ID for the workspace dependency resolver configuration.
 const DEP_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 #[test]

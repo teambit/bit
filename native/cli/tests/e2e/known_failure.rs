@@ -27,6 +27,7 @@ macro_rules! allow_known_failure {
 /// A ported case whose command runs natively: [`Native::native`] fails the case
 /// when the command runs on the Node.js CLI instead.
 pub trait Native<Value> {
+    /// Unwraps the native result or panics if the command delegated to the Node.js CLI.
     fn native(self) -> Value;
 }
 

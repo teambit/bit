@@ -34,6 +34,7 @@ fn host_info(base: &Path) -> HostInfo {
     }
 }
 
+/// Builds a [`WorkspaceComponent`] fixture under `comps/{name}` with `scope`.
 fn component(root: &Path, scope: &str, name: &str) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {

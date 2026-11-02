@@ -31,6 +31,7 @@ fn component(root: &Path, scope: &str, name: &str, env_id: &str) -> WorkspaceCom
     }
 }
 
+/// Builds a runtime [`PolicyEntry`] for `name` with `resolve_from_env: true`.
 fn from_env(name: &str) -> PolicyEntry {
     PolicyEntry { resolve_from_env: true, ..entry(name, "^1.0.0", Lifecycle::Runtime) }
 }

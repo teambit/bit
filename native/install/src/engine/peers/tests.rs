@@ -15,6 +15,7 @@ fn missing(wanted_range: &str, optional: bool) -> MissingPeer {
     }
 }
 
+/// Verifies that [`safe_intersect`] returns a single range unchanged without parsing.
 #[test]
 fn a_single_range_passes_through() {
     assert_eq!(safe_intersect(["^1.0.0"].into_iter()).as_deref(), Some("^1.0.0"));

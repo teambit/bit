@@ -9,7 +9,7 @@ use std::{fs, path::PathBuf};
 pub const FOO_FIXTURE: &str = "module.exports = function foo() { return 'got foo'; }";
 pub const IS_TYPE_FIXTURE: &str = "module.exports = function isType() { return 'got is-type'; };";
 pub const IS_STRING_HARMONY_FIXTURE: &str = "const isType = require('../is-type/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-
+/// Name and filesystem path of an isolated bare scope fixture.
 pub struct BareScopeEnv {
     pub scope_name: String,
     pub scope_path: PathBuf,

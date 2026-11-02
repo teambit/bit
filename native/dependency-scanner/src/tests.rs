@@ -9,6 +9,7 @@ fn fixture(kind: &str, source: &str) -> File {
     File { path: format!("fixture.{kind}"), source: Some(source.into()), kind: None }
 }
 
+/// Verifies that type-only imports, specifier aliases, and duplicate imports merge into a single dependency entry.
 #[test]
 fn preserves_types_aliases_and_duplicate_metadata() {
     let result = scan(

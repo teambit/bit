@@ -21,6 +21,7 @@ fn touch(path: &Path, time: SystemTime) {
         .expect("mtime");
 }
 
+/// Verifies that an empty dependency cache directory does not require invalidation.
 #[test]
 fn an_empty_cache_needs_no_invalidation() {
     let temp = tempfile::tempdir().expect("tempdir");

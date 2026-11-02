@@ -51,6 +51,7 @@ pub(crate) fn publish_to(helper: &Helper, remote: &Path) {
         seed_selected_to(helper, &helper.scopes.local_path, remote, &[]);
     }
 }
+/// Publishes `identities` from `workspace` into `helper`'s default remote scope.
 fn seed_selected_at(helper: &Helper, workspace: &Path, identities: &[String]) {
     seed_selected_to(helper, workspace, &helper.scopes.remote_path, identities);
 }

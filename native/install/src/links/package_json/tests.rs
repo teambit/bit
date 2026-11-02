@@ -29,6 +29,7 @@ fn component(scope: Option<&str>, version: Option<&str>) -> WorkspaceComponent {
     }
 }
 
+/// Builds a [`PackageJsonContext`] with `props` and `bit.cloud` domain for manifest synthesis tests.
 fn context(props: Value) -> PackageJsonContext<'static> {
     PackageJsonContext {
         dependencies: None,

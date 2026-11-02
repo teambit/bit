@@ -69,7 +69,7 @@ pub fn update_scope_json(path: &Path, update: impl FnOnce(&mut Map<String, Value
     write_json(path, &scope, b"    ");
 }
 
-/// `//` and `/* */` comments outside strings removed.
+/// Strips `//` line comments and `/* */` block comments outside string literals from `text`.
 fn strip_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();

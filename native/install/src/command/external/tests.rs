@@ -14,6 +14,7 @@ fn dependencies(entries: &[(&str, &str)]) -> DependencyMap {
         .collect()
 }
 
+/// Verifies that [`write_package_json_dependencies`] updates existing keys and appends new dependencies preserving CRLF formatting.
 #[test]
 fn writes_dependencies_into_the_root_package_json() {
     let root = tempfile::tempdir().unwrap();
