@@ -7,6 +7,7 @@ use serde_json::json;
 use std::{ffi::OsString, fs};
 use tempfile::tempdir;
 
+/// Converts string slices into owned [`OsString`] CLI arguments for `logout` tests.
 fn os_args(args: &[&str]) -> Vec<OsString> {
     args.iter()
         .map(OsString::from)

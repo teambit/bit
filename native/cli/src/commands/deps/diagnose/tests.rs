@@ -5,6 +5,7 @@
 use super::{PackageCopy, PackageReport, parse_copy, render};
 use crate::commands::color::Chalk;
 
+/// Verifies that [`parse_copy`] extracts the version and formatted peer dependency suffix.
 #[test]
 fn parses_peer_suffix() {
     let copy = parse_copy("1.2.3_@scope+peer@4.0.0_react@18.0.0");

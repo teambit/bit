@@ -5,6 +5,7 @@
 use super::{Chalk, known_global_dirs, parse_json_flag, render_json, render_report};
 use std::{ffi::OsString, path::Path};
 
+/// Verifies `bit globals` `-j` and `--json` flag parsing and rejection of unknown arguments.
 #[test]
 fn parses_globals_json_flags() {
     assert_eq!(parse_json_flag(&[OsString::from("globals")]), Some(false));

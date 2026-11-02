@@ -10,6 +10,7 @@ use crate::commands::color::Chalk;
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit mcp-server` subcommand parsing across `setup` and `write-rules` (`rules`).
 #[test]
 fn parses_setup_and_rules_subcommands() {
     assert_eq!(

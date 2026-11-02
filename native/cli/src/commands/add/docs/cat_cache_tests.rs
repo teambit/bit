@@ -6,6 +6,7 @@ use super::cat_prepare;
 use serde_json::json;
 use std::{fs, path::Path};
 
+/// Verifies that an empty `cat-component` source entry is persisted once and reused without rewriting.
 #[test]
 fn proven_empty_cat_source_is_written_once_then_reused_without_rewrite() {
     let root = tempfile::tempdir().unwrap();

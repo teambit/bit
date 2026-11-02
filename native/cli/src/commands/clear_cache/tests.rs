@@ -7,6 +7,7 @@ use crate::commands::color::Chalk;
 use serde_json::json;
 use std::{ffi::OsString, fs};
 
+/// Converts string slices into owned [`OsString`] CLI arguments for `clear-cache` tests.
 fn args(items: &[&str]) -> Vec<OsString> {
     items
         .iter()

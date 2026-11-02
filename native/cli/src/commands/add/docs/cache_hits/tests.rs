@@ -7,6 +7,7 @@ use crate::commands::add::docs::sources::observe;
 use serde_json::json;
 use std::{fs, path::Path};
 
+/// Seeds a `cacache` entry at `cache` for `path` with `docs` and returns the recorded timestamp.
 fn seed(cache: &Path, path: &Path, docs: &str) -> f64 {
     bit_install::dependencies::cache::put(cache, path.to_str().unwrap(), docs).unwrap();
     bit_object_import::read_dependency_cache(cache, path.to_str().unwrap())

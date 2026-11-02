@@ -3,6 +3,7 @@
 //! Verifies scientific, hexadecimal, and decimal coercion rules alongside non-numeric target preservation.
 
 use super::normalize;
+/// Verifies that scientific, hexadecimal, and decimal target strings coerce like `yargs` number-then-string.
 #[test]
 fn scientific_hex_and_decimal_targets_follow_yargs_number_then_string() {
     for (raw, expected) in [

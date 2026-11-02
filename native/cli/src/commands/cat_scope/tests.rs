@@ -5,6 +5,7 @@
 use super::{Options, build_component_entry, build_lane_entry, parse_options};
 use serde_json::json;
 
+/// Verifies `bit cat-scope` flag parsing including `-f` / `--full`, `--json`, and `--json-extra`.
 #[test]
 fn parses_cat_scope_flags_including_full() {
     assert_eq!(

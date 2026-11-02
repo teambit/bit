@@ -6,6 +6,7 @@ use super::{filtered, format};
 use crate::commands::{color::Chalk, diff::options::parse};
 use serde_json::json;
 
+/// Verifies that [`filtered`] and [`format`] filter diff rows by `--file` and render `--stat` summaries.
 #[test]
 fn filters_and_summarizes_diff_rows() {
     let result = json!([{"id":"s/one","_fullId":"s/one@1","hasDiff":true,

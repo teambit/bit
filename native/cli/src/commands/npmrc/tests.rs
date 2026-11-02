@@ -5,6 +5,7 @@
 use super::parse_subcommand;
 use std::ffi::OsString;
 
+/// Converts string slices into owned [`OsString`] CLI arguments for `npmrc` tests.
 fn os_args(args: &[&str]) -> Vec<OsString> {
     args.iter()
         .map(OsString::from)

@@ -4,6 +4,7 @@
 
 use super::{matching, split};
 
+/// Canonical component ID fixture list used by the `multimatch` / `minimatch` oracle tests.
 const IDS: [&str; 10] = [
     "org.scope/ui/button",
     "org.scope/ui/card",

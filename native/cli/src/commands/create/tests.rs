@@ -6,6 +6,7 @@ use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit create` positional template/component parsing and option flags.
 #[test]
 fn parses_create_arguments_and_options() {
     assert_eq!(

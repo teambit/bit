@@ -9,6 +9,7 @@ use super::{
 use crate::commands::color::Chalk;
 use serde_json::json;
 
+/// Verifies `bit dependents` CLI option parsing and unscoped `.bitmap` row detection.
 #[test]
 fn parses_dependents_options_and_checks_bitmap_scope() {
     assert_eq!(parse_options(&["comp1"]), Some(Options { id: "comp1".into(), json: false }));

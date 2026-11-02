@@ -5,6 +5,7 @@
 use super::Retained;
 use serde_json::json;
 
+/// Verifies that `advance_bitmap` updates `.bitmap` receipts while preserving unrelated read-set entries.
 #[test]
 fn acknowledged_bitmap_changes_preserve_all_other_read_receipts() {
     let before = json!({"path":"/workspace/.bitmap","hash":"before"});

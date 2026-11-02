@@ -4,6 +4,7 @@
 
 use super::{Options, parse_options};
 
+/// Verifies `bit login` CLI option parsing for `--default-cloud-domain`, `-d`, and `--no-browser`.
 #[test]
 fn parses_login_options() {
     assert_eq!(

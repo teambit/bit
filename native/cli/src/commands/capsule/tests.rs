@@ -4,6 +4,7 @@
 
 use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand};
 
+/// Verifies `bit capsule` subcommand parsing across `list`, `delete`, `prune`, and `create`.
 #[test]
 fn parses_capsule_subcommands() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::BareList));

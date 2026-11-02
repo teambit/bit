@@ -8,6 +8,7 @@ use serde_json::{Value, json};
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit deps` subcommand parsing across `set`, `unset`, `remove`, `reset`, `blame`, `usage`, and `diagnose`.
 #[test]
 fn parses_deps_subcommands() {
     assert_eq!(

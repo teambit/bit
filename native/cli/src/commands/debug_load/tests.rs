@@ -5,6 +5,7 @@
 use super::{Options, check_missing_workspace_component, parse_options};
 use std::fs;
 
+/// Verifies `bit show --legacy` / debug load option parsing across flags and combined short options.
 #[test]
 fn parses_debug_load_options() {
     assert_eq!(

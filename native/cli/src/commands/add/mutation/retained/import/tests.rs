@@ -5,6 +5,7 @@
 use super::{Retained, json};
 use std::fs;
 
+/// Builds a synthetic import write receipt transitioning `path` from `before` bytes to `after` bytes.
 fn write(path: &std::path::Path, before: &[u8], after: &[u8]) -> serde_json::Value {
     let original = bit_install::policy::scope::proof_from_bytes(path, Some(before));
     let published = bit_install::policy::scope::proof_from_bytes(path, Some(after));

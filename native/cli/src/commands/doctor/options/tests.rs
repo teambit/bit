@@ -3,6 +3,7 @@
 //! Verifies `--list`, `--archive`, `--remote`, and `--save` validation order and error messages.
 
 use super::Options;
+/// Verifies that `--list` bypasses archive-only option validation in [`Options::validate`].
 #[test]
 fn list_precedes_archive_validation() {
     let options = Options::parse(&["--list", "--include-node-modules"]).unwrap();

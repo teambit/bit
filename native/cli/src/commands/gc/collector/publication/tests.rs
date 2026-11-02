@@ -4,6 +4,7 @@
 use super::super::{super::format::GcResult, Plan};
 use std::fs;
 
+/// Verifies that [`Plan::execute`] leaves an empty bucket directory intact when the target object was already absent.
 #[test]
 fn an_object_removed_after_planning_does_not_remove_its_empty_bucket() {
     let scope = tempfile::tempdir().unwrap();

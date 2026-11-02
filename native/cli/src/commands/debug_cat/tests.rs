@@ -11,6 +11,7 @@ use crate::commands::color::Chalk;
 use serde_json::json;
 use std::fs;
 
+/// Verifies `bit cat-object` SHA-1 hash validation and `-p`, `-s`, and `--headers` flags.
 #[test]
 fn parses_cat_object_flags_and_hash() {
     let hash = "0123456789abcdef0123456789abcdef01234567";

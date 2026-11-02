@@ -21,6 +21,7 @@ use std::{
 };
 use tempfile::tempdir;
 
+/// Writes a zlib-compressed scope object of `kind` and `hash` with `body` into `scope_dir/objects`.
 fn write_scope_obj(scope_dir: &Path, kind: &str, hash: &str, body: &[u8]) {
     let header = format!("{kind} {hash} {}\0", body.len());
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

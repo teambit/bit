@@ -4,6 +4,7 @@
 
 use super::{parse, parse_revert};
 
+/// Verifies that [`parse_revert`] accepts only `bit revert` positional order and supported flags.
 #[test]
 fn revert_accepts_only_its_positional_order_and_options() {
     let options = parse_revert(&["scope/one", "0.0.1", "-x"]).unwrap();

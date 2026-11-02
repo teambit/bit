@@ -5,6 +5,7 @@
 use super::options::{Action, Options};
 use std::ffi::OsString;
 
+/// Parses `words` as [`OsString`] CLI arguments through [`Options::parse`].
 fn parse(words: &[&str]) -> Option<Options> {
     let args = words
         .iter()

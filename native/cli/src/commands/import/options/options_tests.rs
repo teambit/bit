@@ -4,6 +4,7 @@
 
 use super::parse;
 
+/// Verifies `bit import` and `bit fetch` option parsing for `-x`, `-o`, `-c`, `--lanes`, and `--from-original-scopes`.
 #[test]
 fn imports_without_installing_and_fetches() {
     let import = parse(&["import", "s/a", "-x"]).unwrap();

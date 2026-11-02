@@ -4,6 +4,7 @@
 use super::{error, mkdir_not_directory};
 use std::{io, path::Path};
 
+/// Verifies that raw OS error `183` (`ERROR_ALREADY_EXISTS`) qualifies for `mkdir_not_directory` only on Windows.
 #[test]
 fn existing_windows_files_only_qualify_for_mkdir_translation_on_windows() {
     assert_eq!(mkdir_not_directory(&io::Error::from_raw_os_error(183)), cfg!(windows));

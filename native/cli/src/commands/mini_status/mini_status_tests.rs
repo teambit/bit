@@ -5,6 +5,7 @@
 use super::{Summary, quick_report, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 
+/// Builds a [`Summary`] fixture with `modified` and `new_comps` component lists.
 fn summary(modified: &[&str], new_comps: &[&str]) -> Summary {
     Summary {
         modified: modified

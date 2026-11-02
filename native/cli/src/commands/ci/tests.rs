@@ -7,6 +7,7 @@ use super::{
     validate_sync_options,
 };
 
+/// Verifies `bit ci` subcommand parsing across `verify`, `pr`, `merge`, and `sync`.
 #[test]
 fn parses_ci_subcommands_and_validates_sync_flags() {
     assert_eq!(parse_subcommand(&[]), Some(Subcommand::Bare));

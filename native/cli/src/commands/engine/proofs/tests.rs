@@ -6,6 +6,7 @@ use super::{Engine, MAX_PROOFS};
 use serde_json::json;
 use std::fs;
 
+/// Verifies that [`Engine::validate_read_set`] rejects a stale receipt located in a trailing frame batch.
 #[test]
 fn a_stale_receipt_in_the_last_frame_is_still_rejected() {
     let directory = tempfile::tempdir().unwrap();

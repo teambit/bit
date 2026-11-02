@@ -4,6 +4,7 @@
 
 use super::{list, table};
 use crate::commands::color::Chalk;
+/// Verifies that [`table`] renders double-line outlines and single-line row separators.
 #[test]
 fn table_uses_published_double_outline_and_row_separators() {
     assert_eq!(

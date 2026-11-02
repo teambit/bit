@@ -4,6 +4,7 @@
 
 use super::{render_completion_script, valid_options};
 
+/// Verifies `bit completion` option validation and `bash` / `zsh` completion script rendering.
 #[test]
 fn validates_completion_options_and_renders_scripts() {
     assert!(valid_options(&[]));

@@ -9,6 +9,7 @@ use super::{
 use serde_json::json;
 use std::ffi::OsString;
 
+/// Parses `words` as [`OsString`] CLI arguments through [`parse_options`].
 fn parse(words: &[&str]) -> Option<Action> {
     let args = words
         .iter()

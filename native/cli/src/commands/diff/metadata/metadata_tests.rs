@@ -5,6 +5,7 @@
 use super::prettify;
 use crate::commands::ids::Id;
 
+/// Verifies that [`prettify`] converts camelCase field names into title-case labels.
 #[test]
 fn prettifies_field_names() {
     assert_eq!(prettify("packageName"), "Package Name");

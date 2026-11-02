@@ -4,7 +4,7 @@
 
 use super::Chalk;
 
-/// `chalk.red(...)` with level 1 in chalk 4.1.2.
+/// Verifies `chalk.red(...)` and single-style wrapping with level 1 in `chalk` 4.1.2.
 #[test]
 fn wraps_like_chalk() {
     let chalk = Chalk::new(true);

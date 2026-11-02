@@ -6,6 +6,7 @@ use super::validate;
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;
 
+/// Builds a synthetic `import` / `fetch` receipt JSON payload wrapping `details`.
 fn receipt(details: &serde_json::Value) -> serde_json::Value {
     json!({ "token": "t", "owner": "rust", "importedIds": ["s/a@0.0.1"], "progress": [], "importDetails": [details] })
 }

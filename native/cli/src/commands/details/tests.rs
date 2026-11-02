@@ -5,6 +5,7 @@
 use super::{Chalk, render_details, valid_args};
 use std::{ffi::OsString, fs};
 
+/// Verifies that [`valid_args`] accepts empty and `--no-color` invocations of `bit details`.
 #[test]
 fn validates_empty_details_arguments() {
     assert!(valid_args(&[OsString::from("details")]));

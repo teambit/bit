@@ -5,6 +5,7 @@
 use super::{Subcommand, parse_subcommand};
 use std::ffi::OsString;
 
+/// Converts string slices into owned [`OsString`] CLI arguments for `local-only` tests.
 fn args(items: &[&str]) -> Vec<OsString> {
     items
         .iter()

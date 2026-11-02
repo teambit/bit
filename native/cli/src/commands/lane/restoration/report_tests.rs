@@ -6,6 +6,7 @@ use super::{merge, project};
 use crate::commands::color::Chalk;
 use serde_json::json;
 
+/// Verifies that [`merge`] concatenates only changed and added components from the restored partition.
 #[test]
 fn restored_partition_only_concatenates_changed_and_added_components() {
     let mut first = json!({"components":[{"id":"scope/existing@new"}],"addedComponents":[],

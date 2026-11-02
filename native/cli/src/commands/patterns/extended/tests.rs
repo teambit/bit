@@ -2,6 +2,7 @@
 //!
 //! Verifies character classes, `+(...)` / `!(...)` extglobs, and numeric `{start..end}` braces.
 
+/// Splits `pattern` and returns the matching subset of `ids`.
 fn matching<'a>(ids: &[&'a str], pattern: &str) -> Vec<&'a str> {
     super::matching(ids, &crate::commands::patterns::split(pattern)).unwrap()
 }

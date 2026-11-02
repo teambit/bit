@@ -7,6 +7,7 @@ use crate::commands::doctor::catalog::DIAGNOSES;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
 use std::{fs, io::Write, path::Path};
+/// Writes a zlib-compressed `Component` object with `hash` and JSON `value` into `scope/objects`.
 fn write_object(scope: &Path, hash: &str, value: &Value) {
     let body = serde_json::to_vec(value).unwrap();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

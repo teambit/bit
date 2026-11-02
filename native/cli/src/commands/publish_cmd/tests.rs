@@ -8,6 +8,7 @@ use super::{
 use bit_install::workspace::Bitmap;
 use std::fs;
 
+/// Verifies `bit publish` option parsing, empty workspace detection, and unexported ID collection.
 #[test]
 fn parses_publish_options_and_detects_empty_workspace() {
     assert_eq!(parse_options(&[]), None);

@@ -16,6 +16,7 @@ use crate::commands::color::Chalk;
 use serde_json::json;
 use std::fs;
 
+/// Verifies `bit aspect` subcommand parsing across `list-core`, `list`, `get`, `set`, `unset`, and `update`.
 #[test]
 fn parses_aspect_subcommands() {
     assert_eq!(parse_subcommand(&["list-core"]), Some(Subcommand::ListCore { json: false }));

@@ -7,6 +7,7 @@ use std::{
     process::Command,
 };
 
+/// Verifies that filesystem symlink resolution matches `Node.js` `realpathSync` without expanding missing names.
 #[test]
 fn filesystem_resolution_matches_node_without_expanding_ordinary_names() {
     let directory = tempfile::tempdir().unwrap();

@@ -6,6 +6,7 @@ use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit new` positional template/workspace parsing and supported boolean flags.
 #[test]
 fn parses_new_arguments_and_options() {
     assert_eq!(

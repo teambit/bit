@@ -6,6 +6,7 @@ use super::{Options, parse_options, validate_compile_selectors};
 use std::fs;
 use tempfile::tempdir;
 
+/// Verifies `bit compile` CLI option parsing across component patterns and boolean flags.
 #[test]
 fn parses_compile_options() {
     assert_eq!(
