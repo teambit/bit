@@ -36,7 +36,7 @@ pub(super) struct Options {
     pub include_deps: bool,
     pub names: Vec<String>,
 }
-
+/// Evaluated summary message, terminal table/cycles text, and `--json` payload for a single insight.
 struct EvaluatedInsight {
     message: String,
     rendered_data: String,

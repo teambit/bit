@@ -27,7 +27,7 @@ pub const COMMAND: Command = Command { name: "globals", aliases: &[], run };
 /// Configuration key overriding the default capsules root base directory.
 const CAPSULES_KEY: &str = "capsules_root_base_dir";
 
-/// Entry point for `bit globals`.
+/// Entry point for `bit globals` ([`COMMAND`]).
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(json) = parse_json_flag(args) else {
         return Ok(Outcome::Declined("arguments outside the native `globals` grammar".to_owned()));

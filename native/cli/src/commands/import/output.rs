@@ -112,6 +112,7 @@ pub(super) fn validate_lane_groups(prepared: &Value, options: &Options) -> io::R
     Ok(())
 }
 
+/// Returns whether the inbound lane group `count` is valid for `main` fetch and `selected` lane count.
 #[inline]
 fn valid_group_count(count: usize, main: bool, selected: usize) -> bool {
     if main { (1..=33).contains(&count) } else { (1..=32).contains(&count) && count == selected }

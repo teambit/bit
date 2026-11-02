@@ -55,6 +55,7 @@ pub(super) fn untracked(receipt: &Value, format: &Formatter) -> String {
     format!("{} {}\n{hint}", format.warn_symbol(), format.chalk.yellow(&ids.join(", ")))
 }
 
+/// Formats the Ripple CI cloud build tracking URLs section from `receipt`.
 pub(super) fn cloud(receipt: &Value, chalk: Chalk) -> String {
     let mut urls = ids(receipt, "rippleJobUrls");
     if urls.is_empty() {

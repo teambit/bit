@@ -115,6 +115,7 @@ fn matched(list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     Ok(ids)
 }
 
+/// Normalizes a remote list `component` entry into a `<base>@<version>` component ID string.
 #[inline]
 fn component_id(component: &Value) -> io::Result<String> {
     let base = component_base_id(component)?;

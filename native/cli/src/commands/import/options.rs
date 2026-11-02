@@ -36,7 +36,7 @@ pub struct WriteOptions {
     pub dependencies: DependencyOptions,
     pub adoption: AdoptionOptions,
 }
-
+/// Terminal output formatting flags (`--json`, `--verbose`) for `bit import` and `bit fetch`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct OutputOptions {
     pub json: bool,

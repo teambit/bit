@@ -83,6 +83,7 @@ pub(super) fn is_missing_host(cwd: &Path) -> bool {
             })
 }
 
+/// Parses CLI arguments `args` into [`Options`] when they fit the native `bit format` grammar.
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();
     let mut iter = args.iter().copied();

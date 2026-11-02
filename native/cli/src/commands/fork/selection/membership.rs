@@ -72,6 +72,7 @@ fn row_raw_id(row: &Value) -> Option<&str> {
         })
 }
 
+/// Returns `true` when `version` is a non-empty version string other than `"latest"` or `"head"`.
 #[inline]
 fn is_concrete_version(version: &str) -> bool {
     !version.is_empty()

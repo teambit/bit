@@ -67,6 +67,7 @@ fn entry(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
         copy_file(src, dst, overwrite, destination.is_some())
     }
 }
+/// Recursively copies directory `src` into `dst` and preserves permissions when newly created.
 fn directory(src: &Path, dst: &Path, overwrite: bool, existed: bool) -> io::Result<()> {
     fs::create_dir_all(dst).map_err(|error| failure(error, "mkdir", dst))?;
     let mut entries = fs::read_dir(src)

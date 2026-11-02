@@ -62,6 +62,7 @@ fn remove_leaf(path: &Path) -> io::Result<()> {
     }
 }
 
+/// Ensures `path` exists as an empty directory, removing any existing files, subdirectories, or symlinks.
 #[inline]
 fn empty(path: &Path) -> io::Result<()> {
     if path.as_os_str().is_empty() {

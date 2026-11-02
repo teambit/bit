@@ -44,6 +44,7 @@ pub(super) fn prepare_into_with(
     engine.request(&request)
 }
 
+/// Runs local preflight eligibility checks for `options` in `root` before starting transport or providers.
 pub(super) fn local_preflight(root: &Path, options: &Options) -> io::Result<Preflight> {
     if options.output.json && options.ids.is_empty() {
         return Err(io::Error::other("released no-ID JSON import argument failure"));

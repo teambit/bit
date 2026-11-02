@@ -74,7 +74,7 @@ fn clean_opt(value: Option<&str>) -> Option<String> {
         .filter(|text| !text.is_empty())
         .map(str::to_owned)
 }
-/// Applies `--env` configuration overrides onto `plan` via the `forkEnvironment` host callback.
+/// Applies `--env` configuration overrides onto [`Plan`] `plan` via the `forkEnvironment` host callback.
 #[inline]
 fn environment(
     root: &Path,

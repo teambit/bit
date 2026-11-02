@@ -83,6 +83,7 @@ fn identical(_: &fs::Metadata, _: &fs::Metadata) -> bool {
     false
 }
 
+/// Verifies that `source` (`metadata`) and `target` (`existing`) are neither identical nor mismatched directory/non-directory types.
 #[inline]
 fn entry_types(
     source: &Path,

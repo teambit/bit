@@ -71,7 +71,7 @@ pub(crate) fn insight_graph(root: &Path) -> Result<(CompGraph, Vec<String>), Fai
         .collect();
     Ok((build_full_graph(&scope_dir, &ws), seeders))
 }
-/// Returns `true` when any active workspace component imports an unimported npm Bit package.
+/// Returns `true` when any active [`WorkspaceComponent`] in `ws` imports an unimported npm Bit package.
 fn has_unimported_npm_bit_dep(root: &Path, scope_dir: &Path, ws: &Workspace) -> bool {
     for (_, comp) in ws.active() {
         for rel_file in &comp.files {

@@ -83,6 +83,7 @@ fn qualify_scope_part(part: &str, scope: &str) -> Option<String> {
         Some(format!("{prefix}{scope}/{body}"))
     }
 }
+/// Lists all component identities in remote `scope` via `commandInboundList` on [`Engine`].
 fn list(root: &Path, scope: &str) -> io::Result<Vec<String>> {
     let cli = NodeCli::find()?;
     let response: Value=Engine::new()?.request(&json!({"kind":"commandInboundList","root":root,"globalConfigDir":cache_root().join("config"),"nodeExecutable":cli.node,"bitDir":cli.bit_dir,"bitVersion":cli.version,"patterns":[format!("{scope}/**")],"laneOnly":false,"forkOrder":true}))?;

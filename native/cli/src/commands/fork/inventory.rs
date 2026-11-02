@@ -39,7 +39,7 @@ pub(super) fn selected<'a>(inventory: &'a Value, source: &str) -> Option<&'a Val
         .find(|row| matches_source_row(row, bare, explicit_ver))
 }
 
-/// Returns `true` when `row` matches the bare component identity `bare` and optional `explicit_ver`.
+/// Returns `true` when `row` matches the bare component identity `bare` and optional `explicit_ver` for [`selected`].
 #[inline]
 fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bool {
     let bare = bare.trim();

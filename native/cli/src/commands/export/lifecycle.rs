@@ -90,6 +90,7 @@ impl Lifecycle {
         self.host.as_ref().map_or_else(String::new, |host| host.take_stdout())
     }
 
+    /// Returns `true` when package linking runs natively without delegating to a `Node.js` [`Host`].
     #[inline]
     pub(super) fn native_packages(&self) -> bool {
         self.host.is_none()

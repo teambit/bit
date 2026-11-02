@@ -47,7 +47,7 @@ impl<'a> Collector<'a> {
             verbose: false,
         }
     }
-    /// Marks all reachable bare-scope objects and returns the sorted list of unreachable hashes.
+    /// Marks all reachable bare-scope [`Object`] hashes and returns the sorted list of unreachable hashes.
     pub(super) fn plan(&mut self) -> io::Result<Vec<String>> {
         self.local_components()?;
         self.logs.push(format!(

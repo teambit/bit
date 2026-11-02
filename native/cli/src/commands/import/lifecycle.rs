@@ -64,6 +64,7 @@ impl Lifecycle {
     pub(super) fn own_cache(&mut self) {
         self.cache_owned = true;
     }
+    /// Drains buffered stdout from the optional [`ProjectedLinker`], suppressing it when `--json` is set.
     #[inline]
     pub(super) fn take_stdout(&mut self) -> String {
         let stdout = self.linker.as_mut().map_or_else(String::new, ProjectedLinker::take_stdout);

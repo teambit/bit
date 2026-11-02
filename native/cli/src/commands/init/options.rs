@@ -1,6 +1,6 @@
 //! `InitCmd` flags, with optional values for `--bare` and `--agent`.
 //!
-//! Defines [`Options`], [`Defaults`], and [`Flags`] and flag parsing from [`OsString`] CLI arguments.
+//! Defines [`Options`], [`Defaults`], [`Flags`], and [`Resets`] and flag parsing ([`parse`]) from [`OsString`] CLI arguments.
 use std::ffi::OsString;
 
 /// Parsed CLI options for `bit init`.

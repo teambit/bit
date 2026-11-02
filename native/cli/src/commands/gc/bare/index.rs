@@ -68,6 +68,7 @@ fn normalized_scope(value: &Value) -> Option<Value> {
     Some(raw.clone())
 }
 
+/// Writes `bytes` to `scope/index.json` when a rebuilt index payload is present.
 #[inline]
 pub(super) fn write(scope: &Path, bytes: Option<&[u8]>) -> io::Result<()> {
     if let Some(bytes) = bytes {

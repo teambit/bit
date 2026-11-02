@@ -5,7 +5,7 @@ use windows_sys::Win32::System::Console::{CTRL_C_EVENT, SetConsoleCtrlHandler};
 /// Placeholder state token for the Windows console control handler registration.
 pub(super) type Previous = ();
 
-/// Windows console control callback that intercepts [`CTRL_C_EVENT`] and prints the export warning.
+/// Windows console control callback installed by [`install`] that intercepts [`CTRL_C_EVENT`] and prints the export warning.
 unsafe extern "system" fn interrupt(kind: u32) -> i32 {
     if kind != CTRL_C_EVENT {
         return 0;

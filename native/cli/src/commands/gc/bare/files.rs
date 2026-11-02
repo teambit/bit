@@ -78,6 +78,7 @@ fn check_parents(source: &Path, target: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Returns `Ok(Some(metadata))` when `path` exists, or `Ok(None)` on `NotFound`.
 #[inline]
 fn metadata_if_present(path: &Path, follow: bool) -> io::Result<Option<fs::Metadata>> {
     let result = if follow { fs::metadata(path) } else { fs::symlink_metadata(path) };

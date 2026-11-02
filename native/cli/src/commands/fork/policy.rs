@@ -82,6 +82,7 @@ fn insert_policy_entry(
         .insert(id.into(), Value::String(version.to_owned()));
     Ok(())
 }
+/// Collects deduplicated dependency policy entries from forked component `facts`.
 #[inline]
 fn dependencies(
     facts: &[Value],

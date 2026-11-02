@@ -88,6 +88,7 @@ fn require_matches(options: &Options, local: &[String], remote: &[String]) -> io
         format!(r#"no components found matching pattern "{}""#, options.source)
     }))
 }
+/// Filters out candidate `ids` whose `<scope>/<name>` target already exists in the workspace `pool`.
 fn without_existing_targets(ids: Vec<String>, scope: &str, pool: &[Value]) -> Vec<String> {
     ids.into_iter()
         .filter(|id| {

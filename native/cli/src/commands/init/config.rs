@@ -72,6 +72,7 @@ pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {
     }
 }
 
+/// Injects the `teambit.workspace/workspace-config-files` aspect block into `bytes` when requested by `options`.
 #[inline]
 pub(super) fn workspace_files(bytes: Vec<u8>, options: &Options) -> io::Result<Vec<u8>> {
     if !uses_workspace_config_files(options) {

@@ -60,7 +60,7 @@ fn object_name(bucket: &str, entry: &fs::DirEntry) -> io::Result<Option<String>>
     }
     Ok(Some(identity))
 }
-/// Reads, decompresses, and validates a single bare-scope object `identity` from `directory`.
+/// Reads, decompresses, and validates a single bare-scope [`Object`] `identity` from `directory`.
 fn read_one(directory: &Path, identity: &str) -> io::Result<Object> {
     let (kind, mut value) = bit_object_import::read_object_directory(directory, identity)?
         .ok_or_else(|| unsupported("object disappeared during inventory"))?;

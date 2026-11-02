@@ -93,6 +93,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
+/// Builds old-to-new package and component identity replacement pairs from [`Results`].
 #[inline]
 fn replacements(root: &Path, results: &Results) -> io::Result<Vec<(String, String)>> {
     let state = inventory::read(root)?;

@@ -120,6 +120,7 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     }
 }
 
+/// Emits a user-facing `bit lane merge` validation error or declines when outside the native grammar.
 #[inline]
 fn fallback_lane_merge_error(args: &[OsString], grammar: &[&str]) -> io::Result<Outcome> {
     let Some(err_msg) = options::validate_error(grammar) else {

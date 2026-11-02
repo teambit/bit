@@ -1,7 +1,7 @@
 //! The component file inventory of every status-like command: Bit's ignore lists and the workspace's patterns compiled with
 //! `bit-ignore`, and the scan/finish requests of the workspace engine.
 //!
-//! Compiles [`Ignore`] rules ([`Rule`], [`ALWAYS_IGNORE`], [`IGNORE_ALL`], [`DEFAULT_IGNORES`]) and normalizes nested patterns via [`normalize`] for [`Engine`].
+//! Compiles [`Ignore`] rules ([`Inventory`], [`Options`], [`Rule`], [`ALWAYS_IGNORE`], [`IGNORE_ALL`], [`DEFAULT_IGNORES`]) and normalizes nested patterns via [`normalize`] for [`Engine`].
 
 pub use rebase::normalize;
 

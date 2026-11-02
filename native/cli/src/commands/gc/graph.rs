@@ -13,7 +13,7 @@ use std::{
     path::Path,
 };
 
-/// Parsed component scope, name, and optional version from `.bitmap`.
+/// Parsed component `scope`, `name`, and optional `version` from `.bitmap` for [`GcGraph`].
 #[derive(Debug, Clone)]
 pub(super) struct CompIdSpec {
     pub scope: Option<String>,

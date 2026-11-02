@@ -78,6 +78,7 @@ impl Models {
     }
 }
 
+/// Normalizes legacy boxed component names and validates `Symlink` targets in `inventory`.
 pub(in crate::commands::gc) fn normalize(inventory: &mut ScopeInventory) -> Result<(), String> {
     for object in &mut inventory.objects {
         if matches!(object.kind.as_str(), "Component" | "Symlink") {

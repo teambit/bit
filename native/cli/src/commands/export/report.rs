@@ -77,7 +77,7 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
     })
 }
 
-/// Extracts the target `scopes` and `scopeObjectCounts` arrays from `value` into [`Transfers`].
+/// Extracts the target `scopes` and `scopeObjectCounts` arrays from `value` into [`Transfers`] for [`prepared`].
 fn parse_transfers(value: &Value) -> io::Result<Transfers> {
     let scopes = array(value.get("scopes"), "scopes")?
         .iter()

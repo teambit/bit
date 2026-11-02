@@ -52,6 +52,7 @@ struct ParsedId<'a> {
     version: Option<&'a str>,
 }
 
+/// Shortens component IDs in `cycle` by factoring out any common scope and version.
 fn shorten_names(cycle: &[String]) -> Shortened {
     let unique = &cycle[..cycle.len().saturating_sub(1)];
     let parsed = unique

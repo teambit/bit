@@ -46,7 +46,7 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     Ok(formatted)
 }
 
-/// Writes `bytes` to `child`'s stdin and flushes, killing the child process if writing fails.
+/// Writes `bytes` to `child`'s stdin and flushes for [`format`], killing the child process if writing fails.
 #[inline]
 fn write_formatter_input(child: &mut std::process::Child, bytes: &[u8]) -> io::Result<()> {
     let mut stdin = child.stdin.take().ok_or_else(|| invalid("formatter tool stdin"))?;

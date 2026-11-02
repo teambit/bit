@@ -88,6 +88,7 @@ pub(super) fn local_name(cwd: &Path) -> io::Result<String> {
     ))
 }
 
+/// Copies non-null preserved metadata fields from `current` into `scope`.
 #[inline]
 fn copy_current(scope: &mut Value, current: &Value) {
     for key in

@@ -48,7 +48,7 @@ pub(super) struct Options {
     pub list: bool,
     pub json: bool,
 }
-
+/// Pre-validated `bit internalize` operation (`--list` read or `.bitmap` mutation).
 enum Prepared {
     List {
         ids: Vec<String>,

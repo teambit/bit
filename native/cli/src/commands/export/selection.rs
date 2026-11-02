@@ -74,7 +74,7 @@ fn is_non_main_lane(lane: Option<&Value>) -> bool {
     !name.is_empty() && name.rsplit('/').next().map(str::trim) != Some("main")
 }
 
-/// Extracts non-empty candidate component ID strings from a `commandOutboundCandidates` response.
+/// Extracts non-empty candidate component ID strings from a `commandOutboundCandidates` response for [`ids`].
 #[inline]
 fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {
     let rows = candidates["ids"]

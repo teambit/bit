@@ -1,6 +1,6 @@
 //! Recovery invokes the retained native importer before updating remove configuration.
 //!
-//! [`RecoverOptions`] and [`recover_import`] control whether workspace configuration files are updated after recovery.
+//! [`RecoverOptions`], [`recover_import`], [`recover_probe`], and [`recover_scope_import`] coordinate recovery imports and workspace configuration updates.
 use super::{Planned, options, render};
 use crate::commands::{color::Chalk, installation, workspace_command};
 use bit_install::output::Output;

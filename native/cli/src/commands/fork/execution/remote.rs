@@ -89,7 +89,7 @@ fn copy_sources(
     Ok(())
 }
 
-/// Strips a trailing `@<version>` suffix from `id` when a non-empty prefix precedes `@`.
+/// Strips a trailing `@<version>` suffix from `id` for [`copy_sources`] when a non-empty prefix precedes `@`.
 #[inline]
 fn bare_id(id: &str) -> &str {
     let trimmed = id.trim();

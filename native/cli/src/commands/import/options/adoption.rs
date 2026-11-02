@@ -81,6 +81,7 @@ fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
     Some(())
 }
 impl AdoptionOptions {
+    /// Parses [`AdoptionOptions`] from CLI `flags` and optional `write_deps`.
     #[inline]
     pub(super) fn parse(flags: &[&str], write_deps: Option<String>) -> Self {
         Self {

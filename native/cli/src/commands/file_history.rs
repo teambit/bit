@@ -86,7 +86,7 @@ pub(super) fn classify_target(root: &Path, input: &str) -> io::Result<Target> {
     })
 }
 
-/// Matches `requested` against `entry.root_dir` and returns `(entry, relative_path, dir_len)`.
+/// Matches `requested` against `entry.root_dir` and returns `(entry, relative_path, dir_len)` for [`classify_target`].
 #[inline]
 fn match_entry_file<'a>(
     entry: &'a bitmap::Entry,

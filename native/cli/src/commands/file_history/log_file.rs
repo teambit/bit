@@ -51,7 +51,7 @@ fn parse_args<'a>(args: &[&'a str]) -> Option<(&'a str, bool)> {
     Some((path?, one_line))
 }
 
-/// Consumes a single trailing file path token after `--` for `bit log-file`.
+/// Consumes a single trailing file path token after `--` for `bit log-file` ([`parse_args`]).
 #[inline]
 fn consume_trailing_path<'a>(
     iter: impl Iterator<Item = &'a str>,

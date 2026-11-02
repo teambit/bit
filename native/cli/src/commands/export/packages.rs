@@ -70,7 +70,7 @@ pub(super) fn validate(prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Returns the trimmed `"cloudDomain"` string from `value`, or `"bit.cloud"` when absent.
+/// Returns the trimmed `"cloudDomain"` string from `value` for [`link`] and [`validate`], or `"bit.cloud"` when absent.
 #[inline]
 fn cloud_domain(value: &Value) -> &str {
     value["cloudDomain"]

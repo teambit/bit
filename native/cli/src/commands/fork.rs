@@ -72,6 +72,7 @@ fn handle_outside_workspace(
         workspace_command::execute_failure_scope(cwd, args, "fork", false, "", err)
     }
 }
+/// Prepares the [`ProjectedLinker`] and runs `bit fork` or `bit scope fork` inside `root`.
 fn execute(
     args: &[OsString],
     root: &std::path::Path,

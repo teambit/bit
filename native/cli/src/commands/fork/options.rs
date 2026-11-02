@@ -91,6 +91,7 @@ fn parse_flag(
     }
     Some(())
 }
+/// Parses local `bit fork` flags (`--path`, `--scope`, `--env`, `--refactor`, `--preserve`, etc.) onto [`Options`].
 fn parse_local_flag(
     argument: &str,
     arguments: &mut std::slice::Iter<'_, &str>,

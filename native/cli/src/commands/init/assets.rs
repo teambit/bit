@@ -89,6 +89,7 @@ fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)
     };
     Ok(Some((PathBuf::from(name), content)))
 }
+/// Prepares the `.mcp.json` configuration file in `root` with the `bit` MCP server entry.
 #[inline]
 fn mcp(root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
     let path = root.join(".mcp.json");

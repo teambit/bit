@@ -72,6 +72,7 @@ fn dependencies_depth(options: &Options) -> Option<String> {
         .then(|| format!(r#""--dependencies-depth" must be a positive integer, got "{raw}""#))
 }
 
+/// Returns whether `--dependencies` or `--dependencies-head` is enabled in `options`.
 #[inline]
 const fn has_dependency_import_flag(options: &Options) -> bool {
     options.write.dependencies.import_dependencies

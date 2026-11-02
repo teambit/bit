@@ -91,6 +91,7 @@ pub(super) fn publish(inputs: &[Value], outputs: &[Value]) -> io::Result<Option<
     }
     Ok(None)
 }
+/// Extracts the trimmed non-empty `"absolutePath"` [`Path`] from a formatter `input` row.
 #[inline]
 fn path(input: &Value) -> io::Result<&Path> {
     input["absolutePath"]

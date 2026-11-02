@@ -1,6 +1,6 @@
 //! Retain provisioning inputs and execute the same ordered filesystem ownership as init.
 //!
-//! Defines [`Action`], [`Plan`], and [`prepare`] built from [`Options`] and [`scope`] helpers.
+//! Defines [`Action`], [`Plan`], and [`prepare`] ([`plan_scope`], [`scope_name`]) built from [`Options`] and [`scope`] helpers.
 use super::{options::Options, scope};
 use crate::commands::workspace_command::{self, NodeCli};
 use std::{

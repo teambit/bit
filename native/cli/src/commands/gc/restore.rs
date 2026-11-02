@@ -46,7 +46,7 @@ impl From<io::Error> for Error {
     }
 }
 
-/// Semantic CI errors carry released JavaScript stacks; decline those layouts before claiming backups.
+/// Semantic CI errors carry released `JavaScript` stacks; decline those layouts before claiming backups.
 pub(super) fn preflight(scope: &Path) -> io::Result<()> {
     if cfg!(windows) {
         return Err(io::Error::other(

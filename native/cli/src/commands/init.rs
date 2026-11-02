@@ -127,6 +127,7 @@ fn report(
     message
 }
 
+/// Populates unset `default_scope` and `default_directory` in `options` from environment or global config.
 #[inline]
 fn defaults(options: &mut options::Options) -> io::Result<()> {
     let global =

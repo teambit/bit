@@ -80,6 +80,7 @@ impl CompGraph {
         }
     }
 
+    /// Retains only nodes and [`GraphEdge`]s reachable from `seeders`.
     #[inline]
     pub(super) fn filter_to_seeders(&mut self, seeders: &[String]) {
         let reachable = self.reachable_from(seeders);

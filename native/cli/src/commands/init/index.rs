@@ -1,7 +1,7 @@
 //! `Repository.loadOptionallyCreateScopeIndex` after a repair removes its cached index.
 //! Its published type filter is `ModelComponent` + `Lane`; `Symlink` entries are not rebuilt.
 //!
-//! [`prepare`] appends `index.json` removal and rebuild [`Action`] entries to [`Plan`] for [`Options`].
+//! [`prepare`] appends `index.json` removal and rebuild [`Action`] entries ([`build`], [`hashes`], [`component`]) to [`Plan`] for [`Options`].
 use super::{
     options::Options,
     plan::{Action, Plan},

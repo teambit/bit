@@ -100,6 +100,7 @@ fn valid_dependencies(
         || (ids.is_empty() && enabled && options.raw_depth.is_none())
 }
 
+/// Validates `--merge` and `--merge=<strategy>` combinations against `ids`, `explicit_objects`, and `override_existing`.
 #[inline]
 fn valid_merge_mode(
     merge: bool,
