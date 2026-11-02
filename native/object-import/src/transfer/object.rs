@@ -79,6 +79,7 @@ pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
     Ok(bytes)
 }
 
+/// Inflates and parses a compressed non-`Source` repository object for `hash` into its JSON value.
 pub(crate) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::Value> {
     parse_metadata(bytes, hash).map(|(value, _, _)| value)
 }

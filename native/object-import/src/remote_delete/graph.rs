@@ -5,6 +5,7 @@ use indexmap::{IndexMap, IndexSet};
 use serde_json::{Value, json};
 use std::{collections::VecDeque, io};
 
+/// Ordered map from `<scope>/<name>@<version>` dependency IDs to the set of dependent `<scope>/<name>@<version>` IDs.
 type Reverse = IndexMap<String, IndexSet<String>>;
 
 /// Computes transitive reverse dependents across all indexed versions for `found` components.

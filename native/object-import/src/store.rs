@@ -14,6 +14,7 @@ use std::{
     },
 };
 
+/// Monotonically increasing counter for unique temporary file suffixes in [`Store::write`].
 static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
 
 /// Concurrent loose-object store rooted at `directory` with optional `(uid, gid)` ownership preservation.

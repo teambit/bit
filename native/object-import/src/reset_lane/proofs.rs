@@ -36,6 +36,7 @@ fn regular(path: &Path) -> io::Result<Option<Vec<u8>>> {
     Ok(bytes)
 }
 
+/// Appends `(path, bytes)` to `proofs` or verifies that a previously recorded path is unchanged.
 fn retain(path: &Path, bytes: Option<&[u8]>, proofs: &mut ReadSet) -> io::Result<()> {
     if let Some((_, previous)) = proofs
         .iter()

@@ -60,6 +60,7 @@ fn pre(version: &mut Value, identifier: Option<&str>) -> io::Result<()> {
     version["prerelease"] = json!(parsed_parts(values));
     Ok(())
 }
+/// Increments the last numeric element of prerelease `parts` or appends `0` when none exists.
 fn increment_parts(parts: &[Value]) -> io::Result<Vec<Value>> {
     let mut values = Vec::with_capacity(parts.len() + 1);
     values.extend_from_slice(parts);

@@ -51,6 +51,7 @@ pub(crate) struct Prepared {
     pub(crate) archive_hash: String,
 }
 
+/// Validates and writes a `USTAR` tar archive containing `items` to `archive`, returning its [`Prepared`] summary.
 pub(crate) fn prepare(
     directory: &Path,
     archive: &Path,

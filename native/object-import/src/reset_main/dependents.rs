@@ -66,6 +66,7 @@ fn component_model(objects: &Path, row: &Value, same: bool) -> io::Result<Option
     outbound::read_object(objects, hash, "Component").map(Some)
 }
 
+/// Collects all tagged, orphaned, head, and local state `Version` hashes on `component`.
 fn references(component: &Value) -> io::Result<HashSet<&str>> {
     let versions =
         component["versions"].as_object().ok_or_else(|| invalid("reset dependent versions"))?;

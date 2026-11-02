@@ -89,6 +89,7 @@ fn index_component_hash(scope: &Path, id: &str) -> Option<[u8; 20]> {
         .and_then(|hash| merge_history::hash(hash.trim()).ok())
 }
 
+/// Extracts the `(scope, name)` tuple from an `index.json` component `row`.
 #[inline]
 fn index_row_parts(row: &Value) -> (&str, &str) {
     if let Some(id_str) = row["id"].as_str().map(str::trim) {

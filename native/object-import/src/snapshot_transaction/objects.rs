@@ -85,6 +85,7 @@ fn compress(inputs: Vec<(String, String, Vec<u8>)>, bytes: usize) -> io::Result<
         .collect()
 }
 
+/// Reads or serializes the raw uncompressed body bytes for `object` within `maximum` bytes.
 fn body(
     object: &wire::Object,
     pretty: bool,

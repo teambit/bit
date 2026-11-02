@@ -72,6 +72,7 @@ impl State {
         Ok(())
     }
 
+    /// Mints a deterministic 40-hex SHA-1 token derived from `self.revision` and `bytes`.
     #[inline]
     pub(super) fn token(&mut self, bytes: &[u8]) -> io::Result<String> {
         if bytes.len() > super::MAX_BYTES {

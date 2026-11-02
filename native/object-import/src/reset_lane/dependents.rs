@@ -88,6 +88,7 @@ fn references(
     Ok(refs)
 }
 
+/// Appends all tagged, orphaned, and head `Version` hashes on `model` for `identity` into `refs`.
 fn collect_model_references(
     model: &Value,
     identity: &str,

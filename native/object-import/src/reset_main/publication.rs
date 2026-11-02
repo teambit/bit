@@ -89,6 +89,7 @@ pub(crate) fn validate_file_id(file_id: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Returns `true` when every projected object, index, `.bitmap`, and control file in `fresh` matches `plan`.
 #[inline]
 fn plan_inputs_unchanged(fresh: &Plan, plan: &Plan) -> bool {
     fresh.object == plan.object

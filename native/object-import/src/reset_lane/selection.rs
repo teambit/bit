@@ -65,6 +65,7 @@ fn hashes(distance: &Value) -> io::Result<Vec<String>> {
         .collect()
 }
 
+/// Appends unexported hashes reachable from `repository.model["head"]` when `detachedHeads` are present.
 fn add_detached(repository: &Repository, local: &mut Vec<String>) -> io::Result<()> {
     if repository.model["detachedHeads"]["heads"].as_array().is_none_or(Vec::is_empty) {
         return Ok(());

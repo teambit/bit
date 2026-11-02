@@ -16,7 +16,7 @@ impl Drop for Pending {
         }
     }
 }
-/// Writes each entry's compressed bytes to its private spool path with rollback on failure.
+/// Writes each [`Entry`]'s compressed bytes to its private spool path with rollback on failure.
 pub(super) fn write(entries: &[Entry]) -> io::Result<Vec<PathBuf>> {
     let mut pending = Pending(Vec::with_capacity(entries.len()));
     for entry in entries {

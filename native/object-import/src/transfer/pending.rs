@@ -24,7 +24,7 @@ struct Owner {
     gid: u32,
 }
 
-/// Materializes all objects from a frozen transfer plan into `pendingDir` with optional ownership preservation.
+/// Materializes all objects from a frozen transfer plan in `state` into `pendingDir` with optional ownership preservation.
 pub(super) fn write(state: &State, input: &Value) -> io::Result<Value> {
     let request: Request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     crate::transfer::paths(&request.pending_dir, &request.pending_dir.join(".native-path-check"))?;

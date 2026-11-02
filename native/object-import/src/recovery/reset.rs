@@ -8,6 +8,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
+/// Allowed top-level property keys in a `historyResetComponentPlan` JSON request object.
 const FIELDS: &[&str] = &[
     "objectsDirectory",
     "versions",

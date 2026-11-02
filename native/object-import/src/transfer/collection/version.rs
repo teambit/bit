@@ -67,6 +67,7 @@ fn extract(value: &Value) -> io::Result<References> {
     })
 }
 
+/// Extracts builder artifact file SHA-1 digests from `value.extensions`.
 fn artifacts(value: &Value) -> io::Result<Vec<[u8; 20]>> {
     let Some(extensions) = value.get("extensions").and_then(Value::as_array) else {
         return Ok(Vec::new());

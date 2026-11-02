@@ -1,4 +1,4 @@
 //! Shared comment-preserving `JSONC` parser re-export ([`parse`], [`bit_workspace_config::parse_jsonc`]) for byte-oriented recovery reads.
 
-/// Parses `JSONC` bytes (allowing comments and trailing commas) into a [`serde_json::Value`] tree.
+/// Parses `JSONC` bytes (allowing comments and trailing commas) into a [`serde_json::Value`] tree (via [`bit_workspace_config::parse_jsonc`]).
 pub(crate) use bit_workspace_config::parse_jsonc as parse;

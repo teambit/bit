@@ -89,6 +89,7 @@ fn action_path(reader: &mut impl Read, total: &mut usize) -> io::Result<Option<P
     Ok(Some(path))
 }
 
+/// Executes a single validated workspace filesystem [`Action`].
 fn apply(action: &Action) -> io::Result<()> {
     match action.kind {
         0 => remove(&action.source),

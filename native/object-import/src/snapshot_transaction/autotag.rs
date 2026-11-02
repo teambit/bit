@@ -58,6 +58,7 @@ fn graph(components: &[Value]) -> io::Result<HashMap<String, Node>> {
     }
     Ok(graph)
 }
+/// Performs a depth-first traversal of reverse dependency `graph` starting from `key`.
 fn walk(
     key: &str,
     graph: &HashMap<String, Node>,

@@ -61,6 +61,7 @@ fn matches_identity(row: &Value, identities: &[String]) -> bool {
         })
 }
 
+/// Revalidates each [`Control`] file's preimage bytes and writes its updated postimage bytes.
 pub(crate) fn publish(controls: &[Control]) -> io::Result<()> {
     for control in controls {
         if fs::read(&control.path)? != control.before {

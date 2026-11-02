@@ -69,6 +69,7 @@ impl Repository {
             .ok_or_else(|| invalid("reset index components"))
     }
 
+    /// Returns the path to the scope `objects` directory under `self.root`.
     pub(super) fn objects(&self) -> PathBuf {
         crate::scope_path(&self.root).join("objects")
     }

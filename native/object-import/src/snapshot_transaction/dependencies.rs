@@ -64,6 +64,7 @@ fn normalize_component_id(id: &Value, version: String) -> io::Result<Value> {
     };
     Ok(normalized)
 }
+/// Computes aligned `teambit.dependencies/dependency-resolver` patch entries for `component`.
 fn resolver_rows(component: &Value, components: &[Value]) -> io::Result<Vec<Value>> {
     let mut output = Vec::new();
     for (index, dependency) in array(component, "resolver")?.iter().enumerate() {

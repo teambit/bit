@@ -62,6 +62,7 @@ fn matches_component_row(id: &Value, scope: &str, name: &str) -> bool {
     (row_scope == scope || row_scope.is_empty()) && row_name == name
 }
 
+/// Updates or removes `identity` in `lane["updateDependents"]` according to `selection`.
 fn project_hidden(lane: &mut Value, identity: &str, selection: &Selection) -> io::Result<()> {
     let rows =
         lane["updateDependents"].as_array_mut().ok_or_else(|| invalid("lane reset hidden rows"))?;

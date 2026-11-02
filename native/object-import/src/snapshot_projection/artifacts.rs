@@ -62,6 +62,7 @@ fn reference(reference: &Value) -> io::Result<Value> {
     }
     Ok(Value::Object(fields))
 }
+/// Replaces the first occurrence of property `name` on `value` with `replacement`.
 fn replace(value: &Value, name: &str, replacement: Value) -> io::Result<Value> {
     let fields = object(value)?;
     let mut replacement = Some(replacement);

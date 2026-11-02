@@ -61,6 +61,7 @@ pub struct Plan {
 }
 
 impl Plan {
+    /// Prepares a `main`-lane reset plan for `identity` at `root` without mutating workspace files.
     pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
         let (scope, name) = parse_identity(identity)?;
         let identity = format!("{scope}/{name}");

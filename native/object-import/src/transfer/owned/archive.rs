@@ -86,6 +86,7 @@ fn preflight(plan: &Plan, request: &wire::Archive, fetch: bool) -> io::Result<Ve
     Ok(headers)
 }
 
+/// Builds the `scope.json` and `index.json` wrapper payloads for a fetch-mode tar archive.
 fn wrappers(plan: &Plan, request: &wire::Archive) -> io::Result<(Vec<u8>, Vec<u8>)> {
     let scope = request.scope_name
         .as_deref()

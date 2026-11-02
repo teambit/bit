@@ -90,6 +90,7 @@ fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
         .collect()
 }
 
+/// Converts an ASCII hexadecimal digit `byte` into its 4-bit numeric value (`0..16`).
 #[inline]
 fn hex_digit(byte: u8) -> io::Result<u8> {
     match byte {

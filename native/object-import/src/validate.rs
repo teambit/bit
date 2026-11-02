@@ -49,6 +49,7 @@ pub(crate) fn validate(compressed: &[u8], expected: [u8; 20]) -> Outcome {
     }
 }
 
+/// Validates the `Source <hash> <size>\0` header prefix in `bytes` against `expected`, returning the body byte offset.
 fn header(bytes: &[u8], expected: &str) -> Result<usize, &'static str> {
     let end = bytes
         .iter()

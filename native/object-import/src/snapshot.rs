@@ -45,6 +45,7 @@ impl Owner {
         owner.map(|owner| (owner.uid, owner.gid))
     }
 }
+/// Serialized `BSS1` snapshot frame response carrying completion count and optional `data`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,

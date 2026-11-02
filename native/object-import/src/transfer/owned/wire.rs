@@ -73,6 +73,7 @@ pub(super) struct Options {
     pub(super) graceful_missing: bool,
 }
 
+/// Deserialized `Version` entry (`hash`, `locallyChanged`, optional `expected` [`References`]) in a `transferCollect` request.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Version {

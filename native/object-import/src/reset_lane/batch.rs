@@ -42,6 +42,7 @@ impl Batch {
         Self::prepare_with(root, head_only, None)
     }
 
+    /// Prepares a lane reset across explicit component `identities` at `root`.
     pub fn prepare_selected(
         root: &Path,
         identities: &[String],

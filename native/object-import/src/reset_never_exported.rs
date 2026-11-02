@@ -10,6 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Selected `(label, object_path, preimage_bytes)` tuple for an unscoped `.bitmap` entry on `bit reset --never-exported`.
 type SelectedRow = (String, PathBuf, Option<Vec<u8>>);
 
 /// Retained `.bitmap` and loose-object preimage plan for `bit reset --never-exported`.

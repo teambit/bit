@@ -36,6 +36,7 @@ pub(super) fn plan(plan: &Plan) -> io::Result<Value> {
         None => json!({"detached":detached,"tag":plan.tag}),
     })
 }
+/// Validates `hash`, `head`, `parent`, `version`, and non-conflicting `head_policy` flags on `plan`.
 fn validate(plan: &Plan) -> io::Result<()> {
     hash(&plan.hash)?;
     if let Some(head) = &plan.head {

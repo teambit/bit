@@ -42,6 +42,7 @@ impl Readset {
         result
     }
 
+    /// Records the preimage of the loose object at `hash` in `self.objects` without decoding it.
     pub(super) fn watch_hash(&mut self, hash: &str) -> io::Result<()> {
         let hash = hash.trim();
         validate_hash(hash)?;

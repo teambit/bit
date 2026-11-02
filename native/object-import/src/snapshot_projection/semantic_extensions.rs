@@ -78,6 +78,7 @@ pub(super) fn dependencies(value: &Value) -> io::Result<Value> {
     Ok(Value::Array(output))
 }
 
+/// Resolves the canonical extension identifier string (`extensionId`, `name`, or `legacyId`) from `row`.
 fn id(row: &Value) -> io::Result<String> {
     object(row)?;
     for key in ["extensionId", "name", "legacyId"] {

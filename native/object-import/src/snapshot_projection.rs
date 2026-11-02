@@ -87,6 +87,7 @@ fn lane_history_identity(fields: &Value) -> io::Result<String> {
     Ok(hexadecimal(&hasher.finalize()))
 }
 
+/// Projects and serializes `fields` of `kind` into canonical JSON bytes (`pretty` when `true`).
 pub fn serialize(kind: &str, fields: &Value, pretty: bool) -> io::Result<Vec<u8>> {
     stringify(&project(kind, fields)?, pretty)?.ok_or_else(|| invalid("missing serialization"))
 }

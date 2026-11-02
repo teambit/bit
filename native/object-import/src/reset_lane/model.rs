@@ -63,6 +63,7 @@ fn remove_versions(model: &mut Value, selection: &Selection) -> io::Result<()> {
     Ok(())
 }
 
+/// Removes `labels` from `model["state"]["versions"]` and drops `state` when empty.
 fn remove_pending_state(model: &mut Value, labels: &[String]) -> io::Result<()> {
     let Some(state) = model.get_mut("state") else { return Ok(()) };
     if let Some(versions) = state

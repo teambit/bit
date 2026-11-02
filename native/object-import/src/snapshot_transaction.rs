@@ -55,6 +55,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
     }
 }
 
+/// Computes the total compressed + inflated byte footprint of `objects`.
 #[inline]
 fn object_bytes(objects: &[objects::Prepared]) -> usize {
     objects

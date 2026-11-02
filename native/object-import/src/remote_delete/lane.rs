@@ -89,6 +89,7 @@ fn parse_lane_id(id: &str) -> io::Result<(&str, &str)> {
     Ok((lane_scope, name))
 }
 
+/// Returns `true` when every component on `lane` is already merged into `main` in `index`.
 fn fully_merged(index: &Value, readset: &mut Readset, lane: &Value) -> io::Result<bool> {
     let Some(rows) = lane["components"].as_array() else { return Err(invalid("lane components")) };
     for row in rows {

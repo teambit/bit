@@ -32,6 +32,7 @@ struct Plan {
     modified: Vec<String>,
     new: Vec<String>,
 }
+/// Deserialized `clientStatusPrepare` request (`root`, `home`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Prepare {

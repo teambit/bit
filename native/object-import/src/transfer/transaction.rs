@@ -37,6 +37,7 @@ pub(super) struct Transaction {
     phase: Phase,
 }
 
+/// Execution phase of a multi-scope export [`Transaction`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Phase {
     Push(usize),

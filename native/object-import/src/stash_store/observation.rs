@@ -28,6 +28,7 @@ impl Observation {
         }
         Ok(())
     }
+    /// Returns the `.bit/stash` directory path observed by `self`.
     #[inline]
     #[must_use]
     pub(super) fn directory(&self) -> &Path {

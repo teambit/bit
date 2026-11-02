@@ -55,6 +55,7 @@ struct BytesChange {
     after: Vec<u8>,
 }
 
+/// Preimage and postimage `.bitmap` bytes and projected component `version` string for a lane reset.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BitmapChange {
     before: Vec<u8>,

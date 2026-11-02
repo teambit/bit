@@ -42,6 +42,7 @@ impl Repository {
         Self::load_inner(root, bitmap, scope, name, false)
     }
 
+    /// Loads `Component` and `Lane` objects, remote/baseline heads, and read proofs for `(scope, name)`.
     fn load_inner(
         root: &Path,
         bitmap: &BitmapState,

@@ -1,4 +1,4 @@
-//! Inspect Windows link identity ([`single`], [`is_single_regular_handle`]) without following reparse points before copying.
+//! Inspect Windows link identity ([`single`], [`is_single_regular_handle`], [`OPEN_REPARSE_POINT`]) without following reparse points before copying.
 
 use std::{fs::OpenOptions, io, os::windows::fs::OpenOptionsExt, path::Path};
 

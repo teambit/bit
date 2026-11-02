@@ -92,6 +92,7 @@ fn request(reader: &mut impl Read) -> io::Result<Vec<File>> {
     Ok(files)
 }
 
+/// Reads and validates a length-prefixed absolute workspace file path from `reader`.
 fn filename(reader: &mut impl Read) -> io::Result<PathBuf> {
     let length = protocol::word(reader)? as usize;
     if !(1..=MAX_PATH).contains(&length) {

@@ -1,4 +1,4 @@
-//! Canonical field ordering and projection ([`component`]) for `Component`, `Lane`, and `VersionHistory` [`Value`] objects.
+//! Canonical field ordering and projection ([`component`], [`lane`], [`detached`]) for `Component`, `Lane`, and `VersionHistory` [`Value`] objects.
 
 use std::io;
 

@@ -38,6 +38,7 @@ pub(super) fn error(message: impl Into<String>) -> io::Error {
     })
 }
 
+/// Attaches cold `VersionHistory` population `changes` and `proofs` to a [`CanonicalError`].
 pub(super) fn with_population(
     error: io::Error,
     objects: &Path,

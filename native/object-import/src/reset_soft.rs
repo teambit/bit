@@ -51,6 +51,7 @@ impl Plan {
         Self::prepare_with(root, None, Some(selected))
     }
 
+    /// Loads `.bitmap` at `root` and selects soft-tagged entries matching `pattern` or `selected`.
     fn prepare_with(
         root: &Path,
         pattern: Option<&str>,

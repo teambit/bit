@@ -53,6 +53,7 @@ impl Kind {
         }
     }
 }
+/// Workspace file `path` and expected SHA-1 `hash` for a `Source` object in a snapshot commit.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Workspace {

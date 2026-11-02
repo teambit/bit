@@ -37,6 +37,7 @@ pub(super) struct Workspace {
     pub(super) normalization: Normalization,
 }
 
+/// Existing loose repository object reference (`objectsDirectory` and `hash`) for a `Source` object.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Repository {

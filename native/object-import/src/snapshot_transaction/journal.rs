@@ -42,6 +42,7 @@ const REPOSITORY: &[&str] = &[
     "postPersist",
 ];
 
+/// Session-scoped registry of active snap/tag or repository persistence [`Journal`] records.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     journals: HashMap<String, Journal>,

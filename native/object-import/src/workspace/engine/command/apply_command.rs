@@ -79,6 +79,7 @@ fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     }
     Ok(())
 }
+/// Removes stale files and writes merged/materialized component source files for `plan` under `root`.
 pub(super) fn publish_sources(plan: &mut planning::Planned, root: &Path) -> io::Result<()> {
     if let Some(merge) = &plan.merge {
         merge.remove(root)?;

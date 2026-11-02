@@ -7,7 +7,7 @@ use super::{super::Target, document, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Returns active bitmap targets available on the current workspace lane.
+/// Returns active `.bitmap` [`Target`] entries available on the current workspace lane.
 pub(in crate::workspace::engine) fn targets(
     root: &Path,
     config: &Value,

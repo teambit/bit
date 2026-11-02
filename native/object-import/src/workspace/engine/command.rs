@@ -65,6 +65,7 @@ struct Histories {
     checkout: Option<Box<lane_history::Retained>>,
     inspection: Option<Box<lane_history::inspection::Retained>>,
 }
+/// Active workspace command transaction record holding the request, context, repository, proofs, token, and planned mutations.
 struct Record {
     request: Prepare,
     context: Value,

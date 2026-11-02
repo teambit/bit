@@ -58,6 +58,7 @@ fn ancestors(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Verifies that `metadata` has a single hard link (`nlink() == 1`) on Unix platforms.
 #[cfg(unix)]
 fn links(_path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     use std::os::unix::fs::MetadataExt;

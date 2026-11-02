@@ -60,6 +60,7 @@ fn copy(block: &mut [u8; 512], offset: usize, bytes: &[u8]) {
     block[offset..offset + bytes.len()].copy_from_slice(bytes);
 }
 
+/// Encodes `value` as an ASCII octal field of `digits` characters at `offset` in `block`.
 #[inline]
 fn octal(block: &mut [u8; 512], offset: usize, digits: usize, value: u64) -> io::Result<()> {
     if (value >> (digits * 3)) != 0 {

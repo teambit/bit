@@ -32,6 +32,7 @@ struct Tag {
     version_to_tag: String,
     prerelease_id: Option<String>,
 }
+/// Global version-bump parameters (`releaseType`, `autoTagReleaseType`, `incrementBy`, `soft`, `exactVersion`) for `snapshotFutureVersions`.
 #[derive(Debug, Default, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Params {

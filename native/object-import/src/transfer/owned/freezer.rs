@@ -46,7 +46,7 @@ pub(super) fn freeze(
     Ok(frozen)
 }
 
-/// Reads a single [`Descriptor`] from `directory` into a frozen [`Entry`] within `remaining` bytes.
+/// Reads a single [`Descriptor`] from `directory` into a frozen [`Entry`] within `remaining` compressed bytes.
 #[inline]
 fn entry(
     directory: &Path,

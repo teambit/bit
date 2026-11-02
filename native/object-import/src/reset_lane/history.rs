@@ -75,6 +75,7 @@ fn append_missing_ancestors(
     Ok(())
 }
 
+/// Constructs a `VersionHistory` `versions` row from `hash`, `version`, and `parents`.
 fn parent_entry(hash: &str, version: &Value, parents: &[Value]) -> Value {
     let mut entry = json!({"hash":hash,"parents":parents});
     if let Some(unrelated) = version["unrelated"]["head"]

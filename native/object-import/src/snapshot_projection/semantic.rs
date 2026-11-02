@@ -92,6 +92,7 @@ fn files(value: &Value) -> io::Result<Value> {
     ))
 }
 
+/// Projects `dependencies` or `devDependencies` rows into canonical field order for semantic hashing.
 fn dependencies(value: &Value) -> io::Result<Value> {
     let Value::Array(rows) = value else {
         return Err(invalid("dependencies required"));

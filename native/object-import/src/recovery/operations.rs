@@ -55,6 +55,7 @@ impl State {
         self.index = 0;
         Ok(output)
     }
+    /// Executes up to `count` queued [`Operation`] steps matching `token` and advances `self.index`.
     pub(crate) fn advance(&mut self, token: &str, count: usize) -> io::Result<Value> {
         let token = token.trim();
         if token.is_empty()

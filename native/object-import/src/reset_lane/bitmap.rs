@@ -83,6 +83,7 @@ pub(super) fn insert(rows: &mut Map<String, Value>, key: &str, row: Value) -> io
     Ok(())
 }
 
+/// Returns `true` when `existing_key` precedes `key` in canonical `.bitmap` property order.
 #[inline]
 fn should_insert_before(existing_key: &str, key: &str) -> bool {
     existing_key.starts_with('$')

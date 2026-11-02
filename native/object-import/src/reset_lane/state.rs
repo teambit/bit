@@ -81,6 +81,7 @@ impl BitmapState {
         Ok(())
     }
 
+    /// Projects the `.bitmap` entry for `self.key` to `next` (resolving tag names from `model`).
     pub(super) fn project(&mut self, model: &Value, next: Option<String>) -> io::Result<String> {
         if self.key.is_empty() {
             return Ok(String::new());

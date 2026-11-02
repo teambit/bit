@@ -33,6 +33,7 @@ pub(crate) enum Mode {
     Fetch { include_artifacts: bool },
 }
 
+/// Selects transfer [`Descriptor`]s for `versions` from `directory` according to `mode`.
 pub(crate) fn select(
     directory: &Path,
     versions: &[Version],

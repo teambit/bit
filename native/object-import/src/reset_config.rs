@@ -86,6 +86,7 @@ fn validate_relative_path(path: &str, message: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Finds the staged configuration entry for `(scope, name)` marked removed in `rows`.
 fn find_removed_staged<'a>(rows: &'a [Value], scope: &str, name: &str) -> Option<&'a Value> {
     rows.iter()
         .find(|row| {
