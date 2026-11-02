@@ -59,6 +59,7 @@ impl Hub {
             ci: !matches!(mode, "failure" | "direct-failure" | "direct-multi-failure"),
         }
     }
+    /// Executes `command` in `root` pointed at this [`Hub`] server URL.
     fn run(&self, root: &Path, command: &str, node: bool) -> crate::helper::Run {
         let mut environment = vec![
             ("BIT_NATIVE", OsStr::new(if node { "off" } else { "on" })),

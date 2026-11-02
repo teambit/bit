@@ -78,6 +78,7 @@ fn parity(mode: &str) {
     assert_eq!(actual.stdout.matches("export provider startup").count(), 1);
 }
 
+/// Verifies configured environment package generation and post-export callbacks match `Node.js` ([`parity`]).
 #[test]
 fn configured_environment_packages_and_post_export_match_node() {
     parity("");

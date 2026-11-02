@@ -2,7 +2,9 @@
 //!
 //! Covers `bit lane checkout` and `bit lane revert` with deleted component restoration and `--json` output.
 
+/// Configured provider callback tests for `bit lane checkout` and `bit lane revert`.
 mod callbacks;
+/// Error and decline tests for `bit lane checkout` and `bit lane revert`.
 mod errors;
 mod fixture;
 mod inflate_origin;

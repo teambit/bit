@@ -34,7 +34,7 @@ fn log_file_reads_staged_deprecation_with_exact_published_state() {
     assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
 }
 
-/// Verifies `bit blame` reads file history when deprecation is staged in `.bitmap` ([`compare`]).
+/// Verifies `bit blame` reads file history when deprecation is staged in `.bitmap` ([`bitmap`], [`compare`]).
 #[test]
 fn blame_reads_staged_deprecation_with_exact_published_state() {
     let helper = support::workspace(1, true);

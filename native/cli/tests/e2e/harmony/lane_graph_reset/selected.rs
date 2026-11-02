@@ -5,7 +5,7 @@
 use super::fixture;
 use crate::{commands::move_paths::support, helper::remote};
 
-/// Verifies that resetting a single lane component removes it from the lane while keeping other members intact.
+/// Verifies that resetting a single lane component removes it from the lane while keeping other members intact ([`fixture`]).
 #[test]
 fn selected_introduced_member_leaves_the_other_lane_member_and_main_versions_intact() {
     let helper = fixture::workspace(2, true);

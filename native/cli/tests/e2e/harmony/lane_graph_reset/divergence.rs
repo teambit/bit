@@ -22,7 +22,7 @@ fn exported_ahead() -> (Helper, std::path::PathBuf, String, String) {
     (helper, reader, previous, remote_head)
 }
 
-/// Verifies that resetting a diverged exported lane uses its remote boundary and preserves working tree files.
+/// Verifies that resetting a diverged exported lane uses its remote boundary and preserves working tree files ([`exported_ahead`]).
 #[test]
 fn reset_a_diverged_exported_lane_uses_its_remote_boundary_and_preserves_disk_bytes() {
     let (helper, reader, _, _) = exported_ahead();

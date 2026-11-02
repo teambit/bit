@@ -60,6 +60,7 @@ fn http_remote_doctor_preserves_named_and_complete_results_and_exact_queries() {
         http(command, &response());
     }
 }
+/// Verifies HTTP remote `bit doctor` preserves unsupported server and missing diagnosis errors ([`http`], [`response`]).
 #[test]
 fn http_remote_doctor_preserves_unsupported_server_and_missing_diagnosis_errors() {
     http(

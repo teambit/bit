@@ -45,6 +45,7 @@ fn delete_objects_dir_after_initiating_with_git() {
     helper.run("status");
 }
 
+/// Verifies missing `.bit`/`.bitmap`/`workspace.jsonc` handling and invalid `--default-scope` errors ([`Helper`]).
 /// init command on Harmony › when workspace.jsonc exist, but not .bitmap nor .bit
 /// init command on Harmony › workspace.jsonc is missing
 /// init command on Harmony › init with an invalid default-scope

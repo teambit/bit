@@ -11,7 +11,9 @@ pub(super) use support::{assert_origins, delay_copies, exported, ids, remote_wor
 mod callbacks;
 /// Missing and corrupt remote `Source` object failure tests during `bit fork`.
 mod corruption;
+/// End-to-end HTTP scope `bit fork` private object capture tests.
 mod http;
+/// End-to-end `bit fork` CLI flag and refactoring option tests.
 mod options;
 mod patterns;
 mod remote;

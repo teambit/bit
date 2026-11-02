@@ -32,7 +32,7 @@ fn seeded() -> Helper {
     helper
 }
 
-/// Extracts the single `updateDependents` entry from a `cat-lane` JSON payload.
+/// Extracts the single `updateDependents` entry from a `cat-lane` JSON payload ([`Value`]).
 fn hidden(lane: &Value) -> String {
     let rows = lane["updateDependents"].as_array().expect("real hidden members");
     assert_eq!(rows.len(), 1);

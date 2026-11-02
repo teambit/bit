@@ -5,7 +5,7 @@
 use super::support;
 use crate::commands::move_paths::support::{self as paired, bitmap, setup, successful};
 
-/// Verifies that comma-separated local component patterns fork all matching components into `--scope`.
+/// Verifies that comma-separated local component patterns fork all matching components into `--scope` ([`successful`]).
 #[test]
 fn local_pattern_forks_both_sources_in_the_selected_scope() {
     let helper = paired::workspace(2, false);

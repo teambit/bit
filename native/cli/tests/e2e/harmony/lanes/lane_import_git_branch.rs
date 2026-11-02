@@ -78,6 +78,7 @@ fn importing_an_exported_lane_into_a_git_repo_when_git_branch_already_exists() {
     assert_eq!(lanes["currentLane"].as_str(), Some("my-test-lane"));
 }
 
+/// Verifies importing a lane with `--branch` after remote lane updates and Git branch switches ([`git`], [`init_new_git_repo`]).
 #[test]
 fn import_lane_after_remote_lane_changes() {
     let helper = Helper::new();

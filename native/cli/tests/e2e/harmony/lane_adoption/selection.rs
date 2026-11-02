@@ -2,6 +2,7 @@
 //!
 //! Covers skipped main components, removed lane components, and bracket pattern selection.
 
+/// Level-0 `zlib` component stream canonicalization tests on `bit switch main`.
 mod compression;
 
 use super::{empty, exported, lane};

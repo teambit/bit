@@ -7,7 +7,7 @@ use crate::helper::{Helper, parse};
 /// Component ID verified across `main` and separate lane scope history.
 const COMP1_ID: &str = "comp1";
 
-/// Verifies that exporting a lane to a separate scope omits pre-lane `main` `Version` objects while preserving `bit log` ([`COMP1_ID`]).
+/// Verifies that exporting a lane to a separate scope omits pre-lane `main` `Version` objects while preserving `bit log` ([`COMP1_ID`], [`Helper`], [`parse`]).
 #[test]
 fn lane_export_skips_main_history_separate_lane_scope() {
     let helper = Helper::new();

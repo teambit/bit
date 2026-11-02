@@ -14,7 +14,7 @@ use crate::{
 };
 use serde_json::json;
 
-/// Verifies `bit create`, `bit new`, `bit test`, `TypeScript` compilation, and multi-env validation on Harmony.
+/// Verifies `bit create`, `bit new`, `bit test`, `TypeScript` compilation, and multi-env validation on Harmony ([`Helper`], [`KnownResult`]).
 #[test]
 fn create_command_options_and_validations() -> KnownResult<()> {
     let helper = Helper::new();

@@ -2,7 +2,9 @@
 //!
 //! Covers `bit switch` and `bit lane import` with aliases, patterns, and default package installation.
 
+/// Provider callback and configuration mutation tests for `bit lane import` and `bit switch`.
 pub(crate) mod callbacks;
+/// Duration token normalization helpers for lane adoption stdout comparisons.
 pub(crate) mod output;
 
 mod conflicts;

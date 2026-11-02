@@ -59,7 +59,7 @@ fn local_is_diverged_from_the_remote() {
     );
 }
 
-/// Verifies `mergePendingComponents` when a local lane diverges from its remote and another lane has a newer snap ([`Helper`]).
+/// Verifies `mergePendingComponents` when a local lane diverges from its remote and another lane has a newer snap ([`Helper`], [`Duration`]).
 #[test]
 fn local_is_diverged_from_the_remote_and_another_lane_has_a_more_recent_snap() {
     let helper = Helper::new();

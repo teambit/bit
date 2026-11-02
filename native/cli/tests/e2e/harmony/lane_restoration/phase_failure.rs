@@ -89,6 +89,7 @@ fn provider_deleted() -> (Helper, String, Value) {
     (helper, history, version)
 }
 
+/// Verifies that phase-two `onLoad` tooling errors are owned natively while keeping phase-one existing reverts.
 #[test]
 fn phase_two_onload_tooling_errors_are_owned_but_discarded_from_the_first_result() {
     let (helper, history, version) = provider_deleted();

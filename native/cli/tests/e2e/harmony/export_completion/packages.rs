@@ -1,6 +1,6 @@
 //! Generated package bytes and source-link shapes ([`compare`], [`compare_tree`]) stay observable after `bit export`.
 //!
-//! Recursively compares generated `node_modules` package trees between native and Node.js runs.
+//! Recursively compares generated `node_modules` package trees between native and `Node.js` runs ([`config`]).
 
 use crate::helper::config;
 use std::{fs, path::Path};

@@ -44,6 +44,7 @@ fn durations(text: &str) -> String {
         .map(completion)
         .collect()
 }
+/// Normalizes a recognized pnpm/linking/compilation completion line's `(completed in ...)` suffix to `<duration>)`.
 fn completion(line: &str) -> String {
     let body = line.trim_end_matches(['\r', '\n']);
     let plain = body.strip_prefix("\u{1b}[K\u{1b}[0J").unwrap_or(body);

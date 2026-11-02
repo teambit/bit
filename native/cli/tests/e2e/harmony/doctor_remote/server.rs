@@ -49,6 +49,7 @@ impl Server {
         let thread = thread::spawn(move || serve(&listener, &sent, &body));
         Self { url, requests, thread: Some(thread) }
     }
+    /// Joins the background [`Server`] thread and panics if serving failed.
     pub fn finish(mut self) {
         self.thread
             .take()

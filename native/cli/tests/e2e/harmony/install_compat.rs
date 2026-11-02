@@ -2,6 +2,7 @@
 //!
 //! Verifies custom aspect installer hooks, pre/post-install lifecycle slots, and scope snapshot backups.
 
+/// Expected `last-merged/main-components` scope snapshot backup helpers.
 mod main_snapshot;
 
 use crate::{

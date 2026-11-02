@@ -61,7 +61,7 @@ fn main_to_lane_switch_and_on_lanes_only() {
     helper.native("lane create dev --scope some-scope");
 }
 
-/// bit lane basic operations › lane-a => lane-b
+/// bit lane basic operations › lane-a => lane-b ([`remote::publish`])
 #[test]
 fn lane_a_to_lane_b_to_lane_c() {
     let helper = Helper::new();

@@ -9,7 +9,7 @@ pub(crate) fn durations(text: &str) -> String {
         .collect()
 }
 
-/// Normalizes a single completion line's `(completed in ...)` suffix to `<duration>)` after validation.
+/// Normalizes a single completion line's `(completed in ...)` suffix to `<duration>)` after validation ([`completion_duration`], [`validate_duration`]).
 fn completion(line: &str) -> String {
     let (body, newline) = if let Some(body) = line.strip_suffix("\r\n") {
         (body, "\r\n")

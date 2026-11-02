@@ -2,7 +2,7 @@
 
 use crate::helper::{Helper, parse};
 use std::{collections::HashSet, path::Path};
-/// Returns `true` if `cat-object <hash>` succeeds with non-empty output in `scope_path`.
+/// Returns `true` if `cat-object <hash>` succeeds with non-empty output in `scope_path` ([`Path`]).
 fn scope_has_object(scope_path: &Path, hash: &str) -> bool {
     let out = Helper::cmd_in(scope_path, &format!("cat-object {hash}"));
     out.status.success() && !out.stdout.trim().is_empty()

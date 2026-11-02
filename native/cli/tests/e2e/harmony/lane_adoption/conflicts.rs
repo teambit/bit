@@ -24,7 +24,7 @@ fn fixture() -> Helper {
     helper
 }
 
-/// Verifies that an automatic merge conflict during `bit switch` preserves local file bytes and `.bitmap`.
+/// Verifies that an automatic merge conflict during `bit switch` preserves local file bytes and `.bitmap` ([`fixture`]).
 #[test]
 fn automatic_conflict_preserves_local_bytes_and_current_lane() {
     let helper = fixture();

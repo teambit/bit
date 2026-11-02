@@ -42,6 +42,7 @@ impl Proxy {
             .expect("catalog proxy did not announce its port");
         Self { url: format!("http://127.0.0.1:{port}"), child, journal }
     }
+    /// Returns the number of requests recorded by the [`Proxy`] journal.
     pub fn requests(&self) -> usize {
         fs::read(self.journal.path().join("requests")).unwrap().len()
     }

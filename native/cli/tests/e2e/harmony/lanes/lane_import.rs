@@ -1,7 +1,7 @@
 //! Port of `e2e/harmony/lanes/lane-import.e2e.ts` for `bit lane import` and `bit switch` parity across lanes ([`update_components_from_remote_lane`], [`some_components_are_on_a_lane_some_are_not`]).
 
 use crate::helper::{Helper, len, parse};
-/// Verifies `bit import --objects`, `checkout head --all`, and `merge` when a local lane lags, leads, or diverges ([`Helper`]).
+/// Verifies `bit import --objects`, `checkout head --all`, and `merge` when a local lane lags, leads, or diverges ([`Helper`], [`len`]).
 #[test]
 fn update_components_from_remote_lane() {
     let helper = Helper::new();

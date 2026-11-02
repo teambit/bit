@@ -72,7 +72,7 @@ fn switch_between_main_and_dev_and_merge_ahead_lane() {
     remote::publish(&helper);
 }
 
-/// bit lane merge operations › export the lane, then switch back to main › merging the dev lane when the lane has diverged from main
+/// bit lane merge operations › export the lane, then switch back to main › merging the dev lane when the lane has diverged from main ([`setup_exported_lane_and_switch_to_main`])
 #[test]
 fn merge_dev_lane_when_diverged_from_main() {
     let (helper, after_switching_local, after_switching_remote) =

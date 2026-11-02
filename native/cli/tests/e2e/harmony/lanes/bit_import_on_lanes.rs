@@ -34,7 +34,7 @@ fn importing_component_when_checked_out_to_a_lane() {
     assert_eq!(len(&parse(&helper.native("lane show dev --json"))["components"]), 1);
 }
 
-/// bit lane command › importing a (non-lane) component from another scope when checked out to a lane
+/// bit lane command › importing a (non-lane) component from another scope when checked out to a lane ([`config::set_workspace_key`])
 #[test]
 fn importing_non_lane_component_from_another_scope_when_on_a_lane() {
     let helper = Helper::new();
