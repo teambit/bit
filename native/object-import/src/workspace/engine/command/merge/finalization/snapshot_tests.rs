@@ -70,6 +70,7 @@ fn snapshot_stages_config_while_merge_keeps_its_configured_component_guard() {
     assert!(!directory.0.join(".bit/staged-config/main.json").exists());
 }
 
+/// Verifies that Windows snapshot publication links component files and `_src` directory with `_src/index.js` `types` metadata.
 #[cfg(windows)]
 #[test]
 fn windows_snapshot_links_files_and_source_directory_with_ide_types() {

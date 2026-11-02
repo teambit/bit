@@ -11,6 +11,7 @@ fn begin(state: &mut State, mode: &str, count: usize) -> Value {
 fn receipt(state: &mut State, previous: &Value, next: usize) -> Value {
     apply("mergeTransactionReceipt", json!({"token":previous["token"],"revision":previous["revision"],"phase":previous["directive"]["phase"],"index":previous["directive"]["index"],"completed":previous["directive"]["count"],"nextCount":next}), state).expect("receipt")
 }
+/// Verifies that an invalid `mergeTransactionReceipt` preserves the current revision and live serial batch.
 #[test]
 fn invalid_receipt_keeps_revision_and_live_serial_batch() {
     let mut state = State::default();

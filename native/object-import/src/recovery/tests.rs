@@ -7,6 +7,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Monotonic sequence counter for unique [`Fixture`] directory names.
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 /// Temporary directory fixture that removes its root on drop.
 #[derive(Debug)]

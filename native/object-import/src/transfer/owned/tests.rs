@@ -33,6 +33,7 @@ fn fixture(root: &Path, state: &mut State) -> Value {
     apply("transferCollect",&json!({"mode":"export","objectsDirectory":root,"stagingDirectory":staging,"versions":[{"hash":version,"locallyChanged":true,"expected":{"sources":[hash],"artifacts":[]}}]}),state).unwrap()
 }
 
+/// Initializes an owned transfer plan in `state` from `collection` via `transferInitialize`.
 fn initialize(state: &mut State, collection: &Value) -> Value {
     let objects: Vec<_> = collection["objects"]
         .as_array()

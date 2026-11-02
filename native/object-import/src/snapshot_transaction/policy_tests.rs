@@ -6,7 +6,7 @@ use super::future;
 use serde_json::Value;
 use std::process::Command;
 
-/// Verifies that [`future::plan`] matches `ModelComponent.getVersionToAdd` across 1,000 seeded release and prerelease inputs.
+/// Verifies that [`future::plan`] matches `ModelComponent.getVersionToAdd` across 1,000 seeded release, prerelease, and exact inputs.
 #[test]
 fn seeded_future_versions_match_actual_model_component_inc_policy() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

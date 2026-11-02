@@ -44,6 +44,7 @@ fn owner_destination_is_retained_and_rejects_a_later_filesystem_change() {
     assert!(retained.validate().is_err());
 }
 
+/// Verifies that `avoid_tracked` keeps the original conflict path when the owner-prefixed destination is already tracked or occupied.
 #[test]
 fn occupied_or_nested_owner_destinations_preserve_the_original_conflict() {
     let target = crate::command_import::Target {

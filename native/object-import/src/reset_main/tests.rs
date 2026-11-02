@@ -82,6 +82,7 @@ impl Drop for Fixture {
     }
 }
 
+/// Computes the lowercase 40-character hexadecimal SHA-1 digest of `text`.
 fn hash(text: &str) -> String {
     format!("{:x}", Sha1::digest(text.as_bytes()))
 }

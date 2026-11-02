@@ -67,6 +67,7 @@ fn pending_root_replacement_keeps_reachable_historical_root_distinct() {
     assert_eq!(rows[2]["source"], old);
 }
 
+/// Verifies that `dependencies_graph` stores serialized dependency graph JSON as a `Source` object referenced by `dependenciesGraphRef`.
 #[test]
 fn dependencies_graph_is_stored_as_a_source_the_version_refers_to() {
     let graph = r#"{"schemaVersion":"2.0","packages":{},"edges":[{"id":".","neighbours":[]}]}"#;

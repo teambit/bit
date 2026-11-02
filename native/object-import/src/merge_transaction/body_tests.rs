@@ -13,6 +13,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic sequence counter for unique [`Fixture`] directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory fixture containing `objects` and `snapshots` subdirectories for merge body tests.
 #[derive(Debug)]

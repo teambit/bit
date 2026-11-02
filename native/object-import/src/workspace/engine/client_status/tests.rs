@@ -79,6 +79,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Runs [`prepare`], [`scan`], and [`finish`] against `fixture` with empty ignore policies.
 fn inspect(fixture: &Fixture) -> io::Result<Value> {
     let mut state = State::default();
     fixture.prepare(&mut state)?;

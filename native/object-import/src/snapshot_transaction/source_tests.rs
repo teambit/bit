@@ -7,7 +7,7 @@ use serde_json::json;
 use sha1::{Digest, Sha1};
 use std::fs;
 
-/// Computes the lowercase 40-char hexadecimal SHA-1 digest of `bytes`.
+/// Computes the lowercase 40-character hexadecimal [`Sha1`] digest of `bytes`.
 fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }

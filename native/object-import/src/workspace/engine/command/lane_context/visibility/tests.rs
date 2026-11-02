@@ -37,6 +37,7 @@ fn active_and_selected_inactive_bitmap_metadata_are_separate() {
     assert_eq!(bitmap["inactive"]["isAvailableOnCurrentLane"], false);
 }
 
+/// Verifies that `history_head` does not fall back to `main` for workspace components absent from lane history unless hidden.
 #[test]
 fn lane_history_absence_does_not_fall_back_to_main_for_workspace_components() {
     let main = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

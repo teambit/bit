@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+/// Monotonic sequence counter for unique [`Scratch`] directory names.
 static SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
 /// Temporary workspace fixture seeded with `.bit/refs/remotes/scope` lane refs.

@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique candidate discovery test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Verifies that [`ordered`] preserves `index.json` component order rather than lane or alphabetical order.

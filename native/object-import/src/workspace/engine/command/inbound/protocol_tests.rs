@@ -53,6 +53,7 @@ fn request(omit_owned_write_receipts: bool) -> Apply {
     Apply { token: "owner".into(), omit_owned_write_receipts }
 }
 
+/// Verifies that [`Prepare`] deserializes flat transport fields (`nodeExecutable`, `bitVersion`, `globalRemotesFile`).
 #[test]
 fn public_prepare_accepts_flat_transport_fields() {
     let request = json!({

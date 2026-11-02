@@ -19,7 +19,7 @@ fn lane_ids_must_be_distinct_and_non_main() {
     assert!(parse_id("feature", &mut seen).is_err());
 }
 
-/// Verifies that [`merge_remote`] deduplicates identical objects per scope and rejects conflicting payloads for the same hash.
+/// Verifies that [`merge_remote`] and [`validate_virtual_bounds`] deduplicate identical [`VirtualRemote`] objects per scope and reject conflicting payloads.
 #[test]
 fn same_scope_lanes_share_identical_objects_only() {
     let remote =

@@ -39,6 +39,7 @@ fn callbacks_and_per_component_effects_have_canonical_order() {
     assert_eq!(effects.last().unwrap().0, "clearCache");
 }
 
+/// Verifies that resizing a callback batch never alters the singleton `stagedWrite` directive count.
 #[test]
 fn callback_batch_resize_never_changes_singleton_staged_write() {
     let mut state = State::default();

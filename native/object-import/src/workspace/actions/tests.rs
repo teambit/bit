@@ -29,6 +29,7 @@ fn response(bytes: Vec<u8>) -> Value {
     serve(&mut Cursor::new(bytes), &mut output).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+/// Verifies that [`serve`] removes nested directories recursively and succeeds when target paths are already absent.
 #[test]
 fn removes_nested_trees_and_ignores_missing_paths() {
     let directory = Directory::new();

@@ -40,6 +40,7 @@ fn imported_harmony_manifests_share_layout_and_preserve_source_references() {
     assert!(super::manifest(&"b".repeat(40), &version).is_err());
 }
 
+/// Verifies that [`prepare`] declines when a checkout target `Version` has an empty `files` array before reading sources.
 #[test]
 fn empty_checkout_target_declines_before_reading_or_materializing_sources() {
     let root = Path::new("/unused-empty-command-root");

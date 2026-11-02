@@ -13,6 +13,7 @@ use std::{
 fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepared> {
     prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates, &[])
 }
+/// Monotonic sequence counter for unique [`Fixture`] directory names.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 /// Verifies that [`Prepared::clear_config`] removes component config overrides only for targeted components and backs up `.bitmap`.

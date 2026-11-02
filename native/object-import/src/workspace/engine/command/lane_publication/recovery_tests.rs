@@ -52,6 +52,7 @@ fn recovery_retains_original_bytes_after_merge_and_replaces_old_backup_file() {
     assert!(!root.join(".bit/last-merged/staged-config.json").exists());
 }
 
+/// Verifies that [`Recovery::prepare`] and [`Recovery::commit`] preserve non-empty `staged-config/main.json` bytes verbatim.
 #[test]
 fn recovery_keeps_nonempty_staged_configuration_exactly() {
     let workspace = Workspace::new();

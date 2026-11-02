@@ -20,7 +20,7 @@ fn accepts_the_settings_bit_writes_by_default() {
     assert!(extensions(&config).is_ok());
 }
 
-/// What `reInitWorkspace` of the e2e suite writes.
+/// Verifies that [`extensions`] and [`ignored_issues`] accept disabled previews and valid issue ignore lists (`reInitWorkspace`).
 #[test]
 fn accepts_disabled_previews_and_ignored_issues() {
     let config = json!({

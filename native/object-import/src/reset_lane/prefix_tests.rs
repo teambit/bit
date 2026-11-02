@@ -11,6 +11,7 @@ use std::{
 
 /// Baseline `1.0.0` `Version` SHA-1 hash fixture.
 const BASE: &str = "1111111111111111111111111111111111111111";
+/// Lane head `Version` SHA-1 hash fixture for `scope/alpha`.
 const ALPHA: &str = "2222222222222222222222222222222222222222";
 const DETACHED: &str = "3333333333333333333333333333333333333333";
 const OTHER: &str = "4444444444444444444444444444444444444444";

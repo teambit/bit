@@ -21,6 +21,7 @@ fn metadata_is_lossless_and_bounded_without_parsing_json() {
     assert!(inflate(&compressed(&vec![b'a'; MAX_BYTES + 1])).is_none());
 }
 
+/// Verifies that [`inflate`] rejects truncated, bit-flipped, or trailing-byte zlib streams.
 #[test]
 fn corrupt_truncated_and_trailing_streams_never_return_metadata() {
     let bytes = compressed(b"Version hash 2\0{}");

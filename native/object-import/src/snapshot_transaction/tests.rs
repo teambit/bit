@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique [`Fixture`] directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory fixture that removes its root on drop.
 #[derive(Debug)]

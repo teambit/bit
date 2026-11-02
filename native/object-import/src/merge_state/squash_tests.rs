@@ -26,6 +26,7 @@ fn request(input: impl serde::Serialize) -> Value {
         .unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+/// Builds a baseline `squashPolicy` request fixture for [`request`].
 fn policy() -> Value {
     json!({"kind":"squashPolicy","sourceOnly":[],"targetOnly":[reference('b'),reference('c')],
         "common":reference('a'),"detachHead":false,"currentLaneDefault":false,

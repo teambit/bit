@@ -39,6 +39,7 @@ fn autosnap_upgrades_harmony_version_schema_without_rewriting_original() {
     assert_eq!(original["flattenedDependencies"], json!(["scope/dep@1.0.0"]));
 }
 
+/// Verifies that [`metadata::model`] preserves existing local tag entries while recording the new snap hash in `state.versions`.
 #[test]
 fn model_projection_keeps_existing_local_tags_and_adds_snap_without_version_tag() {
     let model = json!({"name":"alpha","scope":"scope","versions":{"1.0.0":"a".repeat(40)},

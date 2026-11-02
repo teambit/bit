@@ -19,6 +19,7 @@ fn resetting_a_model_without_pending_state_does_not_create_state() {
     assert_eq!(model, json!({"versions":{}}));
 }
 
+/// Verifies that [`remove_versions`] omits an empty or null `state` field while retaining an existing empty `state.versions` map.
 #[test]
 fn empty_constructor_state_is_omitted_but_an_empty_versions_map_is_retained() {
     for state in [json!({}), json!(null)] {

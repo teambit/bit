@@ -52,6 +52,7 @@ fn policy_update_is_planned_and_preserves_unrelated_jsonc_comments() {
     assert!(after.contains(r#""linkCoreAspects": true"#));
 }
 
+/// Verifies that [`Prepared::prepare`] declines when a package appears in both `dependencies` and `peerDependencies` without mutating `workspace.jsonc`.
 #[test]
 fn duplicate_policy_text_declines_before_any_workspace_write() {
     let fixture = Fixture::new();

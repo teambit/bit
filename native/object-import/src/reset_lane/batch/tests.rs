@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique lane reset batch test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Encodes and writes a loose Bit object (`hash`, `kind`, `value`) into `root/.bit/objects`.

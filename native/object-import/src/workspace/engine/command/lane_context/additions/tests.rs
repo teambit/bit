@@ -60,6 +60,7 @@ fn prospective_metadata_only_includes_genuinely_new_consumers() {
     );
 }
 
+/// Verifies that `validate_overlap` allows an inactive `.bitmap` row with matching `defaultScope` to share its own `rootDir`.
 #[test]
 fn inactive_default_scope_root_is_not_a_collision_with_itself() {
     let destination = json!({"scope":"scope","name":"component","rootDir":"existing-root"});

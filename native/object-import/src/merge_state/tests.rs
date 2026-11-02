@@ -25,6 +25,7 @@ fn request(state: &mut State, value: impl serde::Serialize) -> Value {
     serve(&mut Cursor::new(frame), &mut output, state, &POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
+/// Builds a lane component merge entry fixture for `name`.
 fn entry(name: &str) -> Value {
     json!({"id":{"scope":"scope","name":name},"head":hash_value('a'),
         "laneId":{"scope":"scope","name":"lane"},"mergedConfig":{"2":"two","a":"å"}})

@@ -18,6 +18,7 @@ fn receipt(state: &mut State, previous: &Value, success: bool) -> Value {
     )
     .unwrap()
 }
+/// Verifies that a failed upload cleans up only previously acknowledged remotes and rejects stale receipts.
 #[test]
 fn failed_upload_cleans_only_prior_acknowledged_remotes() {
     let mut state = State::default();

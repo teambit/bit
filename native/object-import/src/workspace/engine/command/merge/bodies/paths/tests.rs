@@ -57,6 +57,7 @@ fn native_components_do_not_relax_canonical_file_identity_guards() {
     );
 }
 
+/// Verifies that [`canonical_relative`] rejects backslashes in filenames on non-Windows platforms.
 #[cfg(not(windows))]
 #[test]
 fn backslashes_in_native_unix_filenames_remain_unsupported() {

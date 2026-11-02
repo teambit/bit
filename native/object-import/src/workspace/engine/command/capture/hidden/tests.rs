@@ -14,7 +14,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
-/// Verifies that [`from_model`] captures hidden lane sources in parallel into [`snapshots::State`] without disk workspace files.
+/// Verifies that [`from_model`] captures hidden lane sources in parallel into [`snapshots::State`] without disk workspace files and validates [`Repository`] proofs.
 #[test]
 fn hidden_sources_are_parallel_retained_and_proven_without_workspace_files() {
     let fixture = Fixture(

@@ -10,6 +10,7 @@ fn hash(byte: char) -> String {
 fn input() -> Value {
     json!({"objectsDirectory":std::env::temp_dir(),"versions":[],"deletedRefs":[],"removeOnlyHead":false,"laneHidden":false,"laneNew":false,"hasScope":false,"tags":[],"orphaned":[],"detachedHeads":[]})
 }
+/// Verifies that [`plan`] uses the `common` ancestor shortcut without reading the object store.
 #[test]
 fn common_shortcut_avoids_repository_reads_and_keeps_common_identity() {
     let mut request = input();

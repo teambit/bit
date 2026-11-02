@@ -5,7 +5,7 @@
 use super::{ASPECT, filter, validate_version};
 use serde_json::json;
 
-/// Verifies that [`filter`] strips `.bitmap` and nested member component paths while retaining root-owned files.
+/// Verifies that [`filter`] strips `.bitmap` and nested member component paths while retaining root-owned manifest files.
 #[test]
 fn root_manifest_keeps_only_files_owned_by_the_root() {
     let mut manifest = json!({"files":[

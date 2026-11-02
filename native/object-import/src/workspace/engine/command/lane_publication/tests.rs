@@ -47,6 +47,7 @@ fn lane_history_keeps_deleted_and_hidden_buckets_separate_and_preserves_previous
     assert_eq!(actual["history"]["new"]["log"]["message"], r#"merge from "scope/main""#);
 }
 
+/// Verifies that [`objects::snapshot_update`] promotes a hidden `.bitmap` component into `components` and clears `updateDependents`.
 #[test]
 fn snapshot_promotes_bitmap_component_without_leaving_a_hidden_duplicate() {
     let mut lane =

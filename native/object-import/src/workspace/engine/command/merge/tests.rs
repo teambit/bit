@@ -34,6 +34,7 @@ fn select_options(distance: &Value, modified: bool, target_as_diverged: bool) ->
         .unwrap()
 }
 
+/// Verifies that [`select`] classifies divergent histories as `"merge"` and target-only histories as `"target"`.
 #[test]
 fn divergent_and_fast_forward_decisions_use_canonical_status_kernel() {
     let divergent = json!({"sourceOnly":["a".repeat(40)],"targetOnly":["b".repeat(40)],"common":"c".repeat(40),"noCommon":false});

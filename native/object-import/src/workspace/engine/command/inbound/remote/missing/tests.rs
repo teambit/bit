@@ -27,6 +27,7 @@ fn component(id: &str, version_hash: &str, version: &Value) -> [ObjectItem; 2] {
 
 /// Fixed 40-char SHA-1 hash for the root `acme.app/app` test version.
 const APP: &str = "1111111111111111111111111111111111111111";
+/// Fixed 40-char SHA-1 hash for the `acme.lib/lib` dependency test version.
 const DEPENDENCY: &str = "2222222222222222222222222222222222222222";
 
 fn app(version: &Value) -> Vec<ObjectItem> {

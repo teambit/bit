@@ -3,7 +3,7 @@
 use super::ScopeGuard;
 use std::fs;
 
-/// Verifies that [`ScopeGuard`] rejects custom `hooksPath` configs and concurrent `scope.jsonc` creation.
+/// Verifies that [`ScopeGuard`] rejects custom `hooksPath` configs and concurrent `scope.jsonc` creation before file deletion.
 #[test]
 fn custom_scope_and_late_metadata_changes_are_rejected_before_file_delete() {
     let root = tempfile::tempdir().unwrap();

@@ -38,6 +38,7 @@ fn paths_exclude_direct_dependencies_and_filter_every_via_node() {
     );
     assert!(select(&graph, &sources, &[target("left", "latest")], &[]).unwrap().is_empty());
 }
+/// Verifies that [`select`] deduplicates multiple versions of the same intermediate dependent into a single `"latest"` [`Target`].
 #[test]
 fn distinct_versions_of_a_dependent_request_latest_once() {
     let graph = HashMap::from([

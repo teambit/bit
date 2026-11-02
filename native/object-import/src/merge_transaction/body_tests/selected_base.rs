@@ -23,6 +23,7 @@ fn prepare(mut request: Value) -> io::Result<Value> {
     request["token"] = owner["token"].clone();
     apply("mergePrepare", request, &mut state)
 }
+/// Removes the loose `Source` object referenced by `version` from `fixture`.
 fn remove_source(fixture: &Fixture, version: &Value) {
     let hash = version["files"][0]["hash"].as_str().unwrap();
     fs::remove_file(

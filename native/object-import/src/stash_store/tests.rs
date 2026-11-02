@@ -9,6 +9,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic sequence counter for unique [`scope`] test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Creates a fresh temporary scope directory for stash store tests.
 fn scope() -> PathBuf {

@@ -7,6 +7,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique soft-reset test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Verifies that [`Plan::prepare`] and [`Plan::commit`] remove `nextVersion` entries from `.bitmap` and reject stale plans.

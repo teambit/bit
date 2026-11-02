@@ -58,6 +58,7 @@ fn export_groups_and_fetch_version_last_preserve_exact_order() {
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Verifies that [`select`] enforces `strict_local_artifacts` for locally changed versions while treating older artifacts as optional.
 #[test]
 fn missing_local_artifacts_strict_and_old_artifacts_optional() {
     let root = directory();

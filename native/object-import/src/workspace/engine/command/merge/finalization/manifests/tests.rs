@@ -40,6 +40,7 @@ fn canonical_package_metadata_changes_remain_pending_until_native_commit() {
     assert!(!directory.0.join(".bit/objects").exists());
 }
 
+/// Verifies that [`Prepared::package_manifests`] binds owned package paths, normalizes `"latest"` to `"0.0.1-new"`, and rejects mismatched identities.
 #[test]
 fn package_receipts_bind_owned_paths_but_allow_canonical_callback_metadata_overrides() {
     let directory = Directory::create().unwrap();

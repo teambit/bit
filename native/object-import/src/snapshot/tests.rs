@@ -10,6 +10,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Monotonic sequence counter for unique [`Directory`] test paths.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Temporary directory guard that removes its path on drop.
 #[derive(Debug)]

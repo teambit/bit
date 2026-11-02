@@ -8,6 +8,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique lane reset graph test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 const BASE: &str = "1111111111111111111111111111111111111111";
 const MAIN: &str = "2222222222222222222222222222222222222222";

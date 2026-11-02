@@ -35,6 +35,7 @@ fn checkout_retains_exact_cross_scope_versions_and_rejects_duplicate_membership(
     assert!(selection::phases(&duplicate, &json!({}), &json!({}), false, false).is_err());
 }
 
+/// Verifies that `extend_proofs` propagates the retained history object proof and detects subsequent disk modifications.
 #[test]
 fn selected_history_proof_is_propagated_and_rejects_later_content_changes() {
     let directory = tempfile::tempdir().unwrap();

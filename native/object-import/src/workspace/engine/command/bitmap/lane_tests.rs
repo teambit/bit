@@ -19,6 +19,7 @@ fn update(identity: &str) -> Update {
         keep_ours: false,
     }
 }
+/// Builds a lane context JSON fixture for `local.scope/feature`.
 fn context() -> Value {
     json!({"lane":{"currentId":{"scope":"local.scope","name":"feature"}}})
 }

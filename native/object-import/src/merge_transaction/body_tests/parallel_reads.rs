@@ -65,6 +65,7 @@ fn parallel_sources_keep_order_complete_receipts_and_serial_equivalence() {
         }
     }
 }
+/// Verifies that oversized parallel worker shares retry cleanly without emitting duplicate source receipts.
 #[test]
 fn oversized_worker_share_retries_without_duplicate_receipts() {
     let fixture = Fixture::new();

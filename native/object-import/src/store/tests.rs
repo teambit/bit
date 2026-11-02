@@ -9,6 +9,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique [`Directory`] test paths.
 static COUNTER: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory guard for object [`Store`] tests.
 #[derive(Debug)]

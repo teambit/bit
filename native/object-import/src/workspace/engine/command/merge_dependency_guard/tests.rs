@@ -46,6 +46,7 @@ fn retained_fast_forward_sources_preserve_imports_and_detect_stale_capture() {
     fs::write(&current_path, b"module.exports = 3;").unwrap();
     assert!(super::verify(&fixture.0, &fixture.0, &current, &[], &grammar).is_err());
 }
+/// Temporary workspace directory fixture for [`compare`] and [`Budget`] dependency guard tests.
 struct Fixture(std::path::PathBuf);
 impl Fixture {
     fn new() -> Self {

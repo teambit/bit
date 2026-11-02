@@ -7,6 +7,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
+/// Monotonic sequence counter for unique never-exported reset test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Verifies that [`Plan::prepare`] and [`Plan::commit`] clear only unexported `.bitmap` versions and reject stale `.bitmap` files.

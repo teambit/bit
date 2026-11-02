@@ -14,6 +14,7 @@ use sha1::{Digest, Sha1};
 
 use super::{Body, Descriptor, prepare};
 
+/// Monotonic sequence counter for unique [`directory`] test paths.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
 /// Creates an isolated temporary directory for transfer tests.

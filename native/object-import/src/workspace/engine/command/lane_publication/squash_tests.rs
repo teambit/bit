@@ -5,7 +5,7 @@
 use super::replace_message;
 use serde_json::json;
 
-/// Verifies that [`replace_message`] preserves original author fields and appends ordered squash modification log entries.
+/// Verifies that [`replace_message`] preserves original author fields (`username`, `email`, `date`) and appends ordered squash modification log entries.
 #[test]
 fn message_replacement_keeps_author_and_ordered_modification_history() {
     for previous in ["original", ""] {
