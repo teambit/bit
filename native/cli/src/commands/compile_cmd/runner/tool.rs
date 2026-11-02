@@ -38,6 +38,7 @@ pub(super) fn compile(files: &[Value]) -> io::Result<Vec<Value>> {
     Ok(rows)
 }
 
+/// Resolves the Node.js binary path and Bit `package.json` manifest for the external compiler helper.
 #[inline]
 fn resolve_compiler_tool() -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let Target::Entry(cli) = discovery::find()? else {

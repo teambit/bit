@@ -35,6 +35,7 @@ pub(super) const CORE_ENVS: &[&str] = &[
     "teambit.harmony/empty-env",
 ];
 
+/// Parsed subcommand variant for `bit envs` (`bit env`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     List { json: bool, table_only: bool },

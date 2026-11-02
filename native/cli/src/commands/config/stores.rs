@@ -60,6 +60,7 @@ impl Stores {
         Ok(Self { entries })
     }
 
+    /// Returns the bare scope directory when `scope` is present without an enclosing `workspace` store.
     #[inline]
     pub(super) fn history_scope(&self) -> Option<&Path> {
         self.entries

@@ -26,6 +26,7 @@ pub(in crate::commands) fn executable(root: &Path) -> io::Result<String> {
     Ok(normalize_git_executable(configured))
 }
 
+/// Sanitizes `configured` or `BIT_CONFIG_GIT_PATH`, falling back to `"git"` when unset or flag-like.
 #[inline]
 fn normalize_git_executable(configured: Option<String>) -> String {
     let sanitize = |raw: Option<String>| {

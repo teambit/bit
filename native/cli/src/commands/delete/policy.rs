@@ -50,6 +50,7 @@ impl Policy {
         }
         Ok(Some(Self { before, document, items }))
     }
+    /// Verifies that `workspace.jsonc` is still a regular non-symlink file matching `self.before`.
     #[inline]
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         let path = root.join("workspace.jsonc");

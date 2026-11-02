@@ -17,6 +17,7 @@ pub(super) fn components(receipts: &[Value], chalk: Chalk) -> String {
         .join(",")
 }
 
+/// Formats a single remote hard-delete `receipt` into dependent, removed, lane, and missing sections.
 fn component(receipt: &Value, format: &Formatter) -> String {
     let dependent = dependents(receipt, format);
     let removed = section(

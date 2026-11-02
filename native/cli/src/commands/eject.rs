@@ -21,6 +21,7 @@ use bit_object_import::{component_remove::select_ids, parse_jsonc, scope_path};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the `bit eject` (`bit E`) CLI command.
 pub const COMMAND: Command = Command { name: "eject", aliases: &["E"], run };
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

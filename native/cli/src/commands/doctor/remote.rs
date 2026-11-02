@@ -46,6 +46,7 @@ pub(super) fn prepare(context: &Context, options: &Options) -> io::Result<Option
     Ok(Some(Plan { remote, network, name: name.to_owned() }))
 }
 
+/// Constructs the configured [`Remotes`] registry and [`Network`] client for remote doctor checks.
 fn build_remotes_and_network(
     context: &Context,
     scope: &Value,

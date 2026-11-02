@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 use std::io;
 /// Static [`Host`] implementation for built-in Node and React compilation environments.
 pub(super) struct Builtin;
+/// Constructs the error returned when a non-supported [`Host`] callback is invoked during compilation.
 #[inline]
 fn unsupported() -> io::Error {
     io::Error::other("unexpected compiler environment callback")

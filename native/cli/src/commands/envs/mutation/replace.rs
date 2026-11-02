@@ -53,6 +53,7 @@ pub(super) fn prepare_replace(
     Ok(Prepared::Replace { env_display_id, batch })
 }
 
+/// Appends `env_id` to `available_envs` when non-empty and not already present.
 #[inline]
 fn record_available_env(available_envs: &mut Vec<String>, env_id: &str) {
     let env_id = env_id.trim();

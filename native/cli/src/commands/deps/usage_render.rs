@@ -24,6 +24,7 @@ pub(super) fn importer_tree_node(
     }
 }
 
+/// Determines which dependency lifecycle field in `importer` references `alias`.
 fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'static str> {
     let pkg_name = pnpm_lockfile::PkgName::parse(alias.trim()).ok()?;
     let has = |group: Option<&pnpm_lockfile::ResolvedDependencyMap>| {

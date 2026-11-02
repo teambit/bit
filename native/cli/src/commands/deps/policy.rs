@@ -44,6 +44,7 @@ impl WorkspaceDepsContext {
         }
     }
 
+    /// Applies a single stored model policy item (`dependencyId`, `version`, `lifecycleType`) onto `deps`.
     #[inline]
     fn apply_model_policy_item(
         &self,

@@ -22,6 +22,7 @@ pub(super) fn filtered(result: &Value, options: &Options) -> io::Result<Value> {
         .map(Value::Array)
 }
 
+/// Filters `filesDiff` and `fieldsDiff` on a single diff `row` according to `options.output`.
 fn filter_one(row: &Value, options: &Options) -> io::Result<Value> {
     let mut row = row.clone();
     if options.output.table {

@@ -48,6 +48,7 @@ complete -o default -F _bit_yargs_completions bit
 ###-end-bit-completions-###
 "#;
 
+/// Static `zsh` `yargs` shell completion script printed by `bit completion` under `zsh`.
 const ZSH_COMPLETION_SCRIPT: &str = r#"#compdef bit
 ###-begin-bit-completions-###
 #

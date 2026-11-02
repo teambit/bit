@@ -50,6 +50,7 @@ pub(super) const DIAGNOSES: &[Diagnosis] = &[
     },
 ];
 impl Diagnosis {
+    /// Serializes `self` into the JSON entry emitted by `bit doctor --list --json`.
     #[inline]
     pub fn listing(&self) -> Value {
         json!({"name":self.name,"description":self.description,"category":self.category})

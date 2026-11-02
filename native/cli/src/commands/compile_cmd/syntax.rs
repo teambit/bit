@@ -48,6 +48,7 @@ pub(in crate::commands) fn parse(
     }
     Ok(Value::Object(result))
 }
+/// Scans `files` under `directory` and returns those whose dependency scan reported `"parse_error"`.
 fn collect_parse_error_inputs(
     root: &Path,
     directory: &str,

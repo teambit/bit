@@ -33,6 +33,7 @@ pub(in crate::commands) fn select(
     literal(targets, pattern)
 }
 
+/// Resolves a literal component directory, ID, or name `pattern` against `targets`.
 fn literal(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
     if pattern.is_empty()
         || !pattern

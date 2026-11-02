@@ -59,6 +59,7 @@ pub(super) fn run(
     })
 }
 
+/// Scans local version history logs for `component` and collects [`BlameRow`] entries for `dependency`.
 fn inspect(root: &Path, component: &str, dependency: &str) -> Result<Vec<BlameRow>, Failure> {
     let ctx = WorkspaceDepsContext::load(root)?;
     let Some((id, workspace_component)) = find_component(root, &ctx, component)? else {

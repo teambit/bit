@@ -25,6 +25,7 @@ pub(super) fn render(plan: &Plan, options: &Options<'_>, undo: bool, format: &Fo
     }
     sections(changed, unchanged, undo, verb, format)
 }
+/// Formats the multi-component summary header alongside changed and unchanged component sections.
 #[inline]
 fn sections(
     changed: &[String],

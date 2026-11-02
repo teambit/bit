@@ -30,6 +30,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Returns `true` when `args` contain only color flags and an optional `--` terminator.
 #[inline]
 fn valid_args(args: &[OsString]) -> bool {
     if args.is_empty() {

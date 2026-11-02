@@ -41,6 +41,7 @@ impl Options {
         Some(options)
     }
 
+    /// Consumes a single trailing diagnosis name argument after `--`.
     #[inline]
     fn consume_trailing_name(&mut self, rest: &[&str]) -> Option<()> {
         for &arg in rest {

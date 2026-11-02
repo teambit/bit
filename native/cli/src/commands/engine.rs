@@ -35,6 +35,7 @@ struct Response {
 }
 
 impl Engine {
+    /// Spawns a new [`WorkspaceSession`] bounded to at most 4 worker threads.
     #[inline]
     pub fn new() -> io::Result<Self> {
         let threads = thread::available_parallelism().map_or(1, usize::from).min(4);

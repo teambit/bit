@@ -32,7 +32,7 @@ impl DepGraph {
             self.nodes.insert(id.to_owned());
         }
     }
-
+    /// Adds a directed dependency edge `src -> dst` (`dep_type`), upgrading non-`"prod"` edges when `"prod"` is seen.
     pub(super) fn add_edge(&mut self, src: &str, dst: &str, dep_type: &'static str) {
         let (src, dst) = (src.trim(), dst.trim());
         if src.is_empty() || dst.is_empty() || src == dst {

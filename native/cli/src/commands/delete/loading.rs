@@ -42,6 +42,7 @@ pub(in crate::commands) fn validate(
     Ok(())
 }
 
+/// Returns `true` when `file` is a non-empty relative path without `..` parent traversal segments.
 #[inline]
 fn is_safe_rel_path(file: &str) -> bool {
     let path = Path::new(file);

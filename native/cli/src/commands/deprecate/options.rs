@@ -22,6 +22,7 @@ pub(super) fn parse<'a>(args: &[&'a str], undo: bool) -> Option<Options<'a>> {
     Some(Options { pattern: pattern?, replacement, range })
 }
 
+/// Consumes positional pattern tokens following `--`, rejecting multiple or invalid values.
 #[inline]
 fn consume_trailing_pattern<'a>(rest: &[&'a str], pattern: &mut Option<&'a str>) -> Option<()> {
     for &arg in rest {

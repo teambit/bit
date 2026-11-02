@@ -52,6 +52,7 @@ impl Links {
             has_roots: config.dependency_resolver.has_root_components(),
         })
     }
+    /// Resolves the `dist` output directories for every package copy of `identities`.
     pub(super) fn dist_directories(
         &self,
         root: &Path,

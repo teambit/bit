@@ -61,6 +61,7 @@ pub(super) fn output_error(options: &Options) -> Option<&'static str> {
     None
 }
 
+/// Parses a single CLI argument token `arg` (and any consumed value from `args`) into `options`.
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {
     if matches!(
         arg,

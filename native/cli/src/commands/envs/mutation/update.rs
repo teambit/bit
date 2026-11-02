@@ -33,6 +33,7 @@ pub(in crate::commands::envs) struct EnvUpdatePlan {
     pub comp_json_edits: Vec<CompJsonEdit>,
 }
 
+/// Resolved target environment identity, version, and workspace presence for `bit envs update`.
 struct TargetEnv {
     bare: String,
     target_ver: Option<String>,

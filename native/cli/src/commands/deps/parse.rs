@@ -2,7 +2,7 @@
 
 use super::{Subcommand, write::WriteTarget};
 use crate::commands::aspect::is_supported_pattern;
-
+/// Parses `bit deps` / `bit dependencies` arguments into a [`Subcommand`] variant.
 pub(in crate::commands) fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()

@@ -36,6 +36,7 @@ pub(in crate::commands) fn captured(
     Ok(physical)
 }
 
+/// Reorders `files` by breadth-first directory enumeration under `root` to match Windows `globby` order.
 pub(super) fn filesystem(root: &Path, files: &[String]) -> io::Result<Vec<String>> {
     if files.is_empty() {
         return Ok(Vec::new());

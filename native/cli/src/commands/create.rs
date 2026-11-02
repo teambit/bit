@@ -61,6 +61,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("create requires generator aspect runtime".into()))
 }
 
+/// Splits an optional `<scope>/` prefix from `raw` when the prefix is a dot-containing scope name.
 #[inline]
 fn parse_scope_from_component_id_str(raw: &str) -> (Option<&str>, &str) {
     let Some((potential_scope, rest)) = raw.split_once('/') else {

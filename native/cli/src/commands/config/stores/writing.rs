@@ -42,6 +42,7 @@ pub(super) fn write(store: &Store) -> io::Result<()> {
     }
 }
 
+/// Rebuilds the `scope.json` object with canonical top-level key ordering and updated `config` values.
 fn scope(store: &Store) -> io::Result<Value> {
     let mut source = store.source
         .as_object()

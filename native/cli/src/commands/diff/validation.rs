@@ -50,6 +50,8 @@ pub(super) fn command_error(
 }
 
 /// Format `MissingBitMapComponent` when a literal component pattern is absent from `.bitmap`.
+///
+/// Returns `None` on lanes or when `pattern` uses wildcards or state selectors.
 fn missing_component_error(root: &Path, options: &options::Options) -> Option<String> {
     let pattern = options.pattern.as_deref()?.trim();
     if pattern.is_empty()

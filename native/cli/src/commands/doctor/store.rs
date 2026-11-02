@@ -16,6 +16,7 @@ pub(super) fn object(scope: &Path, hash: &str) -> io::Result<Option<(String, Val
     bit_object_import::read_scope_object(scope, hash)
 }
 
+/// Returns the loose object file path `<scope>/objects/<hash[..2]>/<hash[2..]>`.
 #[inline]
 fn path(scope: &Path, hash: &str) -> PathBuf {
     scope

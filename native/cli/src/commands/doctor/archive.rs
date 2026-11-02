@@ -51,6 +51,7 @@ pub(super) fn save(
     builder.finish()?;
     Ok(Some(filename.to_string_lossy().into_owned()))
 }
+/// Appends `env-meta.json` and `doc-results.json` to the diagnostic TAR `builder`.
 #[inline]
 fn append_results(
     builder: &mut tar::Builder<fs::File>,

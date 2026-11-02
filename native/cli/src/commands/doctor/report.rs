@@ -20,6 +20,7 @@ pub(super) fn list(chalk: Chalk) -> String {
     );
     table(&rows)
 }
+/// Formats `results`, environment `meta`, and optional archive path `saved` into the terminal doctor report.
 pub(super) fn results(
     results: &[Value],
     meta: &Value,

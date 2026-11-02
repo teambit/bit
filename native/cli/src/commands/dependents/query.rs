@@ -22,7 +22,7 @@ use bit_install::{
 };
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs, path::Path};
-
+/// Resolves workspace and scope dependents for `options.id` and renders the text or `--json` report.
 pub(super) fn run_dependents_query(
     root: &Path,
     options: &Options,

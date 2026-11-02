@@ -57,6 +57,7 @@ pub(super) fn read(request: Request<'_>) -> io::Result<Vec<Value>> {
         .collect()
 }
 
+/// Resolves the target component identity objects to compare in `--parent` mode.
 fn selected_identities(
     engine: &mut Engine,
     root: &Path,

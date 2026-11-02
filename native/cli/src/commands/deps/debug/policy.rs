@@ -21,6 +21,7 @@ pub(super) fn parse_manual_fields(fields: &Map<String, Value>) -> Result<ManualP
     Ok(manual)
 }
 
+/// Returns `true` when `manual` combines `+` version placeholders with unsupported peer or duplicate entries.
 fn unsupported_peer_plus_mix(manual: &ManualPolicy) -> bool {
     let groups = [&manual.runtime, &manual.dev, &manual.peer];
     let populated = groups

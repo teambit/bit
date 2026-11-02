@@ -40,6 +40,7 @@ pub(super) fn validate_sources(files: &[Value]) -> io::Result<()> {
     }
     Ok(())
 }
+/// Removes existing output `directories` when `--delete-dist-dir` or `--json` is enabled.
 pub(super) fn remove(directories: &[PathBuf]) -> io::Result<()> {
     for directory in directories {
         if directory

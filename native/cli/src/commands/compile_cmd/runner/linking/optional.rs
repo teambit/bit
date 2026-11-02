@@ -36,6 +36,7 @@ pub(super) fn apply(
     }
     Ok(())
 }
+/// Checks whether the first matching [`PolicyEntry`] for `name` is marked `optional`.
 #[inline]
 fn optional(entries: &[PolicyEntry], name: &str) -> bool {
     let name = name.trim();

@@ -44,6 +44,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the `bit diff` CLI command.
 pub const COMMAND: Command = Command { name: "diff", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

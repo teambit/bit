@@ -52,6 +52,8 @@ fn exported_target(root: &Path, result: &Value) -> bool {
 }
 
 /// `scope/name` of the `.bitmap` entries with their own scope.
+///
+/// Filters out internal `.bitmap` keys (`$`, `_bit_lane`, `version`) and un-exported rows.
 pub(super) fn exported_ids(root: &Path) -> Vec<String> {
     let bitmap = fs::read_to_string(root.join(".bitmap"))
         .ok()

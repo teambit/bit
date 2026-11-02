@@ -53,6 +53,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("debug-load trace inspection delegated".into()))
 }
 
+/// Emits a text or `--json` error report for `bit debug-load` when component validation fails.
 #[inline]
 fn emit_debug_load_error(
     root: &Path,

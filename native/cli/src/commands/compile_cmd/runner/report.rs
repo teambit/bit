@@ -28,6 +28,7 @@ pub(super) fn create(
     Ok(Report { data, code: i32::from(!options.json && failures > 0), details: None })
 }
 
+/// Serializes `rows` into the `--json` payload array returned by `bit compile --json`.
 #[inline]
 fn json_rows(rows: &[Compiled]) -> Vec<Value> {
     rows.iter()

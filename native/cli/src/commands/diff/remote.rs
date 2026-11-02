@@ -28,6 +28,7 @@ fn push_target_versions(target: &Value, identity: &str, options: &Options, ids: 
     }
 }
 
+/// Prepares an `importWithoutDeps` refresh token when exported comparison versions need fetching.
 pub(super) fn prepare(
     engine: &mut Engine,
     root: &Path,

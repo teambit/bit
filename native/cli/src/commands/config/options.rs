@@ -44,6 +44,7 @@ impl Options {
         options.valid().then_some(options)
     }
 
+    /// Appends positional arguments following `--` when each value is non-empty and not flag-prefixed.
     #[inline]
     fn consume_trailing_values<'a>(
         &mut self,

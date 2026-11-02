@@ -7,7 +7,7 @@ use crate::commands::{
 };
 use serde_json::Value;
 use std::{fs, path::Path};
-
+/// Loads the `Component` or `Version` scope object for `raw_id` from `scope_dir`.
 pub(in crate::commands) fn load_cat_component(
     root: &ScopeRoot,
     scope_dir: &Path,
