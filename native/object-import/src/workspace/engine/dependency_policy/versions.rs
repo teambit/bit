@@ -10,7 +10,7 @@ mod wire;
 use super::{invalid, io};
 use serde_json::{Value, json};
 
-/// Applies resolved component and extension version selection via [`select::select`] to `request`.
+/// Applies resolved component and extension version selection via [`select::select`] and [`update`] to `request` ([`Request`]).
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     validate::validate(request)?;
     let index = index::Index::new(request);

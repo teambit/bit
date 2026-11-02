@@ -7,7 +7,7 @@ use super::invalid;
 use serde_json::{Map, Value};
 use std::io;
 
-/// Serializes `raw` into a component ID object while preserving `BitId` / `ComponentID` field order.
+/// Serializes `raw` ([`Value`]) via [`parse_parts`] into a component ID object while preserving `BitId` / `ComponentID` field order.
 #[inline]
 pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
     let (scope, name, version) = parse_parts(raw)?;

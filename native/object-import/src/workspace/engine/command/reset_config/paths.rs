@@ -3,7 +3,7 @@
 use super::{invalid, proof};
 use std::{fs, io, path::Path};
 
-/// Captures ordinary directory metadata [`proof::Proof`] records for every ancestor of `destination` up to `root`.
+/// Captures [`ordinary_directory_metadata`] [`proof::Proof`] records for every ancestor [`Path`] of `destination` up to `root`.
 #[inline]
 pub(super) fn capture(
     root: &Path,

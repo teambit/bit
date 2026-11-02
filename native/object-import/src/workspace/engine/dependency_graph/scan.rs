@@ -22,7 +22,7 @@ pub(super) struct ScanBudget {
     output_bytes: AtomicUsize,
 }
 
-/// Scans a single source `file` for imports and resolves its dependencies under `budget`.
+/// Scans a single source `file` ([`Path`]) for imports via [`detected`] and resolves its dependencies under `budget` ([`Budget`]).
 pub(super) fn scan(
     request: &Request,
     file: &Path,

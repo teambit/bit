@@ -76,7 +76,7 @@ fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
         .unwrap_or(&Value::Null)
 }
 
-/// Merges non-empty `message`, `username`, and `email` strings from `values` into `log`.
+/// Merges non-empty `message`, `username`, and `email` strings from `values` into `log` ([`Value`]).
 #[inline]
 fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     for field in ["message", "username", "email"] {
@@ -90,6 +90,7 @@ fn merge(log: &mut Value, values: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Appends or sets `"bump dependencies versions"` on `log` for auto-snapped dependents.
 #[inline]
 fn automatic(log: &mut Value, explicit_message: bool) {
     let message = log["message"].as_str().unwrap_or_default();

@@ -32,7 +32,7 @@ impl Prepared {
     }
 }
 
-/// Prepares the `.bit/stash/<id>.json` [`PreparedSave`] plan for `rows` and optional `message`.
+/// Prepares the `.bit/stash/<id>.json` [`PreparedSave`] plan for `rows` and optional `message` on `retained` ([`Retained`]).
 #[inline]
 fn metadata(
     retained: &Retained,

@@ -71,7 +71,7 @@ pub(super) fn commit(
     Ok(plans.len())
 }
 
-/// Filters `context["targets"]` to the optional `selected` component IDs for `VersionHistory` staging.
+/// Filters `context["targets"]` to the optional `selected` component IDs via [`contains`] for `VersionHistory` staging.
 fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("stash history targets"))?;
     Ok(targets
@@ -86,6 +86,7 @@ fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value
         .collect())
 }
 
+/// Returns `true` when `target["identity"]` matches any trimmed entry in `ids`.
 #[inline]
 fn contains(ids: &[String], target: &Value) -> bool {
     target["identity"]

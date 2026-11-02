@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io, path::Path};
 
-/// Rewrites co-snapped dependency references, rekeys root edges to `hash`, and stores `flattenedEdges`.
+/// Rewrites co-snapped dependency references ([`rewrite_batch_refs`]), rekeys root edges to `hash` ([`rekey`]), and stores `flattenedEdges` ([`store`]).
 #[inline]
 pub(super) fn graph(
     root: &Path,

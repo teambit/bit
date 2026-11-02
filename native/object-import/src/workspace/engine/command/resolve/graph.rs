@@ -56,7 +56,7 @@ fn project_with_saved(
     Ok(())
 }
 
-/// Captures the saved flattened dependency graph from prior head `Version` objects for `materials`.
+/// Captures the [`saved`] flattened dependency graph from prior head `Version` objects in `repository` ([`Repository`]) for `materials` ([`Material`]).
 #[inline]
 pub(super) fn previous_graph(
     materials: &[Material],
@@ -65,6 +65,7 @@ pub(super) fn previous_graph(
     saved::capture(materials, repository)
 }
 
+/// Traverses direct and transitive dependency edges for `identity` and `version`, returning `(flattened, graph)`.
 fn traverse(
     identity: &str,
     version: &Value,

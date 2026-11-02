@@ -11,7 +11,7 @@ struct Additions {
     packages: [Map<String, Value>; 3],
     removals: HashSet<String>,
 }
-/// Applies manual dependency policy additions and promotions from `request` onto `output`.
+/// Applies manual dependency policy [`Additions`] via [`add`] from `request` ([`Request`]) onto `output` ([`Output`]).
 pub(super) fn apply(request: &Request, output: &mut Output) {
     let mut additions = Additions {
         components: std::array::from_fn(|_| Vec::new()),

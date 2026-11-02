@@ -49,7 +49,7 @@ pub(super) fn reports(
         .collect()
 }
 
-/// Builds `snapshotAutoTag` component rows for `ordered` with pinned config dependencies from `components`.
+/// Builds `snapshotAutoTag` component rows for `ordered` ([`ordered`]) with pinned config dependencies from `components` via [`component`].
 #[inline]
 fn build_rows(
     ordered: &[&Value],

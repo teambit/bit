@@ -5,7 +5,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::io;
 
-/// Dispatches a command-domain [`Request`] variant against `snapshots` and `pool`.
+/// Dispatches a command-domain [`Request`] variant against `snapshots` ([`snapshots::State`]) and `pool`, falling back to [`overlay_reads`].
 #[inline]
 pub(super) fn dispatch(
     request: Request,

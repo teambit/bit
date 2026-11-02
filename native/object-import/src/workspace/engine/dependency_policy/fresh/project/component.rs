@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::io;
 
 impl Projection<'_> {
-    /// Classifies a component `package` import `edge` from `origin` into runtime, dev, or [`peer`] dependencies.
+    /// Classifies a component `package` ([`Package`]) import `edge` from `origin` into runtime, dev, or [`peer`] dependencies via [`component_dependency`](Self::component_dependency).
     pub(super) fn component(
         &mut self,
         package: &Package,

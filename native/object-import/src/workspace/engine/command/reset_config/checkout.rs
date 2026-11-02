@@ -51,7 +51,7 @@ pub(super) fn document(
     )
 }
 
-/// Inserts non-seen aspect configuration entries from `config` into `extensions`.
+/// Inserts non-seen aspect configuration entries from `config` into `extensions` ([`Map`]) via [`insert`].
 #[inline]
 fn add_config(
     extensions: &mut Map<String, Value>,
@@ -66,7 +66,7 @@ fn add_config(
     Ok(())
 }
 
-/// Normalizes and inserts a single aspect configuration entry (`id`, `value`) into `extensions`.
+/// Normalizes and inserts a single aspect configuration entry (`id`, `value`) into `extensions` ([`Map`]) for `record` ([`Record`]).
 fn insert(
     extensions: &mut Map<String, Value>,
     seen: &mut HashSet<String>,

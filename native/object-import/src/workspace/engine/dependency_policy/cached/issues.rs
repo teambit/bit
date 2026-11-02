@@ -9,7 +9,7 @@ const MISSING: &str = "MissingPackagesDependenciesOnFs";
 /// Component issue class name for missing manually configured packages (`MissingManuallyConfiguredPackages`).
 const MANUAL: &str = "MissingManuallyConfiguredPackages";
 
-/// Extracts missing filesystem package records from cached `issues`.
+/// Extracts [`MISSING`] filesystem package records from cached `issues` ([`Value`]).
 pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
     let mut seen = HashSet::new();
     let mut missing = Vec::new();

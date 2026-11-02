@@ -48,7 +48,7 @@ pub(super) fn plan(
     if params["soft"] == true { Ok(()) } else { ranges::update(materials) }
 }
 
-/// Builds the `snapshotFutureVersions` component input rows for `materials`.
+/// Builds the `snapshotFutureVersions` component input rows for `materials` ([`Material`]) and [`file::for_component`].
 #[inline]
 fn components(
     materials: &[Material],

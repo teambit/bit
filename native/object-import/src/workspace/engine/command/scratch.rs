@@ -5,13 +5,13 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
-/// Monotonic counter used to allocate unique temporary scratch directory names within the process.
+/// Monotonic counter used by [`Directory::create`] to allocate unique temporary scratch directory names within the process.
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
-/// Owned temporary directory path that removes its contents when dropped.
+/// Owned temporary directory [`PathBuf`] that removes its contents when dropped.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {
-    /// Allocates a new private `0700` temporary directory under the system temp directory.
+    /// Allocates a new private `0700` temporary directory via [`private_builder`] under the system temp directory.
     pub(super) fn create() -> io::Result<Self> {
         let parent = fs::canonicalize(std::env::temp_dir())?;
         let meta = fs::symlink_metadata(&parent)?;

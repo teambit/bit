@@ -9,7 +9,7 @@ use std::{
 
 // Workspace-level range policy is guarded by context eligibility. This retained
 // projection carries the canonical stored/current resolver prefix.
-/// Updates dependency version ranges across co-tagged `materials` using each component's [`prefix`].
+/// Updates dependency version ranges across co-tagged `materials` ([`Material`]) using each component's [`prefix`] via [`update_dependencies`].
 #[inline]
 pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
     let mut versions = HashMap::with_capacity(materials.len());

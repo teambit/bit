@@ -45,7 +45,7 @@ pub(in crate::workspace::engine) fn apply_overlay(
 ) -> io::Result<(usize, Value)> {
     apply_view(request, pool, Some(overlay))
 }
-/// Runs the end-to-end dependency policy pipeline using an optional [`SourceOverlay`].
+/// Runs the end-to-end dependency policy pipeline for `request` ([`Request`]) using an optional [`SourceOverlay`].
 fn apply_view(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -75,6 +75,7 @@ fn apply_view(
     Ok((1, output))
 }
 
+/// Builds and validates the [`finalize::Request`] payload from `request.finish` and `initial`.
 fn finish_request(request: &Request, initial: &Value) -> io::Result<Value> {
     let mut finish = request.finish.clone();
     let fields = finish.as_object().ok_or_else(|| invalid("dependency pipeline finalization"))?;

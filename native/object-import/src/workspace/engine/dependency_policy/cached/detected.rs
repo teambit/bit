@@ -4,7 +4,7 @@ use super::{invalid, issues};
 use serde_json::{Value, json};
 use std::io;
 
-/// Extracts the initial pre-policy dependency state from `detected` and `finish`.
+/// Extracts the initial pre-policy dependency state from `detected` and `finish` ([`Value`]) via [`entry`] and [`ignored`].
 pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
     if !detected["allDependencies"]["dependencies"].is_array()
         || !detected["allDependencies"]["devDependencies"].is_array()

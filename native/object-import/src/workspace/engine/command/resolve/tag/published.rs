@@ -14,7 +14,7 @@ pub(in crate::workspace::engine) struct Overrides {
     semver: Value,
 }
 
-/// Applies registry semantic version `input` overrides onto `state.resolve` and updates dependency ranges.
+/// Applies registry semantic version `input` ([`Overrides`]) onto `state.resolve` via [`update`] and [`replace_ids`].
 pub(in crate::workspace::engine) fn apply(
     input: &Overrides,
     state: &mut State,

@@ -72,7 +72,7 @@ fn detect_view(
     captured["readSet"] = serde_json::to_value(controls).map_err(io::Error::other)?;
     project::project(request, &captured, overlay).map(|value| (request.files.len(), value))
 }
-/// Completes fresh dependency detection and applies policies for `request` against the filesystem.
+/// Completes fresh dependency detection and applies policies for `request` ([`Complete`]) against the filesystem via [`apply_view`].
 #[inline]
 pub(in crate::workspace::engine) fn apply(
     request: &Complete,
@@ -80,6 +80,7 @@ pub(in crate::workspace::engine) fn apply(
 ) -> io::Result<(usize, Value)> {
     apply_view(request, pool, None)
 }
+/// Completes fresh dependency detection and applies policies for `request` ([`Complete`]) against an in-memory [`SourceOverlay`].
 #[inline]
 pub(in crate::workspace::engine) fn apply_overlay(
     request: &Complete,

@@ -9,7 +9,7 @@ use super::{
 };
 use serde_json::{Value, json};
 use std::io;
-/// Initializes a workspace command owner on `state`, capturing control proofs and checkout targets.
+/// Initializes a workspace command [`Record`] owner on `state` ([`State`]), capturing [`preparation_proofs`] and [`checkout_targets`].
 pub(super) fn run(
     mut request: Prepare,
     state: &mut State,

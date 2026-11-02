@@ -61,6 +61,7 @@ pub(super) fn validate(input: &Validate, state: &mut State) -> io::Result<(usize
     Ok((sources.len(), json!({"token":retained.record.token,"sourceReadSet":sources})))
 }
 
+/// Verifies that `retained` ([`Retained`]) is in [`publication::Phase::Pending`] and matches `token`.
 #[inline]
 fn pending(retained: &Retained, token: &str) -> io::Result<()> {
     let token = token.trim();
@@ -74,6 +75,7 @@ fn pending(retained: &Retained, token: &str) -> io::Result<()> {
     Ok(())
 }
 
+/// Applies a [`Refresh`] payload onto `snapshots.command.resolve` via [`refresh`].
 #[inline]
 pub(super) fn apply(
     input: Refresh,

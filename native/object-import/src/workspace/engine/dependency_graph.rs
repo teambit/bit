@@ -52,6 +52,7 @@ pub(super) struct Request {
     visited: Option<serde_json::Map<String, Value>>,
 }
 
+/// TypeScript and custom detector options for a dependency graph [`Request`].
 #[derive(Deserialize)]
 struct DetectorOptions {
     typescript: bool,
@@ -59,6 +60,7 @@ struct DetectorOptions {
     custom: Option<HashMap<String, CustomDetection>>,
 }
 
+/// Custom detector overrides, source hash, and resolved path lookups for a single file.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct CustomDetection {

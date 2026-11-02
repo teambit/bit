@@ -46,6 +46,7 @@ pub(in crate::workspace::engine) struct Complete {
     pub(super) finish: Value,
     pub(super) resolution: Value,
 }
+/// Captured fresh detection snapshot, component version entries, and cryptographic [`Proof`] read set.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Capture {
@@ -54,6 +55,7 @@ pub(super) struct Capture {
     pub(super) component_versions: Vec<ComponentVersion>,
     pub(super) read_set: Vec<Proof>,
 }
+/// Component dependency bucket/index location and resolved concrete/dependent version strings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct ComponentVersion {

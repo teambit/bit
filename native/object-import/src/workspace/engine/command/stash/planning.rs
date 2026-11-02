@@ -12,7 +12,7 @@ use crate::workspace::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, fs, io};
 
-/// Captures workspace sources, selects modified components, and projects dependency graphs onto `retained`.
+/// Captures workspace sources, selects modified components via [`select`], and projects dependency graphs onto `retained` ([`Retained`]).
 pub(super) fn plan(
     retained: &mut Retained,
     input: Plan,

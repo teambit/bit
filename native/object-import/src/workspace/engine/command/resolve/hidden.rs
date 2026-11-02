@@ -75,7 +75,7 @@ fn candidates(
     Ok(candidates)
 }
 
-/// Computes auto-tag cascade reports for hidden lane `candidates` triggered by `selected`.
+/// Computes [`cascade::reports`] for hidden lane `candidates` ([`candidates`]) triggered by `selected`.
 fn reports(
     candidates: &[(crate::command_import::lane::Entry, Value)],
     current: &[Value],

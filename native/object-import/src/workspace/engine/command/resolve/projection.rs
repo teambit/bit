@@ -51,7 +51,7 @@ impl Component {
             .collect()
     }
 
-    /// Formats `<packageName>@<version>` strings for config-pinned dependencies matching `filter_ids`.
+    /// Formats `<packageName>@<version>` strings for [`config_pinned_entries`](Self::config_pinned_entries) matching `filter_ids`.
     pub(in crate::workspace::engine::command) fn pinned_packages_for(
         &self,
         filter_ids: &HashSet<&str>,
@@ -84,6 +84,7 @@ impl Component {
     }
 }
 
+/// Attaches `pinnedDependentPackages` warning rows onto `result` for `components` ([`Component`]) referencing `materials`.
 pub(super) fn attach_pinned_dependents(
     retained: &super::Retained,
     components: &[Component],

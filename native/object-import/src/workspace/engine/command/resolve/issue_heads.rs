@@ -52,7 +52,7 @@ fn has_head(heads: &[Value], hash: &str) -> bool {
         })
 }
 
-/// Resolves the canonical `scope/name` identity for `model` using `context` targets or `defaultScope`.
+/// Resolves the canonical `scope/name` identity for `model` ([`Value`]) using `context` targets or `defaultScope`.
 fn model_identity(context: &Value, model: &Value) -> io::Result<String> {
     if model["scope"]
         .as_str()

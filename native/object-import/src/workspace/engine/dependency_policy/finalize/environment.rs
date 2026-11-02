@@ -5,7 +5,7 @@ use crate::workspace::engine::{dependency_policy::wire::version, invalid};
 use serde_json::Value;
 use std::io;
 
-/// Applies environment dependency policy overrides and plus-version resolution onto `output`.
+/// Applies environment dependency policy overrides ([`remove_existing`]) and plus-version resolution ([`resolve`]) onto `output` ([`Output`]).
 pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
     remove_existing(request, output);
     for (name, value) in &request.environment.policy {

@@ -4,7 +4,7 @@ use super::{Material, invalid};
 use serde_json::{Value, json};
 use std::io;
 
-/// Reconciles `version` parents, squash metadata, and unrelated-history references from `material.pending`.
+/// Reconciles `version` parents ([`merge_parent`]), [`squash`] metadata, and [`unrelated`]-history references from `material.pending` ([`Material`]).
 pub(super) fn reconcile(
     version: &mut Value,
     material: &Material,

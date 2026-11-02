@@ -45,7 +45,7 @@ pub(in crate::workspace::engine::command) fn additions(
     Ok(())
 }
 
-/// Converts a single `addedTargets` entry into a [`crate::command_import::Target`] for object import.
+/// Converts a single `addedTargets` entry into a [`crate::command_import::Target`] for object import via [`identity_parts`].
 #[inline]
 fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> {
     let version = target["version"]
@@ -58,6 +58,7 @@ fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> 
     Ok(crate::command_import::Target { scope: Some(scope), name, version: version.into() })
 }
 
+/// Extracts `(scope, name)` from `target["identity"]`, `target["id"]`, or explicit `scope`/`name` fields.
 fn identity_parts(target: &Value) -> io::Result<(String, String)> {
     if let Some(identity) = target["identity"]
         .as_str()

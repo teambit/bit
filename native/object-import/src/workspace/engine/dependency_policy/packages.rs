@@ -6,7 +6,7 @@ use super::{
 };
 use serde_json::{Map, Value};
 
-/// Prepares package and component dependency buckets on `plan` according to `request` policies.
+/// Prepares package and component dependency buckets on `plan` ([`Plan`]) according to `request` ([`Request`]) policies.
 #[inline]
 pub(super) fn prepare(request: &Request, plan: &mut Plan) {
     model_peers(request, plan);

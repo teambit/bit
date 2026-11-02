@@ -34,6 +34,7 @@ pub(super) struct Resolved {
     pub(super) component_identity: Option<String>,
     pub(super) concrete_version: Option<String>,
 }
+/// Environment policy, workspace policy, and model component/package inputs for [`Request`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Environment {
@@ -42,6 +43,7 @@ pub(super) struct Environment {
     pub(super) model_components: Vec<Entry>,
     pub(super) model_packages: Packages,
 }
+/// Finalized dependency policy state, added/missing lists, self-references, and environment-owned keys.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Output {

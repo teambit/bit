@@ -7,7 +7,7 @@ use std::{collections::HashMap, io};
 /// Adjacency map of saved flattened dependency edges keyed by source component identity.
 pub(super) type Graph = HashMap<String, Vec<Value>>;
 
-/// Captures saved flattened dependency edges from the current head `Version` of each entry in `materials`.
+/// Captures saved flattened dependency edges from the current head `Version` of each entry in `materials` ([`Material`]) via [`append`].
 #[inline]
 pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io::Result<Graph> {
     let mut graph = Graph::new();

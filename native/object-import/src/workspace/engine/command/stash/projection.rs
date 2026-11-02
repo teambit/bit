@@ -74,7 +74,7 @@ fn clean_extensions(version: &mut Value) {
     }
 }
 
-/// Strips empty version fields and trailing `@` markers from a single dependency-resolver entry.
+/// Strips empty version fields and trailing `@` markers from a single dependency-resolver entry via [`remove_empty_version`].
 #[inline]
 fn clean_resolver_dependency(dependency: &mut Value) {
     remove_empty_version(dependency);
@@ -90,6 +90,7 @@ fn clean_resolver_dependency(dependency: &mut Value) {
     }
 }
 
+/// Removes a trailing `@` from a string `value` or removes an empty `"version": ""` field from an object `value`.
 #[inline]
 fn remove_empty_version(value: &mut Value) {
     if let Some(stripped) = value

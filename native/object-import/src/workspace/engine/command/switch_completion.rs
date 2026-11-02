@@ -54,12 +54,14 @@ impl Retained {
         }
         Ok(())
     }
+    /// Marks the checkout phase as published after validating `self.bitmap`.
     #[inline]
     pub(super) fn published(&mut self) -> io::Result<()> {
         self.bitmap.validate()?;
         self.applied = true;
         Ok(())
     }
+    /// Commits deferred `tracking` and `bitmap` writes and returns the completion receipt.
     fn commit(&self, file_id: &str) -> io::Result<Value> {
         if !self.applied {
             return Err(invalid("switch checkout not published"));

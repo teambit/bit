@@ -65,6 +65,7 @@ impl Reader {
         let value = crate::parse_jsonc(&bytes)?;
         Ok(Some(value))
     }
+    /// Resolves and caches the `node_modules` [`Package`] manifest and component metadata for `resolved`.
     pub(super) fn package(&mut self, resolved: &str) -> io::Result<Package> {
         let directory = directory(resolved)?;
         if let Some(package) = self.packages.get(&directory) {

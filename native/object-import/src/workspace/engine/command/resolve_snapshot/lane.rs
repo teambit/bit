@@ -4,7 +4,7 @@ use super::{super::repository::Repository, Material, invalid, snapshot};
 use serde_json::{Value, json};
 use std::io;
 
-/// Synthesizes updated `Lane` and `LaneHistory` objects into `objects` for `materials` and `receipt`.
+/// Synthesizes updated `Lane` and `LaneHistory` objects into `objects` for `materials` ([`Material`]) and `receipt` via [`apply_allocations`].
 pub(super) fn lane_objects(
     lane: &Value,
     materials: &[Material],

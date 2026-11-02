@@ -13,7 +13,7 @@ use std::{
     io,
 };
 
-/// Captures circular dependency and multiple-version issue diagnostics across `components` and `materials`.
+/// Captures circular dependency and multiple-version issue diagnostics across `components` ([`Component`]) and `materials` ([`Material`]).
 pub(super) fn capture(
     components: &[Component],
     current: &[Value],

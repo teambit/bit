@@ -59,7 +59,7 @@ pub(super) fn canonical(message: String) -> io::Error {
     crate::workspace::engine::response::canonical(message)
 }
 
-/// Rejects lane switches when any workspace or lane target resolves to a soft-removed `Version` object.
+/// Rejects lane switches when any workspace or lane target resolves to a soft-removed `Version` object via [`reject_removed_target`].
 #[inline]
 pub(super) fn reject_removed_targets(
     root: &Path,
@@ -76,6 +76,7 @@ pub(super) fn reject_removed_targets(
     Ok(())
 }
 
+/// Verifies that a single workspace `target` does not resolve to a soft-removed `Version` object.
 fn reject_removed_target(
     scope: &Path,
     context: &Value,

@@ -52,7 +52,7 @@ struct GeneratedFile {
     url: Option<String>,
 }
 
-/// Captures builder-generated artifact `Source` objects from `receipt` into `objects` and records read `proofs`.
+/// Captures builder-generated [`GeneratedFile`] `Source` objects from `receipt` into `objects` under [`artifact_root`] and records read `proofs`.
 pub(super) fn artifacts(
     receipt: &mut Value,
     objects: &mut Vec<Value>,
@@ -87,6 +87,7 @@ pub(super) fn artifacts(
     Ok(())
 }
 
+/// Validates and returns the absolute `artifactRoot` directory [`PathBuf`] from `receipt`.
 #[inline]
 fn artifact_root(receipt: &Value) -> io::Result<PathBuf> {
     let root = receipt["artifactRoot"]

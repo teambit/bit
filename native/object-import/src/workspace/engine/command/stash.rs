@@ -57,6 +57,7 @@ pub(in crate::workspace::engine) struct StageHistory {
     prepare_only: bool,
     selected_ids: Option<Vec<String>>,
 }
+/// Deserialized allocation entry mapping a component `identity` to its detached `Version` `hash` and optional `log`.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Allocation {
@@ -64,11 +65,13 @@ struct Allocation {
     hash: String,
     log: Option<Value>,
 }
+/// Deserialized request payload to persist a prepared stash transaction identified by `token`.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Persist {
     token: String,
 }
+/// Captured modified or new component metadata, source files, and `.bitmap` entry for a `stash save` batch.
 struct Component {
     identity: String,
     id: Value,

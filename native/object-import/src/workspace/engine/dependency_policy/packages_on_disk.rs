@@ -42,7 +42,7 @@ pub(in crate::workspace::engine) fn read_overlay(
 ) -> io::Result<(usize, Value)> {
     read_view(request, pool, Some(overlay))
 }
-/// Resolves installed `node_modules` package metadata for `request` using an optional [`SourceOverlay`].
+/// Resolves installed `node_modules` package metadata for `request` ([`Request`]) using an optional [`SourceOverlay`].
 fn read_view(
     request: &Request,
     pool: &rayon::ThreadPool,
@@ -67,6 +67,7 @@ fn read_view(
     }
     Ok((resolved.len(), output))
 }
+/// Locates and resolves a single package `name` under `budget` ([`Budget`]) using [`metadata::resolved`].
 fn resolve(
     request: &Request,
     name: &str,

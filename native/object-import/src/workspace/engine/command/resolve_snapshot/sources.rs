@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
-/// Captures `Source` objects from `material.files` into `objects` and attaches sorted file entries to `version`.
+/// Captures `Source` objects from `material.files` ([`Material`]) into `objects` via [`capture_file`] and attaches sorted file entries to `version`.
 #[inline]
 pub(super) fn sources(
     version: &mut Value,

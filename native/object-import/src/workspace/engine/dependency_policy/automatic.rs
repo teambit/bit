@@ -4,7 +4,7 @@ use super::{Plan, Request, wire::version};
 use serde_json::Value;
 use std::collections::HashSet;
 
-/// Applies automatic dependency policies from `request` onto `plan` while skipping ignored entries.
+/// Applies automatic dependency policies from `request` ([`Request`]) onto `plan` ([`Plan`]) via [`detected`] and [`update`].
 pub(super) fn apply(request: &Request, plan: &mut Plan) {
     let mut seen = HashSet::new();
     for field in 0..3 {

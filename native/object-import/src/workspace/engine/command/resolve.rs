@@ -82,12 +82,13 @@ pub(super) struct Policy {
     pub skip_published_versions: bool,
 }
 
-/// Deduplicated component `identities` and `load_count` selected for a `snap` or `tag` batch.
+/// Deduplicated component `identities` and `load_count` selected for a [`snap`] or [`tag`] batch.
 struct Selection {
     identities: Vec<String>,
     load_count: usize,
 }
 impl Selection {
+    /// Deduplicates and normalizes `identities` into a bare `scope/name` [`Selection`] with matching `load_count`.
     fn unique(identities: Vec<String>) -> Self {
         let mut unique = Vec::with_capacity(identities.len());
         for id in identities {

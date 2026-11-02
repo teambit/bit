@@ -53,7 +53,7 @@ pub(super) fn semver(file: Option<&Value>, base: &Value) -> io::Result<Value> {
     Ok(Value::Object(output))
 }
 
-/// Resolves versions-file tag data for `identity`, ignoring `DEFAULT` when `automatic_root` is `true`.
+/// Resolves versions-file [`tag_data`] for `identity`, ignoring `DEFAULT` when `automatic_root` is `true`.
 #[inline]
 pub(super) fn for_component(
     file: Option<&Value>,

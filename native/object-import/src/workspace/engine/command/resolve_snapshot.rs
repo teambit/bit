@@ -81,6 +81,7 @@ pub(super) struct Participation {
     pub automatic: bool,
 }
 
+/// Staged [`snapshot::Snapshot`] objects, [`proof::Proof`] records, optional [`Repository`], and built `versions` ([`Value`]).
 pub(super) struct Snapshot {
     objects: snapshot::Snapshot,
     proofs: Vec<proof::Proof>,
@@ -89,6 +90,7 @@ pub(super) struct Snapshot {
 }
 
 impl Snapshot {
+    /// Updates retained read `proofs` and `repository` with newly published `files` and re-validates `self`.
     pub(super) fn accept_published(
         &mut self,
         files: &HashMap<std::path::PathBuf, Vec<u8>>,

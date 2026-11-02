@@ -2,7 +2,7 @@
 
 use super::{Value, invalid, io, json};
 
-/// Resolves installed package identity and concrete version metadata from `package` and `dependent`.
+/// Resolves installed package [`identity`] and [`concrete_version`] metadata from `package` and `dependent` ([`Value`]).
 pub(super) fn resolved(
     name: &str,
     package: Option<&Value>,

@@ -40,7 +40,7 @@ pub(super) fn select(
     Ok(selected)
 }
 
-/// Extracts and deduplicates `scope/name` component identities from `pending` unmerged rows.
+/// Extracts and deduplicates `scope/name` component identities from `pending` unmerged rows via [`identity`].
 #[inline]
 fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
     let mut unresolved = Vec::with_capacity(pending.len());

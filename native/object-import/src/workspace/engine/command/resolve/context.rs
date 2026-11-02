@@ -11,7 +11,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::io;
-/// Prepares a retained `snap`, `tag`, or `merge --resolve` context, repository, and read proofs.
+/// Prepares a [`Retained`] `snap`, `tag`, or `merge --resolve` context, [`repository::Repository`], and [`proof`] records.
 #[inline]
 pub(super) fn prepare(
     request: &Prepare,

@@ -53,7 +53,7 @@ pub(super) fn include(
     Ok(true)
 }
 
-/// Returns the workspace-root component identity auto-added to the current snap batch, if any.
+/// Returns the workspace-root component identity auto-added via [`AUTO`] to the current snap batch, if any.
 #[inline]
 pub(super) fn added(retained: &Retained) -> Option<&str> {
     retained.record.context[AUTO]
@@ -62,6 +62,7 @@ pub(super) fn added(retained: &Retained) -> Option<&str> {
         .filter(|root| !root.is_empty())
 }
 
+/// Returns the non-removed workspace-root target entry (`directory == "."`) from `context`, if present.
 #[inline]
 fn target(context: &Value) -> Option<&Value> {
     context["targets"]
@@ -73,6 +74,7 @@ fn target(context: &Value) -> Option<&Value> {
         })
 }
 
+/// Writes [`ASPECT`] provenance data onto non-hidden `materials` ([`Material`]) via [`provenance_data`].
 #[inline]
 pub(super) fn provenance(retained: &Retained, materials: &mut [Material]) -> io::Result<()> {
     let root = target(&retained.record.context);

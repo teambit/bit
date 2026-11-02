@@ -41,7 +41,7 @@ impl Prepared {
         Ok(())
     }
 }
-/// Prepares `unmerged.json` and `merge-conflict` cleanup plans for resolved `identities` under `root`.
+/// Prepares `unmerged.json` and `merge-conflict` ([`prepare_conflict`]) [`Prepared`] cleanup plans for resolved `identities` under `root`.
 pub(super) fn prepare(
     root: &Path,
     pending: &[Value],
@@ -57,6 +57,7 @@ pub(super) fn prepare(
     let conflict = prepare_conflict(root, pending, identities, proofs)?;
     Ok(Prepared { pending: path, bytes, conflict, staged: false })
 }
+/// Prepares the `merge-conflict` file update or removal plan via [`retained_sections`] for unresolved `pending` entries.
 fn prepare_conflict(
     root: &Path,
     pending: &[Value],

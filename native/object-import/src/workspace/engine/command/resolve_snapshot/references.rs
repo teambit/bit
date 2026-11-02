@@ -7,7 +7,7 @@ use std::{
     io,
 };
 
-/// Recursively rewrites co-snapped component references in `value` using `hashes` and `pinned`.
+/// Recursively rewrites co-snapped component references in `value` ([`Value`]) using `hashes` and `pinned` via [`update_object`].
 pub(super) fn rewrite_batch_refs(
     value: &mut Value,
     hashes: &HashMap<&str, &str>,

@@ -48,6 +48,7 @@ impl Proof {
     }
 }
 impl Metadata {
+    /// Captures the file kind (`missing`, `file`, `directory`, `other`) and canonicalized path for `file`.
     fn capture(file: &Path, metadata: Option<&fs::Metadata>) -> io::Result<Self> {
         let kind = match metadata {
             None => "missing",
@@ -59,11 +60,13 @@ impl Metadata {
         Ok(Self { kind: kind.to_owned(), real_path })
     }
 }
+/// Wire request payload carrying a `read_set` of [`Proof`] records to verify.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
     read_set: Vec<Proof>,
 }
+/// Verifies `request.read_set` via [`verify`] and returns `{"fresh": true}`.
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     verify(&request.read_set)?;
     Ok((request.read_set.len(), serde_json::json!({"fresh":true})))

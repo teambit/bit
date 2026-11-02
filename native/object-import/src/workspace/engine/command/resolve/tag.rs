@@ -75,7 +75,7 @@ pub(super) fn select(
     candidate_selection(retained, captured)
 }
 
-/// Returns the candidate component identities eligible for tagging in `captured`.
+/// Returns the candidate component identities eligible for tagging in `captured` via [`candidate_selection`].
 #[inline]
 pub(super) fn candidate_ids(
     retained: &mut Retained,
@@ -84,7 +84,7 @@ pub(super) fn candidate_ids(
     candidate_selection(retained, captured).map(|selection| selection.identities)
 }
 
-/// Builds the [`Selection`] of modified, new, and head-snapped components eligible for tagging.
+/// Builds the [`Selection`] of modified, new, and head-snapped components eligible for tagging from `captured` ([`capture::Captured`]).
 fn candidate_selection(
     retained: &mut Retained,
     captured: &[capture::Captured],

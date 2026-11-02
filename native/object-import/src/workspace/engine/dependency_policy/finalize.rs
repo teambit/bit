@@ -12,7 +12,7 @@ use super::{invalid, io};
 use serde_json::{Value, json};
 use wire::Output;
 
-/// Finalizes `request` by applying [`environment`] and [`manual`] dependency policies.
+/// Finalizes `request` ([`Request`]) into [`Output`] by applying [`environment`] and [`manual`] dependency policies.
 #[inline]
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;

@@ -64,6 +64,7 @@ impl State {
         Ok(())
     }
 
+    /// Records a relative import `source` from `origin` into another workspace component `owner` ([`Owner`]).
     #[inline]
     pub(super) fn authored(
         &mut self,
@@ -84,6 +85,7 @@ impl State {
     }
 }
 
+/// Loads all tracked workspace component [`Owner`] records from `.bitmap` under `request.root`.
 fn owners(request: &Detect) -> io::Result<Vec<Owner>> {
     let text = match fs::read_to_string(request.root.join(".bitmap")) {
         Ok(text) => text,
