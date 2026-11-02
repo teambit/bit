@@ -30,6 +30,7 @@ use std::io;
 use workspace::{Workspace, read as workspace};
 /// Aspect ID for the dependency resolver extension (`teambit.dependencies/dependency-resolver`).
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Standard `package.json` dependency lifecycle field names (`dependencies`, `devDependencies`, `peerDependencies`).
 const FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
 const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];

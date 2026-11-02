@@ -3,7 +3,7 @@
 //! [`normalized`] resolves `.` and `..` segments in a [`Path`] into a clean [`PathBuf`] without disk I/O.
 use std::path::{Path, PathBuf};
 
-/// Lexically normalizes `.` and `..` segments in `path` into a clean [`PathBuf`] without touching the filesystem or following symlinks.
+/// Lexically normalizes `.` and `..` segments in `path` into a clean [`PathBuf`] without disk I/O or symlink traversal.
 #[inline]
 pub(super) fn normalized(path: &Path) -> PathBuf {
     let path = path.to_str().map_or(path, |text| Path::new(text.trim()));

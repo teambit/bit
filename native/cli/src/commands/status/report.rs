@@ -16,7 +16,9 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
+/// Issue summary label when tag-blocking component issues are present.
 const FAILURE: &str = "issues found";
+/// Issue summary label when only non-blocking warnings are present.
 const WARNINGS: &str = "warnings found";
 const CLEAN: &str = r#"nothing to tag or export (use "bit create <template> <component>" to generate a new component)"#;
 const IMPORT_PENDING: &str = r#"your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope."#;

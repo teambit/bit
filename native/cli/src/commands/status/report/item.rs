@@ -48,6 +48,7 @@ impl Status<'_> {
         self.item_with_soft_tag(id, false, None, false, false)
     }
 
+    /// Formats a component status line with optional issues, local versions, and `(soft-tagged)` suffix.
     fn item_with_soft_tag(
         &self,
         id: (&str, Option<&str>),

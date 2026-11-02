@@ -23,7 +23,7 @@ use bit_install::output::Output;
 use serde_json::Value;
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the native `bit switch` command.
+/// Descriptor for the native `bit switch` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "switch", aliases: &[], run };
 /// Entry point for `bit switch`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {

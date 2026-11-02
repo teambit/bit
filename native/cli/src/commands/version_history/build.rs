@@ -83,6 +83,7 @@ fn select(root: &ScopeRoot, id: &str, from: Option<&str>) -> Option<Vec<String>>
     Some(vec![prepare(root, id, from)?])
 }
 
+/// Resolves component identities matching glob or comma-separated `pattern` for a version-history rebuild in `root`.
 fn by_pattern(root: &ScopeRoot, pattern: &str, from: Option<&str>) -> Option<Vec<String>> {
     if pattern
         .split(',')

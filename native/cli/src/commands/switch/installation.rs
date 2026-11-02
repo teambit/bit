@@ -11,7 +11,7 @@ use bit_install::{HostInfo, output::Output};
 use serde_json::json;
 use std::{io, path::Path, sync::Arc};
 
-/// Runs component compilation, package installation, and link generation after a lane switch.
+/// Runs component compilation, package installation, and link generation on `planned` after a lane switch.
 pub(super) fn run(
     root: &Path,
     planned: &mut Planned,

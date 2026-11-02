@@ -76,6 +76,7 @@ fn emit_watch_err(
     })
 }
 
+/// Returns `true` when CI environment variables disable interactive native error paths.
 #[inline]
 fn ci_enabled() -> bool {
     super::scope_rename::ci_active()

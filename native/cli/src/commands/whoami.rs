@@ -20,7 +20,7 @@ use std::{
     time::Duration,
 };
 
-/// Descriptor for the native `bit whoami` command.
+/// Descriptor for the native `bit whoami` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "whoami", aliases: &[], run };
 
 /// Entry point for `bit whoami`.

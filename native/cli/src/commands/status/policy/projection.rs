@@ -90,6 +90,7 @@ fn populate(
     Ok(())
 }
 
+/// Parses and adds an optional aspect configuration map `config` onto `merger` under `origin`.
 fn add_config(
     merger: &mut Merger<'_>,
     config: Option<&Value>,

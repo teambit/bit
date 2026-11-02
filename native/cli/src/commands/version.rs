@@ -15,7 +15,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the native `bit version` command.
+/// Descriptor for the native `bit version` command ([`COMMAND`]).
 pub const COMMAND: Command = Command { name: "version", aliases: &[], run };
 
 /// Entry point for `bit version`.

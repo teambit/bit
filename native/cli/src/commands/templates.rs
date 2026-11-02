@@ -85,6 +85,7 @@ fn run_outside_workspace(
     workspace_command::execute_with_scope(cwd, args, "templates", &report)
 }
 
+/// Executes `bit templates` when invoked inside a workspace at `root`.
 fn run_inside_workspace(
     root: &Path,
     args: &[OsString],

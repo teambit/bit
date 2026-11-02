@@ -56,6 +56,7 @@ pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {
             })
 }
 
+/// Parses CLI `args` into [`Options`] for `bit ui-build [ui-root-name]`.
 #[must_use]
 #[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {

@@ -11,6 +11,7 @@ use crate::commands::status::js::{array, decline, nullish, object, text, truthy}
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
+/// Three-element array of [`Map`] values corresponding to [`FIELDS`] (`dependencies`, `devDependencies`, `peerDependencies`).
 type Fields = [Map<String, Value>; 3];
 
 /// Merged manual, automatic, and environment-owned dependency policies for one component across [`FIELDS`].

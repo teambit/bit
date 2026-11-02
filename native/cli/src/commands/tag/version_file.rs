@@ -10,7 +10,7 @@ use bit_install::policy::scope::read_proof;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Parsed `--versions-file` payload paired with its filesystem read proof.
+/// Parsed `--versions-file` payload paired with its filesystem [`read_proof`] receipt.
 pub(super) struct Captured {
     pub(super) data: Value,
     pub(super) proof: Value,

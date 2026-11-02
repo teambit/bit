@@ -70,6 +70,7 @@ impl<'r> Status<'r> {
             .collect())
     }
 
+    /// Formats the `updates from <forked-lane>` status section when `forkedLaneId` is present.
     fn forked_section(&self) -> io::Result<String> {
         let Some(id) = self.result.get("forkedLaneId").and_then(serde_json::Value::as_str) else {
             return Ok(String::new());

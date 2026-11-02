@@ -82,6 +82,7 @@ your workspace.jsonc has this component-id set in the "teambit.workspace/variant
     ))
 }
 
+/// Returns `true` when `aspect_key` is a `teambit.harmony/*` aspect not present in the core aspect catalog.
 #[inline]
 fn is_unknown_harmony_aspect(aspect_key: &str) -> bool {
     let bare = bit_install::config::aspect_id_without_version(aspect_key.trim());

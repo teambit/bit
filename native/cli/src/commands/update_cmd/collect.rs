@@ -50,6 +50,7 @@ pub(super) struct Collected {
     pub save_prefix: Option<String>,
 }
 
+/// Collects dependency update [`Candidate`] entries across `workspace.jsonc`, `.bitmap`, and `component.json` in `root`.
 pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Collected, String> {
     let ws_bytes = fs::read(root.join("workspace.jsonc")).map_err(|err| err.to_string())?;
     let bitmap_bytes = fs::read(root.join(".bitmap")).map_err(|err| err.to_string())?;

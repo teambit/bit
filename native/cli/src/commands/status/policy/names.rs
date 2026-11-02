@@ -89,6 +89,7 @@ fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[V
     bit_install::workspace::component_package_name(&id, prefix, &aspects)
 }
 
+/// Formats the normalized extension identity string for an extension `id` [`Value`].
 pub(super) fn extension_identity(id: &Value) -> String {
     if let Some(text) = non_empty_str(id).or_else(|| non_empty_str(&id["id"])) {
         return strip_latest_or_head(text).to_string();

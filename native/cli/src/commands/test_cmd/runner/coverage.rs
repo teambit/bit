@@ -79,6 +79,7 @@ fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
     Some(json!({"files":files,"total":total}))
 }
 
+/// Aggregates total, covered, skipped, and percentage counts across `files` for each [`METRICS`] key.
 fn totals(files: &[Value]) -> Option<Value> {
     let mut totals = json!({});
     for metric in METRICS {

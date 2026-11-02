@@ -26,6 +26,7 @@ enum Failure {
 }
 
 impl From<io::Error> for Failure {
+    /// Converts a filesystem [`io::Error`] into [`Failure::Declined`].
     #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error.to_string())

@@ -52,6 +52,7 @@ fn non_empty_os_name(name: Option<&std::ffi::OsStr>) -> Option<&std::ffi::OsStr>
     })
 }
 
+/// Verifies that `path` is either absent or a non-symlink directory residing on `device`.
 #[cfg(unix)]
 #[inline]
 fn valid_directory(path: &Path, device: u64) -> Option<()> {

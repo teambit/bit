@@ -16,7 +16,7 @@ pub(super) struct TemplateDescriptor {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub env: Option<&'static str>,
 }
-/// Core aspect IDs whose workspace starter templates are available outside a workspace.
+/// Core aspect IDs whose [`WORKSPACE_TEMPLATES`] starters are available outside a workspace.
 pub(super) const WORKSPACE_STARTER_ASPECTS: &[&str] = &[
     "teambit.generator/generator",
     "teambit.react/react",

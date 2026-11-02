@@ -73,6 +73,7 @@ impl Inputs {
     }
 }
 
+/// Combines `merge-conflict` and `unmerged.json` configuration entries for `identity`.
 fn configuration(merge: &MergeConfig, rows: &[Value], identity: &str) -> io::Result<Option<Value>> {
     let identity = super::super::js::without_version(identity);
     let raw = merge.raw_component(identity)?;

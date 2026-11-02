@@ -21,7 +21,7 @@ pub(super) fn attribute(value: &str) -> String {
     }
     out
 }
-/// Strips ANSI escape sequences from `value` before XML attribute formatting.
+/// Strips ANSI escape sequences from `value` before [`attribute`] XML formatting.
 #[inline]
 pub(super) fn strip_ansi(value: &str) -> std::borrow::Cow<'_, str> {
     if !value.contains(['\x1b', '\u{9b}']) {

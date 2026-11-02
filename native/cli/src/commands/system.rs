@@ -56,6 +56,7 @@ fn parse_args(args: &[OsString]) -> Option<Parsed> {
     if sub == "log" { Some(Parsed::Log) } else { Some(Parsed::Unrecognized(sub.to_owned())) }
 }
 
+/// Starts a command [`History`] entry when the current working directory is inside a Bit workspace.
 #[inline]
 fn start_history(args: &[OsString]) -> Option<History> {
     env::current_dir()

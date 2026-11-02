@@ -86,6 +86,7 @@ fn merge(target: &mut Value, source: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Partitions multi-component Jest output `raw` across `components` and `identities` into a detailed [`Report`].
 pub(super) fn report_detail(
     root: &Path,
     raw: &Value,

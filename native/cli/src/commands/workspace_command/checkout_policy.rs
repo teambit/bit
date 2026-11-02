@@ -23,7 +23,7 @@ impl Steps<'_> {
     }
 }
 
-/// Evaluates `SemVer` range grammar inputs for `checkoutPolicyPreparation` `receipt`.
+/// Evaluates `SemVer` range grammar inputs for `checkoutPolicyPreparation` `receipt` [`Value`].
 #[inline]
 pub(crate) fn semver(receipt: &Value) -> io::Result<Value> {
     let mut inputs = vec![receipt.clone()];

@@ -50,6 +50,7 @@ fn code_description(code: &str) -> Option<&'static str> {
     }
 }
 
+/// Formats a human-readable environment service failure message for `service`, `environment`, and `error`.
 #[inline]
 pub(in crate::commands) fn message(
     service: &str,

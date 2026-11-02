@@ -73,6 +73,7 @@ fn configured_policy(context: &Value) -> io::Result<Option<&Value>> {
     Ok(Some(policy))
 }
 
+/// Returns `true` when `value` is a non-empty version string or `{ version, preserve? }` policy entry.
 #[inline]
 fn is_valid_policy_version_entry(value: &Value) -> bool {
     let valid_preserve = value

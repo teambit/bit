@@ -64,6 +64,7 @@ fn refs(value: &Value) -> Option<Vec<&str>> {
         .collect()
 }
 
+/// Returns `hash` trimmed when it is a 40-character lowercase ASCII hexadecimal SHA-1 digest.
 #[inline]
 fn valid_hash(hash: &str) -> Option<&str> {
     let hash = hash.trim();

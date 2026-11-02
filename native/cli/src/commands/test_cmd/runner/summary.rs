@@ -73,6 +73,7 @@ fn component(component: &Value) -> Option<Value> {
         "pending":pending,"hasError":has_error}))
 }
 
+/// Returns a trimmed non-empty string slice when `val` is a non-blank JSON string.
 #[inline]
 fn non_empty_str(val: &Value) -> Option<&str> {
     val.as_str()

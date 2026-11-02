@@ -63,6 +63,7 @@ impl Status<'_> {
             .collect()
     }
 
+    /// Formats each component in `unavailableOnMain` as a warning status item line.
     #[inline]
     pub(super) fn unavailable_on_main(&self) -> io::Result<Vec<String>> {
         Ok(ids(self.result, "unavailableOnMain")?

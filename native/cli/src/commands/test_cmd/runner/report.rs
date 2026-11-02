@@ -47,7 +47,7 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
         details: None,
     })
 }
-/// Projects a single Jest `testResults` row into a Bit tester `testFiles` entry.
+/// Projects a single Jest `testResults` `row` [`Value`] into a Bit tester `testFiles` entry.
 fn file(row: &Value) -> io::Result<Value> {
     let non_empty = |key: &str| {
         row[key]

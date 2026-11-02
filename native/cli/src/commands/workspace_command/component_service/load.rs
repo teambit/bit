@@ -36,6 +36,7 @@ impl Loaded {
         &self.capture.captured
     }
 
+    /// Projects the captured component entries and file slices into [`super::Component`] structs.
     pub(in crate::commands) fn components(&self) -> io::Result<Vec<super::Component>> {
         let mut offset = 0;
         self.ids

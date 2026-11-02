@@ -39,6 +39,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
 pub(in crate::commands) fn parse_import(args: &[&str]) -> Option<Options> {
     parse_mode(args, true)
 }
+/// Parses `args` in either `switch` (`import == false`) or `lane import` (`import == true`) mode.
 fn parse_mode(args: &[&str], import: bool) -> Option<Options> {
     let mut options = Options::default();
     let mut seen = HashSet::with_capacity(args.len());

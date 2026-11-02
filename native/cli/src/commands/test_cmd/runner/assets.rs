@@ -63,6 +63,7 @@ fn build_payloads(package: &Path) -> io::Result<[(&'static str, String); 7]> {
     Ok(FILES.map(|(name, source)| (name.trim(), format!("{prefix}{source}"))))
 }
 
+/// Computes the hex-encoded [`Sha1`] digest across all `(name, source)` pairs in `payloads`.
 #[inline]
 fn payload_hash(payloads: &[(&str, String)]) -> String {
     let mut hash = Sha1::new();

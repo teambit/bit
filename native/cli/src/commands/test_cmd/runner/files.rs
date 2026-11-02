@@ -86,6 +86,7 @@ pub(super) fn tests(component: &Component, patterns: &[String]) -> io::Result<Ve
     Ok(paths)
 }
 
+/// Returns `true` when at least one path in `values` resolves to an existing regular file.
 #[inline]
 fn any_existing_file(values: &[String]) -> bool {
     values

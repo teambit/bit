@@ -77,6 +77,7 @@ pub(super) enum FastOutcome {
     SkippedAll { count: usize },
 }
 
+/// Renders a [`FastOutcome`] (empty, error, invalid `--skip-tasks`, or all tasks skipped) into a [`Report`].
 fn emit_fast(
     options: &Options,
     fast: FastOutcome,

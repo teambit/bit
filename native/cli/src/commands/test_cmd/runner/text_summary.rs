@@ -29,6 +29,7 @@ impl Summary<'_> {
                 }
             })
     }
+    /// Formats the trailing `, <n> without tests, <m> not tested due to tester errors` suffix.
     fn suffix(&self) -> String {
         let mut parts = Vec::with_capacity(2);
         let without = self.number("withoutTests");

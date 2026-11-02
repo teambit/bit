@@ -95,6 +95,7 @@ fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+/// Resolves outdated dependencies from `collected`, applies updates, and runs installation in `root`.
 fn execute_update(
     root: &Path,
     args: &[OsString],

@@ -65,6 +65,7 @@ fn resolve_target(root: &Path, id: &str) -> Option<Target> {
     Some(Target { scope, name, model_hash, display, proofs: Vec::new() })
 }
 
+/// Candidate component entry from `index.json` considered when matching a pattern in [`pattern_target`].
 struct Candidate {
     scope: String,
     name: String,

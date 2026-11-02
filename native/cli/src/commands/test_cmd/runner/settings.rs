@@ -92,6 +92,7 @@ impl Settings {
         Ok(())
     }
 
+    /// Applies boolean color, JSON, summary, coverage, and snapshot flags for `token`, returning `true` when matched.
     #[inline]
     fn apply_bool_flag(&mut self, token: &str) -> bool {
         match token {

@@ -47,6 +47,7 @@ impl Session {
     }
 }
 
+/// Maximum serialized byte size (16 MiB) for a Jest worker request or response message.
 const LIMIT: u64 = 16 * 1024 * 1024;
 
 struct Quiet {

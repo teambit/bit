@@ -49,7 +49,7 @@ fn component_directory(component: &Value) -> Value {
         )
 }
 
-/// Normalizes a component file entry into `{ "relativePath": ..., "test": ... }`.
+/// Normalizes a component `file` [`Value`] entry into `{ "relativePath": ..., "test": ... }`.
 #[inline]
 fn normalize_file(file: &Value) -> Value {
     let path = [

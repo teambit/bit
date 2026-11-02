@@ -85,6 +85,7 @@ struct Prepared {
     root: PathBuf,
 }
 
+/// Validates CLI `args`, workspace root, and Node CLI installation into [`Prepared`] for `bit uninstall`.
 fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
     let Some(argv) = parse_arguments(args) else {
         return Ok(Err("arguments are not UTF-8".to_string()));

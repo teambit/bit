@@ -60,6 +60,7 @@ fn projected_extension(extension: &Value) -> io::Result<Value> {
     model_extension(extension, name)
 }
 
+/// Validates and normalizes a bare model `extension` [`Value`] with aspect `name`.
 fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
     let bare = bit_install::config::aspect_id_without_version(name);
     if !CORES.contains(&bare)

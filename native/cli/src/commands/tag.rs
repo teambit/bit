@@ -70,6 +70,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, args, &options, &workflow, &policy)
 }
 
+/// Returns `true` when CI environment variables disable interactive native error paths.
 #[inline]
 fn is_ci() -> bool {
     super::scope_rename::ci_active()

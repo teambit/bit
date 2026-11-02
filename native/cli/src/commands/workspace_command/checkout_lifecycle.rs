@@ -90,6 +90,7 @@ pub(in crate::commands) fn bootstrap_inherited(
     Ok(environment.for_checkout())
 }
 
+/// Appends captured startup and load callback stdout from `capture` onto `startup`.
 #[inline]
 pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &capture::Capture) {
     if let Some(startup) = startup {

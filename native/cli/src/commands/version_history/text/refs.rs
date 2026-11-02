@@ -60,6 +60,7 @@ fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>
     Some(Some(head.to_owned()))
 }
 
+/// Enumerates tracked remote lane ref files under `root/refs/remotes`.
 fn lane_paths(root: &Path) -> Option<Vec<(String, PathBuf)>> {
     let mut paths = Vec::new();
     for remote in entries(&root.join("refs/remotes"))? {

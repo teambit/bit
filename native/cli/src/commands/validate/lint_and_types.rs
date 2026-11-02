@@ -87,6 +87,7 @@ pub(super) fn run_check_types_step(matched: &[(&BitmapEntry, &WorkspaceComponent
     }
 }
 
+/// Checks `TypeScript` source files in `comp` for syntax and type errors, appending diagnostics into `details`.
 fn check_component_types(
     comp: &WorkspaceComponent,
     error_files: &mut usize,

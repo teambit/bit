@@ -91,6 +91,7 @@ fn file_scope_supported(scope: &std::path::Path) -> bool {
         && build::supported_startup(&root, scope) == Some(true)
 }
 
+/// Returns `true` when `index.json` in `scope` is absent or contains no staged/unexported entries.
 #[inline]
 fn clean_index(scope: &std::path::Path) -> bool {
     let bytes = match std::fs::read(scope.join("index.json")) {

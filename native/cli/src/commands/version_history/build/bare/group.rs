@@ -48,6 +48,7 @@ pub(super) fn resolve(name: &str) -> Option<(PathBuf, Vec<u8>)> {
     Some((path, bytes))
 }
 
+/// Stub for non-Unix platforms where `/etc/group` GID resolution is not applicable.
 #[cfg(not(unix))]
 #[inline]
 pub(super) fn resolve(_name: &str) -> Option<(PathBuf, Vec<u8>)> {

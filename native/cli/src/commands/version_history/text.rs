@@ -79,6 +79,7 @@ fn render(
     Some(output.join("\n"))
 }
 
+/// Formats a single [`graph::Node`] line with its parent hashes, tags, and lane/head pointers.
 fn format_row(
     model: &Value,
     graph: &graph::Graph,

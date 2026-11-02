@@ -83,6 +83,7 @@ fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     Some(Subcommand::Build(id?, from, remote))
 }
 
+/// Applies a single `bit version-history build` CLI argument or flag onto `id`, `from`, or `remote`.
 #[inline]
 fn apply_build_arg<'a>(
     argument: &'a str,

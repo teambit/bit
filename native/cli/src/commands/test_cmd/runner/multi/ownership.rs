@@ -61,6 +61,7 @@ fn check(root: &Path, path: &Path) -> io::Result<()> {
     Ok(())
 }
 
+/// Recursively verifies that `directory` contains no symbolic links.
 fn reject_symlinks(directory: &Path) -> io::Result<()> {
     for entry in fs::read_dir(directory)? {
         let entry = entry?;

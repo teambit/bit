@@ -90,6 +90,7 @@ fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
     Ok(order)
 }
 
+/// Extracts the trimmed component identity string used for sorting a status `row` [`Value`].
 #[inline]
 fn sort_id(row: &Value) -> io::Result<String> {
     if let Value::String(id) = row {

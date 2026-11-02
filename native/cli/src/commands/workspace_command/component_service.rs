@@ -45,6 +45,7 @@ fn invalid(message: &str) -> io::Error {
     io::Error::other(message)
 }
 
+/// Returns `val` trimmed without reallocating when no leading or trailing whitespace is present.
 #[inline]
 fn trim_owned(val: String) -> String {
     if val.trim().len() == val.len() { val } else { val.trim().to_owned() }

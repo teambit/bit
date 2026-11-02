@@ -71,6 +71,7 @@ fn lane_component_id(id: &Value) -> Option<(&str, &str)> {
     Some((identifier(raw_scope)?, identifier(raw_name)?))
 }
 
+/// Extracts the hidden head hash for `scope`/`name` from a lane's `updateDependents` array `hidden`.
 #[inline]
 fn hidden_head(hidden: &Value, scope: &str, name: &str) -> Option<Option<String>> {
     if hidden.is_null() {

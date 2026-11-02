@@ -44,6 +44,7 @@ impl Refreshes {
         Ok(Self { main, forked })
     }
 
+    /// Attaches `forkedLaneId`, `pendingUpdatesFromMain`, and `updatesFromForked` onto `result`.
     #[inline]
     pub(super) fn attach(&self, result: &mut Value, context: &Value) {
         if let Some(forked) = forked_lane_id(context) {

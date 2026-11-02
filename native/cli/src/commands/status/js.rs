@@ -94,7 +94,7 @@ pub fn text(value: Option<&Value>) -> io::Result<&str> {
     }
 }
 
-/// `target.identity + (target.version ? '@' + target.version : '')`.
+/// `target.identity + (target.version ? '@' + target.version : '')` formatted for status outputs.
 pub fn full_identity(target: &Value) -> io::Result<String> {
     let identity =
         match non_empty_str(target.get("identity")).or_else(|| non_empty_str(target.get("id"))) {

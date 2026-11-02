@@ -68,7 +68,7 @@ pub struct Planned {
 }
 
 impl Planned {
-    /// Reuse the retained command's pool for fresh post-write tooling reads.
+    /// Reuse the retained command's [`Engine`] pool for fresh post-write tooling reads.
     #[inline]
     pub(in crate::commands) fn engine_mut(&mut self) -> &mut Engine {
         &mut self.engine

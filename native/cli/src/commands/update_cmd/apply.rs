@@ -87,6 +87,7 @@ fn apply_single_ws_update(doc: &mut Document, doc_val: &Value, upd: &ResolvedUpd
     }
 }
 
+/// Updates a string or `{ version }` policy entry at `path` inside `doc` to `latest_range`.
 #[inline]
 fn set_doc_policy_entry(doc: &mut Document, path: &[&str], latest_range: &str) {
     if doc

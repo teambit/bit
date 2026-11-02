@@ -18,6 +18,7 @@ pub(super) enum ReadFailure {
 }
 
 impl From<io::Error> for ReadFailure {
+    /// Converts a pre-commit [`io::Error`] into [`ReadFailure::Declined`].
     #[inline]
     fn from(error: io::Error) -> Self {
         Self::Declined(error)

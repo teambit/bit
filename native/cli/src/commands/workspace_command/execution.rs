@@ -33,7 +33,7 @@ pub fn execute_with(
     })
 }
 
-/// Report a lane inspection from a validated bare scope without workspace history.
+/// Report a lane inspection [`Report`] from a validated bare `scope` without workspace [`History`].
 #[inline]
 pub fn execute_with_scope(
     scope: &Path,

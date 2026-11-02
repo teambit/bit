@@ -84,6 +84,7 @@ fn test_match(
         )
     }
 }
+/// Populates Jest CLI `options` (`updateSnapshot`, `coverage`, `coveragePathIgnorePatterns`) for `settings`.
 #[inline]
 fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings) -> Value {
     let mut options = json!({});
