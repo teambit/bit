@@ -31,6 +31,7 @@ pub(super) enum Issue {
 }
 
 impl Issue {
+    /// Parses a status issue class name into a top-level [`Issue`] or delegates to [`detected::Issue::parse`].
     #[inline]
     pub(super) fn parse(name: &str) -> io::Result<Self> {
         let name = name.trim();

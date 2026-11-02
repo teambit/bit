@@ -16,8 +16,9 @@ use reports::{batch_report, never_exported_report, report, soft_report};
 use selection::LANE_CI_DIAGNOSTIC;
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit reset` command.
 pub const COMMAND: Command = Command { name: "reset", aliases: &[], run };
-
+/// Parsed command-line options for `bit reset`.
 #[derive(Default)]
 struct Options<'a> {
     pattern: Option<&'a str>,

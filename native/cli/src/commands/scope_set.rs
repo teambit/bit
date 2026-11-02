@@ -20,12 +20,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Parsed command-line options for `bit scope set <scope-name> [pattern]`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Options {
     scope_name: String,
     pattern: Option<String>,
 }
-
+/// Error classification distinguishing delegation declines from user-facing diagnostics.
 #[derive(Debug)]
 pub(in crate::commands) enum Failure {
     Declined(String),

@@ -40,6 +40,7 @@ pub(super) fn filter_graph_for_cycles(
         .collect()
 }
 
+/// Returns `true` when `component`'s `node_modules` link is missing or its detected issues include unresolved dependencies.
 #[inline]
 fn has_unresolved_deps(root: &Path, component: &Component) -> bool {
     let package_name = component.package_name.trim();

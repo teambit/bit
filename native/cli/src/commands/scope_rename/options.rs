@@ -43,6 +43,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+/// Returns `true` when `token` is a non-empty, non-flag scope or owner identifier without whitespace or NUL bytes.
 #[inline]
 fn valid_name_token(token: &str) -> bool {
     !token.is_empty()

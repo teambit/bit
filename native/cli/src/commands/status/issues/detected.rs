@@ -26,6 +26,7 @@ pub(super) enum Issue {
 }
 
 impl Issue {
+    /// Parses a component-issue class name into a [`Issue`] variant or declines if unknown.
     #[inline]
     pub(super) fn parse(name: &str) -> io::Result<Self> {
         Ok(match name.trim() {

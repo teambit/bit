@@ -6,7 +6,7 @@ use super::{Capture, Component, array, decline, full_identity, js, policy, text}
 use serde_json::{Value, json};
 use std::io;
 
-/// Records the comparison metadata, dependency state, and [`Component`] row of one captured `target` into `captured`.
+/// Records the comparison metadata, dependency state, and [`Component`] row of one captured `target` into `captured`, including [`peer_identities`] and [`dependency_identities`].
 pub(super) fn record(
     target: &Value,
     directory: &str,

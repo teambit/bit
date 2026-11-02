@@ -18,6 +18,7 @@ pub(super) struct Callbacks {
 }
 
 impl CacheWrites {
+    /// Records snapshot callback data for `identity` inside `self.callbacks`.
     #[inline]
     pub(in crate::commands::status) fn retain_snapshot_data(
         &mut self,

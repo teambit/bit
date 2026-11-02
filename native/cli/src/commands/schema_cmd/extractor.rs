@@ -18,13 +18,13 @@ use crate::{
 use bit_install::workspace::{Bitmap, BitmapEntry};
 use serde_json::Value;
 use std::{fs, path::Path};
-
+/// Outcome of resolving component schemas from a workspace for `bit schema`.
 pub(super) enum WorkspaceSchemaOutcome {
     Error(String),
     Schemas(Vec<Value>),
     Declined,
 }
-
+/// Resolves workspace component schemas matching `pattern` when `--json` is active.
 pub(super) fn resolve_workspace_schema(
     root: &Path,
     pattern: &str,

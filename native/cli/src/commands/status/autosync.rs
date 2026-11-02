@@ -36,6 +36,7 @@ pub(in crate::commands) fn run_if_enabled(root: &Path) -> io::Result<()> {
     run(&mut engine, root, &mut startup)
 }
 
+/// Executes `bitmapAutoSync` against `engine` and records progress and snapshot events into `startup`.
 pub(in crate::commands) fn run(
     engine: &mut Engine,
     root: &Path,

@@ -21,6 +21,7 @@ pub(in crate::commands) struct ParsedScript {
     pub handler: ScriptHandler,
 }
 
+/// Scripts and `scripts()` method presence extracted from an environment component directory.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct EnvScripts {
     pub has_scripts_method: bool,

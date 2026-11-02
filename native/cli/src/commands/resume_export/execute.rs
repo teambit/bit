@@ -48,6 +48,7 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     first.execute(args, "resume-export", |output| report(args, options, &plans, &names, output))
 }
 
+/// Runs either the `--delete` cleanup flow or export persistence and formats the [`Report`].
 fn report(
     args: &[OsString],
     options: &Options,

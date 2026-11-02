@@ -29,6 +29,7 @@ pub const COMMAND: Command = Command { name: "script", aliases: &[], run };
 
 /// Error message emitted when no script name is provided and `--list` is not set.
 const MISSING_SCRIPT_ERR: &str = "script name is required. Use --list to see available scripts.";
+/// Warning message emitted when `teambit.workspace/scripts` has no configured environments.
 const NO_ENVS_CONFIG_MSG: &str = "no envs configured. Add to workspace.jsonc:\n{\n  \"teambit.workspace/scripts\": {\n    \"envs\": [\"your-scope/your-env\"]\n  }\n}";
 
 #[derive(Debug, Clone, PartialEq, Eq)]

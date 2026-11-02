@@ -1,6 +1,6 @@
 //! Main-lane reset diagnostics and detached-head recovery.
 //!
-//! [`missing_component`] evaluates [`Plan`] and `.bitmap` ([`bitmap`]) state via [`read_scope_object`] and [`render_workspace_bitmap`].
+//! [`missing_component`] and [`dependent_error`] evaluate [`Plan`] and `.bitmap` ([`bitmap`]) state via [`read_scope_object`] and [`render_workspace_bitmap`].
 
 use crate::commands::list::bitmap;
 use bit_object_import::{

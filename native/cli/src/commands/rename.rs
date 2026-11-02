@@ -48,6 +48,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+/// Returns `true` when `CI` is set to a non-empty, non-falsy environment value.
 #[inline]
 fn is_ci_active() -> bool {
     env::var_os("CI")

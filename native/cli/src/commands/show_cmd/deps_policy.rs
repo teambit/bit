@@ -24,6 +24,7 @@ pub(super) fn apply_version_dependencies(
     apply_model_dependencies(model, identity, deps);
 }
 
+/// Applies legacy `packageDependencies`, `devPackageDependencies`, and `peerPackageDependencies` fields onto `deps`.
 fn apply_legacy_pkg_fields(ver_val: &Value, identity: &Identity<'_>, deps: &mut Vec<DepEntry>) {
     let pkg_fields = [
         ("packageDependencies", "runtime"),

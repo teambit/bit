@@ -36,6 +36,7 @@ pub(super) struct Options {
     pub args: Option<String>,
 }
 
+/// Entry point for `bit run`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("run arguments are not UTF-8".into()));

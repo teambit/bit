@@ -49,6 +49,7 @@ pub(super) fn run(
     Ok(report(&prepared, chalk))
 }
 
+/// Synchronizes `prepared.facts` component file lists and overlay paths with `captured` rows.
 fn refreshed_files(prepared: &mut Prepared, captured: &[serde_json::Value]) -> io::Result<()> {
     let components = prepared.facts["components"]
         .as_array_mut()

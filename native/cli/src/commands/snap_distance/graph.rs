@@ -46,6 +46,7 @@ pub(super) fn compute_snap_distance(vh_val: &Value, source: &str, target: &str) 
     }))
 }
 
+/// Builds a map from each version hash in `vh_val` to its immediate parent hashes.
 pub(super) fn build_parents_map(vh_val: &Value) -> Option<HashMap<&str, Vec<&str>>> {
     let versions = vh_val["versions"].as_array()?;
     let mut parents_map = HashMap::with_capacity(versions.len());

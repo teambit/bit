@@ -41,6 +41,7 @@ pub(in crate::commands) fn run(
     result.map(|_| ())
 }
 
+/// Deserializes the embedded core aspect IDs list.
 #[inline]
 fn core_aspect_ids() -> io::Result<Vec<String>> {
     serde_json::from_str(include_str!(

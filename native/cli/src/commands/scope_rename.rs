@@ -37,6 +37,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_rename(args)
 }
 
+/// Returns the first non-color argument token following `bit scope`.
 #[inline]
 fn first_subcommand(args: &[OsString]) -> Option<String> {
     args.iter()

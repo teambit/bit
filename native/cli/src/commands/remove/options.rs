@@ -9,6 +9,7 @@ pub(super) struct Options<'a> {
     pub force: bool,
     pub track: bool,
 }
+/// Parses `bit remove` arguments into [`Options`] when `-s`/`--silent` is active.
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut pattern = None;
     let mut silent = false;

@@ -48,6 +48,7 @@ pub(in crate::commands::status) fn load(
     Ok(info["issues"] == true)
 }
 
+/// Queries `statusCallbackInfo` on `host` for non-core workspace aspects and buffered startup stdout.
 fn callback_info(host: &Host, context: &Value, capture: &Capture) -> io::Result<Value> {
     capture.cache.retain_callback_startup(&host.take_stdout());
     let core = core_ids()?;

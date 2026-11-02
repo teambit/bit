@@ -43,6 +43,7 @@ impl Scan<'_> {
         self.loaded_target(target, directory, files, &policy, captured)
     }
 
+    /// Validates source file presence and records detected dependencies for `target` into `captured`.
     fn loaded_target(
         &mut self,
         target: &Value,

@@ -30,6 +30,7 @@ impl Environments {
         Ok(host.take_stdout())
     }
 
+    /// Wraps an already-running [`Host`] into an [`Environments`] session.
     #[inline]
     pub(in crate::commands) fn from_host(host: Host) -> Self {
         Self { host: Some(host), ..Self::new() }

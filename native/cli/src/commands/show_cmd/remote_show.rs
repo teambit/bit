@@ -24,9 +24,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Aspect ID for the `teambit.envs/envs` aspect.
 const ENVS_ASPECT: &str = "teambit.envs/envs";
+/// Aspect ID for the `teambit.component/remove` aspect.
 const REMOVE_ASPECT: &str = "teambit.component/remove";
-
+/// Attempts to resolve and render a `--remote` `bit show` request against a local file remote scope.
 pub(super) fn try_run(
     cwd: &Path,
     args: &[OsString],

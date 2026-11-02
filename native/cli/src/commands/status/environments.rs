@@ -34,6 +34,7 @@ use bit_install::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Retained environment callback session managing optional [`Host`] invocations and built-in service facts.
 pub(in crate::commands) struct Environments {
     host: Option<Host>,
     issue_facts: bool,

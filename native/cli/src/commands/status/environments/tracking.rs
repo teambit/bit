@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::{ffi::OsString, io, path::Path};
 
 impl Environments {
-    /// Drains and returns already-buffered [`Host`] stdout before another metadata adapter reads it.
+    /// Drains and returns already-buffered [`Host`] stdout before another metadata adapter reads it (see [`Environments::identity_installation_info`]).
     #[inline]
     pub(in crate::commands) fn take_tracking_stdout(&self) -> String {
         self.host.as_ref().map_or_else(String::new, Host::take_stdout)

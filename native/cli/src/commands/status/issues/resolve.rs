@@ -29,6 +29,7 @@ pub fn ordinary_heads_for(context: &Value, receipt: &Value, graph: Option<&[Comp
             .all(|(model, row)| ordinary_model(context, model, row, referenced.as_ref()))
 }
 
+/// Checks whether a single `model` and its `row` in `receipt` satisfy ordinary issue-head invariants.
 fn ordinary_model(
     context: &Value,
     model: &Value,

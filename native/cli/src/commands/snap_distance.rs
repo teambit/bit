@@ -24,8 +24,9 @@ use crate::native::Outcome;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
+/// Descriptor for the native `bit snap-distance` command.
 pub const COMMAND: Command = Command { name: "snap-distance", aliases: &[], run };
-
+/// Parsed command-line arguments for `bit snap-distance <id> [source-snap] [target-snap]`.
 #[derive(Debug, PartialEq, Eq)]
 struct Options {
     id: String,

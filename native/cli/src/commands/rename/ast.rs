@@ -20,6 +20,7 @@ impl Drop for Spool {
     }
 }
 
+/// Applies `TypeScript` AST import rewrites in a temporary spool directory via [`ProjectedLinker`].
 pub(super) fn transform(
     root: &Path,
     plan: &mut Plan,

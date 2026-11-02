@@ -26,6 +26,7 @@ pub(super) enum ScriptFailure {
     Declined(String),
 }
 
+/// Workspace components grouped under a single resolved environment ID and its [`EnvScripts`].
 struct EnvGroup<'a> {
     env_id: String,
     components: Vec<&'a WorkspaceComponent>,

@@ -4,7 +4,7 @@
 
 use super::{super::js::text, Capture, Engine, Value, array, decline, io, json};
 
-/// Prepares default-environment task discovery via [`crate::host::Host`] after native snapshot preflight succeeds.
+/// Prepares default-environment task discovery via [`crate::host::Host`] after native snapshot preflight succeeds, before [`snapshot_hydrate`].
 pub fn snapshot_host(
     capture: &Capture,
     root: &std::path::Path,

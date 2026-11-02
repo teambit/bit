@@ -40,6 +40,7 @@ pub(super) fn read(
     }))
 }
 
+/// Resolved environment policy, dev-file patterns, compiler settings, and load failures from `providerFacts`.
 struct ProviderFacts {
     env_policy: Value,
     dev_patterns: Value,

@@ -24,6 +24,7 @@ const BUILTIN_TRUSTED_PATTERNS: &[&str] =
 /// Top-level `workspace.jsonc` key storing trusted scope patterns.
 const TRUSTED_SCOPES_KEY: &str = "trustedScopes";
 
+/// Action selected by `bit scope trust` CLI flags and positional arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Action {
     List,

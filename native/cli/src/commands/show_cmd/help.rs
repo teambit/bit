@@ -31,6 +31,7 @@ pub(super) fn try_run(args: &[OsString], argv: &[&str]) -> io::Result<Option<Out
     Ok(Some(Outcome::Exit(code)))
 }
 
+/// Returns `true` when `token` is a non-empty positional component ID argument.
 #[inline]
 fn is_positional_id(token: &str) -> bool {
     let trimmed = token.trim();

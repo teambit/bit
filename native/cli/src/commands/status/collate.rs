@@ -15,7 +15,7 @@ const ROOT_LANGUAGES: &[&str] = &[
     "", "c", "posix", "en", "de", "fr", "it", "pt", "nl", "es", "ja", "zh", "ko", "ru", "uk", "pl",
 ];
 
-/// Returns `true` when this process's default locale (`LC_ALL`, `LC_MESSAGES`, `LANG`) collates IDs like the ICU root locale.
+/// Returns `true` when this process's default locale (`LC_ALL`, `LC_MESSAGES`, `LANG`) collates IDs like the ICU root locale ([`compare`], [`supported`]).
 #[must_use]
 pub fn root_locale() -> bool {
     let locale = ["LC_ALL", "LC_MESSAGES", "LANG"]

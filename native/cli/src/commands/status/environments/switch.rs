@@ -23,6 +23,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
+    /// Returns the active checkout callback [`Host`] or declines if absent.
     #[inline]
     fn switch_host(&self) -> io::Result<&Host> {
         self.host.as_ref().ok_or_else(|| decline("switch callback host"))

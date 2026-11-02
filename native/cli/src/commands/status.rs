@@ -36,8 +36,8 @@ use std::{
     process::ExitCode,
 };
 
+/// Descriptor for the native `bit status` (`s`) command.
 pub const COMMAND: Command = Command { name: "status", aliases: &["s"], run };
-
 /// `--json`, or the report with its flags.
 enum Mode {
     Json(report::Flags),

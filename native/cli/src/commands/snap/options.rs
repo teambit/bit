@@ -54,6 +54,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+/// Maps short and negated `bit snap` flags to their canonical long option names.
 #[inline]
 fn canonical_flag(raw: &str) -> &str {
     match raw.trim() {

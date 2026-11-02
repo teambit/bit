@@ -16,6 +16,7 @@ pub(in crate::commands) fn ids(root: &Path, pattern: &str) -> io::Result<Vec<Str
                 .collect()
         })
 }
+/// Prepares a [`LocalBatch`] removal plan from resolved component `ids` and status `rows`.
 #[inline]
 pub(super) fn prepare(
     root: &Path,

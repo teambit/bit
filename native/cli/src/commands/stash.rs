@@ -21,8 +21,9 @@ use options::Options;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
+/// Descriptor for the native `bit stash` command.
 pub const COMMAND: Command = Command { name: "stash", aliases: &[], run };
-
+/// Entry point for `bit stash`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("stash arguments are not UTF-8".to_owned()));

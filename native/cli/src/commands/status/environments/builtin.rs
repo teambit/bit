@@ -37,6 +37,7 @@ pub(super) fn supported(
             })
 }
 
+/// Synthesizes fixed `teambit.react/react` environment policy and compiler facts for `component`.
 pub(super) fn facts(component: &WorkspaceComponent, issues: bool) -> Value {
     let explicit = component.config
         .get("teambit.envs/envs")

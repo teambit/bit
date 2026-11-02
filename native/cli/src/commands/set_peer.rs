@@ -28,6 +28,7 @@ pub const UNSET_PEER: Command = Command { name: "unset-peer", aliases: &[], run:
 /// Aspect ID for the dependency resolver configuration entry.
 pub(in crate::commands) const DEP_RESOLVER_ID: &str = "teambit.dependencies/dependency-resolver";
 
+/// Parsed `set-peer` or `unset-peer` action and target component selector.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum PeerAction {
     Set { component_id: String, range: String },

@@ -51,6 +51,7 @@ fn is_ci_active() -> bool {
         })
 }
 
+/// Entry point for `bit show`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("show arguments are not UTF-8".into()));

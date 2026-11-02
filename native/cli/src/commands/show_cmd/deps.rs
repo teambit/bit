@@ -37,6 +37,7 @@ pub(super) struct Identity<'a> {
 }
 
 impl Identity<'_> {
+    /// Returns `true` when `candidate` refers to this component's own name, scoped ID, or package name.
     #[inline]
     pub(super) fn is_self(&self, candidate: &str) -> bool {
         let stripped = strip_pkg_version(candidate.trim());

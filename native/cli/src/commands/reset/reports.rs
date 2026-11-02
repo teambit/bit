@@ -37,6 +37,7 @@ pub(super) fn soft_report(args: &[OsString], plan: &SoftPlan) -> Report {
     }
 }
 
+/// Formats the summary [`Report`] for a single-component reset of `identity` across `labels`.
 #[inline]
 pub(super) fn report(args: &[OsString], identity: &str, labels: &[String]) -> Report {
     let formatter = Formatter::new(Chalk::detect(args));

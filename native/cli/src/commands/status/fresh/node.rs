@@ -25,6 +25,7 @@ pub struct Node {
 }
 
 impl Node {
+    /// Discovers the Node.js CLI runtime when backed by an installed Bit distribution directory.
     pub fn find() -> io::Result<Self> {
         match discovery::find()? {
             Target::Entry(cli) if cli.bit_dir.is_some() => Ok(Self { cli }),

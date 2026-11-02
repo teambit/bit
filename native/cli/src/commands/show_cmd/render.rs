@@ -40,6 +40,7 @@ pub(super) fn legacy_json(loaded: &LoadedComponent) -> Value {
     })
 }
 
+/// Serializes `loaded` into the Harmony `bit show --json` section array layout.
 pub(super) fn harmony_json(loaded: &LoadedComponent) -> Value {
     let deps_json = serialize_deps(&loaded.deps);
     let extensions = build_extensions_array(loaded, false);

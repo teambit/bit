@@ -25,8 +25,10 @@ use bit_install::{
 use serde_json::Value;
 use std::{ffi::OsString, io, path::Path};
 
+/// Embedded JSON array of built-in core aspect IDs.
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
+/// Diagnostic message emitted when `.bitmap` references component versions absent from local scope objects.
 const IMPORT_PENDING: &str = r#"your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope."#;
 
 pub(super) struct LoadedComponent {

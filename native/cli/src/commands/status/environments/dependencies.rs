@@ -31,6 +31,7 @@ impl Environments {
         Ok(parsed)
     }
 
+    /// Invokes `detectDependencies` on `self.host` when `target`'s environment requires custom detectors.
     pub(in crate::commands::status) fn detectors(
         &mut self,
         root: &Path,

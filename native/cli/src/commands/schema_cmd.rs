@@ -39,6 +39,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
+/// Parsed command-line options for `bit schema diff <component> <base-version> <compare-version>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct DiffOptions {
     pub component: String,

@@ -55,6 +55,7 @@ pub(in crate::commands) fn prepare_many(
         .map(|(plan, facts)| Prepared { plan, facts })
         .collect())
 }
+/// Loads the projected [`Workspace`] and `trackingContext` inventory facts from [`Engine`].
 fn inventory(root: &Path) -> io::Result<(Workspace, Value, Engine)> {
     let bitmap = bit_object_import::parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
     let mut engine = Engine::new()?;

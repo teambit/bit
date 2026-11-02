@@ -21,6 +21,7 @@ pub(super) struct Reader {
     files: Vec<(PathBuf, Vec<u8>)>,
 }
 impl Reader {
+    /// Initializes a load-free [`Reader`] by requesting `statusContext` from [`Engine`].
     #[inline]
     pub(super) fn new(root: &Path) -> io::Result<Self> {
         let mut engine = Engine::new()?;

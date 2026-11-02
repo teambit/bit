@@ -56,6 +56,7 @@ fn mentions_no_fs_cache(value: &str) -> bool {
         })
 }
 
+/// Encodes `bytes` as a lowercase hexadecimal string.
 #[must_use]
 #[inline]
 pub fn hex(bytes: &[u8]) -> String {

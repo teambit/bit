@@ -60,6 +60,7 @@ pub(in crate::commands) fn read_inherited_context(
         ContextSetup { snapshot: None, inherited: Some(inherited) },
     )
 }
+/// Internal configuration options for [`read_context_with`].
 #[derive(Default)]
 struct ContextSetup {
     snapshot: Option<bool>,

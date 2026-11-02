@@ -22,6 +22,7 @@ pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Resu
     Ok(true)
 }
 
+/// Records a `ComponentsPendingImport` invalid entry when a scoped versioned `target` lacks a local model.
 pub(super) fn status_pending(
     context: &Value,
     target: &Value,

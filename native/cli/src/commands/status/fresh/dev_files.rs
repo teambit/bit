@@ -41,6 +41,7 @@ pub enum Group {
 }
 
 impl Group {
+    /// Returns the compiled segment regex slice for this dev-pattern [`Group`].
     #[inline]
     fn names(self) -> &'static [Regex] {
         let all = names();

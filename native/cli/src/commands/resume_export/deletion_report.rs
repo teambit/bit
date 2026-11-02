@@ -23,6 +23,7 @@ pub(super) fn failed_lines(failed: &IndexMap<String, String>) -> Vec<String> {
         .collect()
 }
 
+/// Formats the `"failed scopes"` section for scopes that could not be reached.
 fn failed_section(formatter: &Formatter, failed: &IndexMap<String, String>) -> String {
     if failed.is_empty() {
         return String::new();

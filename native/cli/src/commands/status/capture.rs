@@ -43,7 +43,7 @@ use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidatio
 use identities::{base_identity, record};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
-
+/// Captured workspace component rows, dependency states, environment facts, and pending [`CacheWrites`].
 pub struct Capture {
     /// Every selected target: identity, version, directory, files, current
     /// metadata and peer dependencies.

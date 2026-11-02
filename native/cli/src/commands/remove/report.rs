@@ -17,6 +17,7 @@ pub(super) fn render(
         modified_section(format, modified),
     ])
 }
+/// Formats the section listing components removed from `location` (`workspace` or `lane`).
 fn removed_section(format: &Formatter, ids: &[String], location: &str) -> String {
     let location = location.trim();
     if ids.is_empty() || location.is_empty() {

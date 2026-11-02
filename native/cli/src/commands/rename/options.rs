@@ -22,6 +22,7 @@ pub(super) fn parse(argv: &[&str]) -> Option<Options> {
     Some(options)
 }
 
+/// Appends post-`--` positional arguments to `positions` after validating each token.
 #[inline]
 fn consume_trailing_positions<'a>(
     arguments: impl Iterator<Item = &'a str>,

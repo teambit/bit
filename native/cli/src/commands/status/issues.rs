@@ -43,7 +43,7 @@ pub struct Component {
     pub issues: Value,
 }
 
-/// Validate a public component-issue class name against the released native catalog.
+/// Validate a public component-issue class name against the released native catalog ([`collect`], [`collect_resolved`]).
 #[inline]
 pub(in crate::commands) fn validate_name(name: &str) -> io::Result<()> {
     Issue::parse(name).map(|_| ())
