@@ -36,6 +36,7 @@ use self::{
     root::resolve_create_root,
 };
 
+/// Parsed CLI flags and positional component IDs for `bit capsule create`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct CreateArgs {
     pub ids: Vec<String>,

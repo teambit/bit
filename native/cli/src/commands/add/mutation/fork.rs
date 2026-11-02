@@ -7,6 +7,7 @@ use serde_json::Value;
 use std::{io, path::Path};
 
 impl ProjectedLinker {
+    /// Captures and validates the current `.bitmap` preimage before a native `fork` write.
     #[inline]
     pub(in crate::commands) fn fork_bitmap_preimage(&self, root: &Path) -> io::Result<Value> {
         let path = bitmap_path(root)?;

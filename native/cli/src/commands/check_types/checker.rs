@@ -22,6 +22,7 @@ use std::{collections::HashSet, ffi::OsString, fs, io, path::Path};
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
+/// Per-file `TypeScript` diagnostic collection for a workspace component.
 struct FileDiag {
     file: String,
     errors: Vec<String>,

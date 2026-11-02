@@ -19,6 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Prepared `bit ci init` onboarding plan for a workspace and Git repository.
 struct Plan {
     root: PathBuf,
     cwd: PathBuf,

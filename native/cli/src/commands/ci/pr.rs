@@ -10,6 +10,7 @@ use crate::native::Outcome;
 use bit_object_import::parse_jsonc;
 use std::{ffi::OsString, fs, io, path::Path};
 
+/// Parsed CLI options for `bit ci pr`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct PrOptions {
     pub lane: Option<String>,

@@ -5,6 +5,7 @@ use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};
 use serde_json::Value;
 use std::io;
 
+/// Extracts [`ComponentDependencies`] keyed by bare component identity from captured load rows.
 #[inline]
 pub(in crate::commands) fn packages(
     captured: &[Value],

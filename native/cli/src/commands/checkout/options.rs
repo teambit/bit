@@ -10,6 +10,7 @@ mod options_tests;
 
 use serde_json::{Map, Value, json};
 
+/// Parsed CLI options and target selector for `bit checkout` / `bit revert`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub to: String,

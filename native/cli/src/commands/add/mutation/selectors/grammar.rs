@@ -20,6 +20,7 @@ const STATES: [&str; 9] = [
     "localOnly",
 ];
 
+/// Validates a single `$state` or `$env:` selector criterion against supported [`STATES`].
 pub(super) fn validate(criterion: &str) -> io::Result<()> {
     let Some(state) = criterion.trim().strip_prefix('$') else { return Ok(()) };
     if let Some((name, _)) = state.split_once(':') {

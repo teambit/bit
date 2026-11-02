@@ -9,6 +9,7 @@ use crate::commands::status::capture::Capture;
 use serde_json::Value;
 use std::{collections::HashMap, fs, io, path::Path};
 
+/// Retained component [`Capture`]s, source spools, read-set proofs, and selector [`super::selectors::Facts`].
 #[derive(Default)]
 pub(super) struct Retained {
     captures: Vec<Capture>,

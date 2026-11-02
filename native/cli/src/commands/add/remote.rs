@@ -7,6 +7,7 @@ use crate::{
     host::Host,
 };
 use serde_json::{Value, json};
+/// Emits best-effort remote component collision warnings via `host` after `.bitmap` publication.
 pub(super) fn warn(
     host: &Host,
     added: &[Value],

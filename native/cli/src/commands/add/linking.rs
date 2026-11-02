@@ -8,6 +8,7 @@ use bit_install::model::WorkspaceComponent;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
+/// Overlays captured file lists, main files, and package names onto `components`.
 #[inline]
 pub(in crate::commands) fn overlay(
     components: &mut [WorkspaceComponent],

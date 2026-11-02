@@ -10,6 +10,7 @@ use std::{error::Error, fmt, io};
 const NO_FILES: &str = "warning: no files to add";
 const IGNORED: &str = ", the following files were ignored: ";
 
+/// Applies inner [`Chalk`] styling to `InvalidInput` tracking errors when colors are enabled.
 pub(super) fn error(error: io::Error, chalk: Chalk) -> io::Error {
     if !chalk.enabled() || error.kind() != io::ErrorKind::InvalidInput {
         return error;

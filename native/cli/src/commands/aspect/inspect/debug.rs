@@ -28,6 +28,7 @@ use bit_install::{
 use serde_json::{Map, Value, json};
 use std::{ffi::OsString, path::Path};
 
+/// Provenance origin entry before aspect merge resolution in `bit aspect get --debug`.
 struct DebugOrigin {
     origin: &'static str,
     extensions: Vec<AspectEntry>,

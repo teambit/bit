@@ -29,6 +29,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit capsule` command descriptor.
 pub const COMMAND: Command = Command { name: "capsule", aliases: &[], run };
 
 const BUILD_BASE_KEY: &str = "capsules_build_components_base_dir";

@@ -1,4 +1,4 @@
-//! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`]).
+//! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`], [`GeneratedPackage`]).
 
 mod policy;
 

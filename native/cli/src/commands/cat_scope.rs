@@ -24,6 +24,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit cat-scope` command descriptor.
 pub const COMMAND: Command = Command { name: "cat-scope", aliases: &[], run };
 
 #[derive(Debug, Default, PartialEq, Eq)]

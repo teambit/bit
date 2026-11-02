@@ -13,6 +13,7 @@ use std::{
 };
 const MAX_METADATA: usize = 32 * 1024 * 1024;
 
+/// Partitioned `ComponentFsCache` documentation hits, misses, and proven cache entries.
 pub(super) struct Plan {
     pub hits: Vec<Value>,
     pub misses: Vec<Value>,

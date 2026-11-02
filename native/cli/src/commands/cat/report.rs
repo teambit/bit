@@ -10,6 +10,7 @@ use std::{
     path::{Component, Path},
 };
 
+/// Renders `bit cat` output in text or `--json` mode according to `options`.
 pub(super) fn render(value: &Value, options: &Options<'_>) -> io::Result<String> {
     let files = value["files"].as_array().ok_or_else(|| decline("cat files"))?;
     let show_files = !options.config || options.all;

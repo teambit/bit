@@ -5,6 +5,7 @@ use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace:
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Projected [`Workspace`] state and selected component entries for a staged `.bitmap`.
 pub(super) struct Projection {
     pub workspace: Workspace,
     pub context: Value,

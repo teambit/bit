@@ -12,6 +12,7 @@ use std::{ffi::OsString, fs, io, path::Path};
 
 const DEFAULT_COMMIT_MESSAGE: &str = "chore: update .bitmap and lockfiles as needed [skip ci]";
 
+/// Semantic version bump flags for `bit ci merge`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct BumpOptions {
     pub increment: Option<String>,

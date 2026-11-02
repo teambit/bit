@@ -1,6 +1,6 @@
 //! A retained import on [`ProjectedLinker`] advances only exact content proofs acknowledged by its native publisher.
 //!
-//! Supports `prepare_checkout_docs` and `project_installation_workspace` for inbound mutations.
+//! Supports `prepare_checkout_docs`, `project_installation_workspace`, and proof advancement for inbound mutations.
 use super::ProjectedLinker;
 use serde_json::Value;
 use std::{io, path::Path};

@@ -9,6 +9,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
+/// Formats verbose workspace config update logs and dependency update/conflict summary sections.
 pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String, String)> {
     let Some(value) = value.filter(|value| !value.is_null()) else {
         return Ok((String::new(), String::new()));

@@ -17,6 +17,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit cli` command descriptor.
 pub const COMMAND: Command = Command { name: "cli", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

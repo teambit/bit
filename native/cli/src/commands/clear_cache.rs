@@ -22,6 +22,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Native `bit clear-cache` (`cc`) command descriptor.
 pub const COMMAND: Command = Command { name: "clear-cache", aliases: &["cc"], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

@@ -19,7 +19,9 @@ use crate::{commands::Command, native::Outcome, workspace};
 use bit_install::{HostInfo, output::Output};
 use std::{env, ffi::OsString, io, path::Path, sync::Arc};
 
+/// Native `bit checkout` command descriptor and `-U` alias.
 pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
+/// Native `bit revert` command descriptor.
 pub const REVERT: Command = Command { name: "revert", aliases: &[], run: run_revert };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {

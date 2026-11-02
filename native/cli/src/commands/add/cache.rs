@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Blocks dependency-cache writes for newly captured [`WorkspaceComponent`]s whose `node_modules` links are absent.
 pub(in crate::commands) fn restrict(root: &Path, capture: &mut Capture) {
     let captured_ids: HashSet<&str> = capture.captured
         .iter()

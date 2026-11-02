@@ -3,6 +3,7 @@
 //! Checks [`links`] preconditions in CI environments prior to mutating `node_modules`.
 use super::projection::Projection;
 use std::{env, fs, io, path::Path};
+/// Returns `true` when the `CI` environment variable is set and non-empty.
 #[inline]
 pub(super) fn ci() -> bool {
     env::var_os("CI").is_some_and(|value| !value.is_empty())

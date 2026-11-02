@@ -16,6 +16,7 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 impl ProjectedLinker {
+    /// Returns `true` when `pattern` contains a stateful component selector criterion.
     #[inline]
     pub(in crate::commands) fn state_pattern(pattern: &str) -> bool {
         let trimmed = pattern.trim();

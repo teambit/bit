@@ -6,6 +6,7 @@ const START: &str = "<!-- bit-ci-sync:start";
 const END: &str = "<!-- bit-ci-sync:end -->";
 pub(super) const UNKNOWN: &str = "<org>/<this-repo>";
 
+/// Renders the `AGENTS.md` CI sync section for `scope`, `repo`, and `branch`.
 pub(super) fn render(scope: &str, repo: &str, branch: &str) -> String {
     let (scope, repo, branch) = (super::trim(scope), super::trim(repo), super::trim(branch));
     let raw = include_str!("agents-section.md").replace("\r\n", "\n");

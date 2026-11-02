@@ -2,6 +2,7 @@
 //!
 //! Validates component ID positionals and `--file`, `--config`, `--all`, and `--json` flags.
 
+/// Parsed CLI flags and positional component ID for `bit cat`.
 #[derive(Default)]
 pub(super) struct Options<'a> {
     pub(super) id: Option<&'a str>,

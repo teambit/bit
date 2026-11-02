@@ -4,6 +4,7 @@
 
 use serde_json::{Map, Value, json};
 
+/// Builds the `ModelComponent.toObject()` JSON representation for `bit cat-scope --json`.
 pub(super) fn build_component_json_obj(
     raw: &Value,
     scope: &str,

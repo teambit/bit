@@ -18,6 +18,7 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
+/// Native `bit build` command descriptor.
 pub const COMMAND: Command = Command { name: "build", aliases: &[], run };
 
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";

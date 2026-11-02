@@ -4,6 +4,7 @@
 use reqwest::Url;
 use std::env;
 
+/// Parsed Git remote host, owner, and repository name for CI onboarding instructions.
 pub(super) struct Repository {
     pub owner: String,
     pub name: String,

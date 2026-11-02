@@ -1,6 +1,6 @@
 //! Native `bit aspect <list|list-core|get|set|unset|update>` (`scopes/harmony/aspect/aspect.cmd.ts`) handler and helpers.
 //!
-//! Dispatches aspect inspection ([`inspect`]) and configuration mutations ([`mutation`]).
+//! Dispatches aspect inspection ([`inspect`]) and configuration mutations ([`mutation`]) via [`COMMAND`].
 
 pub(in crate::commands) use self::mutation::{
     CompJsonEdit, deep_merge, find_bitmap_row_mut, find_bitmap_row_ref, find_component_aspect,

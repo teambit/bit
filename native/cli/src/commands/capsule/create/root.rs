@@ -13,6 +13,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Parses `bit capsule create` CLI flags and trailing positional arguments into a [`Subcommand`].
 pub(in crate::commands::capsule) fn parse_create_flags(rest: &[&str]) -> Option<Subcommand> {
     let mut create = CreateArgs::default();
     let mut args = rest.iter().copied();

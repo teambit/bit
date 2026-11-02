@@ -6,6 +6,7 @@ use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace:
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+/// Projects `identities` from `bitmap` and `context` into a [`Projection`] for component loading.
 pub(super) fn prepare(
     root: &Path,
     bitmap: &Value,

@@ -3,6 +3,7 @@
 //! Parses CLI arguments into [`Tracking`] options, environment overrides, and `--json` mode via [`parse`].
 use bit_object_import::component_tracking::Options as Tracking;
 use serde_json::json;
+/// Parsed `bit add` CLI options, including [`Tracking`] parameters, `--env`, and `--json`.
 pub(super) struct Options {
     pub tracking: Tracking,
     pub env: Option<String>,

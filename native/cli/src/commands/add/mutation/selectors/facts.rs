@@ -5,6 +5,7 @@ use crate::commands::{engine::Engine, status::capture::Capture};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
+/// Retained per-component comparison rows and environment metadata across selector evaluations.
 #[derive(Default)]
 pub(in crate::commands::add::mutation) struct Facts {
     comparisons: HashMap<String, Value>,

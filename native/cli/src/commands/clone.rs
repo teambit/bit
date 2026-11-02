@@ -14,6 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// Native `bit clone` command descriptor.
 pub const COMMAND: Command = Command { name: "clone", aliases: &[], run };
 
 #[derive(Debug, Clone, PartialEq, Eq)]

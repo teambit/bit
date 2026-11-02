@@ -11,6 +11,7 @@ use std::{
 };
 const LIMIT: u64 = 96 * 1024 * 1024;
 
+/// Observed source file bytes and filesystem modification timestamp.
 #[derive(PartialEq)]
 pub(super) struct Source {
     bytes: Vec<u8>,

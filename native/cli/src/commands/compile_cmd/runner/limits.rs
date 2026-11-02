@@ -7,6 +7,7 @@ use bit_workspace_config::{config_string, effective, global_config_dir, read_glo
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::Path};
 
+/// Resolves the `concurrency.io` batch size limit for workspace compilation.
 pub(super) fn batch_size(root: &Path) -> io::Result<usize> {
     let global = read_global_config(&global_config_dir())?;
     let scope = read(&bit_object_import::scope_path(root).join("scope.json"))?;

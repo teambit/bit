@@ -4,6 +4,7 @@
 use super::{remote, shell_word};
 use crate::commands::color::Chalk;
 
+/// Onboarding file status entry for the `bit ci init` report.
 pub(super) struct File {
     pub relative: &'static str,
     pub display: String,

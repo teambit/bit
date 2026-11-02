@@ -6,6 +6,7 @@ mod tests;
 
 use std::sync::OnceLock;
 
+/// Coerces numeric and hexadecimal checkout targets using yargs and `String(to)` rules.
 #[inline]
 pub(super) fn normalize(raw: &str) -> String {
     let raw = raw.trim();

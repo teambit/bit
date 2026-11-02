@@ -4,6 +4,7 @@
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::{Value, json};
 use std::io;
+/// Formats the `--json` payload for `bit add` from `components` and `warnings`.
 #[inline]
 pub(super) fn json(components: &[Value], warnings: &Value) -> Value {
     json!({"addedComponents":components.iter().map(|row|json!({"id":row["id"],"files":row["files"]})).collect::<Vec<_>>(),"warnings":warnings})

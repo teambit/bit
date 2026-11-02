@@ -8,6 +8,7 @@ use bit_install::workspace::BitmapEntry;
 use serde_json::{Value, json};
 use std::{fs, path::PathBuf};
 
+/// Sets or deep-merges `config` for `bare_aspect` in a `component.json` file at `path`.
 pub(super) fn set_in_comp_json(
     path: PathBuf,
     resolved_aspect_id: &str,

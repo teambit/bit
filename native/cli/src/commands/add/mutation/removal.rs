@@ -6,6 +6,7 @@ use crate::commands::{engine::Engine, workspace_command};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 impl ProjectedLinker {
+    /// Captures consumer status rows for `ids` against the projected `bitmap`.
     #[inline]
     pub(in crate::commands) fn capture_consumers(
         &mut self,

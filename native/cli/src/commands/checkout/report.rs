@@ -1,6 +1,6 @@
 //! The checkout report ([`Options`], [`policy`]): `checkoutOutput` of `@teambit/checkout`.
 //!
-//! Renders [`format`] and [`format_title`] summaries from [`Results`].
+//! Renders [`format`] and [`format_title`] summaries from [`Results`] and [`Changed`] entries.
 pub(crate) mod policy;
 #[cfg(test)]
 mod report_tests;

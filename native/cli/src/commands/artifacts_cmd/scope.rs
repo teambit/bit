@@ -10,6 +10,7 @@ use crate::commands::{debug_cat::lookup::resolve_component_entry, patterns, scop
 use serde_json::Value;
 use std::{fs, path::Path};
 
+/// Resolves literal or pattern [`TargetComponent`] entries in a bare scope at `scope_dir`.
 pub(super) fn resolve_bare_scope_targets(
     scope_dir: &Path,
     pattern: &str,

@@ -1,6 +1,6 @@
 //! Acknowledge only [`Retained`] content preimages consumed by exact native import publications.
 //!
-//! Refreshes versioned component rows and advances retained file proofs after import writes.
+//! Refreshes versioned component rows and advances retained file proofs after import writes in `bit-cli`.
 #[cfg(test)]
 mod tests;
 

@@ -1,6 +1,6 @@
 //! Native `bit app [subcommand]` (`scopes/harmony/application/app.cmd.ts`, alias `apps`, `list` default).
 //!
-//! Implements `app list` and delegates `app run` to [`run_cmd`].
+//! Implements `app list` via [`Workspace`] and [`table`] and delegates `app run` to [`run_cmd`].
 
 mod help;
 #[cfg(test)]

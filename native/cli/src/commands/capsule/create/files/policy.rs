@@ -6,6 +6,7 @@ use super::{BuiltinEnv, EntryPointMetadata, ManifestConfig, PackageDependencies}
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 
+/// Computes [`PackageDependencies`] for a capsule component under `env` and `component_dependencies`.
 pub(super) fn package_dependencies(
     env: BuiltinEnv,
     component_dependencies: &BTreeMap<String, String>,

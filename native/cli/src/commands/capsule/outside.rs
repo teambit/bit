@@ -14,6 +14,7 @@ use std::{
     process::ExitCode,
 };
 
+/// Executes `bit capsule` [`Subcommand`]s when invoked outside a workspace or bare scope.
 pub(super) fn run_outside_scope(
     cwd: &Path,
     args: &[OsString],

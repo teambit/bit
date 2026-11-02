@@ -21,6 +21,7 @@ use std::{
 const ORIGIN_FILE: &str = ".bit-capsule-origin.json";
 const VALID_KINDS: &[&str] = &["workspace", "scope-aspects-root", "scope-aspect", "scope"];
 
+/// Capsule root directory metadata and disk usage summary for `bit capsule list`.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct RootEntry {

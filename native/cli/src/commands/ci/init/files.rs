@@ -7,6 +7,7 @@ use serde_json::json;
 use std::{fs, io, path::Path};
 const ASPECT: &str = "teambit.git/ci";
 
+/// Scaffolds `.github/workflows/bit-sync.yml` and `.github/workflows/bit-release.yml` under `root`.
 pub(super) fn workflows(
     root: &Path,
     cwd: &Path,

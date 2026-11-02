@@ -17,6 +17,7 @@ use bit_install::model::WorkspaceComponent;
 use bit_object_import::component_tracking::Plan;
 use std::{io, path::Path, sync::Arc};
 
+/// Publishes component caches, links [`WorkspaceComponent`]s, and commits the `.bitmap` [`Plan`].
 pub(super) fn run(
     root: &Path,
     mut prepared: Prepared,

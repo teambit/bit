@@ -18,6 +18,7 @@ const FIELDS: [&str; 9] = [
     "extensions",
 ];
 
+/// Compares workspace file hashes against stored model [`FIELDS`] to evaluate `$codeModified`.
 pub(super) fn compare(
     engine: &mut Engine,
     root: &Path,

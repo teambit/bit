@@ -17,6 +17,7 @@ use std::{
     time::Instant,
 };
 
+/// Single emitted compiler output file path and text contents.
 struct Emitted {
     path: PathBuf,
     content: String,

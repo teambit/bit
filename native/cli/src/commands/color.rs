@@ -26,6 +26,7 @@ const UNDERLINE: Style = Style("\u{1b}[4m", "\u{1b}[24m");
 const BOLD: Style = Style("\u{1b}[1m", "\u{1b}[22m");
 const DIM: Style = Style("\u{1b}[2m", "\u{1b}[22m");
 
+/// ANSI color wrapper matching `chalk` 4.1.2 behavior in the Node.js CLI.
 #[derive(Debug, Clone, Copy)]
 pub struct Chalk {
     enabled: bool,
