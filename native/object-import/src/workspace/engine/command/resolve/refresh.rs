@@ -24,6 +24,7 @@ pub(in crate::workspace::engine) struct Validate {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+/// Deserialized refresh request carrying updated component projections and callback source diffs.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Refresh {

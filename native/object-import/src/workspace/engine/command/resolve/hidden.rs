@@ -52,6 +52,7 @@ pub(super) fn append(
     Ok(reports)
 }
 
+/// Loads and projects non-removed hidden lane `Version` objects absent from `visible`.
 #[inline]
 fn candidates(
     retained: &mut Retained,

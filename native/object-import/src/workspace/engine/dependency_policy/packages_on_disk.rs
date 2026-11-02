@@ -25,6 +25,7 @@ pub(crate) struct Request {
     component_root: PathBuf,
     names: Vec<String>,
 }
+/// Resolves installed `node_modules` package metadata for `request` directly from disk.
 #[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,

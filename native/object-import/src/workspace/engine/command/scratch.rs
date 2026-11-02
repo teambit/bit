@@ -5,6 +5,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
+/// Monotonic counter used to allocate unique temporary scratch directory names within the process.
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 /// Owned temporary directory path that removes its contents when dropped.
 #[derive(Debug, PartialEq, Eq)]

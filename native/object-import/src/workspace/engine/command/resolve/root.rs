@@ -8,6 +8,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
+/// Aspect ID for the workspace-root marker aspect (`teambit.workspace/workspace-root`).
 const ASPECT: &str = "teambit.workspace/workspace-root";
 const AUTO: &str = "snapshotAutoAddedWorkspaceRoot";
 

@@ -36,6 +36,7 @@ pub(super) fn range(package: &Package) -> Option<Value> {
     Some(Value::String(formatted))
 }
 
+/// Returns `true` when `value` is truthy under `JavaScript` boolean coercion rules.
 #[inline]
 fn truthy(value: &Value) -> bool {
     match value {

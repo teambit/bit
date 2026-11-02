@@ -24,6 +24,7 @@ pub(in crate::workspace::engine) struct Prepare {
     home: PathBuf,
     global_remotes_file: PathBuf,
 }
+/// Deserialized request to plan modified components and dependency graphs for a `stash save` transaction.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Plan {

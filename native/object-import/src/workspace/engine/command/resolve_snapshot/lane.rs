@@ -31,6 +31,7 @@ pub(super) fn lane_objects(
     Ok(())
 }
 
+/// Applies allocated `Version` hashes from `receipt["versions"]` onto the `Lane` object `value`.
 #[inline]
 fn apply_allocations(value: &mut Value, materials: &[Material], receipt: &Value) -> io::Result<()> {
     let allocations =

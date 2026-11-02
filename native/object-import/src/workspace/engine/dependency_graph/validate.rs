@@ -42,6 +42,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
+/// Validates custom detector overrides, hashes, and lookup paths on `request`.
 #[inline]
 fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {

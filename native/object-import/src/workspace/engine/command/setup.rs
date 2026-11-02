@@ -55,6 +55,7 @@ pub(super) fn run(
     Ok((count, output))
 }
 
+/// Validates or preloads `ScopeMeta` license strings for all scopes referenced in `context`.
 #[inline]
 fn prepare_licenses(
     request: &Prepare,

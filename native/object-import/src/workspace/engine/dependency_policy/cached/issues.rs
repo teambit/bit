@@ -37,6 +37,7 @@ pub(super) fn missing(issues: &Value) -> io::Result<Vec<Value>> {
     Ok(missing)
 }
 
+/// Updates cached dependency `issues` with post-policy missing filesystem and manual packages from `output`.
 pub(super) fn apply(issues: &Value, output: &Value) -> io::Result<Value> {
     let mut result = Vec::new();
     for issue in rows(issues)? {

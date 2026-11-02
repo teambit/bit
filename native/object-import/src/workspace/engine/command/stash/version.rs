@@ -31,6 +31,7 @@ const FIELDS: &[&str] = &[
     "buildStatus",
 ];
 
+/// Builds a detached `Version` object and its `Source` objects for `component` and `allocation`.
 pub(super) fn prepare(
     component: &Component,
     allocation: &Allocation,

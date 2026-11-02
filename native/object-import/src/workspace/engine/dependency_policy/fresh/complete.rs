@@ -32,6 +32,7 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
     apply_versions(&mut detected, request)?;
     Ok(detected)
 }
+/// Validates the serialized issue array in `value` against issue count and kind limits.
 #[inline]
 fn validate_issues(value: &Value) -> io::Result<()> {
     let issues = value.as_array().ok_or_else(|| invalid("fresh detection issues"))?;

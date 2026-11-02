@@ -40,6 +40,7 @@ pub(super) fn select(
     filter_pattern(candidates, &known, pattern, &options)
 }
 
+/// Collects eligible new, modified, and unmerged component identities from `captured`.
 pub(super) fn candidates(
     retained: &mut Retained,
     captured: &[capture::Captured],

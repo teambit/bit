@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 /// Three-bucket (`dependencies`, `devDependencies`, `peerDependencies`) package policy map array.
 pub(super) type Packages = [Map<String, Value>; 3];
+/// Wire request for detecting fresh source dependencies of a workspace component.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Detect {

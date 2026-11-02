@@ -16,6 +16,7 @@ pub(super) struct Context<'a> {
     pub ordinary_snapshot: bool,
 }
 
+/// Assembles the `Version`, `Source`, graph, and `Component` objects for `material` into `objects`.
 #[inline]
 pub(super) fn prepare(
     context: &Context<'_>,

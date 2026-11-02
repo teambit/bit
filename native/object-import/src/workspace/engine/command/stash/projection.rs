@@ -36,6 +36,7 @@ pub(super) fn version(
     Ok(version)
 }
 
+/// Strips empty `"version": ""` fields from dependency ID objects across all dependency lifecycles.
 #[inline]
 fn clean_dependencies(version: &mut Value) {
     for field in ["dependencies", "devDependencies", "peerDependencies"] {

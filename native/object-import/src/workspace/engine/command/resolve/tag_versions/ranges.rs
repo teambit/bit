@@ -33,6 +33,7 @@ pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
     Ok(())
 }
 
+/// Updates `versionRange` fields on non-pinned dependencies in `version` that appear in `versions`.
 #[inline]
 fn update_dependencies(
     version: &mut Value,

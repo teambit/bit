@@ -17,6 +17,7 @@ pub(super) struct Prepared {
     committed: bool,
 }
 impl Prepared {
+    /// Validates and atomically commits staged detached objects and stash metadata to `root`.
     #[inline]
     pub(super) fn commit(&mut self, root: &Path) -> io::Result<()> {
         if self.committed {

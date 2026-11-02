@@ -12,6 +12,7 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Aspect ID for the builder pipeline core aspect (`teambit.pipelines/builder`).
 const BUILDER: &str = "teambit.pipelines/builder";
 
 /// Applies builder pipeline tasks, `buildStatus`, and built aspect extensions from `allocation` onto `version`.

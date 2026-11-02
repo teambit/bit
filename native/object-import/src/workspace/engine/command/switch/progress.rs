@@ -23,6 +23,7 @@ pub(in crate::workspace::engine::command) fn import_count(
         .ok_or_else(|| invalid("switch addition count"))
 }
 
+/// Builds a synthetic zero-object import progress receipt for `count` switch components.
 #[inline]
 pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
     json!({"requested":count,"components":count,"objects":0,"performed":count > 0})

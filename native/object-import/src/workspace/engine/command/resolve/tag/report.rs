@@ -29,6 +29,7 @@ pub(in super::super) fn report(
         "isSoftTag":retained.tag.as_ref().is_some_and(|options| options.soft),"warnings":warnings(retained, semver, selected, materials)?,"totalComponentsCount":materials.len()}))
 }
 
+/// Formats `id` with its planned `tagged_version` (`scope/name@version`) from `materials`.
 #[inline]
 fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {
     let id = id.trim();

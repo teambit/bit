@@ -44,6 +44,7 @@ pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
     Ok(Value::Object(config))
 }
 
+/// Validates that `config` contains at most `key` and that its value satisfies `valid`.
 #[inline]
 fn validate_single(
     config: &serde_json::Map<String, Value>,

@@ -40,6 +40,7 @@ pub(super) fn initial(detected: &Value, finish: &Value) -> io::Result<Value> {
         "ignored":ignored(finish)?,"missing":issues::missing(&detected["issues"])?}))
 }
 
+/// Projects a single cached component dependency `row` into an initial policy entry.
 #[inline]
 fn entry(row: &Value) -> io::Result<Value> {
     let range = row

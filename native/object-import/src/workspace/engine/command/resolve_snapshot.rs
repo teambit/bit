@@ -36,6 +36,7 @@ pub(super) struct Material {
     pub participation: Participation,
 }
 
+/// Returns `true` when `version["extensions"]` marks `teambit.component/remove` with `removed: true`.
 #[inline]
 pub(super) fn is_removed(version: &Value) -> bool {
     version["extensions"]

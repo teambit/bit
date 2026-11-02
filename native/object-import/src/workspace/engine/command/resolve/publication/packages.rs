@@ -15,6 +15,7 @@ pub(in crate::workspace::engine) struct PackageFinalize {
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }
+/// Verifies that `token` matches `retained.record.token` on an active snapshot/callback batch.
 #[inline]
 fn validate_package_token(retained: &super::Retained, token: &str) -> io::Result<()> {
     let token = token.trim();

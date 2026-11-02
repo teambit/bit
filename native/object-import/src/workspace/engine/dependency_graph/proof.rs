@@ -26,6 +26,7 @@ pub(in crate::workspace::engine) struct Proof {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     range: Option<Range>,
 }
+/// Byte offset and length for a partial-file read [`Proof`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Range {

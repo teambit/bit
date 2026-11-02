@@ -37,6 +37,7 @@ pub(super) fn plan(
     Ok(response(retained))
 }
 
+/// Selects modified (and optionally new) workspace components eligible for stashing from `captured`.
 fn select(
     retained: &mut Retained,
     captured: &[capture::Captured],

@@ -51,6 +51,7 @@ pub(super) fn document(
     )
 }
 
+/// Inserts non-seen aspect configuration entries from `config` into `extensions`.
 #[inline]
 fn add_config(
     extensions: &mut Map<String, Value>,

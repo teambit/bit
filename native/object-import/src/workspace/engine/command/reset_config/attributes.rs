@@ -6,6 +6,7 @@ use std::{
     path::Path,
     sync::atomic::{AtomicUsize, Ordering},
 };
+/// Monotonic probe file counter used when testing parent directory `SELinux` inheritance.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 /// Validates that `path` has no non-`SELinux` extended attributes and matches parent directory inheritance.

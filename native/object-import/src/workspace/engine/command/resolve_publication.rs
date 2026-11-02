@@ -9,7 +9,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
+/// Options controlling imported-index reconciliation and snapshot mode during publication.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct Options<'a> {
     pub imported_index: Option<&'a Value>,

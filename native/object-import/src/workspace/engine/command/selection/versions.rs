@@ -52,6 +52,7 @@ pub(super) fn resolve(
     explicit(selection, to, repository)
 }
 
+/// Returns an explicit stash, historical, or switch target version override for `selection`, if present.
 #[inline]
 fn target_version(options: &Options, selection: &Selection<'_>) -> io::Result<Option<String>> {
     let identity = selection.target["identity"]

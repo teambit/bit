@@ -40,6 +40,7 @@ pub(super) fn capture(context: &Value, repository: &mut Repository) -> io::Resul
     Ok(json!(output))
 }
 
+/// Returns `true` when `heads` already contains an entry matching `hash` (case-insensitively).
 #[inline]
 fn has_head(heads: &[Value], hash: &str) -> bool {
     heads

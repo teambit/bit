@@ -29,6 +29,7 @@ pub(in crate::workspace::engine) fn apply(
     Ok((input.versions.len(), json!({"token":retained.record.token,"result":retained.result})))
 }
 
+/// Validates and applies `input.versions` onto `retained.materials` and returns old-to-new ID mappings.
 fn update(retained: &mut Retained, input: &Overrides) -> io::Result<HashMap<String, String>> {
     let count = input.versions.len();
     let mut replacements = HashMap::with_capacity(count);

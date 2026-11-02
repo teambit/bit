@@ -42,6 +42,7 @@ pub(super) fn project(
     }
     Ok(None)
 }
+/// Builds a map of workspace target component IDs keyed by bare `scope/name` identity.
 fn identities(context: &Value) -> io::Result<HashMap<String, Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("stash graph targets"))?;
     let mut identities = HashMap::with_capacity(targets.len());

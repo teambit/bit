@@ -28,6 +28,7 @@ pub(super) fn apply(request: &Request, output: &mut Output) -> io::Result<()> {
     Ok(())
 }
 
+/// Removes existing package entries from `output` that are overridden by `request` environment policies.
 #[inline]
 fn remove_existing(request: &Request, output: &mut Output) {
     for name in request.environment.policy.keys() {

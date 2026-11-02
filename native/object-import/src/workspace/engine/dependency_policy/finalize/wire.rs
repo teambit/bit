@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 /// Map of dependency package names to version range JSON values.
 type Packages = Map<String, Value>;
+/// Wire request for finalizing environment and manual dependency policies.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

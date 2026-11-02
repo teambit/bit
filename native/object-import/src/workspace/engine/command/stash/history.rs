@@ -38,6 +38,7 @@ fn plans(
     Ok(plans.to_vec())
 }
 
+/// Stages pending `VersionHistory` plans onto `retained.graph.history_plans` and returns their count.
 #[inline]
 pub(super) fn prepare(
     retained: &mut Retained,

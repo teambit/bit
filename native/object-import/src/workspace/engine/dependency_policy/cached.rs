@@ -46,6 +46,7 @@ pub(in crate::workspace::engine) fn apply(
         pool,
     )
 }
+/// Wire payload for completing dependency policy evaluation from a pre-loaded detection snapshot.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

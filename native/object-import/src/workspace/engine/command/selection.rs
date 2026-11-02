@@ -21,6 +21,7 @@ pub(super) struct Selection<'a> {
     pub(super) semver: &'a Value,
 }
 
+/// Drives the `checkoutSelectBegin` / `checkoutSelectReceipt` state machine for `selection`.
 pub(super) fn select(
     options: &Options,
     selection: &Selection<'_>,

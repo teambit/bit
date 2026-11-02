@@ -30,6 +30,7 @@ pub(super) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     Ok((1, json!(plan)))
 }
 
+/// Filters ignored component, missing-issue, and package dependencies out of `plan`.
 fn ignored(request: &Request, plan: &mut Plan) {
     for field in 0..2 {
         plan.components[field].retain(|index| {

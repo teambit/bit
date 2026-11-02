@@ -24,6 +24,7 @@ pub(super) fn graph(
     store(version, &rows, objects)
 }
 
+/// Reads `flattenedEdges` from `version` or loads the `flattenedEdgesRef` `Source` object from disk.
 fn read(
     root: &Path,
     version: &Value,

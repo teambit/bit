@@ -22,6 +22,7 @@ pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usiz
     manual::apply(request, &mut output);
     Ok((1, json!(output)))
 }
+/// Validates map entries, row counts, and resolved package names on `request`.
 pub(super) fn validate(request: &Request) -> io::Result<()> {
     validate_state(request)?;
     let state = &request.state;

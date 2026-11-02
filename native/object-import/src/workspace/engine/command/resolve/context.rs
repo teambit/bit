@@ -1,5 +1,4 @@
 //! Workspace [`status_context`], lane validation, and [`proof`] capture into [`Retained`] via [`prepare`].
-
 #[cfg(test)]
 mod tests;
 use super::{
@@ -12,6 +11,7 @@ use crate::{
 };
 use serde_json::{Value, json};
 use std::io;
+/// Prepares a retained `snap`, `tag`, or `merge --resolve` context, repository, and read proofs.
 #[inline]
 pub(super) fn prepare(
     request: &Prepare,

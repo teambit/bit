@@ -36,6 +36,7 @@ pub(in crate::workspace::engine::command) fn preflight(
     Ok(())
 }
 
+/// Validates semantic tag uniqueness, current head hashes, and pending merge state on `material`.
 fn validate_identity(material: &Material) -> io::Result<()> {
     if let Some(tag) = &material.version_state.tagged_version {
         let tag = tag.trim();

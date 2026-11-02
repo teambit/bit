@@ -28,6 +28,7 @@ pub(in crate::workspace::engine) fn detect(
 ) -> io::Result<(usize, Value)> {
     detect_view(request, pool, None)
 }
+/// Detects fresh source dependencies for `request` against an in-memory [`SourceOverlay`].
 #[inline]
 pub(in crate::workspace::engine) fn detect_overlay(
     request: &Detect,
