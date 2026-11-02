@@ -1,4 +1,4 @@
-//! Global config and cache locations from the published `legacy.constants` module.
+//! Global config [`global_config_dir`] and [`cache_root`] locations from `legacy.constants`.
 use std::{env, path::PathBuf};
 
 /// `GLOBAL_CONFIG` contains config.json below `CACHE_ROOT`.

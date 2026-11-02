@@ -1,4 +1,4 @@
-//! Populate and verify `VersionHistory` records for status queries.
+//! Populate and verify `VersionHistory` records via [`prepare`] and [`proof`] for status queries.
 
 use super::{Reader, invalid};
 use crate::workspace::engine::{dependency_graph::proof, status_history};

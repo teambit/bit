@@ -1,4 +1,4 @@
-//! Validated per-file `Version` and `Source` history shared by `log-file` and `blame`.
+//! Validated per-file `Version` and `Source` history [`read`] for [`Request`] (`log-file` and `blame`).
 
 #[cfg(test)]
 mod tests;

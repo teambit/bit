@@ -1,4 +1,4 @@
-//! `LanesMain.listUpdatesFromMainPending` over a retained, uncommitted import.
+//! `LanesMain.listUpdatesFromMainPending` over a retained [`Overlay`] for [`Request`].
 
 use super::{Reader, history_population, indexed_models, invalid, lane, replace_models, versions};
 use crate::{command_import::Overlay, read_budget::Budget};

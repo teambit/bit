@@ -1,4 +1,4 @@
-//! The first-parent chain used by `bit diff --parent`, with tags and file identity.
+//! The first-parent chain [`read`] for [`Request`] used by `bit diff --parent`.
 
 use super::{Request as ModelsRequest, invalid, load_overlay, versions};
 use crate::{merge_history, read_version};

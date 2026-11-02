@@ -1,4 +1,4 @@
-//! Active lane object loading, component head extraction, and remote lane ref resolution.
+//! Active [`Lane`] object loading via [`read`], component head extraction, and remote ref resolution.
 
 use super::{Reader, invalid};
 use crate::read_budget::Budget;

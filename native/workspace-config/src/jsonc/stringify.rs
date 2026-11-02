@@ -1,4 +1,4 @@
-//! `comment-json` 4.2.5 `stringify(value, undefined, 2)` formatter.
+//! `comment-json` 4.2.5 `stringify(value, undefined, 2)` formatter for [`Node`] and [`Object`].
 
 use super::node::{Comment, Comments, Node, Object};
 use std::fmt::Write as _;

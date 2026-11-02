@@ -1,4 +1,4 @@
-//! Read and validate remote main refs for status models.
+//! [`read`] and validate remote `main` refs under [`Budget`] for status models.
 
 use super::invalid;
 use crate::read_budget::Budget;

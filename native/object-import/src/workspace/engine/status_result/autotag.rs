@@ -1,4 +1,4 @@
-//! Compute pending auto-tag candidates and dependency cycles for modified workspace components.
+//! Compute [`pending`] auto-tag candidates and dependency cycles for modified [`Target`] items.
 use super::{Request, Target, invalid};
 use serde_json::{Value, json};
 use std::io;

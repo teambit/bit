@@ -1,4 +1,4 @@
-//! Source file capture and normalization for semantic status comparisons.
+//! Source file capture via [`all`] and [`overlay`] normalization for [`Target`] comparisons.
 
 mod overlay;
 

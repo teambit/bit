@@ -1,10 +1,10 @@
-//! `JSONC` parsing and comment-preserving document edits.
+//! `JSONC` [`parse`] and comment-preserving [`Document`] edits across [`Node`] and [`Object`].
 //!
 //! Bit reads and writes `workspace.jsonc` with comment-json 4.2.5: the whole
 //! file is re-serialized with `stringify(data, undefined, 2)`, comments are
 //! attached to the property they surround (by name), and deleting then
 //! re-adding a property keeps them. [`Document`] reproduces that model and
-//! output byte for byte, including comment-json's quirks (JavaScript property
+//! output byte for byte, including comment-json's quirks (`JavaScript` property
 //! order, no newline between a leading block comment and `{`, partial string
 //! escaping).
 

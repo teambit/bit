@@ -1,4 +1,4 @@
-//! Harmony 1 and Harmony 2 `Version` validation and consumer projection.
+//! Harmony 1 and Harmony 2 `Version` [`validate`] checks and consumer projection.
 
 #[cfg(test)]
 mod tests;

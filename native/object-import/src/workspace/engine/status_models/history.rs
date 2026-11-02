@@ -1,4 +1,4 @@
-//! Compute status and merge version-history distances across main and lanes.
+//! Compute status and merge version-history distances via [`read`] and [`history_population`].
 
 use super::{Reader, Request, history_population, invalid, lane::Lane, remotes, versions};
 use rayon::prelude::*;

@@ -1,4 +1,4 @@
-//! `scopeList`: `ComponentsList.listAll` projection for each indexed model.
+//! `scopeList`: `ComponentsList.listAll` projection for [`Request`] across [`index`] and [`http_lanes`].
 
 pub(in crate::workspace::engine) mod http_lanes;
 #[cfg(test)]

@@ -1,4 +1,4 @@
-//! Read and diff model and workspace file contents for workspace diff evaluations.
+//! [`read`] and [`diff`] model and workspace [`File`] contents under [`Budgets`].
 
 #[cfg(test)]
 mod tests;

@@ -1,4 +1,4 @@
-//! Bounded operation-local workspace file snapshot and engine state tracking.
+//! Bounded operation-local workspace file [`Observation`] and engine [`State`] tracking.
 
 #[cfg(test)]
 mod tests;

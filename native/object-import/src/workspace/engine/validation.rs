@@ -1,4 +1,4 @@
-//! Shared request path, count, and object-identity validation helpers.
+//! Shared request [`path`], [`count`], and [`invalid`] validation helpers.
 
 use super::MAX_FILES;
 use sha1::{Digest, Sha1};

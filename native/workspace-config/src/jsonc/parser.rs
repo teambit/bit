@@ -1,4 +1,4 @@
-//! `comment-json` 4.2.5 parser: attaches each comment to the symbol the
+//! `comment-json` 4.2.5 [`Parsed`] parser: attaches each [`Comment`] to the symbol the
 //! `JavaScript` parser would, so `stringify` reproduces Bit's output.
 
 use super::{

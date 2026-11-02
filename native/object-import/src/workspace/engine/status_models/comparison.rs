@@ -1,4 +1,4 @@
-//! Semantic and code-level comparison between workspace targets and stored `Version` objects.
+//! [`semantic`] and code-level comparison between workspace [`Target`] entries and [`versions`].
 
 pub(in crate::workspace::engine) mod capture;
 

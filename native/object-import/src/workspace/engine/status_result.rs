@@ -1,4 +1,4 @@
-//! Assemble staged, modified, pending, and invalid workspace status result sets.
+//! Assemble staged, modified, [`autotag`], and [`model`] status result sets for [`Request`].
 
 mod autotag;
 mod model;

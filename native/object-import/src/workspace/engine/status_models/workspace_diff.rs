@@ -1,4 +1,4 @@
-//! Compare workspace files against local `Version` object models for status diffs.
+//! Compare workspace [`files`] and [`capture`] against local `Version` models via [`read`].
 
 mod capture;
 mod files;

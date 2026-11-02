@@ -1,4 +1,4 @@
-//! Read the limited lane projection returned by an HTTP scope's `GraphQL` API.
+//! [`read`] the limited lane projection returned by an HTTP scope's `GraphQL` [`Network`] API.
 
 use crate::{read_budget::Budget, workspace::engine::invalid};
 use bit_client_transfer::{GlobalConfig, http::Network, remotes::Remote};

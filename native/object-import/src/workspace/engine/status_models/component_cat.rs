@@ -1,4 +1,4 @@
-//! `CatCmd`'s stored `Version` and `Source` reads, without a Node file-body round trip.
+//! `CatCmd`'s stored `Version` and `Source` [`read`] for [`Request`], without a Node round trip.
 
 use super::{indexed_models, invalid};
 use crate::{checkout::repository, merge_history, read_budget::Budget, read_version};

@@ -1,4 +1,4 @@
-//! Published `package.json` indentation, newline detection, and serialization.
+//! Published `package.json` indentation, newline detection, and [`stringify_package`] serialization.
 #[cfg(test)]
 mod tests;
 

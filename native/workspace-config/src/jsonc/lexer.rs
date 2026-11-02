@@ -1,5 +1,5 @@
-//! The subset of `esprima`'s tokenizer `comment-json` relies on: punctuators,
-//! JSON literals, and comments, each with the lines it starts and ends on.
+//! The subset of `esprima`'s tokenizer `comment-json` relies on: [`Kind`] punctuators,
+//! JSON literals, and comments in [`Token`], each with the lines it starts and ends on.
 
 use std::{io, iter::Peekable, str::CharIndices};
 

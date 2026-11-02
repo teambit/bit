@@ -1,4 +1,4 @@
-//! `VersionHistory` serialization, proof verification, and object-store persistence.
+//! `VersionHistory` [`identity`], [`proof`] verification, and [`Store`] persistence for [`Request`].
 
 #[cfg(test)]
 mod tests;

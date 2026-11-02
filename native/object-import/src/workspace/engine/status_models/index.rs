@@ -1,4 +1,4 @@
-//! Scope `index.json` component listing and model identity verification.
+//! Scope `index.json` [`Item`] listing via [`read`] and [`read_at`] with identity verification.
 
 use super::{Reader, invalid};
 use crate::read_budget::Budget;

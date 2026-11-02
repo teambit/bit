@@ -1,4 +1,4 @@
-//! Capture workspace source files and metadata for status diff comparisons.
+//! Capture workspace source [`File`] items via [`all`] for [`Request`] status diff comparisons.
 
 use super::{Request, comparison, invalid};
 use crate::workspace::engine::read;

@@ -1,5 +1,5 @@
-//! The subset of `minimatch` dev-file patterns used in workspace configs: `**`, `*`, `?`, `[...]`,
-//! `{a,b}` and the extglobs `+(..)`, `*(..)`, `?(..)`, `@(..)`, `!(..)`.
+//! The subset of `minimatch` dev-file patterns via [`match_patterns`] and [`matches`]: `**`, `*`,
+//! `?`, `[...]`, `{a,b}` and the extglobs `+(..)`, `*(..)`, `?(..)`, `@(..)`, `!(..)`.
 //! Like minimatch's defaults, wildcards never match a leading `.`.
 
 /// `matchPatterns(file, splitPatterns(patterns))` of `@teambit/toolbox.path.match-patterns`:

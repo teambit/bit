@@ -1,4 +1,4 @@
-//! Scope model, version, lane, and version-history loading for workspace status and inspection.
+//! Scope [`index`], [`versions`], [`lane`], and [`history`] loading for workspace status and inspection.
 
 pub(super) mod comparison;
 pub(in crate::workspace::engine) mod component_cat;

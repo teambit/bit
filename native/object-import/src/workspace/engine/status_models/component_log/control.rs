@@ -1,4 +1,4 @@
-//! `ModelComponent.collectLogs` projects HEAD range/snap metadata over its history.
+//! `ModelComponent.collectLogs` projects HEAD [`Range`]/snap metadata via [`Control`] over history.
 
 use node_semver::{Range, Version};
 use serde_json::{Value, json};
