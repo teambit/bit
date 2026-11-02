@@ -4,6 +4,7 @@ use super::{State, serve, write};
 use serde_json::{Value, json};
 use std::io::Cursor;
 
+/// Shared four-thread Rayon pool for [`serve`] merge state unit tests.
 pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
     rayon::ThreadPoolBuilder::new()
         .num_threads(4)

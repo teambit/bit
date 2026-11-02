@@ -59,6 +59,7 @@ fn callback_batch_resize_never_changes_singleton_staged_write() {
     assert_eq!(output["directive"]["kind"], "stagedWrite");
     assert_eq!(output["directive"]["count"], 1);
 }
+/// Verifies that soft-tag transactions capture lane state before `softTag` and treat a failed receipt as terminal.
 #[test]
 fn soft_tags_capture_lane_and_failure_is_terminal() {
     let mut state = State::default();
@@ -75,6 +76,7 @@ fn soft_tags_capture_lane_and_failure_is_terminal() {
     assert_eq!(terminal["directive"]["phase"], "softTag");
     assert!(state.receipt(failed).is_err());
 }
+/// Verifies that `deleteObjects` runs before `validateObjects` and replayed revision receipts are rejected.
 #[test]
 fn deletion_precedes_validation_and_replayed_receipts_decline() {
     let mut state = State::default();

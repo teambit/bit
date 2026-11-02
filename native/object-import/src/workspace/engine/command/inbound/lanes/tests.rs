@@ -9,7 +9,7 @@ use std::{
     path::PathBuf,
 };
 
-/// Verifies that [`parse_id`] accepts distinct `scope/lane` IDs and rejects duplicates, `main`, or unscoped names.
+/// Verifies that [`parse_id`] accepts distinct `scope/lane` IDs in [`HashSet`] and rejects duplicates, `main`, or unscoped names.
 #[test]
 fn lane_ids_must_be_distinct_and_non_main() {
     let mut seen = HashSet::new();

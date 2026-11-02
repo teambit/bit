@@ -47,6 +47,7 @@ fn reset_clears_only_written_overrides_and_retains_original_history() {
             .is_err(),
     );
 }
+/// Temporary workspace fixture seeded with `.bit` and `.bitmap` for `.bitmap` update tests.
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {
@@ -68,6 +69,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
+/// Verifies that [`prepare`] preserves unexported empty `scope` fields and writes a `.bitmap` history backup on commit.
 #[test]
 fn bitmap_update_preserves_unexported_scope_and_records_original_backup() {
     let fixture = Fixture::new();

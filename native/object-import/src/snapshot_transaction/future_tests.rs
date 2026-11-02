@@ -4,7 +4,7 @@ use super::future;
 use serde_json::{Value, json};
 use std::process::Command;
 
-/// Verifies that [`future::plan`] matches Node's `getValidVersionOrReleaseType` and `getVersionToAdd` across tag, next, and entered modes.
+/// Verifies that [`future::plan`] matches Node's `getValidVersionOrReleaseType` and `getVersionToAdd` via [`Command`] across tag, next, and entered modes.
 #[test]
 fn raw_version_branches_match_actual_semver_helper_normalization() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {

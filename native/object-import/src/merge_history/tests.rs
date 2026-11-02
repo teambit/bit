@@ -1,4 +1,4 @@
-//! Unit tests for merge history DAG traversal, common-ancestor discovery ([`Directory`], [`POOL`]), and
+//! Unit tests for merge history DAG traversal, common-ancestor discovery ([`Directory`], [`POOL`], [`NEXT`]), and
 //! three-way file merge resolution ([`serve`], [`response`], [`graph`], [`record`], [`digest`]) in `bit-object-import`.
 
 use super::serve;

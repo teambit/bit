@@ -67,7 +67,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.0);
     }
 }
-/// Verifies that `mergePrepare` capsules and late template loads preserve raw bytes before EOL normalization.
+/// Verifies that `mergePrepare` via [`apply`] retains raw source capsules in [`State`] before auto-EOL normalization.
 #[test]
 fn retained_prepare_capsules_and_late_template_preserve_raw_bytes_before_auto_eol() {
     let fixture = Fixture::new();

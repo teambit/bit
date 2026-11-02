@@ -72,6 +72,7 @@ fn inactive_default_scope_root_is_not_a_collision_with_itself() {
     assert!(super::validate_overlap(&destination, std::iter::once(&other)).is_err());
 }
 
+/// Verifies that `identity_bitmap` resolves workspace `defaultScope` so an inactive `.bitmap` row does not collide with its own destination.
 #[test]
 fn workspace_default_scope_keeps_an_inactive_destination_out_of_collision_resolution() {
     let bitmap = json!({"inactive":{"scope":"","name":"component","rootDir":"existing-root"}});

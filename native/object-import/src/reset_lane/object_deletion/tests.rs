@@ -3,7 +3,7 @@
 use crate::reset_lane::{ObjectChange, object_path, write_objects};
 use std::fs;
 
-/// Verifies that deleting the last object in a two-char prefix directory removes the prefix directory while keeping `.bit/objects`.
+/// Verifies that [`write_objects`] prunes the two-character prefix directory when deleting its last [`ObjectChange`] while keeping `.bit/objects`.
 #[test]
 fn deleting_the_only_object_prunes_its_prefix_but_keeps_the_object_store() {
     let fixture = tempfile::tempdir().expect("fixture");

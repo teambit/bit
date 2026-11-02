@@ -7,7 +7,7 @@
 use super::receipt_versions;
 use serde_json::json;
 
-/// Verifies that [`receipt_versions`] retains only non-hidden auto-detected dependencies that differ from `workspace.jsonc` policy and skips `"ours"` strategies.
+/// Verifies that [`receipt_versions`] retains only non-hidden `"auto"` dependencies that differ from `workspace.jsonc` policy and skips `"ours"` strategies.
 #[test]
 fn checkout_receipt_only_contains_auto_dependencies_overlapping_workspace_policy() {
     let context = json!({"workspace":{"teambit.dependencies/dependency-resolver":{"policy":{

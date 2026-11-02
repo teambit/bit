@@ -32,6 +32,7 @@ fn policy() -> Value {
         "common":reference('a'),"detachHead":false,"currentLaneDefault":false,
         "currentParents":[reference('d')],"isLegacy":false,"mainModelKnown":false})
 }
+/// Verifies that [`request`] rewrites fast-forward `squashPolicy` inputs to `common` while preserving `previousParents` order.
 #[test]
 fn fast_forward_rewrites_to_common_and_preserves_previous_order() {
     let mut input = policy();
@@ -42,6 +43,7 @@ fn fast_forward_rewrites_to_common_and_preserves_previous_order() {
         "parents":[reference('a')],"previousParents":[reference('d'),reference('e')]}),
     );
 }
+/// Verifies that divergent `sourceOnly` histories require `detachHead: true` and skip when `targetOnly` is empty.
 #[test]
 fn divergence_requires_detach_and_source_only_or_equal_skips() {
     let mut input = policy();

@@ -34,6 +34,7 @@ fn remove_source(fixture: &Fixture, version: &Value) {
     )
     .unwrap();
 }
+/// Verifies that [`prepare`] skips reading the `base` `Source` body when `current` equals `base` or `target`.
 #[test]
 fn unused_base_body_is_not_read_for_equal_current_or_equal_target() {
     for current in [b"base\n".as_slice(), b"target\n", b"\xef\xbb\xbfbase\r\n"] {
@@ -49,6 +50,7 @@ fn unused_base_body_is_not_read_for_equal_current_or_equal_target() {
         assert_eq!(fs::read(fixture.0.join("index.ts")).unwrap(), current);
     }
 }
+/// Verifies that [`prepare`] verifies the `base` `Source` body when needed for a three-way merge and writes no snapshots on failure.
 #[test]
 fn required_base_body_is_verified_and_failure_writes_no_snapshots() {
     for corrupt in [false, true] {

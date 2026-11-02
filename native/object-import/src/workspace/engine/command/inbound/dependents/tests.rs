@@ -52,6 +52,7 @@ fn distinct_versions_of_a_dependent_request_latest_once() {
     assert_eq!(result[0].version, "latest");
 }
 
+/// Verifies that [`select`] enforces the path payload budget on dense graphs before hitting the processed-node limit.
 #[test]
 fn dense_workspace_graph_rejects_path_explosion_before_the_processed_limit() {
     let sources = (0..512)
@@ -68,6 +69,7 @@ fn dense_workspace_graph_rejects_path_explosion_before_the_processed_limit() {
     assert_eq!(error.to_string(), "inbound dependent graph path payload limit");
 }
 
+/// Verifies that [`select`] bounds the initial `sources` payload size before enqueuing BFS paths.
 #[test]
 fn initial_source_payload_is_bounded_before_it_enters_the_queue() {
     let sources = vec!["x".repeat(1024 * 1024); 33];

@@ -25,6 +25,7 @@ fn common_shortcut_avoids_repository_reads_and_keeps_common_identity() {
     request["laneHeadRemote"] = json!(hash('c'));
     assert_eq!(plan(&request).unwrap()["removeLane"], false);
 }
+/// Verifies that [`walk`] preserves the first loaded parent provenance index and rejects cyclic or multi-parent snaps.
 #[test]
 fn walk_preserves_first_loaded_parent_provenance_and_declines_cycles() {
     let versions =
@@ -37,6 +38,7 @@ fn walk_preserves_first_loaded_parent_provenance_and_declines_cycles() {
     let multiple = json!([{"hash":hash('a'),"parents":[hash('b'),hash('c')]}]);
     assert!(walk(multiple.as_array().unwrap(), &hash('a')).is_err());
 }
+/// Verifies that [`plan`] retains non-deleted detached heads and preserves tag entries when resetting by hash label.
 #[test]
 fn detached_selection_and_hash_labels_do_not_delete_tags() {
     let mut request = input();

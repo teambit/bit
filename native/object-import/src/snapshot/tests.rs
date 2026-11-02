@@ -36,9 +36,11 @@ impl Drop for Directory {
 fn hash(body: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(body))
 }
+/// Encodes `body` as a lowercase hexadecimal string.
 fn hex(body: &[u8]) -> String {
     crate::validate::hexadecimal(body)
 }
+/// Builds a `Source` object commit descriptor for `body` with its [`hash`] and [`hex`] payload.
 fn source(body: &[u8]) -> Value {
     json!({"type":"Source","hash":hash(body),"body":hex(body)})
 }

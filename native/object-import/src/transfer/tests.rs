@@ -48,6 +48,7 @@ pub(super) fn source(directory: &std::path::Path, bytes: &[u8]) -> ([u8; 20], Ve
     (hash, compressed)
 }
 
+/// Builds a repository-backed [`Descriptor`] for `hash` and optional `scope`.
 fn descriptor(hash: [u8; 20], scope: Option<&str>) -> Descriptor {
     Descriptor {
         hash,
@@ -57,6 +58,7 @@ fn descriptor(hash: [u8; 20], scope: Option<&str>) -> Descriptor {
     }
 }
 
+/// Verifies that [`prepare`] deduplicates identical `(scope, hash)` pairs while preserving distinct scopes and first-seen order.
 #[test]
 fn dedup_preserves_scope_and_first_order_with_frozen_archive() {
     let root = directory();

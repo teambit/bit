@@ -65,6 +65,7 @@ fn package_receipts_bind_owned_paths_but_allow_canonical_callback_metadata_overr
     assert!(!directory.0.join("node_modules").exists());
 }
 
+/// Verifies that `normalize` prefixes 40-char snap hashes with `"0.0.0-"` for `node_modules` `package.json` manifests.
 #[test]
 fn post_transform_snap_versions_use_node_package_semver_prefix() {
     let original = json!({"source":"index.js","_bit_local":true});
@@ -74,6 +75,7 @@ fn post_transform_snap_versions_use_node_package_semver_prefix() {
     assert_eq!(value["version"], "0.0.0-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 }
 
+/// Verifies that `aspect_exports` inserts `"types"` before `"default"` in `exports["."]` without overwriting an existing `"types"` entry.
 #[test]
 fn aspect_exports_insert_types_before_a_truthy_default_and_preserve_existing_types() {
     let mut manifest = json!({"types":"index.d.ts","exports":{".":{"require":"./index.js","default":"./index.js"}}});
@@ -87,6 +89,7 @@ fn aspect_exports_insert_types_before_a_truthy_default_and_preserve_existing_typ
     assert_eq!(manifest["exports"]["."]["types"], "./index.d.ts");
 }
 
+/// Verifies that `normalize` prefixes short hex snap versions (`>= 3` hex characters) with `"0.0.0-"`.
 #[test]
 fn short_callback_hash_versions_follow_the_published_version_parser() {
     let original = json!({"source":"index.js"});

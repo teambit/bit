@@ -63,6 +63,7 @@ fn recovery_keeps_nonempty_staged_configuration_exactly() {
     assert_eq!(fs::read(workspace.0.join(".bit/last-merged/staged-config.json")).unwrap(), bytes);
 }
 
+/// Verifies that [`Recovery::prepare`] and [`Recovery::commit`] preserve file permissions and reject stale file modes on Unix.
 #[cfg(unix)]
 #[test]
 fn recovery_preserves_copy_permissions_and_rejects_stale_modes() {

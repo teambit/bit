@@ -48,6 +48,7 @@ fn jsonc_comments_trailing_commas_and_string_escapes_are_preserved() {
     assert!(jsonc::parse(b"{,}").is_err());
     assert!(jsonc::parse(b"{\"bad\":,}").is_err());
 }
+/// Verifies that [`bitmap`] treats `removed: true` component entries as tracked root directories when filtering `removeDirs`.
 #[test]
 fn bitmap_root_membership_includes_removed_components() {
     let fixture = Fixture::new();
@@ -60,6 +61,7 @@ fn bitmap_root_membership_includes_removed_components() {
         json!({"removeDirs":["later"]}),
     );
 }
+/// Verifies that [`bitmap`] declines when `.bitmap` entries lack scope/rootDir metadata or contain duplicate `rootDir` values.
 #[test]
 fn invalid_bitmap_identity_and_duplicate_dirs_decline() {
     let fixture = Fixture::new();

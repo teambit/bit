@@ -45,6 +45,7 @@ fn divergent_and_fast_forward_decisions_use_canonical_status_kernel() {
     );
 }
 
+/// Verifies that [`select`] returns `"unchanged"` with a snap/tag prompt when `modified` is true.
 #[test]
 fn modified_component_is_rejected_before_retained_body_preparation() {
     assert_eq!(
@@ -53,6 +54,7 @@ fn modified_component_is_rejected_before_retained_body_preparation() {
     );
 }
 
+/// Verifies that `equivalent_dependencies` ignores matching optional `packageName` fields while rejecting mismatched package names or versions.
 #[test]
 fn optional_dependency_package_name_does_not_change_policy() {
     let base = json!([{"id":{"scope":"scope","name":"dep","version":"1.0.0"},"relativePaths":[]}]);

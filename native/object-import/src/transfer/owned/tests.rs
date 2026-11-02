@@ -44,6 +44,7 @@ fn initialize(state: &mut State, collection: &Value) -> Value {
     apply("transferInitialize", &json!({"objects":objects}), state).unwrap()
 }
 
+/// Verifies that `transferArchive` reads from the frozen compressed spool in [`State`] without re-reading modified repository objects.
 #[test]
 fn compressed_spool_survives_helper_drop_and_archive_never_rereads_repository() {
     let root = directory();
@@ -68,6 +69,7 @@ fn compressed_spool_survives_helper_drop_and_archive_never_rereads_repository() 
     fs::remove_dir_all(root).unwrap();
 }
 
+/// Verifies that `transferArchive` in `"fetch"` mode writes `.BIT.START` and `.BIT.END` markers with exact file counts.
 #[test]
 fn fetch_archive_contains_exact_start_end_and_count() {
     let root = directory();

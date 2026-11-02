@@ -58,6 +58,7 @@ fn snapshot_promotes_bitmap_component_without_leaving_a_hidden_duplicate() {
     assert!(lane.get("overrideUpdateDependents").is_none());
 }
 
+/// Verifies that [`objects::snapshot_update`] marks a removed lane component with `isDeleted: true`.
 #[test]
 fn removed_snapshot_marks_the_lane_component_deleted() {
     let mut lane =
@@ -67,6 +68,7 @@ fn removed_snapshot_marks_the_lane_component_deleted() {
     assert_eq!(lane["components"][0]["isDeleted"], true);
 }
 
+/// Verifies that `finalize_snap` stages lane snapshot objects in `lane-snapshot` separately from existing staged component objects.
 #[test]
 fn lane_snapshot_stages_separately_from_existing_component_objects() {
     let directory = super::super::scratch::Directory::create().unwrap();

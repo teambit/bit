@@ -69,6 +69,7 @@ fn duplicate_policy_text_declines_before_any_workspace_write() {
     assert_eq!(fs::read(&path).unwrap(), before);
 }
 
+/// Verifies that [`Prepared::prepare`] renders git-style conflict markers into the planned `workspace.jsonc` buffer before [`Prepared::commit`] writes to disk.
 #[test]
 fn policy_conflict_is_rendered_before_checkout_writes_the_workspace() {
     let fixture = Fixture::new();
@@ -91,6 +92,7 @@ fn policy_conflict_is_rendered_before_checkout_writes_the_workspace() {
     assert!(after.contains(">>>>>>> theirs"));
 }
 
+/// Verifies that [`Prepared::validate`] rejects a `workspace.jsonc` file that has been hardlinked after [`Prepared::new`].
 #[cfg(unix)]
 #[test]
 fn hardlinked_workspace_config_declines_during_validation() {

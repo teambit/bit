@@ -40,6 +40,7 @@ fn lexical_latest_preserves_the_published_double_digit_rollover() {
     assert!(!scope.join("stash/stash-9.json").exists());
     fs::remove_dir_all(scope).unwrap();
 }
+/// Verifies that [`PreparedSave::apply`] writes four-space indented stash JSON and [`PreparedLoad::consume`] rejects concurrent file edits.
 #[test]
 fn save_formats_exact_metadata_and_refuses_concurrent_metadata_changes() {
     let scope = scope();
@@ -58,6 +59,7 @@ fn save_formats_exact_metadata_and_refuses_concurrent_metadata_changes() {
     assert!(scope.join("stash/stash-1.json").exists());
     fs::remove_dir_all(scope).unwrap();
 }
+/// Verifies that [`PreparedLoad::prepare`] and [`PreparedSave::prepare`] reject symlinked stash metadata files without modifying the symlink target.
 #[cfg(unix)]
 #[test]
 fn symbolic_metadata_is_rejected_without_touching_its_target() {

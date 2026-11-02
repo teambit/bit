@@ -37,6 +37,7 @@ fn failed_upload_cleans_only_prior_acknowledged_remotes() {
         .is_err(),
     );
 }
+/// Verifies that validation failure cleans up all remotes on a fresh transfer (`resume = false`) while skipping cleanup on `--resume`.
 #[test]
 fn fresh_validation_failure_cleans_all_but_resume_never_cleans() {
     let mut state = State::default();
@@ -52,6 +53,7 @@ fn fresh_validation_failure_cleans_all_but_resume_never_cleans() {
     next = receipt(&mut state, &next, false);
     assert_eq!(next["directive"], json!({"kind":"failed","indices":[],"reason":"validate"}));
 }
+/// Verifies that `persist` retries at most three times before transitioning to `"failed"` without deleting pending directories.
 #[test]
 fn persist_retries_exactly_three_times_then_preserves_pending_dirs() {
     let mut state = State::default();

@@ -2,7 +2,7 @@
 
 use super::WorkspaceSession;
 
-/// Verifies that [`WorkspaceSession`] stack size (`size_of`) remains at most 1024 bytes by boxing large operation state structs.
+/// Verifies that [`WorkspaceSession`] stack size (`std::mem::size_of`) remains at most 1024 bytes by boxing large operation state structs.
 #[test]
 fn retained_operation_state_does_not_inflate_caller_stack_frames() {
     assert!(

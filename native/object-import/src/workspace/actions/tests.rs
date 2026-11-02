@@ -39,6 +39,7 @@ fn removes_nested_trees_and_ignores_missing_paths() {
     assert_eq!(response(frame(&[(0, &nested, None), (0, &nested, None)]))["completed"], 2);
     assert!(!nested.exists());
 }
+/// Verifies that [`serve`] preserves non-empty directories for action `1` and stops immediately when targeting a regular file.
 #[test]
 fn preserves_nonempty_directories_and_stops_at_nondirectory() {
     let directory = Directory::new();
@@ -49,6 +50,7 @@ fn preserves_nonempty_directories_and_stops_at_nondirectory() {
     assert_eq!(result["failed"], true);
     assert!(file.exists());
 }
+/// Verifies that truncated or malformed action frames are rejected before executing any prefix actions.
 #[test]
 fn incomplete_or_invalid_frames_never_remove_prefixes() {
     let directory = Directory::new();

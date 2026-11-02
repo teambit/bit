@@ -13,8 +13,11 @@ use std::{
 const BASE: &str = "1111111111111111111111111111111111111111";
 /// Lane head `Version` SHA-1 hash fixture for `scope/alpha`.
 const ALPHA: &str = "2222222222222222222222222222222222222222";
+/// Detached head `Version` SHA-1 hash fixture for `scope/alpha`.
 const DETACHED: &str = "3333333333333333333333333333333333333333";
+/// Secondary parent `Version` SHA-1 hash fixture for [`MERGE`].
 const OTHER: &str = "4444444444444444444444444444444444444444";
+/// Multi-parent merge `Version` SHA-1 hash fixture for `scope/beta`.
 const MERGE: &str = "5555555555555555555555555555555555555555";
 
 /// Temporary workspace fixture pre-populated with `Version`, `Component`, `Lane`, and `VersionHistory` objects.

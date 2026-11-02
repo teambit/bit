@@ -51,6 +51,7 @@ fn lane_history_absence_does_not_fall_back_to_main_for_workspace_components() {
     assert_eq!(super::history_head(Some(&hidden), Some(main), true), Some(hidden.head.as_str()));
 }
 
+/// Verifies that an unexported inactive `.bitmap` row with `defaultScope` matches [`inactive_targets`] without becoming a new consumer addition.
 #[test]
 fn unexported_inactive_bitmap_uses_default_scope_without_becoming_an_addition() {
     let bitmap = json!({"$schema-version":"17.0.0","inactive":{"name":"component","scope":"","defaultScope":"scope","version":"1.0.0","rootDir":"existing-root","mainFile":"index.js","isAvailableOnCurrentLane":false}});

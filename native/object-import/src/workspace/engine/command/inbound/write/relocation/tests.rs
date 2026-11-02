@@ -76,6 +76,7 @@ fn occupied_or_nested_owner_destinations_preserve_the_original_conflict() {
     }
 }
 
+/// Verifies that [`prepare`] preserves occupied candidate directories (`component`, `component_1`) and retains the first empty suffixed target (`component_2`).
 #[test]
 fn occupied_candidates_are_preserved_and_the_empty_target_is_retained() {
     let root = tempfile::tempdir().unwrap();

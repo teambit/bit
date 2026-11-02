@@ -54,6 +54,7 @@ fn concurrent_writes_are_atomic_and_duplicate_identities_keep_first_payload() {
     assert_eq!(fs::read_dir(parent).unwrap().count(), 1);
 }
 
+/// Verifies that failed [`Store::write`] calls do not mark objects as written and clean up temporary staging files on rename failure.
 #[test]
 fn failed_writes_are_not_marked_complete_and_failed_renames_clean_temporary_files() {
     let directory = Directory::new();
@@ -85,6 +86,7 @@ fn failed_writes_are_not_marked_complete_and_failed_renames_clean_temporary_file
     );
 }
 
+/// Verifies that [`Store::new`] and [`Store::write`] reject relative roots and non-hexadecimal or path-traversal object hashes.
 #[test]
 fn invalid_paths_and_identities_cannot_escape_object_directory() {
     let directory = Directory::new();

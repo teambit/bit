@@ -5,7 +5,7 @@
 //! Also rejects mismatched component identities and invalid root directory paths.
 
 use super::{capture, json};
-/// Verifies that [`capture`] initializes newly added components (`added: true`) with empty files and version while rejecting invalid `rootDir` paths.
+/// Verifies that [`capture`] initializes newly added components (`added: true`) with empty files and version while rejecting invalid or traversal `rootDir` paths.
 #[test]
 fn incoming_capture_never_invents_current_contents_or_version() {
     let destination =

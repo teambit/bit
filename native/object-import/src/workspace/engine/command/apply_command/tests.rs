@@ -6,7 +6,7 @@ use super::notify;
 use crate::workspace::engine::command::scratch;
 use std::fs;
 
-/// Verifies that [`notify`] writes an empty `.bit/events/onPostObjectsPersist` marker file and returns `1`.
+/// Verifies that [`notify`] writes an empty `.bit/events/onPostObjectsPersist` marker file in [`scratch::Directory`] and returns `1`.
 #[test]
 fn persistence_notification_counts_actual_invocations_and_preserves_empty_payload() {
     let directory = scratch::Directory::create().unwrap();

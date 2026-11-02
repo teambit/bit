@@ -23,10 +23,12 @@ fn update(identity: &str) -> Update {
 fn context() -> Value {
     json!({"lane":{"currentId":{"scope":"local.scope","name":"feature"}}})
 }
+/// Builds a baseline `.bitmap` JSON fixture containing `alpha` via [`row`] and a `_bit_lane` header.
 fn bitmap() -> Value {
     json!({"alpha":row("local.scope","alpha","alpha"),"$schema-version":"17.0.0",
         "_bit_lane":{"id":{"scope":"local.scope","name":"feature"},"exported":true}})
 }
+/// Runs [`prepare_bytes`] on `bitmap`, `context`, `updates`, and `removed`, returning the parsed `JSONC` output.
 fn prepare(
     bitmap: &Value,
     context: &Value,

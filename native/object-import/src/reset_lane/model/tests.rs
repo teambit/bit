@@ -32,6 +32,7 @@ fn empty_constructor_state_is_omitted_but_an_empty_versions_map_is_retained() {
     assert_eq!(model, json!({"versions":{},"state":{"versions":{}}}));
 }
 
+/// Verifies that [`remove_versions`] removes only the reset tag label from `state.versions` while preserving other pending entries.
 #[test]
 fn pending_state_removes_only_the_published_tag_label_and_preserves_other_entries() {
     let hash = "a".repeat(40);
@@ -44,6 +45,7 @@ fn pending_state_removes_only_the_published_tag_label_and_preserves_other_entrie
     );
 }
 
+/// Verifies that [`remove_versions`] retains an empty `state.versions` object when removing the final pending tag.
 #[test]
 fn removing_the_last_pending_version_retains_the_existing_versions_container() {
     let mut model =

@@ -63,7 +63,7 @@ fn tracked_lane_component_keeps_lane_only_flags_on_another_lane() {
     assert_eq!(bitmap["_bit_lane"]["id"]["name"], "study");
 }
 
-/// Verifies that `switch_visibility` marks unselected `--workspace-only` lane entries unavailable and removes `onLanesOnly`.
+/// Verifies that `super::lane::switch_visibility` marks unselected `--workspace-only` lane entries unavailable and removes `onLanesOnly`.
 #[test]
 fn workspace_only_keeps_inactive_lane_entries_unavailable_without_lane_only_flags() {
     let context = json!({"lane":{"switchSelectedIds":["s/visible"],"switchWorkspaceOnly":true,

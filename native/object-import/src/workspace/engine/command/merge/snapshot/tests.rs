@@ -63,6 +63,7 @@ fn model_projection_keeps_existing_local_tags_and_adds_snap_without_version_tag(
     assert_eq!(actual["head"], "b".repeat(40));
 }
 
+/// Verifies that [`metadata::object`] preserves `Version` extension `config`, `data`, and field serialization order.
 #[test]
 fn snapshot_version_projection_preserves_extension_config_and_order() {
     let object=metadata::object("Version",Some(&"a".repeat(40)),json!({"files":[],
@@ -75,6 +76,7 @@ fn snapshot_version_projection_preserves_extension_config_and_order() {
     );
 }
 
+/// Verifies that [`metadata::no_application_files`] rejects `*.node-app.*`, `*.react-app.*`, and `*.bit-app.*` application registration files.
 #[test]
 fn merged_application_registration_files_decline_before_allocation() {
     for path in ["apps/server.node-app.ts", "client.react-app.js", "custom.bit-app.mjs"] {

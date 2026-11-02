@@ -10,8 +10,11 @@ use std::{
 
 /// Monotonic sequence counter for unique lane reset graph test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Common baseline `Version` SHA-1 hash shared by `main` and the lane.
 const BASE: &str = "1111111111111111111111111111111111111111";
+/// Merged `main`-branch `Version` SHA-1 hash parented by [`BASE`].
 const MAIN: &str = "2222222222222222222222222222222222222222";
+/// Lane merge `Version` SHA-1 hash parented by both [`BASE`] and [`MAIN`].
 const MERGE: &str = "3333333333333333333333333333333333333333";
 
 /// Temporary directory guard for lane reset graph tests.

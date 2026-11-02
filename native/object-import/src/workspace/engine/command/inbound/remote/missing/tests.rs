@@ -30,15 +30,18 @@ const APP: &str = "1111111111111111111111111111111111111111";
 /// Fixed 40-char SHA-1 hash for the `acme.lib/lib` dependency test version.
 const DEPENDENCY: &str = "2222222222222222222222222222222222222222";
 
+/// Builds a two-item (`Component` and `Version`) [`ObjectItem`] fixture for `acme.app/app` at [`APP`].
 fn app(version: &Value) -> Vec<ObjectItem> {
     component("acme.app/app", APP, version).into()
 }
 
+/// Runs [`requests`] for `acme.app/app@latest` against `items` in a nonexistent object directory.
 fn requested(items: &[ObjectItem]) -> Vec<String> {
     let ids = ["acme.app/app@latest".to_owned()];
     requests(items, &ids, Path::new("/nonexistent"))
 }
 
+/// Verifies that [`requests`] returns empty when a version already embeds `flattenedEdges` alongside `flattenedDependencies`.
 #[test]
 fn a_version_with_a_dependency_graph_needs_nothing_more() {
     let dependencies = json!(["acme.lib/lib@1.0.0"]);

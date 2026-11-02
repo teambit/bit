@@ -1,6 +1,6 @@
 //! Unit tests for remote lane listing ([`remote_lane`], [`lane_list`]) and HTTP wildcard lane fetching ([`http_lane`]).
 //!
-//! Confirms that remote lane listings keep visible heads, omit hidden dependent updates, and honour [`GlobalConfig`] [`Network`] settings.
+//! Confirms that remote lane listings keep visible heads, omit hidden dependent updates, and honour [`GlobalConfig`] [`Network`] [`tar`] settings.
 
 use super::{http_lane, lane_list, remote_lane};
 use crate::{command_import::lane, workspace::engine::command::outbound};

@@ -87,6 +87,7 @@ fn hash(text: &str) -> String {
     format!("{:x}", Sha1::digest(text.as_bytes()))
 }
 
+/// Encodes and writes a loose Bit object (`hash`, `kind`, `value`) under `root` via [`object_path`] and [`outbound::encode_object`].
 fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
     let path = object_path(root, hash);
     fs::create_dir_all(path.parent().expect("parent")).expect("object directory");
@@ -94,6 +95,7 @@ fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
     fs::write(path, bytes).expect("write object");
 }
 
+/// Verifies that [`Plan::prepare`] and [`Plan::commit`] reset `head` on `main`, rewrite `.bitmap`, and reject stale plans.
 #[test]
 fn reset_head_rewrites_model_and_bitmap_and_refuses_a_stale_plan() {
     let fixture = Fixture::new(false);

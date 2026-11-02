@@ -49,8 +49,7 @@ fn declines_settings_that_change_what_harmony_does() {
     }
 }
 
-/// Installation settings remain available to Harmony adapters without forcing
-/// the complete read command back through Node.
+/// Verifies that [`extensions`] accepts read-inert `teambit.dependencies/dependency-resolver` installation settings without declining cold status.
 #[test]
 fn accepts_read_inert_resolver_options() {
     assert!(

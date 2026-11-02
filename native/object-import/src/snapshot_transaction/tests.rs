@@ -41,6 +41,7 @@ impl Drop for Fixture {
 fn source(body: &[u8]) -> Value {
     json!({"type":"Source","hash":crate::validate::hexadecimal(&Sha1::digest(body)),"body":crate::validate::hexadecimal(body)})
 }
+/// Verifies that an invalid late object in `snapshotSerialize` fails preflight before writing any spool files.
 #[test]
 fn invalid_late_object_preflights_before_any_spool_write() {
     let fixture = Fixture::new();
@@ -53,6 +54,7 @@ fn invalid_late_object_preflights_before_any_spool_write() {
     assert_eq!(fs::read_dir(staging).unwrap().count(), 0);
     assert!(state.plans.is_empty());
 }
+/// Verifies that multiple `snapshotSerialize` plans in [`State`] retain independent tokens and commit cleanly via `snapshotCommit`.
 #[test]
 fn multiple_plans_preserve_frozen_bytes_and_commit_prefix() {
     let fixture = Fixture::new();

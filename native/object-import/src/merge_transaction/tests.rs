@@ -26,6 +26,7 @@ fn invalid_receipt_keeps_revision_and_live_serial_batch() {
     let write = receipt(&mut state, &second_apply, 1);
     assert_eq!(write["directive"], json!({"phase":"writeMany","index":0,"count":1}));
 }
+/// Verifies that an empty `apply` batch skips serial `apply` directives and retains the terminal owner until `mergeTransactionFinish`.
 #[test]
 fn empty_apply_skips_serial_and_terminal_owner_lives_until_finish() {
     let mut state = State::default();
@@ -42,6 +43,7 @@ fn empty_apply_skips_serial_and_terminal_owner_lives_until_finish() {
     apply("mergeTransactionFinish", json!({"token":token}), &mut state).expect("finish");
     assert!(state.journal.verify_retained(token, 0).is_err());
 }
+/// Verifies that finishing a parent merge transaction retires both completed and incomplete child transactions.
 #[test]
 fn finishing_parent_retires_completed_and_incomplete_children() {
     let mut state = State::default();

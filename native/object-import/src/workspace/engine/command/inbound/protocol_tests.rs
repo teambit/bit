@@ -68,6 +68,7 @@ fn public_prepare_accepts_flat_transport_fields() {
     assert_eq!(input.transport.bit_version, "1.0.0");
 }
 
+/// Verifies that ordinary [`apply`] keeps `ownedWorkspaceWrites` receipts while lane opt-out (`omit_owned_write_receipts`) publishes identical files.
 #[test]
 fn ordinary_apply_keeps_receipts_while_lane_optout_publishes_the_same_files() {
     let ordinary = PublicationFixture::new();

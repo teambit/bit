@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
-/// Monotonic counter used by [`root`] to create isolated temporary workspace directories for [`Prepared`] and [`History`] tests.
+/// Monotonic counter used by [`root`] and [`history`] to create isolated temporary workspace directories for [`Prepared`] and [`History`] tests.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 fn root() -> PathBuf {
     let root = std::env::temp_dir()
