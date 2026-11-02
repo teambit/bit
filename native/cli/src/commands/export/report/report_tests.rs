@@ -63,6 +63,7 @@ fn reports_the_exported_components() {
     assert_eq!(format_with(&receipt(&[], &[]), chalk, false), "nothing to export");
 }
 
+/// Verifies [`format_with`] renders an exported lane both with and without newly exported component versions.
 #[test]
 fn reports_an_exported_lane_with_and_without_new_versions() {
     let chalk = Chalk::new(false);

@@ -7,6 +7,7 @@ use std::fs;
 use tempfile::tempdir;
 
 /// Verifies `bit compile` CLI option parsing across component patterns and boolean flags.
+/// Checks `-c`, `-v`, `--json`, `-d`, and `--generate-types`.
 #[test]
 fn parses_compile_options() {
     assert_eq!(

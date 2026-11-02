@@ -93,6 +93,7 @@ fn reports_binary_conflicts_and_declines_illegitimate_failures() {
     assert!(format(&failed, &options, Chalk::new(false)).is_err());
 }
 
+/// Verifies that [`format`] renders `newFromLane` components in a dedicated section separate from switched components.
 #[test]
 fn reports_new_lane_components_separately_from_changed_components() {
     let lane = ["scope/alpha@1234567890123456789012345678901234567890"];

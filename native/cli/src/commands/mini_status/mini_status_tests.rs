@@ -46,6 +46,8 @@ fn reports_a_workspace_without_file_changes() {
 }
 
 /// Verifies that [`report`] lists new components under `new components:` when no modified components exist.
+///
+/// Confirms `modified components (files only):` renders `<none>` above the new component list.
 #[test]
 fn mini_status_report_lists_new_components_when_present() {
     let only_new = summary(&[], &["s/new-comp"]);

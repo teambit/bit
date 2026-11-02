@@ -7,6 +7,7 @@ use crate::commands::color::Chalk;
 use std::fs;
 
 /// Verifies `bit format` option parsing, missing host detection, and empty workspace pattern diagnostics.
+///
 /// Checks `--changed`, `--check`, and `--json` flags alongside `unable to find any component` reporting.
 #[test]
 fn parses_format_options_and_detects_missing_host() {

@@ -69,6 +69,8 @@ fn unrelated_resolution_defaults_and_both_valued_spellings() {
 }
 
 /// Verifies that [`parse`] returns `None` when no `bit lane merge` target lane name is given.
+///
+/// Ensures empty argument slices decline native execution.
 #[test]
 fn empty_lane_merge_args_return_none() {
     assert!(parse(&[]).is_none());

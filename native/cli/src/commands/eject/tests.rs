@@ -62,6 +62,7 @@ fn rejects_eject_when_workspace_on_lane() {
 }
 
 /// Verifies [`parse_options`] accepts patterns after `--` and rejects unrecognized short flags.
+///
 /// Confirms `-fx -- comp1` sets `force` and `skip_dependency_installation`.
 #[test]
 fn parses_trailing_double_dash_pattern_and_rejects_unknown_short_flags() {

@@ -42,6 +42,7 @@ fn exclusion_keeps_scope_metadata_and_hides_only_internal_payloads() {
 }
 
 /// Verifies that `--include-public` and `--include-node-modules` prevent [`excluded`] from filtering those directories.
+///
 /// Confirms both `public/file` and `node_modules/pkg/file` remain included.
 #[test]
 fn include_public_and_node_modules_flags_retain_those_paths_in_archive() {

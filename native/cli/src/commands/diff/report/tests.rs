@@ -7,6 +7,7 @@ use crate::commands::{color::Chalk, diff::options::parse};
 use serde_json::json;
 
 /// Verifies that [`filtered`] and [`format`] filter diff rows by `--file` and render `--stat` summaries.
+///
 /// Ensures `fieldsDiff` is cleared when `--file` filters are active.
 #[test]
 fn filters_and_summarizes_diff_rows() {

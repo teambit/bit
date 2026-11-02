@@ -86,6 +86,7 @@ fn detailed_list_preserves_the_blank_line_after_an_empty_current_lane() {
     ));
 }
 
+/// Verifies that [`show_report`] formats `main` and serializes an exported lane.
 #[test]
 fn shows_main_and_serializes_an_exported_lane() {
     let main = LaneData {

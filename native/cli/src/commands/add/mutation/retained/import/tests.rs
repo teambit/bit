@@ -79,6 +79,7 @@ fn changed_published_bytes_are_rejected_and_absent_receipts_are_not_invented() {
         .unwrap();
     assert_eq!(retained.read_set.len(), 1);
 }
+/// Verifies that a symlink at `path` cannot satisfy a regular-file import publication receipt.
 #[cfg(unix)]
 #[test]
 fn a_symlink_cannot_acknowledge_a_regular_publication_even_with_matching_bytes() {

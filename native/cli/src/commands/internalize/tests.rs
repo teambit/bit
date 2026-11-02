@@ -30,6 +30,8 @@ fn parses_internalize_flags_and_pattern() {
 }
 
 /// Verifies that [`is_entry_internal`] reads the `teambit.component/internalize` extension from `component.json`.
+///
+/// Confirms `internal: true` in `component.json` marks the [`Bitmap`] entry as internal.
 #[test]
 fn detects_internalize_from_component_json() {
     let temp = tempfile::tempdir().unwrap();

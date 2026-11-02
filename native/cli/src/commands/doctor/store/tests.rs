@@ -83,6 +83,7 @@ fn integrity_accepts_jsonc_index_and_string_component_ids() {
     );
 }
 
+/// Verifies that [`heads`] reports `valid: true` with zero components when no scope path is provided.
 #[test]
 fn heads_without_scope_reports_valid_zero_components() {
     let result = heads(&DIAGNOSES[7], None).unwrap();

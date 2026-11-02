@@ -95,6 +95,7 @@ fn matches_object_hash_short_sha1() {
 }
 
 /// Verifies that [`parse_subcommand`] returns `None` for an unrecognized `capsule` subcommand.
+/// Ensures unknown subcommands fall through to the CLI help/rejection path.
 #[test]
 fn unrecognized_capsule_subcommand_returns_none() {
     assert_eq!(parse_subcommand(&["unknown-subcommand"]), None);

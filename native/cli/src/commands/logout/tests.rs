@@ -55,6 +55,7 @@ fn clears_user_credentials_from_global_config() {
     );
 }
 
+/// Verifies that [`clear_auth_config`] succeeds as a no-op when `config.json` does not exist on disk.
 #[test]
 fn clear_auth_config_succeeds_when_config_file_does_not_exist() {
     let dir = tempdir().unwrap();

@@ -46,6 +46,7 @@ fn renders_globals_text_and_json_formats() {
 }
 
 /// Verifies that [`parse_json_flag`] defaults to `Some(false)` on an empty argument slice.
+///
 /// Ensures invocations without `-j` or `--json` render plain text output.
 #[test]
 fn empty_args_slice_defaults_to_non_json_for_globals() {

@@ -29,6 +29,8 @@ fn accepts_the_native_subset() {
 }
 
 /// Verifies that [`parse`] rejects incompatible or unsupported `bit merge` flags.
+///
+/// Covers `--no-snap` with `-m`, `--manual` with `-r`, invalid strategies, and uppercase patterns.
 #[test]
 fn rejects_everything_else() {
     assert!(parse(&["-x", "--no-snap", "-m", "msg"]).is_none());

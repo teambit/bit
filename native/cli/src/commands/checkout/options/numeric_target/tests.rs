@@ -21,6 +21,7 @@ fn scientific_hex_and_decimal_targets_follow_yargs_number_then_string() {
     }
 }
 /// Verifies that leading-zero, unsafe-integer, and non-numeric target strings preserve their exact spelling.
+/// Prevents semver tags (`0.0.1`), relative heads (`head~2`), and hex prefixes (`abcdef1`) from coercing.
 #[test]
 fn leading_zero_unsafe_and_non_numeric_targets_keep_their_spelling() {
     for raw in

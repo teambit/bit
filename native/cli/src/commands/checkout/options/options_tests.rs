@@ -92,6 +92,7 @@ fn head_and_latest_without_a_pattern_report_as_all() {
     assert!(parse(&["0.0.1", "-x", "--all"]).unwrap().report_all());
 }
 
+/// Verifies that [`parse`] and [`parse_revert`] preserve complex component glob and state predicates.
 #[test]
 fn checkout_and_revert_preserve_component_predicates() {
     for pattern in ["comp*", "**/comp[13]*", "$modified", "comp* AND $modified", "comp*,!**/comp2"]

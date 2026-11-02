@@ -96,6 +96,7 @@ fn validates_non_empty_dir_and_unscoped_lane() {
 }
 
 /// Verifies that valid scoped `bit clone` options targeting a new directory pass [`validate_outside_workspace`].
+/// Confirms `Ok(None)` is returned when the destination directory does not yet exist.
 #[test]
 fn valid_scoped_clone_options_into_new_directory_pass_validation() {
     let temp = tempfile::tempdir().unwrap();

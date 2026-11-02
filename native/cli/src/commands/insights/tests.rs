@@ -59,6 +59,8 @@ fn parses_insights_list_and_named_flags() {
 }
 
 /// Verifies duplicate dependency rendering across component versions in [`CompGraph`].
+///
+/// Checks both zero-duplicate and multi-version outdated dependent summaries in [`render::duplicate_dependencies`].
 #[test]
 fn formats_duplicate_version_nodes_in_graph() {
     let mut graph = CompGraph::default();

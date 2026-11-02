@@ -20,6 +20,8 @@ fn resolve_options() {
 }
 
 /// Verifies that [`format`] strips version suffixes from resolved component IDs.
+///
+/// Also confirms that unexpected top-level JSON fields cause [`format`] to return an error.
 #[test]
 fn resolved_components_are_listed_without_versions() {
     let result = json!({ "resolvedComponents": [{ "id": "s/a@0123456789abcdef0123456789abcdef01234567" }, { "id": "s/b@1.0.0" }] });

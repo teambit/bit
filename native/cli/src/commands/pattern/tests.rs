@@ -42,6 +42,8 @@ fn declines_stateful_or_invalid_arguments() {
 }
 
 /// Verifies that [`parse_options`] accepts a pattern argument following `--`.
+///
+/// Ensures `--` terminates option parsing and treats the next token as the pattern string.
 #[test]
 fn accepts_double_dash_before_pattern_argument() {
     assert_eq!(

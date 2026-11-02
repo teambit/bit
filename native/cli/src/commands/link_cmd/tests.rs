@@ -55,6 +55,8 @@ fn parses_link_options() {
 }
 
 /// Verifies that [`replace_package_name`] rewires both `require` and `import` specifiers.
+///
+/// Checks both exact specifier matches and subpath specifiers (`"../comp2/sub"`).
 #[test]
 fn replaces_package_names_in_imports_and_requires() {
     let source = "const a = require('../comp2');\nimport b from \"../comp2/sub\";\n";

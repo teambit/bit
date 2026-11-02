@@ -29,6 +29,8 @@ fn parses_pack_options_and_detects_missing_scope() {
 }
 
 /// Verifies that [`build_tgz_bytes`] produces a gzipped tar archive with `package/package.json` and component files.
+///
+/// Decompresses the archive with [`GzDecoder`] and inspects entry paths inside the tar stream.
 #[test]
 fn builds_valid_tgz_archive() {
     let pkg = json!({

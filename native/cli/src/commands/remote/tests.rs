@@ -58,6 +58,7 @@ fn declines_unsupported_remote_arguments() {
     assert_eq!(parse(&["remote", "unknown"]), None);
 }
 
+/// Verifies that [`Options::parse`] defaults to [`Action::List`] on `"remote"` when given an empty argument slice.
 #[test]
 fn empty_args_slice_defaults_to_remote_list_action() {
     assert_eq!(

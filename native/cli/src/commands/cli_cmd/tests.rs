@@ -5,7 +5,7 @@
 use super::{is_generate_docs, parse_unknown_skill, render_docs_frontmatter};
 
 /// Verifies `bit cli generate --docs` flag parsing and YAML frontmatter rendering.
-/// Covers `--docs`, `--metadata`, and `--skill` combinations.
+/// Covers `--docs`, `--metadata`, and `--skill` combinations as well as rejected `--json` flags.
 #[test]
 fn parses_cli_generate_docs_and_renders_frontmatter() {
     assert!(is_generate_docs(&["generate", "--docs"]));

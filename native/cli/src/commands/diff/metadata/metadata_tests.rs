@@ -28,6 +28,7 @@ fn parses_ids_like_bit_id() {
 }
 
 /// Verifies that [`prettify`] returns an empty string when given an empty input.
+///
 /// Ensures empty field labels do not panic during title-case conversion.
 #[test]
 fn prettify_empty_string_returns_empty() {

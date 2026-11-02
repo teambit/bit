@@ -29,6 +29,7 @@ fn controls_retain_absence_and_reject_nonregular_or_over_budget_files() {
 }
 
 /// Verifies that [`refresh`] rejects a symlinked control file even when its target is a regular file.
+/// Prevents symlink indirection from spoofing regular control preimages.
 #[cfg(unix)]
 #[test]
 fn a_control_symlink_cannot_replace_a_regular_preimage() {

@@ -28,6 +28,7 @@ fn package_segments_use_platform_separators() {
 }
 
 /// Verifies that `PermissionDenied` does not qualify for [`mkdir_not_directory`] translation.
+/// Ensures non-directory-collision errors remain untouched.
 #[test]
 fn permission_denied_error_does_not_qualify_for_mkdir_not_directory_translation() {
     assert!(!mkdir_not_directory(&io::Error::from(io::ErrorKind::PermissionDenied)));

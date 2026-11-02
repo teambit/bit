@@ -22,6 +22,8 @@ const IDS: [&str; 10] = [
 const ORACLE: &str = include_str!("oracle.txt");
 
 /// Verifies that [`matching`] and [`split`] agree with every `multimatch` case in [`ORACLE`].
+///
+/// Iterates all tab-separated `(pattern, expected_json)` lines in `oracle.txt`.
 #[test]
 fn matches_agree_with_multimatch() {
     for line in ORACLE.lines() {

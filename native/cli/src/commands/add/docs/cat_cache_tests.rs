@@ -39,6 +39,7 @@ fn proven_empty_cat_source_is_written_once_then_reused_without_rewrite() {
 }
 
 /// Computes the total byte size of all regular files recursively under `directory`.
+/// Traverses nested bucket directories produced by `cacache`.
 fn cache_bytes(directory: &Path) -> usize {
     fs::read_dir(directory)
         .unwrap()

@@ -45,6 +45,7 @@ fn checks_ts_content_for_type_mismatches() {
 }
 
 /// Verifies that [`parse_options`] returns `None` when given an unrecognized `check-types` flag.
+/// Ensures unknown flags decline native `check-types` handling.
 #[test]
 fn unknown_check_types_option_returns_none() {
     assert_eq!(parse_options(&["--unknown-flag"]), None);

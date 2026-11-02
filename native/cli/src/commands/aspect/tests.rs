@@ -54,6 +54,7 @@ fn parses_aspect_subcommands() {
 }
 
 /// Verifies that [`deep_merge`] recursively merges nested JSON objects while preserving sibling keys.
+/// Overwrites scalar leaf values in `target` when `source` provides new values.
 #[test]
 fn deep_merges_nested_objects() {
     let mut target = json!({"a": {"x": 1, "y": 2}, "b": 3});

@@ -22,6 +22,7 @@ fn acknowledged_bitmap_changes_preserve_all_other_read_receipts() {
 }
 
 /// Verifies that a conflicting `.bitmap` receipt rejects the entire advance without partial updates.
+/// Confirms `retained.read_set` remains identical to its pre-call state on error.
 #[test]
 fn a_conflicting_bitmap_receipt_rejects_the_whole_advance() {
     let before = json!({"path":"/workspace/.bitmap","hash":"before"});

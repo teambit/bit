@@ -80,6 +80,7 @@ fn formats_megabyte_quantities_with_one_decimal_place() {
     assert_eq!(format_bytes(1_048_576), "1.0 MB");
 }
 
+/// Verifies that [`restore`] recovers backed-up objects and [`format_empty_gc_report`] formats empty GC runs.
 #[test]
 fn restores_deleted_objects_and_formats_empty_report() {
     let dir = tempdir().expect("tempdir");

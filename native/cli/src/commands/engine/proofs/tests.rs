@@ -35,6 +35,7 @@ fn different_observations_of_one_path_are_not_deduplicated() {
 }
 
 /// Verifies that [`Engine::validate_read_set`] succeeds immediately on empty or null-only proof slices.
+///
 /// Ensures no worker IPC roundtrip is required when no concrete proofs exist.
 #[test]
 fn empty_and_null_only_proof_slices_succeed_without_engine_roundtrip() {

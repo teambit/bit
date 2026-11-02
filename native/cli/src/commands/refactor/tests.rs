@@ -76,6 +76,7 @@ const keep = '@scope/older';
     ));
 }
 
+/// Verifies that [`extract_version_package_name`] returns `None` when the dependency-resolver extension is absent.
 #[test]
 fn extract_version_package_name_returns_none_when_extension_is_absent() {
     assert_eq!(extract_version_package_name(&json!({"extensions": []})), None);

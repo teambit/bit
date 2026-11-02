@@ -67,6 +67,7 @@ fn clears_workspace_fs_cache_and_scope_index() {
     assert!(report.contains("scope-index file"));
 }
 
+/// Verifies that [`clear_caches`] on a bare scope removes `index.json` without reporting a workspace filesystem cache.
 #[test]
 fn clears_bare_scope_index_only() {
     let dir = tempfile::tempdir().unwrap();

@@ -41,6 +41,7 @@ fn lists_and_negations() {
     assert_eq!(matched("!org.scope/**, org.scope/utils"), ["org.scope/utils"]);
 }
 
+/// Verifies that character classes, braces, extglobs, comments, and backslash escapes decline in [`matching`].
 #[test]
 fn other_globs_are_left_to_node() {
     for pattern in

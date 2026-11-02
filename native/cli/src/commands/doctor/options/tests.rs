@@ -64,6 +64,7 @@ fn archive_path_wins_over_save_regardless_of_argument_order() {
     }
 }
 
+/// Verifies that empty `bit doctor` CLI arguments parse cleanly and pass [`Options::validate`].
 #[test]
 fn empty_doctor_args_parse_and_pass_validation() {
     let options = Options::parse(&[]).unwrap();

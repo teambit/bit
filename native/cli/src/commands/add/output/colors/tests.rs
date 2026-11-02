@@ -87,6 +87,7 @@ fn native_filesystem_errors_keep_the_released_double_red_style() {
     );
 }
 
+/// Verifies that [`native_io`] preserves the [`CallbackError`] wrapper for callback filesystem messages.
 #[test]
 fn callback_filesystem_messages_keep_the_callback_error_type() {
     let message = "EPERM: operation not permitted, callback fixture";

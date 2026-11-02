@@ -39,6 +39,7 @@ fn parses_artifacts_options() {
 }
 
 /// Verifies [`is_empty_workspace`] returns `true` when `.bitmap` has no tracked components.
+/// Uses a minimal `workspace.jsonc` and empty `.bitmap` fixture.
 #[test]
 fn detects_empty_workspace_for_artifacts() {
     let temp = tempfile::tempdir().unwrap();

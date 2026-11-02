@@ -40,6 +40,7 @@ fn different_versions_are_not_equal_component_ids() {
 }
 
 /// Verifies that [`classify`] returns empty local and remote vectors when all inputs are empty.
+///
 /// Confirms empty candidate pools produce `(vec![], vec![])`.
 #[test]
 fn empty_local_and_remote_inputs_produce_empty_classifications() {

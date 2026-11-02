@@ -83,5 +83,5 @@ fn parses_ci_subcommands_and_validates_sync_flags() {
 /// Confirms default flags do not trigger `--init`, `--all`, or `--main` conflict errors.
 #[test]
 fn valid_default_sync_options_pass_validation() {
-    assert!(validate_sync_options(&SyncOptions::default()).is_ok());
+    assert_eq!(validate_sync_options(&SyncOptions::default()), Ok(()));
 }

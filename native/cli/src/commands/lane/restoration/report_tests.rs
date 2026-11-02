@@ -73,6 +73,7 @@ fn file_statuses(projected: bool, colored: bool) -> serde_json::Value {
     serde_json::Value::Object(rows)
 }
 
+/// Verifies that [`project`] projects all [`FILE_STATUSES`] entries across both collection and [`Chalk`] color modes.
 #[test]
 fn all_released_file_statuses_project_in_both_collections_and_color_modes() {
     let statuses = file_statuses(false, false);

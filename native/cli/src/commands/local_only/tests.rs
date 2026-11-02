@@ -14,6 +14,8 @@ fn args(items: &[&str]) -> Vec<OsString> {
 }
 
 /// Verifies `bit local-only` subcommand parsing for `set`, `unset`, `list`, and unrecognized subcommands.
+///
+/// Also checks that `--help` returns `None` so help rendering is delegated.
 #[test]
 fn parses_set_unset_list_and_unrecognized_subcommands() {
     assert_eq!(

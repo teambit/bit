@@ -30,6 +30,8 @@ fn rejects_flags_or_missing_subcommand() {
 }
 
 /// Verifies that [`parse_subcommand`] returns `None` when given an empty argument slice.
+///
+/// Ensures missing argv tokens decline native `bit npmrc` handling cleanly.
 #[test]
 fn empty_slice_returns_none_for_npmrc() {
     assert_eq!(parse_subcommand(&[]), None);

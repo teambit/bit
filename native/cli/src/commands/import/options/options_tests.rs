@@ -70,6 +70,7 @@ fn path_requires_one_explicit_component_write() {
     }
 }
 
+/// Verifies that `--merge` accepts `manual`, `ours`, and `theirs` strategies and requires a single component write.
 #[test]
 fn merge_requires_one_component_write() {
     for strategy in ["manual", "ours", "theirs"] {

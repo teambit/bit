@@ -70,6 +70,7 @@ fn malformed_cached_json_defers_the_entire_batch_to_the_published_reader() {
     assert_eq!(plan.misses, components);
 }
 
+/// Verifies that a proven-empty cache miss records empty metadata and stages a new cache write.
 #[test]
 fn proven_empty_miss_produces_metadata_and_a_new_cache_write() {
     let directory = tempfile::tempdir().unwrap();

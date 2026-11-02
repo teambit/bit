@@ -84,6 +84,8 @@ fn reports_failed_validation_without_repeating_remote_actions() {
 }
 
 /// Verifies that [`parse`] accepts positional component IDs after a `--` separator.
+///
+/// Confirms `--all` remains enabled while trailing arguments populate `ids`.
 #[test]
 fn double_dash_separator_accepts_positional_export_ids() {
     let parsed = parse(&["--all", "--", "s/a", "s/b"]).unwrap();

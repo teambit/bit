@@ -58,6 +58,7 @@ fn reference(paths: &[PathBuf], expression: &str) -> Vec<PathBuf> {
 fn link(target: &Path, path: &Path) {
     std::os::unix::fs::symlink(target, path).unwrap();
 }
+/// Creates a directory symbolic link at `path` pointing to `target` on Windows.
 #[cfg(windows)]
 fn link(target: &Path, path: &Path) {
     std::os::windows::fs::symlink_dir(target, path).unwrap();

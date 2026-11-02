@@ -54,6 +54,7 @@ fn parses_blame_args_with_no_color_and_classifies_targets() {
     assert_eq!(classify_target(dir.path(), "other/index.ts").unwrap(), Target::Unowned);
 }
 
+/// Verifies that [`parse_args`] rejects empty or multi-positional `bit blame` invocations.
 #[test]
 fn rejects_empty_or_multi_positional_blame_args() {
     assert_eq!(parse_args(&[]), None);

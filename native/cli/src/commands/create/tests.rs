@@ -7,6 +7,7 @@ use std::fs;
 use tempfile::tempdir;
 
 /// Verifies `bit create` positional template/component parsing and option flags.
+/// Rejects single-argument invocations and negated `--no-force` flags.
 #[test]
 fn parses_create_arguments_and_options() {
     assert_eq!(

@@ -22,6 +22,8 @@ fn join_linux_matches_node() {
 }
 
 /// Verifies [`pattern`] against `rebaseIgnorePattern` outputs from Bit 2.2.94.
+///
+/// Covers negated patterns (`!`), anchored paths (`/`), and trailing directory slashes.
 #[test]
 fn rebase_matches_node() {
     let cases = [

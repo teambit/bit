@@ -70,6 +70,7 @@ fn unexpected_receipts_decline() {
     assert!(validate(&foreign).is_err());
 }
 
+/// Verifies that an installation error block precedes the final import summary line in [`validate`] output.
 #[test]
 fn an_installation_error_precedes_the_summary() {
     let receipt = validate(&json!({

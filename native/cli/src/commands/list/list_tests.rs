@@ -86,6 +86,7 @@ fn renders_the_table_like_cli_table() {
     );
 }
 
+/// Verifies that [`report`] colors table headers, borders, and multiline deprecated/lane-readme IDs via [`Chalk`].
 #[test]
 fn colors_the_head_borders_and_multiline_ids() {
     let mut deprecated = row("remote/one", Some("0.0.1"), None);

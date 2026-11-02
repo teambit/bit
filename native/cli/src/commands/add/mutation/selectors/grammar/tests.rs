@@ -6,6 +6,7 @@ use super::{applied, identities, ordinary, union, validate};
 use serde_json::json;
 
 /// Verifies that ordinary pattern matches precede state selector results and [`union`] preserves first occurrence.
+/// Confirms duplicate entries from subsequent [`union`] calls do not reorder earlier matches.
 #[test]
 fn ordinary_matches_precede_state_results_and_union_keeps_first_occurrence() {
     let pool = vec![json!({"identity":"scope/a"}), json!({"identity":"scope/b"})];
