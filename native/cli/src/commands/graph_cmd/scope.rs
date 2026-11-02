@@ -87,6 +87,7 @@ fn apply_scope_filters(
     Ok(())
 }
 
+/// Renders `graph` as pretty-printed JSON or writes an SVG image and returns the formatted summary.
 #[inline]
 fn render_scope_graph(
     graph: &CompGraph,

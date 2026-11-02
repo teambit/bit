@@ -89,6 +89,7 @@ fn run_prepared(prepared: CanonicalInstall, path: String) -> Value {
     }
 }
 
+/// Formats an [`io::Error`] from the native pnpm engine into a structured JSON error payload.
 #[inline]
 fn native_error(error: &io::Error) -> Value {
     match bit_install::engine::EngineError::from_io(error) {

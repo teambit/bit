@@ -45,7 +45,7 @@ pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Re
     )
 }
 
-/// Normalizes a string or object lane `entry` into a `{"scope": ..., "name": ...}` JSON object.
+/// Converts a string or object lane `entry` into a `{"scope": ..., "name": ...}` JSON object.
 #[inline]
 fn exported_lane(entry: &Value) -> Option<Value> {
     if let Some((scope, name)) = entry

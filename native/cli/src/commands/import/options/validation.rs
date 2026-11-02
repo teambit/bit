@@ -80,6 +80,7 @@ pub(super) fn mode(
         && valid_path(path, ids, objects_only)
 }
 
+/// Validates `--dependencies`, `--dependencies-head`, and `--dependencies-depth` combinations in `options`.
 #[inline]
 fn valid_dependencies(
     options: &DependencyOptions,

@@ -51,6 +51,7 @@ impl CompGraph {
         }
     }
 
+    /// Inserts or updates a directed [`GraphEdge`] from `source_id` to `target_id` with `attr`.
     pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
         let attr = attr.trim();
         let source_id = trim_owned(source_id);

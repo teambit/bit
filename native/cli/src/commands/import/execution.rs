@@ -58,7 +58,7 @@ fn preflight_outcome(
         }
     }
 }
-/// Runs cache preparation, planning, and execution for the resolved `selection`.
+/// Runs cache preparation, [`Planned`] staging, and execution for the resolved `selection`.
 fn execute_selected(
     root: &Path,
     args: &[OsString],

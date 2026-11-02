@@ -63,6 +63,7 @@ fn inline_value(values: &mut Values<'_>, argument: &str) -> Option<Option<()>> {
         .strip_prefix("--dependents-via=")
         .map(|val| set_adoption_slot(&mut values.dependents_via, val))
 }
+/// Validates and stores a non-empty comma-separated argument into `field`.
 #[inline]
 fn set_adoption_slot(field: &mut Option<String>, value: &str) -> Option<()> {
     let trimmed = value.trim();

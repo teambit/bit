@@ -52,6 +52,7 @@ fn lane(value: &Value, hash: &str) -> io::Result<Value> {
     Ok(json!({"id":id,"hash":hash}))
 }
 
+/// Extracts and trims the optional `scope` field from `value` or `value.id`.
 #[inline]
 fn normalized_scope(value: &Value) -> Option<Value> {
     let raw = value

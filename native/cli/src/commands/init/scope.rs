@@ -74,6 +74,7 @@ pub(super) fn valid_name(name: &str) -> io::Result<String> {
     Ok(name)
 }
 
+/// Generates a randomized `<dir>-local-<hex>` scope name for a new workspace in `cwd`.
 #[inline]
 pub(super) fn local_name(cwd: &Path) -> io::Result<String> {
     let mut random = [0u8; 4];

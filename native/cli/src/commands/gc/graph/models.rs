@@ -66,6 +66,7 @@ impl Models {
                     .flatten()
             })
     }
+    /// Resolves `key` against direct component identities or `Symlink` alias target hashes.
     #[inline]
     fn lookup(&self, key: &str) -> Option<&Value> {
         self.identities

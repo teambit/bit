@@ -33,6 +33,7 @@ pub(super) fn install() -> io::Result<Previous> {
     // SAFETY: successful sigaction initialized the previous-action output.
     Ok(unsafe { previous.assume_init() })
 }
+/// Restores the [`Previous`] `SIGINT` disposition captured by [`install`].
 #[inline]
 pub(super) fn restore(previous: &Previous) {
     // SAFETY: previous is the initialized disposition captured by install; no output is requested.

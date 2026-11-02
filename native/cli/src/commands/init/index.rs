@@ -85,6 +85,7 @@ fn hashes(objects: &Path) -> io::Result<Vec<String>> {
     Ok(hashes)
 }
 
+/// Formats a `Component` object entry for `index.json` during `bit init` index reconstruction.
 #[inline]
 fn component(value: &Value, hash: &str) -> io::Result<Value> {
     let name = value["name"]

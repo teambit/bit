@@ -7,7 +7,7 @@ use std::{
 };
 /// Maximum JSON byte payload accepted on stdin or stdout when communicating with `tool.cjs`.
 const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
-/// Formats `files` in a single batch by spawning `tool.cjs` against the bundled Prettier package.
+/// Formats `files` in a single batch by spawning `tool.cjs` against the bundled Prettier package (up to [`MAX_TOOL_BYTES`]).
 #[inline]
 pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     if files.is_empty() {

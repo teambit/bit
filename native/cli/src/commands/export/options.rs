@@ -89,6 +89,7 @@ fn apply_export_arg<'a>(
     }
 }
 
+/// Validates and records a `--resume` export `client_id` onto `options.resume`.
 #[inline]
 fn set_resume_id(options: &mut Options, client_id: &str) -> Option<()> {
     let client_id = client_id.trim();

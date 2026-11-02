@@ -64,6 +64,7 @@ fn pattern(options: &Options, scope: &str) -> Option<String> {
         })
         .filter(|joined| !joined.is_empty())
 }
+/// Prefixes a comma-separated pattern segment `part` with `scope/` when not already qualified.
 #[inline]
 fn qualify_scope_part(part: &str, scope: &str) -> Option<String> {
     let trimmed = part.trim();

@@ -49,6 +49,7 @@ pub(in crate::commands) fn lane_fetch(
     execution::run(root, args, &options)
 }
 
+/// Entry point for `bit import` and `bit fetch`.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

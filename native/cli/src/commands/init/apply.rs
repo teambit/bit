@@ -50,6 +50,7 @@ fn remove(path: &Path) -> io::Result<()> {
 fn remove_leaf(path: &Path) -> io::Result<()> {
     fs::remove_file(path)
 }
+/// Removes a single file, symlink, or Windows directory junction at `path`.
 #[cfg(windows)]
 #[inline]
 fn remove_leaf(path: &Path) -> io::Result<()> {

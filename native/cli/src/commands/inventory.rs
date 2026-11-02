@@ -54,7 +54,7 @@ pub struct Options {
     pub ignored_files: Vec<String>,
 }
 
-/// The compiled workspace rules every component scan starts from.
+/// The compiled workspace [`Ignore`] rules every component scan starts from.
 pub struct Inventory {
     root: Ignore,
     /// `ALWAYS_IGNORE_LIST`, or `IGNORE_LIST` without `trackAllFiles`.

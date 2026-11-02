@@ -59,6 +59,7 @@ impl Lifecycle {
     pub(super) const fn started(&self) -> bool {
         self.linker.is_some() || self.cache_owned
     }
+    /// Marks the pre-import status cache as owned by this [`Lifecycle`] session.
     #[inline]
     pub(super) fn own_cache(&mut self) {
         self.cache_owned = true;

@@ -77,6 +77,7 @@ pub(in crate::commands) fn recover_scope_import(
     Ok(())
 }
 
+/// Builds default override [`options::Options`] for `bit recover` over `ids`.
 #[inline]
 fn import_options(ids: &[String], skip_config: bool, skip_installation: bool) -> options::Options {
     options::Options {

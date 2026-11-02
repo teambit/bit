@@ -50,7 +50,7 @@ pub(super) fn json_report(
     serde_json::to_string_pretty(&report).map_err(io::Error::other)
 }
 
-/// `listing remote components` per pattern, then `NoIdMatchWildcard` warnings.
+/// Emits `listing remote components` per wildcard pattern, followed by any `NoIdMatchWildcard` warnings.
 #[inline]
 pub(super) fn selection(
     options: &Options,

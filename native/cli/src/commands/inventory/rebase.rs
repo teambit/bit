@@ -4,7 +4,7 @@
 //! Exposes [`pattern`], [`join_linux`], and [`normalize`] for workspace-relative `.gitignore` and `.bitignore` rule rebasing.
 //! Preserves leading `!` negations and trailing `/` directory-only markers.
 
-/// Rebases `pattern` from the ignore file in `dir` (a Linux-style relative path) to the workspace root.
+/// Rebases `pattern` from the ignore file in `dir` (a Linux-style relative path) to the workspace root via [`join_linux`].
 #[must_use]
 #[inline]
 pub fn pattern(pattern: &str, dir: &str) -> String {

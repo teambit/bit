@@ -45,6 +45,7 @@ fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
     }
     execute(args, &root, &options, &state)
 }
+/// Emits the outside-workspace error or declines under CI when `bit fork` is run outside a workspace.
 fn handle_outside_workspace(
     cwd: &std::path::Path,
     args: &[OsString],

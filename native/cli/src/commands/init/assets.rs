@@ -47,6 +47,7 @@ fn write(root: &Path, file: Option<(PathBuf, Vec<u8>)>) -> Option<String> {
     fs::write(&path, bytes).ok()?;
     Some(relative)
 }
+/// Resolves and renders the optional AI agent instructions file from `plan` and `options`.
 #[inline]
 fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)>> {
     let raw_agent = options.agent.as_deref().map(str::trim);

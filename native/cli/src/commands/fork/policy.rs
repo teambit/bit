@@ -53,6 +53,7 @@ fn build_policy(
     }
     Ok(Value::Object(policy))
 }
+/// Inserts a single dependency policy `entry` into `policy["dependencies"]` or `policy["peerDependencies"]`.
 #[inline]
 fn insert_policy_entry(
     policy: &mut serde_json::Map<String, Value>,

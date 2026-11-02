@@ -92,6 +92,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_in_workspace(&root, args, path, one_line)
 }
 
+/// Runs `bit log-file` inside `root` after classifying `path` against `.bitmap`.
 fn run_in_workspace(
     root: &Path,
     args: &[OsString],

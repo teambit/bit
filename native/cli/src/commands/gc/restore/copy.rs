@@ -53,6 +53,7 @@ pub(super) fn run(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     entry(src, dst, overwrite)
 }
 
+/// Copies a single directory, symbolic link, or regular file from `src` to `dst`.
 #[inline]
 fn entry(src: &Path, dst: &Path, overwrite: bool) -> io::Result<()> {
     let metadata = fs::symlink_metadata(src).map_err(|error| failure(error, "lstat", src))?;

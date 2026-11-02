@@ -93,6 +93,7 @@ fn apply_inventory_fields(root: &Path, id: &str, source: &mut Value) -> io::Resu
     Ok(())
 }
 
+/// Copies, links, and optionally refactors a single workspace-local component `source`.
 fn local(
     root: &Path,
     options: &Options,

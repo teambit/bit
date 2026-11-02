@@ -52,6 +52,7 @@ pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Resu
     Ok(render(&document))
 }
 
+/// Splits a comma-separated `--generator` argument into non-empty trimmed environment IDs.
 #[inline]
 fn parse_generator_envs(value: &str) -> Vec<&str> {
     value

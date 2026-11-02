@@ -83,6 +83,7 @@ fn read_one(directory: &Path, identity: &str) -> io::Result<Object> {
     }
     Ok(Object { kind, value })
 }
+/// Prepends `value.box` to `value.name` for legacy boxed `Component` and `Symlink` objects.
 fn normalize_name(kind: &str, value: &mut Value) -> io::Result<()> {
     if !matches!(kind, "Component" | "Symlink")
         || !crate::commands::status::js::truthy(value.get("box"))

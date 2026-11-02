@@ -51,7 +51,7 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
     Ok(())
 }
 
-/// Stages `.bitmap` creation, reset, object validation, and history backup onto `plan`.
+/// Stages `.bitmap` creation, reset, object validation, and history [`backup`] onto `plan`.
 fn bitmap(plan: &mut Plan, scope: &Path, options: &Options) -> io::Result<()> {
     plan.actions.push(Action::Directory(scope.join("bitmap-history")));
     let mut path = plan.root.join(".bitmap");

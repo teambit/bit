@@ -88,6 +88,7 @@ fn consume_trailing_init_path<'a>(
     Some(())
 }
 
+/// Parses a single `bit init` flag or positional path token `arg` into `options`.
 #[inline]
 fn apply_arg<'a>(
     arg: &'a str,

@@ -65,6 +65,7 @@ fn check_target(
     }
     Ok(())
 }
+/// Verifies ancestor directories of `target` up to `source`'s parent before moving an object.
 #[inline]
 fn check_parents(source: &Path, target: &Path) -> io::Result<()> {
     for parent in target.ancestors().skip(1) {

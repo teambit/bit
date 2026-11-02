@@ -57,6 +57,7 @@ fn missing_ids(options: &Options) -> Option<&'static str> {
         r#"you have to specify ids to use "--track-only" flag"#,
     )
 }
+/// Validates `--dependencies-depth` against `--dependencies` and `--dependencies-head` in `options`.
 #[inline]
 fn dependencies_depth(options: &Options) -> Option<String> {
     let raw = options.write.dependencies.raw_depth.as_deref()?.trim();

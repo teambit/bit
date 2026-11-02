@@ -76,6 +76,7 @@ fn local_matches(options: &Options, pool: &[Value]) -> io::Result<Vec<String>> {
         .collect::<Vec<_>>();
     matched(&ids, &options.source)
 }
+/// Returns a user-facing error when neither `local` nor `remote` matched `options.source`.
 #[inline]
 fn require_matches(options: &Options, local: &[String], remote: &[String]) -> io::Result<()> {
     if !local.is_empty() || !remote.is_empty() {

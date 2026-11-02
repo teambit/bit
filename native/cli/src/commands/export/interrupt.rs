@@ -21,6 +21,7 @@ static ACTIVE: AtomicBool = AtomicBool::new(false);
 static ENABLED: AtomicBool = AtomicBool::new(false);
 /// Flag indicating whether ANSI color is enabled for the Ctrl+C warning message.
 static COLOR: AtomicBool = AtomicBool::new(false);
+/// Uncolored Ctrl+C warning printed when remote export communication has already started.
 const PLAIN: &str = "⚠ unable to cancel the export process at this point because the communication with the remote already started\n";
 const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the export process at this point because the communication with the remote already started\u{1b}[39m\n";
 

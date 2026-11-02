@@ -59,6 +59,7 @@ fn check_parent_entry(
         Err(error) => Err(failure(error, "stat", parent)),
     }
 }
+/// Formats the `fs-extra` error emitted when attempting to copy `source` into its own subdirectory `target`.
 #[inline]
 fn subdirectory(source: &Path, target: &Path) -> io::Error {
     io::Error::other(format!(

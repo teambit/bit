@@ -70,7 +70,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-/// What the command needs before any work starts.
+/// Pre-install state resolved before starting the [`Host`] or package manager execution.
 struct Prepared {
     argv: Vec<String>,
     cli: NodeCli,

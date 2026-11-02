@@ -84,6 +84,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+/// Dispatches `bit lane merge` through the shared [`super::merge::lifecycle`] workflow.
 fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some((workflow, grammar)) = super::merge::lifecycle::workflow(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane tooling grammar".into()));

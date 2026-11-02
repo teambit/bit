@@ -77,6 +77,7 @@ fn supported_writes(
     offset == files.len() && offset == inputs.len()
 }
 
+/// Returns `true` when all modified file paths in `inputs`/`outputs` resolve to distinct canonical files.
 #[inline]
 fn component_writes_supported(inputs: &[Value], outputs: &[Value]) -> bool {
     if inputs.len() != outputs.len() {

@@ -72,6 +72,7 @@ pub(super) fn validate(inputs: &[Value]) -> io::Result<()> {
     Ok(())
 }
 
+/// Writes non-empty `newContent` slices from `outputs` to their corresponding `inputs` paths.
 pub(super) fn publish(inputs: &[Value], outputs: &[Value]) -> io::Result<Option<Value>> {
     for (input, output) in inputs.iter().zip(outputs) {
         let Some(content) = output["newContent"]

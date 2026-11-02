@@ -46,6 +46,7 @@ fn configured_root_aspects(root: &Path) -> io::Result<bool> {
             .is_none_or(|text| !text.trim().is_empty()))
 }
 
+/// Returns whether `scope.jsonc` under `root` configures any non-core custom aspects.
 fn scope_custom_aspects(root: &Path, custom: &impl Fn(&str) -> bool) -> io::Result<bool> {
     let path = scope_path(root).join("scope.jsonc");
     if !path.try_exists()? {

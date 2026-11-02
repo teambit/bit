@@ -38,7 +38,9 @@ use std::{
 /// Descriptor for the `bit gc` CLI command.
 pub const COMMAND: Command = Command { name: "gc", aliases: &[], run };
 
+/// Error message emitted when `bit gc` is invoked outside any workspace or bare scope.
 const NO_SCOPE_ERR: &str = "unable to find a scope. run this command inside a workspace or a scope";
+/// Error message emitted when `--dry-run` is combined with `--restore` or `--restore-overwrite`.
 const DRY_RUN_RESTORE_ERR: &str =
     "--dry-run cannot be combined with --restore or --restore-overwrite";
 

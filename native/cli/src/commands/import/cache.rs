@@ -82,6 +82,7 @@ fn bare(raw: &str) -> &str {
     }
 }
 
+/// Filters `context["targets"]` to component entries matching the bare `<scope>/<name>` IDs in `ids`.
 fn selected_targets(context: &Value, ids: &[String]) -> io::Result<Vec<Value>> {
     let requested: HashSet<&str> = ids
         .iter()

@@ -44,6 +44,7 @@ pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
     format!("{section}\n{hint}")
 }
 
+/// Formats the warning and hint for exported components that are absent from `.bitmap`.
 #[inline]
 pub(super) fn untracked(receipt: &Value, format: &Formatter) -> String {
     let ids = ids(receipt, "nonExistOnBitMap");

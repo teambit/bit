@@ -70,7 +70,7 @@ pub struct Installer {
     cache_initialized: bool,
 }
 
-/// The two graceful results of `ComponentWriter.finalizeWrite` after an import.
+/// The two graceful results (`installation` and `compilation`) of `ComponentWriter.finalizeWrite` after an import.
 pub(in crate::commands) struct ImportErrors {
     pub installation: Option<String>,
     pub compilation: Option<String>,

@@ -84,6 +84,7 @@ impl Lifecycle {
             })
     }
 
+    /// Drains any buffered stdout captured by the optional Node.js [`Host`].
     #[inline]
     pub(super) fn take_stdout(&self) -> String {
         self.host.as_ref().map_or_else(String::new, |host| host.take_stdout())

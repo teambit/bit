@@ -58,6 +58,7 @@ impl Plan {
         Ok(())
     }
 }
+/// Removes `path`, ignoring `NotFound` errors and formatting other failures with [`failure`].
 #[inline]
 fn remove_file(path: &Path) -> io::Result<()> {
     match fs::remove_file(path) {

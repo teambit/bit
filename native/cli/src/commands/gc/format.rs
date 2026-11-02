@@ -59,6 +59,7 @@ pub(super) struct DeletedTypeStats {
     pub size: u64,
 }
 
+/// Formats `bytes` using human-readable binary units (`B`, `KB`, `MB`, `GB`, or `TB`).
 #[inline]
 pub(super) fn format_bytes(bytes: u64) -> String {
     if bytes < 1024 {

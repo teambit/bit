@@ -35,7 +35,9 @@ use std::{
 /// Descriptor for the `bit internalize` CLI command.
 pub const COMMAND: Command = Command { name: "internalize", aliases: &[], run };
 
+/// Aspect ID of the Bit component internalize aspect (`teambit.component/internalize`).
 const INTERNALIZE_ASPECT_ID: &str = "teambit.component/internalize";
+/// Error message emitted when `bit internalize` is invoked without a pattern or `--list`.
 const MISSING_PATTERN_ERR: &str =
     "please specify a component-pattern, or use --list to show the internal components";
 /// Parsed CLI options for `bit internalize`.

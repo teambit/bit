@@ -7,8 +7,11 @@ use serde::Serialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, fmt::Write as _};
 
+/// Arrow separator rendered between adjacent component names in a horizontal cycle line.
 const ARROW: &str = "  ───>  ";
+/// Display character width of [`ARROW`].
 const ARROW_LEN: usize = 8;
+/// Maximum display width before `cycles` switches from horizontal to vertical layout.
 const MAX_HORIZONTAL_WIDTH: usize = 90;
 
 /// Formats circular dependency `cycles` into horizontal or vertical arrow chains.

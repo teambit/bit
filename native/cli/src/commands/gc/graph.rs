@@ -30,6 +30,7 @@ pub(super) struct GcGraph {
 }
 
 impl GcGraph {
+    /// Constructs a [`GcGraph`] from `inv`'s `Version` objects, component [`models::Models`], and remote refs.
     pub fn new(inv: &ScopeInventory) -> Self {
         let mut version_map = HashMap::new();
         for obj in &inv.objects {

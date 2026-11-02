@@ -24,6 +24,7 @@ pub const COMMAND: Command = Command { name: "graph", aliases: &[], run };
 
 /// Error message emitted when `bit graph` is run outside a workspace without `--remote` or `<id>`.
 const MISSING_REMOTE_OR_ID_ERR: &str = "please specify remote scope name or enter an id";
+/// Error message emitted when `bit graph` cannot locate a workspace or scope host.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
 /// Parsed CLI options for `bit graph`.

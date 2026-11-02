@@ -71,6 +71,7 @@ fn consume_trailing_positions<'a>(
     }
     Some(())
 }
+/// Consumes a single flag token `argument` (and any value from `arguments`) into `options`.
 fn parse_flag(
     argument: &str,
     arguments: &mut std::slice::Iter<'_, &str>,

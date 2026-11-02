@@ -76,6 +76,7 @@ fn parse_json_flag(args: &[OsString]) -> Option<bool> {
     Some(json)
 }
 
+/// Resolves the active capsules root base directory (`capsules_root_base_dir`) across env, workspace, scope, and global layers.
 pub(in crate::commands) fn resolve_capsules_dir(cwd: &Path) -> io::Result<String> {
     if let Some(from_env) = environment_value(CAPSULES_KEY)
         .map(|val| {

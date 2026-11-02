@@ -77,7 +77,7 @@ fn listed(pattern: &str, list: &Value, include_deprecated: bool) -> io::Result<V
     Ok(ids)
 }
 
-/// `commandInboundList`: each pattern with the components its remote lists.
+/// Sends `commandInboundList` to [`Engine`] and returns the per-pattern remote component lists.
 fn list(root: &Path, patterns: &[&String], lane_only: bool) -> io::Result<Vec<Value>> {
     let cli = NodeCli::find()?;
     let listed: Value = Engine::new()?

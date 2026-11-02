@@ -14,7 +14,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+/// Minimum age in milliseconds (`1 hour`) before a temporary file in `objects/` is treated as stray.
 const STRAY_MIN_AGE_MS: u64 = 60 * 60 * 1000;
+/// Operating-system metadata filenames ignored when scanning `objects/` buckets.
 const FS_METADATA_FILES: &[&str] = &[".DS_Store", "Thumbs.db", "desktop.ini"];
 
 type RemoteRefsPair = (HashMap<String, Vec<String>>, HashSet<String>);

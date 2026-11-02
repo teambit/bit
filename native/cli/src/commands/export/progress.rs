@@ -84,6 +84,7 @@ impl Exported {
         }
     }
 
+    /// Emits forked-lane version-history import progress lines onto `output` when applicable.
     fn fork_progress(&self, output: &Output) {
         if let Some(history) = &self.fork_history
             && history.external_count > 0

@@ -96,6 +96,7 @@ fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
     Ok((scope, name))
 }
 
+/// Builds the text or `--json` [`crate::commands::workspace_command::results::Report`] for `bit format`.
 #[inline]
 pub(super) fn create(
     value: &Value,

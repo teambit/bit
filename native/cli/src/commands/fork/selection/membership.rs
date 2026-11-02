@@ -57,6 +57,7 @@ fn version<'a>(id: &'a str, pool: &'a [Value]) -> Option<&'a str> {
     })
 }
 
+/// Extracts the trimmed non-empty `"identity"` or `"id"` string from `row`.
 #[inline]
 fn row_raw_id(row: &Value) -> Option<&str> {
     row["identity"]

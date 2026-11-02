@@ -57,7 +57,7 @@ pub(super) fn execute_workspace_graph(
     Ok(formatter.success_summary(&format!("image created at {}", svg_path.display())))
 }
 
-/// Build the same workspace ID graph used by `GraphBuilder.getGraphIds` for insights.
+/// Builds the same workspace [`CompGraph`] and seeder list used by `GraphBuilder.getGraphIds` for insights.
 pub(crate) fn insight_graph(root: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
     let (_, ws) =
         resolve_workspace_components(root).map_err(|err| Failure::Declined(err.to_string()))?;
