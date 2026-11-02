@@ -88,6 +88,7 @@ fn read_without_a_token_observes_disk_instead_of_a_retained_body() {
     assert_eq!(result["files"][0]["rawHash"], hash(b"changed"));
 }
 
+/// Verifies that [`begin`] with `memoryOnly: true` validates read ownership without writing snapshot spool files to disk.
 #[test]
 fn memory_only_capture_validates_supplied_read_ownership() {
     let fixture = Fixture::new();

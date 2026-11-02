@@ -1,4 +1,4 @@
-//! Unit tests for versioned component removal `VersionHistory` validation ([`HistoryState`], [`read_history`], [`validate`], [`Scratch`]) in
+//! Unit tests for versioned component removal `VersionHistory` validation ([`HistoryState`], [`read_history`], [`validate`], [`Scratch`], [`SEQUENCE`]) in
 //! `bit-object-import` scope removals.
 
 use super::{HistoryState, read_history, validate};

@@ -1,5 +1,5 @@
 //! Unit tests for [`ci_requires_published_diagnostic`] lane history published
-//! diagnostic checks ([`Fixture`]) in `bit-object-import` CI lane verification.
+//! diagnostic checks ([`Fixture`], [`cached_key_stays_native_without_contacting_an_http_remote`]) in `bit-object-import` CI lane verification.
 
 use super::ci_requires_published_diagnostic;
 use flate2::{Compression, write::ZlibEncoder};

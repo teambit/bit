@@ -1,4 +1,4 @@
-//! Unit tests for rebasing retained read proofs ([`Capture`], [`Directory`]) across native import writes in
+//! Unit tests for rebasing retained read proofs ([`Capture`], [`Directory`], [`retaining_native_writes_rebases_only_owned_paths_and_preserves_other_read_proofs`]) across native import writes in
 //! `bit-object-import` publication boundaries.
 
 use crate::command_import::capture::Capture;

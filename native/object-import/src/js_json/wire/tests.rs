@@ -1,5 +1,5 @@
 //! Unit tests for compact and legacy `JavaScript` JSON wire [`Value`]
-//! serialization in `bit-object-import` canonical JSON formatting ([`compact_and_legacy_strings_have_identical_javascript_serialization`]).
+//! serialization in `bit-object-import` canonical JSON formatting ([`compact_and_legacy_strings_have_identical_javascript_serialization`], [`mixed_key_encodings_cannot_hide_duplicate_javascript_properties`]).
 
 use super::Value;
 use serde_json::json;

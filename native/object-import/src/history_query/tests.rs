@@ -1,5 +1,5 @@
 //! Unit tests for [`show`] topological graph sorting and [`lines`]
-//! `jsdiff`-compatible line diffs in `bit-object-import` history query operations ([`topological_order_matches_reverse_cleargraph_depth_first_walk`]).
+//! `jsdiff`-compatible line diffs in `bit-object-import` history query operations ([`topological_order_matches_reverse_cleargraph_depth_first_walk`], [`line_tokenizer_retains_carriage_returns_and_final_newline_identity`]).
 
 use super::{lines, show};
 use serde_json::json;

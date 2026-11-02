@@ -1,5 +1,5 @@
 //! Unit tests for [`equal`] comparison and own `undefined` property
-//! preservation in component config merges in `bit-object-import` merge planning ([`own_undefined_keys_differ_from_absence_and_null`]).
+//! preservation in component config merges in `bit-object-import` merge planning ([`own_undefined_keys_differ_from_absence_and_null`], [`undefined_sets_and_object_properties_ignore_order`]).
 
 use super::equal;
 use serde_json::json;

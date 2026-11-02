@@ -1,4 +1,4 @@
-//! Unit tests for checkout transition [`State`] lifecycle and file publication ([`apply`], [`plan`], [`Fixture`]) in
+//! Unit tests for checkout transition [`State`] lifecycle and file publication ([`apply`], [`plan`], [`Fixture`], [`NEXT`]) in
 //! `bit-object-import` workspace checkouts.
 
 use super::{State, apply, plan};

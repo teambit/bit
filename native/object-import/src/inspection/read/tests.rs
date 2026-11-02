@@ -1,4 +1,4 @@
-//! Unit tests for parallel workspace file [`capture`] ([`request`]) and binary [`wire`]
+//! Unit tests for parallel workspace file [`capture`] ([`request`], [`parallel_capture_preserves_input_order_hashes_and_binary_normalization`]) and binary [`wire`]
 //! normalization in `bit-object-import` workspace inspection.
 
 use super::{capture, wire};

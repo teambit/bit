@@ -1,4 +1,4 @@
-//! Unit tests verifying `VersionHistory` [`merge`] ([`row`], [`history`]) keeps incoming rows first and retains existing-only
+//! Unit tests verifying `VersionHistory` [`merge`] ([`row`], [`history`], [`large_history_merge_preserves_incoming_overrides_and_existing_only_order`]) keeps incoming rows first and retains existing-only
 //! rows in order in `bit-object-import` object merges.
 
 use super::merge;

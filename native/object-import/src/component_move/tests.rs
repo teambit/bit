@@ -1,5 +1,5 @@
 //! Unit tests for component directory move `.bitmap` projection ([`project`], [`Observed`]) and untracked
-//! path errors in `bit-object-import` move operations ([`projected_roots_preserve_published_textual_prefix_matching`]).
+//! path errors in `bit-object-import` move operations ([`projected_roots_preserve_published_textual_prefix_matching`], [`untracked_paths_fail_without_mutating_bitmap`]).
 
 use super::{Observed, project};
 use serde_json::json;

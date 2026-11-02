@@ -1,4 +1,4 @@
-//! Unit tests ensuring incoming `Source` [`Capture`] ([`source`], [`object_path`]) retains the validated wire representation in
+//! Unit tests ensuring incoming `Source` [`Capture`] ([`source`], [`object_path`], [`file_and_virtual_sources_preserve_received_compressed_bytes`]) retains the validated wire representation in
 //! `bit-object-import` remote object fetches.
 
 use super::Capture;

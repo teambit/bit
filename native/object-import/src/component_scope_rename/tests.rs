@@ -1,5 +1,5 @@
 //! Unit tests for component scope and owner rename [`selection`] and
-//! [`Options`] validation in `bit-object-import` scope rename operations ([`owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes`]).
+//! [`Options`] validation in `bit-object-import` scope rename operations ([`owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes`], [`scope_selection_keeps_namespaces_and_forces_owner_preservation`]).
 
 use super::{Options, selection};
 /// Verifies that [`selection::scope`] with [`Options`] `owner: true` matches only scopes prefixed by `old.` and preserves the suffix.

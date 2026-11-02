@@ -63,6 +63,7 @@ fn setup(directory: &Path) -> Value {
     store(directory,&version,"Version",serde_json::to_string(&json!({"files":[{"file":hash,"relativePath":"target.ts","name":"target.ts","test":false}]})).unwrap().as_bytes());
     json!({"objectsDirectory":directory,"componentHash":component,"requestedVersion":"1.0.0","expectedVersionHash":version,"current":[],"expectedFiles":[{"hash":hash,"relativePath":"target.ts","name":"target.ts","test":false}]})
 }
+/// Encodes `value` into a length-prefixed checkout plan request frame.
 fn frame(value: &Value) -> Vec<u8> {
     let body = serde_json::to_vec(value).unwrap();
     let mut bytes = 42_u32.to_be_bytes().to_vec();

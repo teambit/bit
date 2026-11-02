@@ -66,6 +66,7 @@ fn a_new_status_replaces_the_other_outputs_spinner(
     assert!(!after.contains("import 1 components"), "the replaced spinner drew: {after:?}");
 }
 
+/// Verifies that [`Output::loader_off`] silences spinner and status output across all instances until [`Output::loader_on`].
 fn off_silences_every_output_until_on(command: &Output, install: &Output, written: &Mutex<String>) {
     install.loader_off();
     take(written);

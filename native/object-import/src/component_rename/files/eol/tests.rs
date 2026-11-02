@@ -1,5 +1,5 @@
 //! Unit tests for end-of-line preservation, CRLF/LF normalization, and
-//! [`Writer`] output during component rename writes in `bit-object-import` file materialization ([`component_writer_uses_platform_eol_for_new_nonpreserved_targets`]).
+//! [`Writer`] output during component rename writes in `bit-object-import` file materialization ([`component_writer_uses_platform_eol_for_new_nonpreserved_targets`], [`exported_and_preserved_target_writes_retain_exact_source_eol`]).
 
 use super::Writer;
 

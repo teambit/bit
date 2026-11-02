@@ -45,7 +45,7 @@ fn evicts_before_exceeding_byte_budget_and_never_retains_oversize_sources() {
     assert!(state.bytes <= super::MAX_BYTES);
 }
 
-/// Verifies that [`State`] retains a cached source object whose length equals [`super::MAX_BYTES`].
+/// Verifies that [`State`] retains a cached source object whose length equals [`super::MAX_BYTES`] (`32` MiB).
 #[test]
 fn retains_sources_at_the_exact_raw_byte_budget() {
     let directory = std::env::temp_dir();

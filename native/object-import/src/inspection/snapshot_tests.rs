@@ -1,4 +1,4 @@
-//! Unit tests for in-memory owned snapshot [`begin`], [`apply`], and [`State`] capture ([`request`])
+//! Unit tests for in-memory owned snapshot [`begin`], [`apply`], and [`State`] capture ([`request`], [`owned_capture_requires_embedded_capability_and_never_spools`])
 //! during inspection in `bit-object-import` embedded sessions.
 
 use super::{State, apply, begin, tests::Fixture};

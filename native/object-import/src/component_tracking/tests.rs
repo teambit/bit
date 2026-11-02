@@ -1,4 +1,4 @@
-//! Unit tests for `bit add` component tracking [`Plan`] and [`Options`] preparation ([`main_file`], [`planning`], [`root`], [`fixture`]) and
+//! Unit tests for `bit add` component tracking [`Plan`] and [`Options`] preparation ([`main_file`], [`planning`], [`root`], [`fixture`], [`facts`], [`source`], [`options`]) and
 //! `.bitmap` updates in `bit-object-import` tracking workflows.
 
 mod main_file;

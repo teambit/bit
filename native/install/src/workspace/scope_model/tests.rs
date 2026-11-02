@@ -54,7 +54,7 @@ fn scope(extensions: &Value, files: &Value) -> tempfile::TempDir {
     dir
 }
 
-/// Verifies that [`ScopeObjects::component`] reads `Version.files` and detects `aspect` environment descriptors.
+/// Verifies that [`ScopeObjects::component`] reads `Version.files` and detects `aspect` environment descriptors in [`scope`].
 #[test]
 fn reads_files_and_the_env_descriptor_type() {
     let dir = scope(

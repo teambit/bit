@@ -74,6 +74,7 @@ fn put(root: &Path, hash: &str, kind: &str, value: &Value) {
     fs::write(directory.join(&hash[2..]), outbound::encode_object(hash, kind, value).unwrap())
         .unwrap();
 }
+/// Reads and decodes a loose Bit object (`hash`, `kind`) from `root/.bit/objects`.
 fn read(root: &Path, hash: &str, kind: &str) -> Value {
     outbound::read_object(&root.join(".bit/objects"), hash, kind).unwrap()
 }

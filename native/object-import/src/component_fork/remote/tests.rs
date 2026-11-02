@@ -1,4 +1,4 @@
-//! Unit tests for remote component fork object extraction ([`objects`], [`object`]) and error reporting ([`single_error`]) in
+//! Unit tests for remote component fork object extraction ([`objects`], [`object`], [`fixture`]) and error reporting ([`single_error`]) in
 //! `bit-object-import` remote forks.
 
 use super::{objects, single_error};

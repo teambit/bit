@@ -61,6 +61,7 @@ fn structural_data_equality_ignores_object_order_with_preserved_serialization() 
     assert_ne!(serde_json::to_string(&left).unwrap(), serde_json::to_string(&right).unwrap());
 }
 
+/// Builds sample `teambit.envs/envs` and `teambit.dependencies/dependency-resolver` aspect entries for config merge tests.
 fn sample_aspect_entries() -> Value {
     let env_ext = json!({
         "name": "teambit.envs/envs",

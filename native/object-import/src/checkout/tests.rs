@@ -25,7 +25,7 @@ fn pool() -> &'static rayon::ThreadPool {
     });
     &POOL
 }
-/// Monotonic counter for unique checkout test directory names.
+/// Monotonic counter for unique checkout test [`Directory`] names.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 struct Directory(PathBuf);
 impl Directory {

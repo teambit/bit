@@ -75,7 +75,7 @@ pub(super) const PATHS: &[&str] = &[
     "constructor",
     "SRC/Index.TS",
 ];
-/// Recorded `(ignore_rules, expected_remaining_paths)` filter golden cases from `node-ignore` 3.3.10.
+/// Recorded `(ignore_rules, expected_remaining_paths)` filter golden cases from `node-ignore` 3.3.10 ([`PATHS`]).
 pub(super) const FILTERS: &[(&[&str], &[&str])] = &[
     (
         &[

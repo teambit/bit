@@ -79,6 +79,7 @@ fn glob_subset() {
     assert!(!glob::matches("*", ".hidden"));
 }
 
+/// Constructs a [`ComponentId`] with optional `scope`, `default_scope`, and `name`.
 fn id(scope: Option<&str>, default_scope: Option<&str>, name: &str) -> ComponentId {
     ComponentId {
         scope: scope.map(str::to_owned),

@@ -96,6 +96,7 @@ fn empty_model_is_not_modified_even_when_current_files_exist() {
     assert_eq!(result["statuses"][0]["status"], "new");
 }
 
+/// Verifies that `inspectionFiles` preserves nested forward-slash separators in canonical relative path labels.
 #[test]
 fn canonical_platform_relative_labels_preserve_nested_separators() {
     let fixture = Fixture::new();

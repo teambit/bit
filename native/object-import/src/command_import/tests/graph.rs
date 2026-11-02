@@ -1,4 +1,4 @@
-//! Unit tests for cached graph import ([`prepare_cached`], [`prepare`], [`Fixture`]) and versionless root progress accounting
+//! Unit tests for cached graph import ([`prepare_cached`], [`prepare`], [`Fixture`], [`cached_graph_import_has_no_fetcher_phase_and_versionless_roots_are_not_unbuilt_requests`]) and versionless root progress accounting
 //! in `bit-object-import` dependency graph fetches.
 
 use super::{Fixture, prepare, prepare_cached};

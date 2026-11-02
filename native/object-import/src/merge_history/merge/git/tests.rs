@@ -1,5 +1,5 @@
 //! Unit tests for [`workspace_merge_for_platform`] three-way text merge
-//! conflict formatting in `bit-object-import` source merges ([`mixed_windows_newlines_keep_the_common_prefix_outside_conflict_markers`]).
+//! conflict formatting in `bit-object-import` source merges ([`mixed_windows_newlines_keep_the_common_prefix_outside_conflict_markers`], [`the_same_merge_keeps_lf_output_on_unix`]).
 
 use super::workspace_merge_for_platform;
 

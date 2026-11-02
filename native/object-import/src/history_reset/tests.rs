@@ -62,6 +62,7 @@ fn dependency_index_deduplicates_edges_and_filters_batch_candidates() {
         json!({"dependents":[["first_hash@1","third_hash@1"],[]],"outside":[["third_hash@1"],[]]}),
     );
 }
+/// Verifies that `historyResetLocalRead` skips `laneHead` aliases and `historyResetLocalVersions` preserves source order when `reverse: false`.
 #[test]
 fn lane_read_skips_all_head_aliases_and_late_labels_keep_original_order() {
     let first_hash = "a".repeat(40);

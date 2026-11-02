@@ -1,4 +1,4 @@
-//! Unit tests for accepting verified recovery objects ([`publish`], [`object_hash`], [`Fixture`]) during pending imports in
+//! Unit tests for accepting verified recovery objects ([`publish`], [`object_hash`], [`Fixture`], [`restored_models_are_verified_and_not_replayed_by_the_pending_import`]) during pending imports in
 //! `bit-object-import` post-delete recovery.
 
 use super::{Fixture, object_hash, publish};

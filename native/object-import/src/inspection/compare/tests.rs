@@ -1,5 +1,5 @@
 //! Seeded equivalence tests for [`plan`], `isComponentModified`, and
-//! `isComponentSourceCodeModified` in `bit-object-import` modification checks ([`seeded_comparison_matches_actual_consumer_modified_policy`]).
+//! `isComponentSourceCodeModified` in `bit-object-import` modification checks ([`seeded_comparison_matches_actual_consumer_modified_policy`], [`Command`]).
 
 use super::plan;
 use serde_json::Value;
