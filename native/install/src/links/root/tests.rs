@@ -1,5 +1,5 @@
 //! Unit tests for root `link:` dependencies ([`linked_root_deps`]) and core aspect store linking ([`link_core_aspects_to_hoisted_store`], [`sync_core_aspect_links_for_envs`]) in
-//! `bit-install`.
+//! `bit-install` root `node_modules` linking.
 
 use super::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,

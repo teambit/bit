@@ -1,5 +1,5 @@
 //! Unit tests for `bit add` component tracking [`Plan`] preparation and
-//! `.bitmap` updates in `bit-object-import`.
+//! `.bitmap` updates in `bit-object-import` tracking workflows.
 
 mod main_file;
 mod planning;

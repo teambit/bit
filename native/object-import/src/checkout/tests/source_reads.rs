@@ -1,5 +1,5 @@
 //! Unit tests for parallel raw source object reads ([`read_sources`]) without filesystem writes in
-//! `bit-object-import`.
+//! `bit-object-import` source inspection.
 
 use super::{Directory, frame, pool, store};
 use crate::checkout::{cache, read_sources};

@@ -1,5 +1,5 @@
 //! Unit tests for UTF-16 [`align_files`] and duplicate path handling during
-//! version comparison in `bit-object-import`.
+//! version comparison in `bit-object-import` component status checks.
 
 use super::{Js, align_files, array, get, text};
 use serde_json::json;

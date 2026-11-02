@@ -1,5 +1,5 @@
 //! Unit tests for workspace variant matching ([`by_root_dir_and_name`]), specificity sorting, and package
-//! naming ([`component_package_name`], [`binding_prefix_by_default_scope`]) in `bit-install`.
+//! naming ([`component_package_name`], [`binding_prefix_by_default_scope`]) in `bit-install` configuration resolution.
 
 use crate::{
     model::ComponentId,

@@ -1,5 +1,5 @@
 //! Unit tests for retained workspace read [`Observation`] and [`State`]
-//! sessions during inspection in `bit-object-import`.
+//! sessions during inspection in `bit-object-import` status pipelines.
 
 use super::{State, begin, hash, tests::Fixture};
 use crate::workspace::snapshots::{Observation, State as Reads};

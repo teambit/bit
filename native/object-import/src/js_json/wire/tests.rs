@@ -1,5 +1,5 @@
 //! Unit tests for compact and legacy `JavaScript` JSON wire [`Value`]
-//! serialization in `bit-object-import`.
+//! serialization in `bit-object-import` canonical JSON formatting.
 
 use super::Value;
 use serde_json::json;

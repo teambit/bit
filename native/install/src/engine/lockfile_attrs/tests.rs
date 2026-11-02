@@ -1,5 +1,5 @@
 //! Unit tests for the `bit:` custom attribute block ([`read`], [`write`], [`merge`]) in `pnpm-lock.yaml` in
-//! `bit-install`.
+//! `bit-install` lockfile persistence.
 
 use super::{merge, read, remove_for_update, restore_after_failure, write};
 use pretty_assertions::assert_eq;

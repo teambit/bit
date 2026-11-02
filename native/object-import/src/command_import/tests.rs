@@ -1,5 +1,5 @@
 //! Unit tests for command-driven remote object import planning ([`PreparedImport`], [`prepare`], [`prepare_cached`]) and publication ([`publish`])
-//! in `bit-object-import`.
+//! in `bit-object-import` import sessions.
 
 mod canonical_model;
 mod graph;

@@ -1,5 +1,5 @@
 //! Unit tests for lane [`Entry`] equality ([`same_entries`]) and `updateDependents` replacement order ([`replace_entry`])
-//! in `bit-object-import`.
+//! in `bit-object-import` lane imports.
 
 use super::{Entry, json, replace_entry, same_entries};
 

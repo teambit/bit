@@ -1,5 +1,5 @@
 //! Unit tests for [`hoist_pattern`], global virtual store flags ([`enable_global_virtual_store`]), and [`peer_dependency_rules`]
-//! in `bit-install`.
+//! in `bit-install` engine settings.
 
 use super::{
     EnvVars, enable_global_virtual_store, hoist_pattern, package_extensions, peer_dependency_rules,

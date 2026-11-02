@@ -1,5 +1,5 @@
 //! Unit tests for checkout plan computation ([`serve`]) and version resolution ([`plain_tag`]) in
-//! `bit-object-import`.
+//! `bit-object-import` checkout planning.
 
 use super::{plain_tag, serve};
 use crate::checkout::cache::State;

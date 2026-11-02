@@ -1,5 +1,5 @@
 //! Unit tests for local lane alias resolution ([`resolve_local`], [`Id`]) and `updateDependents` entry
-//! extraction ([`entries`]) in `bit-object-import`.
+//! extraction ([`entries`]) in `bit-object-import` lane queries.
 
 use super::{Id, entries, resolve_local};
 use serde_json::json;

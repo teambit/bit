@@ -1,5 +1,5 @@
 //! Unit tests for lockfile restoration context ([`graph`], [`merge`]) and `pnpmfileChecksum` overrides
-//! in `bit-install`.
+//! in `bit-install` lockfile synthesis.
 
 use super::{graph, merge};
 use serde_json::{Value, json};

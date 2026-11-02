@@ -1,5 +1,5 @@
 //! Unit tests for pruning unreferenced virtual-store packages ([`prune_modules`]) under
-//! `node_modules/.pnpm` in `bit-install`.
+//! `node_modules/.pnpm` in `bit-install` after lockfile updates.
 
 use super::prune_modules;
 use std::{collections::HashSet, fs, path::Path};

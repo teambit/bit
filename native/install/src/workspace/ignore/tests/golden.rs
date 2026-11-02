@@ -1,5 +1,5 @@
 //! Golden fixtures ([`REGEXES`]) recorded from `node-ignore` 3.3.10, the version Bit lists component files
-//! with. Do not edit by hand.
+//! with. Do not edit by hand; regenerate from the `node-ignore` test suite.
 pub(super) const REGEXES: &[(&str, &str, &str)] = &[
     ("node_modules", r"(?:^|\/)node_modules(?=$|\/)", r"(?:^|\/)node_modules(?=$|\/$)"),
     ("**/node_modules/**", r"^(?:.*\/)?node_modules\/.+", r"^(?:.*\/)?node_modules\/.+"),

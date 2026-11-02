@@ -1,5 +1,5 @@
 //! Unit tests for [`BitHooks`] `readPackage` manifest transformations ([`normalize`]) in
-//! `bit-install`.
+//! `bit-install` pnpm hook execution.
 
 use super::{BitHooks, normalize};
 use pnpm_hooks::{HookContext, PnpmfileHooks};

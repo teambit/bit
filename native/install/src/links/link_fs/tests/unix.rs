@@ -1,5 +1,5 @@
 //! Unix linking tests ([`create_link_or_symlink`], [`hard_link_directory`], [`LinkKind`]): absolute symlinks for component files, hard links for files, and symlinks
-//! (`junction` on unix) for directories in `bit-install`.
+//! (`junction` on unix) for directories in `bit-install` filesystem links.
 
 use super::super::{LinkKind, create_link_or_symlink, hard_link_directory};
 use std::{fs, path::Path};

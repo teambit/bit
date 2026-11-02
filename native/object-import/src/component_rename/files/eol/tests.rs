@@ -1,5 +1,5 @@
 //! Unit tests for end-of-line preservation, CRLF/LF normalization, and
-//! [`Writer`] output during component rename writes in `bit-object-import`.
+//! [`Writer`] output during component rename writes in `bit-object-import` file materialization.
 
 use super::Writer;
 

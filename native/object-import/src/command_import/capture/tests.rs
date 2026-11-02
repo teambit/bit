@@ -1,5 +1,5 @@
 //! Unit tests ensuring incoming `Source` [`Capture`] retains the validated wire representation in
-//! `bit-object-import`.
+//! `bit-object-import` remote object fetches.
 
 use super::Capture;
 use flate2::{Compression, write::ZlibEncoder};

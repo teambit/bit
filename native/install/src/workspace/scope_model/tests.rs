@@ -1,5 +1,5 @@
 //! Unit tests for reading component model and `Version` metadata from local
-//! [`ScopeObjects`] in `bit-install`.
+//! [`ScopeObjects`] in `bit-install` workspace loading.
 
 use super::{ScopeObjects, sha1_hex};
 use crate::model::ComponentId;

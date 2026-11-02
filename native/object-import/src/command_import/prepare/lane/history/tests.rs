@@ -1,5 +1,5 @@
 //! Unit tests for `LaneHistory` entry merging ([`merge_history`]) during lane refresh in
-//! `bit-object-import`.
+//! `bit-object-import` lane synchronization.
 
 use super::merge_history;
 use serde_json::json;

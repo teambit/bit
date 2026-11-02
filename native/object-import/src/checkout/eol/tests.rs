@@ -1,5 +1,5 @@
 //! Unit tests for [`binary`] file classification and end-of-line normalization ([`normalize`]) in
-//! `bit-object-import`.
+//! `bit-object-import` source materialization.
 
 use super::{binary, normalize};
 #[test]

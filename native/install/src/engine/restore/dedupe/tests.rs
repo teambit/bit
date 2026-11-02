@@ -1,5 +1,5 @@
 //! Unit tests for lockfile snapshot deduplication ([`dedupe`]) against root policy versions
-//! in `bit-install`.
+//! in `bit-install` lockfile restoration.
 
 use super::dedupe;
 use serde_json::{Value, json};

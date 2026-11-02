@@ -1,5 +1,5 @@
 //! Unit tests for converting stored dependency graphs ([`Graph`], [`to_lockfile`], [`merge_into_existing`]) into `pnpm-lock.yaml`
-//! structures in `bit-install`.
+//! structures in `bit-install` model restoration.
 
 use super::{
     convert::{Graph, importer_id, to_lockfile},

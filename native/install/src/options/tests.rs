@@ -1,5 +1,5 @@
 //! Unit tests for `bit install` CLI option parsing ([`parse`], [`InstallOptions`], [`Parsed`]) and camel-case flag
-//! expansion in `bit-install`.
+//! expansion in `bit-install` command invocation.
 
 use super::{ExistingEntries, InstallOptions, Parsed, parse};
 use indexmap::IndexMap;

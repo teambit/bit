@@ -1,5 +1,5 @@
 //! Unit tests for cached graph import ([`prepare_cached`], [`prepare`]) and versionless root progress accounting
-//! in `bit-object-import`.
+//! in `bit-object-import` dependency graph fetches.
 
 use super::{Fixture, prepare, prepare_cached};
 

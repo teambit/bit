@@ -1,5 +1,5 @@
 //! Unit tests for canonical model stream normalization ([`prepare_cached`], [`publish`]) during lane main refresh
-//! in `bit-object-import`.
+//! in `bit-object-import` object synchronization.
 
 use super::{Fixture, object_hash, prepare_cached, publish};
 use flate2::{Compression, write::ZlibEncoder};

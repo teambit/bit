@@ -1,5 +1,5 @@
 //! Unit tests for workspace component `node_modules` linking ([`link_components`], [`ComponentLinkOptions`]) and `package.json`
-//! generation in `bit-install`.
+//! generation in `bit-install` component links.
 
 mod tracking;
 

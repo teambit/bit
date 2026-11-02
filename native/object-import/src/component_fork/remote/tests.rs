@@ -1,5 +1,5 @@
 //! Unit tests for remote component fork object extraction ([`objects`]) and error reporting ([`single_error`]) in
-//! `bit-object-import`.
+//! `bit-object-import` remote forks.
 
 use super::{objects, single_error};
 use crate::component_tracking::observe::Observed;

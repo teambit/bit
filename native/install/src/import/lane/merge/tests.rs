@@ -1,5 +1,5 @@
 //! Unit tests for [`RemoteLane`] merging ([`merge_and_save`]) and `LaneHistory` recording during import
-//! in `bit-install`.
+//! in `bit-install` lane synchronization.
 
 use super::merge_and_save;
 use crate::import::{

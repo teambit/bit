@@ -1,4 +1,5 @@
 //! Unit tests for progress reporter throttle interval parsing ([`throttle`]) in `bit-install`.
+//! Covers explicit numeric milliseconds, `null` reset, and non-numeric rejection.
 
 use super::throttle;
 use serde_json::json;

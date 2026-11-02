@@ -1,5 +1,5 @@
 //! Unit tests for scope object importing ([`import_current_objects`]), merging ([`merge_component`], [`merge_version_history`]), and remote fetching in
-//! `bit-install`.
+//! `bit-install` pre-install object synchronization.
 
 use super::{
     bitmap::{self, Id, LaneId},

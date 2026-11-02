@@ -1,5 +1,5 @@
 //! Unit tests for checkout selection state machine ([`State`]) checkpoints and receipts in
-//! `bit-object-import`.
+//! `bit-object-import` checkout transitions.
 
 use super::State;
 use serde_json::{Value, json};

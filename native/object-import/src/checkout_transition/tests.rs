@@ -1,5 +1,5 @@
 //! Unit tests for checkout transition [`State`] lifecycle and file publication ([`apply`], [`plan`]) in
-//! `bit-object-import`.
+//! `bit-object-import` workspace checkouts.
 
 use super::{State, apply, plan};
 use flate2::{Compression, write::ZlibEncoder};

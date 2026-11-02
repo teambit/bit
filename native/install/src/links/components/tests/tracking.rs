@@ -1,5 +1,5 @@
 //! Unit tests for ordered tracking publication barriers ([`link_tracking_components`]) independent of filesystem completion
-//! races in the CLI.
+//! races in the native CLI.
 
 use super::{ComponentLinkOptions, FakeHost, component, write_sources};
 use crate::{links::link_tracking_components, model::WorkspaceComponent};

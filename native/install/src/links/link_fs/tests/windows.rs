@@ -1,5 +1,5 @@
 //! Windows linking tests ([`create_link_or_symlink`], [`symlink_dir`], [`LinkKind`]): symlinks where permitted, otherwise hard links for files and junctions
-//! for directories in `bit-install`.
+//! for directories in `bit-install` filesystem links.
 
 use super::super::{
     LinkKind, create_link_or_symlink, hard_link_directory, remove_path, symlink_dir,

@@ -1,5 +1,5 @@
 //! Unit tests for local component batch removal ([`LocalBatch`]) and dependency cleanup in
-//! `bit-object-import`.
+//! `bit-object-import` workspace removals.
 
 use super::LocalBatch;
 use serde_json::{Value, json};

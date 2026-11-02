@@ -1,5 +1,5 @@
 //! Unit tests for component deletion [`Batch`] preparation, [`Scope`] checks, and [`outbound`] remote
-//! requests in `bit-object-import`.
+//! requests in `bit-object-import` delete workflows.
 
 use super::{Batch, Scope, outbound};
 use serde_json::{Value, json};

@@ -1,6 +1,6 @@
 //! Integration tests verifying Bit's loader is one per process, as in Node: every [`Output`] and [`Sink`] drives the same spinner
 //! and the same `logger.off()`/`logger.on()` switch. The cases share that state, so they
-//! run in order in one test, in this binary's own process.
+//! run in order in one test, in this binary's own process (`bit-install`).
 
 use bit_install::output::{Output, Sink};
 use std::{

@@ -1,5 +1,5 @@
 //! Unit tests for component file scanning ([`FileRules`]) and ignore rule rebasing ([`rebase_ignore_pattern`]) in
-//! `bit-install`.
+//! `bit-install` workspace discovery.
 
 use super::{super::FileRules, write};
 use crate::workspace::rebase_ignore_pattern;

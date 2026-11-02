@@ -1,5 +1,5 @@
 //! Unit tests for component rename [`Batch`] planning ([`Plan`], [`Options`]) and atomic publication in
-//! `bit-object-import`.
+//! `bit-object-import` rename workflows.
 
 use super::Batch;
 use crate::component_rename::{Options, Plan};

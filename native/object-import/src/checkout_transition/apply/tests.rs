@@ -1,5 +1,5 @@
 //! Unit tests for checkout transition file application ([`effects`], [`File`]) and platform error paths ([`error_path_for_platform`])
-//! in `bit-object-import`.
+//! in `bit-object-import` transitions.
 
 use super::error_path_for_platform;
 #[test]

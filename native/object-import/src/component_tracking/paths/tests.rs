@@ -1,5 +1,5 @@
 //! Unit tests for component tracking [`display`], [`relative`], and
-//! [`diagnostic`] path formatting in `bit-object-import`.
+//! [`diagnostic`] path formatting in `bit-object-import` path resolution.
 
 use super::{diagnostic, display, relative};
 use std::path::Path;

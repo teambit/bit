@@ -1,5 +1,5 @@
 //! Unit tests for retained current workspace snapshot verification ([`Observation`], [`State`], [`digest`]) during
-//! checkout transition in `bit-object-import`.
+//! checkout transition preparation in `bit-object-import`.
 
 use super::{digest, wire};
 use crate::workspace::snapshots::{Observation, State};

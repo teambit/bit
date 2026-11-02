@@ -1,5 +1,5 @@
 //! Unit tests for local component fork planning ([`Plan`], [`Options`]), source refactoring, and
-//! `.bitmap` updates in `bit-object-import`.
+//! `.bitmap` updates in `bit-object-import` fork workflows.
 
 use super::{Options, Plan};
 use serde_json::{Value, json};

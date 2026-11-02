@@ -1,5 +1,5 @@
 //! Unit tests for [`semver`] comparison and range intersection in config merge
-//! planning in `bit-object-import`.
+//! planning in `bit-object-import` dependency policy merges.
 
 use super::semver;
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for Bit Cloud `GraphQL` `me.username` lookup ([`cloud_username`]) and fallback in
+//! Unit tests for Bit Cloud `GraphQL` `me.username` lookup ([`cloud_username`]) and timeout fallback in
 //! `bit-install`.
 
 use super::{LOOKUP_TIMEOUT, cloud_username};

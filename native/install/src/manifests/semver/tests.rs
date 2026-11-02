@@ -1,5 +1,5 @@
 //! Unit tests for npm `semver` 7.7.1 compatibility ([`valid_range`], [`satisfies`], [`coerce`], [`gt`]) against [`golden`] fixtures in
-//! `bit-install`.
+//! `bit-install` version comparison.
 
 use super::{coerce, gt, satisfies, satisfies_including_prerelease, valid_range};
 use serde_json::Value;

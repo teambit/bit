@@ -1,5 +1,5 @@
 //! Unit tests for component rename [`identity`] validation and [`refactor`]
-//! source rewriting in `bit-object-import`.
+//! source rewriting in `bit-object-import` rename planning.
 
 use super::{identity, refactor};
 

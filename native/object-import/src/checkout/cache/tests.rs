@@ -1,5 +1,5 @@
 //! Unit tests for bounded source object caching ([`State`]) across checkout repositories in
-//! `bit-object-import`.
+//! `bit-object-import` preflight and materialization.
 
 use super::State;
 use std::path::Path;

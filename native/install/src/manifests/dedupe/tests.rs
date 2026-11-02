@@ -1,5 +1,5 @@
 //! Unit tests for `hoist-dependencies.spec.ts` cases ([`hoist`]) and deduplication entry points ([`dedupe`], [`Deduped`])
-//! in `bit-install`.
+//! in `bit-install` manifest deduplication.
 
 use super::{Deduped, IndexEntry, Item, dedupe, exclude_workspace, hoist::hoist, policy_manifest};
 use crate::{
