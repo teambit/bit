@@ -89,6 +89,7 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     (!options.id.is_empty()).then_some(options)
 }
 
+/// Assigns a positional argument `val` to `options.id` or `options.dir`.
 fn apply_clone_positional(val: &str, options: &mut Options) -> Option<()> {
     let val = val.trim();
     (!val.is_empty() && !val.starts_with('-')).then_some(())?;

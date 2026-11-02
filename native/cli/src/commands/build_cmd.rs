@@ -62,6 +62,7 @@ pub(super) struct Options {
     pub capsules: CapsuleFlags,
 }
 
+/// Executes `bit build`, validating [`Options`] and dispatching workspace or outside-workspace handling.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("build arguments are not UTF-8".into()));

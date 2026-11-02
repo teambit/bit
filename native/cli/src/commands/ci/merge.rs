@@ -57,6 +57,7 @@ fn non_flag_val(val: &str) -> Option<String> {
     (!trimmed.is_empty() && !trimmed.starts_with('-')).then(|| trimmed.to_owned())
 }
 
+/// Consumes a single flag (and any associated option value) at `rest[idx]` into `opts`.
 fn apply_merge_arg(rest: &[&str], idx: usize, opts: &mut MergeOptions) -> Option<usize> {
     let arg = rest[idx];
     if let Some(next_idx) = apply_merge_value_arg(rest, idx, opts) {

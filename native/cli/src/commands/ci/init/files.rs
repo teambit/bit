@@ -100,6 +100,7 @@ pub(super) fn config(root: &Path) -> io::Result<bool> {
     .map_err(|error| failure(error, "open", &root.join("workspace.jsonc")))?;
     Ok(true)
 }
+/// Rewrites a filesystem `error` during `operation` on `path` into a canonical Node-style `EACCES`/`ENOENT`/`EISDIR` diagnostic.
 fn failure(error: io::Error, operation: &str, path: &Path) -> io::Error {
     let error = if cfg!(windows)
         && operation == "mkdir"

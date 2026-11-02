@@ -100,6 +100,7 @@ pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
         })
 }
 
+/// Returns `true` when `args` matches a supported `bit cli generate --docs` invocation.
 #[inline]
 pub(super) fn is_generate_docs(args: &[&str]) -> bool {
     let ["generate", rest @ ..] = args else { return false };

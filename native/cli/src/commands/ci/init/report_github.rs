@@ -1,6 +1,6 @@
 //! [`Repository`]-specific [`Report`] manual steps; rendering never contacts a Git host.
 //!
-//! Formats [`steps`] for pushing workflows, configuring permissions, and registering webhooks.
+//! Formats [`steps`] for pushing workflows, configuring [`permissions`], and registering [`public_webhook`] / [`enterprise_webhook`].
 use super::{
     remote::{self, Repository},
     report::{self, Report},

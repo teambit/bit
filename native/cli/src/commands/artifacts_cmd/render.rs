@@ -103,6 +103,7 @@ fn sanitize_component_dir(identity: &str) -> String {
     }
 }
 
+/// Renders extracted [`ComponentArtifacts`] blocks and optional `--out-dir` summary footer for `pattern`.
 pub(super) fn render_artifacts_report(
     results: &[ComponentArtifacts],
     pattern: &str,

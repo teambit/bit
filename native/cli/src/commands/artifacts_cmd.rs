@@ -27,10 +27,15 @@ pub const COMMAND: Command = Command { name: "artifacts", aliases: &[], run };
 /// Parsed CLI options and filter arguments for `bit artifacts`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
+    /// Required component ID or pattern argument passed to `bit artifacts`.
     pub pattern: String,
+    /// Optional `--aspect` filter matching the aspect that generated the artifacts.
     pub aspect: Option<String>,
+    /// Optional `--task` filter matching the build task name.
     pub task: Option<String>,
+    /// Optional `--files` glob pattern filtering extracted artifact file paths.
     pub files: Option<String>,
+    /// Optional `--out-dir` target directory where artifact files are written.
     pub out_dir: Option<String>,
 }
 

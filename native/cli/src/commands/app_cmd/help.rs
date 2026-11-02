@@ -70,6 +70,7 @@ fn app_option_error(args: &[&str], list: bool) -> Option<String> {
     leading_value.or_else(|| rejected_app_option(args, list)).map(str::to_owned)
 }
 
+/// Maps a rejected `app` or `app list` CLI flag in `args` to its static yargs unknown-argument error string.
 fn rejected_app_option(args: &[&str], list: bool) -> Option<&'static str> {
     if list && list_json_no_color(args) {
         return Some("Unknown arguments: no-color, noColor");

@@ -1,6 +1,6 @@
 //! Native `--list-tasks` and [`compute_capsules_root_dirs`] capsule materialization for `bit build`.
 //!
-//! Exposes [`run_list_tasks`] and [`BUILD_TASKS`]/[`DEPLOY_TASKS`] pipeline inspection via [`Formatter`].
+//! Exposes [`run_list_tasks`], [`try_run`], and [`BUILD_TASKS`]/[`DEPLOY_TASKS`] pipeline inspection via [`Formatter`].
 
 use super::{
     super::{

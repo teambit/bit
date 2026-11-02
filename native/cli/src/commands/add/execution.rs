@@ -103,6 +103,7 @@ fn non_empty_str(value: &serde_json::Value) -> Option<&str> {
         .map(str::trim)
         .filter(|text| !text.is_empty())
 }
+/// Validates that the dependency read-set in `capture` remains unchanged on `prepared.engine`.
 #[inline]
 fn validate(prepared: &mut Prepared, capture: &capture::Capture) -> io::Result<()> {
     prepared.engine.validate_read_set(

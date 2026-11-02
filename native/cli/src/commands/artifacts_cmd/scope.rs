@@ -106,6 +106,7 @@ fn resolve_bare_pattern_targets(
     Ok(targets)
 }
 
+/// Loads candidate `(identity_no_ver, comp_name)` pairs from `scope_dir/index.json` for `scope_name`.
 fn load_bare_scope_candidates(
     scope_dir: &Path,
     scope_name: &str,

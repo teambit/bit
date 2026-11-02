@@ -19,7 +19,9 @@ use std::{
 
 /// Single emitted compiler output file path and text contents.
 struct Emitted {
+    /// Destination filesystem path for the emitted artifact.
     path: PathBuf,
+    /// UTF-8 text contents of the emitted artifact.
     content: String,
 }
 /// Compiler diagnostic source file path and formatted error message.

@@ -117,6 +117,7 @@ impl ProjectedLinker {
         )
     }
 
+    /// Validates deletion-loading preconditions and captures cached component rows for `ids` under `request`.
     fn load_criterion(&mut self, request: &Request<'_>, ids: &[String]) -> io::Result<()> {
         request.output.status(&format!("loading {} component(s)", ids.len()));
         let missing = self.retained.missing(ids);

@@ -62,6 +62,7 @@ fn fallback_checkout_error(args: &[OsString], raw_args: &[&str]) -> io::Result<O
     workspace_command::execute_then(&root, args, "checkout", |_| Err(io::Error::other(err_msg)))
 }
 
+/// Parses and executes `bit revert` against `args` via [`options::parse_revert`] and [`run_options`].
 fn run_revert(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

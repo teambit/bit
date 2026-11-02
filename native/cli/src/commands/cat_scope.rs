@@ -1,6 +1,6 @@
 //! Native `bit cat-scope [scopePath] [-f|--full] [-j|--json] [-e|--json-extra]` (`cat-scope-cmd.ts`).
 //!
-//! Lists stored `ModelComponent` entries in table or [`json`] format for local and bare scopes.
+//! Lists stored `ModelComponent` entries in [`table`] or [`json`] format via [`Options`] and [`ScopeEntry`].
 
 mod json;
 #[cfg(test)]

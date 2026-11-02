@@ -1,6 +1,6 @@
 //! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput` via [`Formatter`] and [`Chalk`].
 //!
-//! Exposes [`format`] to render workspace dependency update logs and conflict sections.
+//! Exposes [`format`] to render workspace dependency update logs and conflict sections via [`updates`] and [`update_pair`].
 use crate::commands::{
     color::Chalk,
     status::js::{array, decline, object, text},

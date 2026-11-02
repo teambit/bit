@@ -102,6 +102,7 @@ fn parse_args(args: &[OsString]) -> Option<Option<String>> {
     Some(remote)
 }
 
+/// Applies a single CLI token at `tokens[*index]` to `remote`, advancing `index` when `-r`/`--remote` consumes a value.
 fn apply_token(tokens: &[&str], index: &mut usize, remote: &mut Option<String>) -> Option<()> {
     match tokens[*index] {
         "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"

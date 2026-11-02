@@ -85,6 +85,7 @@ fn emit_outside_workspace(cwd: &Path, args: &[OsString], options: &Options) -> i
     })
 }
 
+/// Emits the empty-workspace `bit check-types` report in text or `--json` mode.
 fn emit_empty_check_types(
     root: &Path,
     args: &[OsString],

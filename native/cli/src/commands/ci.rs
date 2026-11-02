@@ -70,6 +70,7 @@ impl Subcommand {
         }
     }
 
+    /// Returns the startup banner printed before executing this [`Subcommand`] variant.
     #[inline]
     const fn init_banner(&self) -> &'static str {
         match self {

@@ -105,6 +105,7 @@ fn content_path(proof: &Value) -> io::Result<&Path> {
         .filter(|path| path.is_absolute())
         .ok_or_else(|| invalid("import content proof path"))
 }
+/// Returns `true` when `proof` is a two-field `{"path", "hash"}` content proof object.
 #[inline]
 fn content(proof: &Value) -> bool {
     proof

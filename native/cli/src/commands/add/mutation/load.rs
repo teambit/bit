@@ -98,6 +98,7 @@ pub(super) fn projected_with_engine(
     selection::prepare(root, bitmap, identities, context)
 }
 
+/// Projects `bitmap` and `projection` into `environment` and loads component documentation via [`docs::load`].
 fn project(
     root: &Path,
     bitmap: &Value,

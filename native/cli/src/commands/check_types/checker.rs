@@ -92,6 +92,7 @@ fn load_workspace(root: &Path) -> Option<(Workspace, Bitmap)> {
     Some((ws, bitmap))
 }
 
+/// Filters active [`WorkspaceComponent`] entries in `ws` against `pattern` and `bitmap`.
 fn match_components<'a>(
     root: &Path,
     ws: &'a Workspace,

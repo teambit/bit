@@ -94,6 +94,7 @@ fn parse_bool_val(raw: &str) -> Option<bool> {
     }
 }
 
+/// Applies combined short boolean flags (such as `-ca`, `-cj`, `-caj`) to `options`.
 #[inline]
 fn apply_cat_combined_short(options: &mut Options<'_>, arg: &str) -> bool {
     if !arg.starts_with('-')

@@ -111,6 +111,7 @@ fn file_path(file: &Value) -> Option<&str> {
         })
 }
 
+/// Renders the `config` section (`env`, `dependencies`, `devDependencies`, `peerDependencies`) as plain text.
 fn text_config(config: &Value) -> io::Result<String> {
     let mut lines = Vec::new();
     if let Some(env) = config["env"]

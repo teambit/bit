@@ -1,6 +1,6 @@
 //! Native `bit capsule [list|delete|create]` (`scopes/workspace/workspace/capsule.cmd.ts`, `list` default).
 //!
-//! Coordinates [`create`], [`list_stats`], [`outside`], and [`prune`] capsule operations.
+//! Coordinates [`create`], [`list_stats`], [`outside`], and [`prune`] capsule operations via [`Subcommand`].
 
 mod create;
 mod list_stats;

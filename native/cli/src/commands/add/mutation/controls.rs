@@ -83,6 +83,7 @@ pub(super) fn reads(facts: &Value) -> &[Value] {
         .map_or(&[], Vec::as_slice)
 }
 
+/// Reads `path` within [`MAX_CONTROL`] and returns a fresh read-set proof via [`bounded_proof`].
 pub(super) fn refresh(path: &Path) -> io::Result<Value> {
     match fs::symlink_metadata(path) {
         Ok(metadata)

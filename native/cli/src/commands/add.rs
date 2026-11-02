@@ -123,8 +123,12 @@ fn run_workspace(
 
 /// Staged `bit add` [`Plan`], workspace [`projection::Projection`], optional [`capture::Capture`], and [`Engine`].
 struct Prepared {
+    /// Staged `.bitmap` component tracking plan ready for validation and commit.
     plan: Plan,
+    /// Projected workspace state and selected component entries.
     projection: projection::Projection,
+    /// Captured component metadata and callback session when new or updated components require loading.
     capture: Option<capture::Capture>,
+    /// Native workspace [`Engine`] session used for read-set validation and cache commit.
     engine: Engine,
 }

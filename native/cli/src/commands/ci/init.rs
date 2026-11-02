@@ -114,6 +114,7 @@ impl Plan {
             repo_root,
         }
     }
+    /// Returns the Git repository root when available, or falls back to the workspace root.
     #[inline]
     fn scaffold_root(&self) -> &Path {
         self.repository_root.as_deref().unwrap_or(&self.root)

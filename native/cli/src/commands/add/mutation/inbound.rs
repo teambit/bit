@@ -107,6 +107,7 @@ impl ProjectedLinker {
         Ok(())
     }
 
+    /// Loads and publishes `ComponentFsCache` documentation entries for `ids` on the retained provider session.
     pub(in crate::commands) fn import_docs(
         &mut self,
         root: &Path,

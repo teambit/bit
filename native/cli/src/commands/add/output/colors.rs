@@ -54,6 +54,7 @@ fn filesystem_message(message: &str) -> bool {
         || trimmed.starts_with("EISDIR: illegal operation on a directory, rename '")
         || trimmed.starts_with("EPERM: operation not permitted,")
 }
+/// Formats recognized `bit add` warning messages ([`NO_FILES`], empty directory) with yellow [`Chalk`] styling.
 fn message_color(message: &str, chalk: Chalk) -> Option<String> {
     let message = message.trim();
     if message == NO_FILES {

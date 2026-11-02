@@ -33,6 +33,7 @@ impl Source {
         }
     }
 }
+/// Converts `duration` into fractional milliseconds as an `f64` for [`Source::mtime_ms`].
 #[inline]
 fn milliseconds(duration: std::time::Duration) -> f64 {
     (duration.as_secs() as f64).mul_add(1000.0, f64::from(duration.subsec_nanos()) / 1_000_000.0)

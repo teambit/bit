@@ -109,6 +109,7 @@ impl ProjectedLinker {
         Ok(())
     }
 }
+/// Refreshes `directory`, `files`, and `current.mainFile` on retained `rows` from projected `components`.
 fn refreshed(
     mut rows: Vec<Value>,
     components: &[bit_install::model::WorkspaceComponent],

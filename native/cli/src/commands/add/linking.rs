@@ -108,6 +108,7 @@ pub(super) fn error(root: &Path, components: &[WorkspaceComponent], error: io::E
     })
 }
 
+/// Returns `true` when `error` indicates a non-directory path component during `mkdir` for [`error`].
 #[inline]
 fn mkdir_not_directory(error: &io::Error) -> bool {
     error.kind() == io::ErrorKind::NotADirectory

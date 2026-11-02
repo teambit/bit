@@ -110,6 +110,7 @@ pub(in crate::commands) fn update_in_comp_json(
     Ok(CompJsonEdit { path, bytes })
 }
 
+/// Replaces any matching `bare_aspect` key in `entry`'s `.bitmap` `config` object with `target_aspect_id` and `cfg_val`.
 pub(in crate::commands) fn update_in_bitmap_row(
     bitmap_val: &mut Value,
     entry: &BitmapEntry,

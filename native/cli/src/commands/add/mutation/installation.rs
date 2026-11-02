@@ -1,6 +1,6 @@
 //! Reuse [`ProjectedLinker`] identity providers when bulk renaming invokes the native [`Installer`].
 //!
-//! Bootstraps [`Environments`] and installation [`bit_install::HostInfo`] prior to worker execution in `bit-cli`.
+//! Bootstraps [`Environments`] and installation [`bit_install::HostInfo`] for [`ProjectedLinker`] prior to worker execution in `bit-cli`.
 use super::ProjectedLinker;
 use crate::commands::{installation::Installer, status::environments::Environments};
 use serde_json::json;

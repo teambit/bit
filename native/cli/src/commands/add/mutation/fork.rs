@@ -1,6 +1,6 @@
 //! Advance only the `.bitmap` preimage acknowledged by a completed native fork publication on [`ProjectedLinker`].
 //!
-//! Validates and updates the retained `.bitmap` control entry via [`controls`] after `fork`.
+//! Validates and updates the retained `.bitmap` control entry via [`controls`] and [`bitmap_path`] after `fork`.
 use super::{ProjectedLinker, controls};
 use crate::commands::engine::Engine;
 use serde_json::Value;

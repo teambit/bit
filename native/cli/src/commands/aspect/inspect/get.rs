@@ -100,6 +100,7 @@ pub(in crate::commands::aspect) fn resolve_component_for_get<'a>(
     }
 }
 
+/// Formats the canonical `Failed parsing the string` error when an unscoped component `raw` is not in the scope index.
 #[inline]
 pub(in crate::commands::aspect) fn missing_scope_error(raw: &str) -> String {
     format!(

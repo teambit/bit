@@ -122,6 +122,7 @@ fn warning(value: &Value, format: &Formatter) -> io::Result<String> {
     Ok(warning)
 }
 
+/// Formats warnings for `alreadyUsed` component files in `value` using `format` for [`warning`].
 fn already_used(value: &Value, format: &Formatter) -> io::Result<String> {
     let mut result = Vec::new();
     let Some(already) = value["alreadyUsed"].as_object() else {

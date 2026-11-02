@@ -1,6 +1,6 @@
 //! Project the selected persisted identities into [`Projection`] without inventing new-component versions.
 //!
-//! Builds [`Workspace`] and [`WorkspaceConfig`] projections via [`prepare`].
+//! Builds [`Workspace`] and [`WorkspaceConfig`] projections via [`prepare`], [`components`], and [`seed_environments`].
 use super::super::projection::{self, Projection};
 use bit_install::{config::WorkspaceConfig, model::WorkspaceComponent, workspace::Workspace};
 use serde_json::{Value, json};

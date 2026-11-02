@@ -78,10 +78,15 @@ fn deprecated_all(options: &Options, report: String) -> String {
 
 /// `checkoutOutput(results, props)`.
 struct Checkout<'r> {
+    /// Hydrated checkout operation results from the workspace engine.
     results: &'r Results,
+    /// Parsed `bit checkout` / `bit revert` options.
     options: &'r Options,
+    /// Shared CLI [`Formatter`] with [`Chalk`] styling.
     format: Formatter,
+    /// Rendered `(verbose_logs, summary)` sections for `workspace.jsonc` dependency updates.
     policy: (String, String),
+    /// Optional custom summary header override (such as lane switch/merge titles).
     title: Option<&'r str>,
 }
 

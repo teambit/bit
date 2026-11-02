@@ -112,6 +112,7 @@ fn stored<'a>(context: &'a Value, id: &str, version: &str) -> io::Result<&'a Val
     Ok(stored)
 }
 
+/// Collects refreshed read-set proofs via [`controls::refresh`] for all source files of `targets` under `root`.
 #[inline]
 fn source_proofs(root: &Path, targets: &[Value]) -> io::Result<Vec<Value>> {
     targets

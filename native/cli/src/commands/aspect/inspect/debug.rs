@@ -30,8 +30,11 @@ use std::{ffi::OsString, path::Path};
 
 /// Provenance origin entry before aspect merge resolution in `bit aspect get --debug`.
 struct DebugOrigin {
+    /// Human-readable origin label (such as `.bitmap` or `workspace.jsonc`).
     origin: &'static str,
+    /// Aspect entries contributed by this origin layer prior to merging.
     extensions: Vec<AspectEntry>,
+    /// Optional origin-specific diagnostic metadata (such as variant pattern).
     extra_data: Option<Value>,
 }
 

@@ -83,6 +83,7 @@ fn serialized(path: &Path) -> Option<String> {
     bit_object_import::stringify_json(&value, false).ok()
 }
 
+/// Invalidates `cache/components/deps` entries under `root` for non-root [`WorkspaceComponent`]s in `components`.
 pub(in crate::commands) fn invalidate(
     root: &Path,
     components: &[WorkspaceComponent],

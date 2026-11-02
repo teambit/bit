@@ -96,6 +96,7 @@ fn consume_inline_value(options: &mut Options, arg: &str) -> Option<Option<bool>
     *slot = Some(inline.to_owned());
     Some(Some(true))
 }
+/// Returns a mutable reference to the string option slot on `options` corresponding to `arg`.
 #[inline]
 fn string_option<'a>(options: &'a mut Options, arg: &str) -> Option<&'a mut Option<String>> {
     match arg {

@@ -86,6 +86,7 @@ pub(super) fn inspect(
 ) -> io::Result<Plan> {
     partition(root, cache, components, observed, true)
 }
+/// Classifies `file` at `path` against `cache` and `source`, appending hits or proven empty-doc entries to `plan`.
 fn classify(
     cache: &Path,
     path: &Path,

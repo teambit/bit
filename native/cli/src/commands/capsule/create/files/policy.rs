@@ -117,6 +117,7 @@ pub(super) fn has_custom_builtin_env_config(config: Option<&Map<String, Value>>)
     })
 }
 
+/// Resolves `types` and `exports` [`EntryPointMetadata`] for `manifest` and main file `stem`.
 #[inline]
 pub(super) fn configured_entry_points(manifest: &ManifestConfig, stem: &str) -> EntryPointMetadata {
     let mut entry_points = entry_point_metadata(manifest.env, stem);

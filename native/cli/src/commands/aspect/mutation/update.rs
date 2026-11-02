@@ -1,6 +1,6 @@
 //! Aspect version resolution and batch update helpers for `bit aspect update`.
 //!
-//! Defines [`UpdatePlan`], [`prepare_update`], [`resolve_latest_aspect_version`], and [`update_in_bitmap_row`].
+//! Defines [`UpdatePlan`], [`prepare_update`], [`resolve_latest_aspect_version`], [`update_in_comp_json`], and [`update_in_bitmap_row`].
 pub(in crate::commands) use super::comp_json::{update_in_bitmap_row, update_in_comp_json};
 use super::{
     BitmapContext, CompJsonEdit, Prepared, find_bitmap_row_ref, find_matching_aspect_key,

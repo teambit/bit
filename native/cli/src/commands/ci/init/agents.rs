@@ -105,6 +105,7 @@ fn starts_block(line: &str) -> bool {
         .is_some_and(|regex| regex.find(line).is_some())
 }
 
+/// Computes the line index in `lines` where a new managed CI sync section should be inserted.
 #[inline]
 fn insertion_point(lines: &[&str]) -> usize {
     let mut at = 0;

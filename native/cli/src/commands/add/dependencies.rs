@@ -1,6 +1,6 @@
 //! [`ComponentDependencies`] and [`PackageDependency`] extraction from the shared native component-load receipt.
 //!
-//! Exposes [`packages`] to map captured component dependency rows by [`Lifecycle`].
+//! Exposes [`packages`] to map captured component dependency rows by [`Lifecycle`] via [`component_packages`].
 use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};
 use serde_json::Value;
 use std::io;

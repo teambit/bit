@@ -99,6 +99,7 @@ fn build_env_tracking_config(facts: &Value) -> io::Result<Value> {
     Ok(json!({(configured):{},"teambit.envs/envs":{"env":resolved}}))
 }
 
+/// Extracts a trimmed non-empty environment identifier string stored under `key` in `facts`.
 #[inline]
 fn extract_env_id<'a>(facts: &'a Value, key: &str) -> Option<&'a str> {
     let value = facts.get(key)?;

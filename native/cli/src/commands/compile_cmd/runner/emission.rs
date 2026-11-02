@@ -104,6 +104,7 @@ fn source_path(source: &Value) -> io::Result<PathBuf> {
     Ok(Path::new(directory).join(relative))
 }
 
+/// Appends [`Emitted`] file entries from compiler output `row` for each target directory in `directories`.
 fn append(
     compiled: &mut Compiled,
     row: &Value,

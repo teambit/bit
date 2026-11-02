@@ -97,6 +97,7 @@ impl CatDocs {
     }
 }
 
+/// Validates a host documentation parser `receipt` and extracts any trimmed error message for [`CatDocs::absorb`].
 #[inline]
 fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
     if receipt["published"] != true

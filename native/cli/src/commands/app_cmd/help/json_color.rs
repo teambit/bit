@@ -1,6 +1,6 @@
 //! Released yargs unknown-option [`error`] ordering and deduplication for [`is_json_flag`] and color flags.
 //!
-//! Formats `Unknown argument` and `Unknown arguments` messages for invalid `--json`/`--no-color` flags.
+//! Formats `Unknown argument` and `Unknown arguments` messages via [`error`] and [`unknown_names`] for invalid `--json`/`--no-color` flags.
 
 use super::is_json_flag;
 

@@ -8,7 +8,9 @@ use std::{collections::HashMap, io, path::Path};
 /// Retained per-component comparison rows and environment metadata across selector evaluations.
 #[derive(Default)]
 pub(in crate::commands::add::mutation) struct Facts {
+    /// Cached `statusCompare` target rows keyed by bare component identity.
     comparisons: HashMap<String, Value>,
+    /// Merged environment fact map accumulated from component captures.
     pub(super) environments: Value,
 }
 impl Facts {

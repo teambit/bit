@@ -80,6 +80,7 @@ fn ci_enabled() -> bool {
         })
 }
 
+/// Emits a `bit compile` selector validation error in text or `--json` mode.
 #[inline]
 fn emit_compile_error(
     root: &Path,

@@ -101,6 +101,7 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     }
 }
 
+/// Converts a [`SystemTime`] into rounded milliseconds since [`UNIX_EPOCH`].
 #[inline]
 pub(super) fn millis(time: SystemTime) -> u64 {
     time.duration_since(UNIX_EPOCH)

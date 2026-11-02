@@ -1,6 +1,6 @@
 //! Released CI diagnostics ([`ci`]) include Node stacks, so predictable [`Projection`] errors delegate before providers.
 //!
-//! Checks [`links`] preconditions in CI environments prior to mutating `node_modules`.
+//! Checks [`links`] preconditions in CI environments via [`blocked_package`] and [`blocked_manifest`] prior to mutating `node_modules`.
 use super::projection::Projection;
 use std::{env, fs, io, path::Path};
 /// Returns `true` when the `CI` environment variable is set and non-empty.

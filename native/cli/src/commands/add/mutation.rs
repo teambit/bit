@@ -120,6 +120,7 @@ impl ProjectedLinker {
         self.finish(result)
     }
 
+    /// Flushes accumulated provider and [`CallbackError`] stdout when `result` is an `Err`.
     fn finish<ResultValue>(&mut self, result: io::Result<ResultValue>) -> io::Result<ResultValue> {
         if let Err(error) = &result {
             print!("{}", self.take_stdout());

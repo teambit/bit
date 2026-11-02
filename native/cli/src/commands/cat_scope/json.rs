@@ -101,6 +101,7 @@ fn split_scope_name(val: &Value) -> Option<(&str, &str)> {
     (!scope.is_empty() && !name.is_empty()).then_some((scope, name))
 }
 
+/// Converts a version-to-hash JSON object into a map of `{"hash": "<sha1>"}` reference objects.
 fn map_ref_dict(val: Option<&Value>) -> Option<Value> {
     let mut out = Map::new();
     let Some(obj) = val.and_then(Value::as_object) else {

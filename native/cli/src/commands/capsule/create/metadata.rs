@@ -1,6 +1,6 @@
 //! Root metadata ([`object_hash_short`]) written by `IsolatorMain` for workspace capsules.
 //!
-//! Writes root `package.json` and `.bit-capsule-origin.json` markers via [`write_root_metadata`].
+//! Writes root `package.json` ([`RootPackage`]) and `.bit-capsule-origin.json` ([`OriginMarker`]) markers via [`write_root_metadata`].
 
 use super::super::object_hash_short;
 use chrono::{SecondsFormat, Utc};

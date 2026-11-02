@@ -39,6 +39,7 @@ pub(super) fn default_branch(root: &Path) -> (String, bool) {
     let trimmed = super::trim(&current);
     (if matches!(trimmed, "main" | "master") { trimmed.to_owned() } else { "main".into() }, true)
 }
+/// Detects the default branch name from `origin/HEAD` symbolic refs or remote branches in `root`.
 fn detected_branch(root: &Path) -> Option<String> {
     let symbolic = run(root, &["symbolic-ref", "refs/remotes/origin/HEAD"]);
     if let Some(branch) = symbolic

@@ -106,6 +106,7 @@ impl Prepared {
         Ok(())
     }
 }
+/// Validates and serializes parsed documentation `writes` against `observed` [`Source`]s within the 32 MiB budget.
 fn validate(
     writes: &[Value],
     observed: &BTreeMap<PathBuf, Source>,

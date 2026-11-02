@@ -79,6 +79,7 @@ pub(super) fn parse_pr(rest: &[&str]) -> Option<PrOptions> {
     Some(opts)
 }
 
+/// Consumes a single flag (and any associated option value) at `rest[idx]` into `opts`.
 fn apply_pr_arg(rest: &[&str], idx: usize, opts: &mut PrOptions) -> Option<usize> {
     if let Some(next_idx) = apply_pr_value_arg(rest, idx, opts) {
         return Some(next_idx);

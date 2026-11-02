@@ -96,6 +96,7 @@ fn parse_bool_flag(arg: &str) -> Option<(&str, bool)> {
     }
 }
 
+/// Applies an inline `--flag=value` option or a positional component ID `arg` to `create`.
 fn apply_create_inline_or_id(arg: &str, create: &mut CreateArgs) -> Option<()> {
     if let Some((key, val)) = arg.split_once('=') {
         let val = val.trim();

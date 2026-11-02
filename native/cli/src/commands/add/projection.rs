@@ -108,6 +108,7 @@ fn target(
     target
 }
 
+/// Reads `component.json` and `package.json` control files under `root` for `targets` and `added` rows.
 fn controls(root: &Path, targets: &mut [Value], added: &[Value]) -> io::Result<Option<String>> {
     let mut error = None;
     for target in targets {

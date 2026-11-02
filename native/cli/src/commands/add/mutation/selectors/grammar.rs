@@ -77,6 +77,7 @@ pub(super) fn ordinary(targets: &[Value], parts: &[String]) -> io::Result<Vec<Va
         .cloned()
         .collect())
 }
+/// Appends rows from `targets` into `selected` when their bare [`row_identity`] is not already present.
 pub(super) fn union(selected: &mut Vec<Value>, targets: Vec<Value>) {
     for row in targets {
         let Some(row_id) = row_identity(&row) else {
