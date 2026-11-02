@@ -26,6 +26,7 @@ fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
         .or_else(|| find_versioned_aspect(map, id))
 }
 
+/// Finds an aspect entry in `map` whose key matches `{id}@<non-empty-version>`.
 #[inline]
 fn find_versioned_aspect<'a>(
     map: &'a serde_json::Map<String, Value>,

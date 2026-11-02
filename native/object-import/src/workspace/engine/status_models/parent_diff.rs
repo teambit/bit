@@ -30,6 +30,7 @@ pub(in crate::workspace::engine) fn read(
     read_overlay(request, pool, None)
 }
 
+/// Reads the first-parent chain for `request` against an optional import `overlay`.
 pub(in crate::workspace::engine) fn read_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,

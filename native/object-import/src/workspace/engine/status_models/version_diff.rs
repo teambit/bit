@@ -40,6 +40,7 @@ pub(in crate::workspace::engine) fn read(
     read_overlay(request, pool, None)
 }
 
+/// Compares two local `Version` objects for `request` against an optional import `overlay`.
 pub(in crate::workspace::engine) fn read_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,

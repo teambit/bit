@@ -24,6 +24,7 @@ pub(super) struct Token {
     pub(super) end_line: usize,
 }
 
+/// Constructs an `InvalidData` [`io::Error`] with `message`.
 #[inline]
 pub(super) fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message.into())

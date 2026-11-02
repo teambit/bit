@@ -55,6 +55,7 @@ fn find_comma_brace_pair(pattern: &str) -> Option<(usize, usize)> {
     None
 }
 
+/// Matches `/`-split `pattern` segments against `name` segments with `**` recursion.
 #[inline]
 fn segments(pattern: &[&str], name: &[&str]) -> bool {
     match (pattern.split_first(), name.split_first()) {

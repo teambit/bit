@@ -11,7 +11,9 @@ use std::{
 
 /// Maximum total byte budget retained across operation-local file observations.
 pub(crate) const MAX_BYTES: usize = 32 * 1024 * 1024;
+/// Maximum number of file observations retained concurrently in [`State`].
 const MAX_FILES: usize = 4096;
+/// Maximum safe integer token value (`2^53 - 1`) for `JavaScript` interoperability.
 const MAX_TOKEN: u64 = (1 << 53) - 1;
 
 /// Operation-local observations, never a cache that silently replaces a later filesystem read.

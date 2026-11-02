@@ -16,6 +16,7 @@ pub(in crate::workspace::engine) struct Entry {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub(in crate::workspace::engine) version_from_config: bool,
 }
+/// Missing package group for a single source or dev file.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Missing {

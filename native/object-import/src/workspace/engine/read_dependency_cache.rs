@@ -23,6 +23,7 @@ pub(super) struct Freshness {
     files: Vec<PathBuf>,
     timestamp: f64,
 }
+/// Reads a single `cacache` dependency cache entry for `request` and wraps it in a wire response.
 #[inline]
 pub(super) fn read(request: &Read) -> io::Result<(usize, Value)> {
     let cache = read_cache(&request.cache, &request.key)?;

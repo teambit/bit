@@ -35,6 +35,7 @@ struct LaneId {
     name: String,
 }
 
+/// Reads and traverses the local `Version` log entries for `request`.
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,

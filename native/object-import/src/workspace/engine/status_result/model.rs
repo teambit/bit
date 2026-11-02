@@ -53,6 +53,7 @@ fn append_staged(
     }
     Ok(())
 }
+/// Returns `true` when `model` has staged local versions to report in status output.
 #[inline]
 fn is_staged(model: &Value, tracked: bool, hidden: bool, source: &[Value]) -> bool {
     if tracked || hidden { !source.is_empty() } else { local(model) }

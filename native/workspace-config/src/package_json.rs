@@ -86,6 +86,7 @@ enum Leading {
     None,
 }
 
+/// Classifies the leading whitespace of `line` into [`Leading`].
 #[inline]
 fn leading(line: &str) -> Leading {
     let run = |character: char| line.len() - line.trim_start_matches(character).len();

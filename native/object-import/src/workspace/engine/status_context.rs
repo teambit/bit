@@ -73,6 +73,7 @@ fn exclude_inactive(output: &mut Value, inactive: &[(String, bool)]) -> io::Resu
     Ok(())
 }
 
+/// Returns component identities that are tracked on a lane but absent on `main`.
 fn unavailable_on_main(
     context: &Value,
     models: &Value,

@@ -53,6 +53,7 @@ struct Target {
     identity: String,
     version: String,
 }
+/// Loaded scope models, versions, lane heads, semantic hashes, and staged history plans.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {

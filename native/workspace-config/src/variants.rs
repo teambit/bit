@@ -19,6 +19,7 @@ struct ItemMatch {
     excluded: bool,
 }
 
+/// Matched variant pattern, specificity score, and aspect configuration map.
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct MatchedVariant<'a> {
     pattern: &'a str,

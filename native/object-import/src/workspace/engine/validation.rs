@@ -25,6 +25,7 @@ pub(super) fn path(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
+/// Validates that `count` does not exceed [`MAX_FILES`].
 #[inline]
 pub(super) fn count(count: usize) -> io::Result<()> {
     if count > MAX_FILES { Err(invalid("workspace file count limit")) } else { Ok(()) }

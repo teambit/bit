@@ -29,6 +29,7 @@ pub(super) fn canonical(mut message: String) -> io::Error {
     io::Error::other(CanonicalError { message, progress: None })
 }
 
+/// Attaches a non-null `progress` value to a [`CanonicalError`] wrapped in `error`.
 pub(super) fn with_progress(error: io::Error, progress: serde_json::Value) -> io::Error {
     if !is_canonical(&error) || progress.is_null() {
         return error;

@@ -31,6 +31,7 @@ struct Target {
     version: String,
 }
 
+/// Lists pending updates from `main` or `forked_lane_id` for `request` against `overlay`.
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     overlay: &Overlay,

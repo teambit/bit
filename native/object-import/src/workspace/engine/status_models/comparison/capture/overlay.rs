@@ -34,6 +34,8 @@ pub(super) fn validate(target: &Target) -> io::Result<()> {
 }
 
 /// Resolves `file` for `target` from either its validated source overlay spool or `root`.
+///
+/// Overlay files must be regular files nested inside `target.source_overlay_root`.
 pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Result<PathBuf> {
     let Some(path) = target.source_overlays.get(file) else {
         return Ok(root.join(target.directory.trim()).join(file));

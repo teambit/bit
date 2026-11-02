@@ -44,6 +44,7 @@ pub(super) fn read(
 
 /// Ordered relative paths and raw byte contents for current workspace files.
 type Sources = (Vec<String>, HashMap<String, Vec<u8>>);
+/// Extracts ordered relative paths and a path-to-bytes lookup map from `current` files.
 #[inline]
 fn current_sources(current: Vec<File>) -> io::Result<Sources> {
     let mut order = Vec::with_capacity(current.len());

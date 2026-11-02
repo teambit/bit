@@ -74,6 +74,7 @@ fn owned_status_command(
     }
 }
 
+/// Validates and verifies a batch of read-set `proofs` within count and path-byte limits.
 #[inline]
 fn validate_read_set(proofs: &[dependency_graph::proof::Proof]) -> io::Result<(usize, Value)> {
     let mut bytes = 0_usize;

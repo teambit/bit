@@ -21,6 +21,7 @@ pub(super) struct Policy {
     #[serde(default)]
     cache: Vec<(String, bool)>,
 }
+/// Compiled `node-ignore` rule matcher with memoized path decisions and recorded cache deltas.
 pub(super) struct Matcher {
     rules: Arc<[(Regex, bool)]>,
     cache: HashMap<String, bool>,

@@ -46,6 +46,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((count, json!({"version":request.version.trim(),"files":files})))
 }
 
+/// Resolves `version` (`""`, `"latest"`, `"head"`, SHA-1, or tag) on `model` to a lowercase hex SHA-1.
 #[inline]
 fn reference(model: &Value, version: &str) -> io::Result<String> {
     let version = version.trim();

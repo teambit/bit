@@ -25,6 +25,7 @@ struct Component {
     dependencies: Vec<String>,
 }
 
+/// Adjacency map from versioned component identity to its direct dependency identities.
 type Graph = HashMap<String, Vec<String>>;
 
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {

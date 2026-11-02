@@ -31,6 +31,7 @@ struct Plan {
     workspace_root: bool,
     nested: bool,
 }
+/// Wire input for the first phase of a workspace or component inventory scan.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Begin {

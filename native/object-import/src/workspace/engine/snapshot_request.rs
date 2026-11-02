@@ -5,6 +5,8 @@ use serde_json::Value;
 use std::io;
 
 /// Dispatches stash and resolve snapshot callback `request` phases against `snapshots`.
+///
+/// Unhandled `request` variants fall through to [`dispatch_resolve`] and [`owned_command`].
 #[inline]
 pub(super) fn dispatch(
     request: Request,

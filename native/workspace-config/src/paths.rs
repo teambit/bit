@@ -35,6 +35,7 @@ fn home_dir() -> PathBuf {
         .unwrap_or_default()
 }
 
+/// Reads environment variable `key` as a non-empty, trimmed [`PathBuf`].
 #[inline]
 fn non_empty_env(key: &str) -> Option<PathBuf> {
     let val = env::var_os(key)?;

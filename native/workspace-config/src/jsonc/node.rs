@@ -19,7 +19,7 @@ pub struct Comment {
 /// entries, so a deleted and re-added property gets its comments back.
 pub type Comments = HashMap<String, Vec<Comment>>;
 
-/// A parsed JSONC value that keeps its comments.
+/// A parsed `JSONC` value that keeps its [`Comments`].
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
     Null,

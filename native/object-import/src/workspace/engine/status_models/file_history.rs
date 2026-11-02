@@ -47,6 +47,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((rows.len(), json!({"history":rows})))
 }
 
+/// Memoized `Version` and `Source` object cache with shared read budgets for file history traversal.
 struct Cache {
     versions: HashMap<String, Value>,
     sources: HashMap<String, String>,

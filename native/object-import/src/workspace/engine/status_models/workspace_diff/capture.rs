@@ -43,6 +43,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
     group_target_files(request, captured)
 }
 
+/// Groups flat `captured` [`File`] entries back into per-target vectors matching `request.targets`.
 #[inline]
 fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<Vec<File>>> {
     let mut captured = captured.into_iter();

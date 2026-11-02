@@ -41,6 +41,7 @@ impl Spool {
         offset.checked_add(size).ok_or_else(|| invalid("overlay spool overflow"))?;
         Ok(Self { path: PathBuf::from(path), offset, size, hash })
     }
+    /// Reads and SHA-1 verifies the spooled byte slice from disk.
     pub(super) fn read(&self) -> io::Result<Vec<u8>> {
         let metadata = fs::symlink_metadata(&self.path)?;
         if !metadata.is_file()

@@ -68,6 +68,7 @@ fn load_or_init_history(
     }
     Ok(history)
 }
+/// Populates missing ancestor `Version` edges for `head` into `history` when `stage` is enabled.
 fn populate(
     reader: &Reader<'_>,
     history: &mut Value,

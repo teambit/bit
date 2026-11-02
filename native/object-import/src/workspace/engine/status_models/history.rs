@@ -75,6 +75,7 @@ fn compare(
     distances(reader, model, &identity, [source, head, remote], stage)
 }
 
+/// Resolves the scoped `<scope>/<name>` identity for `model` against `targets`.
 #[inline]
 fn model_identity(model: &Value, targets: &HashMap<&str, &str>) -> io::Result<String> {
     model["name"].as_str().ok_or_else(|| invalid("status model name"))?;

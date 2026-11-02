@@ -47,6 +47,7 @@ impl Control {
                 .cloned(),
         }
     }
+    /// Applies `deleted` and `deprecated` flags to every log entry in `rows`.
     pub(super) fn apply(&self, rows: &mut [Value]) {
         let parsed_deprecated = self.deprecated
             .as_ref()

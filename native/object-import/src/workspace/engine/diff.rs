@@ -34,6 +34,7 @@ enum Input {
     Source { objects_directory: PathBuf, hash: String },
     Workspace { path: PathBuf, hash: String },
 }
+/// Preflighted left and right byte buffers and equality flag for a single file diff.
 struct Prepared {
     relative_path: String,
     left: Vec<u8>,

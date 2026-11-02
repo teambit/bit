@@ -39,6 +39,8 @@ pub fn merge_layers(global: &Value, scope: &Value, workspace: &Value) -> Map<Str
 }
 
 /// `toEnvVariableName` replaces periods only; hyphens remain significant.
+///
+/// Prefixes the uppercased key with `BIT_CONFIG_`.
 #[must_use]
 #[inline]
 pub fn environment_key(key: &str) -> String {

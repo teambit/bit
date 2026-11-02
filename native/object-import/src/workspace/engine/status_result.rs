@@ -40,6 +40,7 @@ struct Target {
     #[serde(default)]
     invalid: Option<Value>,
 }
+/// `.bitmap` flags (`local_only`, `soft_tagged`, `locally_removed`) for a workspace component.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct BitmapState {

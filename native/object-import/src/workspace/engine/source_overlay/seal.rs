@@ -54,6 +54,7 @@ fn capture_one(
     }
     Ok(proofs)
 }
+/// Reserves `size` bytes from the shared overlay capture budget `bytes`.
 #[inline]
 fn reserve(size: usize, bytes: &AtomicUsize) -> io::Result<()> {
     if bytes.fetch_add(size, Ordering::Relaxed).saturating_add(size) > 96 * 1024 * 1024 {

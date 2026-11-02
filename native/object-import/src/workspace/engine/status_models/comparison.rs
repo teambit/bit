@@ -55,6 +55,7 @@ pub(in crate::workspace::engine) fn read(
     compare_all(request, &snapshot, pool)
 }
 
+/// Compares all `request.targets` against their corresponding models and versions in `snapshot`.
 fn compare_all(
     request: &Request,
     snapshot: &super::Snapshot,

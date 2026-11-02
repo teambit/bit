@@ -43,6 +43,7 @@ fn newer(path: &Path, timestamp: f64) -> io::Result<bool> {
     };
     Ok(!milliseconds.is_finite() || milliseconds > timestamp)
 }
+/// Converts `time` to milliseconds using Node `fs.Stats`'s unfused floating-point arithmetic.
 #[inline]
 #[expect(clippy::suboptimal_flops, reason = "match Node Stats' unfused timestamp arithmetic")]
 fn milliseconds(time: Duration) -> f64 {

@@ -69,6 +69,7 @@ pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> i
     Ok(crate::validate::hexadecimal(&crate::merge_history::hash(resolved)?))
 }
 
+/// Reads `Version` objects for `references` in parallel, allowing missing non-`required` hashes.
 // The mutable Version body is read once per reference in this command.
 pub(super) fn read(
     reader: &Reader<'_>,

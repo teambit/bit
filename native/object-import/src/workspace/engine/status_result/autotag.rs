@@ -56,6 +56,7 @@ fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {
     }
     Ok(Value::Array(result))
 }
+/// Builds the `snapshotAutoTag` component row for `target`.
 #[inline]
 fn row(target: &Target) -> io::Result<Value> {
     let dependencies: Vec<_> = target.dependencies

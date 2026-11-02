@@ -25,6 +25,7 @@ struct Plan {
     history: Value,
     read_set: Vec<proof::Proof>,
 }
+/// Computes the SHA-1 object hash for `<component>:VersionHistory`.
 #[inline]
 pub(super) fn identity(component: &str) -> String {
     let mut hasher = Sha1::new();

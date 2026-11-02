@@ -28,7 +28,7 @@ pub fn parse(text: &str) -> io::Result<Value> {
     Ok(Document::parse(text)?.value())
 }
 
-/// A JSONC document that keeps its comments across edits.
+/// A `JSONC` document that keeps its [`Comment`] entries across edits.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Document {
     root: Node,

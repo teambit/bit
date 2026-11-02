@@ -31,7 +31,7 @@ pub(super) struct Request {
     dependencies: Vec<String>,
     home: Option<PathBuf>,
 }
-
+/// Resolves all module specifiers in `request` under a shared [`Budget`] and thread `pool`.
 pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     let mode = request.mode.trim();
     if !matches!(mode, "commonjs" | "typescript5.9") {

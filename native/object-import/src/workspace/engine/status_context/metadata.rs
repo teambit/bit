@@ -65,6 +65,7 @@ pub(super) fn component(
     Ok(target)
 }
 
+/// Returns `true` when `component["componentId"]` matches `target_identity` without version.
 fn component_id_matches(component: &Value, target_identity: &str) -> bool {
     let target_identity = target_identity.trim();
     let id = &component["componentId"];

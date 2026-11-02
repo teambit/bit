@@ -29,6 +29,7 @@ struct Parser {
     unassigned: Option<Vec<Comment>>,
 }
 
+/// Parses `text` into a [`Parsed`] `JSONC` AST with attached [`Comment`] lists.
 pub(super) fn parse(text: &str) -> io::Result<Parsed> {
     let tokens = tokenize(text)?;
     if tokens.is_empty() {

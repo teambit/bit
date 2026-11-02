@@ -50,6 +50,7 @@ fn process(comments: Option<&[Comment]>, deeper_gap: &str, display_block: bool) 
     output
 }
 
+/// Joins `one` and `two` with a newline and `gap` indentation, omitting empty sides.
 #[inline]
 fn join(one: &str, two: &str, gap: &str) -> String {
     match (one.is_empty(), two.is_empty()) {

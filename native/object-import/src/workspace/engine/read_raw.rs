@@ -25,6 +25,7 @@ struct Record {
 struct Data<'a> {
     files: &'a [Record],
 }
+/// Wire header line preceding the concatenated raw file bodies in a binary read response.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Response<'a> {

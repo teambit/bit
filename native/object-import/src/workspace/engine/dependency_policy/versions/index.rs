@@ -56,6 +56,7 @@ fn first(ids: &[String]) -> HashMap<&str, &str> {
     }
     index
 }
+/// Returns `true` when `ver` is a non-empty concrete version other than `"latest"` or `"head"`.
 #[inline]
 fn pinned_version(ver: &str) -> bool {
     !ver.is_empty() && !ver.eq_ignore_ascii_case("latest") && !ver.eq_ignore_ascii_case("head")
