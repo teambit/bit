@@ -49,7 +49,7 @@ pub(super) fn version(helper: &Helper, name: &str, reference: &str) -> Value {
     support::json(helper, &format!("cat-component {name}@{reference} --json"))
 }
 
-/// Runs `command` via [`history_oracle::compare`] for `reset` and asserts a zero exit status ([`Helper`], [`Run`], [`support`]).
+/// Runs `command` via [`history_oracle::compare`] for `reset` and asserts a zero exit status ([`Helper`], [`Run`], [`support`], [`workspace`]).
 pub(super) fn successful(helper: &Helper, command: &str) -> Run {
     // SnappingMain.reset ends with consumer.onDestroy('reset'); independently
     // observe the actual write rather than assuming second-resolution backups.

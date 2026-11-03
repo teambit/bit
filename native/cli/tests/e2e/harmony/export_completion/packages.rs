@@ -5,7 +5,7 @@
 use crate::helper::config;
 use std::{fs, path::Path};
 
-/// Compares generated `node_modules/@<scope>/<pkg>` directories for all tracked `.bitmap` components ([`compare_tree`]).
+/// Compares generated `node_modules/@<scope>/<pkg>` directories for all tracked `.bitmap` components ([`compare_tree`], [`config::read_jsonc`]).
 pub(super) fn compare(actual: &Path, expected: &Path) {
     let bitmap = config::read_jsonc(&expected.join(".bitmap"));
     for row in bitmap

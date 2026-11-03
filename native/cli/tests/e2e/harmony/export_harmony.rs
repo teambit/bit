@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, remote};
 
-/// Verifies that exporting after re-initializing the remote scope requires `--all-versions` for missing history ([`remote::publish`]).
+/// Verifies that exporting after re-initializing the remote scope requires `--all-versions` for missing history ([`remote::publish`], [`Helper`]).
 #[test]
 fn export_reinit_remote_scope_tag_and_export() {
     let helper = Helper::new();

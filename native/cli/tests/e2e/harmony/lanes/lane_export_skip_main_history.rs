@@ -7,7 +7,7 @@ fn scope_has_object(scope_path: &Path, hash: &str) -> bool {
     let out = Helper::cmd_in(scope_path, &format!("cat-object {hash}"));
     out.status.success() && !out.stdout.trim().is_empty()
 }
-/// Returns all version hashes recorded in `VersionHistory` for `comp_id` in `scope_path` ([`Helper`], [`Path`], [`parse`], [`scope_has_object`]).
+/// Returns all version hashes recorded in `VersionHistory` for `comp_id` in `scope_path` ([`Helper`], [`Path`], [`parse`], [`scope_has_object`], [`dangling_parents_in`]).
 fn vh_hashes(scope_path: &Path, comp_id: &str) -> Vec<String> {
     let out = Helper::cmd_in(scope_path, &format!("cat-version-history {comp_id} --json"));
     assert!(out.status.success(), "{out:?}");

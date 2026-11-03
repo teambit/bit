@@ -6,7 +6,7 @@ use crate::helper::config;
 use serde_json::Value;
 use std::{fs, io::Read, path::Path};
 
-/// Compares `.bit/objects`, `.bitmap`, and scope control files between `root` and `oracle`.
+/// Compares `.bit/objects` ([`objects`]), `.bitmap` ([`config::read_jsonc`]), and scope control files between `root` and `oracle`.
 pub(in crate::harmony) fn controls(root: &Path, oracle: &Path) {
     objects(&root.join(".bit"), &oracle.join(".bit"));
     last_export(root, oracle);

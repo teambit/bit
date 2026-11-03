@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Verifies forking a lane into another remote scope (`--fork-lane-new-scope`) and importing it cleanly ([`Helper`]).
+/// Verifies forking a lane into another remote scope (`--fork-lane-new-scope`) and importing it cleanly ([`Helper`], [`fork_lane_then_original_lane_progresses_and_squashed_to_main`]).
 #[test]
 fn fork_lane_and_export_to_another_scope_then_import() {
     let helper = Helper::new();

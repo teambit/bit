@@ -40,7 +40,7 @@ fn automatic_conflict_preserves_local_bytes_and_current_lane() {
     assert_eq!(support::bitmap(&helper), bitmap);
 }
 
-/// Verifies explicit `--auto-merge-resolve` strategies (`ours`, `theirs`, `manual`) preserve conflict materialization ([`fixture`], [`support`], [`automatic_conflict_preserves_local_bytes_and_current_lane`]).
+/// Verifies explicit `--auto-merge-resolve` strategies (`ours`, `theirs`, `manual`) preserve conflict materialization ([`fixture`], [`support`], [`automatic_conflict_preserves_local_bytes_and_current_lane`], [`Helper`]).
 #[test]
 fn explicit_merge_strategies_preserve_canonical_conflict_materialization() {
     for strategy in ["ours", "theirs", "manual"] {

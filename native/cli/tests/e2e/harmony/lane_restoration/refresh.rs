@@ -87,7 +87,7 @@ fn remove_local_entry(helper: &crate::helper::Helper, id: &str) {
     );
 }
 
-/// Returns the object hash of lane `dev` from `.bit/index.json` ([`remove_local_entry`], [`Value`], [`stale_file_remote`]).
+/// Returns the object hash of lane `dev` from `.bit/index.json` ([`remove_local_entry`], [`Value`], [`stale_file_remote`], [`Sha1`]).
 fn lane_hash(helper: &crate::helper::Helper) -> String {
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     let index: Value =

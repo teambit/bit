@@ -2,7 +2,7 @@
 //!
 //! Covers local and remote forking, `--no-link`, provenance tracking, and post-fork snapping.
 
-/// Post-fork pnpm package installation and compilation output parity tests.
+/// Post-fork pnpm package installation and compilation output parity tests alongside [`support`].
 pub(super) mod installation;
 
 pub(super) use support::{assert_origins, delay_copies, exported, ids, remote_workspace};

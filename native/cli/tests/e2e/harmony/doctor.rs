@@ -2,7 +2,7 @@
 //!
 //! Validates diagnosis listing, git executable checks, scope integrity, and archive saving against Node.js.
 
-/// Local HTTPS `CONNECT` proxy fixture for offline BVM version check tests.
+/// Local HTTPS `CONNECT` proxy fixture for offline BVM version check tests ([`proxy::Proxy`]).
 mod proxy;
 /// Canonical `.bit/index.json` recovery tests before `bit doctor` runs.
 mod recovery;

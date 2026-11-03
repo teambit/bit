@@ -70,7 +70,7 @@ fn pattern_with_an_explicit_target_preserves_the_released_validation_error() {
     assert!(!result.status.success());
     assert!(result.stderr.contains("target-component-name is not allowed when using patterns"));
 }
-/// Verifies `--refactor` on a remote component fails before any target component is tracked ([`compare`], [`support::remote_workspace`], [`support::ids`]).
+/// Verifies `--refactor` on a remote component fails before any target component is tracked ([`compare`], [`support::remote_workspace`], [`support::ids`], [`successful`]).
 #[test]
 fn remote_single_refactor_fails_before_any_component_is_tracked() {
     let helper = support::remote_workspace(1);

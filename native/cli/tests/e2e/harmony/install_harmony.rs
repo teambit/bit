@@ -45,7 +45,7 @@ fn status_shows_duplicate_component_and_package_issue() {
     helper.expect_status_to_have_issue("DuplicateComponentAndPackage");
 }
 
-/// Verifies `bit install` with legacy environments that lack `env.jsonc` with and without `--recurring-install` ([`Helper`], [`json`]).
+/// Verifies `bit install` with legacy environments that lack `env.jsonc` with and without `--recurring-install` ([`Helper`], [`json`], [`read_pkg_version`], [`read_ws_dep`]).
 /// Covers:
 /// - `e2e/harmony/install.e2e.ts:66`
 ///   install command › install with old envs in the workspace › without --recurring-install › should show a warning that the workspace has old env without env.jsonc so another install might be required

@@ -4,7 +4,7 @@
 
 use crate::commands::move_paths::support::{self, bitmap, compare};
 
-/// Verifies that `bit log-file` displays multi-version file history matching the Node CLI.
+/// Verifies that `bit log-file` displays multi-version file history matching the `Node.js` CLI via [`compare`] and [`support::workspace`].
 #[test]
 fn log_file_loads_multiple_versions_with_exact_published_cache() {
     let helper = support::workspace(1, true);

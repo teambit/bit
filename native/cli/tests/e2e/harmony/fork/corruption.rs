@@ -9,7 +9,7 @@ use crate::{
 };
 use std::{fs, path::PathBuf};
 
-/// Resolves the remote object store path of `comp1@0.0.1`'s `index.js` `Source` blob.
+/// Resolves the remote object store path of `comp1@0.0.1`'s `index.js` `Source` blob via [`setup`] and [`PathBuf`].
 fn source_object(helper: &Helper) -> PathBuf {
     let version: serde_json::Value =
         serde_json::from_str(&setup(helper, "cat-component comp1@0.0.1 --json")).unwrap();

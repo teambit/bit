@@ -6,7 +6,7 @@ use crate::helper::Helper;
 use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
 
-/// Creates a workspace with a tagged `bar/foo` component for scope index recovery tests.
+/// Creates a workspace with a tagged `bar/foo` component via [`Helper`] for [`compare_recovery`].
 fn fixture() -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

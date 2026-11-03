@@ -25,7 +25,7 @@ fn init_git_workspace_with_exported_components(
     helper.git(r#"commit -m "initial commit""#);
 }
 
-/// Verifies a Git worktree initializes a standalone `.bit` scope and supports `import`, `status`, and `list` ([`init_git_workspace_with_exported_components`], [`Helper`], [`parse`], [`KnownResult`], [`fs`]).
+/// Verifies a Git worktree initializes a standalone `.bit` scope and supports `import`, `status`, and `list` ([`init_git_workspace_with_exported_components`], [`Helper`], [`parse`], [`KnownResult`], [`fs`], [`Command`]).
 #[test]
 fn git_worktree_support_workflow() -> KnownResult<()> {
     let helper = Helper::new();

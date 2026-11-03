@@ -39,7 +39,7 @@ fn exporting_the_lane_and_importing_component() {
     assert!(bitmap_after["bar/foo"].get("onLanesOnly").is_none());
 }
 
-/// bit lane export operations › exporting a lane to a different scope than the component scope ([`FOO_FIXTURE`], [`Helper`], [`exporting_the_lane_and_importing_component`])
+/// bit lane export operations › exporting a lane to a different scope than the component scope ([`FOO_FIXTURE`], [`Helper`], [`exporting_the_lane_and_importing_component`], [`export_with_deleted_deps_tiny_cache_and_multiple_snaps`])
 /// bit lane export operations › tag on main, export, create lane and snap
 /// bit lane export operations › export on main then on a lane
 #[test]

@@ -65,7 +65,7 @@ mod parity_bugs {
         assert!(!comp2_source.contains("remote-head-change"), "{comp2_source}");
     }
 
-    /// bit checkout command when on a lane › checkout head on main when some components are not available on main › should make them available on main even without running bit-import before ([`FOO_FIXTURE`], [`Helper`], [`head_of_lane`])
+    /// bit checkout command when on a lane › checkout head on main when some components are not available on main › should make them available on main even without running bit-import before ([`FOO_FIXTURE`], [`Helper`], [`head_of_lane`], [`checkout_head_when_some_components_are_merge_pending`])
     #[test]
     #[ignore = "checkout head on main does not yet call makeLaneComponentsAvailableOnMain for inactive bitmap entries"]
     fn checkout_head_on_main_when_some_components_are_not_available_on_main() {

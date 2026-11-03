@@ -83,7 +83,7 @@ fn export_to_new_lane_and_delete_component() {
     assert_eq!(deleted_arr.len(), 2);
 }
 
-/// Verifies exporting to a new lane, snapping unmodified components, and removing the remote lane over HTTP ([`Helper`], [`export_to_new_lane_and_delete_component`]).
+/// Verifies exporting to a new lane, snapping unmodified components, and removing the remote lane over HTTP ([`Helper`], [`export_to_new_lane_and_delete_component`], [`http_export_log_import_remove_and_lane_list`]).
 #[test]
 fn export_to_new_lane_snap_export_and_remove_lane_on_remote() {
     let helper = Helper::new();

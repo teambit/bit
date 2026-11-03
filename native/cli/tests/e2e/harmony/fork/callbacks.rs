@@ -10,7 +10,7 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
-/// Creates an exported component workspace with a custom `env/fork` aspect recording `onLoad` and `onAdd` hooks.
+/// Creates an exported component workspace with a custom `env/fork` aspect recording `onLoad` and `onAdd` hooks via [`support::exported`] and [`config`].
 fn configured() -> Helper {
     let helper = support::exported(1);
     let source = include_str!("callbacks.cjs");

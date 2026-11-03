@@ -55,7 +55,7 @@ fn head_only_introduced_member_keeps_the_main_parent_as_a_lane_member() {
     fixture::unchanged(&files);
 }
 
-/// Verifies resetting a snapped lane deletion restores the component's `.bitmap` removal config ([`fixture`], [`support`], [`remote::publish`]).
+/// Verifies resetting a snapped lane deletion restores the component's `.bitmap` removal config ([`fixture`], [`support`], [`remote::publish`], [`selected_introduced_member_leaves_the_other_lane_member_and_main_versions_intact`]).
 #[test]
 fn resetting_a_snapped_lane_deletion_restores_the_exact_bitmap_removal_configuration() {
     let helper = fixture::workspace(2, true);

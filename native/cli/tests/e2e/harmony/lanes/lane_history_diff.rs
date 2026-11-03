@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Snap message of the intermediate snap removed by `bit reset --silent` ([`bit_reset_removes_the_lane_history_entry_of_the_reset_snap`]).
+/// Snap message of the intermediate snap removed by `bit reset --silent` ([`bit_reset_removes_the_lane_history_entry_of_the_reset_snap`], [`Helper`]).
 const RESET_SNAP_MSG: &str = "snap B";
 
 /// Verifies that `bit reset` removes the reset snap's `LaneHistory` entry and `lane history-diff` succeeds ([`RESET_SNAP_MSG`], [`Helper`], [`parse`]).

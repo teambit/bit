@@ -5,7 +5,7 @@
 use crate::commands::move_paths::support;
 use std::fs;
 
-/// Marker file recording how many times the configured aspect provider started during `bit lane import` ([`active_lane_import_with_configured_provider_matches_released_node`]).
+/// Marker file recording how many times the configured aspect provider started during `bit lane import` ([`active_lane_import_with_configured_provider_matches_released_node`], [`support`]).
 const STARTUP_MARKER_FILE: &str = "lane-import-provider-startups";
 
 /// Verifies that `bit lane import` on an active lane starts the configured aspect provider once like `Node.js` ([`STARTUP_MARKER_FILE`], [`support`], [`fs`]).

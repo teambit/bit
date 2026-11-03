@@ -69,7 +69,7 @@ fn remove_components_when_on_lane_and_export_after_removing() {
     helper.run(&format!("lane import {}/dev -x", helper.scopes.remote));
 }
 
-/// bit lane command › soft remove on lane ([`remove_flag_in_show`], [`FOO_FIXTURE`], [`Helper`], [`remove_components_when_on_lane_and_export_after_removing`])
+/// bit lane command › soft remove on lane ([`remove_flag_in_show`], [`FOO_FIXTURE`], [`Helper`], [`remove_components_when_on_lane_and_export_after_removing`], [`is_removed_in_show`])
 /// bit lane command › soft remove on lane-a, then re-creating the component on lane-b
 #[test]
 fn soft_remove_on_lane_merge_import_and_fork() {

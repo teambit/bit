@@ -2,7 +2,7 @@
 //!
 //! Verifies package generation, post-export hooks, lane classes, and JSON output parity.
 
-/// Local HTTP remote server fixture for `bit export` callback qualification.
+/// Local HTTP remote server fixture ([`remote::start`]) for `bit export` callback qualification.
 mod remote;
 
 use crate::helper::{Helper, config};
