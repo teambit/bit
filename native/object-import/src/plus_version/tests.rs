@@ -2,7 +2,7 @@
 
 use super::{is_plus, resolve};
 
-/// Verifies that [`is_plus`] and [`resolve`] handle `+`, `+^`, and `+~` placeholders across tags, snaps, prereleases, and `SemVer` ranges.
+/// Verifies that [`is_plus`] and [`resolve`] handle `+`, `+^`, and `+~` dependency version placeholders across tags, snaps, prereleases, and `SemVer` ranges.
 #[test]
 fn release_ranges_snap_versions_and_unresolved_placeholders() {
     for placeholder in ["+", "+^", "+~"] {

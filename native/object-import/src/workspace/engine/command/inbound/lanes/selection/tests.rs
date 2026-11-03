@@ -37,7 +37,7 @@ impl Drop for Scratch {
     }
 }
 
-/// Verifies that [`tracked_for_separator`] returns non-`main`/`master` remote lane refs in [`Scratch`] when `/` is the path separator.
+/// Verifies that [`tracked_for_separator`] returns non-`main`/`master` remote lane refs in [`Scratch`] when `/` is the path separator ([`SEQUENCE`]).
 #[test]
 fn implicit_lane_selection_matches_published_path_separator_glob_behavior() {
     let scratch = Scratch::new();

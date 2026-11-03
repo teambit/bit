@@ -69,7 +69,7 @@ fn compressed_spool_survives_helper_drop_and_archive_never_rereads_repository() 
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Verifies that `transferArchive` in `"fetch"` mode writes `.BIT.START` and `.BIT.END` markers with exact file counts.
+/// Verifies that `transferArchive` via [`apply`] in `"fetch"` mode on [`fixture`] writes `.BIT.START` and `.BIT.END` markers with exact file counts.
 #[test]
 fn fetch_archive_contains_exact_start_end_and_count() {
     let root = directory();

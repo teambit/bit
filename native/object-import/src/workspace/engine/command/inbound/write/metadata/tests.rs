@@ -1,6 +1,6 @@
 //! Unit tests for `.bitmap` live component ID ordering ([`live_order_preserves_existing_positions_and_appends_only_new_targets`]), metadata validation, and scope resolution in `bit-object-import`.
 //!
-//! Ensures live `.bitmap` ordering preserves existing component positions and appends new targets deterministically via [`json`].
+//! Ensures live `.bitmap` ordering preserves existing component positions, resolves scopes ([`live_order_resolves_authored_and_row_specific_default_scopes`]), and validates lane metadata ([`bitmap_metadata_accepts_both_string_and_object_lane_ids`]) via [`json`].
 
 use serde_json::json;
 

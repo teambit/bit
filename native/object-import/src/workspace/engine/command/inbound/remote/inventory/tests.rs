@@ -1,6 +1,6 @@
 //! Unit tests for remote file inventory metadata ([`file_component`], [`file_inventory_preserves_removed_deprecated_and_readme_metadata`]) and latest tag selection ([`latest_from_model`]) in `bit-object-import`.
 //!
-//! Verifies removed/deprecated flags, lane readme references, and orphaned tag fallback behavior via [`file_component`] and [`latest_from_model`].
+//! Verifies removed/deprecated flags, lane readme references, and orphaned tag fallback behavior via [`file_component`], [`latest_from_model`], and [`latest_version_prefers_last_matching_tag_then_orphaned_tag`].
 
 use super::{file_component, latest_from_model};
 use serde_json::json;

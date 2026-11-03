@@ -76,7 +76,7 @@ fn soft_tags_capture_lane_and_failure_is_terminal() {
     assert_eq!(terminal["directive"]["phase"], "softTag");
     assert!(state.receipt(failed).is_err());
 }
-/// Verifies that `deleteObjects` runs before `validateObjects` and replayed revision receipts are rejected.
+/// Verifies that `deleteObjects` runs before `validateObjects` in [`State`] and replayed revision [`receipt`] calls are rejected.
 #[test]
 fn deletion_precedes_validation_and_replayed_receipts_decline() {
     let mut state = State::default();

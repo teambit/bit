@@ -90,7 +90,7 @@ fn ordinary_apply_keeps_receipts_while_lane_optout_publishes_the_same_files() {
     );
 }
 
-/// Verifies that `omit_owned_write_receipts` is rejected for non-lane imports without consuming the retained [`State`] plan.
+/// Verifies that `omit_owned_write_receipts` on [`request`] is rejected for non-lane imports without consuming the [`Retained`] [`State`] plan.
 #[test]
 fn lane_receipt_optout_rejects_other_plans_without_consuming_them() {
     let fixture = PublicationFixture::new();

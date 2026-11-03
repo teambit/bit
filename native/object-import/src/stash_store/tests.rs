@@ -72,7 +72,7 @@ fn symbolic_metadata_is_rejected_without_touching_its_target() {
     assert_eq!(fs::read(scope.join("target")).unwrap(), b"{}");
     fs::remove_dir_all(scope).unwrap();
 }
-/// Verifies that [`PreparedSave::prepare`] enforces the 4,096-entry stash directory budget even when stash files are empty.
+/// Verifies that [`PreparedSave::prepare`] enforces the 4,096-entry stash directory budget in [`scope`] even when stash files are empty.
 #[test]
 fn empty_files_cannot_bypass_the_metadata_entry_budget() {
     let scope = scope();

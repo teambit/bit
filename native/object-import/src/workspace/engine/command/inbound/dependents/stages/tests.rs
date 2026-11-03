@@ -5,7 +5,7 @@
 use super::current_dependencies;
 use serde_json::json;
 
-/// Verifies that [`current_dependencies`] prefers `resolvedDependencies` over legacy `dependencies`/`devDependencies` arrays and rejects non-array `resolvedDependencies`.
+/// Verifies that [`current_dependencies`] prefers `resolvedDependencies` over legacy `dependencies`/`devDependencies` (`DependenciesData`) arrays and rejects non-array `resolvedDependencies`.
 #[test]
 fn resolved_class_dependencies_override_empty_legacy_metadata_and_explicit_empty_is_authoritative()
 {

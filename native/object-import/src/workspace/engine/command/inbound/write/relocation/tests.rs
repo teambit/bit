@@ -1,6 +1,6 @@
 //! Unit tests for inbound component destination collision avoidance ([`prepare`], [`owner_destination_is_retained_and_rejects_a_later_filesystem_change`]), relocation, and retained directory validation in `bit-object-import`.
 //!
-//! Confirms that owner-prefixed directories avoid tracked collisions and detect concurrent filesystem edits.
+//! Confirms that owner-prefixed directories avoid tracked collisions ([`occupied_or_nested_owner_destinations_preserve_the_original_conflict`], [`occupied_candidates_are_preserved_and_the_empty_target_is_retained`]) and detect concurrent filesystem edits.
 
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};

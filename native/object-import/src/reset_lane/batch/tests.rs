@@ -19,7 +19,7 @@ fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
     fs::write(path, outbound::encode_object(hash, kind, value).expect("encode")).expect("object");
 }
 
-/// Verifies that [`Batch`] publishes two lane component resets atomically and validates external dependents.
+/// Verifies that [`Batch`] publishes two lane component resets atomically via [`object`] and validates external dependents.
 #[test]
 fn publishes_two_lane_resets_once_and_checks_external_dependents() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

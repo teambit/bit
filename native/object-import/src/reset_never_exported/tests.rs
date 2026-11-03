@@ -10,7 +10,7 @@ use std::{
 /// Monotonic sequence counter for unique [`Plan`] never-exported reset test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
-/// Verifies that [`Plan::prepare`] and [`Plan::commit`] clear only unexported `.bitmap` versions and reject stale `.bitmap` files.
+/// Verifies that [`Plan::prepare`] and [`Plan::commit`] clear only unexported `.bitmap` (`BitMap`) versions and reject stale `.bitmap` files.
 #[test]
 fn clears_only_unexported_bitmap_versions_and_rejects_a_stale_plan() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

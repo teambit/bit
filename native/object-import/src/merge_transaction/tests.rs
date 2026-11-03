@@ -43,7 +43,7 @@ fn empty_apply_skips_serial_and_terminal_owner_lives_until_finish() {
     apply("mergeTransactionFinish", json!({"token":token}), &mut state).expect("finish");
     assert!(state.journal.verify_retained(token, 0).is_err());
 }
-/// Verifies that finishing a parent merge transaction retires both completed and incomplete child transactions.
+/// Verifies that finishing a parent merge transaction via [`begin`] and [`apply`] retires both completed and incomplete child transactions.
 #[test]
 fn finishing_parent_retires_completed_and_incomplete_children() {
     let mut state = State::default();

@@ -18,7 +18,7 @@ fn custom_scope_and_late_metadata_changes_are_rejected_before_file_delete() {
     assert!(ScopeGuard::prepare(root.path()).is_err());
 }
 
-/// Verifies that [`ScopeGuard::prepare`] accepts `JSONC` comments in `scope.json` and `super::component_row` matches string IDs.
+/// Verifies that [`ScopeGuard::prepare`] accepts `JSONC` comments in `scope.json` (`ScopeJson`) and `super::component_row` matches string IDs.
 #[test]
 fn scope_guard_accepts_jsonc_and_component_row_matches_string_ids() {
     let root = tempfile::tempdir().unwrap();

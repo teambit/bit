@@ -1,6 +1,6 @@
 //! Unit tests for lane addition destination [`directory`] placeholders ([`destination_matches_canonical_scope_owner_placeholders`], [`prospective_metadata_only_includes_genuinely_new_consumers`]) and prospective metadata in `bit-object-import`.
 //!
-//! Validates `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholder expansion across default and custom templates.
+//! Validates `{scopeId}`, `{owner}`, `{scope}`, and `{name}` placeholder expansion across default and custom templates ([`inactive_default_scope_root_is_not_a_collision_with_itself`], [`workspace_default_scope_keeps_an_inactive_destination_out_of_collision_resolution`]).
 
 use super::{directory, json};
 

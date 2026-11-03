@@ -1,6 +1,6 @@
 //! Unit tests for parallel merge snapshot source [`capture`], [`digest`], [`rekey`], and [`Budget`] enforcement ([`parallel_sources_preserve_order_hashes_and_share_one_allocation_budget`], [`pending_root_replacement_keeps_reachable_historical_root_distinct`]).
 //!
-//! Verifies deterministic parallel source hashing via [`capture`] and [`digest`], [`PENDING_GRAPH_VERSION`] [`rekey`] handling, and shared [`Budget`] limits.
+//! Verifies deterministic parallel source hashing via [`capture`] and [`digest`], [`PENDING_GRAPH_VERSION`] [`rekey`] handling, [`dependencies_graph_is_stored_as_a_source_the_version_refers_to`], and shared [`Budget`] limits.
 
 use super::{super::PENDING_GRAPH_VERSION, Budget, capture, digest, rekey};
 use rayon::ThreadPoolBuilder;

@@ -84,7 +84,7 @@ impl Fixture {
     }
 }
 
-/// Verifies that [`Repository::load_staged`] loads a lane component even when its row has been removed from `.bitmap`.
+/// Verifies that [`Repository::load_staged`] loads a lane component from [`Fixture`] even when its row has been removed from `.bitmap`.
 #[test]
 fn staged_repository_load_does_not_require_a_visible_bitmap_row() {
     let fixture = Fixture::new();

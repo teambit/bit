@@ -1,6 +1,6 @@
 //! Unit tests for lane history phase [`selection`] ([`restore_partition_counts_inactive_bitmap_members_and_preserves_history_order`], [`checkout_retains_exact_cross_scope_versions_and_rejects_duplicate_membership`]) and selected history proofs in `bit-object-import`.
 //!
-//! Checks restore/checkout phase partitioning, cross-scope versions, and duplicate detection in lane history items.
+//! Checks restore/checkout phase partitioning, cross-scope versions, duplicate detection, and retained proofs ([`selected_history_proof_is_propagated_and_rejects_later_content_changes`], [`bitmap_acknowledgment_requires_retained_preimage_and_actual_written_bytes`]).
 
 use super::selection;
 use serde_json::json;

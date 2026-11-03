@@ -87,7 +87,7 @@ fn oversized_worker_share_retries_without_duplicate_receipts() {
         32,
     );
 }
-/// Verifies that failed or oversized parallel `Source` reads leave no private snapshot spool files on disk.
+/// Verifies that failed or oversized parallel `Source` reads on [`target`] leave no private snapshot spool files on disk.
 #[test]
 fn failed_parallel_source_reads_leave_no_private_snapshots() {
     let pool = rayon::ThreadPoolBuilder::new()

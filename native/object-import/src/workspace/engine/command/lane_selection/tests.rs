@@ -1,6 +1,6 @@
 //! Unit tests for lane pattern index mapping ([`indices_for_ids`]) and squash version selection ([`versions_to_check`], [`pattern_receipt_preserves_order_and_rejects_duplicates_or_unknown_ids`]) in `bit-object-import`.
 //!
-//! Confirms pattern receipt ordering, duplicate rejection, and head-only squash ancestry checks via [`indices_for_ids`] and [`versions_to_check`].
+//! Confirms pattern receipt ordering, duplicate rejection, and head-only squash ancestry checks ([`squash_only_checks_head_and_excluded_status_does_not_import_ancestry`]) via [`indices_for_ids`] and [`versions_to_check`].
 
 use super::{indices_for_ids, json, versions_to_check};
 

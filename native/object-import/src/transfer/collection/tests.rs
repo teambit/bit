@@ -84,7 +84,7 @@ fn missing_local_artifacts_strict_and_old_artifacts_optional() {
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Verifies that [`prepare`] and [`select`] fail without creating an archive when a required `Source` is missing or cached `References` are stale.
+/// Verifies that [`prepare`] and [`select`] fail without creating an archive when a required `Source` ([`source`]) is missing or cached `References` are stale.
 #[test]
 fn stale_cached_refs_or_missing_required_source_never_creates_archive() {
     let root = directory();

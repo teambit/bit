@@ -1,6 +1,6 @@
 //! Unit tests for [`Prepared`] pending `node_modules` package manifest plans ([`prepared`], [`canonical_package_metadata_changes_remain_pending_until_native_commit`]) and commit in `bit-object-import`.
 //!
-//! Verifies that package manifest updates in [`Directory`] fixtures remain staged in memory until final commit.
+//! Verifies that package manifest updates ([`package_receipts_bind_owned_paths_but_allow_canonical_callback_metadata_overrides`], [`post_transform_snap_versions_use_node_package_semver_prefix`]) in [`Directory`] fixtures remain staged in memory until final commit.
 
 use super::super::Prepared;
 use crate::workspace::engine::command::scratch::Directory;

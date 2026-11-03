@@ -1,6 +1,6 @@
 //! Unit tests for `--write-deps` [`workspace`] policy `JSONC` serialization and preimages ([`workspace_policy_reorders_entries_preserves_comments_and_serializes_runtime_defaults`], [`unchanged_workspace_dependency_write_still_records_the_complete_preimage`]) in `bit-object-import`.
 //!
-//! Verifies sorted dependency [`Value`] entries, comment preservation, and runtime resolver defaults in `workspace.jsonc`.
+//! Verifies sorted dependency [`Value`] entries, comment preservation, and runtime resolver defaults in `workspace.jsonc` via [`workspace`] and [`json`].
 
 use super::workspace;
 use serde_json::{Value, json};

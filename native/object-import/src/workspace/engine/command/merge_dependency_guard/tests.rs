@@ -1,6 +1,6 @@
 //! Unit tests for merge dependency import [`compare`] verification, [`Source`], and stale capture [`proof`] rejection ([`Fixture`], [`NEXT`], [`retained_fast_forward_sources_preserve_imports_and_detect_stale_capture`]).
 //!
-//! Ensures retained fast-forward sources preserve import specifiers, respect [`Budget`] and [`Comparison`] rules, and detect concurrent file edits.
+//! Ensures retained fast-forward sources preserve import specifiers ([`source_edits_keep_imports_but_new_or_removed_imports_decline`]), respect [`Budget`] and [`Comparison`] rules, and detect concurrent file edits.
 
 use super::{Budget, Comparison, Source, compare, proof};
 use std::{

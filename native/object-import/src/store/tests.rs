@@ -86,7 +86,7 @@ fn failed_writes_are_not_marked_complete_and_failed_renames_clean_temporary_file
     );
 }
 
-/// Verifies that [`Store::new`] and [`Store::write`] reject relative roots and non-hexadecimal or path-traversal object hashes.
+/// Verifies that [`Store::new`] and [`Store::write`] reject relative roots and non-hexadecimal or path-traversal object hashes in [`Directory`].
 #[test]
 fn invalid_paths_and_identities_cannot_escape_object_directory() {
     let directory = Directory::new();

@@ -1,6 +1,6 @@
 //! Unit tests for component merge [`Input`] and [`State`] action selection and divergent status decisions.
 //!
-//! Checks fast-forward, three-way merge, and unrelated history resolution options in `bit-object-import`.
+//! Checks fast-forward, three-way merge, and unrelated history resolution options via [`select`] and [`select_options`] ([`divergent_and_fast_forward_decisions_use_canonical_status_kernel`]) in `bit-object-import`.
 
 use super::{Input, State};
 use serde_json::{Value, json};

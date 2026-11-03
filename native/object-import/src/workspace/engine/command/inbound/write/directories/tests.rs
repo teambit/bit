@@ -1,6 +1,6 @@
 //! Unit tests for default component directory template resolution via [`default_directory`] ([`absent_template_uses_the_legacy_consumer_default_without_harmony`]) in `bit-object-import`.
 //!
-//! Checks legacy consumer default directories and custom `defaultDirectory` templates in `workspace.jsonc` via [`default_directory`].
+//! Checks legacy consumer default directories (`components/{name}`) and custom `defaultDirectory` templates in `workspace.jsonc` via [`default_directory`].
 
 use super::default_directory;
 use std::fs;

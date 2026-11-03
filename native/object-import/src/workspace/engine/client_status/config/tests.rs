@@ -49,7 +49,7 @@ fn declines_settings_that_change_what_harmony_does() {
     }
 }
 
-/// Verifies that [`extensions`] accepts read-inert `teambit.dependencies/dependency-resolver` installation settings without declining cold status.
+/// Verifies that [`extensions`] accepts read-inert `teambit.dependencies/dependency-resolver` (`WorkspaceConfig`) installation settings without declining cold status.
 #[test]
 fn accepts_read_inert_resolver_options() {
     assert!(
