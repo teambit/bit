@@ -77,7 +77,7 @@ fn parallel(
     }
     Ok(files)
 }
-/// Read `batch` in parallel from `directory` under shared raw and compressed [`MAX_BYTES`] budgets.
+/// Read [`wire::Manifest`] `batch` in parallel from `directory` under shared raw and compressed [`MAX_BYTES`] [`Budget`]s.
 #[inline]
 fn read_batch(
     directory: &Path,

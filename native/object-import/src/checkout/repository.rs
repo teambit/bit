@@ -78,7 +78,7 @@ pub(crate) fn read_source_shared(
     source_contents(compressed, object, hash, MAX_BYTES)
 }
 
-/// Validate the `<type> <hash> <size>\0` header and SHA-1 digest of `object` and return a [`SourceRecord`].
+/// Validate the `<type> <hash> <size>\0` header and [`Sha1`] digest of `object` and return a [`SourceRecord`].
 #[inline]
 fn source_contents(
     compressed: Vec<u8>,

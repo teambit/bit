@@ -17,7 +17,7 @@ pub(super) fn is_hash(version: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
-/// `snapToSemver`: a snap hash becomes `0.0.0-<hash>`.
+/// `snapToSemver`: a snap hash ([`is_hash`]) becomes `0.0.0-<hash>`.
 #[inline]
 pub(super) fn snap_to_semver(version: &str) -> String {
     let trimmed = version.trim();

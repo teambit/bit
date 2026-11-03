@@ -17,7 +17,7 @@ use crate::{
 };
 use serde_json::Value;
 
-/// Return the resolved version of a non-hidden dependency named `name` (`findByPkgNameOrCompId`) in [`ComponentDependencies`].
+/// Return the resolved version of a non-hidden dependency named `name` (`findByPkgNameOrCompId`) in [`ComponentDependencies`] via [`dependency_list`].
 #[inline]
 fn found_version(deps: &ComponentDependencies, name: &str) -> Option<String> {
     let name = name.trim();

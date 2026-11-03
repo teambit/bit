@@ -66,7 +66,7 @@ fn envs_of(components: &[WorkspaceComponent]) -> HashSet<&str> {
         .collect()
 }
 
-/// The extensions that are envs of components, in order, and the other extensions.
+/// The extensions that are envs of components, in order, and the other extensions (matched with [`split_version`]).
 fn split_envs<'a>(
     envs_of_components: &HashSet<&str>,
     extensions: &'a [String],

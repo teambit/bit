@@ -85,7 +85,7 @@ pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String,
     manifest
 }
 
-/// Look up the [`DEPENDENCY_RESOLVER`] (`teambit.dependencies/dependency-resolver`) aspect [`Value`] on `component.config`.
+/// Look up the [`DEPENDENCY_RESOLVER`] (`teambit.dependencies/dependency-resolver`) aspect [`Value`] on [`WorkspaceComponent`] `component.config`.
 #[inline]
 fn component_resolver_config(component: &WorkspaceComponent) -> Option<&Value> {
     if component.config.is_empty() {

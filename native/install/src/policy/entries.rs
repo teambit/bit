@@ -53,7 +53,7 @@ pub fn merge(policies: Vec<Vec<PolicyEntry>>) -> Vec<PolicyEntry> {
     uniq(all)
 }
 
-/// `uniqWith` on `(name, lifecycle)`: the first entry wins.
+/// `uniqWith` on `(name, lifecycle)`: the first [`PolicyEntry`] wins.
 #[must_use]
 pub fn uniq(entries: Vec<PolicyEntry>) -> Vec<PolicyEntry> {
     let mut result: Vec<PolicyEntry> = Vec::with_capacity(entries.len());

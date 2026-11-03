@@ -35,7 +35,7 @@ fn staged(model: &Value) -> bool {
                 .any(|version| version["local"] == true)
         })
 }
-/// Retain the local `Component`, `Version`, and `Source` objects for `target` in the import overlay.
+/// Retain the local `Component`, `Version`, and `Source` objects ([`transfer::retain_sources`]) for [`Target`] `target` in the import overlay.
 fn retain_version(
     plan: &mut PreparedImport,
     target: &Target,

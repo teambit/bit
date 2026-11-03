@@ -45,7 +45,7 @@ struct Record {
     current: CurrentState,
 }
 impl State {
-    /// Start a new component version selection session from [`Value`] `input` ([`Begin`]) and return its initial directive.
+    /// Start a new component version selection session from [`Value`] `input` ([`Begin`], validated via [`validate`]) and return its initial directive.
     pub(super) fn begin(&mut self, input: &Value) -> io::Result<Value> {
         let request: Begin = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         validate(&request)?;

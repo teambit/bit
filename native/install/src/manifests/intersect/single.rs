@@ -76,7 +76,7 @@ fn merge_bound(left: &Comparator, right: &Comparator, end: End) -> Option<Compar
     Some(if wider { left.clone() } else { right.clone() })
 }
 
-/// A prerelease bound only merges with a bound of the same `M.m.p` or one it widens.
+/// A prerelease [`SemVer`] bound only merges with a bound of the same `M.m.p` or one it widens at [`End`] `end`.
 #[inline]
 fn merge_blocked(left: &SemVer, right: &SemVer, end: End) -> bool {
     let main = left.compare_main(right);

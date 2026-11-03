@@ -31,7 +31,7 @@ pub struct AspectEntry {
 }
 
 impl AspectEntry {
-    /// The id `mergeConfigs` compares, ignoring versions.
+    /// The id `mergeConfigs` compares via [`aspect_id_without_version`], ignoring versions.
     #[inline]
     fn merge_key(&self) -> (bool, &str) {
         (self.core, aspect_id_without_version(&self.id))

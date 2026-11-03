@@ -42,7 +42,7 @@ impl State {
         }
         self.sources.get(&(canonical_dir(directory), hash))
     }
-    /// Insert `body` for `(directory, hash)` into the cache, clearing all entries if byte or count budgets are exceeded.
+    /// Insert `body` for `(directory, hash)` into the cache, clearing all entries if [`MAX_BYTES`], [`MAX_KEY_BYTES`], or [`MAX_ENTRIES`] budgets are exceeded.
     #[inline]
     pub(crate) fn insert(&mut self, directory: &Path, hash: [u8; 20], body: Vec<u8>) {
         let dir = canonical_dir(directory);

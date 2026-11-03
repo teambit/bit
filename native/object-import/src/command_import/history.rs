@@ -84,7 +84,7 @@ fn model_scope_and_name(model: &Value) -> io::Result<(&str, &str)> {
         .ok_or_else(|| invalid("history name"))?;
     Ok((scope, name))
 }
-/// Verify and append newly populated ancestor version rows from `result` into `history["versions"]`.
+/// Verify and append newly populated ancestor version rows from [`Value`] `result` into `history["versions"]` in [`Capture`].
 fn append(
     capture: &mut Capture,
     directory: &Path,

@@ -29,7 +29,7 @@ fn keep_in_components(
     }
 }
 
-/// Insert `name` at `version` into `field` of the root manifest in `deduped`.
+/// Insert `name` at `version` into [`Field`] `field` of the root manifest in [`Deduped`] `deduped`.
 #[inline]
 fn set_root(deduped: &mut Deduped, field: Field, name: &str, version: &str) {
     deduped.root.get_mut(field).insert(name.to_string(), version.to_string());

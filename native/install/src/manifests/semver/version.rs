@@ -25,7 +25,7 @@ pub(crate) struct SemVer {
 }
 
 impl SemVer {
-    /// `new SemVer(version)`: throws (`Err`) on an invalid version.
+    /// `new SemVer(version)`: throws (`Err`) on an invalid version or length exceeding [`MAX_LENGTH`].
     pub(crate) fn parse(version: &str) -> io::Result<Self> {
         let trimmed = version.trim();
         if trimmed.len() > MAX_LENGTH {

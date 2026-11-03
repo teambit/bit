@@ -86,7 +86,7 @@ pub(super) fn dependency_list(deps: &ComponentDependencies) -> Vec<Dep<'_>> {
         .collect()
 }
 
-/// `dependencyList.toDependenciesManifest()`.
+/// `dependencyList.toDependenciesManifest()` converting [`Dep`] items into a [`DepsObject`].
 pub(super) fn to_deps_object(list: &[Dep<'_>]) -> DepsObject {
     let mut object = DepsObject::default();
     for dep in list {

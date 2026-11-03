@@ -74,7 +74,7 @@ pub struct LaneFlags {
 }
 
 impl BitmapEntry {
-    /// `isRemoved()`: soft-removed with `bit remove`.
+    /// `isRemoved()`: soft-removed with `bit remove` via [`REMOVE_ASPECT`].
     #[must_use]
     pub fn is_removed(&self) -> bool {
         let Some(remove) = self.config

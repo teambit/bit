@@ -55,7 +55,7 @@ impl Capture {
         }
     }
 
-    /// Register a pre-fetched virtual file at `path` within [`MAX_RECORDS`] and [`MAX_BYTES`] budgets.
+    /// Register a pre-fetched virtual file at [`PathBuf`] `path` within [`MAX_RECORDS`] and [`MAX_BYTES`] budgets.
     #[inline]
     pub(super) fn virtual_file(&mut self, path: PathBuf, bytes: Vec<u8>) -> io::Result<()> {
         if self.virtual_files.len() >= MAX_RECORDS

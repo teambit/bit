@@ -21,7 +21,7 @@ pub(crate) struct Comparator {
 }
 
 impl Comparator {
-    /// Parse a single `<op><version>` comparator string (`new Comparator(comp)`).
+    /// Parse a single `<op><version>` comparator string (`new Comparator(comp)`) using [`Token::Comparator`].
     pub(crate) fn parse(comp: &str) -> io::Result<Self> {
         let comp = collapse_whitespace(comp);
         let found = re(Token::Comparator)

@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
-    /// Refresh and merge the remote `LaneHistory` object for [`Id`] into the [`PreparedImport`] overlay.
+    /// Refresh and merge the remote `LaneHistory` object for [`Id`] and [`Record`] into the [`PreparedImport`] overlay.
     pub(crate) fn refresh_lane_history(
         &mut self,
         local: &Record,

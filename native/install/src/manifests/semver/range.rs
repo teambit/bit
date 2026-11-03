@@ -50,7 +50,7 @@ fn replace_gte0(comp: &str) -> String {
     re(Token::Gte0).replace(comp, "")
 }
 
-/// Parse a single `||`-delimited range clause into a deduplicated [`Comparator`] list according to `flavor`.
+/// Parse a single `||`-delimited range clause into a deduplicated [`Comparator`] list according to [`Flavor`] `flavor`.
 fn parse_part(range: &str, flavor: Flavor) -> io::Result<Vec<Comparator>> {
     let comparators = comparator_strings(range, flavor)
         .iter()

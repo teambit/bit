@@ -58,7 +58,7 @@ pub(super) fn policy_manifest(policy: &[PolicyEntry]) -> DepsObject {
     object
 }
 
-/// `indexByDepId`: group component dependencies by package name and attach preserved workspace policy versions.
+/// `indexByDepId`: group component [`DepsObject`] dependencies by package name into [`IndexEntry`] values and attach preserved [`PolicyEntry`] versions.
 fn index_by_dep_id(
     policy: &[PolicyEntry],
     components: &IndexMap<String, DepsObject>,

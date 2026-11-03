@@ -9,7 +9,7 @@ use super::{Entry, Id, PreparedImport, Record, invalid, text};
 use serde_json::{Value, json};
 use std::{fs, io, path::PathBuf};
 
-/// Staged `scope.json` lane tracking update with pre-write and post-write byte proofs.
+/// Staged `scope.json` lane tracking update with pre-write and post-write byte proofs ([`PathBuf`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SwitchTracking {
     /// Absolute path to the workspace scope's `scope.json`.

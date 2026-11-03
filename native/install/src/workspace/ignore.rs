@@ -77,7 +77,7 @@ impl Ignore {
             .collect()
     }
 
-    /// Return `true` when `path` is excluded by this [`Ignore`] rule set.
+    /// Return `true` when `path` is excluded (`!self.keep(path)`) by this [`Ignore`] rule set.
     #[inline]
     pub fn ignores(&mut self, path: &str) -> bool {
         !self.keep(path)

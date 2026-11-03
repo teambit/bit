@@ -86,7 +86,7 @@ fn retain_field(
     Ok(())
 }
 
-/// Determine which `base` manifest files must be loaded because `current` and `request.target` differ.
+/// Determine which [`wire::Version`] `base` manifest files must be loaded because [`current::Loaded`] `current` and `request.target` differ.
 #[inline]
 fn required_base(
     request: &wire::Prepare,

@@ -37,7 +37,7 @@ impl PreparedImport {
         self.publish_imported_lane(id, &Record { hash, value, is_new: false })?;
         self.validate()
     }
-    /// Fetch lane objects for both lane heads ([`Id`]) and distinct tracked workspace [`Target`] versions.
+    /// Fetch lane objects for both lane heads ([`Id`], [`Record`]) and distinct tracked workspace [`Target`] versions.
     pub(crate) fn prepare_fetch_lane(
         &mut self,
         root: &Path,

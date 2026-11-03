@@ -17,7 +17,7 @@ use std::io;
 struct Multi(Vec<Single>);
 
 impl Multi {
-    /// Convert a parsed [`Range`] into a normalized [`Multi`] union of [`Single`] intervals.
+    /// Convert a parsed [`Range`] into a normalized [`Multi`] union of [`Single`] intervals via [`create_single`] and [`normalize`].
     #[inline]
     fn from_range(range: &Range) -> io::Result<Self> {
         let singles = range.set

@@ -90,7 +90,7 @@ pub(crate) fn auto(bytes: Vec<u8>) -> Vec<u8> {
     normalize(bytes, cfg!(windows))
 }
 
-/// Normalize text line endings in `bytes` to `CRLF` when `windows` is `true` or `LF` otherwise, leaving binary buffers untouched.
+/// Normalize text line endings in `bytes` to `CRLF` when `windows` is `true` or `LF` otherwise, leaving [`binary`] buffers untouched.
 #[inline]
 pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
     if bytes.is_empty()

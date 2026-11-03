@@ -60,7 +60,7 @@ impl ModelData {
             == Some("aspect")
     }
 
-    /// `hasEnvManifest`: the Version ships an `env.jsonc` or `env.json`.
+    /// `hasEnvManifest`: the `Version` ships an `env.jsonc` or `env.json` in `self.files`.
     #[must_use]
     #[inline]
     pub fn has_env_manifest(&self) -> bool {

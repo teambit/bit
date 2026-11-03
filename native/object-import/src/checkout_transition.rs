@@ -44,7 +44,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         _ => Err(invalid("unsupported checkout transition operation")),
     }
 }
-/// Prepare a checkout plan in `state` using retained workspace `snapshots`.
+/// Prepare a checkout plan in [`State`] `state` using retained workspace `snapshots` via [`prepare::prepare`].
 #[inline]
 pub(crate) fn prepare_with_workspace(
     input: &Value,

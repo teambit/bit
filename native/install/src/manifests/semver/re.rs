@@ -40,7 +40,7 @@ fn main_version(numeric: &str) -> String {
     format!(r"({numeric})\.({numeric})\.({numeric})")
 }
 
-/// Format the `(?:-({id}(?:\.{id})*))` strict prerelease regex fragment.
+/// Format the `(?:-({id}(?:\.{id})*))` strict prerelease regex fragment using [`NUMERIC`] and [`NON_NUMERIC`].
 #[inline]
 fn prerelease() -> String {
     let id = format!("(?:{NUMERIC}|{NON_NUMERIC})");

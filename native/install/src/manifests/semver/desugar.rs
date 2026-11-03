@@ -70,7 +70,7 @@ impl<'a> Parts<'a> {
     }
 }
 
-/// Expand a parsed caret range (`^M.m.p`) in [`Parts`] `parts` into explicit `>=` and `<` bounds using `suffix`.
+/// Expand a parsed caret range (`^M.m.p`) in [`Parts`] `parts` into explicit `>=` and `<` bounds using `suffix` ([`is_x`], [`next`]).
 fn caret(parts: &Parts<'_>, suffix: &str) -> String {
     let (major, minor) = (parts.major, parts.minor.unwrap_or_default());
     if is_x(Some(major)) {

@@ -30,7 +30,7 @@ const MAX_BYTES: usize = 32 * 1024 * 1024;
 /// Maximum destination path byte length (`32 KiB`) accepted in a checkout batch.
 const MAX_PATH: usize = 32_768;
 
-/// Single file checkout entry pairing a 20-byte `Source` SHA-1 hash with its workspace destination.
+/// Single file checkout entry pairing a 20-byte `Source` SHA-1 hash with its workspace destination [`PathBuf`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Input {
     /// Raw 20-byte SHA-1 digest of the `Source` object.

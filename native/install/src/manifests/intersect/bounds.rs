@@ -23,7 +23,7 @@ fn is_prerelease(comparator: &Comparator) -> bool {
         .is_some_and(|semver| !semver.prerelease.is_empty())
 }
 
-/// `stripSemVerPrerelease`: `M.m.p` of the comparator's version.
+/// `stripSemVerPrerelease`: `M.m.p` of the [`Comparator`]'s [`SemVer`] version.
 #[inline]
 fn strip_prerelease(comparator: &Comparator) -> String {
     comparator.semver

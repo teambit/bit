@@ -46,7 +46,7 @@ fn read(
         inflated: source.inflated_size,
     }))
 }
-/// Read uncached `Source` [`Record`]s for `request` in parallel on `pool` under shared [`MAX_BYTES`] budgets.
+/// Read uncached `Source` [`Record`]s for [`Request`] `request` in parallel on `pool` under shared [`MAX_BYTES`] [`Budget`]s.
 fn records(
     request: &Request,
     state: &cache::State,

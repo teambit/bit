@@ -39,7 +39,7 @@ pub(super) struct Current {
     pub(super) shares_buffer: bool,
     pub(super) raw_hash: String,
 }
-/// Spooled checkout file payload and its SHA-1 digest.
+/// Spooled checkout file payload ([`PathBuf`]) and its SHA-1 digest.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Body {
     pub(super) offset: Option<usize>,

@@ -60,7 +60,7 @@ pub(super) fn component_manifests(
         .collect()
 }
 
-/// Resolve `+` version placeholders in `peers` against `root`'s own package versions (`_resolvePlusVersions`), falling back to `*`.
+/// Resolve `+` version placeholders in `peers` against `root`'s own [`DepsObject`] package versions (`_resolvePlusVersions`), falling back to `*`.
 fn resolve_plus(peers: &DependencyMap, root: &DepsObject) -> DependencyMap {
     let lookup = [
         Field::Dependencies,

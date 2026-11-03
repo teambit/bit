@@ -79,7 +79,7 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     canonical(file, raw)
 }
 
-/// Read and verify a current workspace file under a shared parallel [`Budget`].
+/// Read and verify a current workspace [`wire::Current`] `file` under a shared parallel [`Budget`].
 #[inline]
 fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usize)> {
     let raw_hash = file.raw_hash.trim();

@@ -90,7 +90,7 @@ impl DepsObject {
             .any(|field| truthy(self.get(field), name))
     }
 
-    /// `manifest.toJson({ copyPeerToRuntime })` for `name` and `version`.
+    /// `manifest.toJson({ copyPeerToRuntime })` producing a [`Manifest`] for `name` and `version`.
     pub(super) fn to_manifest(
         &self,
         name: &str,

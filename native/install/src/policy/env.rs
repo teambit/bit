@@ -61,7 +61,7 @@ pub fn from_config(config: &Value, include_legacy_peers: bool) -> io::Result<Env
     })
 }
 
-/// Parse legacy `peerDependencies` from `config` as forced `"env-own"` runtime [`PolicyEntry`] items.
+/// Parse legacy `peerDependencies` from `config` ([`Value`]) as forced `"env-own"` runtime [`PolicyEntry`] items.
 fn legacy_peers(config: &Value) -> Vec<PolicyEntry> {
     let Some(peers) = config.get("peerDependencies").and_then(Value::as_object) else {
         return Vec::new();

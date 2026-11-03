@@ -81,7 +81,7 @@ fn record_request(plan: &mut PreparedImport, target: &Target, scope: &str) -> io
     Ok(())
 }
 
-/// Refresh `target`'s `main` head from `directory` and collect its ancestor closure when `all_history` is enabled.
+/// Refresh [`Target`] `target`'s `main` head from [`Path`] `directory` and collect its ancestor closure ([`ancestors::collect`]) when `all_history` is enabled.
 #[inline]
 fn refresh_with_history(
     plan: &mut PreparedImport,

@@ -47,7 +47,7 @@ pub(super) fn verify(
     crate::checkout::plan::verify_manifest(directory, version_hash, &expected, compressed)
 }
 
-/// Load raw `Source` file bodies for [`wire::Manifest`] entries, reading imported blobs from [`Overlay`] when present.
+/// Load raw `Source` file bodies for [`wire::Manifest`] entries, reading imported blobs from [`Overlay`] via [`body`] when present.
 pub(super) fn files(
     directory: &Path,
     manifests: &[wire::Manifest],

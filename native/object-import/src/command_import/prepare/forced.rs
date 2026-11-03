@@ -27,7 +27,7 @@ pub(super) fn finish(plan: &mut PreparedImport, roots: &[&Target]) -> io::Result
     )
 }
 
-/// Collect deduplicated flattened dependency [`Target`]s across `roots` and clear received unbuilt entries.
+/// Collect deduplicated flattened dependency [`Target`]s across `roots` on [`PreparedImport`] and clear received unbuilt entries.
 fn collect_forced_dependencies(
     plan: &mut PreparedImport,
     roots: &[&Target],

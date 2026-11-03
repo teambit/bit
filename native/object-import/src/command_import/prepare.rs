@@ -90,7 +90,7 @@ struct Mode {
     graph_versions: bool,
 }
 
-/// Prepare a read-only [`PreparedImport`] plan for `targets` using `virtual_remotes` and `mode`.
+/// Prepare a read-only [`PreparedImport`] plan for [`Target`] `targets` using [`VirtualRemote`]s and [`Mode`].
 fn prepare_with_virtual_options(
     root: &Path,
     global_remotes_file: &Path,

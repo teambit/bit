@@ -27,7 +27,7 @@ pub(super) struct Component {
     pub(super) current_exists: bool,
     pub(super) is_removed: bool,
 }
-/// Model component metadata indicating whether `main` has a recorded head version.
+/// Model component metadata in [`Begin`] indicating whether `main` has a recorded head version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Model {

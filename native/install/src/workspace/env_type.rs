@@ -12,8 +12,7 @@ use super::scope_model::ScopeObjects;
 use crate::model::WorkspaceComponent;
 use std::io;
 
-/// The env IDs whose [`WorkspaceComponent`]s are aspects: `core` plus the envs of
-/// components whose stored [`ScopeObjects`] descriptor says `aspect`.
+/// The env IDs whose [`WorkspaceComponent`]s are aspects: `core` ([`seed_core_ids`]) plus the envs of components whose stored [`ScopeObjects`] descriptor says `aspect`.
 pub fn aspect_env_ids(
     components: &[WorkspaceComponent],
     objects: &ScopeObjects,
@@ -45,6 +44,7 @@ pub fn aspect_env_ids(
 }
 
 /// Trim, filter empty entries, and deduplicate the initial `core` aspect environment ID slice into a [`Vec<String>`] for [`aspect_env_ids`].
+/// Preserves the first-seen order of distinct non-empty IDs.
 #[inline]
 fn seed_core_ids(core: &[&str]) -> Vec<String> {
     let mut ids = Vec::with_capacity(core.len());
