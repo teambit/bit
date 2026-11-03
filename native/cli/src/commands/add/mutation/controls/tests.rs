@@ -1,6 +1,6 @@
 //! Unit tests for control file [`refresh`] and [`bounded_proof`] preimage proofs and symlink rejection.
 //!
-//! Verifies missing-file hash representation, size-budget enforcement, and non-regular file rejection.
+//! Verifies missing-file hash representation, size-budget enforcement, and non-regular file rejection in [`refresh`] and [`bounded_proof`].
 
 use super::{bounded_proof, refresh};
 use std::fs;

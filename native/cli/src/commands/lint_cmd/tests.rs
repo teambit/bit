@@ -6,7 +6,7 @@ use super::{Options, is_missing_host, parse_options, validate_lint_pattern};
 use crate::commands::color::Chalk;
 use std::fs;
 
-/// Verifies [`parse_options`] for `bit lint` and [`is_missing_host`] missing workspace host detection.
+/// Verifies [`parse_options`] into [`Options`] for `bit lint` and [`is_missing_host`] missing workspace host detection.
 #[test]
 fn parses_lint_options_and_detects_missing_host() {
     let opts = parse_options(&["ui/*", "-c", "-f", "--fix-type", "problem", "--json"]).unwrap();

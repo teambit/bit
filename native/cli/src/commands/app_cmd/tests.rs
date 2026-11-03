@@ -8,7 +8,7 @@ use super::{
 use std::fs;
 
 /// Verifies `bit app` [`parse_options`] CLI flag parsing and [`is_empty_app_workspace`] empty workspace detection.
-/// Checks both bare and `list` invocations alongside invalid flag combinations.
+/// Checks both bare and `list` [`Options`] invocations alongside invalid flag combinations.
 #[test]
 fn parses_app_options_and_detects_empty_workspace() {
     assert_eq!(parse_options(&[]), Some(Options { json: false }));

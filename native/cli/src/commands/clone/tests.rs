@@ -5,7 +5,7 @@
 use super::{Options, parse_component_name, parse_options, validate_outside_workspace};
 use std::fs;
 
-/// Verifies [`parse_options`] for `bit clone` CLI flags covering component ID, target directory, `--lane`, and `-x`.
+/// Verifies [`parse_options`] into [`Options`] for `bit clone` CLI flags covering component ID, target directory, `--lane`, and `-x`.
 #[test]
 fn parses_clone_options() {
     assert_eq!(

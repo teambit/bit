@@ -20,7 +20,7 @@ fn parses_subcommand() {
     assert_eq!(parse_subcommand(&os_args(&["npmrc", "bar", "--no-color"])), Some("bar".to_owned()));
 }
 
-/// Verifies that [`parse_subcommand`] rejects missing subcommands, `--help` flags, and extra positionals.
+/// Verifies that [`parse_subcommand`] rejects missing subcommands, `--help` flags, and extra positionals in [`os_args`].
 #[test]
 fn rejects_flags_or_missing_subcommand() {
     assert_eq!(parse_subcommand(&os_args(&["npmrc"])), None);

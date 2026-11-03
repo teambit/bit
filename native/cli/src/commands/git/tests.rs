@@ -5,7 +5,7 @@
 use super::{Chalk, Parsed, format_unrecognized, merge_bitmap_contents, parse_args};
 use std::ffi::OsString;
 
-/// Verifies [`parse_args`] for `bit git` subcommands across `merge-bitmaps` and `set-merge-driver` (`smd`).
+/// Verifies [`parse_args`] into [`Parsed`] for `bit git` subcommands across `merge-bitmaps` and `set-merge-driver` (`smd`).
 #[test]
 fn parses_git_subcommands_and_flags() {
     assert_eq!(

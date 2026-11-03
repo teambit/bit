@@ -11,7 +11,7 @@ fn receipt(details: &serde_json::Value) -> serde_json::Value {
     json!({ "token": "t", "owner": "rust", "importedIds": ["s/a@0.0.1"], "progress": [], "importDetails": [details] })
 }
 
-/// Verifies [`validate`] formats imported and fetched component version summaries.
+/// Verifies [`validate`] formats imported and fetched component version summaries from [`receipt`] with [`expected_success_symbols`].
 #[test]
 fn imported_components_are_listed_with_their_versions() {
     let added = receipt(

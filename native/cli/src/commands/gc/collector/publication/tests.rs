@@ -1,6 +1,6 @@
 //! Scope repository deletion ([`Plan`]) leaves the parent untouched when the object disappeared before unlink.
 //!
-//! Also verifies that mixed-type [`GcResult`] reports decline before stray cleanup.
+//! Also verifies that mixed-type [`GcResult`] reports in [`Plan`] decline before stray cleanup.
 use super::super::{super::format::GcResult, Plan};
 use std::fs;
 

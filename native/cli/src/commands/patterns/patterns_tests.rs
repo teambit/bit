@@ -8,7 +8,7 @@ use super::{matching, split};
 const IDS: [&str; 5] =
     ["org.scope/ui/button", "org.scope/ui/card", "org.scope/utils", "other/utils", "other/.hidden"];
 
-/// Splits `pattern` and returns the matching subset of [`IDS`].
+/// Splits `pattern` via [`split`] and returns the [`matching`] subset of [`IDS`].
 fn matched(pattern: &str) -> Vec<&'static str> {
     matching(&IDS, &split(pattern)).unwrap()
 }

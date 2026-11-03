@@ -25,7 +25,7 @@ fn write_scope_object(root: &Path, kind: &str, hash: &str, payload: &Value) {
     fs::write(obj_dir.join(&hash[2..]), compressed).unwrap();
 }
 
-/// Verifies [`parse_options`] for `bit eject-conf` flags and explicit boolean values.
+/// Verifies [`parse_options`] into [`Options`] for `bit eject-conf` flags and explicit boolean values.
 #[test]
 fn parses_eject_conf_flags_and_boolean_values() {
     assert_eq!(

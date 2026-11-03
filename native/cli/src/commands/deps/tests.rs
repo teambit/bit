@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies [`parse_subcommand`] for `bit deps` across `set`, `unset`, `remove`, `reset`, `blame`, `usage`, and `diagnose`.
+/// Verifies [`parse_subcommand`] into [`Subcommand`] for `bit deps` across `set`, `unset`, `remove`, `reset`, `blame`, `usage`, and `diagnose`.
 ///
 /// Also covers 40-hex snap version normalization to `0.0.0-<hash>`, `--tree`/`--scope` flags, and [`parse_why`] depth parsing.
 #[test]

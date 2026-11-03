@@ -1,6 +1,6 @@
 //! Unit tests for `bit lane merge` CLI option parsing ([`parse`]) and request payload construction.
 //!
-//! Verifies `--no-snap`, `--no-squash`, `--pattern`, and strategy flags for lane merges.
+//! Verifies `--no-snap`, `--no-squash`, `--pattern`, and strategy flags for lane merges in [`parse`].
 
 use super::parse;
 use serde_json::json;

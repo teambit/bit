@@ -20,7 +20,7 @@ fn scientific_hex_and_decimal_targets_follow_yargs_number_then_string() {
         assert_eq!(normalize(raw), expected, "{raw}");
     }
 }
-/// Verifies that leading-zero, unsafe-integer, and non-numeric target strings preserve their exact spelling.
+/// Verifies that leading-zero, unsafe-integer, and non-numeric target strings preserve their exact spelling in [`normalize`].
 /// Prevents semver tags (`0.0.1`), relative heads (`head~2`), and hex prefixes (`abcdef1`) from coercing.
 #[test]
 fn leading_zero_unsafe_and_non_numeric_targets_keep_their_spelling() {

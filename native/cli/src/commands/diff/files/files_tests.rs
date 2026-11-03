@@ -1,6 +1,6 @@
 //! Unit tests for unified file diff header [`format`] and dollar-pattern expansion.
 //!
-//! Verifies `formatFileDiff`-compatible unified headers and `JavaScript` `$` replacement pattern semantics.
+//! Verifies `formatFileDiff`-compatible unified headers in [`format`] and `JavaScript` `$` replacement pattern semantics.
 
 use super::format;
 

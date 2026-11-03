@@ -1,6 +1,6 @@
 //! Preserve unrelated [`error`] values while translating proven blocked-parent [`mkdir_not_directory`] failures.
 //!
-//! Also verifies platform-specific package segment separators.
+//! Also verifies platform-specific package segment separators alongside [`error`] and [`mkdir_not_directory`].
 use super::{error, mkdir_not_directory};
 use std::{io, path::Path};
 

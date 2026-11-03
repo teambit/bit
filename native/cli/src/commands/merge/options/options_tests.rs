@@ -1,6 +1,6 @@
 //! Unit tests for `bit merge` CLI option parsing ([`parse`]) and unsupported-flag rejection.
 //!
-//! Verifies `--no-snap`, `--auto-merge-resolve`, `--manual`, and `--message` flag parsing.
+//! Verifies `--no-snap`, `--auto-merge-resolve`, `--manual`, and `--message` flag parsing in [`parse`].
 
 use super::parse;
 

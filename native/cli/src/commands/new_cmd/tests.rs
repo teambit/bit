@@ -6,7 +6,7 @@ use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies [`parse_options`] for `bit new` positional template/workspace arguments and supported boolean flags.
+/// Verifies [`parse_options`] into [`Options`] for `bit new` positional template/workspace arguments and supported boolean flags.
 ///
 /// Also confirms that `--no-*` negated boolean flags return `None`.
 #[test]

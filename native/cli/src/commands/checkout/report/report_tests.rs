@@ -10,7 +10,7 @@ use crate::commands::{
 };
 use serde_json::json;
 
-/// Verifies what `checkoutOutput` prints via [`format`] for one switched component without colors.
+/// Verifies what `checkoutOutput` prints via [`format`] and [`expected_success_symbols`] for one switched component without colors.
 #[test]
 fn reports_one_switched_component() {
     let options = parse(&["0.0.1", "one", "-x"]).unwrap();

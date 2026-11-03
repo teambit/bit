@@ -10,7 +10,7 @@ use crate::commands::color::Chalk;
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies [`parse_subcommand`] for `bit mcp-server` across `setup` and `write-rules` (`rules`).
+/// Verifies [`parse_subcommand`] into [`Subcommand`] for `bit mcp-server` across `setup` and `write-rules` (`rules`).
 ///
 /// Also checks that `start` and empty argument slices return `None` while unknown subcommands return [`Subcommand::Unrecognized`].
 #[test]

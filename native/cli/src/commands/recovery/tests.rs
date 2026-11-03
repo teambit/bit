@@ -19,7 +19,7 @@ fn abort_grammars_select_only_explicit_noninteractive_operations() {
     assert!(parse_lane(&["--silent", "component"]).is_none());
 }
 
-/// Verifies that [`format_component`] strips `@version` suffixes from aborted component IDs.
+/// Verifies that [`format_component`] with [`Chalk`] strips `@version` suffixes from aborted component IDs.
 ///
 /// Ensures `abortedComponents` entries render only their unversioned `scope/name` identity.
 #[test]

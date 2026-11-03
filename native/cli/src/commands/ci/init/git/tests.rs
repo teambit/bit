@@ -1,6 +1,6 @@
 //! Released branch validation uses `ECMAScript` whitespace rather than Rust's Unicode set.
 //!
-//! Verifies empty-string trimming and Unicode whitespace distinctions in branch names.
+//! Verifies empty-string trimming and Unicode whitespace distinctions in branch names for `valid_branch`.
 /// Verifies that branch validation and trimming preserve the released `ECMAScript` Unicode whitespace distinction.
 /// Specifically contrasts BOM (`\u{feff}`, treated as whitespace) with NEL (`\u{0085}`, retained).
 #[test]

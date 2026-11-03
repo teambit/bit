@@ -19,7 +19,7 @@ fn write_object(scope: &Path, hash: &str, value: &Value) {
     fs::create_dir_all(&directory).unwrap();
     fs::write(directory.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
-/// Verifies that [`heads`] inspects local scope models and reports missing head hashes.
+/// Verifies that [`heads`] inspects local scope models written via [`write_object`] and reports missing head hashes against [`DIAGNOSES`].
 #[test]
 fn integrity_inspects_only_local_models_and_reports_the_missing_head() {
     let directory = tempfile::tempdir().unwrap();

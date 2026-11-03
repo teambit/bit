@@ -18,7 +18,7 @@ fn parse(words: &[&str]) -> Option<Action> {
     parse_options(&args)
 }
 
-/// Verifies [`parse`] for `bit refactor` CLI subcommands covering `dependency-name` and unrecognized subcommands.
+/// Verifies [`parse`] into [`Action`] for `bit refactor` CLI subcommands covering `dependency-name` and unrecognized subcommands.
 #[test]
 fn parses_dependency_name_and_unrecognized_subcommands() {
     assert_eq!(

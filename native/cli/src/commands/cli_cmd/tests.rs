@@ -1,6 +1,6 @@
 //! Unit tests for `bit cli generate --docs` [`is_generate_docs`], [`parse_unknown_skill`], and [`render_docs_frontmatter`].
 //!
-//! Verifies `--docs`, `--metadata`, and `--skill` CLI flag combinations and YAML frontmatter rendering.
+//! Verifies `--docs`, `--metadata`, and `--skill` CLI flag combinations in [`is_generate_docs`] and [`parse_unknown_skill`].
 
 use super::{is_generate_docs, parse_unknown_skill, render_docs_frontmatter};
 

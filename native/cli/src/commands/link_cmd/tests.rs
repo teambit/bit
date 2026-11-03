@@ -11,7 +11,7 @@ use super::{
 };
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 
-/// Verifies [`parse_options`] for `bit link` CLI flags across component IDs, `--target`, `--rewire`, and `--peers`.
+/// Verifies [`parse_options`] into [`Options`] for `bit link` CLI flags across component IDs, `--target`, `--rewire`, and `--peers`.
 #[test]
 fn parses_link_options() {
     assert_eq!(

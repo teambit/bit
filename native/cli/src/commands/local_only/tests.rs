@@ -13,7 +13,7 @@ fn args(items: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
-/// Verifies [`parse_subcommand`] for `bit local-only` across `set`, `unset`, `list`, and unrecognized subcommands.
+/// Verifies [`parse_subcommand`] with [`args`] for `bit local-only` across `set`, `unset`, `list`, and unrecognized [`Subcommand`]s.
 ///
 /// Also checks that `--help` returns `None` so help rendering is delegated.
 #[test]

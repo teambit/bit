@@ -16,7 +16,7 @@ fn validates_empty_details_arguments() {
     assert!(!valid_args(&[OsString::from("details"), OsString::from("extra")]));
 }
 
-/// Verifies [`render_details`] output when command details are absent or persisted on disk.
+/// Verifies [`render_details`] output with [`Chalk`] when command details are absent or persisted on disk.
 #[test]
 fn renders_missing_and_persisted_command_details() {
     let temp = tempfile::tempdir().unwrap();

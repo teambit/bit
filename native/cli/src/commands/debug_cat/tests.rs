@@ -11,7 +11,7 @@ use crate::commands::color::Chalk;
 use serde_json::json;
 use std::fs;
 
-/// Verifies [`parse_object_options`] for `bit cat-object` SHA-1 hash validation and `-p`, `-s`, and `--headers` flags.
+/// Verifies [`parse_object_options`] into [`ObjectOptions`] for `bit cat-object` SHA-1 hash validation and `-p`, `-s`, and `--headers` flags.
 /// Rejects non-hexadecimal object identifiers with `None`.
 #[test]
 fn parses_cat_object_flags_and_hash() {

@@ -12,7 +12,7 @@ use crate::commands::color::Chalk;
 use serde_json::json;
 use std::fs;
 
-/// Verifies [`parse_subcommand`] for `bit envs` across `set`, `unset`, `replace`, `update`, `list`, and `get`.
+/// Verifies [`parse_subcommand`] into [`Subcommand`] for `bit envs` across `set`, `unset`, `replace`, `update`, `list`, and `get`.
 #[test]
 fn parses_envs_subcommands() {
     assert_eq!(

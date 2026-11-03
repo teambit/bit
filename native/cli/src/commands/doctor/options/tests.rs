@@ -1,6 +1,6 @@
 //! Unit tests for `bit doctor` [`Options`] CLI parsing and flag compatibility validation.
 //!
-//! Verifies `--list`, `--archive`, `--remote`, and `--save` validation order and error messages.
+//! Verifies `--list`, `--archive`, `--remote`, and `--save` validation order and error messages in [`Options`].
 
 use super::Options;
 /// Verifies that `--list` bypasses archive-only option validation in [`Options::validate`].

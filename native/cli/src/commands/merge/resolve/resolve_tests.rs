@@ -19,7 +19,7 @@ fn resolve_options() {
     assert!(parse(&["--resolve", "a", "b"]).is_none());
 }
 
-/// Verifies that [`format`] strips version suffixes from resolved component IDs.
+/// Verifies that [`format`] with [`Chalk`] strips version suffixes from resolved component IDs.
 ///
 /// Also confirms that unexpected top-level JSON fields cause [`format`] to return an error.
 #[test]

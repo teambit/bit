@@ -17,7 +17,7 @@ fn parses_component_issues_flags() {
     assert_eq!(parse(&["extra"]), None);
 }
 
-/// Verifies [`issues_json`] and [`report`] list all 25 component issue definitions in canonical order.
+/// Verifies [`issues_json`] and [`report`] with [`Chalk`] list all 25 component issue definitions in canonical order.
 #[test]
 fn lists_all_25_component_issues_in_order() {
     let json = issues_json();

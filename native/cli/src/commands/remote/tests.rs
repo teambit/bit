@@ -14,7 +14,7 @@ fn parse(words: &[&str]) -> Option<Options> {
     Options::parse(&args)
 }
 
-/// Verifies [`parse`] for `bit remote` CLI subcommands covering `list`, default `remote`, and `--global` / `-g`.
+/// Verifies [`parse`] into [`Options`] and [`Action`] for `bit remote` CLI subcommands covering `list`, default `remote`, and `--global` / `-g`.
 #[test]
 fn parses_list_and_default_subcommand() {
     assert_eq!(

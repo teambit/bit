@@ -17,7 +17,7 @@ fn row(schema: &str) -> serde_json::Value {
     }})
 }
 
-/// Verifies that [`lane`] excludes deleted components, attaches local tracking aliases, and declines unmigrated schemas.
+/// Verifies that [`lane`] on [`row`] excludes deleted components, attaches [`Tracking`] aliases, and declines unmigrated schemas.
 #[test]
 fn reads_a_lane_without_its_deleted_components() {
     let untracked = Tracking(Vec::new());

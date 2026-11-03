@@ -18,7 +18,7 @@ fn wraps_like_chalk() {
     assert_eq!(Chalk::new(false).red("a\n"), "a\n");
 }
 
-/// Verifies `chalk.bold.white(...)` and `chalk.cyan(...)` around styled text in `chalk` 4.1.2 level 1.
+/// Verifies [`Chalk`] `bold.white(...)` and `cyan(...)` around styled text in `chalk` 4.1.2 level 1.
 #[test]
 fn chains_and_nests_like_chalk() {
     let chalk = Chalk::new(true);

@@ -11,7 +11,7 @@ fn write(path: &std::path::Path, before: &[u8], after: &[u8]) -> serde_json::Val
     let published = bit_install::policy::scope::proof_from_bytes(path, Some(after));
     json!({"path":path,"beforeHash":original["hash"],"afterHash":published["hash"]})
 }
-/// Verifies that exact owned content receipts advance while preserving unrelated read-set entries.
+/// Verifies that exact owned content [`write`] receipts advance in [`Retained`] while preserving unrelated read-set entries.
 #[test]
 fn exact_owned_content_advances_without_discarding_other_receipts() {
     let directory = tempfile::tempdir().unwrap();
