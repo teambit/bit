@@ -87,7 +87,7 @@ fn explicit(
     Ok(to.to_owned())
 }
 
-/// Resolves the 40-hex `Version` object hash for `version` (`head`, `latest`, tag, or snap hash) on `model`.
+/// Resolves the 40-hex `Version` object hash for `version` (`head`, `latest`, tag, or snap hash) on `model` via [`head`].
 pub(in crate::workspace::engine::command) fn reference(
     model: &Value,
     version: &str,

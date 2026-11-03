@@ -1,4 +1,4 @@
-//! `BitId.serialize` followed by `ComponentID.toObject` via [`serialize`] preserves field order.
+//! `BitId.serialize` followed by `ComponentID.toObject` via [`serialize`] and [`set_version`] preserves field order.
 
 #[cfg(test)]
 mod tests;

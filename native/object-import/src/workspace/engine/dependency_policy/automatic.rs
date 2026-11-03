@@ -20,7 +20,7 @@ pub(super) fn apply(request: &Request, plan: &mut Plan) {
         }
     }
 }
-/// Returns `true` when `name` was detected in components, packages, `seen`, or missing dependencies.
+/// Returns `true` when `name` was detected in `plan` ([`Plan`]), `request` ([`Request`]) packages via [`version`], `seen`, or missing dependencies.
 #[inline]
 fn detected(request: &Request, plan: &Plan, name: &str, seen: &HashSet<&str>) -> bool {
     let name = name.trim();

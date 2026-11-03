@@ -19,7 +19,7 @@ use serde_json::{Value, json};
 use std::io;
 use wire::Plan;
 
-/// Applies [`ignored`] dependency filtering, [`packages::prepare`], and [`automatic::apply`] to `request` ([`Request`]).
+/// Applies [`ignored`] dependency filtering, [`packages::prepare`], and [`automatic::apply`] to `request` ([`Request`]) on [`Plan`].
 #[inline]
 pub(super) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     request.validate()?;

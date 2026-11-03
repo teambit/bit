@@ -7,7 +7,7 @@ use std::{
 };
 /// Monotonic counter used by [`Directory::create`] to allocate unique temporary scratch directory names within the process.
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
-/// Owned temporary directory [`PathBuf`] that removes its contents when dropped.
+/// Owned temporary directory [`PathBuf`] created by [`Directory::create`] that removes its contents when dropped.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) struct Directory(pub(super) PathBuf);
 impl Directory {

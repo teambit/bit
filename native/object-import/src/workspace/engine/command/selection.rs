@@ -90,7 +90,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
     }))
 }
 
-/// Parses a `head~<N>` ancestor distance from `lower`, enforcing `1 <= N <= 4096`.
+/// Parses a `head~<N>` ancestor distance from `lower` for [`begin`], enforcing `1 <= N <= 4096`.
 #[inline]
 fn parse_ancestor(lower: &str) -> io::Result<Option<usize>> {
     let ancestor = lower

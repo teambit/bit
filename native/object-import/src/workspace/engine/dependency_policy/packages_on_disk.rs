@@ -33,7 +33,7 @@ pub(in crate::workspace::engine) fn read(
 ) -> io::Result<(usize, Value)> {
     read_view(request, pool, None)
 }
-/// Resolves installed `node_modules` package metadata for `request` against an in-memory [`SourceOverlay`].
+/// Resolves installed `node_modules` package metadata for `request` ([`Request`]) against an in-memory [`SourceOverlay`] via [`read_view`].
 #[inline]
 pub(in crate::workspace::engine) fn read_overlay(
     request: &Request,

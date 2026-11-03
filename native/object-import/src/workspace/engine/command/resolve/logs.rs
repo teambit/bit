@@ -46,7 +46,7 @@ pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> 
     Ok(())
 }
 
-/// Extracts the bare `scope/name` component identity from `row["identity"]` or `row["id"]`.
+/// Extracts the bare `scope/name` component identity from `row["identity"]` or `row["id"]` for [`apply`] and [`editor`].
 #[inline]
 fn row_identity(row: &Value) -> Option<&str> {
     row["identity"]

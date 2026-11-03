@@ -4,7 +4,7 @@ use super::{Material, Repository, invalid, key};
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-/// Adjacency map of saved flattened dependency edges keyed by source component identity.
+/// Adjacency map of saved flattened dependency edges keyed by source component identity for [`capture`] and [`append`].
 pub(super) type Graph = HashMap<String, Vec<Value>>;
 
 /// Captures saved flattened dependency edges from the current head `Version` of each entry in `materials` ([`Material`]) via [`append`].

@@ -45,7 +45,7 @@ pub(super) fn chosen(
     Ok(Some(allowed))
 }
 
-/// Returns `true` when `rows` contains any tracked component entry outside `.bitmap` metadata keys.
+/// Returns `true` when `rows` ([`Value`]) contains any tracked component entry outside `.bitmap` metadata keys.
 #[inline]
 fn has_tracked(rows: &serde_json::Map<String, Value>) -> bool {
     rows.keys()

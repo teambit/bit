@@ -1,4 +1,4 @@
-//! Retained file [`proof`] and owned path [`capture`] for [`Captured`] snapshot sources.
+//! Retained file [`proof`] and [`owned_paths`] [`capture`] for [`Captured`] snapshot sources.
 
 #[cfg(test)]
 mod tests;

@@ -88,7 +88,7 @@ fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>
     Ok(targets)
 }
 
-/// Captures initial content read proofs for workspace and `.bit` control files under `request.root`.
+/// Captures initial content read proofs ([`proof::Proof`]) for workspace and `.bit` control files under `request.root` ([`Prepare`]).
 fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::with_capacity(7);
     for name in [

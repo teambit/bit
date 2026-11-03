@@ -1,4 +1,4 @@
-//! Per-component `Version` object assembly via [`prepare`] and [`Context`] for [`Material`].
+//! Per-component `Version` object assembly via [`prepare`], [`metadata`], and [`Context`] for [`Material`].
 
 use super::{Material, graph, invalid, reconciliation, references, snapshot, sources};
 use crate::workspace::{engine::dependency_graph::proof, snapshots};

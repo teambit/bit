@@ -69,7 +69,7 @@ fn resolve(request: &Request, name: &str) -> io::Result<String> {
     Ok(version(&request.environment.model_packages, name).unwrap_or_else(|| "*".to_owned()))
 }
 
-/// Extracts the trailing `@<version>` segment from a model component `identity`, if present.
+/// Extracts the trailing `@<version>` segment from a model component `identity` for [`resolve`], if present.
 #[inline]
 fn extract_model_component_version(identity: &str) -> Option<&str> {
     let trimmed = identity.trim();

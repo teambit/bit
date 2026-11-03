@@ -42,7 +42,7 @@ fn has_non_selinux_xattr(path: &Path) -> io::Result<bool> {
     Ok(xattr::list(path)?.any(|name| name != "security.selinux"))
 }
 
-/// Verifies that `temporary` has no non-`SELinux` extended attributes and matches `original`'s `SELinux` context.
+/// Verifies that `temporary` has no non-`SELinux` extended attributes ([`has_non_selinux_xattr`]) and matches `original`'s `SELinux` context.
 #[inline]
 fn equivalent(original: &Path, temporary: &Path) -> io::Result<()> {
     if has_non_selinux_xattr(temporary)?

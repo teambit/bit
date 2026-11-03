@@ -87,7 +87,7 @@ fn append_pending(
     Ok(())
 }
 
-/// Filters `candidates` against `pattern` matches in `known`, honoring exact-ID and `--unmodified` rules.
+/// Filters `candidates` against `pattern` matches in `known` via [`pattern_set`], honoring exact-ID and `--unmodified` rules.
 fn filter_pattern(
     candidates: Vec<String>,
     known: &[String],

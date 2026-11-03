@@ -1,4 +1,4 @@
-//! Input boundary and normalized-path [`validate`] checks for dependency graph [`Request`] inputs.
+//! Input boundary and [`normalize`] path [`validate`] checks for dependency graph [`Request`] inputs.
 
 use super::{
     super::{invalid, path, resolve_dependencies::normalize},

@@ -1,4 +1,4 @@
-//! Dependency version range prefix [`update`] across co-tagged [`Material`] workspace components.
+//! Dependency version range [`prefix`] [`update`] via [`update_dependencies`] across co-tagged [`Material`] workspace components.
 
 use super::{Material, invalid};
 use serde_json::{Value, json};

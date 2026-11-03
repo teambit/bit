@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
-/// Registry version overrides applied before finalizing a `tag` batch.
+/// Registry version overrides applied before finalizing a `tag` batch via [`apply`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Overrides {

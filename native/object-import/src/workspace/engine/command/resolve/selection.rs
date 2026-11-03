@@ -1,4 +1,4 @@
-//! Unmerged component target selection via [`select`] for `merge --resolve` and `snap --unmerged`.
+//! Unmerged component target selection via [`select`], [`pending_identities`], and [`identity`] for `merge --resolve` and `snap --unmerged`.
 //! Enforces non-empty, deduplicated selections bounded to 4,096 pending workspace components.
 
 #[cfg(test)]

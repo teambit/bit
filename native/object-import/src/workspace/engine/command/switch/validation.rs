@@ -37,7 +37,7 @@ pub(in super::super) fn options(request: &Prepare) -> io::Result<()> {
     }
     Ok(())
 }
-/// Validates that `alias` is at most 800 bytes of lowercase ASCII alphanumeric or `-_!$` characters.
+/// Validates that `alias` is at most 800 bytes of lowercase ASCII alphanumeric or `-_!$` characters, returning [`canonical`] on failure.
 #[inline]
 fn validate_alias(alias: &str) -> io::Result<()> {
     if alias.len() > 800

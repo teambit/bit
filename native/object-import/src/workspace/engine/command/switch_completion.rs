@@ -18,7 +18,7 @@ pub(super) struct Retained {
     tracking: Option<SwitchTracking>,
     applied: bool,
 }
-/// Deserialized request to finalize `.bitmap` and `scope.json` lane tracking after `switch` installation.
+/// Deserialized request to finalize `.bitmap` and `scope.json` [`SwitchTracking`] after `switch` installation.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

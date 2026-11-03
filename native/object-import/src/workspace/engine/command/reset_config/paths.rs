@@ -1,4 +1,4 @@
-//! Ancestor directory metadata [`proof`] [`capture`] and [`ordinary_directory_metadata`] for reset destinations.
+//! Ancestor directory metadata [`proof`] [`capture`] and [`ordinary_directory_metadata`] for reset destinations via [`invalid`].
 
 use super::{invalid, proof};
 use std::{fs, io, path::Path};

@@ -1,4 +1,4 @@
-//! Component and extension version [`apply`] via [`index`], [`select`], [`validate`], and [`wire`].
+//! Component and extension version [`apply`] on [`Request`] via [`index`], [`select`], [`validate`], and [`wire`].
 
 pub(in crate::workspace::engine) use wire::Request;
 

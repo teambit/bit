@@ -54,7 +54,7 @@ pub(super) fn status_load_order(
     Ok(ordered)
 }
 
-/// Reorders `context["targets"]` in place according to `order`.
+/// Reorders `context["targets"]` ([`Value`]) in place according to `order` via [`target_identity`].
 pub(super) fn order_targets(context: &mut Value, order: &[String]) -> io::Result<()> {
     let targets = context["targets"].as_array_mut().ok_or_else(|| invalid("switch targets"))?;
     let mut by_id = HashMap::with_capacity(targets.len());

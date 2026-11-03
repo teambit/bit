@@ -19,7 +19,7 @@ pub(super) enum Phase {
     Prepared(Box<Prepared>),
 }
 
-/// Prepared snapshot objects, filesystem publication plan, and staging directory for `snap` or `tag`.
+/// Prepared snapshot objects, filesystem publication plan, and staging directory for `snap` or `tag` in [`Phase::Prepared`].
 pub(super) struct Prepared {
     _directory: scratch::Directory,
     snapshot: resolve_snapshot::Snapshot,

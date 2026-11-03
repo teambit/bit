@@ -52,7 +52,7 @@ pub(super) struct Request {
     visited: Option<serde_json::Map<String, Value>>,
 }
 
-/// TypeScript and custom detector options for a dependency graph [`Request`].
+/// `TypeScript` and [`CustomDetection`] detector options for a dependency graph [`Request`].
 #[derive(Deserialize)]
 struct DetectorOptions {
     typescript: bool,

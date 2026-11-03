@@ -4,7 +4,7 @@ use super::{super::resolve_dependencies::Budget, PathMap, Request, Row, invalid}
 use serde_json::{Map, Value, json};
 use std::{collections::HashMap, io};
 
-/// Step, byte, and origin-index receipts accumulated during dependency graph [`Replay`].
+/// Step, byte, and origin-index receipts accumulated during dependency graph [`Replay`] via [`finish`].
 #[derive(Default)]
 struct Receipts {
     origins: Vec<usize>,

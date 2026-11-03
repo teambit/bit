@@ -45,7 +45,7 @@ impl Projection<'_> {
         }
         self.component_dependency(package, field)
     }
-    /// Appends a resolved component `package` ([`Package`]) entry and [`ComponentVersion`] record into `field`.
+    /// Appends a resolved component `package` ([`Package`]) entry, [`peer::range`], and [`ComponentVersion`] record into `field`.
     fn component_dependency(&mut self, package: &Package, field: usize) -> io::Result<()> {
         let id = package.component.as_ref().ok_or_else(|| invalid("fresh component metadata"))?;
         let concrete = package.concrete

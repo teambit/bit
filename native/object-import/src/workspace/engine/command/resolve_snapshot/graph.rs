@@ -58,7 +58,7 @@ fn read(
     Ok(rows)
 }
 
-/// Updates root source `version` fields in `rows` matching `identity` to the newly allocated `hash`.
+/// Updates root source `version` fields in `rows` matching `identity` to the newly allocated `hash` for [`graph`].
 fn rekey(rows: &mut Value, identity: &str, hash: &str) -> io::Result<()> {
     let edges = rows.as_array_mut().ok_or_else(|| invalid("resolve graph rows"))?;
     if edges.len() > 16384 {

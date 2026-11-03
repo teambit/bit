@@ -1,4 +1,4 @@
-//! Dependency policy [`apply`] finalization with [`environment`] and [`manual`] policy rules.
+//! Dependency policy [`apply`] finalization on [`Request`] with [`environment`] and [`manual`] policy rules.
 
 pub(in crate::workspace::engine) use wire::Request;
 

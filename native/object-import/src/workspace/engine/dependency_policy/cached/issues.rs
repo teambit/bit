@@ -1,4 +1,4 @@
-//! Cached dependency issue extraction via [`missing`] and post-policy missing-package updates.
+//! Cached dependency issue extraction via [`missing`] and post-policy [`apply`] missing-package updates.
 
 use super::invalid;
 use serde_json::{Value, json};

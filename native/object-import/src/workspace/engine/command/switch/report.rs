@@ -1,4 +1,4 @@
-//! Skipped lane-only target reporting via [`append_skipped`] and [`push_skipped`] for switch command output.
+//! Skipped lane-only target reporting via [`append_skipped`] and [`push_skipped`] on [`Value`] payloads for switch command output.
 
 use super::invalid;
 use serde_json::{Value, json};

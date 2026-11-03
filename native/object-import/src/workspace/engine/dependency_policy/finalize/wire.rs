@@ -18,7 +18,7 @@ pub(crate) struct Request {
     pub(super) self_identity: String,
     pub(super) environment: Environment,
 }
-/// Intermediate package, component-index, and entry state passed into policy finalization.
+/// Intermediate [`Packages`], component-index, and [`Entry`] state passed into policy finalization.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct State {

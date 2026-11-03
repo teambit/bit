@@ -89,7 +89,7 @@ fn squash(
     Ok(())
 }
 
-/// Appends `remote` as a second merge parent on `version["parents"]` if not already present.
+/// Appends `remote` as a second merge parent on `version["parents"]` if not already present for [`reconcile`].
 #[inline]
 fn merge_parent(version: &mut Value, remote: &str) {
     if version["parents"]

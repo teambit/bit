@@ -16,7 +16,7 @@ pub(crate) struct Request {
     finish: Value,
     resolution: Resolution,
 }
-/// Version resolution sources, extensions, grammar, prefix, and merge policy inputs.
+/// Version resolution sources, extensions, grammar, prefix, and merge policy inputs for [`Request`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Resolution {

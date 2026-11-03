@@ -46,7 +46,7 @@ pub(super) fn dispatch(
     }
 }
 
-/// Validates and trims an optional inbound import owner `token`.
+/// Validates and trims an optional inbound import owner `token` for [`inbound_overlay`].
 #[inline]
 fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
     let Some(candidate) = token

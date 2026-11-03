@@ -16,7 +16,7 @@ pub(super) struct State {
     pub(super) untracked: Map<String, Value>,
     pub(super) authored: Map<String, Value>,
 }
-/// Workspace component directory and identity metadata owning a relative import target.
+/// Workspace component directory ([`PathBuf`]) and identity metadata owning a relative import target.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Owner {
     pub(super) directory: PathBuf,

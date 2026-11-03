@@ -5,7 +5,7 @@ use serde_json::{Map, Value, json};
 use std::io;
 
 impl Projection<'_> {
-    /// Finalizes the [`Projection`] into the wire response payload and [`collect_issues`](Self::collect_issues) list.
+    /// Finalizes the [`Projection`] into the wire response payload ([`Value`]) and [`collect_issues`](Self::collect_issues) list.
     pub(super) fn finish(self) -> io::Result<Value> {
         let issues = self.collect_issues()?;
         let mut grammar = Vec::with_capacity(self.grammar.len());

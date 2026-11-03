@@ -16,7 +16,7 @@ pub(super) struct Callbacks {
     pub validated_sources: Option<Vec<proof::Proof>>,
 }
 
-/// Deserialized validation request verifying read proofs before callback execution.
+/// Deserialized validation request verifying read proofs before callback execution via [`validate`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Validate {

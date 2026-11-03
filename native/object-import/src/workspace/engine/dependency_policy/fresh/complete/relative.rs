@@ -66,7 +66,7 @@ fn authored(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Returns `true` when `value` is a JSON string whose trimmed contents are non-empty.
+/// Returns `true` when `value` ([`Value`]) is a JSON string whose trimmed contents are non-empty.
 #[inline]
 fn non_empty_str(value: &Value) -> bool {
     value

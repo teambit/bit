@@ -23,7 +23,7 @@ use std::{
     io,
 };
 
-/// Loaded current/destination lane state, `.bitmap` document, and component selection for `switch` [`context`] preparation.
+/// Loaded current/destination lane state, `.bitmap` document, and component selection for `switch` [`context`] preparation on [`Prepare`].
 struct LaneSelection {
     imported: command_import::PreparedImport,
     bitmap: Value,

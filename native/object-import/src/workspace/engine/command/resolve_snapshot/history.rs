@@ -1,4 +1,4 @@
-//! Pre-tag `VersionHistory` staging via [`tag_histories`] and [`tag_history`] for resolved [`Material`] batches.
+//! Pre-tag `VersionHistory` staging via [`tag_histories`] and [`tag_history`] for resolved [`Material`] batches in [`Repository`].
 //! Stages pre-tag head ancestry before the newly allocated semantic tag is published.
 
 #[cfg(test)]

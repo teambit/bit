@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Resolved `node_modules` package manifest and component metadata for fresh dependency detection.
+/// Resolved `node_modules` package manifest ([`Value`]) and component metadata for fresh dependency detection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Package {
     pub(super) name: String,

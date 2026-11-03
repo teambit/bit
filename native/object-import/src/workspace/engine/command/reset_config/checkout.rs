@@ -1,4 +1,4 @@
-//! `ComponentWriter`'s existing config file [`document`] replacement, excluding local overrides.
+//! `ComponentWriter`'s existing config file [`document`] replacement via [`add_config`] and [`insert`], excluding local overrides.
 
 use super::{Record, invalid};
 use serde_json::{Map, Value, json};

@@ -1,4 +1,4 @@
-//! Scope-only lane dependent auto-tag expansion (`getLaneAutoTagIdsFromScope`) via [`append`].
+//! Scope-only lane dependent auto-tag expansion (`getLaneAutoTagIdsFromScope`) via [`append`], [`candidates`], and [`reports`].
 //! Captures hidden lane dependents from object storage without materializing workspace files.
 
 #[cfg(test)]

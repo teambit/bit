@@ -5,7 +5,7 @@ use crate::workspace::engine::dependency_policy::wire::{Entry, version};
 use serde_json::{Map, Value};
 use std::collections::HashSet;
 
-/// Staged component and package additions and missing-package removals from manual policy rules.
+/// Staged component and package additions ([`Map`], [`Value`]) and missing-package removals from manual policy rules.
 struct Additions {
     components: [Vec<usize>; 3],
     packages: [Map<String, Value>; 3],

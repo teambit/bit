@@ -65,7 +65,7 @@ fn validate_identity(material: &Material) -> io::Result<()> {
     Ok(())
 }
 
-/// Validates Harmony `Version` projection fields (`extensions`, `files`) and application file rules on `material`.
+/// Validates Harmony `Version` projection fields (`extensions`, `files`) and application file rules on `material` ([`Material`]).
 #[inline]
 fn validate_projection(material: &Material, ordinary_snapshot: bool) -> io::Result<()> {
     let projected = crate::workspace::engine::status_models::harmony::project(&material.version)?;

@@ -62,7 +62,7 @@ pub(super) fn added(retained: &Retained) -> Option<&str> {
         .filter(|root| !root.is_empty())
 }
 
-/// Returns the non-removed workspace-root target entry (`directory == "."`) from `context`, if present.
+/// Returns the non-removed workspace-root target entry (`directory == "."`) from `context` for [`include`] and [`provenance`], if present.
 #[inline]
 fn target(context: &Value) -> Option<&Value> {
     context["targets"]

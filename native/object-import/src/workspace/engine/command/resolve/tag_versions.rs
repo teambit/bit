@@ -1,4 +1,4 @@
-//! Compute semantic identities via [`plan`], [`components`], [`file`], and [`ranges`] before allocating `Version` hashes.
+//! Compute semantic identities via [`plan`], [`components`], [`file`], and [`ranges`] on [`Material`] before allocating `Version` hashes.
 
 pub(super) use ranges::update as update_ranges;
 

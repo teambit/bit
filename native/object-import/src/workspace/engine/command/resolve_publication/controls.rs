@@ -2,7 +2,7 @@
 
 use super::{HashSet, Path, PathBuf, Value, fs, io, proof};
 
-/// Prepared `unmerged.json` and `merge-conflict` file cleanup state for resolved snapshots.
+/// Prepared `unmerged.json` and `merge-conflict` file cleanup state for resolved snapshots via [`prepare`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Prepared {
     pending: PathBuf,

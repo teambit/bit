@@ -87,7 +87,7 @@ fn update(
     }
 }
 
-/// Extracts the bare `scope/name` identity from a `scope/name@version` string in `updateDependents`.
+/// Extracts the bare `scope/name` identity from a `scope/name@version` string in `updateDependents` for [`update`].
 #[inline]
 fn hidden_identity(value: &Value) -> Option<&str> {
     value

@@ -56,7 +56,7 @@ fn entry(row: &Value) -> io::Result<Value> {
     Ok(json!({"identity":identity(&row["id"])?,"packageName":pkg_name,"versionRange":range}))
 }
 
-/// Extracts per-lifecycle lists of manually ignored (`"-"`) dependency names from `finish["manual"]`.
+/// Extracts per-lifecycle lists of manually ignored (`"-"`) dependency names from `finish["manual"]` ([`Value`]).
 #[inline]
 fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
     let fields =
