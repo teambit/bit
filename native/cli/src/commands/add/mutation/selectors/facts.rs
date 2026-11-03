@@ -48,7 +48,7 @@ impl Facts {
             map.extend(facts.clone());
         }
     }
-    /// Runs a `statusCompare` [`Engine`] request for `ids` using the retained comparison targets.
+    /// Runs a `statusCompare` [`Engine`] request for `ids` using the retained `self.comparisons` targets.
     #[inline]
     pub(super) fn compare(
         &self,

@@ -42,7 +42,7 @@ pub(super) const GLOBAL_HELP: &str = "Global\n  -h, --help       show help\n    
 const CORE_ASPECT_IDS: &str =
     include_str!("../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
-/// Parsed CLI options for `bit app` (`--json` mode).
+/// Parsed CLI options for `bit app` (`--json` mode) populated by [`parse_options`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub json: bool,

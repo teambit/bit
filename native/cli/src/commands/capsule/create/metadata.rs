@@ -24,7 +24,7 @@ struct OriginMarker<'a> {
     kind: &'static str,
 }
 
-/// Writes root `package.json` ([`RootPackage`]) and `.bit-capsule-origin.json` ([`OriginMarker`]) metadata under `capsules_root`.
+/// Writes root `package.json` ([`RootPackage`]) and `.bit-capsule-origin.json` ([`OriginMarker`]) metadata under `capsules_root` via [`has_valid_origin_marker`].
 pub(super) fn write_root_metadata(capsules_root: &Path, base_dir: &str) -> io::Result<()> {
     let base_dir = base_dir.trim();
     if capsules_root

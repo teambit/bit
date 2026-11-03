@@ -65,7 +65,7 @@ pub(super) fn apply_set_to_entry(
     Ok(true)
 }
 
-/// Unsets `bare_aspect` in `component.json` at `path`, inserting `"-"` when inherited from an outer layer.
+/// Unsets `bare_aspect` in `component.json` at `path` via [`find_matching_aspect_key`], inserting `"-"` when inherited from an outer layer.
 pub(super) fn unset_in_comp_json(
     path: PathBuf,
     bare_aspect: &str,

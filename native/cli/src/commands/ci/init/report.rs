@@ -60,7 +60,7 @@ pub(super) fn render(report: &Report, chalk: Chalk) -> String {
     ]
     .join("\n\n")
 }
-/// Renders the `Scaffolded bit ci sync` header block and any branch or remote warnings for `report`.
+/// Renders the `Scaffolded bit ci sync` header block and any branch or remote warnings for `report` via [`heading`].
 fn header(report: &Report, chalk: Chalk) -> String {
     let redacted = report.target.origin
         .as_deref()

@@ -31,7 +31,7 @@ pub(super) fn resolve_bare_scope_targets(
     resolve_bare_pattern_targets(scope_dir, scope_name, pattern)
 }
 
-/// Resolves a single non-glob literal component pattern in `scope_dir` via [`resolve_component_entry`].
+/// Resolves a single non-glob literal component pattern in `scope_dir` via [`resolve_component_entry`] for [`resolve_bare_scope_targets`].
 fn resolve_bare_literal_target(
     scope_dir: &Path,
     scope_name: &str,

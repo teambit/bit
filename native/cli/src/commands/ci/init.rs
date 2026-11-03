@@ -43,7 +43,7 @@ pub(super) fn run(root: &Path, args: &[OsString]) -> io::Result<Outcome> {
             .map_err(|error| io::Error::new(error.kind(), chalk.red(&error.to_string())))
     })
 }
-/// Validates `workspace.jsonc` and builds the [`Plan`] for `bit ci init` when supported natively.
+/// Validates `workspace.jsonc` and builds the [`Plan`] for `bit ci init` when supported natively via [`files::supported`].
 fn prepare(root: &Path) -> io::Result<Option<Plan>> {
     let document = Document::parse(&fs::read_to_string(root.join("workspace.jsonc"))?)?;
     let value = document.value();

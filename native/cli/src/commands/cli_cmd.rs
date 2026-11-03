@@ -57,7 +57,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// Emits the unknown `--skill` type error for `bit cli generate`.
+/// Emits the unknown `--skill` type error for `bit cli generate` when [`parse_unknown_skill`] matches.
 fn emit_unknown_skill(args: &[OsString], skill: &str) -> io::Result<Outcome> {
     let msg = format!(r#"Unknown skill type: "{skill}". Use "commands" or "reference"."#);
     let err = io::Error::other(msg);

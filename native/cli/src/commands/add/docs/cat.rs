@@ -66,7 +66,7 @@ impl CatDocs {
         Ok(error)
     }
 
-    /// Publishes proven `cat-component` documentation cache entries when sources and cache state remain unchanged.
+    /// Publishes proven `cat-component` documentation cache entries when [`observe`]d sources and [`cache_hits`] state remain unchanged.
     pub(in crate::commands) fn publish(self) -> io::Result<()> {
         if self.observed != observe(&self.root, &self.components)? {
             return Err(io::Error::other("cat documentation sources changed"));

@@ -26,7 +26,7 @@ use bit_install::{
 };
 use serde_json::{Map, Value, json};
 use std::{ffi::OsString, fs, path::Path};
-/// Resolved aspect identifier, configuration source label, and origin level for `bit aspect list` in [`run_list`].
+/// Resolved aspect identifier, configuration source label, and origin level for `bit aspect list` in [`run_list`] and [`build_list_json`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct AspectSourceItem {
     pub aspect_name: String,

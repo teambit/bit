@@ -1,7 +1,7 @@
 //! The commands implemented in Rust (`bit-cli`). A command is looked up by its
 //! name or one of its aliases, exactly as the Node.js CLI spells them.
 //!
-//! Dispatches top-level and subcommand names to native [`Command`] handlers via [`COMMANDS`] and [`find`] in `bit-cli`.
+//! Dispatches top-level and subcommand names to native [`Command`] handlers via [`COMMANDS`] and [`find`] in `bit-cli` without delegating first.
 
 mod add;
 mod app_cmd;

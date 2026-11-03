@@ -58,7 +58,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     build(&flags, &positionals)
 }
 
-/// Deterministic option validation error thrown by `CheckoutCmd.report` before checkout runs.
+/// Deterministic option validation error thrown by `CheckoutCmd.report` before checkout runs via [`validate_target_error`].
 pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     let (flags, positionals) = read_checkout(args, true)?;
     if positionals.is_empty() || positionals.len() > 2 {

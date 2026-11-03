@@ -58,7 +58,7 @@ pub(super) enum Subcommand {
 }
 
 impl Subcommand {
-    /// Returns the progress loader label corresponding to this [`Subcommand`] variant.
+    /// Returns the progress loader label corresponding to this [`Subcommand`] variant for [`run`].
     #[inline]
     const fn loader_label(&self) -> &'static str {
         match self {

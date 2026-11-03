@@ -64,7 +64,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("check-types execution delegated".into()))
 }
 
-/// Emits the outside-workspace error for `bit check-types` in text or `--json` mode.
+/// Emits the outside-workspace error for `bit check-types` in text or `--json` mode using [`OUTSIDE_WORKSPACE_ERR`].
 fn emit_outside_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
     if options.json {
         return workspace_command::execute_failure_scope(

@@ -27,7 +27,7 @@ use std::{
 /// Native `bit cat-scope` [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "cat-scope", aliases: &[], run };
 
-/// Parsed CLI flags and optional scope path argument for `bit cat-scope`.
+/// Parsed CLI flags and optional scope path argument for `bit cat-scope` built by [`parse_options`].
 #[derive(Debug, Default, PartialEq, Eq)]
 struct Options {
     scope_path: Option<String>,

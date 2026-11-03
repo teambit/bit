@@ -38,7 +38,7 @@ pub(super) fn links(root: &Path, projection: &Projection) -> io::Result<()> {
     Ok(())
 }
 
-/// Returns `true` when `target` matches the bare component `identity` after stripping `@version`.
+/// Returns `true` when `target` matches the bare component `identity` after stripping `@version` for [`links`].
 #[inline]
 fn matches_target(target: &serde_json::Value, identity: &str) -> bool {
     let expected = identity.trim();

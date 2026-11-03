@@ -40,7 +40,7 @@ fn consume_trailing_capsule_ids<'a>(
     Some(())
 }
 
-/// Applies a single `bit capsule create` CLI argument `arg` (and any value from `args`) to `create`.
+/// Applies a single `bit capsule create` CLI argument `arg` (and any value from `args`) to `create` via [`apply_create_bool`].
 fn apply_create_arg<'a>(
     arg: &'a str,
     args: &mut impl Iterator<Item = &'a str>,

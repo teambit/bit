@@ -46,7 +46,7 @@ impl ProjectedLinker {
         self.with_installer(|installer| installer.install_fork(root))
     }
 
-    /// Runs `action` with an [`Installer`] backed by the retained [`Environments`] provider session.
+    /// Runs `action` with an [`Installer`] backed by the retained [`Environments`] provider session and restores the session afterwards.
     pub(in crate::commands) fn with_installer<ResultValue>(
         &mut self,
         action: impl FnOnce(Installer) -> io::Result<ResultValue>,

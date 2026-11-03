@@ -84,7 +84,7 @@ impl ProjectedLinker {
         self.retained.validate()
     }
 
-    /// Links the materialized projection for `identities` before the caller publishes its retained `bitmap`.
+    /// Links the materialized projection for `identities` via [`Self::link_inner`] before the caller publishes its retained `bitmap`.
     #[inline]
     pub(in crate::commands) fn link(
         &mut self,

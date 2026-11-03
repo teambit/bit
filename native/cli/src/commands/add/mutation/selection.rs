@@ -91,7 +91,7 @@ pub(super) fn seed_environments(
     Ok(())
 }
 
-/// Extracts the registered environment ID for `env_id` from the `identityLinkFacts` response `facts`.
+/// Extracts the registered environment ID for `env_id` from the `identityLinkFacts` response `facts` for [`seed_environments`].
 #[inline]
 fn extract_registered_env(facts: &Value, env_id: &str) -> Option<String> {
     let entry = facts

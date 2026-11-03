@@ -30,7 +30,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
-/// Applies a single CLI token `arg` (and any consumed value from `args`) to `options`.
+/// Applies a single CLI token `arg` (and any consumed value from `args`) to `options` via [`consume_value`].
 fn apply_arg(
     options: &mut Options,
     arg: &str,

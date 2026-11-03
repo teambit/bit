@@ -74,7 +74,7 @@ fn publish(
     Ok(host)
 }
 
-/// Selects [`WorkspaceComponent`] entries from `projection` that correspond to non-empty tracked rows in `plan`.
+/// Selects [`WorkspaceComponent`] entries from `projection` that correspond to non-empty tracked rows in `plan` via [`non_empty_str`].
 fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
     plan.components()
         .iter()

@@ -63,7 +63,7 @@ pub(super) fn try_run(
     .map(Some)
 }
 
-/// Emits a `bit check-types` pattern resolution failure after any `--all` deprecation warning.
+/// Emits a `bit check-types` pattern resolution failure after any `--all` deprecation warning for [`try_run`].
 fn emit_pattern_error(
     root: &Path,
     args: &[OsString],

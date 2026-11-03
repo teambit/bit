@@ -36,7 +36,7 @@ pub(super) fn app_help_output(argv: &[&str], chalk: Chalk) -> Option<String> {
     }
 }
 
-/// Renders help text plus a yellow `Unknown argument` footer when `argv` passes an unsupported flag.
+/// Renders help text plus a yellow `Unknown argument` footer when `argv` passes an unsupported flag via [`app_option_error`].
 pub(super) fn unsupported_flag_help(argv: &[&str], chalk: Chalk) -> Option<String> {
     let name = command_name(argv)?;
     match &argv[1..] {

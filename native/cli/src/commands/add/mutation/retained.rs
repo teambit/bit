@@ -70,7 +70,7 @@ impl Retained {
             .map(str::to_owned)
             .collect()
     }
-    /// Looks up retained component rows for `identities` in slice order.
+    /// Looks up retained component rows for `identities` in slice order from `self.rows`.
     pub(super) fn rows(&self, identities: &[String]) -> io::Result<Vec<Value>> {
         identities
             .iter()

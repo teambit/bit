@@ -50,7 +50,7 @@ pub(super) fn prepare(
     Ok(Prepared { plan, projection, capture, engine })
 }
 
-/// Resolves effective workspace configuration, preflight [`Plan`], and `trackingContext` from `engine`.
+/// Resolves effective workspace configuration, preflight [`Plan`], and `trackingContext` from `engine` for [`prepare`].
 #[inline]
 fn context(
     engine: &mut Engine,

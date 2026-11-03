@@ -75,7 +75,7 @@ fn non_empty_str(value: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
-/// Collects unique unscoped component rows from `added` that belong to `projection`.
+/// Collects unique unscoped component rows from `added` that belong to `projection` for [`warn`].
 fn candidates(added: &[Value], projection: &Projection) -> Vec<Value> {
     let unscoped: std::collections::HashSet<String> = projection.workspace
         .components

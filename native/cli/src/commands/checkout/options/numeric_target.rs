@@ -20,7 +20,7 @@ pub(super) fn normalize(raw: &str) -> String {
         })
         .unwrap_or_else(|| raw.into())
 }
-/// Parses a decimal or hexadecimal checkout target string as an `f64` when within safe integer bounds.
+/// Parses a decimal or hexadecimal checkout target string as an `f64` when within safe integer bounds for [`normalize`].
 fn number(raw: &str) -> Option<f64> {
     let raw = raw.trim();
     if let Some(hex) = raw

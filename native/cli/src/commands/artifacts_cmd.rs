@@ -24,7 +24,7 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 /// Native `bit artifacts` command descriptor.
 pub const COMMAND: Command = Command { name: "artifacts", aliases: &[], run };
 
-/// Parsed CLI options and filter arguments for `bit artifacts`.
+/// Parsed CLI options and filter arguments for `bit artifacts` built by [`parse_options`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     /// Required component ID or pattern argument passed to `bit artifacts`.

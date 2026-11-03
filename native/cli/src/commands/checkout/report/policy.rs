@@ -40,7 +40,7 @@ pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String,
     Ok((logs, Formatter::join(&[updates, conflicts])))
 }
 
-/// Formats the `workspace.jsonc` dependency update section from `workspaceDepsUpdates` via [`update_pair`].
+/// Formats the `workspace.jsonc` dependency update section from `workspaceDepsUpdates` via [`update_pair`] for [`format`].
 #[inline]
 fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else {

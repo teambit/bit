@@ -36,7 +36,7 @@ pub(super) fn package_dependencies(
     PackageDependencies { dependencies, dev_dependencies, peer_dependencies }
 }
 
-/// Populates default `devDependencies` for Node-like builtin capsule environments.
+/// Populates default `devDependencies` for Node-like builtin capsule environments via [`insert`].
 fn node_like(env: BuiltinEnv, dev: &mut Map<String, Value>) {
     insert(dev, "@types/jest", "26.0.20");
     insert(dev, "@types/node", "22.10.5");

@@ -29,7 +29,7 @@ pub(super) fn save_artifacts_to_dir(
     Ok(total_saved)
 }
 
-/// Writes all artifact files for a single [`ComponentArtifacts`] entry under `base_dir`.
+/// Writes all artifact files for a single [`ComponentArtifacts`] entry under `base_dir` via [`save_single_artifact_file`].
 fn save_component_artifacts(
     scope_dir: &Path,
     base_dir: &Path,

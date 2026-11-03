@@ -85,7 +85,7 @@ impl ProjectedLinker {
         Ok(context)
     }
 
-    /// Evaluates a single selector `entered` criterion against `targets` under `request`.
+    /// Evaluates a single selector `entered` criterion against `targets` under `request` via [`grammar::validate`] and [`grammar::applied`].
     fn criterion(
         &mut self,
         request: &Request<'_>,

@@ -24,7 +24,7 @@ use bit_install::{
 use serde_json::{Map, Value, json};
 use std::{ffi::OsString, fs, path::Path};
 
-/// Executes `bit aspect get` for `opts` in text, `--json`, or `--debug` ([`run_get_debug`]) mode.
+/// Executes `bit aspect get` for `opts` in text, `--json`, or `--debug` ([`run_get_debug`]) mode via [`collect_get_entries`].
 pub(in crate::commands::aspect) fn run_get(
     root: &Path,
     args: &[OsString],

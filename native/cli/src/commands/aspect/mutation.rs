@@ -31,7 +31,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-/// Staged `component.json` filesystem path and serialized JSON payload awaiting commit in [`MutationBatch`].
+/// Staged `component.json` filesystem path and serialized JSON payload awaiting commit in [`MutationBatch`] and [`UpdatePlan`].
 pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,

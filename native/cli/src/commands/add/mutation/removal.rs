@@ -72,7 +72,7 @@ fn normalize_ids(ids: &[String]) -> Vec<String> {
         .collect()
 }
 
-/// Collects bare component identities from `rows` whose `modified` boolean has not yet been computed.
+/// Collects bare component identities from `rows` whose `modified` boolean has not yet been computed for [`ProjectedLinker::consumer_status`].
 #[inline]
 fn unchecked_ids(rows: &[Value]) -> Vec<String> {
     rows.iter()

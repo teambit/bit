@@ -65,7 +65,7 @@ pub(super) fn write(
     Ok(("updated", note))
 }
 
-/// Replaces the [`UNKNOWN`] placeholder between [`START`] and [`END`] markers with `repo`.
+/// Replaces the [`UNKNOWN`] placeholder between [`START`] and [`END`] markers with `repo` for [`write`].
 #[inline]
 fn fill_repo(content: &str, repo: &str) -> String {
     let trimmed_repo = super::trim(repo);

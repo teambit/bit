@@ -42,7 +42,7 @@ pub struct Chalk {
 }
 
 impl Chalk {
-    /// `chalk.supportsColor` for stdout, given the command's arguments.
+    /// `chalk.supportsColor` for stdout, given the command's arguments via [`level`].
     #[inline]
     pub fn detect(args: &[OsString]) -> Self {
         Self { enabled: level(args, io::stdout().is_terminal()) > 0 }

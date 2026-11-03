@@ -23,7 +23,7 @@ const ORIGIN_FILE: &str = ".bit-capsule-origin.json";
 /// Recognized `kind` values recorded in [`ORIGIN_FILE`] markers.
 const VALID_KINDS: &[&str] = &["workspace", "scope-aspects-root", "scope-aspect", "scope"];
 
-/// Capsule root directory metadata and disk usage summary for `bit capsule list`.
+/// Capsule root directory metadata and disk usage summary for `bit capsule list` produced by [`inspect`].
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct RootEntry {

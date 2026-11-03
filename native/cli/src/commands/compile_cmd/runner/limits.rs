@@ -23,7 +23,7 @@ pub(super) fn batch_size(root: &Path) -> io::Result<usize> {
     parse_concurrency_limit(&value)
 }
 
-/// Parses the `concurrency.io` configuration string into a bounded `[1, 256]` batch limit.
+/// Parses the `concurrency.io` configuration string into a bounded `[1, 256]` batch limit for [`batch_size`].
 #[inline]
 fn parse_concurrency_limit(value: &str) -> io::Result<usize> {
     let trimmed = value.trim();
