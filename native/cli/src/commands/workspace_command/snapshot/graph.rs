@@ -22,7 +22,7 @@ use pnpm_lockfile::{FilterByImportersOptions, IncludedDependencies, Lockfile, Pe
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io, path::Path};
 
-/// Snapped component descriptor with root directory, package name, and environment ID for [`graphs`].
+/// Snapped component descriptor with root directory, package name, and environment ID for [`graphs`] and [`graph`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Snapped<'s> {
     /// `componentMap.rootDir`.

@@ -38,7 +38,7 @@ impl Network {
         self.delete_scope_ids(url, ids, force, true).await
     }
 
-    /// Sends a single `POST <url>/api/scope/delete` request for component or lane `ids`.
+    /// Send a single `POST <url>/api/scope/delete` request for component or lane `ids`.
     async fn delete_scope_ids(
         &self,
         url: &str,

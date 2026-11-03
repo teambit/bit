@@ -33,7 +33,7 @@ pub enum Target {
     Wrapper(PathBuf),
 }
 
-/// Discovered Node.js CLI entry script, Node executable, and package/bvm directories.
+/// Discovered Node.js CLI entry script, Node executable, and package/bvm directories ([`Source`], [`Target::Entry`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NodeCli {
     /// `<@teambit/bit>/bin/bit`, or a checkout's `bin/bit.js`.

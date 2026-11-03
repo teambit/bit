@@ -56,7 +56,7 @@ impl Cancellation {
         let _restore = Restore(previous);
         function()
     }
-    /// Creates a new uncancelled [`Cancellation`] token.
+    /// Create a new uncancelled [`Cancellation`] token.
     #[inline]
     #[must_use]
     pub fn new() -> Self {

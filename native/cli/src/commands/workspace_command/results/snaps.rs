@@ -62,7 +62,7 @@ fn id(value: Option<&Value>) -> io::Result<Id> {
     Id::from_object(value)
 }
 
-/// Parses `mergeSnapResults` [`Value`] into [`Snaps`].
+/// Parses `mergeSnapResults` [`Value`] into [`Snaps`] via [`record`], [`rows`], and [`id`].
 pub fn snaps(value: Option<&Value>) -> io::Result<Option<Snaps>> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(None) };
     let map = record(value, &["snappedComponents", "autoSnappedResults"])?;

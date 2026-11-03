@@ -66,7 +66,7 @@ impl Default for Compiler {
 }
 
 impl Compiler {
-    /// Creates a new [`Compiler`] initialized with `node-ignore` 3.3.10 replacement tables.
+    /// Create a new [`Compiler`] initialized with `node-ignore` 3.3.10 [`Step`] replacement tables.
     #[must_use]
     #[inline]
     pub fn new() -> Self {

@@ -73,7 +73,7 @@ const SUPPORTED_PM_CHANGES: &[&str] = &[
     "throttleProgress",
 ];
 
-/// Validates that `values` only contains keys in [`SUPPORTED_PM_CHANGES`].
+/// Validate that [`Value`] `values` only contains keys in [`SUPPORTED_PM_CHANGES`].
 #[inline]
 fn validate_changes(values: &Value) -> io::Result<()> {
     if values.is_null() {

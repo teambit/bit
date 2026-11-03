@@ -55,7 +55,7 @@ pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> Glob
     })
 }
 
-/// Applies `BIT_CONFIG_*` and layered `workspace` / `scope` / `global` precedence using `environment`.
+/// Apply `BIT_CONFIG_*` and layered `workspace` / `scope` / `global` [`GlobalConfig`] precedence using `environment`.
 #[inline]
 fn layers(
     global: GlobalConfig,

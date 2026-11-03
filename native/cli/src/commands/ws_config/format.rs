@@ -1,6 +1,6 @@
 //! Output formatting for `bit ws-config write`.
 //!
-//! Defines [`WriteConfigFilesResult`], [`WriteResults`], and [`OneConfigWriterIdResult`] and renders summaries with [`Formatter`] and [`Chalk`].
+//! Defines [`WriteConfigFilesResult`], [`WriteResults`], [`OneConfigWriterIdResult`], and [`WrittenConfigFile`] and renders summaries with [`Formatter`] and [`Chalk`].
 
 use super::{WriteOptions, clean::format_clean_output};
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};

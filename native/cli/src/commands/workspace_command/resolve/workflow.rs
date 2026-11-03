@@ -1,6 +1,6 @@
 //! `JavaScript` tooling options around Rust's snapshot transaction.
 //!
-//! [`Workflow`] evaluates [`EffectiveConfig`], [`WorkspaceConfig`], and [`ScopeJson`] for [`Kind`] snapshot workflows.
+//! [`Workflow`] and [`parse`] evaluate [`EffectiveConfig`], [`WorkspaceConfig`], and [`ScopeJson`] for [`Kind`] snapshot workflows.
 
 #[cfg(test)]
 mod tests;

@@ -57,7 +57,7 @@ fn component_id(id: &crate::model::ComponentId) -> String {
     identity
 }
 
-/// Builds the serialized `packageManagerOptions` [`Value`] map passed to install subscribers.
+/// Build the serialized `packageManagerOptions` [`Value`] map passed to install subscribers.
 #[inline]
 fn package_options(
     session: &Session<'_>,

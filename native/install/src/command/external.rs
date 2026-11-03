@@ -69,7 +69,7 @@ fn write_package_json_dependencies(root: &Path, dependencies: &DependencyMap) ->
     fs::write(&path, stringify_package(&manifest, &detect_indent(&text), detect_newline(&text))?)
 }
 
-/// Reads and parses `package.json` at `path`, returning an empty object when the file does not exist.
+/// Read and parse `package.json` at [`Path`] `path`, returning an empty [`Value`] object when the file does not exist.
 fn load_package_json(path: &Path) -> io::Result<(String, Value)> {
     let text = match fs::read_to_string(path) {
         Ok(text) => text,

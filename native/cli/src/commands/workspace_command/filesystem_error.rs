@@ -1,6 +1,6 @@
 //! Released filesystem error codes, path operands, and permission guidance.
 //!
-//! [`Failure`] formats POSIX/Windows [`io::Error`] failures at [`Path`] locations with [`inspect`] and [`Chalk`].
+//! [`Failure`], [`failure`], [`paired_failure`], and [`report`] format POSIX/Windows [`io::Error`] failures at [`Path`] locations with [`inspect`] and [`Chalk`].
 mod inspect;
 use crate::commands::{color::Chalk, workspace_command};
 use std::{

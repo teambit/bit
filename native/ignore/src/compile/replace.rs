@@ -29,7 +29,7 @@ pub struct Step {
 }
 
 impl Step {
-    /// Compiles `source` into a [`Step`] with `global` and `replacement`.
+    /// Compile `source` into a [`Step`] with `global` and `replacement`.
     #[inline]
     fn new(source: &str, global: bool, replacement: Replacement) -> Self {
         let regex = Regex::with_flags(source, "").expect("node-ignore's replacers compile");

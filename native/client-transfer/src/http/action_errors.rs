@@ -35,7 +35,7 @@ fn error_code(error: &Value) -> Option<u64> {
         })
 }
 
-/// Extracts a trimmed, non-empty string slice from `value`.
+/// Extract a trimmed, non-empty string slice from [`Value`] `value`.
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

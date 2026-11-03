@@ -20,7 +20,7 @@ pub(super) struct Resolved {
     pub(super) dependencies: IndexMap<String, ComponentDependencies>,
 }
 
-/// Validates that [`Session`] `session.root` and [`Loaded`] `loaded.workspace.scope_path` are non-empty and non-whitespace.
+/// Validate that [`Session`] `session.root` and [`Loaded`] `loaded.workspace.scope_path` are non-empty and non-whitespace.
 #[inline]
 fn validate_paths(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     if [&session.root, &loaded.workspace.scope_path]

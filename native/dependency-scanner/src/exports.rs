@@ -11,7 +11,7 @@ use oxc_ast::ast::{AssignmentTarget, Expression};
 fn peel<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
     expression.without_parentheses().get_inner_expression()
 }
-/// Returns `true` when `expression` is a non-parenthesized identifier matching `name`.
+/// Return `true` when [`Expression`] `expression` is a non-parenthesized identifier matching `name`.
 #[inline]
 fn identifier(expression: &Expression<'_>, name: &str) -> bool {
     matches!(peel(expression), Expression::Identifier(value) if value.name == name)

@@ -26,7 +26,7 @@ pub enum Outcome {
     Declined(String),
 }
 
-/// Returns `Some(code)` ([`ExitCode`]) when a native command handled `args`, or `Ok(None)` to delegate to the Node.js CLI.
+/// Returns `Some(code)` ([`ExitCode`]) when a native command handled `args`, or `Ok(None)` (after [`warn_fallback`]) to delegate to the Node.js CLI.
 pub fn run(args: &[OsString]) -> io::Result<Option<ExitCode>> {
     if env::var_os("BIT_NATIVE")
         .is_some_and(|value| {

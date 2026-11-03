@@ -26,7 +26,7 @@ const MAX_OBJECT_BYTES: usize = 128 * 1024 * 1024;
 /// Maximum number of objects (`16384`) permitted in a single remote object tar archive.
 const MAX_OBJECTS: usize = 16384;
 
-/// A compressed object received from (or served by) a remote.
+/// Compressed object entry received from (or served by) a remote scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ObjectItem {
     pub hash: String,

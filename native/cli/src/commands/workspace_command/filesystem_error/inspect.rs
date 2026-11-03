@@ -1,6 +1,6 @@
 //! Node's inspection of a filesystem callback error, which has no `JavaScript` stack frames.
 //!
-//! [`render`] formats [`Failure`] properties (`errno`, `code`, `syscall`, `path`) with [`Chalk`] and [`quote`].
+//! [`render`] formats [`Failure`] properties (`errno`, `code`, `syscall`, `path`) with [`Chalk`], [`quote`], and [`select_delimiter`].
 #[cfg(test)]
 mod tests;
 

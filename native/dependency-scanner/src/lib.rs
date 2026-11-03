@@ -87,7 +87,7 @@ struct Scanner {
     deps: IndexMap<String, Dependency>,
     unsupported: bool,
 }
-/// Computes the byte offsets of the start of each line in `source`.
+/// Compute the byte offsets of the start of each line in `source` for [`Scanner`].
 #[inline]
 fn line_starts(source: &str) -> Vec<u32> {
     std::iter::once(0)

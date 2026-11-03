@@ -18,7 +18,7 @@ pub struct Policy {
     skip_published_versions: bool,
 }
 
-/// Consume policy flags while retaining all command grammar arguments in order.
+/// Consume policy flags ([`is_policy_flag`], [`policy_alias`]) while retaining all command grammar arguments in order.
 #[must_use]
 #[inline]
 pub fn parse<'a>(args: &[&'a str], tag: bool) -> Option<(Policy, Vec<&'a str>)> {

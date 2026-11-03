@@ -91,7 +91,7 @@ fn enrich(error: io::Error, calculated: &Calculated, output: &Output) -> io::Err
     io::Error::other(unpublished_message(&unpublished, output))
 }
 
-/// Snap-pinned dependencies outside the workspace whose hash the error mentions.
+/// Snap-pinned dependencies in [`Calculated`] outside the workspace whose hash `message` mentions.
 fn unpublished(calculated: &Calculated, message: &str) -> IndexMap<String, (String, Vec<String>)> {
     let local: std::collections::HashSet<String> = calculated.components
         .iter()

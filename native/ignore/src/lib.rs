@@ -36,7 +36,7 @@ pub struct Ignore {
 }
 
 impl Ignore {
-    /// Creates an empty [`Ignore`] rule set.
+    /// Create an empty [`Ignore`] rule set.
     #[must_use]
     #[inline]
     pub fn new() -> Self {

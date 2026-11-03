@@ -15,7 +15,7 @@ pub(crate) const SOURCE_BYTES: usize = 1024 * 1024;
 /// Maximum number of files (`4096`) accepted in a single embedded batch scan request.
 pub(crate) const BATCH_FILES: usize = 4096;
 
-/// Constructs an [`io::ErrorKind::FileTooLarge`] error when a source file exceeds [`SOURCE_BYTES`].
+/// Construct an [`io::ErrorKind::FileTooLarge`] error when a source file exceeds [`SOURCE_BYTES`].
 #[inline]
 fn too_large_error() -> io::Error {
     io::Error::new(io::ErrorKind::FileTooLarge, "source exceeds 1 MiB limit; use legacy fallback")

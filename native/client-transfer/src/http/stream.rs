@@ -31,7 +31,7 @@ pub(super) async fn read(
     result?;
     parsed
 }
-/// Streams chunks from `response` up to `maximum` bytes into `sender` under `cancellation`.
+/// Stream chunks from [`Response`] `response` up to `maximum` bytes into `sender` under [`Cancellation`].
 async fn feed(
     response: Response,
     maximum: usize,

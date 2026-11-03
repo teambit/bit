@@ -54,7 +54,7 @@ pub struct Resolver {
 }
 
 impl Resolver {
-    /// Resolves the custom remote resolver configured by `scope_json["resolverPath"]`, if any.
+    /// Resolve the custom remote [`Resolver`] configured by `scope_json["resolverPath"]`, if any.
     #[inline]
     #[must_use]
     pub fn configured(

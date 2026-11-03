@@ -8,7 +8,7 @@ use super::{Snapped, convert, remove_workspace_package, replacer::Replacer};
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io};
 
-/// Filter `lockfile` to reachable packages and serialize [`Snapped`] `component`'s dependency graph.
+/// Filter `lockfile` ([`Value`]) to reachable packages via [`selected_importers`] and [`filter`] and serialize [`Snapped`] `component`'s dependency graph.
 pub(super) fn graph(
     lockfile: &Value,
     component: &Snapped<'_>,

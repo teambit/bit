@@ -46,7 +46,7 @@ enum Output {
 }
 
 impl Output {
-    /// Returns the filesystem [`Path`] recorded by this [`Output`] variant.
+    /// Return the filesystem [`Path`] recorded by this [`Output`] variant.
     #[inline]
     fn path(&self) -> &Path {
         match self {

@@ -2,7 +2,7 @@
 //! `<scope>/command-history`, one line when a command starts and one when it
 //! ends, `<ISO time> <pid> <arguments>, started|succeeded|failed`.
 //!
-//! [`History`] uses [`workspace`] scope path discovery to append command start and completion lines.
+//! [`History`] uses [`workspace`] scope path discovery and [`iso_now`] to append command start and completion lines.
 
 #[cfg(test)]
 mod history_tests;

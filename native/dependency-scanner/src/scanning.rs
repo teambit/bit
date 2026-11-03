@@ -52,7 +52,7 @@ pub(crate) fn scan(file: &File, unsupported_options: bool) -> Outcome {
     }
     parse_source(file, &source, source_type, ts)
 }
-/// Parses `source` with Oxc [`Parser`] and extracts dependencies into an [`Outcome`].
+/// Parse `source` with Oxc [`Parser`] and extract dependencies into an [`Outcome`].
 fn parse_source(file: &File, source: &str, source_type: SourceType, ts: bool) -> Outcome {
     let allocator = Allocator::default();
     // Babel and TypeScript ESTree drop parentheses, so `(require)('x')` is a plain require call.
