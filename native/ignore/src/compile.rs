@@ -81,7 +81,7 @@ impl Compiler {
         }
     }
 
-    /// `_checkPattern` then `_createRule`; `None` for blank lines and comments.
+    /// `_checkPattern` ([`check_supported`]) then `_createRule` into [`Rule`]; `None` for blank lines and comments.
     #[inline]
     pub fn rule(&mut self, origin: &str) -> Result<Option<Rule>, UnsupportedPattern> {
         check_supported(origin)?;

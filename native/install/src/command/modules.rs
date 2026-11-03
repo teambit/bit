@@ -75,8 +75,8 @@ pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<In
     Ok(Installed { components: calculated.components.len(), old_non_loaded_envs })
 }
 
-/// The engine runs; another round only for `--recurring-install` while legacy envs
-/// that failed to load before the installation change the manifests.
+/// The engine runs ([`engine_run::run`]); another round only for `--recurring-install` while legacy envs
+/// that failed to load before the installation change the [`Calculated`] manifests.
 async fn run_cycles(
     session: &Session<'_>,
     context: &CycleContext<'_>,

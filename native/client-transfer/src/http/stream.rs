@@ -64,7 +64,7 @@ struct Chunks {
     current: io::Cursor<Vec<u8>>,
 }
 impl Read for Chunks {
-    /// Reads bytes from the active chunk buffer or blocks on `self.receiver` for the next HTTP chunk.
+    /// Reads bytes from the active [`Chunks`] buffer or blocks on `self.receiver` for the next HTTP chunk.
     #[inline]
     fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
         if output.is_empty() {

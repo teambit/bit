@@ -58,7 +58,7 @@ struct Outcome {
     dependencies: IndexMap<String, Dependency>,
     diagnostics: Vec<String>,
 }
-/// Extracted dependency entry with import specifiers and optional `isTypeImport` flag.
+/// Extracted dependency entry with [`Specifier`] import specifiers and optional `isTypeImport` flag.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Dependency {

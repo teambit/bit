@@ -42,7 +42,7 @@ const LATEST_VERSIONS_QUERY: &str =
 const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;
 
 impl Network {
-    /// `Http.list` with the published `includeDeleted` projection.
+    /// `Http.list` on [`Network`] with the published `includeDeleted` projection via [`Network::inventory_with_warning`].
     #[inline]
     pub async fn inventory(
         &self,

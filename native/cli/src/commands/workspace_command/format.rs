@@ -53,7 +53,7 @@ impl Formatter {
         format!("   {symbol} {text}")
     }
 
-    /// `formatSection(title, description, items)`.
+    /// `formatSection(title, description, items)` on [`Formatter`].
     #[must_use]
     pub fn section(&self, title: &str, description: &str, items: &[String]) -> String {
         let non_empty: Vec<&str> = items

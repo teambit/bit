@@ -65,7 +65,7 @@ fn component_package_name(argument: &str, loaded: &Loaded) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// `_addPackages`: resolves each package, adds it to the workspace policy, and persists `workspace.jsonc`.
+/// `_addPackages`: resolves each package, adds it to the workspace policy ([`policy_edit::add_to_root_policy`]), and persists `workspace.jsonc` for [`Session`] and [`Loaded`].
 pub async fn add(
     session: &Session<'_>,
     loaded: &Loaded,

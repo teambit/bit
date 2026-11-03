@@ -44,7 +44,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    /// Formats the engine request kind (`commandSnap<step>`, `commandTag<step>`, or `commandResolve<step>`).
+    /// Formats the engine request [`Kind`] (`commandSnap<step>`, `commandTag<step>`, or `commandResolve<step>`).
     #[inline]
     fn request(self, step: &str) -> String {
         match self {

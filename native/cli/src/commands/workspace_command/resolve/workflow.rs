@@ -80,7 +80,7 @@ fn tooling_flag(flag: &str, kind: Kind) -> bool {
 }
 
 impl Workflow {
-    /// Config-store build policy, with `tag --persist[=skip-build]` taking precedence.
+    /// Config-store build policy ([`EffectiveConfig`]), with `tag --persist[=skip-build]` (`kind`: [`Kind`]) taking precedence.
     pub fn configure(&mut self, root: &Path, args: &[&str], kind: Kind) -> io::Result<()> {
         let global =
             load_global_config(&crate::commands::status::cache::cache_root().join("config"))?;

@@ -79,7 +79,7 @@ pub(super) fn auto_snap_report(plan: &Value, receipt: &Value) -> io::Result<Vec<
         .collect()
 }
 
-/// Validates `prepared`: the context's targets match `targets` and `selectedIds` are distinct targets for `kind`.
+/// Validates `prepared` ([`Value`]): the context's targets match `targets` and `selectedIds` are distinct targets for `kind` ([`Kind`]).
 pub(super) fn validate_preparation(prepared: &Value, kind: Kind) -> io::Result<()> {
     let targets = prepared.get("targets").and_then(Value::as_array);
     let selected = prepared.get("selectedIds").and_then(Value::as_array);

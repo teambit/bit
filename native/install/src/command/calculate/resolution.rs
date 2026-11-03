@@ -37,7 +37,7 @@ fn validate_paths(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
     Ok(())
 }
 
-/// Prepares installation aspects on the host and resolves workspace policies and dependencies.
+/// Prepares installation aspects on the [`Session`] host and resolves workspace policies and dependencies into [`Resolved`].
 pub(super) async fn resolve(
     session: &Session<'_>,
     loaded: &Loaded,

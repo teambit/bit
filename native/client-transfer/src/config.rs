@@ -43,7 +43,7 @@ const TRANSPORT_KEYS: &[&str] = &[
     "network.key",
 ];
 
-/// `BIT_CONFIG_*` overrides workspace settings, then scope settings, then global settings.
+/// `BIT_CONFIG_*` overrides `workspace` ([`Value`]) settings, then `scope` settings, then `global` ([`GlobalConfig`]) settings via [`layers`].
 #[inline]
 #[must_use]
 pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> GlobalConfig {

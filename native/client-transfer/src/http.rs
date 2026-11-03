@@ -85,7 +85,7 @@ impl Listed {
         })
     }
 
-    /// `ComponentID.toString()`.
+    /// `ComponentID.toString()` for [`Listed`].
     #[inline]
     #[must_use]
     pub fn id(&self) -> String {

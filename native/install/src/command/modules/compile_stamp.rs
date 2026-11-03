@@ -93,7 +93,7 @@ pub(super) fn check(stamp: &Path, inputs: &Inputs<'_>) -> io::Result<Option<Vec<
         .collect())
 }
 
-/// The outputs that exist now, by path; `None` when one of them was not recorded.
+/// The [`Output`] entries that exist now for `stored` ([`Stamp`]), by [`PathBuf`]; `None` when one of them was not recorded.
 fn current_outputs(stored: &Stamp) -> io::Result<Option<HashMap<PathBuf, Output>>> {
     let current: HashMap<PathBuf, Output> = list_outputs(&stored.paths, false)?
         .into_iter()

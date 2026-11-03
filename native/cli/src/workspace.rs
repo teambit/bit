@@ -2,5 +2,5 @@
 //!
 //! Re-exports [`scope_path`] and [`root`] (`workspace_root`) from `bit_workspace_config` for fast workspace/scope path lookup.
 
-/// Re-export workspace [`root`] and [`.bit` / `bit` scope directory](scope_path) discovery helpers from `bit_workspace_config`.
+/// Re-export workspace [`root`] (`workspace_root`) and [`.bit` / `bit` scope directory](scope_path) discovery helpers from `bit_workspace_config`.
 pub use bit_workspace_config::{scope_path, workspace_root as root};

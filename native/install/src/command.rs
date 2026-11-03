@@ -53,7 +53,7 @@ pub enum Outcome {
 }
 
 /// Run `bit install` with `argv` (starting at the command name) in the
-/// workspace containing `cwd`.
+/// workspace containing `cwd` ([`Path`]) via [`run_with_options`].
 pub async fn run(
     cwd: &Path,
     argv: &[String],

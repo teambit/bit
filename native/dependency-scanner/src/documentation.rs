@@ -69,7 +69,7 @@ fn source_type(path: &str) -> Option<SourceType> {
         .flatten()
 }
 
-/// Bounded AST visitor state proving that a program contains only simple data [`Expression`] and [`Statement`] nodes.
+/// Bounded AST visitor state proving that a program contains only simple data [`Expression`] and [`Statement`] nodes via [`data_expression`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 struct Proof {
     accepted: bool,

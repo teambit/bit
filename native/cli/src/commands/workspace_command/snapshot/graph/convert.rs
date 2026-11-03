@@ -59,7 +59,7 @@ pub fn convert(
     Ok(Value::Object(graph))
 }
 
-/// `convertLockfileToGraphFromCapsule`: the importer's own dependencies.
+/// `convertLockfileToGraphFromCapsule`: the `importer`'s own dependencies from `lockfile` ([`Value`]).
 #[inline]
 fn capsule_dependencies(lockfile: &Value, importer: &str) -> io::Result<Vec<Value>> {
     let importer = &lockfile["importers"][importer];

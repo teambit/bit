@@ -55,7 +55,7 @@ pub(super) fn proxy(
     Ok(builder)
 }
 
-/// `strictSSL`, `ca` and `cafile` from `network.*` with the legacy `proxy.*` fallbacks.
+/// `strictSSL` ([`strict_bool`]), `ca` and `cafile` from `network.*` ([`GlobalConfig`]) with the legacy `proxy.*` fallbacks.
 #[inline]
 pub(super) fn tls(
     builder: reqwest::ClientBuilder,

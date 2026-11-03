@@ -53,7 +53,7 @@ impl Progress {
         render_lane_tail(self.imports.last(), output);
     }
 
-    /// Renders grouped `bit fetch` import statuses across `groups` into `output`.
+    /// Renders grouped `bit fetch` import statuses across `groups` into `output` ([`Output`]) via [`render_group`].
     pub fn render_fetch_groups(
         &self,
         output: &Output,

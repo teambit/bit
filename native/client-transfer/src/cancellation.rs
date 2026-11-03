@@ -46,7 +46,7 @@ impl Cancellation {
             .with(|current| current.borrow().clone())
             .unwrap_or_default()
     }
-    /// Scope synchronous construction on this thread, restoring nested owners even on panic.
+    /// Scope synchronous construction on this thread, restoring nested [`Cancellation`] owners via [`Restore`] even on panic.
     #[inline]
     pub fn scope<ResultValue>(
         cancellation: &Self,

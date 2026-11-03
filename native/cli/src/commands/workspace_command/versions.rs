@@ -44,7 +44,7 @@ pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Repor
         .transpose()?;
     Ok(versioned.report(&Formatter::new(chalk), root.as_ref()))
 }
-/// Hydrates and validates a raw engine snap or tag `value` into [`Versioned`].
+/// Hydrates and validates a raw engine snap or tag `value` ([`Value`]) into [`Versioned`] with `labels` ([`Labels`]).
 fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
     let map = object(value)?;
     let total = header(map, labels)?;

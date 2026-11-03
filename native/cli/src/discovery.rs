@@ -77,7 +77,7 @@ const NOT_FOUND: &str = "the Node.js Bit CLI was not found. Set BIT_NODE_CLI to 
 /// Relative path to the Bit CLI entry script inside a package installation (`node_modules/@teambit/bit/bin/bit`).
 const ENTRY_IN_PACKAGE: &str = "node_modules/@teambit/bit/bin/bit";
 
-/// Discovers the Node.js Bit CLI [`Target`] from the current process environment.
+/// Discovers the Node.js Bit CLI [`Target`] from the current process [`Environment`].
 #[inline]
 pub fn find() -> io::Result<Target> {
     find_in(&Environment::from_process())

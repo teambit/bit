@@ -21,7 +21,7 @@ fn too_large_error() -> io::Error {
     io::Error::new(io::ErrorKind::FileTooLarge, "source exceeds 1 MiB limit; use legacy fallback")
 }
 
-/// Reads the UTF-8 source [`File`] at `path` ([`Path`]), rejecting files larger than [`SOURCE_BYTES`].
+/// Reads the UTF-8 source [`File`] at `path` ([`Path`]), rejecting files larger than [`SOURCE_BYTES`] via [`too_large_error`].
 #[inline]
 pub(crate) fn read_source(path: &Path) -> io::Result<String> {
     let file = File::open(path)?;

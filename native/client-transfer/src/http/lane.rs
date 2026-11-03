@@ -43,7 +43,7 @@ impl Network {
     }
 }
 
-/// Parses and validates the `data.lanes.list` array from a remote `listLanes` `GraphQL` response.
+/// Parses and validates the `data.lanes.list` [`Value`] array from a remote `listLanes` `GraphQL` response via [`lane_projection`].
 #[inline]
 fn parse_lanes_response(bytes: &[u8]) -> io::Result<Vec<Value>> {
     let parsed: Value = serde_json::from_slice(bytes).map_err(io::Error::other)?;

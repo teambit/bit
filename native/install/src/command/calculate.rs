@@ -41,7 +41,7 @@ pub struct Calculated {
 }
 
 impl Calculated {
-    /// `getOldNonLoadedEnvs`: environment IDs without a manifest that failed to load.
+    /// `getOldNonLoadedEnvs`: environment IDs in [`Calculated`] without a manifest that failed to load.
     #[inline]
     pub fn non_loaded_envs(&self) -> Vec<String> {
         self.env_policies

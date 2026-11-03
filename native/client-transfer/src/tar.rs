@@ -34,7 +34,7 @@ pub struct ObjectItem {
     pub scope: Option<String>,
 }
 
-/// Frame an outbound object list without exposing object bodies to Node.
+/// Frame an outbound [`ObjectItem`] list within `max_bytes` ([`MAX_ARCHIVE_BYTES`]) without exposing object bodies to Node.
 pub fn pack(items: &[ObjectItem], max_bytes: usize) -> io::Result<Vec<u8>> {
     if items.len() > MAX_OBJECTS || max_bytes > MAX_ARCHIVE_BYTES {
         return Err(invalid("remote push object bounds"));

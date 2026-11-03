@@ -55,7 +55,7 @@ fn select_delimiter(value: &str) -> char {
     }
 }
 
-/// Quotes and escapes `value` using Node's `util.inspect` string formatting rules.
+/// Quotes and escapes `value` using Node's `util.inspect` string formatting rules ([`select_delimiter`], [`needs_escaping`]).
 fn quote(value: &str) -> String {
     let delimiter = select_delimiter(value);
     if !needs_escaping(value, delimiter) {

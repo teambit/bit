@@ -85,7 +85,7 @@ pub fn snaps(value: Option<&Value>) -> io::Result<Option<Snaps>> {
     Ok(Some(Snaps { snapped, auto }))
 }
 
-/// Parses `mergeSnapError` [`Value`] into [`SnapError`].
+/// Parses `mergeSnapError` [`Value`] into [`SnapError`] via [`record`] and [`text`].
 pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(None) };
     let kind = value["kind"].as_str().map_or("", str::trim);

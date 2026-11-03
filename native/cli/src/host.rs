@@ -91,7 +91,7 @@ struct Response {
 }
 
 impl Host {
-    /// A host for the workspace at `root`. `color` makes the aspects' own output colored.
+    /// A [`Host`] for the workspace at `root` ([`PathBuf`]). `color` makes the aspects' own output colored.
     #[must_use]
     #[inline]
     pub fn new(cli: NodeCli, root: PathBuf, color: bool) -> Self {

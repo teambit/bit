@@ -26,7 +26,7 @@ pub struct HubReply {
 }
 
 impl Network {
-    /// The hub retries an identical object set three times, unlike a direct scope upload.
+    /// The hub retries an identical object set three times via [`Network::push_central_observed`], unlike a direct scope upload.
     #[inline]
     pub async fn push_central(
         &self,

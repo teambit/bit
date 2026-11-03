@@ -81,8 +81,8 @@ pub fn pattern_ids(options: &Value, context: &Value) -> io::Result<Option<Vec<St
 }
 
 impl Steps<'_> {
-    /// `finalizeLane`: the lane receipt, `commandLaneFinalize`, and its
-    /// result and progress over the plan's.
+    /// `finalizeLane`: the lane receipt ([`lane_receipt`]), `commandLaneFinalize`, and its
+    /// result and progress over the `plan`'s ([`Value`]).
     pub(super) fn finalize_lane(
         &mut self,
         plan: &mut Value,

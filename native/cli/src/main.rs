@@ -42,7 +42,7 @@ fn main() -> ExitCode {
     }
 }
 
-/// Dispatches `args` to a [`native`] command when supported or [`delegate`]s to the [`discovery`] Node.js CLI.
+/// Dispatches `args` ([`OsString`]) to a [`native::run`] command when supported or [`delegate::run`]s to the [`discovery::find`] Node.js CLI.
 #[inline]
 fn run(args: &[OsString]) -> std::io::Result<ExitCode> {
     if let Some(code) = native::run(args)? {

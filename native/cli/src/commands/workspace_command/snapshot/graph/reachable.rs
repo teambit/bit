@@ -86,7 +86,7 @@ fn selected_importers(
     importers
 }
 
-/// Filters `lockfile` to packages and snapshots reachable from `importers`.
+/// Filters `lockfile` ([`Value`]) to packages and snapshots reachable from `importers` ([`Map`]).
 #[must_use]
 pub(super) fn filter(lockfile: &Value, importers: Map<String, Value>) -> Map<String, Value> {
     let mut packages = Map::new();

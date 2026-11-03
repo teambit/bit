@@ -77,7 +77,7 @@ fn handled(
     }
 }
 
-/// Evaluates component issue blockers for the batch of component `ids` against `ignored`.
+/// Evaluates component issue blockers on `resolved` for the batch of component `ids` against `ignored` ([`Value`]).
 fn callback_batch(
     resolved: &super::Resolved<'_>,
     rows: &[Value],

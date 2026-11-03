@@ -83,7 +83,7 @@ fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
     Ok(root.join(root_directory).join(".bit_roots"))
 }
 
-/// Builds one component's dependency graph from its lockfile importers via pnpm filtering and [`convert::convert`].
+/// Builds one [`Snapped`] component's dependency graph from its lockfile importers via pnpm filtering and [`convert::convert`].
 fn graph(
     lockfile: &Value,
     component: &Snapped<'_>,

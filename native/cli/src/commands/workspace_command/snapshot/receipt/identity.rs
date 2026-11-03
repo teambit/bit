@@ -36,7 +36,7 @@ impl Cache {
         Self { value: OnceLock::new() }
     }
 
-    /// Loads or initializes the cached [`User`] identity using `factory`.
+    /// Loads or initializes the cached [`User`] identity using `factory` ([`clean_field`]).
     fn load(&self, factory: impl FnOnce() -> io::Result<User>) -> io::Result<User> {
         self.value
             .get_or_init(|| {

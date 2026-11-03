@@ -84,7 +84,7 @@ impl Resolver {
         })
     }
 
-    /// `resolverFunction(scopeName, thisScope.name, token)`.
+    /// `resolverFunction(scopeName, thisScope.name, token)` on [`Resolver`].
     #[inline]
     pub async fn resolve(&self, scope: &str) -> io::Result<String> {
         let scope = scope.trim();

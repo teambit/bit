@@ -16,7 +16,7 @@ fn peel<'a>(expression: &'a Expression<'a>) -> &'a Expression<'a> {
 fn identifier(expression: &Expression<'_>, name: &str) -> bool {
     matches!(peel(expression), Expression::Identifier(value) if value.name == name)
 }
-/// Returns `true` when `expression` is a static or computed `module.exports` member expression.
+/// Returns `true` when `expression` ([`Expression`]) is a static or computed `module.exports` member expression ([`peel`], [`identifier`]).
 #[inline]
 fn module_exports(expression: &Expression<'_>) -> bool {
     match peel(expression) {

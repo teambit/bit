@@ -45,7 +45,7 @@ impl Progress {
     }
 }
 
-/// Returns `true` when `value` carries unexpected `reason` or truthy `objectRequest` fields in [`Progress::render_history_pending`].
+/// Returns `true` when `value` ([`Value`]) carries unexpected `reason` or truthy `objectRequest` fields in [`Progress::render_history_pending`].
 #[inline]
 fn unexpected_history_fields(value: &Value) -> bool {
     !value["reason"].is_null()

@@ -60,7 +60,7 @@ pub(super) fn finish(
     Ok(())
 }
 
-/// Splits `plan["progress"]["loads"]` around issue evaluation and records load events onto `startup`.
+/// Splits `plan["progress"]["loads"]` ([`Value`]) around issue evaluation and records [`load_events`] onto `startup` ([`Startup`]).
 pub(super) fn issue_progress(
     plan: &Value,
     capture: &capture::Capture,

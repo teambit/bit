@@ -23,7 +23,7 @@ const ASPECT_ENVS: [&str; 3] = [
     "teambit.harmony/envs/core-aspect-env-jest",
 ];
 
-/// The `link:` dependencies of the root manifest (`calculateLinkedDeps`).
+/// The `link:` dependencies ([`DependencyMap`]) of the root manifest (`calculateLinkedDeps`) for [`Session`] and [`Loaded`].
 pub fn root_links(
     session: &Session<'_>,
     loaded: &Loaded,

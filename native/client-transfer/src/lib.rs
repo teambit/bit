@@ -24,7 +24,7 @@ pub(crate) fn invalid(message: &str) -> std::io::Error {
     std::io::Error::new(std::io::ErrorKind::InvalidData, text)
 }
 
-/// Returns `true` when `value` is a 40-character lowercase hexadecimal SHA-1 hash.
+/// Returns `true` when `value` is a 40-character lowercase hexadecimal SHA-1 hash ([`is_lowercase_hex_byte`]).
 #[inline]
 #[must_use]
 pub(crate) fn is_hash(value: &str) -> bool {

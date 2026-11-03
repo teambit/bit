@@ -50,7 +50,7 @@ async fn bounded_body(response: Response) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
-/// Parses and validates the `data.scope.getLogs` array from a remote `getLogs` `GraphQL` response.
+/// Parses and validates the `data.scope.getLogs` [`Value`] array from a remote `getLogs` `GraphQL` response via [`validate_row`].
 #[inline]
 fn parse(bytes: &[u8], endpoint: &str) -> io::Result<Vec<Value>> {
     let mut parsed: Value = serde_json::from_slice(bytes).map_err(|_| {

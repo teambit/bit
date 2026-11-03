@@ -51,7 +51,7 @@ impl fmt::Display for Failure {
 }
 impl std::error::Error for Failure {}
 
-/// Formats `error` with `chalk` and attaches Node-style `[Error: ...]` details when `CI` is active.
+/// Formats `error` ([`io::Error`]) with `chalk` ([`Chalk`]) and attaches Node-style `[Error: ...]` details ([`inspect::render`]) when `CI` is active.
 #[must_use]
 #[inline]
 pub(in crate::commands) fn report(error: &io::Error, chalk: Chalk) -> io::Error {

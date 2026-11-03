@@ -46,7 +46,7 @@ pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Val
     Ok(Some(Value::Array(rows)))
 }
 
-/// Matches `pattern` against `identities` using `multimatch` for globs/lists or exact literal matching.
+/// Matches `pattern` against `identities` using `multimatch` for globs/lists or exact [`literal_match`] matching.
 #[inline]
 fn matches<'i>(identities: &[&'i str], pattern: &str) -> io::Result<Vec<&'i str>> {
     if pattern.contains(['*', ',', '!']) {

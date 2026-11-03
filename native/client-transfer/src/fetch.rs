@@ -61,7 +61,7 @@ impl FetchOptions {
         }
     }
 
-    /// `importWithoutDeps` with `fetchHeadIfLocalIsBehind` (`getExternalManyWithoutDeps`).
+    /// `importWithoutDeps` with `fetchHeadIfLocalIsBehind` (`getExternalManyWithoutDeps`) on [`FetchOptions`].
     #[inline]
     #[must_use]
     pub fn latest(lane_id: Option<String>, delta: bool) -> Self {

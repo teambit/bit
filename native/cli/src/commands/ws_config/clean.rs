@@ -74,7 +74,7 @@ pub(super) fn format_clean_output(paths: &[String], dry_run: bool, chalk: Chalk)
     format!("{header}\n  {}\n", paths.join("\n  "))
 }
 
-/// Finds and optionally deletes generated workspace config files matching `writers` in `root`.
+/// Finds ([`find_configs_to_clean`]) and optionally deletes generated workspace config files matching `writers` in `root` ([`Path`]).
 #[inline]
 pub(super) fn clean_workspace_configs(
     root: &Path,

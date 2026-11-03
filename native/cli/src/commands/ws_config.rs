@@ -31,7 +31,7 @@ use std::{
     path::Path,
     process::ExitCode,
 };
-/// Descriptor for the native `bit ws-config` (`workspace-config`) command dispatched by [`run`].
+/// Descriptor for the native `bit ws-config` (`workspace-config`) command ([`COMMAND`]) dispatched by [`run`].
 pub const COMMAND: Command = Command { name: "ws-config", aliases: &["workspace-config"], run };
 /// Parsed CLI options for `bit ws-config write` ([`Subcommand::Write`]) including [`DryRunMode`] and writer filters.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

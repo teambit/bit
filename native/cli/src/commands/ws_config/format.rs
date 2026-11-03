@@ -16,7 +16,7 @@ pub(super) struct WriteConfigFilesResult {
     pub write_results: WriteResults,
 }
 
-/// Aggregated counts and per-writer results for `bit ws-config write`.
+/// Aggregated counts and per-writer [`OneConfigWriterIdResult`] results for `bit ws-config write`.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct WriteResults {

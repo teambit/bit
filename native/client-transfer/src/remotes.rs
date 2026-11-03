@@ -80,7 +80,7 @@ impl Remotes {
         self.resolver.is_some()
     }
 
-    /// A locally configured file/HTTP remote, without a resolver or hub request.
+    /// A locally configured file/HTTP [`Remote`] on [`Remotes`], without a resolver or hub request.
     #[inline]
     pub fn configured(&self, scope: &str) -> io::Result<Option<Remote>> {
         self.hosts

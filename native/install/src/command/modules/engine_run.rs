@@ -68,7 +68,7 @@ pub async fn run(
     Ok(result)
 }
 
-/// A dependency pinned to a never-published snap: point at `bit import` instead of
+/// A dependency pinned to a never-published snap ([`unpublished`]): point at `bit import` instead of
 /// the package manager's "No matching version found".
 fn enrich(error: io::Error, calculated: &Calculated, output: &Output) -> io::Error {
     let engine_error = EngineError::from_io(&error);
