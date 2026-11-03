@@ -193,6 +193,11 @@ pub(super) fn prepare_graph_imports(
             {
                 continue;
             }
+            // A never-exported dependency left out of the batch has no remote
+            // objects; the caller explains it (`command dependency version`).
+            if id["version"].as_str().map(str::trim) == Some("0.0.1-new") {
+                return Err(invalid("command dependency version"));
+            }
             targets.push(dependency_target(id)?);
         }
     }

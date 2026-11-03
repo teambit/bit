@@ -168,9 +168,17 @@ fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
     {
         return false;
     }
-    let name_part = raw_id.split_once('/').map_or(raw_id, |(_, name)| name.trim());
+    let (id_scope, name_part) = raw_id
+        .split_once('/')
+        .map_or(("", raw_id), |(scope, name)| (scope.trim(), name.trim()));
     let row_name = crate::reset_lane::bitmap::row_identity(key, row).1;
-    key == raw_id || row_name == raw_id || row_name == name_part
+    // An unscoped row whose default scope is the requested scope is the very
+    // component being imported (auto-sync promotes it), not a name clash.
+    let promotes = !id_scope.is_empty()
+        && row["defaultScope"]
+            .as_str()
+            .is_some_and(|default| default.trim().trim_matches('/') == id_scope);
+    key == raw_id || row_name == raw_id || (row_name == name_part && !promotes)
 }
 
 fn has_local_unscoped_conflict(input: &Prepare) -> io::Result<bool> {

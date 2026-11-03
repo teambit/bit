@@ -42,7 +42,6 @@ impl Control {
                 .map(str::to_owned)
                 .collect(),
             deprecated: deprecated
-                .filter(|config| config["deprecate"] != Value::Bool(false))
                 .and_then(|config| config.get("range"))
                 .cloned(),
         }
@@ -86,9 +85,8 @@ impl Control {
 /// Projects staged workspace deprecation `config` across every log entry in `rows`.
 #[inline]
 pub(super) fn staged(rows: &mut [Value], config: &Value) {
-    let range = (config["deprecate"] != Value::Bool(false))
-        .then(|| config["range"].as_str())
-        .flatten()
+    let range = config["range"]
+        .as_str()
         .and_then(|range| Range::parse(range.trim()).ok());
     for row in rows {
         row["deprecated"] = json!(

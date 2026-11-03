@@ -240,8 +240,10 @@ impl Response {
     fn into_result(self) -> io::Result<Value> {
         match self.error {
             Some(error) => {
-                let trimmed = error.trim();
-                let message = if trimmed.is_empty() { "JavaScript host error" } else { trimmed };
+                // Leading whitespace is part of the released message (build failures start with a blank line).
+                let trimmed = error.trim_end();
+                let message =
+                    if trimmed.trim().is_empty() { "JavaScript host error" } else { trimmed };
                 Err(io::Error::other(message.to_owned()))
             }
             None => Ok(self.result.unwrap_or(Value::Null)),

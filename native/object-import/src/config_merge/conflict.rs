@@ -160,7 +160,7 @@ fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
     let Some(pos) = contents.find(&original) else {
         return Err(invalid("config dependency substring missing"));
     };
-    let start = pos + name.len() + 4;
+    let start = pos + original.len() - current.len() - 1;
     contents.replace_range(start..start + current.len(), other);
     if contents.len() > MAX_BYTES {
         return Err(invalid("config replacement budget"));

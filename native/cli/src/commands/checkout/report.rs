@@ -152,10 +152,8 @@ impl Checkout<'_> {
         }
         let version = if self.to("head") || self.to("latest") {
             non_empty_trimmed(id.version.as_deref())
-                .or_else(|| non_empty_trimmed(self.results.version.as_deref()))
         } else {
             non_empty_trimmed(self.results.version.as_deref())
-                .or_else(|| non_empty_trimmed(id.version.as_deref()))
         }
         .unwrap_or("undefined");
         let title = format!(

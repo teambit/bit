@@ -128,8 +128,12 @@ pub(in crate::commands::status) fn dev_files(
     let env = EnvDevPatterns {
         patterns: facts
             .get("manifestPatterns")
-            .or_else(|| hooks.get("devPatterns"))
             .filter(|val| !val.is_null())
+            .or_else(|| {
+                hooks
+                    .get("devPatterns")
+                    .filter(|val| !val.is_null())
+            })
             .cloned(),
         tests: list("tests"),
         docs: list("docs"),

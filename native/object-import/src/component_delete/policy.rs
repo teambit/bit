@@ -165,8 +165,8 @@ fn bitmap_row_identity(key: &str, row: &Value) -> io::Result<String> {
                 .trim()
         });
     let version = non_empty_str(&row["version"])
-        .or(key_ver)
-        .ok_or_else(|| invalid("dependency component version"))?;
+        .or_else(|| key_ver.filter(|ver| !ver.is_empty()))
+        .unwrap_or_default();
     Ok(if version.is_empty() {
         format!("{scope}/{name}")
     } else {

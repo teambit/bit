@@ -209,10 +209,13 @@ pub(super) fn normalize(row: &Value) -> io::Result<Value> {
         }
     }
     normalize_author(&mut normalized);
+    if let Some(tag) = row.get("tag") {
+        normalized.insert("tag".into(), tag.clone());
+    }
     for key in ["hash", "parents", "onLane", "deleted"] {
         normalized.insert(key.into(), row[key].clone());
     }
-    for key in ["tag", "deprecated", "hidden"] {
+    for key in ["deprecated", "hidden"] {
         if let Some(val) = row.get(key) {
             normalized.insert(key.into(), val.clone());
         }
