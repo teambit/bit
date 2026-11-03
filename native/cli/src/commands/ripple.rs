@@ -360,7 +360,8 @@ fn parse_no_arg_job_op(sub: &str, rest: &[&str]) -> Option<Subcommand> {
             }
             "-j" | "--json" | "--json=true" => json = true,
             "--json=false" => json = false,
-            "--full-log" | "--full-log=true" | "--full-log=false" if sub_static == "errors" => {}
+            "--full-log" | "--full-log=true" | "--full-log=false"
+                if matches!(sub_static, "errors" | "log") => {}
             _ => return None,
         }
     }

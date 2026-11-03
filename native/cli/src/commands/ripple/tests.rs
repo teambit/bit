@@ -42,3 +42,17 @@ fn parses_simulate_without_lane_flag() {
         Some(Subcommand::Simulate { lane: None, json: false }),
     );
 }
+
+/// Verifies that `log` accepts `--full-log` like `errors`, while `retry` and `stop` still reject it.
+#[test]
+fn log_accepts_full_log_like_errors() {
+    assert_eq!(
+        parse_subcommand(&["log", "--full-log", "--json"]),
+        Some(Subcommand::NoArgJobOp { sub: "log", json: true }),
+    );
+    assert_eq!(
+        parse_subcommand(&["errors", "--full-log"]),
+        Some(Subcommand::NoArgJobOp { sub: "errors", json: false }),
+    );
+    assert_eq!(parse_subcommand(&["retry", "--full-log"]), None);
+}
