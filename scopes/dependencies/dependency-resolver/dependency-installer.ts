@@ -52,6 +52,12 @@ export type InstallOptions = {
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  /**
+   * Each component's own dependencies graph, by component id, for its
+   * manifest to declare the versions the graph resolved. Capsule installs
+   * pass it; see `applyDependenciesGraph`.
+   */
+  componentDependenciesGraphs?: Map<string, DependenciesGraph>;
 };
 
 export type GetComponentManifestsOptions = {
@@ -63,6 +69,7 @@ export type GetComponentManifestsOptions = {
   includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
+  componentDependenciesGraphs?: Map<string, DependenciesGraph>;
 } & Pick<
   PackageManagerInstallOptions,
   | 'dedupe'
@@ -93,8 +100,6 @@ export class DependencyInstaller {
     private dependencyResolver: DependencyResolverMain,
 
     private rootDir?: string | PathAbsolute,
-
-    private cacheRootDir?: string | PathAbsolute,
 
     private preInstallSubscriberList?: PreInstallSubscriberList,
 
@@ -276,6 +281,9 @@ export class DependencyInstaller {
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
       includeAllEnvPeers: packageManagerOptions.rootComponentsForCapsules,
+      // A capsule declares what the component's graph resolved, so that the
+      // lockfile restored from the graph satisfies it.
+      componentDependenciesGraphs: options.componentDependenciesGraphs,
       excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
@@ -356,7 +364,6 @@ export class DependencyInstaller {
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
       ...DEFAULT_PM_INSTALL_OPTIONS,
-      cacheRootDir: this.cacheRootDir,
       nodeLinker: this.nodeLinker,
       packageImportMethod: this.packageImportMethod,
       // Capsules stay on the project-local virtual store even when the global one is enabled.
@@ -421,7 +428,7 @@ export class DependencyInstaller {
         //
         // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
         // and it never leaves node_modules in a broken state.
-        // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+        // Removing node_modules in that case would delete useful state information that is used by pnpm.
         await this.cleanCompsNodeModules(componentDirectoryMap);
       } catch (err) {
         this.logger.debug('failed to remove node_modules directories from components', err);
@@ -439,7 +446,6 @@ export class DependencyInstaller {
     }
     const startTime = process.hrtime();
 
-    // TODO: the cache should be probably passed to the package manager constructor not to the install function
     const installResult = await this.packageManager.install(
       {
         rootDir: finalRootDir,
@@ -481,6 +487,7 @@ export class DependencyInstaller {
     includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
+    componentDependenciesGraphs,
   }: GetComponentManifestsOptions): Promise<{
     manifests: Record<string, ProjectManifest>;
     peerOverrides: Record<string, string>;
@@ -495,6 +502,7 @@ export class DependencyInstaller {
       includeAllEnvPeers,
       hasRootComponents,
       excludeExtensionsDependencies,
+      dependenciesGraphs: componentDependenciesGraphs,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,

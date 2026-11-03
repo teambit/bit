@@ -41,6 +41,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { branchToLaneName } from './branch-to-lane-name';
 import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
@@ -306,16 +307,15 @@ export class CiMain {
 
   /**
    * Converts a branch name to a lane ID string using Bit's naming conventions.
-   * Sanitizes branch name by replacing slashes and dots with dashes, converting to lowercase, then
-   * prefixes with the workspace's default scope.
+   * Sanitizes the branch name (see `branchToLaneName`, which also avoids the reserved `main`/`master`
+   * names), then prefixes it with the workspace's default scope.
    *
    * @param branchName - The git branch name to convert
    * @returns Lane ID in format: {defaultScope}/{sanitizedBranch}
    * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
-    const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
-    return `${this.workspace.defaultScope}/${sanitizedBranch}`;
+    return `${this.workspace.defaultScope}/${branchToLaneName(branchName)}`;
   }
 
   /**

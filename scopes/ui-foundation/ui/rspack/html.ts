@@ -7,6 +7,8 @@ export function html(title: string, withDevTools?: boolean) {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
+      <!-- explicit icon, so browsers don't show a stale /favicon.ico cached from another app on the same localhost port -->
+      <link rel="icon" href="https://static.bit.dev/bit-logo.svg">
       <script>
       // Apply persisted theme synchronously, before React mounts, to avoid
       // a light/dark FOUC on reload. Keep this tiny and self-contained.
