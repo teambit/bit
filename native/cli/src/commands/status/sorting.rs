@@ -64,7 +64,7 @@ fn order(root: &Path, ids: &[String], host: &mut Option<Host>) -> io::Result<Vec
     permutation(&result, ids.len())
 }
 
-/// Validates and converts a JSON index array `result` ([`Value`]) into a bijective `0..count` permutation.
+/// Validates and converts a JSON index array `result` ([`Value`]) into a bijective `0..count` permutation for [`order`].
 #[inline]
 fn permutation(result: &Value, count: usize) -> io::Result<Vec<usize>> {
     let result = result.as_array().ok_or_else(|| decline("locale presentation order"))?;

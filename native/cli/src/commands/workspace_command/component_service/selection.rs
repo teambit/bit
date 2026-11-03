@@ -55,7 +55,7 @@ fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
         .find(|val| !val.is_empty())
 }
 
-/// Normalizes path separators to `/` and strips leading `./` and trailing `/` from `value`.
+/// Normalizes path separators to `/` and strips leading `./` and trailing `/` from `value` for [`matches`].
 #[inline]
 fn normalized_dir(value: &str) -> String {
     let normalized = value.replace('\\', "/");

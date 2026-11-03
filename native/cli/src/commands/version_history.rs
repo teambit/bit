@@ -71,7 +71,7 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     }
 }
 
-/// Parses `bit version-history build` arguments from `rest` into [`Subcommand::Build`].
+/// Parses `bit version-history build` arguments from `rest` into [`Subcommand::Build`] via [`apply_build_arg`].
 fn parse_build(rest: &[&str]) -> Option<Subcommand> {
     let mut id = None;
     let mut from = None;

@@ -30,7 +30,7 @@ pub(super) fn validate(root: &Path, components: &[Component]) -> io::Result<()> 
     }
     Ok(())
 }
-/// Verifies that every source file in `component.files` resides under `directory`.
+/// Verifies that every source file in `component.files` ([`Component`]) resides under `directory` ([`Path`]) for [`validate`].
 #[inline]
 fn validate_sources(directory: &Path, component: &Component) -> io::Result<()> {
     for file in &component.files {

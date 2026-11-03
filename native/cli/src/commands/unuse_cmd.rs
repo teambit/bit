@@ -72,7 +72,7 @@ fn parse_target(args: &[OsString]) -> Option<String> {
     (!target.is_empty()).then(|| target.to_owned())
 }
 
-/// Resolves the configured aspect entry for `target`, removes it from `workspace.jsonc`, and formats the [`Report`].
+/// Resolves the configured aspect entry for `target` in `root` ([`Path`]), removes it from `workspace.jsonc` ([`apply_unuse`]), and formats the [`Report`].
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     let content = fs::read_to_string(root.join("workspace.jsonc"))?;
     let doc = Document::parse(&content)?;

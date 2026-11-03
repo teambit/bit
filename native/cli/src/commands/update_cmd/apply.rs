@@ -58,7 +58,7 @@ fn apply_workspace_jsonc_updates(root: &Path, updates: &[ResolvedUpdate]) -> io:
     )
 }
 
-/// Applies a single [`ResolvedUpdate`] entry onto `doc` at its root policy or variant JSON path.
+/// Applies a single [`ResolvedUpdate`] entry onto `doc` ([`Document`]) at its root policy or variant [`Target`] JSON path.
 #[inline]
 fn apply_single_ws_update(doc: &mut Document, doc_val: &Value, upd: &ResolvedUpdate) {
     let field = upd.field.trim();

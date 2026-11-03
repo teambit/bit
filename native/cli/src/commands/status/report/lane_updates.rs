@@ -73,7 +73,7 @@ impl Status<'_> {
     }
 }
 
-/// Extracts the 9-character short SHA-1 hash of `commonSnapBeforeDiverge` when `snapsOnSourceOnly` is non-empty.
+/// Extracts the 9-character short SHA-1 hash of `commonSnapBeforeDiverge` when `snapsOnSourceOnly` is non-empty for [`Status::updates`].
 fn diverge_hash(diverge_data: &serde_json::Value) -> io::Result<Option<&str>> {
     if array(diverge_data.get("snapsOnSourceOnly"), "lane snaps")?.is_empty() {
         return Ok(None);

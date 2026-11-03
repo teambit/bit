@@ -90,7 +90,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute_update(&root, args, &options, &collected)
 }
 
-/// Handles `bit update --yes` when invoked outside a workspace by printing [`NO_DEPS_FOUND_MSG`].
+/// Handles `bit update --yes` (`options`: [`Options`]) when invoked outside a workspace by printing [`NO_DEPS_FOUND_MSG`] into [`Outcome`].
 fn run_outside_workspace(options: &Options) -> io::Result<Outcome> {
     if !options.yes {
         return Ok(Outcome::Declined("update outside workspace delegated".into()));

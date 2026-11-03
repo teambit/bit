@@ -72,7 +72,7 @@ fn parse_target(args: &[OsString]) -> Option<String> {
     (!target.is_empty()).then(|| target.to_owned())
 }
 
-/// Resolves `target` in `root`, writes the aspect entry into `workspace.jsonc`, and formats the [`Report`].
+/// Resolves `target` in `root` ([`Path`]), writes the aspect entry into `workspace.jsonc` ([`Document`]), and formats the [`Report`].
 fn prepare(root: &Path, target: &str, chalk: Chalk) -> Result<Report, Failure> {
     let ws_path = root.join("workspace.jsonc");
     let content = fs::read_to_string(&ws_path)?;

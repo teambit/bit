@@ -67,7 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-/// Detects terminal color and interactivity settings from `args`.
+/// Detects [`Terminal`] color and interactivity settings from `args` ([`OsString`]).
 #[inline]
 fn detect_terminal(args: &[OsString]) -> Terminal {
     let argv: Vec<String> = args

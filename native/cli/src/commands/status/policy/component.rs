@@ -36,7 +36,7 @@ struct Entry {
 }
 
 impl Policy {
-    /// Reads and merges environment, registered, and variant dependency policies for `target` into a [`Policy`].
+    /// Reads and merges environment, registered, and variant dependency policies for `target` ([`Value`]) into a [`Policy`] via [`Self::project`].
     pub(super) fn read(context: &Value, target: &Value, extensions: &[Value]) -> io::Result<Self> {
         let identity = text(target.get("identity"))?.trim();
         if identity.is_empty() {

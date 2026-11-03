@@ -65,7 +65,7 @@ impl Graph {
         Some(())
     }
 
-    /// Returns `true` when every node in `self.nodes` has a distinct 9-character hash prefix.
+    /// Returns `true` when every [`Node`] in `self.nodes` has a distinct 9-character hash prefix.
     fn unique_short_hashes(&self) -> bool {
         if self.nodes
             .iter()

@@ -19,7 +19,7 @@ pub(super) fn valid_rows(rows: &[Value]) -> Option<bool> {
     Some(true)
 }
 
-/// Verifies that `row` has canonical key order and valid SHA-1 hashes, returning its `"hash"`.
+/// Verifies that `row` ([`Value`]) has canonical key order and valid SHA-1 hashes ([`valid_hash`], [`refs`]), returning its `"hash"`.
 #[inline]
 fn canonical(row: &Value) -> Option<&str> {
     row.as_object()?;

@@ -70,7 +70,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     Some(flags)
 }
 
-/// Applies a single `bit status` presentation flag (`arg`) onto `flags` ([`Flags`]), rejecting duplicates in `seen`.
+/// Applies a single `bit status` presentation flag (`arg`) onto `flags` ([`Flags`]), rejecting duplicates in `seen` for [`parse`].
 fn apply_report_flag<'a>(flags: &mut Flags, seen: &mut Vec<&'a str>, arg: &'a str) -> Option<()> {
     let arg = arg.trim();
     let (raw_flag, val) = match arg.split_once('=') {

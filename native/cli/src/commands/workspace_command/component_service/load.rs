@@ -22,7 +22,7 @@ pub(in crate::commands) struct Loaded {
     docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 impl Loaded {
-    /// Looks up the captured dependency-state [`Value`] for `identity`.
+    /// Looks up the captured dependency-state [`Value`] for `identity` in [`Loaded`].
     #[must_use]
     #[inline]
     pub(in crate::commands) fn dependency_state(&self, identity: &str) -> Option<&Value> {

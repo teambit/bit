@@ -29,7 +29,7 @@ pub(super) struct Plan {
     count: usize,
     mode: Option<u32>,
 }
-/// Delegates bare-scope `VersionHistory` rebuild planning to [`planning::prepare`].
+/// Delegates bare-scope `VersionHistory` rebuild planning in `root` ([`ScopeRoot`]) to [`planning::prepare`] into [`Plan`].
 #[inline]
 pub(super) fn prepare(
     root: &ScopeRoot,

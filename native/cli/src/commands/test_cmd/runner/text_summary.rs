@@ -48,7 +48,7 @@ impl Summary<'_> {
         let pending = self.number("testsPending");
         if pending > 0 { format!(", {pending} pending") } else { String::new() }
     }
-    /// Formats the `<passed>/<total> tests passed across <components> components` clause.
+    /// Formats the `<passed>/<total> tests passed across <components> components` clause for [`Summary`].
     #[inline]
     fn passed(&self, components: u64) -> String {
         let passed = self.number("testsPassed");

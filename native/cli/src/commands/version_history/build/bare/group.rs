@@ -17,7 +17,7 @@ pub(super) fn qualify_parents(
     .then_some(())
 }
 
-/// Returns `true` when `proofs` contains a `/etc/group` ownership proof.
+/// Returns `true` when `proofs` ([`PathBuf`]) contains a `/etc/group` ownership proof.
 #[inline]
 fn has_etc_group_proof(proofs: &[(PathBuf, Vec<u8>)]) -> bool {
     proofs

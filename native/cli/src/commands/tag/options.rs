@@ -52,7 +52,7 @@ pub struct TagSelection {
     pub patterns: Vec<String>,
     pub versions_file: Option<String>,
 }
-/// Execution mode for `bit tag` (ordinary tag, `--soft`, or `--persist`).
+/// Execution mode for `bit tag` ([`Options`]: ordinary tag, `--soft`, or `--persist`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub enum Mode {
     #[default]

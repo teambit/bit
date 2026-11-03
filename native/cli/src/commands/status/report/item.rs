@@ -42,7 +42,7 @@ impl Status<'_> {
         self.item_with_soft_tag(id, show_issues, local, warn, true)
     }
 
-    /// Formats a component status line without issues or `(soft-tagged)` suffix.
+    /// Formats a component status line without issues or `(soft-tagged)` suffix via [`Self::item_with_soft_tag`].
     #[inline]
     pub(super) fn item_without_soft_tag(&self, id: (&str, Option<&str>)) -> String {
         self.item_with_soft_tag(id, false, None, false, false)

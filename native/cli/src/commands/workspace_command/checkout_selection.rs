@@ -25,7 +25,7 @@ pub(super) struct Prepared<'a> {
     pub startup: Option<&'a mut Startup>,
 }
 
-/// Returns `true` when `request` uses a pattern or flag requiring deferred target selection after preparation.
+/// Returns `true` when `request` ([`Request`]) uses a pattern or flag requiring deferred target selection after preparation.
 #[inline]
 pub(super) fn deferred(request: &Request<'_>) -> bool {
     matches!(request.operation, "checkout" | "merge")

@@ -68,7 +68,7 @@ impl Plan {
         let coverage = prepare_coverage(root, &components, tool.is_some())?;
         Ok(Self { loaded, tool, coverage, settings, runnable })
     }
-    /// Commits [`Loaded`] caches, runs the Jest worker [`Session`], collects [`Coverage`], and formats the [`Execution`].
+    /// Commits [`Loaded`] caches, runs the Jest worker [`Session`], collects [`Coverage`], and formats the [`Execution`] and [`Report`].
     pub(super) fn run(
         &mut self,
         root: &Path,

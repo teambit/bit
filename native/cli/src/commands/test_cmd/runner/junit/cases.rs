@@ -15,7 +15,7 @@ pub(super) struct Case {
     pub skipped: bool,
 }
 impl Case {
-    /// Appends the `<testcase>` XML element for `self` onto `output`.
+    /// Appends the `<testcase>` XML element for `self` ([`Case`]) onto `output` via [`xml::attribute`] and [`message`].
     pub(super) fn render(&self, output: &mut String) {
         write!(
             output,

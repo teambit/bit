@@ -28,7 +28,7 @@ pub(super) fn prepare(root: &Path, components: &[Value]) -> io::Result<Vec<CatDo
         .collect()
 }
 
-/// Extracts the normalized `"directory"` or `"rootDir"` [`Value`] from `component`.
+/// Extracts the normalized `"directory"` or `"rootDir"` [`Value`] from `component` for [`prepare`].
 #[inline]
 fn component_directory(component: &Value) -> Value {
     let (directory, root_dir) = (component.get("directory"), component.get("rootDir"));

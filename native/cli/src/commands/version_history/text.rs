@@ -39,7 +39,7 @@ pub(super) fn run(
     emit_text(root, args, "show", true, report)
 }
 
-/// Loads the component model and `VersionHistory` object from `root` and renders the text graph.
+/// Loads the component model and `VersionHistory` object from `root` ([`ScopeRoot`]) and renders the text graph via [`render`].
 fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<String> {
     let id = id.trim();
     let scope_dir = scope_dir_for(root);

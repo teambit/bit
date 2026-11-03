@@ -23,7 +23,7 @@ pub(super) const WORKSPACE_STARTER_ASPECTS: &[&str] = &[
     "teambit.harmony/node",
     "teambit.harmony/aspect",
 ];
-/// Built-in starter templates listed by `bit templates` when run outside a workspace.
+/// Built-in starter templates ([`TemplateDescriptor`]) listed by `bit templates` when run outside a workspace.
 pub(super) const WORKSPACE_TEMPLATES: &[TemplateDescriptor] = &[
     TemplateDescriptor {
         aspect_id: "teambit.generator/generator",

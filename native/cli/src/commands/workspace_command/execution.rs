@@ -57,7 +57,7 @@ pub fn execute_then_scope(
     execute_mode_at(scope, args, command, false, true, work)
 }
 
-/// An owned lane callback error uses the bare scope's loader without workspace history.
+/// An owned lane callback [`io::Error`] uses the bare `scope`'s ([`Path`]) loader without workspace [`History`].
 #[inline]
 pub fn execute_failure_scope(
     scope: &Path,

@@ -81,7 +81,7 @@ fn load_eligible_workspace(root: &Path) -> Option<Workspace> {
     Some(ws)
 }
 
-/// Resolves the target workspace components to validate from `ws` based on `options`.
+/// Resolves the target workspace components ([`BitmapEntry`], [`WorkspaceComponent`]) to validate from `ws` ([`Workspace`]) based on `options` ([`Options`]).
 fn resolve_targets<'a>(
     root: &Path,
     ws: &'a Workspace,

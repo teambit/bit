@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Resolves a validated same-device trash destination [`PathBuf`] for `source` under `root/trash`.
+/// Resolves a validated same-device trash destination [`PathBuf`] for `source` ([`Path`]) under `root/trash`.
 #[cfg(unix)]
 pub(super) fn target(root: &Path, source: &Path) -> Option<PathBuf> {
     use std::os::unix::fs::MetadataExt;

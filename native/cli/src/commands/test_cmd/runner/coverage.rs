@@ -51,7 +51,7 @@ fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
     Ok(reports)
 }
 
-/// Projects per-file coverage metrics and aggregate [`totals`] for files under `directory`.
+/// Projects per-file coverage metrics and aggregate [`totals`] for files under `directory` ([`Path`]) in [`read_many`].
 fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
     let rows = raw.as_object()?;
     let directory = super::paths::normalized(directory);

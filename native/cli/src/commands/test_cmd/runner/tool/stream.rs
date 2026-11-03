@@ -69,7 +69,7 @@ impl Stream {
         }
         Ok(session)
     }
-    /// Spawns the Node.js Jest runner [`Child`] process connected to `listener` with `token`.
+    /// Spawns the Node.js Jest runner [`Child`] process connected to `listener` ([`TcpListener`]) with `token`.
     fn spawn(
         colors: bool,
         args: &[OsString],

@@ -44,7 +44,7 @@ pub(super) fn extensions(
         .collect()
 }
 
-/// Returns the lazily deserialized slice of built-in core aspect IDs from [`CORES`].
+/// Returns the lazily deserialized slice of built-in core aspect IDs from [`CORES`] for [`extensions`].
 #[inline]
 fn core_aspects() -> io::Result<&'static [String]> {
     static CORE: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();

@@ -44,7 +44,7 @@ pub(super) fn resolve_updates(
     updates
 }
 
-/// Reads `file://` local remote scope mappings from `scope.json` in `root`.
+/// Reads `file://` local remote scope mappings from `scope.json` in `root` ([`Path`]).
 fn read_local_remotes(root: &Path) -> HashMap<String, PathBuf> {
     let scope_dir = workspace::scope_path(root);
     let Ok(bytes) = fs::read(scope_dir.join("scope.json")) else {

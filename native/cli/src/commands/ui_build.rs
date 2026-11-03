@@ -41,7 +41,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("ui-build execution delegated".into()))
 }
 
-/// Returns `true` when `cwd` is outside both a Bit workspace and any `.bit` or bare scope directory.
+/// Returns `true` when `cwd` ([`Path`]) is outside both a Bit workspace and any `.bit` or bare scope directory.
 #[must_use]
 #[inline]
 pub(super) fn is_outside_workspace_and_scope(cwd: &Path) -> bool {

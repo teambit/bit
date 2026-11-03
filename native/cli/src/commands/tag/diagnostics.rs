@@ -67,7 +67,7 @@ fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>>
     Ok(None)
 }
 
-/// Returns `val` as a trimmed non-empty string slice when `val` is a JSON string.
+/// Returns `val` ([`Value`]) as a trimmed non-empty string slice when `val` is a JSON string for [`entry_missing_main`].
 #[inline]
 fn non_empty(val: &Value) -> Option<&str> {
     val.as_str()

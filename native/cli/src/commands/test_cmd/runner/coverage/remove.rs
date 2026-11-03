@@ -34,7 +34,7 @@ fn ignore_not_found(result: io::Result<()>, op: &'static str, path: &Path) -> io
     }
 }
 
-/// Recursively deletes every entry inside `path` via [`directory`].
+/// Recursively deletes every entry inside `path` ([`Path`]) via [`directory`].
 #[inline]
 fn remove_directory_entries(path: &Path) -> io::Result<()> {
     for entry in fs::read_dir(path).map_err(|error| failure(error, "scandir", path))? {

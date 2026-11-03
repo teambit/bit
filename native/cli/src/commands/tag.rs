@@ -75,7 +75,7 @@ fn is_ci() -> bool {
     super::scope_rename::ci_active()
 }
 
-/// Handles option-validation errors and invalid `--ver` inputs before declining `bit tag`.
+/// Handles option-validation errors and invalid `--ver` inputs before declining `bit tag` in [`run`].
 fn fallback_parse_error(
     args: &[OsString],
     raw_args: &[&str],

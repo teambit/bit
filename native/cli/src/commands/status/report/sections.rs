@@ -61,7 +61,7 @@ impl<'r> Status<'r> {
         ])
     }
 
-    /// Formats the `pendingUpdateDependents` status items without warning icons.
+    /// Formats the `pendingUpdateDependents` status items without warning icons for [`Self::version_sections`].
     #[inline]
     fn pending_update_dependents(&self) -> io::Result<Vec<String>> {
         Ok(super::ids(self.result, "pendingUpdateDependents")?

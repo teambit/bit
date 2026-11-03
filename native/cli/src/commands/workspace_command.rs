@@ -74,7 +74,7 @@ impl Planned {
         &mut self.engine
     }
 
-    /// `MergingMain` clears the cached current and incoming versions after writing.
+    /// `MergingMain` clears the cached current and incoming versions on [`Planned`] after writing.
     pub(in crate::commands) fn merge_cache_ids(&self) -> io::Result<Vec<String>> {
         let rows = array(self.plan["result"].get("components"), "merged components")?;
         let targets = self.context["lane"]["targets"]

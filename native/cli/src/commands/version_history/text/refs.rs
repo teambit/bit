@@ -39,7 +39,7 @@ fn qualify_shared_heads(lanes: &[(String, String)]) -> Option<()> {
     Some(())
 }
 
-/// Reads remote lane ref file `path` and extracts the 40-hex-character head hash for `scope`/`component`.
+/// Reads remote lane ref file `path` ([`Path`]) and extracts the 40-hex-character head hash for `scope`/`component`.
 #[inline]
 fn lane_head(path: &Path, scope: &str, component: &str) -> Option<Option<String>> {
     let rows: Value = bit_object_import::parse_jsonc(&fs::read(path).ok()?).ok()?;

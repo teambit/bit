@@ -44,7 +44,7 @@ pub(super) fn read<Prepared>(
     }
 }
 
-/// Runs the full `bit status` capture, lane refresh, sorting, `prepare`, and commit pipeline.
+/// Runs the full `bit status` capture, lane refresh, sorting, `prepare`, and commit pipeline for [`read`].
 fn read_prepared<Prepared>(
     root: &Path,
     home: &Path,

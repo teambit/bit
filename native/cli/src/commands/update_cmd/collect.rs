@@ -76,7 +76,7 @@ pub(super) fn collect_candidates(root: &Path, patterns: &[String]) -> Result<Col
     Ok(Collected { candidates, save_prefix })
 }
 
-/// Reads the configured `savePrefix` string from `teambit.dependencies/dependency-resolver` in `ws_val`.
+/// Reads the configured `savePrefix` string from [`DEP_RESOLVER_ID`] in `ws_val` ([`Value`]).
 #[inline]
 fn extract_save_prefix(ws_val: &Value) -> Option<String> {
     super::aspect_entry(ws_val, DEP_RESOLVER_ID)

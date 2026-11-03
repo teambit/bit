@@ -48,7 +48,7 @@ fn env_errors(environment_error: bool, environment: &str, message: Option<&str>)
     vec![error]
 }
 
-/// Summarizes a single component row from `components` into `{ id, passed, failed, pending, hasError }`.
+/// Summarizes a single component row from `components` ([`Value`]) into `{ id, passed, failed, pending, hasError }`.
 fn component(component: &Value) -> Option<Value> {
     let files = component["results"]["testFiles"]
         .as_array()

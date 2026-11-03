@@ -15,7 +15,7 @@ pub(super) struct Selected {
     pub paths: Vec<PathBuf>,
 }
 
-/// Resolves explicit test file arguments in `values` against `.bitmap` component directories in `root`.
+/// Resolves explicit test file arguments in `values` against `.bitmap` ([`Bitmap`]) component directories in `root` into [`Selected`].
 pub(super) fn select(root: &Path, values: &[String]) -> io::Result<Option<Selected>> {
     if !any_existing_file(values) {
         return Ok(None);

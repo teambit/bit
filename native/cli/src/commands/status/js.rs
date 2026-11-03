@@ -5,7 +5,7 @@
 use serde_json::{Map, Value};
 use std::io;
 
-/// Constructs an [`io::Error`] indicating that native status execution should decline (`reason`) cleanly.
+/// Constructs an [`io::Error`] indicating that native status execution should decline (`reason`) cleanly ([`object`], [`string_map`], [`array`], [`text`]).
 #[must_use]
 #[inline]
 pub fn decline(reason: impl Into<String>) -> io::Error {

@@ -45,7 +45,7 @@ fn non_stateful_pattern<'a>(request: &'a super::Request<'_>) -> Option<&'a str> 
         })
 }
 
-/// Verifies dependency grammar and probes checkout eligibility before environment startup.
+/// Verifies [`super::dependency_grammar`] and probes checkout eligibility on `root` ([`Path`]) before [`Environments`] startup.
 fn preflight(
     root: &Path,
     home: &Path,

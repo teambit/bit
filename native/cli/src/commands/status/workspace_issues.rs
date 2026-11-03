@@ -29,7 +29,7 @@ pub(super) fn collect(root: &Path, capture: &Capture) -> io::Result<Vec<String>>
     Ok(issues)
 }
 
-/// Validate `workspace.jsonc` for invalid top-level keys, conflicting rootComponent, or unknown core harmony aspects in variants.
+/// Validate `workspace.jsonc` for invalid top-level keys ([`invalid_top_level_key`]), conflicting `rootComponent`, or unknown core harmony aspects in variants.
 pub(super) fn config_error(root: &Path) -> Option<String> {
     let bytes = std::fs::read(root.join("workspace.jsonc")).ok()?;
     let ws = bit_object_import::parse_jsonc(&bytes).ok()?;

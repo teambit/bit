@@ -10,7 +10,7 @@ use super::{
 use serde_json::{Map, Value, json};
 use std::io;
 
-/// Builds `currentStatusMetadata(target, policy, output)` for comparison with the stored version (`undefined` fields omitted).
+/// Builds `currentStatusMetadata(target, policy, output)` for comparison with the stored version (`undefined` fields omitted) via [`metadata_dependencies`] and [`projected_extensions`].
 pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::Result<Value> {
     let state = &output["state"];
     let entries = array(state.get("entries"), "dependency entries")?;

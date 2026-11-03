@@ -67,7 +67,7 @@ pub(super) fn names(
     (prefix, configured_package_name(identity, stored, extensions))
 }
 
-/// Computes the effective npm package name for `identity`, honoring `teambit.pkg/pkg` overrides in `extensions`.
+/// Computes the effective npm package name for `identity`, honoring `teambit.pkg/pkg` overrides in `extensions` for [`names`].
 fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
     let identity = super::super::js::without_version(identity);
     let Some(pkg) =
