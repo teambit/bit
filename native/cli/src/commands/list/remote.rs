@@ -87,7 +87,7 @@ fn parse_row_id(value: &Value) -> io::Result<(String, Option<String>)> {
     Ok((format!("{scope}/{name}"), version.map(str::to_string)))
 }
 
-/// Converts a single remote component JSON object `value` into a [`Row`].
+/// Converts a single remote component JSON object `value` ([`Value`]) into a [`Row`] via [`parse_row_id`].
 fn row(value: &Value) -> io::Result<Row> {
     let (identity, version) = parse_row_id(value)?;
     let boolean = |field| match value.get(field) {

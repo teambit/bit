@@ -35,7 +35,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
     }
 }
 
-/// Returns the elapsed wall-clock milliseconds since `started`, saturating at `u64::MAX`.
+/// Returns the elapsed wall-clock milliseconds since `started` ([`Instant`]), saturating at `u64::MAX`.
 #[inline]
 fn elapsed_millis(started: &Instant) -> u64 {
     u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)

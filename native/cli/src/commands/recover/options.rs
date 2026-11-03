@@ -8,7 +8,7 @@ pub(super) struct Options<'a> {
     pub skip_installation: bool,
     pub skip_config: bool,
 }
-/// Parses CLI arguments after `bit recover` into [`Options`], returning `None` for unsupported flags.
+/// Parses CLI arguments after `bit recover` into [`Options`] via [`consume_trailing_pattern`] and [`is_valid_pattern_token`], returning `None` for unsupported flags.
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options { pattern: "", skip_installation: false, skip_config: false };
     let mut iter = args.iter().copied();

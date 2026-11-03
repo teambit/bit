@@ -22,7 +22,7 @@ pub(super) struct ComponentLinkItem {
     pub bound: Vec<BoundLink>,
 }
 
-/// Aggregated component links, `--rewire` codemod results, and `--target` directory links for `bit link`.
+/// Aggregated [`ComponentLinkItem`]s, `--rewire` [`CodemodResult`]s, and `--target` [`LinkToDirResult`]s for `bit link`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct LinkSummary {
     pub workspace_name: String,

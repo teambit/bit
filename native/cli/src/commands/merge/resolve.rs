@@ -69,7 +69,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     flags.contains(&"--resolve").then_some(options)
 }
 
-/// Consumes positional pattern arguments following `--` for `bit merge --resolve`.
+/// Consumes positional pattern arguments following `--` into `options` ([`Options`]) for `bit merge --resolve`.
 fn consume_trailing_resolve(tail: &[&str], options: &mut Options) -> Option<()> {
     for &rest in tail {
         let trimmed = rest.trim();

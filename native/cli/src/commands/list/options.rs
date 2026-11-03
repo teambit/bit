@@ -15,7 +15,7 @@ pub(super) struct Options {
     pub(super) namespace: Option<String>,
 }
 
-/// `args` starts after the command name; returns [`Options`] or `None` for unsupported syntax.
+/// `args` starts after the command name; returns [`Options`] via [`Options::step`] or `None` for unsupported syntax.
 #[inline]
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

@@ -64,7 +64,7 @@ fn all_scoped_remote_lanes(names: &[String]) -> bool {
         })
 }
 
-/// Emits the legacy-scope diagnostic or declines when `bit lane remove` runs outside a workspace.
+/// Emits the legacy-scope diagnostic or declines into an [`Outcome`] when `bit lane remove` runs outside a workspace.
 fn outside_workspace_remove(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
     if super::scope_root::discover()
         .ok()

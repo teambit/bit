@@ -6,7 +6,7 @@ use bit_workspace_config::parse_jsonc;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// Returns `true` when `workspace` and `scope` have no startup callbacks or lane hydration requiring delegation.
+/// Returns `true` when `workspace` and `scope` have no startup callbacks or lane hydration requiring delegation via [`scope_supported`] and [`supported_workspace`].
 #[inline]
 pub(in crate::commands) fn supported(
     workspace: Option<&Path>,

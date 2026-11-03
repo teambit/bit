@@ -56,7 +56,7 @@ impl Prepared {
     }
 }
 
-/// Prepares the [`Prepared`] report and pending file writes for `options.action` (`list`, `add`, or `del`).
+/// Prepares the [`Prepared`] report and pending file writes for `options.action` ([`Options`], [`Action`]: `list`, `add`, or `del`).
 pub(super) fn prepare(options: &Options, args: &[OsString]) -> Result<Prepared, Failure> {
     let cwd = env::current_dir()?;
     let chalk = Chalk::detect(args);

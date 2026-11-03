@@ -39,8 +39,7 @@ impl Entry {
     }
 }
 
-/// The bitmap: its entries, in order, and the current lane's id
-/// (`_bit_lane.id`), absent on main.
+/// The bitmap: its [`Entry`] records, in order, and the current lane's id (`_bit_lane.id`), absent on main.
 pub(in crate::commands) struct Bitmap {
     pub entries: Vec<Entry>,
     pub lane: Option<Value>,

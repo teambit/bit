@@ -31,7 +31,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     options.id.map(|_| options)
 }
 
-/// Consumes the single trailing component ID token after `--` into `id`.
+/// Consumes the single trailing component ID token after `--` into `id` for [`parse`].
 #[inline]
 fn consume_trailing_id<'a>(
     iter: impl Iterator<Item = &'a str>,

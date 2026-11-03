@@ -35,7 +35,7 @@ enum Action {
     DependencyName { old_id: String, new_id: String },
     Unrecognized(String),
 }
-/// Error classification distinguishing declined refactor invocations from user-facing errors.
+/// Error classification distinguishing declined refactor invocations from user-facing errors in `bit refactor` ([`COMMAND`]).
 #[derive(Debug)]
 enum Failure {
     Declined(String),

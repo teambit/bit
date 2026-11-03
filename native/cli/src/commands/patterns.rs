@@ -73,7 +73,7 @@ pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<V
         .collect())
 }
 
-/// Validates that `glob` uses only the natively ported glob grammar (`*`, `?`, `**`).
+/// Validates that `glob` uses only the natively ported glob grammar (`*`, `?`, `**`) or declines via [`decline`].
 #[inline]
 fn supported(glob: &str) -> io::Result<()> {
     if glob.is_empty()

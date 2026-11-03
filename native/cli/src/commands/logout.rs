@@ -81,7 +81,7 @@ fn valid_args(args: &[OsString]) -> bool {
     true
 }
 
-/// Removes `user.token` and `user.name` from `config.json` inside `global_dir`.
+/// Removes `user.token` and `user.name` from `config.json` inside `global_dir` for [`run`].
 #[inline]
 fn clear_auth_config(global_dir: &Path) -> io::Result<()> {
     let path = global_dir.join("config.json");

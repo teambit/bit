@@ -67,7 +67,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("link execution delegated".into()))
 }
 
-/// Parses CLI arguments after `bit link` into [`Options`], returning `None` for unsupported flags.
+/// Parses CLI arguments after `bit link` into [`Options`] via [`apply_token`], returning `None` for unsupported flags.
 #[inline]
 pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut options = Options::default();

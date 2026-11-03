@@ -85,7 +85,7 @@ fn apply_create_flag<'a>(
     }
 }
 
-/// Parses an inline `--scope=<val>`, `-s=<val>`, `--remote-scope=<val>`, or `--alias=<val>` flag into `options`.
+/// Parses an inline `--scope=<val>`, `-s=<val>`, `--remote-scope=<val>`, or `--alias=<val>` flag into `options` ([`Options`]).
 #[inline]
 fn apply_create_inline<'a>(options: &mut Options<'a>, flag: &'a str) -> Option<bool> {
     if let Some(val) = flag

@@ -65,7 +65,7 @@ impl Config {
     }
 }
 
-/// Expands each `tsconfig` glob pattern in `patterns` across all component `directories`.
+/// Expands each `tsconfig` glob pattern in `patterns` ([`Value`]) across all component `directories` via [`push_expanded_pattern`].
 #[inline]
 fn expand_patterns(patterns: &[Value], directories: &[&str]) -> io::Result<Vec<Value>> {
     let mut expanded = Vec::with_capacity(patterns.len() * directories.len());

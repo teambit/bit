@@ -65,7 +65,7 @@ pub(super) fn try_pack(
     .map(Some)
 }
 
-/// Resolves the target scope directory from `options.scope_path`, `ws_root`, or `cwd`.
+/// Resolves the target scope directory from `options.scope_path` ([`Options`]), `ws_root`, or `cwd` for [`try_pack`].
 fn resolve_target_scope(cwd: &Path, ws_root: Option<&Path>, options: &Options) -> Option<PathBuf> {
     let dir = match (&options.scope_path, ws_root) {
         (Some(raw), _) => cwd.join(raw),

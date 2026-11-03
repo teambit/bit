@@ -65,7 +65,7 @@ fn strlen(text: &str) -> usize {
         .unwrap_or(0)
 }
 
-/// `/\u001b\[(?:\d*;){0,5}\d*m/g` replaced with nothing.
+/// `/\u001b\[(?:\d*;){0,5}\d*m/g` replaced with nothing via [`sgr_length`].
 #[must_use]
 #[inline]
 pub(crate) fn strip_sgr(text: &str) -> String {

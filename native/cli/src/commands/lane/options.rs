@@ -7,7 +7,7 @@ mod options_tests;
 
 use serde_json::{Map, Value, json};
 
-/// Parsed CLI options and flags for `bit lane merge`.
+/// Parsed CLI options and flags ([`BOOLEANS`], [`EXTRA_BOOLEANS`], [`VALUED`]) for `bit lane merge`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Options {
     pub name: String,

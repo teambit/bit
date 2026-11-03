@@ -37,7 +37,7 @@ pub(super) fn run(
     Ok(())
 }
 
-/// Executes `plan_continuation` and commits the resulting merge-resolution snapshot into [`snap_results`].
+/// Executes `plan_continuation` and commits the resulting merge-resolution snapshot for [`Options`] into [`snap_results`].
 fn continue_snapshot(
     root: &Path,
     output: &Output,

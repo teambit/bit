@@ -4,7 +4,7 @@
 use super::LaneData;
 use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 
-/// Formats the `merged lanes` or `unmerged lanes` terminal section for `bit lane list` using [`Formatter`] and [`lane_name`].
+/// Formats the `merged lanes` or `unmerged lanes` terminal section for `bit lane list` over `lanes` ([`LaneData`]) using [`Formatter`] and [`lane_name`].
 #[inline]
 pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     let format = Formatter::new(chalk);

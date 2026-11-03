@@ -72,7 +72,7 @@ fn count_trailing_positionals(tail: &[&str]) -> Option<usize> {
         .then_some(tail.len())
 }
 
-/// Returns the first user-facing validation error message for conflicting `bit merge` `flags`.
+/// Returns the first user-facing validation error message for conflicting `bit merge` `flags` ([`Value`]) during [`validate_error`].
 fn check_merge_flags(flags: &[(&str, Value)]) -> Option<&'static str> {
     let get = |name: &str| {
         flags

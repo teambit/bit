@@ -38,7 +38,7 @@ use std::{
 /// The schema version (`1.0.0`) of lanes that record their deleted components in [`LaneData`].
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
 
-/// A lane's data, as `serializeLaneData` writes it.
+/// A lane's data (`id`, `alias`, `components`, `update_dependents`, `readme_component`, `is_merged`, `lane`), as `serializeLaneData` writes it.
 #[derive(Clone)]
 pub(super) struct LaneData {
     /// `{ name, scope }`.

@@ -55,7 +55,7 @@ pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outco
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// Writes the active lane identifier (`id`) and `alias` to `stdout` in plain text or `--json` format.
+/// Writes the active lane identifier (`id`, [`Value`]) and `alias` to `stdout` in plain text or `--json` ([`current_json`]) format.
 fn write_current(stdout: &mut impl Write, id: &Value, alias: &str, json: bool) -> io::Result<()> {
     let name = text(id.get("name"))?.trim();
     let alias = Some(alias.trim())

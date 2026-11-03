@@ -40,7 +40,7 @@ const PRESERVED_MANIFEST_KEYS: &[&str] = &[
     "peerDependenciesMeta",
     "bit",
 ];
-/// Executes `bit link` natively into an [`Outcome`] when `root` and `options` ([`Options`]) are eligible, or returns `Ok(None)` to delegate.
+/// Executes `bit link` natively into an [`Outcome`] via [`finish_execution`] when `root` and `options` ([`Options`]) are eligible, or returns `Ok(None)` to delegate.
 pub(super) fn try_run(
     root: &Path,
     cwd: &Path,

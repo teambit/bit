@@ -25,7 +25,7 @@ pub const COMMAND: Command = Command { name: "lint", aliases: &[], run };
 /// Error message emitted when `bit lint` runs outside a workspace or valid bare scope.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
-/// Parsed command-line options for `bit lint`.
+/// Parsed command-line options for `bit lint` ([`COMMAND`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

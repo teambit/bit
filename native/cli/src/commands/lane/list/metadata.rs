@@ -38,7 +38,7 @@ impl Tracking {
     }
 }
 
-/// Deserializes a lane of the index into [`LaneData`] with its id, [`Tracking`] alias, and components that are not deleted.
+/// Deserializes a lane of the index into [`LaneData`] with its id, [`Tracking`] alias, [`updates`], and components that are not deleted.
 pub(in crate::commands::lane::list) fn lane(
     row: &Value,
     tracking: &Tracking,

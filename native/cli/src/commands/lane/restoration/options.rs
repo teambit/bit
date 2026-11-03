@@ -12,7 +12,7 @@ pub(super) struct Options {
 }
 
 impl Options {
-    /// Parses `args` into [`Options`] when they fit the native `bit lane checkout` or `bit lane revert` grammar.
+    /// Parses `args` into [`Options`] via [`Self::apply_arg`] when they fit the native `bit lane checkout` or `bit lane revert` grammar.
     #[must_use]
     #[inline]
     pub fn parse(args: &[&str]) -> Option<Self> {

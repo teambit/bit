@@ -14,7 +14,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::HashMap, env, fs, io, path::Path};
 
-/// Resolved local component target classification for `bit log`.
+/// Resolved local component target classification ([`Value`]) for `bit log`.
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum LocalTarget {
     NewComponent,

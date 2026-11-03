@@ -29,7 +29,7 @@ pub(super) struct Plan {
     pub(super) concurrency: usize,
 }
 
-/// Returns `true` when `name` names a built-in pending-directory action supported on file remotes.
+/// Returns `true` when `name` names a built-in pending-directory action supported on file remotes via [`file::supports`].
 #[inline]
 pub(super) fn supports_file(name: &str) -> bool {
     file::supports(name.trim())

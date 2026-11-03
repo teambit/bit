@@ -62,7 +62,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("pack execution delegated".into()))
 }
 
-/// Emits the `scope not found` failure report for `bit pack` in plain text or `--json` mode.
+/// Emits the [`SCOPE_NOT_FOUND_ERR`] failure report for `bit pack` into an [`Outcome`] in plain text or `--json` mode.
 pub(super) fn missing_scope_error(
     host_dir: &Path,
     args: &[OsString],

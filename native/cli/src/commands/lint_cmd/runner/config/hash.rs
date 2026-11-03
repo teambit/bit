@@ -42,7 +42,7 @@ fn encode(value: &Value, output: &mut String, root: bool) -> io::Result<()> {
     Ok(())
 }
 
-/// Encodes a JSON [`Value::Object`] map into `output` following `object-hash` key ordering and prototype rules.
+/// Encodes a JSON [`Value::Object`] map into `output` following `object-hash` key ordering and [`FUNCTION`] prototype rules.
 fn object(
     values: &serde_json::Map<String, Value>,
     output: &mut String,

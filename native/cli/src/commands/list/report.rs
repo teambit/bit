@@ -42,7 +42,7 @@ pub(super) fn json_report(rows: &[Row], ids: bool) -> Value {
     )
 }
 
-/// Returns `row.version` or `"<new>"` when the component has not yet been snapped or tagged.
+/// Returns `row.version` ([`Row`]) or `"<new>"` when the component has not yet been snapped or tagged.
 #[inline]
 fn local_version(row: &Row) -> &str {
     row.version

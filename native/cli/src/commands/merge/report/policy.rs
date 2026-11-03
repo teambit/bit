@@ -9,7 +9,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// Formats the `workspaceConfigUpdateResult` section of a lane merge report via [`section`].
+/// Formats the `workspaceConfigUpdateResult` (`value`, [`Value`]) section of a lane merge report via [`section`] and [`Chalk`].
 pub(super) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(String::new()) };
     let formatter = Formatter::new(chalk);

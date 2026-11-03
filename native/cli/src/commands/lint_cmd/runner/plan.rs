@@ -50,7 +50,7 @@ impl Plan {
         Ok(Self { loaded, components, config, tools, precomputed })
     }
 
-    /// Commits workspace state, publishes the temporary `tsconfig`, and runs linting across selected components.
+    /// Commits workspace state, publishes the temporary [`Config`], and runs linting across selected [`Component`]s via [`Self::lint_components`].
     pub(super) fn run(
         &mut self,
         root: &Path,

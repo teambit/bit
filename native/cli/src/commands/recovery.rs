@@ -49,7 +49,7 @@ pub(super) struct Options {
     silent: bool,
 }
 
-/// Parses CLI flags for `bit merge --abort` into component-level recovery [`Options`].
+/// Parses CLI flags for `bit merge --abort` into component-level recovery [`Options`] (`Kind::Component`) via [`parse`].
 #[inline]
 pub(super) fn parse_component(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Component)

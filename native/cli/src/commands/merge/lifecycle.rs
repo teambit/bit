@@ -29,7 +29,7 @@ pub(in crate::commands) struct Options {
     pub workflow: resolve::workflow::Workflow,
 }
 
-/// Extracts `--build` workflow flags from `args` and returns the remaining merge grammar tokens.
+/// Extracts `--build` workflow flags from `args` into [`resolve::workflow::Workflow`] and returns the remaining merge grammar tokens.
 pub(in crate::commands) fn workflow<'a>(
     args: &[&'a str],
 ) -> Option<(resolve::workflow::Workflow, Vec<&'a str>)> {

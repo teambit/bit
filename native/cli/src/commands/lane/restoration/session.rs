@@ -51,7 +51,7 @@ impl Session {
         Ok(session)
     }
 
-    /// Executes all checkout partitions in order and merges their outcomes into the final [`Report`].
+    /// Executes all checkout partitions ([`Self::phases`]) in order and merges their outcomes into the final [`Report`] via [`report::render`].
     pub fn run(
         mut self,
         root: &Path,

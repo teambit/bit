@@ -41,7 +41,7 @@ pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {
     Ok(scope)
 }
 
-/// Executes `"PendingDirStatus"` or `"RemovePendingDir"` against the local file-remote `scope`.
+/// Executes `"PendingDirStatus"` or `"RemovePendingDir"` ([`supports`]) against the local file-remote `scope` via [`pending_path`] and [`removal::remove`].
 pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Value> {
     let name = name.trim();
     if !supports(name) {
