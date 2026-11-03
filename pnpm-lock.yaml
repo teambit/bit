@@ -536,7 +536,7 @@ importers:
         specifier: ~0.0.509
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ~0.0.6
+        specifier: ~0.0.7
         version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
@@ -16249,7 +16249,7 @@ importers:
         specifier: 1.2.5
         version: 1.2.5
       '@teambit/compositions.ui.composition-live-controls':
-        specifier: ~0.0.6
+        specifier: ~0.0.7
         version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
@@ -83679,6 +83679,7 @@ snapshots:
       '@teambit/design.themes.dark-theme': 1.91.64(react-dom@18.3.1)(react@18.3.1)
       '@teambit/design.themes.light-theme': 0.1.61(react-dom@18.3.1)(react@18.3.1)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(@testing-library/dom@10.4.1)(react@18.3.1)(supports-color@9.4.0)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -83769,6 +83770,7 @@ snapshots:
       '@teambit/design.themes.dark-theme': 1.91.64(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.themes.light-theme': 0.1.61(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.ui.tooltip': file:components/ui/tooltip(@testing-library/dom@10.4.1)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.harmony-root-generator': file:components/modules/harmony-root-generator
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
