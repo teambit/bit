@@ -91,7 +91,7 @@ impl Detected {
             || !self.untracked.is_empty()
     }
 
-    /// All missing package names, in issue order and without duplicates.
+    /// All missing package names from [`MissingFile`] entries, in issue order and without duplicates.
     #[must_use]
     pub fn missing_packages(&self) -> Vec<String> {
         let mut names: Vec<String> = Vec::new();

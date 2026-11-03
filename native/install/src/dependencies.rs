@@ -90,7 +90,7 @@ pub struct Workspace<'a> {
     pub options: &'a DependencyOptions,
 }
 impl Workspace<'_> {
-    /// The `.bitmap` id matching `id` without version (`getIdFromBitMap`).
+    /// The `.bitmap` [`ComponentId`] matching `id` without version (`getIdFromBitMap`).
     #[must_use]
     #[inline]
     pub fn bitmap_id(&self, id: &ComponentId) -> Option<&ComponentId> {

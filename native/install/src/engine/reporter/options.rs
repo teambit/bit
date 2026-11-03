@@ -1,6 +1,6 @@
 //! Released `lynx` nullish default and N-API `u32` conversion for reporter milliseconds.
 //!
-//! Reproduces `napi_get_value_uint32` `ECMAScript` `ToUint32` semantics for `throttleProgress` via [`throttle`].
+//! Reproduce `napi_get_value_uint32` `ECMAScript` `ToUint32` semantics for `throttleProgress` via [`throttle`].
 #[cfg(test)]
 mod tests;
 use serde_json::Value;

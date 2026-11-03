@@ -17,7 +17,7 @@ use std::time::Duration;
 /// `GraphQL` query (`CloudMain.GET_CURRENT_USER`) for resolving the logged-in Bit Cloud user in [`cloud_username`].
 const GET_CURRENT_USER: &str = "\n    query GET_ME {\n      me {\n        id\n        username\n        image\n        displayName\n      }\n    }\n  ";
 
-/// How long one lookup may take before the install goes on as `anonymous`.
+/// How long ([`Duration`]) one [`cloud_username`] lookup may take before the install goes on as `anonymous`.
 pub const LOOKUP_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Resolve the username of the logged-in Bit Cloud user via [`GET_CURRENT_USER`] when `global` holds a token and the cloud answers within `timeout`.

@@ -81,7 +81,7 @@ impl ScopeJson {
         }
     }
 
-    /// The remote lane a local lane tracks.
+    /// The remote [`TrackLane`] a local lane tracks.
     #[inline]
     #[must_use]
     pub fn tracking(&self, local_lane: &str) -> Option<&TrackLane> {

@@ -2,7 +2,7 @@
 //! immutable objects as they are, Version and `VersionHistory` merged, then the
 //! Component objects merged across remotes, indexed, and their remote heads recorded.
 //!
-//! Emits periodic download progress updates and persists remote ref pointers into [`Written`].
+//! Emit periodic download progress updates and persist remote ref pointers into [`Written`].
 
 use super::{
     component::{keep_existing_version, merge_component, merge_version_history},

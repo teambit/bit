@@ -37,7 +37,7 @@ pub(super) struct EngineCall {
 }
 
 impl EngineCall {
-    /// Clone `plan`, `settings`, and `options` into an owned [`EngineCall`] ready for thread spawning.
+    /// Clone [`InstallPlan`] `plan`, [`EngineSettings`] `settings`, and [`EngineInstallOptions`] `options` into an owned [`EngineCall`] ready for thread spawning.
     #[inline]
     pub(super) fn new(
         plan: &InstallPlan,

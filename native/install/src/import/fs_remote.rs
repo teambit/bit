@@ -63,7 +63,7 @@ struct Selected {
     hash: String,
 }
 impl Collector {
-    /// Read and append the raw loose object `hash` once when present in `self.repo`.
+    /// Read and append the raw loose object `hash` once when present in `self.repo` ([`Repo`]).
     #[inline]
     fn push_raw(&mut self, hash: &str) -> io::Result<()> {
         if self.pushed.contains(hash) {

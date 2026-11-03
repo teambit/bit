@@ -62,7 +62,7 @@ pub fn read(
     Ok(Some(Detected::from_cache(&data)))
 }
 
-/// Format `component`'s ID as `ComponentID.toString()` (`scope/name@version`, omitting version for new components).
+/// Format [`WorkspaceComponent`] `component`'s ID as `ComponentID.toString()` (`scope/name@version`, omitting version for new components).
 #[inline]
 fn key(component: &WorkspaceComponent) -> String {
     let id = component.id.to_string_without_version();

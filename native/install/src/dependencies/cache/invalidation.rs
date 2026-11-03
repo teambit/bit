@@ -70,7 +70,7 @@ fn js_min(left: f64, right: f64) -> f64 {
     if left.is_nan() || right.is_nan() { f64::NAN } else { left.min(right) }
 }
 
-/// `fs.stat(path).mtimeMs`, `None` when the path does not exist.
+/// `fs.stat(path).mtimeMs` for [`Path`] `path`, `None` when the path does not exist.
 #[inline]
 fn mtime_ms(path: &Path) -> io::Result<Option<f64>> {
     let metadata = match fs::metadata(path) {

@@ -73,7 +73,7 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     Ok(Some(existing))
 }
 
-/// Return visible [`LaneObject`] entries (`hidden = false`) followed by hidden `updateDependents` entries (`hidden = true`).
+/// Return visible [`LaneObject`] [`LaneComponent`] entries (`hidden = false`) followed by hidden `updateDependents` entries (`hidden = true`).
 fn entries(lane: &LaneObject) -> Vec<(LaneComponent, bool)> {
     let visible = lane.components
         .iter()

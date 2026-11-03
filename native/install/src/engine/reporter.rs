@@ -32,7 +32,7 @@ const APPROVE_BUILDS_INSTRUCTION_TEXT: &str = "Update the \"allowScripts\" field
 pub struct OutputSink(pub Arc<dyn Fn(&str) + Send + Sync>);
 
 impl fmt::Debug for OutputSink {
-    /// Writes `"OutputSink"` to `formatter`.
+    /// Write `"OutputSink"` to `formatter`.
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("OutputSink")
     }

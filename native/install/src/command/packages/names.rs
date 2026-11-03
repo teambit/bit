@@ -67,7 +67,7 @@ fn scoped_parts(name: &str) -> Option<(&str, &str)> {
     .then_some((user, package))
 }
 
-/// Returns `true` when `part` satisfies `encodeURIComponent(part) === part`.
+/// Return `true` when `part` satisfies `encodeURIComponent(part) === part`.
 #[inline]
 fn is_url_safe(part: &str) -> bool {
     !part.is_empty()

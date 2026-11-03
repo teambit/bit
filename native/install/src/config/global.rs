@@ -37,7 +37,7 @@ pub mod keys {
     pub const NETWORK_STRICT_SSL: &str = "network.strict-ssl";
     pub const NETWORK_CERT: &str = "network.cert";
     pub const NETWORK_KEY: &str = "network.key";
-    /// The cloud domain when `cloud_domain` is unset.
+    /// The cloud domain when [`CLOUD_DOMAIN`] (`cloud_domain`) is unset.
     pub const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";
 
     /// Every key above, for resolving `BIT_CONFIG_*` overrides.

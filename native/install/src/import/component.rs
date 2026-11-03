@@ -78,7 +78,7 @@ fn tags(versions: &Value) -> Vec<[String; 2]> {
         .collect()
 }
 
-/// Extract the trimmed string array under `component["detachedHeads"][key]`.
+/// Extract the trimmed string array under `component["detachedHeads"][key]` on [`Value`] `component`.
 #[inline]
 fn detached(component: &Value, key: &str) -> Vec<String> {
     component["detachedHeads"][key]

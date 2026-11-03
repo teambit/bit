@@ -1,6 +1,6 @@
 //! Tracking prepares every package transformer before its first filesystem publication.
 //!
-//! Pre-evaluates [`Host`] package transformers across tracked components via [`prepare`] prior to writing `package.json` files.
+//! Pre-evaluate [`Host`] package transformers across tracked components via [`prepare`] prior to writing `package.json` files.
 
 use super::{
     ComponentLinkOptions, EnvProps, Host, IndexMap, InjectedDeps, LinkContext, Manifest,

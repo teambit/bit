@@ -80,7 +80,7 @@ fn peer_issues(
     Ok(issues.remove("."))
 }
 
-/// Configure `install` for a full, non-frozen, dry-run [`PeerIssuesSink`] resolution pass on `session`.
+/// Configure [`Install`] `install` for a full, non-frozen, dry-run [`PeerIssuesSink`] resolution pass on [`Session`] `session`.
 #[inline]
 fn configure<'a>(
     install: Install<'a, Vec<DependencyGroup>>,

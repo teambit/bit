@@ -70,7 +70,7 @@ pub fn build(
     list
 }
 
-/// Construct a [`ComponentDependency`] with normalized version and package metadata.
+/// Construct a [`ComponentDependency`] from [`ComponentId`] `id`, `package_name`, [`Lifecycle`] `lifecycle`, and `is_extension`.
 #[inline]
 fn component(
     id: ComponentId,

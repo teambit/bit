@@ -1,7 +1,7 @@
 //! Node.js built-in modules ([`BUILTINS`]; `require('module').builtinModules`), which are never
 //! external package dependencies.
 //!
-//! Recognizes `node:`-prefixed and bare core Node.js module specifiers via [`is_builtin`] during dependency resolution.
+//! Recognize `node:`-prefixed and bare core Node.js module specifiers via [`is_builtin`] during dependency resolution.
 
 /// Canonical list of Node.js built-in module names (`require('module').builtinModules`) checked by [`is_builtin`].
 const BUILTINS: [&str; 45] = [

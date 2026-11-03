@@ -85,7 +85,7 @@ pub struct LaneId {
 }
 
 impl LaneId {
-    /// Formats this [`LaneId`] as `scope/name` for remote fetch requests.
+    /// Format this [`LaneId`] as `scope/name` for remote fetch requests.
     #[must_use]
     #[inline]
     pub fn to_request(&self) -> String {

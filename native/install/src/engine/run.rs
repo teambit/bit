@@ -17,8 +17,7 @@ use engine_call::EngineCall;
 use std::{io, sync::OnceLock};
 use tokio::sync::Mutex;
 
-/// Serializes every engine call of the process: the reporter and stats slots
-/// are process-global, and Bit serializes installs per workspace anyway.
+/// Serialize every engine call of the process: the reporter and stats slots are process-global, and Bit serializes installs per workspace anyway.
 #[inline]
 pub(super) fn engine_call_lock() -> &'static Mutex<()> {
     static LOCK: OnceLock<Mutex<()>> = OnceLock::new();

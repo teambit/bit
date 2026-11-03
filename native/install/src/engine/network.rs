@@ -91,7 +91,7 @@ macro_rules! take_set {
 }
 
 impl NetworkSettings {
-    /// `{ ...self, ...other }` for the fields `other` sets.
+    /// `{ ...self, ...other }` for the [`NetworkSettings`] fields `other` sets.
     fn merge(mut self, other: Self) -> Self {
         take_set!(self, other, max_sockets, network_concurrency, user_agent);
         take_set!(

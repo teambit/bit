@@ -47,7 +47,7 @@ async fn load_with_status(
     ordered(&session.root, components, &receipt)
 }
 
-/// Formats `component.id` as `scope/name` with `@<version>` appended when a version is present.
+/// Format `component.id` on [`WorkspaceComponent`] as `scope/name` with `@<version>` appended when a version is present.
 #[inline]
 pub(crate) fn identity(component: &WorkspaceComponent) -> String {
     let mut id = component.id.to_string_without_version();

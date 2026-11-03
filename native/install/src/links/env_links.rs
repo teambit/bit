@@ -1,7 +1,7 @@
 //! `linkDepsResolvedFromEnv` (`dependency-linker.ts`): a dependency that a component
 //! policy marks `resolveFromEnv` is linked at the root from where its env resolves it.
 //!
-//! Resolves `resolveFromEnv` package directories from core, workspace, or installed environment packages.
+//! Resolve `resolveFromEnv` package directories from core, workspace, or installed environment packages.
 
 #[cfg(test)]
 mod tests;

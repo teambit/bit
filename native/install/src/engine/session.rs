@@ -36,7 +36,7 @@ pub(super) struct Session {
 }
 
 impl Session {
-    /// A session for the workspace at `root`, whose importer is the project at `root`.
+    /// A [`Session`] for the workspace at [`Path`] `root`, whose importer is the [`Project`] at `root`.
     pub(super) fn new(
         config: &'static Config,
         root: &Path,

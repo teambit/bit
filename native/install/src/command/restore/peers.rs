@@ -49,7 +49,7 @@ impl Rewriter<'_> {
             .as_object()
     }
 
-    /// Rewrites `edge`'s node ID and neighbour IDs to normalized peer provider versions.
+    /// Rewrite `edge`'s node ID and neighbour IDs to normalized peer provider versions.
     fn edge(&self, edge: &Value) -> Value {
         let edge_id = id(edge);
         let package = edge["attr"]["pkgId"]

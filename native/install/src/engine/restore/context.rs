@@ -74,7 +74,7 @@ pub(super) fn merge(
     }
 }
 
-/// Returns `true` when `lockfile` ([`Map`]) contains at least one entry in `"packages"` or `"snapshots"`.
+/// Return `true` when `lockfile` ([`Map`]) contains at least one entry in `"packages"` or `"snapshots"`.
 #[inline]
 fn has_resolutions(lockfile: &Map<String, Value>) -> bool {
     ["packages", "snapshots"]

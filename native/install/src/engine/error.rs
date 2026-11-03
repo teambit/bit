@@ -46,7 +46,7 @@ impl EngineError {
         }
     }
 
-    /// The engine error an [`io::Error`] carries, if any.
+    /// The [`EngineError`] an [`io::Error`] carries, if any.
     #[must_use]
     #[inline]
     pub fn from_io(error: &io::Error) -> Option<&Self> {

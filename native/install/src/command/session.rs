@@ -97,7 +97,7 @@ pub struct Loaded {
 }
 
 impl Loaded {
-    /// Load workspace configuration, layered global config, `.bitmap` components, and engine settings for `session`.
+    /// Load [`WorkspaceConfig`], layered [`GlobalConfig`], `.bitmap` components, and [`EngineSettings`] for [`Session`] `session`.
     pub fn load(session: &Session<'_>) -> io::Result<Self> {
         let config = WorkspaceConfig::load(&session.root)?;
         let core_ids = session.core_ids();

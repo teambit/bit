@@ -26,7 +26,7 @@ pub struct EnvVars {
 }
 
 impl EnvVars {
-    /// Read them from the process environment.
+    /// Read [`EnvVars`] from the process environment.
     #[must_use]
     #[inline]
     pub fn from_process() -> Self {

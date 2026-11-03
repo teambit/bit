@@ -75,7 +75,7 @@ impl Captured {
             })
     }
 
-    /// Looks up `name` in `self.vars` (case-insensitively on Windows, exact match on Unix).
+    /// Look up `name` in `self.vars` (case-insensitively on Windows, exact match on Unix).
     #[inline]
     fn get(&self, name: &str) -> Option<&str> {
         if cfg!(windows) {

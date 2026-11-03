@@ -60,7 +60,7 @@ impl<'a> Request<'a> {
     }
 }
 
-/// Extracts and validates an absolute [`PathBuf`] from JSON string `value`.
+/// Extract and validate an absolute [`PathBuf`] from JSON string [`Value`] `value`.
 #[inline]
 fn absolute(value: &Value) -> Option<PathBuf> {
     parse_absolute_str(value.as_str()?)

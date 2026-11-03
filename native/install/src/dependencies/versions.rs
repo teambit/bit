@@ -25,7 +25,7 @@ pub struct VersionInputs<'a> {
     pub env_own: &'a [String],
 }
 
-/// Resolve the version of every component dependency across all [`Lifecycle`] slots of `detected` via [`resolve`].
+/// Resolve the version of every component dependency across all [`Lifecycle`] slots of [`Detected`] `detected` via [`resolve`].
 pub fn update(
     workspace: &Workspace<'_>,
     subject: &Subject<'_>,

@@ -1,6 +1,6 @@
 //! Package copy destination resolution for injected and root-component directories.
 //!
-//! Computes `node_modules/<pkg>` and `.bit_roots` target directories for [`WorkspaceComponent`] compiler artifact mirroring via [`component_package_copies`].
+//! Compute `node_modules/<pkg>` and `.bit_roots` target directories for [`WorkspaceComponent`] compiler artifact mirroring via [`component_package_copies`].
 
 use super::{read_injected_deps, root_component_modules_dirs};
 use crate::model::WorkspaceComponent;

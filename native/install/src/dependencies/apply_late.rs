@@ -60,7 +60,7 @@ fn uses_component(detected: &Detected, name: &str) -> bool {
         .any(|dependency| dependency.package_name.as_deref() == Some(name))
 }
 
-/// Finds and clones the [`LegacyDependency`] in `detected.components[field]` whose `package_name` matches `name`.
+/// Find and clone the [`LegacyDependency`] in `detected.components[field]` whose `package_name` matches `name`.
 #[inline]
 fn find(detected: &Detected, field: usize, name: &str) -> Option<LegacyDependency> {
     detected.components[field]

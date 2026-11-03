@@ -34,7 +34,7 @@ pub fn edit(
     fs::write(&path, platform_eol(format!("{document}\n")))
 }
 
-/// Copy `path` into `<scope>/workspace-config-history/files/<file_id>` and append `reason` to `metadata.txt`.
+/// Copy [`Path`] `path` into `<scope>/workspace-config-history/files/<file_id>` and append `reason` to `metadata.txt`.
 fn backup(path: &Path, scope_path: &Path, file_id: &str, reason: &str) -> io::Result<()> {
     let file_id = file_id.trim();
     if scope_path

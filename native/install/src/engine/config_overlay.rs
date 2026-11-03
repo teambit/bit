@@ -81,8 +81,7 @@ pub(super) fn query_config(settings: &EngineSettings, query: &Query<'_>) -> &'st
     intern(config)
 }
 
-/// The cascade's registry-wide (`@`) headers by URI (`readConfig`'s
-/// `authHeaderByUri`).
+/// The cascade's registry-wide (`@`) headers by URI (`readConfig`'s `authHeaderByUri`) on [`Config`].
 fn cascade_auth_headers(config: &Config) -> HashMap<String, String> {
     config.auth_headers
         .to_by_scope()

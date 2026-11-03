@@ -18,7 +18,7 @@ pub mod output;
 pub mod policy;
 pub mod workspace;
 
-/// Re-exported comment-preserving `JSONC` parser and editor from `bit_object_import`.
+/// Re-export comment-preserving `JSONC` parser and editor from `bit_object_import`.
 pub use bit_object_import::jsonc;
 /// Re-exported top-level `bit install` entry points, outcomes, and stored-graph helpers.
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};

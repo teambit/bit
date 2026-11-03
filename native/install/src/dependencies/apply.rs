@@ -57,7 +57,7 @@ fn remove_ignored_components(deps: &FieldMaps, detected: &mut Detected) {
     detected.missing.retain(|entry| !entry.packages.is_empty());
 }
 
-/// Returns `true` when `ignore` contains `name` after trimming whitespace.
+/// Return `true` when `ignore` contains `name` after trimming whitespace.
 #[inline]
 fn is_ignored_name(ignore: &[String], name: &str) -> bool {
     let target = name.trim();

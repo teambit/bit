@@ -75,7 +75,7 @@ impl Graph {
             })
     }
 
-    /// Drop `name@file:` packages (`dropOrphanFilePkgs`).
+    /// Drop `name@file:` packages (`dropOrphanFilePkgs`) from `self.packages` and `self.edges`.
     fn drop_orphan_file_packages(&mut self) {
         let is_file = |id: &str| {
             parse(id).non_semver_version.is_some_and(|version| version.starts_with("file:"))

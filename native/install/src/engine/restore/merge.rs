@@ -21,7 +21,7 @@ fn object_mut<'a>(
     lockfile.get_mut(key).and_then(Value::as_object_mut)
 }
 
-/// Iterates over the key-value entries of `value` when it is a JSON object.
+/// Iterate over the key-value entries of [`Value`] `value` when it is a JSON object.
 #[inline]
 fn entries(value: Option<&Value>) -> impl Iterator<Item = (&String, &Value)> {
     value

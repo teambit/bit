@@ -75,7 +75,7 @@ fn rename_error(from: &Path, to: &Path, error: io::Error) -> io::Error {
         error
     }
 }
-/// Parses `text` as JSON or `JSONC` and re-serializes it into compact canonical JSON.
+/// Parse `text` as JSON or `JSONC` and re-serialize it into compact canonical JSON.
 #[inline]
 fn compact_json(text: &str) -> Option<String> {
     let trimmed = text.trim();

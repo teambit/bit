@@ -86,7 +86,7 @@ pub struct Resolver<'a> {
     manifests: HashMap<PathBuf, Option<Value>>,
 }
 impl<'a> Resolver<'a> {
-    /// Construct a [`Resolver`] for `root` with the workspace's `components` and `core_aspects`.
+    /// Construct a [`Resolver`] for [`Path`] `root` with the workspace's [`WorkspaceComponent`] `components` and [`CoreAspect`] `core_aspects`.
     #[must_use]
     #[inline]
     pub fn new(

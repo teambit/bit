@@ -82,7 +82,7 @@ pub fn remove_from_document(document: &mut Document, packages: &[String]) -> boo
     changed
 }
 
-/// Add `entries` (`[name, version]`) with `updateExisting` semantics and write `workspace.jsonc`.
+/// Add `entries` (`[name, version]`) with `updateExisting` semantics and write `workspace.jsonc` for [`Session`].
 pub fn add_to_root_policy(
     session: &Session<'_>,
     loaded: &Loaded,

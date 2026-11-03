@@ -81,7 +81,7 @@ fn dependency(dependency: &LegacyDependency) -> Value {
     Value::Object(value)
 }
 
-/// Serialize `dependency.id` into the `{ scope?, name, version? }` JSON [`Value`] object stored in the dependency cache.
+/// Serialize [`LegacyDependency`] `dependency.id` into the `{ scope?, name, version? }` JSON [`Value`] object stored in the dependency cache.
 #[inline]
 fn dependency_id(dependency: &LegacyDependency) -> Value {
     let mut id = Map::with_capacity(3);

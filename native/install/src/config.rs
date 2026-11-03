@@ -46,7 +46,7 @@ pub struct DependencyResolverConfig {
     pub https_proxy: Option<String>,
     pub ca: Option<String>,
     pub cafile: Option<String>,
-    /// A boolean or the string `"true"`/`"false"`.
+    /// A boolean or the string `"true"`/`"false"` [`Value`].
     pub strict_ssl: Option<Value>,
     pub cert: Option<String>,
     pub key: Option<String>,
