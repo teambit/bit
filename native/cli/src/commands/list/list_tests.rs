@@ -5,7 +5,7 @@
 use super::{Options, Row, Wildcard, WorkspaceRow, namespace_pattern, parse, report, table};
 use crate::commands::color::Chalk;
 
-/// Verifies `bit list` CLI option parsing across `-i`, `--json`, `-s`, `-n`, and `-l`.
+/// Verifies [`parse`] for `bit list` CLI options across `-i`, `--json`, `-s`, `-n`, and `-l`.
 #[test]
 fn parses_the_native_flags() {
     assert_eq!(parse(&[]), Some(Options::default()));

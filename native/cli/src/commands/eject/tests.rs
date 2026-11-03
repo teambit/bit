@@ -5,7 +5,7 @@
 use super::{Options, parse_options, validate_workspace};
 use std::fs;
 
-/// Verifies `bit eject` CLI option parsing for short flags and explicit boolean assignments.
+/// Verifies [`parse_options`] for `bit eject` CLI short flags and explicit boolean assignments.
 #[test]
 fn parses_eject_options() {
     assert_eq!(

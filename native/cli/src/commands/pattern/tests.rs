@@ -14,7 +14,7 @@ fn parse(words: &[&str]) -> Option<Options> {
     parse_options(&args)
 }
 
-/// Verifies `bit pattern` argument parsing across local globs, `--remote`, and `-j`.
+/// Verifies [`parse`] for `bit pattern` arguments across local globs, `--remote`, and `-j`.
 #[test]
 fn parses_pattern_and_flags() {
     assert_eq!(

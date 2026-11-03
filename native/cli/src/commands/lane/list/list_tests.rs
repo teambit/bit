@@ -6,7 +6,7 @@ use super::{LaneData, Tracking, lane, report};
 use crate::commands::{color::Chalk, lane::show::show_report};
 use serde_json::json;
 
-/// Builds a sample lane row JSON value with `schema` and one active plus one deleted component.
+/// Builds a sample lane row [`json`] value with `schema` and one active plus one deleted component.
 fn row(schema: &str) -> serde_json::Value {
     json!({"hash": "h", "lane": {
         "name": "dev", "scope": "s", "schema": schema, "log": {"date": "1"},

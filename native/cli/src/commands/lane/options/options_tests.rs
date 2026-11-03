@@ -5,7 +5,7 @@
 use super::parse;
 use serde_json::json;
 
-/// Verifies `bit lane merge` CLI option parsing and request JSON construction.
+/// Verifies [`parse`] for `bit lane merge` CLI options and request [`json`] construction.
 #[test]
 fn lane_merges_with_their_options() {
     assert!(!parse(&["dev", "--no-snap"]).unwrap().skip_install);

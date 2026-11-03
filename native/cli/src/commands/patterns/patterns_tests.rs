@@ -4,7 +4,7 @@
 
 use super::{matching, split};
 
-/// Sample component ID list used across glob and negation unit tests.
+/// Sample component ID list used across [`matching`] glob and negation unit tests.
 const IDS: [&str; 5] =
     ["org.scope/ui/button", "org.scope/ui/card", "org.scope/utils", "other/utils", "other/.hidden"];
 

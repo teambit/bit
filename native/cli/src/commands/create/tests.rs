@@ -6,7 +6,7 @@ use super::{Options, parse_options, validate_options};
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies `bit create` positional template/component parsing and option flags.
+/// Verifies [`parse_options`] for `bit create` positional template/component arguments and option flags.
 /// Rejects single-argument invocations and negated `--no-force` flags.
 #[test]
 fn parses_create_arguments_and_options() {

@@ -5,7 +5,7 @@
 use super::{Config, hash};
 use serde_json::json;
 
-/// Verifies that [`Config::prepare`] names the generated `ESLint` `tsconfig` file using the released object hash.
+/// Verifies that [`Config::prepare`] names the generated `ESLint` `tsconfig` file using the released [`hash`] digest.
 #[test]
 fn generated_configuration_name_matches_released_object_hash() {
     let root = tempfile::tempdir().unwrap();

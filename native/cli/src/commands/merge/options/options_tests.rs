@@ -4,7 +4,7 @@
 
 use super::parse;
 
-/// Verifies that [`parse`] accepts the supported `bit merge` flags and positional pattern.
+/// Verifies that [`parse`] accepts the supported native `bit merge` flags and positional pattern.
 #[test]
 fn accepts_the_native_subset() {
     let options = parse(&["-x", "--no-snap"]).unwrap();

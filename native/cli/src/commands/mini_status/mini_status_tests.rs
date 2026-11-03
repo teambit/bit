@@ -20,7 +20,7 @@ fn summary(modified: &[&str], new_comps: &[&str]) -> Summary {
     }
 }
 
-/// Verifies [`report`] and [`quick_report`] formatting when modified components exist.
+/// Verifies [`report`] and [`quick_report`] formatting when modified [`summary`] components exist.
 #[test]
 fn reports_the_file_changes() {
     let changed = summary(&["s/a", "s/b"], &[]);

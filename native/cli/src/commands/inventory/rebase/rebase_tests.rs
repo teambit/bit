@@ -4,7 +4,7 @@
 
 use super::{join_linux, pattern};
 
-/// Verifies [`join_linux`] against `pathJoinLinux` outputs from Bit 2.2.94.
+/// Verifies [`join_linux`] against `pathJoinLinux` POSIX path-joining outputs from Bit 2.2.94.
 #[test]
 fn join_linux_matches_node() {
     let cases: &[(&[&str], &str)] = &[

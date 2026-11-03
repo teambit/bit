@@ -4,7 +4,7 @@
 
 use super::{Subcommand, create::CreateArgs, object_hash_short, parse_subcommand};
 
-/// Verifies `bit capsule` subcommand parsing across `list`, `delete`, `prune`, and `create`.
+/// Verifies [`parse_subcommand`] for `bit capsule` across `list`, `delete`, `prune`, and `create`.
 ///
 /// Covers short and long flags as well as `--id` and `--base-dir` assignments.
 #[test]

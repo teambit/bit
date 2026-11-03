@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use std::{fs, io::Write, path::Path};
 use tempfile::tempdir;
 
-/// Writes a zlib-compressed loose object of `kind` and `hash` into `root/.bit/objects`.
+/// Writes a zlib-compressed loose object of `kind` and `hash` with [`Value`] `payload` into `root/.bit/objects` using [`ZlibEncoder`].
 fn write_scope_object(root: &Path, kind: &str, hash: &str, payload: &Value) {
     let body = serde_json::to_vec(payload).unwrap();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

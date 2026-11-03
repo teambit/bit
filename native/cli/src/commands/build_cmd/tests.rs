@@ -5,7 +5,7 @@
 use super::{Options, flag_error, is_empty_build_workspace, parse_options};
 use std::fs;
 
-/// Verifies `bit build` pipeline option parsing and capsule flag validation.
+/// Verifies [`parse_options`] for `bit build` pipeline options and [`flag_error`] capsule flag validation.
 #[test]
 fn parses_build_options_and_validates_capsule_flags() {
     let opts = parse_options(&[

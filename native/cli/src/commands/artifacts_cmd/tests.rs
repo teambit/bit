@@ -13,7 +13,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::json;
 use std::fs;
 
-/// Verifies `bit artifacts` CLI option parsing across `--aspect`, `--task`, `--files`, and `--out-dir`.
+/// Verifies [`parse_options`] for `bit artifacts` CLI flags across `--aspect`, `--task`, `--files`, and `--out-dir`.
 #[test]
 fn parses_artifacts_options() {
     assert_eq!(parse_options(&[]), None);

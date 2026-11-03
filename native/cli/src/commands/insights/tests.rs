@@ -6,7 +6,7 @@ use super::{Options, find_cycles, parse_options, render};
 use crate::commands::graph_cmd::model::CompGraph;
 use serde_json::json;
 
-/// Verifies `bit insights` option parsing across `--list`, `--json`, and named insight filters.
+/// Verifies [`parse_options`] for `bit insights` across `--list`, `--json`, and named insight filters.
 #[test]
 fn parses_insights_list_and_named_flags() {
     assert_eq!(

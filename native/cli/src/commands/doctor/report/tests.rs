@@ -12,7 +12,7 @@ fn table_uses_published_double_outline_and_row_separators() {
         "╔═════╗\n║ a   ║\n╟─────╢\n║ xyz ║\n╚═════╝\n",
     );
 }
-/// Verifies that ANSI color escapes in [`list`] do not alter computed table column widths.
+/// Verifies that [`Chalk`] ANSI color escapes in [`list`] do not alter computed table column widths.
 #[test]
 fn colors_do_not_increase_column_width() {
     let plain = list(Chalk::new(false));

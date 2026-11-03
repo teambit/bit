@@ -4,7 +4,7 @@
 
 use super::classify;
 use serde_json::json;
-/// Verifies that [`classify`] orders local matches before reversed remote matches when versions match.
+/// Verifies that [`classify`] orders local matches before reversed remote matches when [`json`] candidate versions match.
 #[test]
 fn equal_remote_matches_repeat_in_local_phase_before_reversed_remote_phase() {
     let local = vec!["old.scope/comp1".into(), "old.scope/comp2".into()];

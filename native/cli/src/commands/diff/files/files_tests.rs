@@ -18,7 +18,7 @@ fn formats_like_format_file_diff() {
     assert_eq!(format("--- a/x\n", "a", "b", "x"), "");
 }
 
-/// What `formatFileDiff` returns for a file name holding `$` patterns:
+/// Verifies what `formatFileDiff` returns via [`format`] for a file name holding `$` patterns:
 /// `$&`, `$$`, `` $` `` and `$'` expand, `$1` stays.
 #[test]
 fn expands_dollar_patterns() {

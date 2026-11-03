@@ -10,7 +10,7 @@ use serde_json::json;
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies `bit log` option parsing for `--one-line`, `--full-hash`, `--remote`, and `--no-color`.
+/// Verifies [`parse`] for `bit log` options covering `--one-line`, `--full-hash`, `--remote`, and `--no-color`.
 #[test]
 fn parses_local_and_remote_history_views() {
     let options = parse(&["alpha", "--one-line", "--full-hash", "--no-color"]).unwrap();

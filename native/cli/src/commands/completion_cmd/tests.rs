@@ -4,7 +4,7 @@
 
 use super::{render_completion_script, valid_options};
 
-/// Verifies `bit completion` option validation and `bash` / `zsh` completion script rendering.
+/// Verifies `bit completion` [`valid_options`] option validation and [`render_completion_script`] `bash` / `zsh` script rendering.
 /// Checks both shell header markers and completion registration commands.
 #[test]
 fn validates_completion_options_and_renders_scripts() {

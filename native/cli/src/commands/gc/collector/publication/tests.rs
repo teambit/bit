@@ -26,7 +26,7 @@ fn an_object_removed_after_planning_does_not_remove_its_empty_bucket() {
     );
 }
 
-/// Verifies that [`Plan::validate`] rejects mixed-type deletion reports before stray cleanup or object removal.
+/// Verifies that [`Plan::validate`] rejects mixed-type [`GcResult`] deletion reports before stray cleanup or object removal.
 #[test]
 fn mixed_type_reports_decline_before_stray_cleanup_or_collection() {
     let scope = tempfile::tempdir().unwrap();

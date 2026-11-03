@@ -8,7 +8,7 @@ use super::{
     parse_options,
 };
 
-/// Verifies `bit graph` CLI option parsing and missing-host / empty-remote preflight errors.
+/// Verifies [`parse_options`] for `bit graph` CLI flags and [`fast_graph_error`] missing-host / empty-remote preflight errors.
 #[test]
 fn parses_graph_options_and_validates_remote_or_host() {
     let opts = parse_options(&["comp1", "--cycles", "--layout", "dot", "-j"]).unwrap();

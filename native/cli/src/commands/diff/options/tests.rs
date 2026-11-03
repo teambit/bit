@@ -4,7 +4,7 @@
 
 use super::{output_error, parse};
 
-/// Verifies that [`parse`] accepts `--file`, `--stat`, `--json`, `--name-only`, and `--parent` modes.
+/// Verifies that [`parse`] accepts `--file`, `--stat`, `--json`, `--name-only`, and `--parent` diff output modes.
 #[test]
 fn accepts_workspace_diff_output_modes() {
     let options = parse(&["consumer", "--file", "src/index.js,index.js", "--stat"]).unwrap();

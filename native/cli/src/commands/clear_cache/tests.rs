@@ -15,7 +15,7 @@ fn args(items: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
-/// Verifies [`parse_args`] for plain `clear-cache` / `cc` and `--remote` invocations.
+/// Verifies [`parse_args`] for plain `clear-cache` / `cc` and `--remote` invocations constructed via [`args`].
 #[test]
 fn parses_plain_and_remote_invocations() {
     assert_eq!(parse_args(&args(&["clear-cache"])), Some(None));

@@ -18,7 +18,7 @@ const IDS: [&str; 10] = [
     "s/ab/cd",
 ];
 
-/// Results `multimatch` 5 with `minimatch` 3.1.5 gave for these patterns.
+/// Results `multimatch` 5 with `minimatch` 3.1.5 gave for these patterns against [`IDS`].
 const ORACLE: &str = include_str!("oracle.txt");
 
 /// Verifies that [`matching`] and [`split`] agree with every `multimatch` case in [`ORACLE`].

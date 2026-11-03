@@ -4,7 +4,7 @@
 
 use super::{GenerateOptions, ServeOptions, parse_generate_options, parse_serve_options};
 
-/// Verifies `bit preview` generate and serve option parsing for `-n` and `-p`.
+/// Verifies [`parse_generate_options`] and [`parse_serve_options`] for `bit preview` `-n` and `-p` flags.
 ///
 /// Also confirms that non-numeric `--port` values return `None`.
 #[test]

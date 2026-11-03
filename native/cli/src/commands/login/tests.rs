@@ -4,7 +4,7 @@
 
 use super::{Options, parse_options};
 
-/// Verifies `bit login` CLI option parsing for `--default-cloud-domain`, `-d`, and `--no-browser`.
+/// Verifies [`parse_options`] for `bit login` CLI flags covering `--default-cloud-domain`, `-d`, and `--no-browser`.
 ///
 /// Also confirms that unexpected positional arguments return `None`.
 #[test]

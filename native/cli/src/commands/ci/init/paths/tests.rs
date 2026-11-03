@@ -40,7 +40,7 @@ fn filesystem_resolution_matches_node_without_expanding_ordinary_names() {
         .collect();
     assert_eq!(actual, expected);
 }
-/// Evaluates `expression` in `node` over `paths` to produce reference `Node.js` path results.
+/// Evaluates `expression` in `node` over `paths` using [`Command`] to produce reference `Node.js` path results.
 fn reference(paths: &[PathBuf], expression: &str) -> Vec<PathBuf> {
     let (setup, mapping) = expression.rsplit_once(';').unwrap();
     let script = format!(

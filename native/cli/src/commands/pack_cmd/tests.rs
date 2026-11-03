@@ -7,7 +7,7 @@ use flate2::read::GzDecoder;
 use serde_json::json;
 use std::io::Read;
 
-/// Verifies `bit pack` option parsing and missing scope detection on an uninitialized directory.
+/// Verifies [`parse_options`] for `bit pack` and [`is_missing_scope`] detection on an uninitialized directory.
 #[test]
 fn parses_pack_options_and_detects_missing_scope() {
     assert_eq!(parse_options(&[]), None);

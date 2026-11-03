@@ -6,7 +6,7 @@ use super::{Options, parse_options, validate_compile_selectors};
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies `bit compile` CLI option parsing across component patterns and boolean flags.
+/// Verifies [`parse_options`] for `bit compile` CLI flags across component patterns and boolean flags.
 /// Checks `-c`, `-v`, `--json`, `-d`, and `--generate-types`.
 #[test]
 fn parses_compile_options() {

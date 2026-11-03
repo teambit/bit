@@ -4,7 +4,7 @@
 
 use super::wildcard;
 
-/// Verifies that [`wildcard`] matches nested namespaces while rejecting unrelated prefixes.
+/// Verifies that [`wildcard`] matches nested namespace globs while rejecting unrelated component prefixes.
 ///
 /// Covers `ui/*`, `ui/**`, `other/button`, and prefix-substring false positives.
 #[test]

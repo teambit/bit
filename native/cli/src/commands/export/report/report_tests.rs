@@ -6,7 +6,7 @@ use super::{format_with, prepared, published};
 use crate::commands::color::Chalk;
 use serde_json::json;
 
-/// Builds a synthetic `export` completion receipt JSON payload for `components` and `remote` IDs.
+/// Builds a synthetic `export` completion receipt [`json`] payload for `components` and `remote` IDs.
 fn receipt(components: &[&str], remote: &[&str]) -> serde_json::Value {
     json!({
         "token": "outbound-1", "owner": "rust", "applied": true,

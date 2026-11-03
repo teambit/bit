@@ -6,7 +6,7 @@ use super::{Kind, parse_component, parse_lane, report::format_component};
 use crate::commands::color::Chalk;
 use serde_json::json;
 
-/// Verifies that [`parse_component`] and [`parse_lane`] accept only explicit non-interactive abort flags.
+/// Verifies that [`parse_component`] and [`parse_lane`] accept only explicit non-interactive abort flags for [`Kind`].
 #[test]
 fn abort_grammars_select_only_explicit_noninteractive_operations() {
     assert!(parse_component(&["--abort"]).is_some());

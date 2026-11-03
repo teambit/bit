@@ -6,7 +6,7 @@ use super::{Options, is_entry_internal, parse_options};
 use bit_install::workspace::Bitmap;
 use std::fs;
 
-/// Verifies `bit internalize` option parsing for component pattern, `--revert`, `--list`, and `--json`.
+/// Verifies [`parse_options`] for `bit internalize` covering component pattern, `--revert`, `--list`, and `--json`.
 #[test]
 fn parses_internalize_flags_and_pattern() {
     assert_eq!(

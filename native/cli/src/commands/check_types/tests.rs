@@ -5,7 +5,7 @@
 use super::{Options, checker::check_ts_content, is_empty_workspace, parse_options};
 use std::fs;
 
-/// Verifies `bit check-types` CLI option parsing for pattern, `-a`, `--strict`, and `--json`.
+/// Verifies [`parse_options`] for `bit check-types` CLI flags covering pattern, `-a`, `--strict`, and `--json`.
 #[test]
 fn parses_check_types_options() {
     assert_eq!(

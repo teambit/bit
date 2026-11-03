@@ -6,7 +6,7 @@ use super::{Chalk, error, native_io};
 use crate::host::callback_error::CallbackError;
 use std::io;
 
-/// Verifies that ignored-file warnings keep separate yellow segments and bold filenames inside red [`Chalk`] wrapping.
+/// Verifies that [`error`] keeps separate yellow segments and bold filenames for ignored-file warnings inside red [`Chalk`] wrapping.
 #[test]
 fn ignored_files_keep_separate_yellow_sections_and_bold_names_inside_red() {
     let chalk = Chalk::new(true);

@@ -4,7 +4,7 @@
 
 use super::{parse, persist_failure, validation_failure};
 
-/// Verifies `bit export` CLI option parsing across native flags and positional component IDs.
+/// Verifies [`parse`] for `bit export` CLI options across native flags and positional component IDs.
 #[test]
 fn parses_the_native_flags() {
     let empty = parse(&[]).unwrap();

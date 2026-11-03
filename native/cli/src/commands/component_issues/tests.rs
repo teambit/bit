@@ -4,7 +4,7 @@
 
 use super::{Chalk, issues_json, parse, report};
 
-/// Verifies `bit component-issues` CLI flag parsing for `-j`, `--json`, and `--no-color`.
+/// Verifies [`parse`] for `bit component-issues` CLI flags covering `-j`, `--json`, and `--no-color`.
 /// Rejects `--help` and unexpected positional arguments with `None`.
 #[test]
 fn parses_component_issues_flags() {

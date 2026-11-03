@@ -5,7 +5,7 @@
 use super::{bounded_proof, refresh};
 use std::fs;
 
-/// Verifies that [`refresh`] and [`bounded_proof`] record absence and reject non-regular or oversized files.
+/// Verifies that [`refresh`] and [`bounded_proof`] record missing-file absence and reject non-regular or oversized files.
 #[test]
 fn controls_retain_absence_and_reject_nonregular_or_over_budget_files() {
     let directory = tempfile::tempdir().unwrap();

@@ -7,7 +7,7 @@ use super::{
     validate_sync_options,
 };
 
-/// Verifies `bit ci` subcommand parsing across `verify`, `pr`, `merge`, and `sync`.
+/// Verifies [`parse_subcommand`] for `bit ci` across `verify`, `pr`, `merge`, and `sync`.
 ///
 /// Also checks [`validate_sync_options`] rejection of incompatible `--init`, `--all`, and `--main` combinations.
 #[test]

@@ -6,7 +6,7 @@ use super::{Target, classify_target, parse_args, published_source_key};
 use std::fs;
 use tempfile::tempdir;
 
-/// Verifies that mixed-separator Windows drive paths are not stripped as POSIX component prefixes.
+/// Verifies that mixed-separator Windows drive paths are not stripped as POSIX component prefixes by [`published_source_key`].
 #[test]
 fn published_windows_absolute_path_never_becomes_version_relative_path() {
     let key = published_source_key(r"D:\workspace\comp1", "D:/workspace/comp1/index.js");

@@ -17,7 +17,7 @@ fn ordinary_matches_precede_state_results_and_union_keeps_first_occurrence() {
     assert_eq!(identities(&selected), ["scope/b", "scope/a"]);
 }
 
-/// Verifies that `$env` uses only its first parameter and unrecognized state selectors fail with canonical errors.
+/// Verifies that `$env` uses only its first parameter via [`applied`] and unrecognized state selectors fail [`validate`] with canonical errors.
 #[test]
 fn env_uses_only_the_first_parameter_and_invalid_state_errors_are_canonical() {
     assert_eq!(applied("$env:scope/env:ignored"), "$env:scope/env");

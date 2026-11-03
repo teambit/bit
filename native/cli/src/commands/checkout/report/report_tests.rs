@@ -42,7 +42,7 @@ fn reports_reverted_files_with_original_checkout_summary() {
     assert!(report.data.contains("Checkout Summary"));
 }
 
-/// `--all` without `--verbose` hides the skipped list behind `bit details`.
+/// Verifies that `--all` without `--verbose` hides the skipped list behind `bit details` in [`format`].
 #[test]
 fn moves_skipped_components_to_details() {
     let options = parse(&["reset", "-x", "--all"]).unwrap();

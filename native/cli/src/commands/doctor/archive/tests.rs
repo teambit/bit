@@ -5,7 +5,7 @@
 use super::{excluded, filename};
 use crate::commands::doctor::options::Options;
 use std::path::Path;
-/// Verifies that [`filename`] normalizes `.tar` and `.tar.gz` archive extensions across paths.
+/// Verifies that [`filename`] normalizes `.tar` and `.tar.gz` archive extensions across [`Path`] inputs.
 #[test]
 fn archive_extensions_and_dotted_directories_match_published_names() {
     for (input, expected) in [

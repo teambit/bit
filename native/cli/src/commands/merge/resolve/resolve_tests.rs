@@ -6,7 +6,7 @@ use super::{format, parse};
 use crate::commands::color::Chalk;
 use serde_json::json;
 
-/// Verifies `bit merge --resolve` option parsing and rejection of incompatible flags.
+/// Verifies [`parse`] for `bit merge --resolve` options and rejection of incompatible flags.
 #[test]
 fn resolve_options() {
     let options = parse(&["--resolve", "-x", "remote/one", "-m", "done"]).unwrap();
