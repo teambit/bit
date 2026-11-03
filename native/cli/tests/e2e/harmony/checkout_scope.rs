@@ -8,7 +8,7 @@ use std::{ffi::OsStr, fs};
 /// Canonical `bit checkout head --include-new-from-scope` command line used in default-scope tests.
 const COMMAND: &str = "checkout head --include-new-from-scope -x";
 
-/// Verifies that [`COMMAND`] (`bit checkout head --include-new-from-scope`) imports newly published default-scope components like `Node.js` ([`Helper`], [`config::read_jsonc`]).
+/// Verifies that [`COMMAND`] (`bit checkout head --include-new-from-scope`) imports newly published default-scope components like `Node.js` ([`Helper`], [`config::read_jsonc`], [`OsStr`]).
 #[test]
 fn checkout_head_includes_new_components_from_the_default_scope() {
     let helper = Helper::new();

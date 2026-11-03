@@ -66,7 +66,7 @@ fn persist_unlinked_soft_tag_matches_node() {
     compare(&helper, &node_workspace, "tag --persist=skip-build");
 }
 
-/// Verifies `bit tag` on an existing component ([`FOO_FIXTURE`]) whose generated package was deleted recreates it via [`compare`].
+/// Verifies `bit tag` on an existing component ([`FOO_FIXTURE`], [`Helper`]) whose generated package was deleted recreates it via [`compare`].
 #[test]
 fn tag_existing_component_without_generated_package_matches_node() {
     let helper = Helper::new();

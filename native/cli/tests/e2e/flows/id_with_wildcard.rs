@@ -21,7 +21,7 @@ fn setup_wildcard_workspace() -> (Helper, std::path::PathBuf) {
     (helper, clone)
 }
 
-/// Verifies wildcard component ID matching across `bit tag`, `bit remove`, and `bit reset` via [`setup_wildcard_workspace`] and [`parse`].
+/// Verifies wildcard component ID matching across `bit tag`, `bit remove`, and `bit reset` via [`setup_wildcard_workspace`], [`parse`], and [`Helper`].
 /// component id with wildcard › tag with wildcard
 /// component id with wildcard › remove with wildcard
 /// component id with wildcard › untag with wildcard

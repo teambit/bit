@@ -68,7 +68,7 @@ fn non_existing_and_after_component_created() {
     assert!(tag_output.contains("1 component(s) tagged"));
 }
 
-/// Verifies `bit checkout` version switching across dependent components with multiple tagged versions ([`SUCCESS_OUTPUT`], [`Helper`]).
+/// Verifies `bit checkout` version switching across dependent components with multiple tagged versions ([`SUCCESS_OUTPUT`], [`Helper`], [`non_existing_and_after_component_created`]).
 #[test]
 fn components_with_dependencies_with_multiple_versions() {
     let helper = Helper::new();

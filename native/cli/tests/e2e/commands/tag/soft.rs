@@ -92,7 +92,7 @@ fn soft_prerelease_persist_preserves_node_rejection() {
     assert_eq!(bitmap(&helper.scopes.local_path), bitmap(&node_workspace));
 }
 
-/// Verifies repeated `bit tag --soft` invocations replace the pending version and message in [`bitmap`] via [`compare_command`].
+/// Verifies repeated `bit tag --soft` invocations replace the pending version and message in [`bitmap`] via [`compare_command`] and [`FOO_FIXTURE`].
 #[test]
 fn repeated_soft_tag_replaces_pending_version_and_message() {
     let helper = Helper::new();

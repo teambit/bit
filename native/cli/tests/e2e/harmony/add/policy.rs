@@ -61,7 +61,7 @@ fn native_root_tracking_keeps_environment_policy_and_dependency_issues_empty() {
     assert!(super::inspection::issue_types(&status, "ws-root").is_empty());
 }
 
-/// Asserts that `ws-root` has no `MissingDists` or `MissingLinksFromNodeModulesToSrc` issues while `comp1` reports `MissingDists` ([`compare`], [`workspace`]).
+/// Asserts that `ws-root` has no `MissingDists` or `MissingLinksFromNodeModulesToSrc` issues while `comp1` reports `MissingDists` ([`compare`], [`workspace`], [`super::inspection::status`]).
 fn assert_toolchain_issues(helper: &crate::helper::Helper) {
     let status = super::inspection::status(helper);
     assert!(

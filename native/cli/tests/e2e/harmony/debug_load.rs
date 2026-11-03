@@ -5,7 +5,7 @@
 use crate::helper::Helper;
 use serde_json::{Value, json};
 
-/// Built-in React environment aspect ID assigned to `comp1` in `bit debug-load` tests.
+/// Built-in React environment aspect ID assigned to `comp1` in `bit debug-load` tests ([`debug_load_command_human_json_and_unknown_component`]).
 const REACT_ENV: &str = "teambit.react/react";
 
 /// Verifies human and `--json` output of `bit debug-load` with [`REACT_ENV`] as well as unknown-component error reporting ([`Value`], [`Helper`]).

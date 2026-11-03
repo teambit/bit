@@ -13,7 +13,7 @@ use serde_json::json;
 use std::fs;
 /// Default sync branch name used when reconciling `main` scope changes via PR.
 const SYNC_BRANCH_MAIN: &str = "bit-sync/main";
-/// Verifies `bit ci sync --all --dry-run` and `bit ci sync --main` reconciliation against [`SYNC_BRANCH_MAIN`] ([`sync_run`], [`setup_sync_workspace`]).
+/// Verifies `bit ci sync --all --dry-run` and `bit ci sync --main` reconciliation against [`SYNC_BRANCH_MAIN`] ([`sync_run`], [`setup_sync_workspace`], [`Helper`]).
 #[test]
 fn ci_sync_main_scope_sync_and_dry_run() {
     let helper = Helper::new();

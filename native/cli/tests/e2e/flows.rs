@@ -10,7 +10,7 @@ mod bitmap_deleted;
 mod cyclic_dependencies;
 /// End-to-end deleted component file handling tests in `bit status` and `bit tag`.
 mod delete_files;
-/// End-to-end wildcard component ID matching tests across `tag`, `remove`, `reset`, and `export`.
+/// End-to-end wildcard component ID matching tests across `tag`, `remove`, `reset`, and `export` (`id-with-wildcard.e2e.ts`).
 mod id_with_wildcard;
 mod import_package_json;
 mod out_of_sync_components;

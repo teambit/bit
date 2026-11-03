@@ -35,7 +35,7 @@ fn exporting_a_png_file_in_addition_to_a_js_file() {
     assert_eq!(fs::metadata(&dest_png).unwrap().len(), png.len() as u64);
 }
 
-/// Verifies exporting and importing a component whose sole tracked file is a PNG binary ([`png_fixture_bytes`], [`remote`]).
+/// Verifies exporting and importing a component whose sole tracked file is a PNG binary ([`png_fixture_bytes`], [`remote`], [`Helper`]).
 /// binary files › exporting a PNG file as the only file
 #[test]
 fn exporting_a_png_file_as_the_only_file() {

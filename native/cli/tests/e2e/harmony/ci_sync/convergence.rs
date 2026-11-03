@@ -68,7 +68,7 @@ fn ci_sync_rejected_sync_commit_push_reports_benign_race() {
     assert!(!reuse_out.contains("HALTED"));
 }
 
-/// Verifies a commit bundling a source edit with a `.bitmap` write is treated as developer work ([`sync_run`], [`setup_sync_workspace`], [`create_lane_with_snap`]).
+/// Verifies a commit bundling a source edit with a `.bitmap` write is treated as developer work ([`sync_run`], [`setup_sync_workspace`], [`create_lane_with_snap`], [`Helper`]).
 #[test]
 fn ci_sync_commit_bundling_source_edit_with_bitmap_write_is_dev_work() {
     let helper = Helper::new();

@@ -77,7 +77,7 @@ fn deprecated_dependency_issues_follow_the_dependent_and_dependency_status() {
     successful(&helper, "undeprecate comp2");
     assert_dependency_issue(&helper, false);
 }
-/// Asserts whether `DeprecatedDependencies` is present in `bit status --json` (`componentsWithIssues`) via [`json`].
+/// Asserts whether `DeprecatedDependencies` is present in `bit status --json` (`componentsWithIssues`) via [`json`] and [`Helper`].
 fn assert_dependency_issue(helper: &Helper, present: bool) {
     let status = json(helper, "status --json");
     let found = status["componentsWithIssues"]

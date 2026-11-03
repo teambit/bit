@@ -52,7 +52,7 @@ fn compare_snap(helper: &Helper, node_workspace: &std::path::Path) {
     );
 }
 
-/// Verifies soft-deleted components do not block `bit tag --soft` or `bit tag --persist` on unrelated components via [`compare_command`] and [`Helper`].
+/// Verifies soft-deleted components do not block `bit tag --soft` or `bit tag --persist` on unrelated components via [`compare_command`], [`bitmap`], and [`Helper`].
 #[test]
 fn removed_components_do_not_block_unrelated_soft_tags() {
     let helper = Helper::new();

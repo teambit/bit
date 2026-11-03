@@ -44,7 +44,7 @@ fn local_only_component_is_reported_without_losing_its_other_status() {
     text_parity(&helper);
 }
 
-/// Verifies that `bit tag --soft` reports the component under `softTaggedComponents` without assigning a version ([`parity`], [`text_parity`], [`FOO_FIXTURE`]).
+/// Verifies that `bit tag --soft` reports the component under `softTaggedComponents` without assigning a version ([`parity`], [`text_parity`], [`FOO_FIXTURE`], [`Helper`]).
 #[test]
 fn soft_tagged_component_is_reported_without_a_version() {
     let helper = Helper::new();

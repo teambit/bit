@@ -70,7 +70,7 @@ fn package_callback_failure_precedes_link_and_bitmap_publication() {
     assert!(!package.exists());
 }
 
-/// Verifies that a blocked `node_modules` package link path aborts `bit add` and preserves `.bitmap` ([`workspace`], [`compare`]).
+/// Verifies that a blocked `node_modules` package link path aborts `bit add` and preserves `.bitmap` ([`workspace`], [`compare`], [`configured`]).
 #[test]
 fn filesystem_link_failure_preserves_blocked_package_and_old_bitmap() {
     let helper = workspace();

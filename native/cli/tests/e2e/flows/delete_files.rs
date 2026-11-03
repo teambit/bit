@@ -36,7 +36,7 @@ fn tag_and_then_delete_a_file() {
     assert!(output.contains("bar/foo"), "{output}");
 }
 
-/// Verifies adding a file, tagging, deleting it, and tagging again omits the deleted file from `bit cat --json` ([`parse`], [`FOO_FIXTURE`]).
+/// Verifies adding a file, tagging, deleting it, and tagging again omits the deleted file from `bit cat --json` ([`parse`], [`FOO_FIXTURE`], [`Helper`]).
 /// delete files from a component › adding a file, tagging it, deleting it and then tagging again › should not show the deleted file in bit show command
 #[test]
 fn adding_a_file_tagging_it_deleting_it_and_then_tagging_again() {

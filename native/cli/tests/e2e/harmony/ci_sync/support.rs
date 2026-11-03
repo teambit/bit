@@ -58,7 +58,7 @@ pub fn setup_components_and_initial_commit(helper: &Helper) -> String {
     current_branch
 }
 
-/// Sets `teambit.git/ci` `"sync"` configuration in `workspace.jsonc` ([`config`], [`Helper`]).
+/// Sets `teambit.git/ci` `"sync"` configuration in `workspace.jsonc` ([`config`], [`Helper`], [`Value`], [`json`]).
 #[expect(clippy::needless_pass_by_value, reason = "callers pass inline json!() values")]
 pub fn set_sync_config(helper: &Helper, sync: Value) {
     config::set_workspace_key(&helper.scopes.local_path, "teambit.git/ci", json!({ "sync": sync }));

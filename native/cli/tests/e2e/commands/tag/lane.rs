@@ -62,7 +62,7 @@ fn soft_tag_on_lane_keeps_lane_graph_and_matches_released_bitmap() {
     assert_eq!(bitmap(&helper.scopes.local_path), bitmap(&node_root));
 }
 
-/// Verifies non-soft `bit tag` on a lane ([`FOO_FIXTURE`], [`Helper`]) delegates to `Node.js` rejection without mutating `.bit/index.json`.
+/// Verifies non-soft `bit tag` on a lane ([`FOO_FIXTURE`], [`Helper`], [`fs`]) delegates to `Node.js` rejection without mutating `.bit/index.json`.
 #[test]
 fn ordinary_lane_tag_delegates_to_released_rejection_without_native_graph_writes() {
     let helper = Helper::new();

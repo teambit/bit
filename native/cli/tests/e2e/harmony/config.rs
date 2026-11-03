@@ -71,7 +71,7 @@ fn history(root: &Path) -> Option<Vec<String>> {
     )
 }
 
-/// Runs the full `bit config` get/set/list/del command sequence under `mode` and asserts parity via [`compare`] and [`setup::copy_dir`].
+/// Runs the full `bit config` get/set/list/del command sequence under `mode` and asserts parity via [`compare`], [`Helper`], and [`setup::copy_dir`].
 fn sequence(mode: &[(&str, &OsStr)]) {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

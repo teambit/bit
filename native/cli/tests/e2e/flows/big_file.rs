@@ -48,7 +48,7 @@ fn should_work_with_no_errors() {
     assert!(import_output.contains("successfully imported one component"), "{import_output}");
 }
 
-/// Verifies exporting and importing a component with a CRLF big file via [`setup_big_file`] and [`Helper`] materializes `big-text-file.txt` on disk.
+/// Verifies exporting and importing a component with a CRLF big file via [`setup_big_file`], [`fixture_content`], and [`Helper`] materializes `big-text-file.txt` on disk.
 /// big text file › Windows format (\\r\\n) › exporting and importing the component › should import the big file
 #[test]
 fn should_import_the_big_file() {

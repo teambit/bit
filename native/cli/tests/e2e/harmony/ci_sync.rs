@@ -18,7 +18,7 @@ mod lane_cycle;
 mod main_scope;
 /// End-to-end `bit ci sync --init` scaffolding and onboarding tests.
 mod onboarding;
-/// End-to-end cross-scope and foreign-scope lane reconciliation tests (`bit ci sync`).
+/// End-to-end cross-scope and foreign-scope lane reconciliation tests (`bit ci sync` in `ci-sync-scopes.e2e.ts`).
 mod scopes;
 mod state;
 mod support;

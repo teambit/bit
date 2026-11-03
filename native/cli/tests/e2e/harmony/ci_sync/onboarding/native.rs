@@ -80,7 +80,7 @@ fn generated(helper: &Helper) -> BTreeMap<&'static str, Vec<u8>> {
     .collect()
 }
 
-/// Verifies `bit ci sync --init` outside a Git repository prints the expected warning without creating `.git` ([`support`], [`Helper`]).
+/// Verifies `bit ci sync --init` outside a Git repository prints the expected warning without creating `.git` ([`support`], [`Helper`], [`generated`]).
 #[test]
 fn onboarding_without_a_git_repository_matches_the_released_warning_and_state() {
     let helper = Helper::new();

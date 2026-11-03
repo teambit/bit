@@ -83,7 +83,7 @@ fn eject_config_for_tagged_component() {
     assert_eq!(comp_json["extensions"]["my-scope/dummy-extension@0.0.1"], json!({ "key": "val" }));
 }
 
-/// Extracts non-empty extension configuration entries (excluding `__specific`) from `bit show --legacy --json` output ([`Value`], [`parse`]).
+/// Extracts non-empty extension configuration entries (excluding `__specific`) from `bit show --legacy --json` output ([`Value`], [`parse`], [`Helper`]).
 fn filter_configured_extensions(show_legacy: &Value) -> Vec<(String, Value)> {
     show_legacy["extensions"]
         .as_array()

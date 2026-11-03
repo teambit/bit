@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Component name for the fixture aspect used in `bit use` repository-hooks tests.
+/// Component name for the fixture aspect used in `bit use` repository-hooks tests ([`repository_hooks_aspect_use_and_tag`]).
 const REPOSITORY_HOOKS_ASPECT_NAME: &str = "repository-hooks-aspect";
 
 /// Verifies registering [`REPOSITORY_HOOKS_ASPECT_NAME`] in `workspace.jsonc` via native `bit use` ([`Helper`]) and reading it back.

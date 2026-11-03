@@ -55,7 +55,7 @@ pub(super) fn status(helper: &Helper) -> Value {
     serde_json::from_str(&actual.stdout).unwrap()
 }
 
-/// Returns the issue type names reported for component `name` in `status` (`componentsWithIssues`).
+/// Returns the issue type names reported for component `name` in `status` (`componentsWithIssues`) via [`Value`] and [`status`].
 pub(super) fn issue_types(status: &Value, name: &str) -> Vec<String> {
     let identity = format!("/{name}");
     let Some(row) = status["componentsWithIssues"]
