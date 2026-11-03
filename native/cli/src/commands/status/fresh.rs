@@ -56,7 +56,7 @@ impl Pending {
         Ok(Self { identity, raw_data: raw_data.to_string(), cacheable, read_set: read_set.clone() })
     }
 
-    /// Constructs a [`Pending`] cache entry from freshly detected `dependencies` and `read_set` for `target`.
+    /// Constructs a [`Pending`] cache entry from freshly detected `dependencies` and `read_set` ([`Value`]) for `target` via [`full_identity`].
     fn detected(target: &Value, dependencies: &Value, read_set: Value) -> io::Result<Self> {
         let raw_data = dependencies.get("rawData").and_then(Value::as_str);
         let cacheable = dependencies.get("cacheable").and_then(Value::as_bool);

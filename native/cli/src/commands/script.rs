@@ -63,7 +63,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     finish_script_outcome(&root, args, execute(&root, &options, chalk))
 }
 
-/// Handles `bit script` when invoked outside a workspace (in a bare scope or arbitrary directory) with [`Chalk`].
+/// Handles `bit script` when invoked outside a workspace (in a bare scope or arbitrary directory) with [`Chalk`] and [`NO_ENVS_CONFIG_MSG`].
 fn run_outside_workspace(cwd: &Path, args: &[OsString], chalk: Chalk) -> io::Result<Outcome> {
     if let Some(scope) = scope_root::discover().ok().flatten() {
         if scope.bare && bare_scope_has_no_envs(&scope.path) {

@@ -55,7 +55,7 @@ pub(in crate::commands) fn resolve_pattern_entries<'a>(
         .collect())
 }
 
-/// Strips an optional `@version` suffix from a literal component selector and rejects package selectors ([`Failure`]).
+/// Strips an optional `@version` suffix from a literal component selector and rejects package selectors ([`Failure`]) for [`resolve_literal_entry`].
 #[inline]
 fn parse_bare_literal(pattern: &str) -> Result<&str, Failure> {
     let pattern = pattern.trim();

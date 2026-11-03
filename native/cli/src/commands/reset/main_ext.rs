@@ -94,7 +94,7 @@ fn append_model_version_refs(
     }
     Ok(())
 }
-/// Extracts `(scope, name)` from a `scope/index.json` component `row` and its `Component` `model` [`Value`].
+/// Extracts `(scope, name)` from a `scope/index.json` component `row` and its `Component` `model` [`Value`] for [`append_model_version_refs`].
 fn model_scope_and_name(model: &Value, row: &Value) -> (String, String) {
     let base = row["id"]
         .as_str()

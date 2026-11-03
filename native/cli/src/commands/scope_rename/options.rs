@@ -52,7 +52,7 @@ fn valid_name_token(token: &str) -> bool {
         && !token.contains('\0')
 }
 
-/// Appends post-`--` positional scope/owner tokens from `iter` onto `names`.
+/// Appends post-`--` positional scope/owner tokens from `iter` onto `names` via [`valid_name_token`].
 #[inline]
 fn consume_trailing_names<'a>(
     iter: impl Iterator<Item = &'a str>,

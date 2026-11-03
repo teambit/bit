@@ -21,7 +21,7 @@ pub fn snapshot<'v>(values: impl IntoIterator<Item = &'v str>) -> Option<Value> 
     Some(Value::Object(result))
 }
 
-/// Formats the canonical semver grammar entry for a single version string `text` via [`npm::parse`].
+/// Formats the canonical semver grammar entry ([`Value`]) for a single version string `text` via [`npm::parse`] for [`snapshot`].
 #[inline]
 fn snapshot_entry(text: &str) -> Value {
     let Some(version) = npm::parse(text.trim()) else { return json!({}) };

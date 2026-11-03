@@ -58,7 +58,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
-/// Emits the `scope not found` error when `bit run-action` is invoked outside any scope or workspace with [`Chalk`].
+/// Emits the `scope not found` error when `bit run-action` is invoked outside any scope or workspace with [`Chalk`] for [`run`].
 #[inline]
 fn run_outside_scope(cwd: &std::path::Path, args: &[OsString]) -> io::Result<Outcome> {
     if env::var_os("CI")

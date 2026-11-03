@@ -29,7 +29,7 @@ struct Options<'a> {
     never_exported: bool,
     selected: Option<selection::Selected>,
 }
-/// Parses CLI arguments after `bit reset` (`ResetCmd`) into [`Options`].
+/// Parses CLI arguments after `bit reset` (`ResetCmd`) into [`Options`] via [`apply_reset_arg`].
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut iter = args.iter().copied().map(str::trim);

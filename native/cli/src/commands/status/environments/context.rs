@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Initializes configured environment providers and captures workspace status controls into `(context, Environments)`.
+/// Initializes configured environment providers via [`read_context_with`] and captures workspace status controls into `(context, Environments)`.
 #[inline]
 pub(in crate::commands) fn read_context(
     engine: &mut crate::commands::engine::Engine,

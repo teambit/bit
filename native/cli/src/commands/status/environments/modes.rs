@@ -36,7 +36,7 @@ impl Environments {
         Self { host: Some(host), ..Self::new() }
     }
 
-    /// Notifies `self.host` of a snapshot continuation and configures snapshot `build` mode.
+    /// Notifies `self.host` ([`Host`]) of a snapshot continuation and configures snapshot `build` mode via [`Self::for_snapshot_build`].
     #[inline]
     pub(in crate::commands) fn continue_snapshot(self, build: bool) -> io::Result<Self> {
         if let Some(host) = &self.host {

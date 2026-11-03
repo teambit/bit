@@ -45,7 +45,7 @@ impl Issue {
         })
     }
 
-    /// Returns `(type, description, solution, is_tag_blocker)` metadata for this [`Issue`] (`source_class` or `runtime_class`).
+    /// Returns `(type, description, solution, is_tag_blocker)` metadata for this [`Issue`] ([`Self::source_class`] or [`Self::runtime_class`]).
     #[inline]
     pub(super) const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {

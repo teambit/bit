@@ -72,7 +72,7 @@ fn ci_active() -> bool {
         })
 }
 
-/// Entry point for `bit schema` (`api`) that dispatches [`ParsedCommand`] `diff` and local or remote schema queries.
+/// Entry point for `bit schema` (`api`) that dispatches [`ParsedCommand`] `diff` and local or remote schema queries with [`HOST_NOT_FOUND_ERR`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("schema arguments are not UTF-8".into()));

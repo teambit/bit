@@ -38,7 +38,7 @@ pub(in crate::commands::status) fn issues(
     append_issue(dependencies, kind, &data)
 }
 
-/// Appends a `LoadFailures` issue onto `dependencies` ([`Value`]) when `identity` has matching aspect load failures.
+/// Appends a `LoadFailures` issue onto `dependencies` ([`Value`]) when `identity` has matching aspect load failures in [`issues`].
 fn load_failures(
     context: &Value,
     facts: &Value,

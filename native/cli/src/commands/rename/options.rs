@@ -85,7 +85,7 @@ fn apply_inline_or_positional(
     Some(())
 }
 
-/// Strips surrounding whitespace and quotes from `val` and validates that it is a non-flag argument token for [`parse`].
+/// Strips surrounding whitespace and quotes from `val` and validates that it is a non-flag argument token for [`parse`] and [`apply_rename_arg`].
 #[inline]
 fn take_val(val: &str) -> Option<String> {
     let trimmed = val

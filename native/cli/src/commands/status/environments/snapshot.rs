@@ -53,7 +53,7 @@ pub(super) fn configured(engine: &mut Engine, root: &Path, context: &Value) -> i
     Ok(false)
 }
 
-/// Checks whether `target`'s source directory triggers snapshot callbacks under `inventory` ([`Inventory`]).
+/// Checks whether `target`'s source directory triggers snapshot callbacks under `inventory` ([`Inventory`]) via [`root_excludes`].
 fn source_callbacks(
     engine: &mut Engine,
     root: &Path,

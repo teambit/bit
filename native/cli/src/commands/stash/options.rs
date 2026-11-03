@@ -43,7 +43,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     }
 }
 
-/// Parses `bit stash save` flags (`--include-new`, `-m`/`--message`) into [`Options::Save`].
+/// Parses `bit stash save` flags (`--include-new`, `-m`/`--message`) into [`Options::Save`] via [`apply_save_arg`].
 fn save(args: &[&str]) -> Option<Options> {
     let mut include_new = false;
     let mut message = None;

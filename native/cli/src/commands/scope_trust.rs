@@ -56,7 +56,7 @@ struct WorkspaceTrust {
     configured: Vec<String>,
 }
 
-/// Entry point for `bit scope trust` that parses tokens, updates `workspace.jsonc`, and renders a [`Report`].
+/// Entry point for `bit scope trust` that parses tokens via [`parse_tokens`], updates `workspace.jsonc`, and renders a [`Report`].
 pub(super) fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(tokens) = parse_tokens(args) else {
         return Ok(Outcome::Declined(

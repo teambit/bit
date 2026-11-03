@@ -75,7 +75,7 @@ pub fn snapshot_pre_snap(
     Ok(output["value"].clone())
 }
 
-/// Replaces source file proofs in `capture` ([`Capture`]) for each entry in `output["changedWorkspaceSources"]`.
+/// Replaces source file proofs in `capture` ([`Capture`]) for each entry in `output["changedWorkspaceSources"]` via [`replace_single_proof`].
 #[inline]
 fn replace_source_proofs(capture: &mut Capture, output: &Value) -> io::Result<()> {
     for change in array(output.get("changedWorkspaceSources"), "pre-snapshot source changes")? {

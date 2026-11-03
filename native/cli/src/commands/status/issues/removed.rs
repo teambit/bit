@@ -29,7 +29,7 @@ impl Checks<'_> {
     }
 }
 
-/// Collects the [`HashSet`] of missing package names reported across `MissingPackagesDependenciesOnFs` issue rows.
+/// Collects the [`HashSet`] of missing package names reported across `MissingPackagesDependenciesOnFs` issue rows for [`Checks::removed_dependencies`].
 #[inline]
 fn missing_packages(rows: &[Value]) -> HashSet<&str> {
     rows.iter()

@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-/// Prunes non-workspace dependency edges from `graph` before running Tarjan's cycle detection ([`cyclic`]) for `components`.
+/// Prunes non-workspace dependency edges from `graph` via [`has_unresolved_deps`] before running Tarjan's cycle detection ([`cyclic`]) for `components`.
 pub(super) fn filter_graph_for_cycles(
     root: &Path,
     components: &[Component],

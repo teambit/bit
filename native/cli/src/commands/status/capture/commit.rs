@@ -42,7 +42,7 @@ pub fn commit(
     Ok(())
 }
 
-/// Publishes pending dependency cache entries from `capture` ([`Capture`]) through [`fresh::commit`].
+/// Publishes pending dependency cache entries from `capture` ([`Capture`]) through [`fresh::commit`] for [`commit`].
 #[inline]
 fn commit_pending_cache(engine: &mut Engine, root: &Path, capture: &Capture) -> io::Result<()> {
     let entries = capture.cache.entries();

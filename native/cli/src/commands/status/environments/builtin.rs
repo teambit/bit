@@ -15,7 +15,7 @@ pub(super) enum Services {
     Compiler,
 }
 
-/// Returns `true` when `component` uses only the built-in `teambit.react/react` environment and core aspects.
+/// Returns `true` when `component` ([`WorkspaceComponent`]) uses only the built-in `teambit.react/react` environment and core aspects.
 #[inline]
 pub(super) fn supported(
     component: &WorkspaceComponent,

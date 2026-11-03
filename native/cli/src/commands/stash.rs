@@ -70,7 +70,7 @@ enum Prepared {
     Error(String),
 }
 
-/// Prepares the [`Prepared`] execution plan for `options` (`save`, `list`, or `load`) inside `root` with [`Startup`].
+/// Prepares the [`Prepared`] execution plan for `options` ([`Options`]: `save`, `list`, or `load`) inside `root` with [`Startup`].
 fn prepare(root: &Path, options: Options, startup: &mut Startup) -> io::Result<Prepared> {
     match options {
         Options::Save { include_new, message } => {

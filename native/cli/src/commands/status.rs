@@ -45,7 +45,7 @@ enum Mode {
     /// `--quick`, with `--json` or not.
     Quick(bool),
 }
-/// Parses `bit status` (`StatusCmd`) CLI arguments into the selected output [`Mode`] (`Json`, `Report`, `Quick`) and log-flag presence.
+/// Parses `bit status` (`StatusCmd`) CLI arguments into the selected output [`Mode`] (`Json`, `Report`, `Quick`) and log-flag presence via [`is_mode_flag`].
 fn mode(args: &[OsString]) -> Option<(Mode, bool)> {
     let arguments = workspace_command::utf8_args(args)?;
     let (filtered, logged) = strip_log_flags(&arguments[1..]);

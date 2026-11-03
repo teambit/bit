@@ -9,7 +9,7 @@ use super::{decline, text};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Merges Harmony callback issue objects from `raw` into `issues` ([`Value`]), skipping types listed in `ignored` ([`HashSet`]).
+/// Merges Harmony callback issue objects from `raw` into `issues` ([`Value`]) via [`validate_callback_object`], skipping types listed in `ignored` ([`HashSet`]).
 pub(super) fn merge(
     issues: &mut Vec<Value>,
     raw: &Value,

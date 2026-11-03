@@ -61,7 +61,7 @@ impl Environments {
     }
 }
 
-/// Resolves `target`'s component directory path under `root`.
+/// Resolves `target`'s component directory path under `root` via [`text`] for [`Environments::parser`] and [`Environments::detectors`].
 #[inline]
 fn target_directory(root: &Path, target: &Value) -> io::Result<std::path::PathBuf> {
     let dir = text(

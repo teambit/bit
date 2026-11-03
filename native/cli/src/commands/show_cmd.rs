@@ -93,7 +93,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("show execution delegated".into()))
 }
 
-/// Returns the missing-host error message when `cwd` is outside both a workspace and a local/bare scope for `options` ([`Options`]).
+/// Returns the missing-host error message when `cwd` is outside both a workspace and a local/bare scope for `options` ([`Options`]) during [`run`].
 #[inline]
 pub(super) fn missing_host_error(cwd: &Path, options: &Options) -> Option<&'static str> {
     if options.legacy

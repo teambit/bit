@@ -57,7 +57,7 @@ fn modified_section(format: &Formatter, ids: &[String]) -> String {
         items.join("\n"),
     )
 }
-/// Strips `@version` suffixes and leading/trailing slashes from `ids`, preserving first-seen order without duplicates for [`render`].
+/// Strips `@version` suffixes and leading/trailing slashes from `ids`, preserving first-seen order without duplicates for [`render`] and [`removed_section`].
 #[inline]
 fn unique_ids(ids: &[String]) -> Vec<&str> {
     let mut out = Vec::with_capacity(ids.len());

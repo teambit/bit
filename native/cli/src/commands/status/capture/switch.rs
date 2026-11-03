@@ -20,7 +20,7 @@ struct Session<'a> {
     facts: &'a mut Option<fresh::Facts>,
 }
 
-/// Scans `targets` into `capture`, interleaving source capture with ordered class loading when checkout callbacks apply.
+/// Scans `targets` into `capture` ([`Capture`]), interleaving source capture with ordered class loading when checkout callbacks apply.
 #[inline]
 pub(super) fn scan(scan: Scan<'_>, targets: &[Value], capture: &mut Capture) -> io::Result<bool> {
     let Scan {

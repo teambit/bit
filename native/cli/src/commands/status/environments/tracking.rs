@@ -13,7 +13,7 @@ impl Environments {
         self.host.as_ref().map_or_else(String::new, Host::take_stdout)
     }
 
-    /// Resolves installer [`bit_install::HostInfo`] and buffered stdout before native workers read the environment.
+    /// Resolves installer [`bit_install::HostInfo`] and buffered [`Host`] stdout before native workers read the environment.
     pub(in crate::commands) fn identity_installation_info(
         &mut self,
         root: &Path,

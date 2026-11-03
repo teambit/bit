@@ -42,7 +42,7 @@ pub(super) struct LoadedComponent {
 }
 
 impl LoadedComponent {
-    /// Formats the full `[scope/]name[@version]` identifier string for this [`LoadedComponent`].
+    /// Formats the full `[scope/]name[@version]` identifier string for this [`LoadedComponent`] during [`try_run`].
     #[inline]
     pub(super) fn full_id(&self) -> String {
         let base = if self.scope.is_empty() {

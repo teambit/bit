@@ -11,7 +11,7 @@ use std::io;
 const DEPRECATION: &str = "teambit.component/deprecation";
 
 impl Checks<'_> {
-    /// Returns the list of deprecated dependency IDs referenced by `component`.
+    /// Returns the list of deprecated dependency IDs referenced by `component` ([`Component`]) via [`deprecated`].
     #[inline]
     pub(super) fn deprecated_dependencies(&self, component: &Component) -> io::Result<Vec<String>> {
         if deprecated(self.context, &component.identity)? {

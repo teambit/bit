@@ -6,7 +6,7 @@ use super::{array, text};
 use serde_json::Value;
 use std::io;
 
-/// Joins the string elements of JSON [`array`] `data` with `", "` (`array.join(', ')`).
+/// Joins the string elements of JSON [`array`] `data` ([`Value`]) with `", "` (`array.join(', ')`) via [`item_text`].
 #[inline]
 pub(super) fn join(data: &Value) -> io::Result<String> {
     let items = array(Some(data), "issue data")?;

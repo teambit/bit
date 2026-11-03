@@ -33,7 +33,7 @@ struct Options {
     source_snap: Option<String>,
     target_snap: Option<String>,
 }
-/// Returns `true` when `text` trims to a 40-character ASCII hexadecimal SHA-1 digest for [`parse_options`].
+/// Returns `true` when `text` trims to a 40-character ASCII hexadecimal SHA-1 digest for [`parse_options`] and [`Options`].
 #[inline]
 fn is_hex40(text: &str) -> bool {
     let trimmed = text.trim();
