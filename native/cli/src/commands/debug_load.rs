@@ -23,7 +23,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
-/// Executes `bit debug-load`, validating workspace and `.bitmap` presence before delegating trace inspection.
+/// Executes `bit debug-load` ([`COMMAND`]), validating workspace and `.bitmap` presence via [`parse_options`] before delegating trace inspection.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("debug-load arguments are not UTF-8".into()));

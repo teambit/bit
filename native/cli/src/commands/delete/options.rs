@@ -64,7 +64,7 @@ pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
     }
     Some(())
 }
-/// Applies an inline `--range=<val>` / `--snaps=<val>` flag or records the positional `pattern`.
+/// Applies an inline `--range=<val>` / `--snaps=<val>` flag or records the positional `pattern` for [`parse`].
 #[inline]
 fn apply_inline_or_pattern<'a>(
     arg: &'a str,

@@ -32,7 +32,7 @@ pub(super) fn files_diff(
     Ok(output)
 }
 
-/// Renders a single file diff entry with `labels` via [`files::format`] when its content changed (`same != true`).
+/// Renders a single file diff [`Value`] entry with `labels` via [`files::format`] when its content changed (`same != true`).
 fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<Value>> {
     if truthy(file.get("same")) {
         return Ok(None);

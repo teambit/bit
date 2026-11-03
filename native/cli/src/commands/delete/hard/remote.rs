@@ -66,7 +66,7 @@ fn hub_ids(ids: &[String], lanes: bool) -> Vec<String> {
         .collect()
 }
 
-/// Strips a trailing `@<version>` suffix from `id` when present.
+/// Strips a trailing `@<version>` suffix from `id` when present for [`hub_ids`].
 #[inline]
 fn unversioned(id: &str) -> &str {
     let trimmed = id.trim();

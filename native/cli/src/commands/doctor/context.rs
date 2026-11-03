@@ -39,7 +39,7 @@ impl Context {
         };
         Ok(Self { root, scope, config, cli, timestamp: chrono::Utc::now().timestamp_millis() })
     }
-    /// Collects runtime environment metadata (`nodeVersion`, `bitVersion`, `npmVersion`, `yarnVersion`, `userDetails`).
+    /// Collects runtime environment metadata (`nodeVersion`, `bitVersion`, `npmVersion`, `yarnVersion`, `userDetails`) via [`vendors::version`].
     pub fn metadata(&self) -> io::Result<Value> {
         let bit_dir =
             self.cli.bit_dir.as_ref().ok_or_else(|| io::Error::other("missing Bit package"))?;

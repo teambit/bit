@@ -6,7 +6,7 @@ use super::{Engine, MAX_REQUEST};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, ops::Range};
 
-/// Maximum number of dependency read-set proofs allowed in a single `dependencyFreshValidate` frame.
+/// Maximum number of dependency read-set proofs allowed in a single `dependencyFreshValidate` frame ([`frames`]).
 const MAX_PROOFS: usize = 16384;
 
 impl Engine {

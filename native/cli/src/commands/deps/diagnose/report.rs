@@ -24,7 +24,7 @@ struct PackageInfo {
     copies: usize,
     origins: Vec<VersionOrigin>,
 }
-/// Origin component ID, version range, and explicitness flag for a diagnosed package dependency.
+/// Origin component ID, version range, and explicitness flag for a diagnosed package dependency in [`PackageInfo`].
 struct VersionOrigin {
     version: String,
     component_id: String,

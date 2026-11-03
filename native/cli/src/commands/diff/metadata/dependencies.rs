@@ -10,7 +10,7 @@ use node_semver::npm;
 use serde_json::{Map, Value};
 use std::io;
 
-/// One dependency change: name, and the version on each side.
+/// One dependency change: name, and the version on each side in [`package_dependencies`] and [`component_dependencies`].
 struct Change {
     name: String,
     left: Option<String>,

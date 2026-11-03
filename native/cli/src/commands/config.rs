@@ -20,7 +20,7 @@ use std::{
 /// Descriptor for the `bit config` CLI [`Command`].
 pub const COMMAND: Command = Command { name: "config", aliases: &[], run };
 
-/// Executes `bit config` (`get`, `set`, `del`, `list`) against the layered configuration [`stores`].
+/// Executes `bit config` (`get`, `set`, `del`, `list`) via [`Options::parse`] and [`execute`] against the layered configuration [`stores`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     if args.is_empty() {
         return Ok(Outcome::Declined("missing configuration command".to_owned()));

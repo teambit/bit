@@ -19,7 +19,7 @@ pub(crate) struct Engine {
     next_id: u32,
 }
 
-/// Decoded `BWS1` JSON response envelope returned by [`WorkspaceSession`].
+/// Decoded `BWS1` JSON response envelope ([`Value`]) returned by [`WorkspaceSession`] to [`Engine`].
 #[derive(Deserialize)]
 struct Response {
     version: u32,

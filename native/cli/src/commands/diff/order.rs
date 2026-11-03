@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Physical sources retain globby order; callback-created virtual files retain manifest order.
+/// Physical sources retain globby order ([`filesystem`]); callback-created virtual files retain manifest order.
 pub(in crate::commands) fn captured(
     root: &Path,
     files: &[String],

@@ -19,7 +19,7 @@ use std::{
     path::Path,
 };
 
-/// Left and right version labels paired with whether the comparison is historical.
+/// Left and right version labels paired with whether the comparison is historical in [`one`].
 struct Versions<'a> {
     left: &'a str,
     right: &'a str,

@@ -4,7 +4,7 @@ mod tests;
 
 use std::path::PathBuf;
 
-/// Parsed CLI options for `bit doctor`.
+/// Parsed CLI options and [`Includes`] archive filters for `bit doctor`.
 #[derive(Debug, Default)]
 pub(super) struct Options {
     pub name: Option<String>,

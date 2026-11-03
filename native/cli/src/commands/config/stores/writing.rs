@@ -68,7 +68,7 @@ fn scope(store: &Store) -> io::Result<Value> {
     Ok(Value::Object(result))
 }
 
-/// Commits a staged `set` or `del` mutation to `workspace.jsonc` via `edit_workspace_config`.
+/// Commits a staged `set` or `del` mutation on `store` ([`Store`]) to `workspace.jsonc` ([`Document`]) via `edit_workspace_config`.
 fn workspace(store: &Store) -> io::Result<()> {
     let root = store.root
         .as_deref()

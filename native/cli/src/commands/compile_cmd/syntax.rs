@@ -73,7 +73,7 @@ fn collect_parse_error_inputs(
     }
     Ok(inputs)
 }
-/// Locates the Node.js binary and Bit `package.json` manifest path for external `TypeScript` syntax parsing.
+/// Locates the `Node.js` binary and Bit `package.json` manifest path via [`discovery::find`] for external `TypeScript` syntax parsing.
 #[inline]
 fn find_parser_entry() -> io::Result<(std::path::PathBuf, std::path::PathBuf)> {
     let Target::Entry(cli) = discovery::find()? else {

@@ -28,7 +28,7 @@ fn strip_final_newline(mut bytes: &[u8]) -> &[u8] {
     }
     bytes
 }
-/// Evaluates the `git`, `npm`, or `yarn` executable [`Diagnosis`] check.
+/// Evaluates the `git`, `npm`, or `yarn` executable [`Diagnosis`] check via [`executable`] and [`version`].
 pub(super) fn examine(diagnosis: &Diagnosis, git: &str) -> Value {
     let git = Some(git.trim())
         .filter(|path| !path.is_empty())

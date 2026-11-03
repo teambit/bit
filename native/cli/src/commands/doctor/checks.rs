@@ -15,7 +15,7 @@ pub(super) fn examine(diagnosis: &Diagnosis, context: &Context) -> io::Result<Va
         _ => workspace(diagnosis, context),
     }
 }
-/// Verifies `.bitmap` presence and returns the local `.bit` / `.git/bit` scope directory path.
+/// Verifies `.bitmap` presence on [`Context`] and returns the local `.bit` / `.git/bit` scope directory [`Path`].
 #[inline]
 fn workspace_scope(context: &Context) -> io::Result<&Path> {
     if !context.root.join(".bitmap").exists() {

@@ -19,7 +19,7 @@ use bit_object_import::{parse_jsonc, scope_path};
 use serde_json::{Map, Value, json};
 use std::{ffi::OsString, fs, io, path::Path};
 
-/// Checks whether a lane-ejected component's workspace files or `.bitmap` config differ from its stored `version`.
+/// Checks whether a lane-ejected component's workspace files ([`are_version_files_modified`]) or `.bitmap` config differ from its stored `version`.
 pub(super) fn is_hub_component_modified(
     root: &Path,
     row: &Value,

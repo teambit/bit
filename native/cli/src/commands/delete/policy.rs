@@ -78,7 +78,7 @@ impl Policy {
             },
         )
     }
-    /// Renders the summary section listing dependencies pinned to their `main` version.
+    /// Renders the summary section listing dependencies pinned to their `main` version via [`Formatter`].
     #[inline]
     pub(super) fn report(&self, format: &Formatter) -> String {
         format.section("pinned deleted components to their main version", "these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main", &self.items.iter().map(|item| format.item(item)).collect::<Vec<_>>())

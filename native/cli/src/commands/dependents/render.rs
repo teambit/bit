@@ -24,7 +24,7 @@ pub(super) struct DepGraph {
 }
 
 impl DepGraph {
-    /// Inserts a component node `id` into the graph if non-empty and not already present.
+    /// Inserts a component node `id` into [`DepGraph`] (`self`) if non-empty and not already present.
     #[inline]
     pub(super) fn add_node(&mut self, id: &str) {
         let id = id.trim();

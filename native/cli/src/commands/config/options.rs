@@ -61,7 +61,7 @@ impl Options {
     }
 }
 
-/// Returns `true` when `arg` is a global `--color` or `--no-color` flag variant.
+/// Returns `true` when `arg` is a global `--color` or `--no-color` flag variant filtered out during [`Options::parse`].
 #[inline]
 fn is_color_flag(arg: &str) -> bool {
     matches!(

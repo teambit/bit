@@ -46,7 +46,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
-/// Mutually exclusive output flag error reported by `DiffCmd.parseOutputOpts`.
+/// Mutually exclusive output flag error reported by `DiffCmd.parseOutputOpts` for [`Options`].
 #[inline]
 pub(super) fn output_error(options: &Options) -> Option<&'static str> {
     if options.output.files_only && options.output.configs_only {

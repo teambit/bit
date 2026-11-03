@@ -87,7 +87,7 @@ impl Stores {
         merge_layers(&value("global"), &value("scope"), &value("workspace"))
     }
 
-    /// Stages a `set` or `del` mutation on the target [`Store`] layer selected by `options`.
+    /// Stages a `set` or `del` mutation on the target [`Store`] layer selected by `options` ([`Options`]).
     pub(super) fn prepare(&mut self, options: &Options) -> io::Result<()> {
         let value = match options.command.as_str() {
             "set" => {

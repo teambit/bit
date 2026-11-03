@@ -63,7 +63,7 @@ fn match_wildcard_inventory_id(id: String, scope: &str, name: &str) -> Option<St
     }
 }
 
-/// Validates a single non-wildcard `<scope>/<name>` remote component ID.
+/// Validates a single non-wildcard `<scope>/<name>` remote component ID for [`components`].
 #[inline]
 fn literal(pattern: &str) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();

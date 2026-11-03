@@ -13,7 +13,7 @@ const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 pub(super) const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 
-/// One side of the comparison (`DiffMetadata`).
+/// One side of the comparison (`DiffMetadata`) built by [`Component::side`].
 pub struct Side {
     pub(super) printable: Map<String, Value>,
     pub(super) version: String,

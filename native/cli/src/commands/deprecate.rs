@@ -41,7 +41,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     run_workspace(&root, args, &options, undo)
 }
-/// Prepares the [`Plan`], captures projected link state, and commits `.bitmap` deprecation updates.
+/// Prepares the [`Plan`], captures projected link state, and commits `.bitmap` deprecation updates under [`options::Options`].
 fn run_workspace(
     root: &std::path::Path,
     args: &[OsString],

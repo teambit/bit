@@ -17,7 +17,7 @@ pub(super) fn render(stores: &Stores, options: &Options, chalk: Chalk) -> io::Re
     }
 }
 
-/// Looks up a single configuration `key` across environment variables, [`Stores`], and git config fallback.
+/// Looks up a single configuration `key` across [`environment_value`], [`Stores`], and [`git`] config fallback.
 fn get(stores: &Stores, key: &str) -> String {
     let key = key.trim();
     let combined = stores.combined();

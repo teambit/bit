@@ -42,7 +42,7 @@ pub(super) fn format(row: &mut Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Parses a plain-text dependency diff `diff` for `name` and renders it as a 4-column CLI table.
+/// Parses a plain-text dependency diff `diff` for `name` via [`label`] and [`changes`] and renders it as a 4-column CLI [`table`].
 fn render(name: &str, diff: &str, colors: bool, chalk: Chalk) -> io::Result<String> {
     let plain = table::strip_sgr(diff);
     let mut lines = plain.trim_start_matches('\n').lines();

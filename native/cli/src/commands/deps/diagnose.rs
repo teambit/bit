@@ -61,7 +61,7 @@ pub(super) fn run_package(
     })
 }
 
-/// Inspects `node_modules/.pnpm` for all installed copies of `package`.
+/// Inspects `node_modules/.pnpm` for all installed copies of `package` and returns a [`PackageReport`] via [`entries`].
 fn inspect<'a>(root: &Path, package: &'a str) -> Result<PackageReport<'a>, Failure> {
     let package = package.trim();
     let virtual_store = root.join("node_modules/.pnpm");

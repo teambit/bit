@@ -8,7 +8,7 @@ use crate::{
 use serde_json::Value;
 use std::{ffi::OsString, io, path::Path, process::Command};
 
-/// Prefix marking errors that belong to `bit diff` rather than triggering fallback delegation.
+/// Prefix marking errors that belong to `bit diff` ([`command_error`]) rather than triggering fallback delegation.
 const OWNED_ERROR_PREFIX: &str = "owned_diff_error:";
 
 /// Execute a command-owned `bit diff` failure with the canonical loader and exit code 1.

@@ -20,7 +20,7 @@ pub const COMMAND: Command = Command { name: "component-issues", aliases: &[], r
 
 /// Aspect ID for `@teambit/component-issues` (`teambit.component/issues`).
 const ISSUES_ASPECT_ID: &str = "teambit.component/issues";
-/// Horizontal divider line printed between issue blocks in `bit component-issues`.
+/// Horizontal divider line printed between [`IssueDefinition`] blocks in `bit component-issues`.
 const DIVIDER_LINE: &str =
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 

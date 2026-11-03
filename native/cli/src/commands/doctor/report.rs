@@ -6,7 +6,7 @@ use super::catalog::DIAGNOSES;
 use crate::commands::color::Chalk;
 use serde_json::Value;
 use unicode_width::UnicodeWidthStr;
-/// Renders the `bit doctor --list` table of all registered [`DIAGNOSES`].
+/// Renders the `bit doctor --list` [`table`] of all registered [`DIAGNOSES`] with [`Chalk`].
 #[inline]
 pub(super) fn list(chalk: Chalk) -> String {
     let mut rows = Vec::with_capacity(1 + DIAGNOSES.len());

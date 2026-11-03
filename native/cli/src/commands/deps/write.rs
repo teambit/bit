@@ -64,7 +64,7 @@ pub(super) fn prepare_write(
     Ok((root.to_path_buf(), target, deduped))
 }
 
-/// Appends non-root [`CandidateRow`] entries from all `variants` dependency-resolver policies in `ctx`.
+/// Appends non-root [`CandidateRow`] entries from all `variants` dependency-resolver policies in `ctx` ([`WorkspaceDepsContext`]).
 fn collect_variant_policies(ctx: &WorkspaceDepsContext, rows: &mut Vec<CandidateRow>) {
     for (_, variant_map) in &ctx.ws_config.variants {
         for (key, cfg) in variant_map {

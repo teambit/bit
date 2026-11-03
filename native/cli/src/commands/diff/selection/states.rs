@@ -61,7 +61,7 @@ pub(in crate::commands) fn criterion(
     State { context, captured, environment_facts, compared }.filter(targets, entered)
 }
 
-/// Evaluates ordinary and `$`-prefixed state pattern segments in `pattern` against `targets`.
+/// Evaluates ordinary and `$`-prefixed state pattern segments in `pattern` via [`patterns::split`] against `targets` ([`Value`]).
 fn select_states(
     state: &State<'_>,
     targets: &[Value],

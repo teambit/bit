@@ -11,7 +11,7 @@ pub(super) struct Prepared {
     pub policy: Option<policy::Policy>,
 }
 impl Prepared {
-    /// Resolves `options.pattern` against `.bitmap` and prepares the soft-delete [`Batch`].
+    /// Resolves `options.pattern` ([`Options`]) against `.bitmap` via [`selection::ids`] and prepares the soft-delete [`Batch`].
     #[inline]
     pub(super) fn prepare(
         root: &Path,

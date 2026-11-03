@@ -78,7 +78,7 @@ where
         workspace_command::execute_then_scope(cwd, args, "doctor", work)
     }
 }
-/// Loads the local [`Context`] and validates scope store preflight when diagnostics will run.
+/// Loads the local [`Context`] and validates scope [`store::preflight`] when diagnostics will run under [`Options`].
 #[inline]
 fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
     if options.list || options.validate().is_err() {

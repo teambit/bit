@@ -36,7 +36,7 @@ pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,
 }
-/// Staged `.bitmap` and [`CompJsonEdit`] mutation state for `bit deps` write subcommands and policy updates.
+/// Staged `.bitmap` and [`CompJsonEdit`] mutation state for `bit deps` ([`Subcommand`]) write subcommands and policy updates.
 pub(in crate::commands) struct BitmapMutation {
     pub root: PathBuf,
     pub reason: String,

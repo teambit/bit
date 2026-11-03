@@ -75,7 +75,7 @@ fn append(
     }
     Ok(())
 }
-/// Builds an optional [`ComponentDependency`] from a raw dependency state `entry` and `package` name.
+/// Builds an optional [`ComponentDependency`] from a raw dependency state `entry` ([`Value`]) and `package` name for [`Lifecycle`].
 fn component(
     entry: &Value,
     package: &str,
