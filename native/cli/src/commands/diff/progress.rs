@@ -75,7 +75,7 @@ pub(super) fn exported_ids(root: &Path) -> Vec<String> {
         .collect()
 }
 
-/// Checks whether any diff row in `result` belongs to a foreign scope and carries a semver tag for [`imports`].
+/// Checks whether any diff row in `result` ([`Value`]) belongs to a foreign scope and carries a semver tag for [`imports`].
 fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
     let Some(scope) = fs::read(bit_object_import::scope_path(root).join("scope.json"))
         .ok()

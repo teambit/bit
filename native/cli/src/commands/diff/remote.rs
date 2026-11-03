@@ -10,7 +10,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Pushes `identity@version` strings for requested comparison versions in [`Options`] onto `ids` for [`prepare`].
+/// Pushes `identity@version` strings for requested comparison versions in [`Options`] (`target`: [`Value`]) onto `ids` for [`prepare`].
 #[inline]
 fn push_target_versions(target: &Value, identity: &str, options: &Options, ids: &mut Vec<String>) {
     let from = options.versions.from

@@ -15,7 +15,7 @@ use serde_json::{Value, json};
 use side::PACKAGE_FIELDS;
 use std::io;
 
-/// Component dependency field names compared by [`diff`].
+/// Component dependency field names compared by [`diff`] via [`dependency_fields`].
 const ID_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"];
 

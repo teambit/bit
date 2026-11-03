@@ -1,6 +1,6 @@
 //! Fixed [`Builtin`] Node and React package [`Host`] properties; arbitrary environment callbacks remain guarded.
 //!
-//! Supplies default `main` and `types` `package.json` properties for built-in environments.
+//! Supplies default `main` and `types` `package.json` properties for built-in environments via [`is_supported_builtin_env`].
 use async_trait::async_trait;
 use bit_install::host::{AfterInstall, AfterInstallResult, Host};
 use serde_json::{Value, json};

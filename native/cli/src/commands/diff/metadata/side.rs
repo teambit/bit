@@ -9,7 +9,7 @@ use std::{cmp::Ordering, io};
 
 /// Aspect ID of `@teambit/dependencies.dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
-/// Package dependency field names extracted into [`Side::packages`].
+/// Package dependency field names extracted into [`Side::packages`] by [`Component::side`].
 pub(super) const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 

@@ -4,7 +4,7 @@ use super::{Capture, Chalk, Engine, array, comparison, decline, one, rows, text}
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Input context for resolving and comparing `--parent` version diffs via [`read`].
+/// Input context for resolving and comparing `--parent` version diffs via [`read`] and [`selected_identities`].
 pub(super) struct Request<'a> {
     pub engine: &'a mut Engine,
     pub root: &'a Path,

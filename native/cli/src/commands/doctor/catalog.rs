@@ -6,7 +6,7 @@ pub(super) struct Diagnosis {
     pub description: &'static str,
     pub category: &'static str,
 }
-/// Ordered table of built-in [`Diagnosis`] checks executed by `bit doctor`.
+/// Ordered table of built-in [`Diagnosis`] checks executed by `bit doctor` ([`Diagnosis::listing`], [`Diagnosis::result`]).
 pub(super) const DIAGNOSES: &[Diagnosis] = &[
     Diagnosis {
         name: "validate workspace's bit config",

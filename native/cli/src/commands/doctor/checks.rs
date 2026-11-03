@@ -25,7 +25,7 @@ fn workspace_scope(context: &Context) -> io::Result<&Path> {
     }
     context.scope.as_deref().ok_or_else(|| io::Error::other("workspace scope not found"))
 }
-/// Validates `workspace.jsonc` syntax and returns the `validate workspace's bit config` diagnosis result.
+/// Validates `workspace.jsonc` syntax on [`Context`] and returns the `validate workspace's bit config` [`Diagnosis`] result ([`Value`]).
 #[inline]
 fn workspace(diagnosis: &Diagnosis, context: &Context) -> io::Result<Value> {
     workspace_scope(context)?;

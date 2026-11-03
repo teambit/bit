@@ -41,7 +41,7 @@ fn importer_dep_field(importer: &ProjectSnapshot, alias: &str) -> Option<&'stati
     }
 }
 
-/// Reads `(name, version)` from the `package.json` manifest of `importer_id` under `root`.
+/// Reads `(name, version)` from the `package.json` manifest of `importer_id` under `root` for [`importer_tree_node`] and [`node_sort_key`].
 pub(super) fn read_importer_manifest(root: &Path, importer_id: &str) -> (String, String) {
     let importer_id = importer_id.trim();
     let dir = if importer_id == "." { root.to_path_buf() } else { root.join(importer_id) };

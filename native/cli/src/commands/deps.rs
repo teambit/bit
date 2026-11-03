@@ -55,7 +55,7 @@ use std::{
 pub const COMMAND: Command = Command { name: "deps", aliases: &["dependencies"], run };
 /// Descriptor for the `bit why` CLI command.
 pub const WHY: Command = Command { name: "why", aliases: &[], run: run_why };
-/// Parsed subcommand variant for `bit deps` (`bit dependencies`) and `bit why`.
+/// Parsed subcommand variant for `bit deps` (`bit dependencies`) and `bit why` dispatched by [`run`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Set { pattern: String, packages: Vec<(String, String)>, dev: bool, optional: bool, peer: bool },

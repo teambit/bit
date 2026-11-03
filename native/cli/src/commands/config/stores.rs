@@ -31,7 +31,7 @@ pub(super) struct Stores {
 }
 
 impl Stores {
-    /// Loads all active [`Store`] layers from disk for the current working directory.
+    /// Loads all active [`Store`] layers from disk for the current working directory via [`workspace_root`] and [`scope_path`].
     pub(super) fn load() -> io::Result<Self> {
         let cwd = env::current_dir()?;
         let mut entries = Vec::with_capacity(3);

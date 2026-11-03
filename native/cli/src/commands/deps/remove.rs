@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 /// Per-component list of removed or unset package names.
 pub(super) type RemovedByComp = Vec<(String, Vec<String>)>;
 
-/// Target component pattern, package list, and lifecycle flags for `bit deps remove` / `unset`.
+/// Target component pattern, package list, and lifecycle flags for `bit deps remove` / `unset` ([`prepare_remove`]).
 pub(super) struct RemoveSpec<'a> {
     pub pattern: &'a str,
     pub packages: &'a [String],

@@ -6,7 +6,7 @@ use super::{Compiled, Options, emission, limits, linking::Links, report, write};
 use crate::commands::workspace_command::component_service::{Loaded, Selection};
 use std::{io, path::Path};
 
-/// Prepared compilation plan holding loaded components, link targets, and output directories.
+/// Prepared compilation plan holding [`Loaded`] components, [`Links`] targets, and output directories.
 pub(super) struct Plan {
     loaded: Loaded,
     batch_size: usize,

@@ -44,7 +44,7 @@ impl Engine {
         Ok(Self { session: WorkspaceSession::new(threads)?, next_id: 0 })
     }
 
-    /// One request; a failed or skipped request is an error.
+    /// One request ([`Value`]) via [`Self::request_owned`]; a failed or skipped request is an error.
     #[inline]
     pub fn request<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let started = std::time::Instant::now();

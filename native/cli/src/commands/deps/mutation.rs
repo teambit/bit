@@ -31,7 +31,7 @@ use std::{
 };
 
 const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
-/// Staged `component.json` file [`PathBuf`] and serialized payload bytes for atomic flush in [`BitmapMutation`].
+/// Staged `component.json` file [`PathBuf`] and serialized payload bytes for atomic flush in [`BitmapMutation::flush`].
 pub(in crate::commands) struct CompJsonEdit {
     pub path: PathBuf,
     pub bytes: Vec<u8>,

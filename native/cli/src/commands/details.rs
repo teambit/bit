@@ -72,7 +72,7 @@ fn render_details(dir: &Path, chalk: Chalk) -> io::Result<String> {
     Ok(format!("{header}\n\n{content}\n\n{hint}"))
 }
 
-/// Formats the `details from ...` title line and optional dim RFC 3339 timestamp from `meta`.
+/// Formats the `details from ...` title line and optional dim RFC 3339 timestamp from `meta` ([`Value`]) via [`Formatter`] for [`render_details`].
 #[inline]
 fn format_header(meta: &Value, formatter: &Formatter, chalk: Chalk) -> String {
     let timestamp = meta["timestamp"]

@@ -28,7 +28,7 @@ pub(in crate::commands::diff) fn after_capture(
     Ok((selected, loads))
 }
 
-/// Evaluate workspace predicates without removing candidates needed by write cascades.
+/// Evaluate workspace predicates via [`select_states`] on [`Capture`] without removing candidates needed by write cascades.
 pub(in crate::commands) fn select_capture(
     engine: &mut Engine,
     root: &Path,

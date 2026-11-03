@@ -83,7 +83,7 @@ fn apply_inline_or_pattern<'a>(
     }
     Some(())
 }
-/// Converts an optional `--range` or `--snaps` flag pair into the corresponding [`Scope`] selector.
+/// Converts an optional `--range` or `--snaps` flag pair into the corresponding [`Scope`] selector for [`parse`].
 #[inline]
 fn scope(modifier: Option<(&str, &str)>) -> Scope {
     match modifier {

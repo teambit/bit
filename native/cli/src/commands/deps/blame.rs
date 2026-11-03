@@ -15,7 +15,7 @@ use bit_install::model::{ComponentId, WorkspaceComponent};
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Single version-history blame entry recording when a dependency version changed.
+/// Single version-history blame entry recording when a dependency version changed in [`inspect`].
 struct BlameRow {
     hash: String,
     tag: String,

@@ -68,7 +68,7 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
     Ok(Some(json!({ "filePath": path, "status": status, "diffOutput": diff })))
 }
 
-/// The comparisons to report: without a pattern, new components, then modified ones.
+/// The comparisons ([`Value`]) to report: without a pattern, new components, then modified ones.
 #[inline]
 pub(super) fn rows(result: &Value, all: bool) -> io::Result<Vec<&Value>> {
     let rows = array(result.get("comparisons"), "comparisons")?;

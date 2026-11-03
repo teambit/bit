@@ -15,7 +15,7 @@ pub(super) struct Options {
     pub include: Includes,
     pub remote: Option<String>,
 }
-/// Archive inclusion/exclusion flags (`--include-node-modules`, `--include-public`, `--exclude-local-scope`).
+/// Archive inclusion/exclusion flags (`--include-node-modules`, `--include-public`, `--exclude-local-scope`) in [`Options`].
 #[derive(Debug, Default)]
 pub(super) struct Includes {
     pub node_modules: bool,

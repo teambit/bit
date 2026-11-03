@@ -77,7 +77,7 @@ fn set_non_conflicting<'a>(slot: &mut Option<&'a str>, val: &'a str) -> Option<(
     Some(())
 }
 
-/// Parses inline `--new-id=<val>` and `--range=<val>` flags into `replacement` and `range`.
+/// Parses inline `--new-id=<val>` and `--range=<val>` flags into `replacement` and `range` via [`set_non_conflicting`].
 #[inline]
 fn apply_inline_flag<'a>(
     arg: &'a str,

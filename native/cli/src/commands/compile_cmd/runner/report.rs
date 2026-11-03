@@ -76,7 +76,7 @@ fn text(
     Formatter::join(&[items, format!("{summary}\n{timing}")])
 }
 
-/// Formats a single [`Compiled`] component status line and optional `verbose` emitted file list.
+/// Formats a single [`Compiled`] component status line and optional `verbose` emitted file list for [`text`].
 #[inline]
 fn item(row: &Compiled, verbose: bool, formatter: &Formatter) -> String {
     let identity = row.identity.trim();

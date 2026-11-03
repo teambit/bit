@@ -58,7 +58,7 @@ fn format_items(ids: &[String], format: &Formatter) -> Vec<String> {
         .collect()
 }
 
-/// Formats a single-component `--range` deprecation summary when `options.range` is set.
+/// Formats a single-component `--range` deprecation summary when `options.range` is set via [`format_range_summary`].
 #[inline]
 fn range_report(
     plan: &Plan,

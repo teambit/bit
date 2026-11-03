@@ -44,7 +44,7 @@ pub(super) fn components(context: &Context, pattern: &str) -> io::Result<Vec<Str
     Ok(ids)
 }
 
-/// Matches a remote inventory `id` against `scope` and wildcard `name`, returning the unversioned `<scope>/<name>`.
+/// Matches a remote inventory `id` against `scope` and wildcard `name` via [`wildcard`], returning the unversioned `<scope>/<name>`.
 #[inline]
 fn match_wildcard_inventory_id(id: String, scope: &str, name: &str) -> Option<String> {
     let (found_scope, found_name) = id.trim().split_once('/')?;

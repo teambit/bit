@@ -44,7 +44,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the `bit diff` CLI command.
+/// Descriptor for the `bit diff` CLI command ([`run`], [`run_workspace`]).
 pub const COMMAND: Command = Command { name: "diff", aliases: &[], run };
 
 /// Executes `bit diff` ([`COMMAND`]) inside a workspace via [`run_workspace`] when arguments fit the native diff grammar.

@@ -16,7 +16,7 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the `bit envs` (`bit env`) CLI command.
+/// Descriptor for the `bit envs` (`bit env`, [`run`], [`Subcommand`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "envs", aliases: &["env"], run };
 
 /// Error message emitted when `bit envs` is invoked outside a workspace or bare scope.

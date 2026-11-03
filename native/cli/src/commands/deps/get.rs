@@ -25,7 +25,7 @@ use std::{
     io,
     path::Path,
 };
-/// Single dependency table row for `bit deps get` ([`prepare_get`]) with depth, parent ID, and lifecycle label.
+/// Single dependency table row for `bit deps get` ([`prepare_get`], [`run_bare_scope`]) with depth, parent ID, and lifecycle label.
 struct DepInfoRow {
     id: String,
     depth: usize,

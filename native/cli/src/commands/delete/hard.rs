@@ -29,7 +29,7 @@ struct Options<'a> {
     update_main: bool,
     has_range: bool,
 }
-/// Shared remote connection ([`Remotes`], [`Network`]) and workspace root state for `bit delete --hard`.
+/// Shared remote connection ([`Remotes`], [`Network`]) and workspace root state for `bit delete --hard` via [`run`].
 struct Context {
     root: Option<PathBuf>,
     remotes: Remotes,

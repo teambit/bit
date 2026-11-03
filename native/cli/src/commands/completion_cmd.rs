@@ -1,6 +1,6 @@
 //! Native `bit completion` (`scopes/harmony/cli/completion.cmd.ts`, [`Command`]).
 //!
-//! Emits [`BASH_COMPLETION_SCRIPT`] for `bash`/`zsh` shell completion setup.
+//! Emits [`BASH_COMPLETION_SCRIPT`] and [`ZSH_COMPLETION_SCRIPT`] for `bash`/`zsh` shell completion setup.
 
 #[cfg(test)]
 mod tests;

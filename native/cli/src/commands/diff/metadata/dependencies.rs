@@ -17,7 +17,7 @@ struct Change {
     right: Option<String>,
 }
 
-/// `getDepDiffType`: only its failure matters to the plain-text output.
+/// `getDepDiffType` for [`package_dependencies`] and [`component_dependencies`]: only its failure matters to the plain-text output.
 #[inline]
 fn check_change(left: Option<&str>, right: Option<&str>) -> io::Result<()> {
     let present = |value: Option<&str>| {

@@ -62,7 +62,7 @@ fn missing_directory(directory: &str, chalk: Chalk) -> io::Error {
     ))
 }
 
-/// Formats the missing-main-file error message for `bit delete`.
+/// Formats the missing-main-file error message for `bit delete` via [`row_scope_or_default`].
 fn missing_main(fallback_id: &str, row: &Value, main: &str, chalk: Chalk) -> io::Error {
     let fallback_id = fallback_id.trim();
     let fallback_bare = fallback_id

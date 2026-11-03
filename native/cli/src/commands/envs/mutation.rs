@@ -34,7 +34,7 @@ pub(super) struct EnvBatch {
     pub comp_json_edits: Vec<CompJsonEdit>,
 }
 
-/// Staged environment mutation plan produced by [`prepare`].
+/// Staged environment mutation plan ([`EnvBatch`], [`EnvUpdatePlan`]) produced by [`prepare`].
 pub(super) enum Prepared {
     Set { env_display_id: String, batch: EnvBatch },
     Unset(EnvBatch),

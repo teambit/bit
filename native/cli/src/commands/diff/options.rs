@@ -8,7 +8,7 @@ pub(super) struct Options {
     pub output: Output,
 }
 
-/// Output formatting flags (`--json`, `--table`, `--verbose`, `--files-only`, `--configs-only`, `--name-only`, `--stat`).
+/// Output formatting flags (`--json`, `--table`, `--verbose`, `--files-only`, `--configs-only`, `--name-only`, `--stat`) in [`Options`].
 #[derive(Default)]
 pub(super) struct Output {
     pub json: bool,

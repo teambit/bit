@@ -56,7 +56,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     execute_doctor(&cwd, args, options.json, work)
 }
-/// Runs `work` inside the workspace or bare-scope command harness with text or `--json` formatting.
+/// Runs `work` ([`Report`]) inside the workspace or bare-scope command harness with text or `--json` formatting ([`Outcome`]).
 fn execute_doctor<Work>(
     cwd: &std::path::Path,
     args: &[OsString],

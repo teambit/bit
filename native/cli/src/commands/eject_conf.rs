@@ -29,7 +29,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the `bit eject-conf` CLI command.
+/// Descriptor for the `bit eject-conf` ([`run`], [`Options`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "eject-conf", aliases: &[], run };
 /// Parsed CLI options and component pattern for `bit eject-conf` ([`COMMAND`], [`parse_options`]).
 #[derive(Debug, Default, PartialEq, Eq)]

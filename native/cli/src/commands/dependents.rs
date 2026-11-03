@@ -88,7 +88,7 @@ fn finish_dependents(
     }
 }
 
-/// Emits a text or `--json` error report for `bit dependents` when validation or lookup fails.
+/// Emits a text or `--json` error report for `bit dependents` when validation or lookup fails in [`run`] or [`finish_dependents`].
 #[inline]
 fn emit_dependents_err(
     root: &Path,

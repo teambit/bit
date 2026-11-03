@@ -29,7 +29,7 @@ pub(in crate::commands) enum WriteTarget {
     PackageJson,
 }
 
-/// Candidate package name, version range, and root-policy origin flag collected for `bit deps write`.
+/// Candidate package name, version range, and root-policy origin flag collected for `bit deps write` ([`prepare_write`]).
 #[derive(Clone)]
 struct CandidateRow {
     name: String,

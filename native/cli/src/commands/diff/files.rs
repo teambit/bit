@@ -47,7 +47,7 @@ fn headers() -> &'static (Regex, Regex) {
 }
 
 /// `text.replace(regex, replacement)` with JavaScript's `$` patterns
-/// (`$$`, `$&`, `` $` ``, `$'`); the regexes have no capture groups.
+/// (`$$`, `$&`, `` $` ``, `$'`) for [`format`]; the [`Regex`] values from [`headers`] have no capture groups.
 fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
     let Some(found) = regex.find(text) else { return text.to_string() };
     let range = found.range();

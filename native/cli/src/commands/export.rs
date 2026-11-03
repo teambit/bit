@@ -28,7 +28,7 @@ use std::{
     path::Path,
     time::{SystemTime, UNIX_EPOCH},
 };
-/// Descriptor for the `bit export` (`bit e`, [`run`]) CLI [`Command`].
+/// Descriptor for the `bit export` (`bit e`, [`run`], [`Options`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "export", aliases: &["e"], run };
 
 use lifecycle::Lifecycle;

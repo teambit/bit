@@ -24,7 +24,7 @@ const ISSUES_ASPECT_ID: &str = "teambit.component/issues";
 const DIVIDER_LINE: &str =
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
 
-/// Static metadata for a single component issue definition in [`ISSUES`].
+/// Static metadata for a single component issue definition in [`ISSUES`] and [`DIVIDER_LINE`] tables.
 struct IssueDefinition {
     name: &'static str,
     description: &'static str,
