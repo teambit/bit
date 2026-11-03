@@ -1,6 +1,6 @@
 //! Unit tests for short object hash prefix matching ([`matching_for_separator`], [`unique`]) and separator behavior.
 //!
-//! Verifies short hash prefix resolution via [`matching_for_separator`] and [`unique`] in [`Directory`] fixtures, retained object deduplication, and ambiguity errors.
+//! Verifies short hash prefix resolution via [`matching_for_separator`] and [`unique`] in [`Directory`] fixtures ([`short_refs_include_all_object_names_and_deduplicate_retained_objects`], [`published_windows_glob_finds_no_short_refs_even_when_objects_exist`]).
 
 use super::{matching_for_separator, unique};
 use crate::workspace::engine::command::scratch::Directory;

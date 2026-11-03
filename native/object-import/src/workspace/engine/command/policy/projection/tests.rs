@@ -1,6 +1,6 @@
 //! Unit tests for component aspect [`Defaults`], [`configured_entries`], [`extensions`], and [`dependencies`] policy projection.
 //!
-//! Checks unversioned aspect version preservation, slot data projection, and policy entry merging in `bit-object-import`.
+//! Checks unversioned aspect version preservation ([`unversioned_workspace_aspect_keeps_stored_version_for_merge_identity`]), [`defaults`] slot data projection, and policy entry merging in `bit-object-import`.
 
 use super::{Defaults, configured_entries, dependencies, extensions};
 use serde_json::{Value, json};

@@ -1,6 +1,6 @@
 //! Unit tests for post-restore [`State`] stale source [`proof`] rejection and [`apply`] error receipts in `bit-object-import`.
 //!
-//! Confirms that concurrent edits after [`restore`] [`Record`] and [`Retained`] [`PreparedPlan`] preparation fail closed with an [`Apply`] [`Operation`] error receipt.
+//! Confirms that concurrent edits after [`restore`] [`Record`] and [`Retained`] [`PreparedPlan`] preparation ([`restored`], [`stale_source_after_restore_allows_only_authenticated_no_write_error_receipt`]) fail closed with an [`Apply`] [`Operation`] error receipt.
 
 use super::{
     super::{PreparedPlan, bitmap, history, planning, repository, scratch},

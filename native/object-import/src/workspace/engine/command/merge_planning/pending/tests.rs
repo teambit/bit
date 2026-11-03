@@ -1,6 +1,6 @@
 //! Unit tests for pending merge [`lane_id`] scope resolution.
 //!
-//! Checks that `main` resolves against the component scope via [`lane_id`] while named lanes preserve their lane scope across string and object inputs.
+//! Checks that `main` resolves against the component scope via [`lane_id`] while named lanes preserve their lane scope across string and object inputs ([`default_pending_lane_uses_component_scope_while_named_lane_retains_its_scope`]).
 
 use super::lane_id;
 use serde_json::json;

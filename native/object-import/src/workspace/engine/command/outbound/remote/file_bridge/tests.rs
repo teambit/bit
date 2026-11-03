@@ -1,6 +1,6 @@
 //! Unit tests for the persistent Node [`FileBridge`] remote action bridge process.
 //!
-//! Verifies request/response framing and [`FileBridge`] process reuse across multiple file-remote actions and error states.
+//! Verifies request/response framing and [`FileBridge`] process reuse across multiple [`Fixture`] file-remote actions ([`NEXT`], [`one_child_handles_multiple_scopes_and_errors`]) and error states.
 
 use super::FileBridge;
 use serde_json::json;

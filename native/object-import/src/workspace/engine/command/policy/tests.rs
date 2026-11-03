@@ -1,6 +1,6 @@
 //! Unit tests for activating written inactive targets via [`activate_inactive`] and [`workspace_id`] in [`Prepared`] workspace policy context in `bit-object-import`.
 //!
-//! Ensures written inactive lane [`Row`] and [`Baseline`] targets become active while excluded or keep-ours rows stay untouched.
+//! Ensures written inactive lane [`Row`] and [`Baseline`] targets ([`row`], [`projected_workspace_activates_written_inactive_targets_without_excluded_or_keep_ours_rows`]) become active while excluded or keep-ours rows stay untouched.
 
 use super::{Baseline, Prepared, Row, activate_inactive, workspace_id};
 use serde_json::{Value, json};

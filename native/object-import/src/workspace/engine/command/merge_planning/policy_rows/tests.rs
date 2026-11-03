@@ -1,6 +1,6 @@
 //! Unit tests for merge policy [`sorted_files`] ordering and added component binding prefixes.
 //!
-//! Validates `UTF-16` code-unit file sorting via [`sorted_files`] and model `bindingPrefix` inheritance for added components without fabricating metadata.
+//! Validates `UTF-16` code-unit file sorting via [`sorted_files`] ([`dependency_roots_follow_bitmap_sort_without_reordering_materials`]) and model `bindingPrefix` inheritance for added components ([`added_component_uses_model_prefix_without_fabricating_current_metadata`]).
 
 use super::sorted_files;
 use serde_json::json;

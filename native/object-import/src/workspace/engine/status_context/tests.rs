@@ -1,6 +1,6 @@
 //! Unit tests for [`read`]ing workspace status context [`Request`], models, and lanes.
 //!
-//! Exercises `.bitmap`, `workspace.jsonc`, and `.bit` object discovery for status context construction in `bit-object-import`.
+//! Exercises `.bitmap`, `workspace.jsonc`, and `.bit` object discovery in [`Fixture`] ([`NEXT`], [`current_component_policy_is_reread_without_harmony`], [`temporary_output_is_not_source_and_invalid_component_configuration_declines`]) for status context construction.
 
 use super::{Request, read};
 use serde_json::{Value, json};

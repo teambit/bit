@@ -1,6 +1,6 @@
 //! Unit tests for hidden lane [`Entry`] dependent package enrichment ([`enrich_packages`]) and trigger [`reports`] in `bit-object-import`.
 //!
-//! Confirms exact dependency-resolver package hydration and transitive dependent trigger ordering in `bit-object-import`.
+//! Confirms exact dependency-resolver package hydration ([`scope_consumer_package_names_match_exact_resolver_identity`]) and transitive dependent trigger ordering via [`candidate`] and [`id`] ([`older_snapshot_and_transitive_dependents_keep_lane_order_and_original_triggers`]).
 
 use super::{enrich_packages, reports};
 use crate::command_import::lane::Entry;

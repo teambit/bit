@@ -1,6 +1,6 @@
 //! Unit tests for [`external`] component issue graph adjacency and [`Repository`] model proofs.
 //!
-//! Checks [`external`] dependent adjacency calculation in [`scratch`] workspaces and [`Repository`] absent model proof validation.
+//! Checks [`external`] dependent adjacency calculation ([`external_adjacency_is_complete_and_absent_models_remain_proven`], [`unproven_external_adjacency_and_corrupt_model_never_become_leaf_receipts`]) in [`scratch`] workspaces and [`Repository`] absent model proof validation.
 
 use super::{Repository, external};
 use crate::workspace::engine::command::scratch;

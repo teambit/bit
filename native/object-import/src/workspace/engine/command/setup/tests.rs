@@ -1,6 +1,6 @@
 //! Unit tests for command [`Prepare`] setup inactive metadata, [`component_controls`], and addition destination [`proof`]s in `bit-object-import`.
 //!
-//! Confirms that inactive target control files in [`Directory`] workspaces via [`component_controls`] and [`lane_context`] addition [`proof`]s are revalidated before commit.
+//! Confirms that inactive target control files in [`Directory`] workspaces via [`component_controls`] and [`lane_context`] addition [`proof`]s ([`inactive_metadata_and_new_directory_are_revalidated_before_publication`], [`empty_lane_context_produces_no_component_control_or_addition_proofs`]) are revalidated before commit.
 
 use super::{Prepare, component_controls, proof};
 use crate::workspace::engine::command::{lane_context, scratch::Directory};

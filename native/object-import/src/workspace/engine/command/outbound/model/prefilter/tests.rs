@@ -1,6 +1,6 @@
 //! Unit tests for outbound [`Prepared`] and [`HistoryBytes`] export prefilter stale discovery rejection in `bit-object-import`.
 //!
-//! Confirms that concurrent object store modifications between prefilter and preparation are rejected in `bit-object-import`.
+//! Confirms that concurrent object store modifications between prefilter and preparation in [`Scratch`] workspaces ([`SEQUENCE`], [`stale_discovery_prevents_history_publication_even_without_transfer_batches`]) are rejected.
 
 use super::{HistoryBytes, Prepared};
 use std::{

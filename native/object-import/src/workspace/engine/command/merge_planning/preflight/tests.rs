@@ -1,6 +1,6 @@
 //! Unit tests for merge preflight [`validate_target`] file validation and dependent rejection.
 //!
-//! Confirms that application files via [`validate_target`] and dependencies awaiting future snapshot replacement decline during preflight before autosnap allocation.
+//! Confirms that application files via [`validate_target`] ([`incoming_fast_forward_application_files_decline_before_autosnap_allocation`]) and dependencies awaiting future snapshot replacement ([`preflight_only_rejects_dependencies_requiring_future_snapshot_replacement`]) decline during preflight.
 
 use super::validate_target;
 use serde_json::json;

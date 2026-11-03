@@ -1,6 +1,6 @@
 //! Unit tests for `/etc/group` [`parse`] resolution and scope `groupName` [`name`] configuration.
 //!
-//! Checks exact group name matching via [`parse`], `root` group GID handling, and invalid `/etc/group` [`name`] configuration rejection.
+//! Checks exact group name matching via [`parse`] ([`matches_the_first_exact_group_and_preserves_zero_without_an_override`]), `root` group GID handling, and invalid `/etc/group` [`name`] configuration rejection.
 
 use super::{name, parse};
 use serde_json::json;

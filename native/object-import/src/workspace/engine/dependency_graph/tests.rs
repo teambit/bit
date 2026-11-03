@@ -1,6 +1,6 @@
 //! Unit tests for workspace file dependency graph [`Request`] scanning and [`apply`] proof capture.
 //!
-//! Exercises `JavaScript`, `TypeScript`, and `CSS` import specifier extraction and readset proof binding in `bit-object-import`.
+//! Exercises `JavaScript`, `TypeScript`, and `CSS` import specifier extraction in [`Fixture`] ([`NEXT`], [`traverses_cycles_and_opaque_files_with_deterministic_order`]) and readset proof binding.
 
 use super::{Request, apply};
 use serde_json::{Value, json};

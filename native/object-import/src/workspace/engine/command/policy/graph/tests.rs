@@ -1,6 +1,6 @@
 //! Unit tests for depth-first flattened dependency edge projection ([`project`]), [`Row`], and [`Repository`] proofs.
 //!
-//! Validates flattened dependency rebuilding via [`project`] and [`Repository`] in [`scratch`] workspaces when lifecycles change or imports are removed.
+//! Validates flattened dependency rebuilding via [`store`], [`project`], and [`Repository`] ([`changed_lifecycles_and_deleted_imports_rebuild_depth_first_edges_with_repository_proofs`]) in [`scratch`] workspaces when lifecycles change.
 
 use super::{Repository, project};
 use crate::workspace::engine::command::{policy::Row, scratch};

@@ -1,6 +1,6 @@
 //! Unit tests for [`Prepared`] [`merge`] lifecycle persistence notifications on empty merges in `bit-object-import`.
 //!
-//! Verifies that empty [`Prepared`] [`merge`] executions in [`scratch`] workspaces still trigger `onPostObjectsPersist` without writing `unmerged.json`.
+//! Verifies that empty [`Prepared`] [`merge`] executions ([`empty_merge_still_invokes_repository_persistence_notification`]) in [`scratch`] workspaces still trigger `onPostObjectsPersist` without writing `unmerged.json`.
 
 use super::{Prepared, merge};
 use crate::workspace::engine::command::scratch;

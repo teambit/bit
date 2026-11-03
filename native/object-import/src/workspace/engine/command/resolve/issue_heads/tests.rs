@@ -1,6 +1,6 @@
 //! Unit tests for issue head version [`capture`] and [`Repository`] absence proofs.
 //!
-//! Ensures missing issue head objects are proven absent via [`capture`] and [`Repository`] while corrupt existing objects fail closed on validation.
+//! Ensures missing issue head objects are proven absent via [`capture`] and [`Repository`] ([`missing_issue_head_is_proven_and_corrupt_existing_head_is_not_absence`]) while corrupt existing objects fail closed on validation.
 
 use super::{Repository, capture};
 use serde_json::json;

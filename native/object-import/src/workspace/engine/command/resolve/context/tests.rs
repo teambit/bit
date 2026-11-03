@@ -1,6 +1,6 @@
 //! Unit tests for [`Prepare`] resolve context lane model and version loading via [`load_models`] in `bit-object-import`.
 //!
-//! Ensures lane model loading succeeds without requiring unrelated main branch version objects in `bit-object-import`.
+//! Ensures lane model loading via [`object`] and [`load_models`] ([`lane_model_loading_does_not_require_unrelated_main_version`]) succeeds without requiring unrelated main branch version objects.
 
 use super::{Prepare, load_models};
 use serde_json::{Value, json};

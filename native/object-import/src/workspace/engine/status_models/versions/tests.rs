@@ -1,6 +1,6 @@
 //! Unit tests for deduplicating and validating dependency model head references via [`include_heads`] in `bit-object-import`.
 //!
-//! Ensures dependency model heads are appended once via [`include_heads`] and malformed hashes decline in `bit-object-import`.
+//! Ensures dependency model heads are appended once via [`include_heads`] ([`context_includes_dependency_heads_once_and_rejects_invalid_heads`], [`empty_model_slice_leaves_existing_references_unchanged`]) and malformed hashes decline.
 
 use super::include_heads;
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for snap dependency [`Baseline`] and [`Row`] issue filtering via [`capture_issues`] in `bit-object-import`.
 //!
-//! Confirms that ignored dependency issues do not block snap policy execution in `bit-object-import`.
+//! Confirms that ignored dependency issues ([`row`], [`an_ignored_issue_does_not_block_the_snap`]) and fast-forward rows ([`fixed_fast_forward_dependency_is_not_a_pending_snapshot_cascade`]) do not block snap policy execution.
 
 use super::{
     super::{Baseline, Row},

@@ -1,6 +1,6 @@
 //! Unit tests for `merge --abort` [`Prepare`] pending component [`select`] filtering and ordering in `bit-object-import`.
 //!
-//! Ensures partial abort selection preserves unselected pending records and all-abort follows insertion order in `bit-object-import`.
+//! Ensures partial abort selection via [`request`] and [`select`] ([`abort_selection_preserves_unselected_pending_records`]) preserves unselected pending records and all-abort ([`all_abort_follows_pending_insertion_order`]) follows insertion order.
 
 use super::{Prepare, select};
 use serde_json::json;

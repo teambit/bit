@@ -1,6 +1,6 @@
 //! Unit tests for separating [`automatic`], [`normalized`], and [`projection`] forced merge dependency policies in `bit-object-import`.
 //!
-//! Verifies that automatic dependency entries are extracted via [`automatic`] and [`normalized`] without mutating persisted merge config in `bit-object-import`.
+//! Verifies that automatic dependency entries are extracted via [`automatic`] and [`normalized`] ([`separates_automatic_policy_without_mutating_persisted_merge_config`]) without mutating persisted merge config.
 
 use super::{automatic, normalized, projection};
 use serde_json::json;

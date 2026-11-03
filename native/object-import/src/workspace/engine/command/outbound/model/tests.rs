@@ -1,6 +1,6 @@
 //! Unit tests for outbound staged model identity ([`requested`]) and version selection ([`staged_versions`]).
 //!
-//! Validates scoped and unscoped staged component matching and rejects ambiguous unscoped names or missing versions.
+//! Validates scoped and unscoped [`staged`] component matching ([`resolves_scoped_and_unscoped_staged_ids`], [`unscoped_identity_must_be_unambiguous`]) and rejects ambiguous unscoped names or missing versions.
 
 use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};

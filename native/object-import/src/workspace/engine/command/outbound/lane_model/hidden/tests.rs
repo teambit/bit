@@ -1,6 +1,6 @@
 //! Unit tests for reconciling outbound lane `updateDependents` entries via [`merge`] and [`model`] in `bit-object-import`.
 //!
-//! Checks reconciliation of advanced, diverged, remote-only, and promoted visible lane dependents in `bit-object-import`.
+//! Checks reconciliation of advanced, diverged, remote-only, and promoted visible lane dependents via [`row`], [`history`], and [`merge`] ([`reconciles_advanced_diverged_missing_and_promoted_entries`]).
 
 use super::{merge, model};
 use serde_json::json;

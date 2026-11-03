@@ -1,6 +1,6 @@
 //! Unit tests for snapshot hash [`allocations`] uniqueness across [`Material`] components in `bit-object-import`.
 //!
-//! Ensures distinct [`Material`] components with [`Participation`] and [`VersionState`] never share a snapshot hash via [`allocations`] and map cleanly by identity.
+//! Ensures distinct [`Material`] components with [`Participation`] and [`VersionState`] never share a snapshot hash via [`allocations`] ([`distinct_components_cannot_share_a_snapshot_hash`], [`distinct_hashes_map_cleanly_to_each_component_identity`]).
 
 use super::{Material, Participation, VersionState, allocations};
 use serde_json::json;

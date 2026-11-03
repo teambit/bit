@@ -1,6 +1,6 @@
 //! Unit tests for outbound lane snap selection up to the remote head via [`lane_versions`] and [`model`] in `bit-object-import`.
 //!
-//! Ensures all unexported lane snaps are collected via [`lane_versions`] and [`model`] and traversal stops at the remote head in `bit-object-import`.
+//! Ensures all unexported lane snaps are collected via [`write_version`], [`lane_versions`], and [`model`] ([`selects_every_unexported_lane_snap_and_stops_at_remote_head`]) and traversal stops at the remote head.
 
 use super::{model, staged::lane_versions};
 use serde_json::{Value, json};

@@ -1,6 +1,6 @@
 //! Unit tests for pending vs. explicit workspace component [`select`] order.
 //!
-//! Confirms that implicit pending selection via [`select`] follows pending order whereas explicit subsets preserve target order and reject duplicates.
+//! Confirms that implicit pending selection via [`select`] follows pending order ([`pending_order_and_explicit_workspace_order_are_distinct`]) whereas explicit subsets preserve target order ([`explicit_subset_preserves_target_order_and_rejects_unlisted_pending_rows`]).
 
 use super::select;
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for proving file content or inventory changes during checkout reset via [`prove_changed`].
 //!
-//! Ensures checkout reset proceeds via [`prove_changed`] only when actual file contents or relative paths differ, ignoring `.bitmap` and duplicate rows.
+//! Ensures checkout reset proceeds via [`prove_changed`] ([`only_different_content_or_inventory_proves_reset_without_dependencies`]) only when actual file contents or relative paths differ, ignoring `.bitmap` and duplicate rows.
 
 use super::prove_changed;
 use serde_json::json;

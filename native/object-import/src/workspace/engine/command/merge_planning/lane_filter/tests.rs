@@ -1,6 +1,6 @@
 //! Unit tests for hidden lane component metadata projection and package hydration via [`prepare_hidden_metadata`].
 //!
-//! Confirms that model-only hidden [`Captured`] [`Target`] components retain resolver data and hydrate `packageName` entries via [`prepare_hidden_metadata`].
+//! Confirms that model-only hidden [`Captured`] [`Target`] components retain resolver data and hydrate `packageName` entries via [`prepare_hidden_metadata`] ([`model_only_projection_preserves_resolver_data_and_hydrates_package_names`]).
 
 use super::prepare_hidden_metadata;
 use crate::workspace::engine::{command::capture::Captured, status_models::comparison::Target};

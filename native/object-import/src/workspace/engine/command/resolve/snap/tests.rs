@@ -1,6 +1,6 @@
 //! Unit tests for snap [`Options`] pattern filtering and negation guard rules via [`filter_pattern`] in `bit-object-import`.
 //!
-//! Checks new-before-modified candidate ordering, negation-only pattern rejection, and exact [`Options`] matches via [`filter_pattern`] in `bit-object-import`.
+//! Checks new-before-modified candidate ordering ([`pattern_selection_preserves_new_before_modified_and_declines_empty_modified_match`]), negation-only pattern rejection, and exact [`Options`] matches ([`exact_literal_pattern_selects_matching_known_component`]) via [`filter_pattern`].
 
 use super::{Options, filter_pattern};
 use serde_json::json;

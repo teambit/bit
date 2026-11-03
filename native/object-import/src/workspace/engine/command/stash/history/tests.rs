@@ -1,6 +1,6 @@
 //! Unit tests for verifying published `VersionHistory` payloads via [`verify_published`] during stash in `bit-object-import`.
 //!
-//! Checks that replaced or corrupted [`ZlibEncoder`] payloads fail [`verify_published`] history verification under [`Budget`] bounds.
+//! Checks that replaced or corrupted [`ZlibEncoder`] payloads fail [`verify_published`] history verification under [`Budget`] bounds ([`replaced_history_cannot_become_an_accepted_published_proof`], [`corrupted_zlib_payload_fails_published_history_verification`]).
 
 use super::verify_published;
 use crate::read_budget::Budget;

@@ -1,6 +1,6 @@
 //! Unit tests for restoring [`Main`] branch component models from `.bit/last-merged`.
 //!
-//! Validates unique [`Main`] model backups and matching `.bit/index.json` entries prior to restoration and publication.
+//! Validates unique [`Main`] model backups ([`main_backups_require_unique_models_and_a_matching_index_before_publication`], [`old_backups_without_main_models_remain_compatible`]) and matching `.bit/index.json` entries prior to restoration.
 
 use super::Main;
 use serde_json::json;

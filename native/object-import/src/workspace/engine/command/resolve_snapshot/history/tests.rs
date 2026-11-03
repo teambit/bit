@@ -1,6 +1,6 @@
 //! Unit tests for `VersionHistory` object updates via [`tag_histories`] during tag snapshot resolution.
 //!
-//! Validates parent link appending, [`Repository`] and [`status_history`] checks, and [`Material`]/[`Participation`]/[`VersionState`] serialization.
+//! Validates parent link appending in [`Fixture`] ([`NEXT`], [`material`], [`tag_stages_only_preexisting_head_missing_from_existing_history`]), [`Repository`] and [`status_history`] checks, and [`Material`]/[`Participation`]/[`VersionState`] serialization.
 
 use super::tag_histories;
 use crate::workspace::engine::{

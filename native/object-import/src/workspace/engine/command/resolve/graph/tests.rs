@@ -1,6 +1,6 @@
 //! Unit tests for resolve dependency graph [`edges`] types and saved graph leaves.
 //!
-//! Verifies that aspect extensions upgrade edge types to `ext` while preserving dependency order and leaf nodes.
+//! Verifies that aspect extensions upgrade edge types to `ext` ([`aspect_edges_override_lifecycle_without_reordering_existing_dependency`], [`malformed_component_aspect_identity_is_not_silently_dropped`]) while preserving dependency order and leaf nodes.
 
 use super::edges;
 use serde_json::json;

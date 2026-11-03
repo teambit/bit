@@ -1,6 +1,6 @@
 //! Expected output of comment-json 4.2.5 `stringify(parse(input), undefined, 2)` and of
 //! a second pass over that output, recorded with the version Bit ships. Do not edit by hand.
-//! Exposes [`CASES`], [`POLICY_EDIT`], and [`READD_EDIT`] for comment-preserving `JSONC` round-trip verification.
+//! Exposes [`CASES`], [`POLICY_EDIT`], and [`READD_EDIT`] for comment-preserving `JSONC` round-trip and policy-edit verification in `bit-workspace-config`.
 /// Recorded `(name, input, expected, second_pass)` golden `JSONC` round-trip fixtures alongside [`POLICY_EDIT`] and [`READD_EDIT`] for `comment-json` tests.
 pub(super) const CASES: &[(&str, &str, &str, Option<&str>)] = &[
     (

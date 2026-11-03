@@ -1,6 +1,6 @@
 //! Unit tests for binary raw workspace file reads ([`serve`], [`frame`]) and retained observations in `bit-object-import`.
 //!
-//! Ensures retained binary reads in [`Directory`] and [`POOL`] preserve BOM-stripped observations across subsequent disk deletions.
+//! Ensures retained binary reads via [`raw`] and [`raw_with`] in [`Directory`] and [`POOL`] preserve BOM-stripped observations across subsequent disk deletions ([`explicitly_retained_reads_keep_the_original_observation_after_disk_deletion`]).
 
 use super::{Directory, POOL, frame, serve};
 use serde_json::{Value, json};

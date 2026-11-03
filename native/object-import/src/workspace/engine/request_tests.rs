@@ -1,6 +1,6 @@
 //! Unit tests for workspace engine [`Request`] deserialization and strict field checks.
 //!
-//! Verifies `componentLog` and `commandOutboundPrepare` request wire payloads and unknown-field rejection.
+//! Verifies `componentLog` ([`component_log_request_decodes_on_main_and_lane`]) and `commandOutboundPrepare` ([`outbound_prepare`], [`outbound_prepare_retains_flat_transport_and_resolution_protocol`]) request wire payloads and unknown-field rejection.
 
 use super::Request;
 

@@ -1,6 +1,6 @@
 //! Unit tests for comment-preserving `JSONC` [`Document`] [`parse`], formatting, and policy updates.
 //!
-//! Exercises [`golden`] round-trip cases and sorted dependency policy insertion in `bit-workspace-config`.
+//! Exercises [`golden`] round-trip cases ([`round_trips_match_comment_json`]) and sorted dependency policy insertion ([`policy_update_keeps_entry_comments_and_sorts`], [`readded_property_keeps_comments_and_new_one_goes_last`]) in `bit-workspace-config`.
 
 mod golden;
 

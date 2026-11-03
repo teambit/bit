@@ -1,6 +1,6 @@
 //! Unit tests for finalizing component automatic peer and plus-range dependencies via [`Request`] and [`apply`] in `bit-object-import`.
 //!
-//! Confirms that automatic peer ranges follow workspace upgrades and keep snap versions exact in `bit-object-import`.
+//! Confirms that automatic peer ranges follow workspace upgrades and keep snap versions exact via [`input`] and [`finish`] ([`automatic_peers_follow_workspace_upgrades_and_keep_snap_versions_exact`], [`manual_plus_ranges_take_package_manifest_versions_and_missing_stays_missing`]).
 
 use super::{Request, apply};
 use serde_json::{Value, json};

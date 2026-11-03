@@ -1,6 +1,6 @@
 //! Unit tests for callback-owned [`SourceChange`] source [`proof`] replacement via [`replace_owned_proofs`] in `bit-object-import`.
 //!
-//! Verifies that callbacks in [`Directory`] workspaces can update only their owned [`SourceChange`] [`proof`]s via [`replace_owned_proofs`].
+//! Verifies that callbacks in [`Directory`] workspaces can update only their owned [`SourceChange`] [`proof`]s via [`replace_owned_proofs`] ([`callbacks_can_replace_only_their_validated_source_and_cannot_reset_other_proofs`], [`unowned_sources_wrong_hashes_and_duplicate_changes_are_rejected`]).
 
 use super::{SourceChange, replace_owned_proofs};
 use crate::workspace::engine::{command::scratch::Directory, dependency_graph::proof};
