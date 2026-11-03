@@ -1,5 +1,5 @@
 //! Unit tests for custom scope [`Resolver`] execution ([`resolver`], [`runtime`]) in `bit-client-transfer`.
-//! Covers `resolverPath` script invocation and token forwarding.
+//! Covers `resolverPath` script invocation and token forwarding ([`only_a_configured_resolver_path_is_used`], [`the_module_gets_the_scope_this_scope_and_the_configured_token`], [`a_rejection_or_a_broken_module_is_the_error`]).
 
 use super::Resolver;
 use crate::GlobalConfig;

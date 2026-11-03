@@ -1,5 +1,5 @@
 //! Unit tests for `node-ignore` 3.3.10 pattern compilation ([`Compiler`], [`Ignore`], [`Rule`], [`FIXTURES`]) and regex caching in
-//! `bit-ignore`.
+//! `bit-ignore` ([`matches_node_ignore_sources_and_cache`], [`negation_after_positive_reuses_the_positive_source`], [`add_ignore_appends_rules_in_order`], [`object_prototype_names_are_unsupported`], [`UnsupportedPattern`]).
 
 use crate::{Compiler, Ignore, Rule, UnsupportedPattern};
 use pretty_assertions::assert_eq;

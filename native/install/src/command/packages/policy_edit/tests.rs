@@ -1,5 +1,5 @@
 //! Unit tests for `workspace.jsonc` dependency policy editing ([`update_config_policy`], [`config_entries`], [`admits`]) and key sorting ([`to_config_object`]) in
-//! `bit-install`.
+//! `bit-install` ([`added_entries_win_and_fields_are_sorted`], [`creates_missing_fields_and_keeps_comments`], [`existing_entries_update_skip_or_fail_by_name_in_any_lifecycle`], [`removes_specified_packages_and_retains_others`]).
 
 use super::{admits, config_entries, to_config_object, update_config_policy};
 use crate::{jsonc::Document, options::ExistingEntries};

@@ -1,5 +1,5 @@
 //! End-to-end tests for Harmony UI (`bit start`, [`scope_ui_on_bare_scope`], [`workspace_ui`]) and file watching (`bit watch`).
-//! Covers CLI help output and watch-mode compilation and file tracking flows.
+//! Covers CLI help output and watch-mode compilation and file tracking flows ([`watch_compiles_modified_and_new_files_and_tracks_add_remove`], [`watch_recognizes_bitmap_changes_and_regenerates_package_json`], [`watch_with_check_types_detects_and_fixes_errors`]).
 
 use crate::helper::Helper;
 use serde_json::json;

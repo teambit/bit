@@ -1,6 +1,6 @@
 //! Seeded differential tests for [`future`] version increment and auto-tag graph policy ([`seeded_future_versions_match_actual_model_component_inc_policy`], [`seeded_autotag_graphs_match_actual_workspace_preorder_and_ref_provenance`]) in `bit-object-import`.
 //!
-//! Compares native future-version calculations against model component increment policy across release types.
+//! Compares native future-version calculations against model component increment policy across release types ([`Command`], [`Value`]).
 
 use super::future;
 use serde_json::Value;

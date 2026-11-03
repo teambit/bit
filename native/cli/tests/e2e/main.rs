@@ -5,7 +5,7 @@
 //! `bit-version` behind it (`bvm install <version>`, or `BIT_E2E_NODE_CLI`). Run with
 //! `cargo test -p bit-cli --features e2e --test e2e`.
 
-/// End-to-end CLI command parity suites ([`flows`], [`functionalities`], [`harmony`], [`helper`], [`known_failure`]).
+/// End-to-end CLI command parity suites ([`commands`], [`flows`], [`functionalities`], [`harmony`], [`helper`], [`known_failure`]).
 mod commands;
 /// End-to-end multi-command workflow parity suites.
 mod flows;

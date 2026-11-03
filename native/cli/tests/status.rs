@@ -1,5 +1,5 @@
 //! `bit status` inputs the native command leaves to the Node.js CLI ([`STUB`], [`bit`], [`write`]).
-//! Verifies pre-effect declines for unsupported workspaces, flags, and aspect configurations.
+//! Verifies pre-effect declines for unsupported workspaces, flags, and aspect configurations ([`workspace`], [`stdout`], [`declined`], [`other_flags_decline`], [`outside_a_workspace_declines`]).
 
 use std::{
     fs,

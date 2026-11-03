@@ -1,5 +1,5 @@
 //! Unit tests for bounded tar object stream decoding ([`read`], [`read_bounded`], [`archive`]) in `bit-client-transfer`.
-//! Covers `.BIT.START` and `.BIT.END` schema checks and malformed entry handling.
+//! Covers `.BIT.START` and `.BIT.END` schema checks and malformed entry handling ([`current_schema_requires_a_truthy_end_but_old_streams_do_not`], [`malformed_metadata_and_remote_error_never_return_partial_objects`], [`entry_headers_and_bodies_can_cross_every_reader_boundary`]).
 
 use super::{read, read_bounded};
 use std::io::{self, Read};

@@ -1,5 +1,5 @@
 //! A recording HTTP action endpoint ([`Server`] and [`Request`]) for released and native protocol
-//! payload comparisons in end-to-end remote scope tests.
+//! payload comparisons ([`exchange`], [`TcpListener`], [`TcpStream`]) in end-to-end remote scope tests.
 use serde_json::Value;
 use std::{
     io::{BufRead, BufReader, Read, Write},

@@ -1,5 +1,5 @@
 //! Remote fixtures ([`publish`], [`seed_after_node_export`], [`publish_selected`]) remain independent of the pinned Windows pending-object glob
-//! bug when publishing local exports to bare remote scopes.
+//! bug when publishing local exports to bare remote scopes ([`publish_at`], [`seed_after_export_at`], [`publish_to`], [`node_export`]).
 use super::{Helper, config, setup};
 use serde_json::Value;
 use std::{collections::HashSet, ffi::OsStr, path::Path, process::Command};

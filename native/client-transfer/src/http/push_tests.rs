@@ -1,5 +1,5 @@
 //! Unit tests for non-replayed HTTP object uploads on [`Network`] in `bit-client-transfer`.
-//! Verifies that failed uploads do not retry even when fetch retries are configured ([`failed_upload_is_not_replayed_even_when_fetch_retries_are_enabled`], [`disconnecting_server`]).
+//! Verifies that failed uploads do not retry even when fetch retries are configured ([`failed_upload_is_not_replayed_even_when_fetch_retries_are_enabled`], [`disconnecting_server`], [`GlobalConfig`]).
 
 use super::{GlobalConfig, Network};
 use serde_json::json;

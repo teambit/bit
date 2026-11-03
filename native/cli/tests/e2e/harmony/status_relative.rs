@@ -1,5 +1,5 @@
 //! Relative cross-component and nested untracked dependency detection parity
-//! tests for `bit status` and `bit status --json` ([`parity`], [`nested_and_repeated_untracked_files_match_node`]).
+//! tests for `bit status` and `bit status --json` ([`parity`], [`nested_and_repeated_untracked_files_match_node`], [`relative_component_commonjs_matches_node`], [`self_reference_matches_node`]).
 
 use crate::helper::Helper;
 use std::{ffi::OsStr, fmt::Write as _};

@@ -1,5 +1,5 @@
 //! Saved graph adjacency remains usable without optional external model
-//! metadata when running `bit status` and `bit graph` commands ([`missing_external_model_uses_saved_adjacency_like_node`], [`Sha1`]).
+//! metadata when running `bit status` and `bit graph` commands ([`missing_external_model_uses_saved_adjacency_like_node`], [`Sha1`], [`Helper`]).
 
 use crate::helper::{
     Helper,

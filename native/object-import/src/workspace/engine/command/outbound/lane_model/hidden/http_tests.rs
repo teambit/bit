@@ -1,6 +1,6 @@
 //! Unit tests for HTTP fetching ([`fetch_http`], [`model`]) of hidden lane model update-dependent objects in `bit-object-import`.
 //!
-//! Verifies [`tar`] [`ObjectItem`] stream extraction ([`serve`], [`network`]) and [`GlobalConfig`] [`Network`] HTTP status handling ([`only_lane_not_found_is_treated_as_an_absent_lane`]) for remote hidden lane models.
+//! Verifies [`tar`] [`ObjectItem`] stream extraction ([`serve`], [`network`], [`fetches_remote_lane_and_retains_hidden_entries`]) and [`GlobalConfig`] [`Network`] HTTP status handling ([`only_lane_not_found_is_treated_as_an_absent_lane`]) for remote hidden lane models.
 
 use super::{fetch_http, model};
 use bit_client_transfer::{

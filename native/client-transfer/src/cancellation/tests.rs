@@ -1,5 +1,5 @@
 //! Unit tests for [`Cancellation`] tokens and construction scopes in
-//! `bit-client-transfer` transport operations ([`cancelled_operations_never_poll_the_transport`], [`cancellation_wakes_an_already_pending_operation`]).
+//! `bit-client-transfer` transport operations ([`cancelled_operations_never_poll_the_transport`], [`cancellation_wakes_an_already_pending_operation`], [`construction_scope_restores_nested_owners_after_a_panic`]).
 
 use super::Cancellation;
 use std::{future, io};

@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/update-cmd.e2e.ts` and `e2e/harmony/publish.e2e.ts` ([`updates_policies_added_by_user_to_latest_versions`]).
-//! Covers `bit update` dependency policy upgrades and npm package publishing workflows.
+//! Covers `bit update` dependency policy upgrades ([`updates_selected_patterns_and_preserves_comments`], [`updates_policies_added_by_deps_set_latest_and_compatible`], [`updates_from_model_with_and_without_save_prefix`]) and npm package publishing workflows.
 
 use crate::helper::{Helper, config};
 use serde_json::{Value, json};

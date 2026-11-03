@@ -1,6 +1,6 @@
 //! Unit tests for local model [`object`] tag version and orphaned [`VersionState`] updates in `bit-object-import`.
 //!
-//! Verifies that newly tagged [`Material`], [`Participation`], and [`VersionState`] versions clear matching `orphanedVersions` entries and update `head` via [`object`] ([`tag_model_keeps_object_identity_distinct_from_semantic_identity`], [`snap_model_updates_head_without_mutating_existing_tag_versions`]).
+//! Verifies that newly tagged [`Material`], [`Participation`], and [`VersionState`] versions clear matching `orphanedVersions` entries and update `head` via [`object`] ([`tag_model_keeps_object_identity_distinct_from_semantic_identity`], [`snap_model_updates_head_without_mutating_existing_tag_versions`]) using [`json`].
 
 use super::{Material, Participation, VersionState, object};
 use serde_json::json;

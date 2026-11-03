@@ -13,7 +13,7 @@ fn create_aspect(helper: &Helper, name: &str) {
     helper.run(&format!("envs set {name} teambit.harmony/aspect"));
 }
 
-/// bit use command › when the aspect is new › should not throw an error ([`create_aspect`], [`Helper`]).
+/// bit use command › when the aspect is new › should not throw an error ([`create_aspect`], [`Helper`], [`when_the_aspect_is_new_should_not_throw_an_error`]).
 #[test]
 fn when_the_aspect_is_new_should_not_throw_an_error() {
     let helper = Helper::new();

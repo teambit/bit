@@ -1,5 +1,5 @@
 //! Restored fixtures ([`remove`], [`writable_directories`], [`remote`]) must not retain outputs when a command leaves read-only
-//! directories on disk after execution.
+//! directories on disk after execution ([`cleanup_removes_readonly_fixture_outputs_without_following_symlinks`], [`fake_package_does_not_modify_linked_or_hardlinked_store_files`]).
 pub(super) mod remote;
 
 use std::{fs, io, path::Path};

@@ -1,6 +1,6 @@
 //! Unit tests for lane merge [`Recovery`] backup preparation, validation, and commit in `bit-object-import`.
 //!
-//! Verifies `.bitmap`, `workspace.jsonc`, and staged-config rollback snapshots during lane publication across temporary [`Workspace`] fixtures ([`recovery_retains_original_bytes_after_merge_and_replaces_old_backup_file`]).
+//! Verifies `.bitmap`, `workspace.jsonc`, and staged-config rollback snapshots during lane publication across temporary [`Workspace`] fixtures ([`recovery_retains_original_bytes_after_merge_and_replaces_old_backup_file`], [`recovery_keeps_nonempty_staged_configuration_exactly`], [`lane_backup_uses_current_lane_and_javascript_utf16_header_length`]).
 
 use super::Recovery;
 use serde_json::{Value, json};

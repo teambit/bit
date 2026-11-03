@@ -1,6 +1,6 @@
 //! Unit tests for inbound command publication protocol ([`Prepare`], [`Apply`], [`apply`]) and [`Retained`] [`State`].
 //!
-//! Validates inbound lane and component import state transitions and publication preconditions in `bit-object-import`.
+//! Validates inbound lane and component import state transitions and publication preconditions in `bit-object-import` ([`PublicationFixture`], [`request`], [`public_prepare_accepts_flat_transport_fields`], [`ordinary_apply_keeps_receipts_while_lane_optout_publishes_the_same_files`]).
 
 use super::{Apply, Prepare, Retained, State, apply};
 use serde_json::json;

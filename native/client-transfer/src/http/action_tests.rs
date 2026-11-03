@@ -1,5 +1,5 @@
 //! Unit tests for [`Network`] and [`GlobalConfig`] HTTP action requests and responses in `bit-client-transfer`.
-//! Covers canonical route headers, JSON payloads ([`Value`]), and HTTP status code handling ([`action_posts_canonical_route_headers_and_json`]).
+//! Covers canonical route headers, JSON payloads ([`Value`], [`json`]), and HTTP status code handling ([`action_posts_canonical_route_headers_and_json`], [`TcpListener`], [`Duration`]).
 
 use super::{GlobalConfig, Network};
 use serde_json::{Value, json};

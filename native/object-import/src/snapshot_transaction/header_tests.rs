@@ -1,6 +1,6 @@
 //! Unit tests for parallel object header [`encode`] and zlib [`compress`] routines ([`parallel_compression_preserves_order_and_serial_bytes_in_shared_pools`], [`seeded_invalid_utf8_source_headers_match_node_buffer_decoding`]) in `bit-object-import`.
 //!
-//! Verifies that multi-threaded compression preserves deterministic ordering, shared-pool execution, and serial byte equivalence.
+//! Verifies that multi-threaded compression preserves deterministic ordering, shared-pool execution, and serial byte equivalence ([`ZlibDecoder`], [`Command`], [`Value`]).
 
 use super::{compress, encode};
 use flate2::read::ZlibDecoder;

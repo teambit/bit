@@ -7,7 +7,7 @@
 use crate::helper::{Helper, Run, config, setup};
 use serde_json::json;
 use std::{fs, path::PathBuf};
-/// Minimal Jest spec with a single passing assertion (`expect(true).toBe(true)`) for [`setup_jest_spec`], [`FAILING_JEST_SPEC`], [`ERRORED_JEST_SPEC`], and [`DESCRIBE_ONLY_SPEC`].
+/// Minimal Jest spec with a single passing assertion (`expect(true).toBe(true)`) for [`setup_jest_spec`], [`FAILING_JEST_SPEC`], [`ERRORED_JEST_SPEC`], [`DESCRIBE_ONLY_SPEC`], [`MOCHA_PKGS`], and [`JEST_ENV_PKGS`].
 const PASSING_JEST_SPEC: &str = "describe('test', () => {\n  it('should pass', () => {\n    expect(true).toBe(true);\n  });\n});\n";
 const FAILING_JEST_SPEC: &str = "describe('test', () => {\n  it('should pass', () => {\n    expect(true).toBe(true);\n  });\n  it('should fail', () => {\n    expect(true).toBe(false);\n  });\n});\n";
 const ERRORED_JEST_SPEC: &str = "throw new Error('some-err');\ndescribe('test', () => {\n  it('should pass', () => {\n    expect(true).toBe(true);\n  });\n});\n";

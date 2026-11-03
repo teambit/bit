@@ -1,7 +1,7 @@
 //! Unit tests for recovery [`Operation`] and [`State`] token revision exhaustion ([`token_revision_exhaustion_discards_previous_plan`]) and plan invalidation on `u64::MAX` in `bit-object-import`.
 
 use super::{Operation, State};
-/// Verifies that [`State::initialize`] fails on `u64::MAX` revision overflow and discards any prior [`Operation`] recovery plan and token in [`State`] ([`State::advance`]).
+/// Verifies that [`State::initialize`] fails on `u64::MAX` revision overflow and discards any prior [`Operation`] recovery plan and token in [`State`] ([`State::advance`], [`token_revision_exhaustion_discards_previous_plan`]).
 #[test]
 fn token_revision_exhaustion_discards_previous_plan() {
     let mut state = State {

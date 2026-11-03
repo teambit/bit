@@ -1,5 +1,5 @@
 //! What every case shares in one test process: the Node.js CLI ([`BIT_VERSION`]), a home and global
-//! config ([`GLOBAL_CONFIG`]) of its own, and the `bit init` templates (`e2e-setup-template.ts`) in [`Shared`] state.
+//! config ([`GLOBAL_CONFIG`]) of its own, and the `bit init` templates (`e2e-setup-template.ts`) in [`Shared`] state ([`shared`], [`runs_dir`], [`STALE_RUN`], [`node_cli`]).
 
 use std::{
     env, fs,

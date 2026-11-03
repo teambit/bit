@@ -1,5 +1,5 @@
 //! Unit tests for empty documentation proof detection ([`proves_empty_docs`]) in
-//! `bit-dependency-scanner` source analysis ([`unexported_test_callbacks_and_definitions_match_released_empty_documentation`]).
+//! `bit-dependency-scanner` source analysis ([`unexported_test_callbacks_and_definitions_match_released_empty_documentation`], [`ordinary_commonjs_data_and_literal_dependency_modules_are_empty`], [`documentation_and_react_component_shapes_always_defer`], [`invalid_unsupported_and_nonliteral_modules_defer`]).
 
 use super::proves_empty_docs;
 

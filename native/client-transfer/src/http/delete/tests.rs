@@ -1,4 +1,4 @@
-//! Unit tests for HTTP remote deletion requests and retry behavior on [`Network`] ([`network`]) in
+//! Unit tests for HTTP remote deletion requests and retry behavior on [`Network`] ([`network`], [`request`], [`serve`], [`runtime`], [`scope_delete_sends_one_authenticated_post_and_keeps_reply`]) in
 //! `bit-client-transfer` remote operations.
 
 use super::super::Network;

@@ -1,4 +1,4 @@
-//! Unit tests verifying a mutual-TLS [`Server`] requires the same configured certificate and key on [`Network`] that
+//! Unit tests verifying a mutual-TLS [`Server`] requires the same configured certificate and key on [`Network`] ([`action`], [`network_certificate_and_legacy_proxy_fallback_authenticate_mutual_tls`]) that
 //! Node forwards. Renew the 824-day leaf fixtures before 2029-01-18; macOS
 //! permits at most 825 days for leaf certificates.
 

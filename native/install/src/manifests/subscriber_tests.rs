@@ -1,5 +1,5 @@
 //! Unit tests for `linkedDependencies` subscriber manifest merging ([`subscriber_links`], [`InstallPlan`]) in
-//! `bit-install` install plans.
+//! `bit-install` install plans ([`Project`], [`replacing_links_uses_unlinked_manifests_without_overwriting_declared_dependencies`], [`deleting_the_link_option_does_not_retain_previously_merged_links`]).
 
 use super::subscriber_links;
 use crate::model::{InstallPlan, Project};

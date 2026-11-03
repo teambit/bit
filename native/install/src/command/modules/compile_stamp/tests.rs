@@ -1,5 +1,5 @@
 //! Unit tests for compile stamp persistence ([`write`], [`check`], [`Inputs`]) and restoration ([`restore`], [`Restore`]) in `bit-install`.
-//! Covers stamp invalidation when external links or component files change ([`has_external_links`], [`remove`]).
+//! Covers stamp invalidation when external links or component files change ([`has_external_links`], [`remove`], [`component`], [`Fixture`], [`an_unchanged_workspace_is_fresh`], [`a_changed_or_added_source_file_is_stale`]).
 
 use super::{Inputs, Restore, check, has_external_links, path, remove, restore, write};
 use crate::model::{ComponentId, Project, WorkspaceComponent};

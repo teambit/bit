@@ -1,4 +1,4 @@
-//! Unit tests for lane reset [`Plan`], [`Batch`], and [`BitmapState`] hash prefix resolution, population prefixes, and [`diagnostics`] in `bit-object-import`.
+//! Unit tests for lane reset [`Plan`], [`Batch`], and [`BitmapState`] hash prefix resolution, population prefixes ([`BASE`], [`ALPHA`], [`DETACHED`], [`OTHER`], [`MERGE`], [`Fixture`]), and [`diagnostics`] in `bit-object-import`.
 
 use super::{
     Batch, BitmapState, Plan, Repository, diagnostics, object_hash, object_path, outbound,

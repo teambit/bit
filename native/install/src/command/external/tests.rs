@@ -1,5 +1,5 @@
 //! Unit tests for external package manager `package.json` ([`write_package_json_dependencies`], [`remove_postinstall_script`], [`dependencies`]) and `workspace.jsonc` ([`disable_in_config`])
-//! updates in `bit-install` (`--external-package-manager`).
+//! updates in `bit-install` (`--external-package-manager`, [`writes_dependencies_into_the_root_package_json`], [`creates_the_package_json_and_its_dependencies`], [`disables_the_mode_in_the_config`], [`removes_only_bits_postinstall_script`]).
 
 use super::{disable_in_config, remove_postinstall_script, write_package_json_dependencies};
 use crate::{jsonc::Document, model::DependencyMap};

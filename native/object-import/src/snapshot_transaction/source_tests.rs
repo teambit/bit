@@ -1,6 +1,6 @@
 //! Unit tests for workspace and artifact source [`wire`] normalization via [`read`] ([`hash`], [`artifact_sources_keep_bom_and_binary_while_workspace_sources_strip_bom`]) during snapshot transactions.
 //!
-//! Checks that artifact sources retain BOM and binary bytes while workspace sources strip BOM and normalize line endings.
+//! Checks that artifact sources retain BOM and binary bytes while workspace sources strip BOM and normalize line endings ([`Sha1`], [`Digest`], [`json`]).
 
 use super::{read, wire};
 use serde_json::json;

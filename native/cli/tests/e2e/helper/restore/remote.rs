@@ -1,5 +1,5 @@
 //! Restores remote children ([`contents`], [`remove_file_or_link`]) without deleting a running scope server's current
-//! working directory before test replay.
+//! working directory before test replay ([`restoring_remote_contents_clears_readonly_children_without_following_links`]).
 use super::{Path, fs, io, remove};
 
 /// Keeps a server's current directory while removing every persisted child before replay ([`Path`], [`remove`], [`remove_file_or_link`], [`super::writable_directories`]).

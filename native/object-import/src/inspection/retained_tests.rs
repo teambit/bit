@@ -1,5 +1,5 @@
 //! Unit tests for retained workspace read [`Observation`] ([`observe`], [`begin`]) and [`State`]
-//! sessions during inspection in `bit-object-import` status pipelines.
+//! sessions during inspection in `bit-object-import` status pipelines ([`request`], [`explicit_read_receipt_keeps_the_original_observation_without_stripping_a_second_bom`], [`changed_receipts_and_other_owners_cannot_publish_a_snapshot`], [`read_without_a_token_observes_disk_instead_of_a_retained_body`]).
 
 use super::{State, begin, hash, tests::Fixture};
 use crate::workspace::snapshots::{Observation, State as Reads};

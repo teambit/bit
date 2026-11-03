@@ -1,4 +1,4 @@
-//! Unit tests for `GraphQL` component and lane listing ([`Network`], [`Listed`], [`serve_once`]) over HTTP in
+//! Unit tests for `GraphQL` component and lane listing ([`Network`], [`Listed`], [`serve_once`], [`lists_a_remote_scope_with_node_fetch_headers`], [`inventories_deleted_components_with_published_graphql_fields`]) over HTTP in
 //! `bit-client-transfer` remote queries.
 
 use super::{Listed, Network};

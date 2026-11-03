@@ -1,4 +1,4 @@
-//! Unit tests for merge transaction [`State`] body preparation ([`apply`], [`compact_receipts`], [`parallel_reads`], [`selected_base`], [`Fixture`], [`NEXT`]), spool packing, and conflict markers in `bit-object-import`.
+//! Unit tests for merge transaction [`State`] body preparation ([`apply`], [`compact_receipts`], [`parallel_reads`], [`selected_base`], [`Fixture`], [`NEXT`], [`retained_prepare_capsules_and_late_template_preserve_raw_bytes_before_auto_eol`]), spool packing, and conflict markers in `bit-object-import`.
 
 mod compact_receipts;
 mod parallel_reads;

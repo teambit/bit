@@ -1,5 +1,5 @@
 //! The scope-install oracle masks only an exact optional startup timer
-//! sample ([`MARKER`], [`FRAME`], [`BANNER`]) while keeping all other pnpm progress and banner lines byte-exact ([`startup_progress`]).
+//! sample ([`MARKER`], [`FRAME`], [`BANNER`]) while keeping all other pnpm progress and banner lines byte-exact ([`startup_progress`], [`startup_timer_sample_projects_to_the_identical_banner_and_remaining_output`], [`changed_counters_controls_positions_and_duplicate_samples_remain_observable`]).
 #[path = "e2e/harmony/scope_rename/installation/startup_progress.rs"]
 mod startup_progress;
 

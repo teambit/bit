@@ -1,4 +1,4 @@
-//! Unit tests for component reset [`plan`] head selection ([`hash`], [`input`]), [`walk`] common ancestor shortcuts, and parent provenance in `bit-object-import`.
+//! Unit tests for component reset [`plan`] head selection ([`hash`], [`input`], [`common_shortcut_avoids_repository_reads_and_keeps_common_identity`], [`detached_selection_and_hash_labels_do_not_delete_tags`]), [`walk`] common ancestor shortcuts, and parent provenance in `bit-object-import`.
 
 use super::{plan, walk};
 use serde_json::{Value, json};

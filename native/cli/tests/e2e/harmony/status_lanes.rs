@@ -1,5 +1,5 @@
 //! Lane-only bitmap visibility in complete `bit status` commands across
-//! workspaces (`--lanes`, diverged components, and lane-scoped component heads, [`inflated`], [`assert_command_parity`]).
+//! workspaces (`--lanes`, diverged components, and lane-scoped component heads, [`inflated`], [`assert_command_parity`], [`assert_status_variants`], [`unavailable_on_main_matches_node`]).
 
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use flate2::read::ZlibDecoder;

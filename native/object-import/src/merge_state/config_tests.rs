@@ -1,5 +1,5 @@
 //! Unit tests for workspace configuration conflict planning in merge [`State`]
-//! and [`serve`] dispatch ([`request`], [`state_request`], [`Directory`], [`jsonc_missing_substring_preflight_preserves_source_and_candidate`], [`jsonc_private_candidate_plan_is_portable_and_does_not_write_workspace`]) in `bit-object-import`.
+//! and [`serve`] dispatch ([`request`], [`state_request`], [`Directory`], [`jsonc_missing_substring_preflight_preserves_source_and_candidate`], [`jsonc_private_candidate_plan_is_portable_and_does_not_write_workspace`], [`nonempty_private_candidate_declines_without_mutation`]) in `bit-object-import`.
 
 use super::{State, serve};
 use serde_json::{Value, json};

@@ -1,4 +1,4 @@
-//! Unit tests for HTTP scope inventory listing ([`Network`], [`list_variables`], [`request`]) and legacy fallback in
+//! Unit tests for HTTP scope inventory listing ([`Network`], [`list_variables`], [`request`], [`omitted_namespace_is_not_serialized_as_null`], [`older_server_retries_plain_list_once_and_returns_warning_receipt`]) and legacy fallback in
 //! `bit-client-transfer` remote queries.
 
 use super::{Network, list_variables};

@@ -1,5 +1,5 @@
 //! Unit tests for lockfile-only dependency graph restoration ([`explicit`], [`merge`]) and peer suffix
-//! parsing ([`split_peer_ids`], [`without_peer_suffix`]) in `bit-install` (`--restore`, [`InstallOptions`]).
+//! parsing ([`split_peer_ids`], [`without_peer_suffix`]) in `bit-install` (`--restore`, [`InstallOptions`], [`graph`], [`an_explicit_graph_is_restored_best_effort_unless_restore_is_set`], [`merges_direct_dependencies_and_prunes_unreachable_nodes`]).
 
 use super::{
     explicit,
