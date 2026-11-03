@@ -3,7 +3,7 @@
 use super::{Pending, lane_model::ForkHistory};
 use serde_json::{Value, json};
 
-/// Builds the JSON preparation receipt summarizing [`Pending`] scope batches, object counts, `lane`, and [`ForkHistory`].
+/// Builds the JSON preparation receipt summarizing [`Pending`] scope batches, object counts, `lane`, and optional [`ForkHistory`].
 #[inline]
 pub(super) fn prepare(
     token: &str,

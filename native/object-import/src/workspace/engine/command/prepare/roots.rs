@@ -4,7 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::io;
 
-/// Verifies that no two target directories in `targets` are equal or nested inside one another.
+/// Verifies that no two target directories in `targets` are equal or nested inside one another via [`invalid`].
 #[inline]
 pub(super) fn validate(targets: &[Value]) -> io::Result<()> {
     let mut roots = targets

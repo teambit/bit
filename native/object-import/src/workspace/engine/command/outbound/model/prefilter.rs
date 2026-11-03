@@ -21,7 +21,7 @@ pub(in super::super) struct Prepared {
     preimages: BTreeMap<PathBuf, Option<Vec<u8>>>,
 }
 
-/// Captures control file preimages, component models, and [`HistoryBytes`] objects into [`Prepared`] for wildcard prefiltering.
+/// Captures control file preimages, component models, and [`HistoryBytes`] objects into [`Prepared`] via [`candidates::histories`].
 pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
     let mut prepared = Prepared { root: root.to_owned(), ..Prepared::default() };
     let scope = crate::scope_path(root);

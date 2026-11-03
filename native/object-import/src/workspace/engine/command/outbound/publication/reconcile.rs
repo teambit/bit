@@ -21,7 +21,7 @@ pub(super) fn prepare_staged_config(
     prepare_staged_config_ids(bytes, &identities, strict)
 }
 
-/// Removes entries matching `(scope, name)` pairs in `selected` from `staged-config.json` `bytes`.
+/// Removes entries matching `(scope, name)` pairs in `selected` from `staged-config.json` `bytes` via [`staged_row_matches`].
 fn prepare_staged_config_ids(
     bytes: &[u8],
     selected: &[(String, String)],

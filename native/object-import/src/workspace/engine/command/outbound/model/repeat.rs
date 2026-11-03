@@ -5,7 +5,7 @@ use super::{Staged, invalid};
 use serde_json::Value;
 use std::io;
 
-/// Builds a zero-object [`Staged`] selection from `model["head"]` via [`non_empty`] for an already-exported component.
+/// Builds a zero-object [`Staged`] selection from `model["head"]` via [`non_empty`] and [`invalid`] for an already-exported component.
 #[inline]
 pub(super) fn select(model: &Value) -> io::Result<Staged> {
     let head = non_empty(&model["head"]).ok_or_else(|| invalid("outbound head"))?;

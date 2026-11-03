@@ -1,4 +1,4 @@
-//! Workspace command [`context`], [`ordinary_context`], [`prepare_checkout_import`], [`checkout_import`], [`checkout_lane`], [`checkout_scope`], and [`roots`] ([`Prepare`], [`Operation`], [`status_models`]).
+//! Workspace command [`context`], [`ordinary_context`], [`prepare_checkout_import`], [`checkout_import`], [`checkout_lane`], [`checkout_scope`], and [`roots`] ([`Prepare`], [`Operation`], [`status_context`], [`status_models`]).
 mod checkout_import;
 mod checkout_lane;
 mod checkout_scope;

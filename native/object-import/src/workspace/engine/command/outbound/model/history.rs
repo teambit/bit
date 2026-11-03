@@ -22,7 +22,7 @@ pub(super) fn prepare_history(
     Ok(HistoryBytes { hash, bytes, hashes })
 }
 
-/// Reads or initializes `VersionHistory`, populates ancestor rows from `head`, and encodes the compressed object.
+/// Reads or initializes `VersionHistory`, populates ancestor rows from `head`, and encodes the compressed object via [`encode`].
 fn history(
     dir: &Path,
     scope: &str,

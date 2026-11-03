@@ -45,7 +45,7 @@ pub(super) fn validate_target(target: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Prepares `component.json` reset writes for a non-checkout recovery reset.
+/// Prepares `component.json` reset writes for a non-checkout recovery reset via [`prepare_with`].
 #[inline]
 pub(super) fn prepare(record: &Record, plan: &planning::Planned) -> io::Result<Prepared> {
     prepare_with(record, plan, false)

@@ -42,7 +42,7 @@ pub(in crate::workspace::engine) fn apply(
     ))
 }
 
-/// Runs pre-transfer validation, history staging, hub or remote push, and resume acknowledgement checks.
+/// Runs pre-transfer validation, history staging, [`hub::push`] or [`push_and_validate`], and resume acknowledgement checks.
 #[inline]
 fn execute_transfer(retained: &mut Retained) -> io::Result<Vec<String>> {
     retained.transfer.progress.phase = "prepare";

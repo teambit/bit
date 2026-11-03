@@ -26,7 +26,7 @@ use std::{
 };
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
-/// Selected main-lane component export closure including [`ModelBytes`] and [`HistoryBytes`] payloads.
+/// Selected main-lane component export closure including [`ModelBytes`], [`HistoryBytes`], and [`ObjectItem`] payloads.
 pub(super) struct Selected {
     pub(super) scope: String,
     pub(super) name: String,

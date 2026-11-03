@@ -33,7 +33,7 @@ pub(super) struct LaneSelected {
     pub(super) components: SelectedComponents,
     pub(super) fork_history: Option<ForkHistory>,
 }
-/// Selected lane component object items, identifiers, model payloads, and version histories.
+/// Selected lane component [`ObjectItem`] entries, identifiers, [`model::ModelBytes`] payloads, and [`model::HistoryBytes`] histories.
 pub(super) struct SelectedComponents {
     pub(super) objects: Vec<ObjectItem>,
     pub(super) ids: Vec<String>,

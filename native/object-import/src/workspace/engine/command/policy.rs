@@ -24,7 +24,7 @@ pub(super) struct Baseline {
     pub(super) package_name: String,
     pub(super) scope_only: bool,
 }
-/// Per-component `ConfigMerger` policy row with [`Baseline`] metadata, merged config, [`Receipts`], and projected `Version`.
+/// Per-component `ConfigMerger` policy row with [`Baseline`] metadata, merged config, [`Receipts`], and projected `Version` for [`Prepared`].
 pub(super) struct Row {
     pub(super) identity: String,
     pub(super) baseline: Baseline,

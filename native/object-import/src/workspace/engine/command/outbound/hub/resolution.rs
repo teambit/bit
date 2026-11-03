@@ -45,7 +45,7 @@ impl Resolution {
     pub(in super::super) fn globals_path(&self) -> &Path {
         &self.global_remotes_file
     }
-    /// Resolves a configured host URL for `scope` from `local` (`scope.json`) or `self.global_remotes_file`.
+    /// Resolves a configured host URL for `scope` from `local` (`scope.json`) or `self.global_remotes_file` on [`Resolution`].
     fn configured(&self, local: &Value, scope: &str) -> io::Result<Option<String>> {
         if local
             .get("remotes")

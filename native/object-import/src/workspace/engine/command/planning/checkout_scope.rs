@@ -43,7 +43,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
-/// Extracts the normalized `scope/name` identity and version string from a scope addition `destination`.
+/// Extracts the normalized `scope/name` identity and version string from a scope addition `destination` via [`invalid`].
 fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     let version = destination["version"]
         .as_str()

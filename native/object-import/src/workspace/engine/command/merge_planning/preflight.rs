@@ -8,7 +8,7 @@ use super::{Prepared, Record, invalid, merge};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Validates conflict-free autosnap preconditions and fast-forward dependency [`cache_guard`] rules on `prepared`.
+/// Validates conflict-free autosnap preconditions and fast-forward dependency [`cache_guard`] rules on `prepared` via [`validate_dependents`].
 pub(super) fn validate(
     record: &Record,
     prepared: &mut Prepared,

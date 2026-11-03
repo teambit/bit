@@ -46,7 +46,7 @@ impl Prepared {
     ) -> io::Result<()> {
         super::preflight::validate(record, self, targets, captured)
     }
-    /// Applies resolved policy configurations onto `self.materials` and non-conflicting `self.unmerged` rows.
+    /// Applies resolved policy configurations onto `self.materials` and non-conflicting `self.unmerged` rows on [`Prepared`].
     pub(in crate::workspace::engine::command) fn apply_policy_configs(&mut self) -> io::Result<()> {
         let policy = self.policy.as_ref().ok_or_else(|| invalid("command policy missing"))?;
         for row in policy.rows.iter().filter(|row| !row.fast_forward) {

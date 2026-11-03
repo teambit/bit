@@ -35,7 +35,7 @@ pub(super) fn checkout(
     validate_current(record, &current)?;
     checkout_captured(record, current, semver, snapshots, pool, false)
 }
-/// Plans a recovery-reset checkout across `current` components using `semver` and `snapshots`.
+/// Plans a recovery-reset checkout across `current` components using `semver` and `snapshots` via [`checkout_captured`].
 #[inline]
 pub(super) fn checkout_reset(
     record: &mut Record,

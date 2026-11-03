@@ -77,7 +77,7 @@ fn validate_issue_packages(data: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Builds the dependency issue target descriptor for `row` from `state` and `issues`.
+/// Builds the dependency issue target descriptor for `row` from `state` and `issues` via [`projection::array`].
 pub(super) fn target(row: &Row, state: &Value, issues: &Value) -> io::Result<Value> {
     let mut dependencies = Vec::new();
     let entries =

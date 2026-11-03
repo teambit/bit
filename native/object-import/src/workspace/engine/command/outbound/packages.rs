@@ -15,7 +15,7 @@ pub(super) struct Prepared {
     proofs: Vec<proof::Proof>,
 }
 
-/// Builds [`Prepared`] native package linking plans and [`controls`] read proofs when `input.native_packages` is enabled.
+/// Builds [`Prepared`] native package linking plans and [`controls`] read proofs via [`cloud_domain`] and [`roots`] when `input.native_packages` is enabled.
 pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
     if !input.native_packages || plan.pending.is_empty() {
         return Ok(Prepared::default());

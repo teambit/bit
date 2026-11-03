@@ -18,7 +18,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Prepares recovery context, [`controls`] filesystem proofs, and [`restore`] state for `request` on `state`.
+/// Prepares recovery context, [`controls`] filesystem proofs, and [`restore`] state for `request` on `state` via [`validate`].
 pub(super) fn prepare(
     request: &Prepare,
     state: &mut State,

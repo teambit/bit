@@ -23,7 +23,7 @@ use removal::Removed;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Prepared merge plan state including policy rows, publications, materials, and unmerged entries.
+/// Prepared merge plan state including policy rows, [`Publication`], materials, and unmerged entries.
 pub(super) struct Prepared {
     pub(super) policy: Option<super::policy::Prepared>,
     publication: Publication,

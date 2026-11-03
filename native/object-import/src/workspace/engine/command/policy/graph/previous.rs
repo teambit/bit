@@ -7,7 +7,7 @@ use std::{collections::BTreeMap, io};
 // Canonical snapping reuses saved flattened graphs before loading dependency
 // Versions. Prove those graphs have the same ordered adjacency as the direct
 // metadata before reconstructing the reachable graph ourselves.
-/// Validates that [`saved_edges`] on `version` match [`direct`] dependency metadata.
+/// Validates that [`saved_edges`] on `version` match [`direct`] dependency metadata via [`load`].
 #[inline]
 pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Result<()> {
     let edges = saved_edges(version, repository)?;

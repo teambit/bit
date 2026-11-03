@@ -23,7 +23,7 @@ pub(super) fn observation(input: &Input<'_>) -> io::Result<Value> {
     Ok(facts)
 }
 
-/// Formats the failure message object when unrelated lane histories lack a shared main head.
+/// Formats the failure message object when unrelated lane histories lack a shared main head via [`target_identity`].
 pub(super) fn failure(input: &Input<'_>) -> io::Result<Value> {
     let identity =
         target_identity(input.target).ok_or_else(|| invalid("command unrelated identity"))?;

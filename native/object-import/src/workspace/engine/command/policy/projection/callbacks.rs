@@ -27,7 +27,7 @@ pub(in crate::workspace::engine::command) fn extensions(value: &Value) -> io::Re
     Ok(value.clone())
 }
 
-/// Extracts and validates the normalized `scope/name` aspect identity from a callback `row`.
+/// Extracts and validates the normalized `scope/name` aspect identity from a callback `row` via [`object_identity`].
 #[inline]
 fn identity(row: &Value) -> io::Result<String> {
     if row

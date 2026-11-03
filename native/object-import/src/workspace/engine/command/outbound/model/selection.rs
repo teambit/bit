@@ -4,7 +4,7 @@ use super::{Prepare, all_versions, invalid, repeat};
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Selects [`Staged`] version hashes and labels for `model` according to `input.options` and [`has_staged`].
+/// Selects [`Staged`] version hashes and labels for `model` according to `input.options`, [`has_staged`], and [`staged`].
 pub(super) fn select_versions(
     input: &Prepare,
     model: &Value,

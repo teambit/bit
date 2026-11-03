@@ -10,7 +10,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::io;
 
-/// Plans a recovery `checkout reset` operation into [`PreparedPlan`] against `record` and projected `bitmap_bytes`.
+/// Plans a recovery `checkout reset` operation into [`PreparedPlan`] against `record` and projected `bitmap_bytes` via [`configuration`].
 pub(super) fn plan(
     record: &mut Record,
     current: Vec<Value>,

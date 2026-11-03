@@ -84,7 +84,7 @@ fn origin_lane_flags(origin: &Value, scope: &str, name: &str) -> (bool, bool) {
     (orig_scope == scope && orig_name == name, !orig_scope.is_empty() && !orig_name.is_empty())
 }
 
-/// Selects the `Version` hashes to export for `id` on `context` according to `--head-only` or `exhaustive` mode.
+/// Selects the `Version` hashes to export for `id` on `context` according to `--head-only` or `exhaustive` mode via [`lane_versions`].
 pub(super) fn selected_versions(
     context: &ComponentContext<'_>,
     id: &ComponentId<'_>,

@@ -43,7 +43,7 @@ impl Prepared {
         Ok(())
     }
 
-    /// Verifies that local control files, lane objects, and component models match their captured preimages.
+    /// Verifies that local control files, lane objects, and component models match their captured preimages via [`Self::validate_files`] and [`Self::validate_objects`].
     pub(super) fn validate(&self) -> io::Result<()> {
         if !self.validate_files()? || !self.validate_objects()? {
             return Err(invalid("outbound lane local state changed"));

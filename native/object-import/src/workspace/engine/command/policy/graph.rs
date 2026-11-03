@@ -11,7 +11,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-/// Projects flattened dependencies and [`direct`] dependency graph edges onto `row.projected`.
+/// Projects flattened dependencies and [`direct`] dependency graph edges onto `row.projected` via [`previous::validate`].
 pub(super) fn project(row: &mut super::Row, repository: &mut Repository) -> io::Result<()> {
     let root = pending_root(&row.identity)?;
     let mut stack = direct(&root, &row.projected)?;

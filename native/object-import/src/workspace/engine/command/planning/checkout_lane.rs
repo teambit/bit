@@ -36,7 +36,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
-/// Extracts the normalized `scope/name` identity and version head from a lane addition `destination`.
+/// Extracts the normalized `scope/name` identity and version head from a lane addition `destination` via [`invalid`].
 fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     let head = destination["version"]
         .as_str()

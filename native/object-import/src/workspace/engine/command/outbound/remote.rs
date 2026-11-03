@@ -25,7 +25,7 @@ impl Actions {
         Ok(Self { file: None })
     }
 
-    /// Executes server action `name` with `options` against `pending`'s file or HTTP remote.
+    /// Executes server action `name` with `options` against `pending`'s file or HTTP [`Remote`] via [`FileBridge`].
     fn action(
         &mut self,
         retained: &Retained,

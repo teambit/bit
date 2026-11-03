@@ -41,7 +41,7 @@ pub(super) fn removals(
         })
         .collect()
 }
-/// Extracts the normalized relative `rootDir` or `directory` string from a `.bitmap` `row`.
+/// Extracts the normalized relative `rootDir` or `directory` string from a `.bitmap` `row` via [`normalize_directory`].
 #[inline]
 fn row_directory(row: &Value) -> Option<&str> {
     row["rootDir"]

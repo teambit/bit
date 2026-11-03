@@ -17,7 +17,7 @@ pub(super) fn prepare(record: &Record, planned: &planning::Planned) -> io::Resul
     overlay.seal()
 }
 
-/// Inserts merged files for `row` into `overlay` and removes deleted pre-merge files.
+/// Inserts merged files for `row` into `overlay` via [`overlay_files`] and removes deleted pre-merge files.
 fn apply_row(
     overlay: &mut SourceOverlay,
     workspace_root: &std::path::Path,

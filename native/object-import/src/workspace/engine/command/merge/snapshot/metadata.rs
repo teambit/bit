@@ -25,7 +25,7 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
     receipt_scalars(value)?;
     Ok(())
 }
-/// Synthesizes the auto-snap `Version` JSON payload for `input` from `receipt` and `message`.
+/// Synthesizes the auto-snap `Version` JSON payload for `input` from `receipt` and `message` via [`base_version`].
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = base_version(input, receipt, message)?;
     if let Some(relation) = input.material.unrelated_relation() {

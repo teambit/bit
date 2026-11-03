@@ -54,7 +54,7 @@ pub(super) fn prepare(
     Ok(Some((Publication::merged(&record.request.root, &plan)?, report(&plan)?)))
 }
 
-/// Formats `workspaceDepsUpdates`, `workspaceDepsUnchanged`, and `workspaceDepsConflicts` from `plan`.
+/// Formats `workspaceDepsUpdates`, `workspaceDepsUnchanged`, and `workspaceDepsConflicts` from `plan` via [`projection::array`].
 fn report(plan: &Value) -> io::Result<Value> {
     let mut report = json!({});
     for (field, output) in

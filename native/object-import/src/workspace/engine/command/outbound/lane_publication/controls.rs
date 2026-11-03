@@ -78,7 +78,7 @@ fn unexported_lane_row<'a>(
         .map(|(_, row)| row)
 }
 
-/// Removes `name` from `scope.json`'s `lanes.new` list and renders updated `scope.json` bytes.
+/// Removes `name` from `scope.json`'s `lanes.new` list and renders updated `scope.json` bytes via [`invalid`].
 pub(super) fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {
     let name = name.trim();
     let mut scope: Value = crate::parse_jsonc(before)?;

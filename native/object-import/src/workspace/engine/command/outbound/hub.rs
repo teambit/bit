@@ -21,7 +21,7 @@ pub(super) struct Plan {
     cloud_domain: String,
 }
 
-/// Builds a central hub export [`Plan`] when `pending` targets `bit.cloud` hub remotes without `--origin-directly`.
+/// Builds a central hub export [`Plan`] when `pending` targets `bit.cloud` hub remotes without `--origin-directly` via [`resolve`].
 pub(super) fn plan(input: &Prepare, pending: &[Pending]) -> io::Result<Option<Plan>> {
     if input.options.origin_directly
         || input.options.resume

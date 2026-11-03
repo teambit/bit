@@ -22,7 +22,7 @@ pub(in super::super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
     Ok(entries)
 }
 
-/// Parses a single `updateDependents` entry (`scope/name@head` string or object) into a normalized lane row.
+/// Parses a single `updateDependents` entry (`scope/name@head` string or object) into a normalized lane row via [`ComponentId::parse`].
 #[inline]
 fn parse_update_dependent(update: &Value) -> io::Result<Value> {
     if let Some(raw) = update.as_str() {

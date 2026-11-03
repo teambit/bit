@@ -43,7 +43,7 @@ pub(super) fn run(
     Ok((count, output))
 }
 
-/// Packages `planned`, `.bitmap` updates, checkout policy, and reset config into a [`PreparedPlan`].
+/// Packages `planned`, `.bitmap` updates, [`prepare_checkout_policy`], and reset config into a [`PreparedPlan`].
 fn retain_plan(
     record: &Record,
     planned: planning::Planned,

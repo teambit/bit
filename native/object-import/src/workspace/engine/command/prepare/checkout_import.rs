@@ -4,7 +4,7 @@ use super::Prepare;
 use crate::{command_import, workspace::engine::client_status::config};
 use serde_json::Value;
 use std::io;
-/// Prepares a remote lane import for `targets` when `.bitmap` satisfies [`has_lane_assignment`].
+/// Prepares a remote lane import for `targets` via [`command_import::prepare_lane`] when `.bitmap` satisfies [`has_lane_assignment`].
 #[inline]
 pub(super) fn lane(
     request: &Prepare,

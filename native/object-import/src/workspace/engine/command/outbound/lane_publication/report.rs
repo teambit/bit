@@ -37,7 +37,7 @@ impl Reported {
     }
 }
 
-/// Extracts normalized `scope/name` identities from `selected.lane["updateDependents"]` present in `selected_ids`.
+/// Extracts normalized `scope/name` identities from `selected.lane["updateDependents"]` present in `selected_ids` for [`Reported`].
 fn selected_update_ids(
     selected: &LaneSelected,
     selected_ids: &HashSet<&str>,

@@ -46,7 +46,7 @@ struct Options {
     _verbose: bool,
     skip_dependency_installation: bool,
 }
-/// Deserialized request to plan a recovery checkout reset against captured workspace files.
+/// Deserialized request to plan a recovery checkout reset against captured workspace files and [`proof::Proof`] entries.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Plan {

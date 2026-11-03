@@ -14,7 +14,7 @@ pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
         .map(Value::Array)
 }
 
-/// Projects a single `Version` extension `value` into a `ConfigMerger` aspect row.
+/// Projects a single `Version` extension `value` into a `ConfigMerger` aspect row via [`identity`].
 fn entry(value: &Value) -> io::Result<Value> {
     let id = identity(value)?;
     let base = id.rsplit_once('@').map_or(id.as_str(), |(base, _)| base);

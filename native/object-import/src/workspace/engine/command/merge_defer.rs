@@ -13,7 +13,7 @@ pub(in crate::workspace::engine) struct Request {
     token: String,
 }
 
-/// Defers snapshot finalization on the active merge transaction in `state` and returns deferred identities.
+/// Defers snapshot finalization on the active [`Operation::Merge`] transaction in `state` and returns deferred identities.
 #[inline]
 pub(in crate::workspace::engine) fn run(
     input: &Request,
