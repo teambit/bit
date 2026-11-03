@@ -55,7 +55,7 @@ impl Snapshot {
         };
         Self { metadata, files, modes }
     }
-    /// Waits until the local second-precision wall clock advances past the latest `.bitmap-*` backup timestamp.
+    /// Waits until the local second-precision wall clock advances past the latest `.bitmap-*` backup timestamp via [`parse`].
     pub(super) fn wait_past(&self) {
         let latest = self.files
             .keys()

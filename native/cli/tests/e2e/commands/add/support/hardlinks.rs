@@ -47,7 +47,7 @@ impl Snapshot {
         }
     }
 }
-/// Recursively walks `directory` under `root` and groups regular file paths by [`Identity`].
+/// Recursively walks `directory` under `root` and groups regular file paths by [`Identity`] via [`identity`].
 fn visit(root: &Path, directory: &Path, groups: &mut BTreeMap<Identity, Vec<PathBuf>>) {
     for entry in fs::read_dir(directory).unwrap() {
         let path = entry.unwrap().path();

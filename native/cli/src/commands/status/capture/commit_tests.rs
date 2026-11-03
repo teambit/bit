@@ -1,6 +1,6 @@
 //! Unit tests for dependency-cache reset gating ([`checkout_reset`]) and [`fresh`] checks during checkout [`Capture`] commit.
 //!
-//! Verifies [`CacheWrites`], [`deps_dir`], and [`put`] cache invalidation across [`Engine`] commits.
+//! Verifies [`CacheWrites`], [`deps_dir`], and [`put`] cache invalidation across [`Engine`] commits and [`checkout_reset`].
 
 use super::{Engine, checkout_reset, fresh};
 use crate::commands::status::capture::{CacheWrites, Capture};

@@ -1,6 +1,6 @@
 //! Unit tests for `bit run` [`Options`] CLI parsing ([`parse_options`]).
 //!
-//! Verifies `--dev`, `--port`, `--watch`, `--no-browser`, and `--args` flag parsing into [`Options`].
+//! Verifies `--dev`, `--port`, `--watch`, `--no-browser`, and `--args` flag parsing into [`Options`] in [`parse_options`].
 
 use super::{Options, parse_options};
 

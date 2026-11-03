@@ -1,6 +1,6 @@
 //! Unit tests for `bit ws-config` [`Subcommand`] CLI parsing ([`parse_subcommand`]), generated config cleanup ([`clean_workspace_configs`]), and writer execution ([`write_workspace_configs`]).
 //!
-//! Verifies [`DryRunMode`], [`WriteOptions`], [`parse_unrecognized`], [`format_write_output`], [`format_clean_output`], [`format_list_output`], and [`format_list_json`].
+//! Verifies [`DryRunMode`], [`WriteOptions`], [`parse_unrecognized`], [`format_write_output`], [`format_clean_output`], [`format_list_output`], and [`format_list_json`] behavior.
 
 use super::{
     DryRunMode, Subcommand, WriteOptions,

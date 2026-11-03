@@ -1,6 +1,6 @@
 //! Unit tests for extracting materialized writer component IDs ([`writer_ids`]) after `bit switch` execution.
 //!
-//! Verifies `switchWriterIds` extraction and rejection of missing or non-array fields in [`writer_ids`].
+//! Verifies `switchWriterIds` extraction and rejection of missing or non-array fields across [`writer_ids`].
 
 use super::writer_ids;
 use serde_json::json;

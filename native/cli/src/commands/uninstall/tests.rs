@@ -1,6 +1,6 @@
 //! Unit tests for `bit uninstall` positional package CLI argument extraction ([`parse_arguments`]).
 //!
-//! Verifies `--no-color` filtering and rejection of empty or flag-prefixed [`OsString`] package arguments in [`parse_arguments`].
+//! Verifies `--no-color` filtering and rejection of empty or flag-prefixed [`OsString`] package arguments across [`parse_arguments`].
 
 use super::parse_arguments;
 use std::ffi::OsString;

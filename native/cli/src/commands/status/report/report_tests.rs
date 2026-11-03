@@ -1,6 +1,6 @@
 //! Unit tests for `bit status` [`Flags`] CLI option parsing ([`parse`]) and status section [`report`] formatting.
 //!
-//! Verifies `--lanes`, `--verbose`, `--warnings`, `--strict`, and [`expected_success_symbols`] with [`Chalk`].
+//! Verifies `--lanes`, `--verbose`, `--warnings`, `--strict`, and [`expected_success_symbols`] with [`Chalk`] across [`parse`] and [`report`].
 
 use super::{Flags, parse, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

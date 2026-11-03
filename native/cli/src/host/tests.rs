@@ -51,7 +51,7 @@ fn private_host_script_is_retained_until_the_session_ends_including_callback_fai
 
 /// Verifies that [`SCRIPT`] contains a non-empty embedded `CommonJS` host program.
 ///
-/// Ensures the compile-time `include_str!` host script payload is populated.
+/// Ensures the compile-time `include_str!` host [`SCRIPT`] payload is populated.
 #[test]
 fn embedded_host_script_is_non_empty() {
     assert!(!SCRIPT.trim().is_empty());

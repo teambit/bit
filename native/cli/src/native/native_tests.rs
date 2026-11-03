@@ -6,7 +6,7 @@ use super::fallback_message;
 
 /// Verifies [`fallback_message`] includes the command name and decline reason in `BIT_NATIVE_TRACE` stderr format.
 ///
-/// Checks both `status` and `diff` trace warning strings.
+/// Checks both `status` and `diff` trace warning strings produced by [`fallback_message`].
 #[test]
 fn the_fallback_warning_names_the_command_and_the_reason() {
     assert_eq!(

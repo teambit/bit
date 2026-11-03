@@ -35,7 +35,7 @@ fn exported_component_readd_keeps_its_scope_after_default_scope_changes() {
 
 /// Verifies that components with identical names in distinct scopes retain separate `.bitmap` entries.
 ///
-/// Confirms `first.scope/shared` and `second.scope/shared` coexist in `.bitmap` via [`compare`].
+/// Confirms `first.scope/shared` and `second.scope/shared` coexist in `.bitmap` via [`compare`] in [`workspace`].
 #[test]
 fn equal_component_names_in_distinct_scopes_keep_distinct_bitmap_entries() {
     let helper = workspace();

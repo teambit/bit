@@ -1,6 +1,6 @@
 //! Unit tests for `bit validate` [`Options`] CLI parsing ([`parse_options`]), [`FastOutcome`] workspace classification ([`classify_workspace`]), and source/type checks ([`check_ts_content`], [`lint_source_content`]).
 //!
-//! Verifies `--unmodified`, `--fail-fast`, `--skip-tasks`, and [`Chalk`] diagnostic formatting.
+//! Verifies `--unmodified`, `--fail-fast`, `--skip-tasks`, and [`Chalk`] diagnostic formatting in [`classify_workspace`].
 
 use super::{
     Chalk, FastOutcome, Options, classify_workspace,

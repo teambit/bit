@@ -5,7 +5,7 @@
 use super::{END, SECOND, START, delay, multiple_bitmap_writes};
 /// Verifies [`multiple_bitmap_writes`] gates only explicit `fork `, `scope fork `, and `recover ` commands.
 ///
-/// Confirms prefix lookalikes (`forked`, `scope forked`, `recovered`) do not trigger the launch gate.
+/// Confirms prefix lookalikes (`forked`, `scope forked`, `recovered`) do not trigger the [`multiple_bitmap_writes`] launch gate.
 #[test]
 fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
     for command in

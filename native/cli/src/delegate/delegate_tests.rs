@@ -1,6 +1,6 @@
 //! Unit tests for `Node.js` CLI delegation process construction ([`command`]) and `PATH` prefixing ([`path_with`]).
 //!
-//! Verifies [`NodeCli`], [`Source`], and [`Target`] process argument construction and environment forwarding.
+//! Verifies [`NodeCli`], [`Source`], and [`Target`] process argument construction and environment forwarding in [`command`].
 
 use super::{command, path_with};
 use crate::discovery::{NodeCli, Source, Target};

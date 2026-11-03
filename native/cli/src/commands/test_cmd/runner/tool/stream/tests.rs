@@ -1,6 +1,6 @@
 //! Unit tests for test-runner control socket handshake ([`accept`]) and delayed message reception over TCP.
 //!
-//! Verifies token authentication and non-blocking readiness message streaming from [`Command`] child processes in [`accept`].
+//! Verifies token authentication and non-blocking readiness message streaming from [`Command`] child processes across [`accept`].
 
 use super::accept;
 use std::{

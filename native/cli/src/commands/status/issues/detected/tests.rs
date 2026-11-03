@@ -1,6 +1,6 @@
 //! Oracle tests comparing detected component [`Issue`] serialization against released `@teambit/component-issues` classes.
 //!
-//! Verifies [`Issue`] `deserialize`, `toObject`, and `dataToString` parity against `oracle.json` [`Value`] fixtures.
+//! Verifies [`Issue`] `deserialize`, `toObject`, and `dataToString` parity against `oracle.json` [`Value`] test fixtures.
 
 use super::super::Issue;
 use serde_json::Value;

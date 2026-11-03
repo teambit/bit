@@ -1,6 +1,6 @@
 //! Unit tests for reachable lockfile [`filter`]ing and [`Snapped`] dependency [`graph`] conversion parity with [`Replacer`].
 //!
-//! Verifies importer pruning, transitive package reachability, and peer suffix retention via [`Command`].
+//! Verifies importer pruning, transitive package reachability, and peer suffix retention via [`Command`] comparison.
 
 use super::{filter, graph};
 use crate::commands::workspace_command::snapshot::graph::{Snapped, replacer::Replacer};

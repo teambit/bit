@@ -1,6 +1,6 @@
 //! Unit tests for `bit watch` [`Options`] CLI parsing ([`parse_options`]) and `--check-types` value validation ([`check_types_error`]).
 //!
-//! Verifies `--verbose`, `--skip-pre-compilation`, `--import`, `--generate-types`, and `--trigger` flags in [`Options`] and [`parse_options`].
+//! Verifies `--verbose`, `--skip-pre-compilation`, `--import`, `--generate-types`, and `--trigger` flags across [`Options`] and [`parse_options`].
 
 use super::{Options, check_types_error, parse_options};
 

@@ -1,6 +1,6 @@
 //! Unit tests for `bit search` CLI flag parsing ([`parse_args`]) and case-insensitive local query matching ([`match_queries`]).
 //!
-//! Verifies `--local-only`, `--remote-only`, and `--json` flags and multi-term search queries.
+//! Verifies `--local-only`, `--remote-only`, and `--json` flags and multi-term search queries in [`parse_args`] and [`match_queries`].
 
 use super::{match_queries, parse_args};
 use serde_json::json;

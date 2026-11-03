@@ -1,6 +1,6 @@
 //! Unit tests for `bit whoami` CLI argument and `--token` flag parsing ([`parse_args`]).
 //!
-//! Verifies optional `--token` value extraction and rejection of unknown flags or positional args in [`parse_args`].
+//! Verifies optional `--token` value extraction and rejection of unknown flags or positional args across [`parse_args`].
 
 use super::parse_args;
 use std::ffi::OsString;

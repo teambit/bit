@@ -3,7 +3,7 @@
 //! Verifies unchanged `.bitmap` bytes on package link failure and path-prefix sibling isolation in [`workspace`].
 use super::support::{compare, workspace};
 use std::fs;
-/// Verifies [`compare`] leaves `.bitmap` and source files unchanged when `node_modules` linking fails.
+/// Verifies [`compare`] leaves `.bitmap` and source files in [`workspace`] unchanged when `node_modules` linking fails.
 #[test]
 fn package_link_failure_keeps_bitmap_and_source_bytes_unchanged() {
     let helper = workspace();

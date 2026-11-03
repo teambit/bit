@@ -84,7 +84,7 @@ fn default_checkout_preflights_the_install_host_before_planning() {
     );
 }
 
-/// Verifies `bit checkout main` declines to [`STUB`] when the `Node.js` CLI package is unavailable.
+/// Verifies `bit checkout main` in [`setup`] declines to [`STUB`] when the `Node.js` CLI package is unavailable via [`bit`].
 #[test]
 fn checkout_main_requires_the_node_cli_package() {
     let dir = setup();

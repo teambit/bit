@@ -1,6 +1,6 @@
 //! Unit tests for aspect configuration origin precedence and variant specificity rules ([`RESOLVER`]) in workspace status.
 //!
-//! Verifies `.bitmap` (`componentConfig`), `component.json`, variant, and stored version merge order.
+//! Verifies `.bitmap` (`componentConfig`), `component.json`, variant, and stored version merge order for [`target`].
 
 use serde_json::{Value, json};
 

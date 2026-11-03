@@ -1,6 +1,6 @@
 //! Unit tests for `bit update` [`Options`] CLI parsing ([`parse_options`]) and empty workspace dependency detection ([`has_no_workspace_dependencies`]).
 //!
-//! Verifies `--yes`, `--patch`, `--minor`, `--major`, and `--semver` flag parsing into [`Options`].
+//! Verifies `--yes`, `--patch`, `--minor`, `--major`, and `--semver` flag parsing into [`Options`] in [`parse_options`].
 
 use super::{Options, has_no_workspace_dependencies, parse_options};
 use std::fs;

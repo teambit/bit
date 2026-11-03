@@ -80,7 +80,7 @@ fn other_arguments_decline() {
     declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "needs the Node.js CLI's own Node");
 }
 
-/// Verifies that unresolved or case-mismatched `bit diff` component patterns decline to [`STUB`].
+/// Verifies that unresolved or case-mismatched `bit diff` component patterns in [`workspace`] decline to [`STUB`] via [`declined`].
 #[test]
 fn unresolved_patterns_decline() {
     let dir = workspace();

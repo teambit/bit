@@ -37,7 +37,7 @@ pub(super) fn align(command: &str) {
         thread::sleep(Duration::from_nanos(u64::try_from(delay).expect("subsecond delay")));
     }
 }
-/// Returns `true` when `command` performs multiple `.bitmap` writes (`fork`, `scope fork`, `recover`).
+/// Returns `true` when `command` performs multiple `.bitmap` writes (`fork`, `scope fork`, `recover`) for [`align`].
 fn multiple_bitmap_writes(command: &str) -> bool {
     command.starts_with("fork ")
         || command.starts_with("scope fork ")

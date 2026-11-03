@@ -10,7 +10,7 @@ pub(crate) mod add;
 pub(crate) mod diff_completion;
 /// End-to-end parity tests for path-moving commands (`move`, `rename`, `fork`, `remove`, `recover`).
 ///
-/// Covers workspace `.bitmap` rewrites, directory moves, and scope history invariants.
+/// Covers workspace `.bitmap` rewrites, directory moves, and scope history invariants in [`move_paths`].
 pub(crate) mod move_paths;
 
 mod app;

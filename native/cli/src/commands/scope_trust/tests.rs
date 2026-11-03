@@ -1,6 +1,6 @@
 //! Unit tests for `bit scope trust` [`Action`] CLI subcommand parsing ([`parse_tokens`], [`parse_action`]), pattern validation ([`is_valid_pattern`]), and [`WorkspaceTrust`] `workspace.jsonc` updates.
 //!
-//! Verifies [`Chalk`] and [`Formatter`] output alongside `workspace.jsonc` trust list mutations.
+//! Verifies [`Chalk`] and [`Formatter`] output alongside `workspace.jsonc` trust list mutations in [`WorkspaceTrust`].
 
 use super::{Action, Chalk, WorkspaceTrust, is_valid_pattern, parse_action, parse_tokens};
 use crate::commands::workspace_command::format::Formatter;

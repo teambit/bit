@@ -1,6 +1,6 @@
 //! Unit tests for `bit tag` release-level, prerelease, [`Mode::Soft`], and [`Mode::Persist`] CLI option parsing ([`parse`]).
 //!
-//! Verifies `--minor`, `--major`, `--prerelease-id`, `--increment-by`, and `--skip-auto-tag` flags.
+//! Verifies `--minor`, `--major`, `--prerelease-id`, `--increment-by`, and `--skip-auto-tag` flags in [`parse`].
 
 use super::{Mode, parse};
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for component dependency [`Policy`] resolution and environment policy override precedence.
 //!
-//! Verifies [`policy`] manual dependency entries, `-` removals, and `resolveFromEnv` peer settings.
+//! Verifies [`policy`] manual dependency entries, `-` removals, and `resolveFromEnv` peer settings in [`Policy`].
 
 use super::Policy;
 use serde_json::{Value, json};

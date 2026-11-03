@@ -1,6 +1,6 @@
 //! Unit tests for `bit snap-distance` [`Options`] CLI argument parsing ([`parse_options`]) and common-ancestor computation ([`compute_snap_distance`]).
 //!
-//! Verifies 1-, 2-, and 3-argument positional parsing and parent-graph BFS distance calculation.
+//! Verifies 1-, 2-, and 3-argument positional parsing and parent-graph BFS distance calculation in [`compute_snap_distance`].
 
 use super::{Options, compute_snap_distance, parse_options};
 use serde_json::json;

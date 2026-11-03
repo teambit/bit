@@ -1,6 +1,6 @@
 //! Unit tests for target pattern selection ([`pattern_ids`]), preparation receipt validation ([`validate_preparation`]), [`Versions`] traversal, and [`squash_logs`] / [`auto_snap_report`] attachment.
 //!
-//! Verifies [`Kind`]-specific preparation receipts in [`validate_preparation`] and negated glob pattern target selection in [`pattern_ids`].
+//! Verifies [`Kind`]-specific preparation receipts in [`validate_preparation`] and negated glob pattern target selection across [`pattern_ids`].
 
 use super::{
     Kind,

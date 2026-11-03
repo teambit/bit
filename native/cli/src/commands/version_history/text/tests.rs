@@ -1,6 +1,6 @@
 //! Unit tests for `bit version-history show` topological ordering and terminal text [`render`]ing.
 //!
-//! Verifies head/tag pointer labels, [`Chalk`] formatting, and decline on ambiguous or cyclic graphs.
+//! Verifies head/tag pointer labels, [`Chalk`] formatting, and decline on ambiguous or cyclic graphs in [`render`].
 
 use super::{Chalk, render};
 use serde_json::json;

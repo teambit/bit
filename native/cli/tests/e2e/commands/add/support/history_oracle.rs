@@ -33,7 +33,7 @@ pub(crate) fn compare_ci<const WRITE_COUNT: usize>(
     compare_mode(helper, command, stdout, reasons, installation, true)
 }
 
-/// Runs `command` under [`compare_ci`] or [`compare`] while validating `WRITE_COUNT` `.bitmap` history entries.
+/// Runs `command` under [`compare_ci`] or [`compare`] while validating `WRITE_COUNT` `.bitmap` [`raw::Snapshot`] history entries.
 fn compare_mode<const WRITE_COUNT: usize>(
     helper: &Helper,
     command: &str,

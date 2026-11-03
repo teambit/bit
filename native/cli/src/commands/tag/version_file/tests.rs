@@ -1,6 +1,6 @@
 //! Unit tests for `bit tag --versions-file` version plan parsing ([`parse`]) and malformed-line rejection.
 //!
-//! Verifies BOM stripping, `#` comments, `DEFAULT:` entries, and duplicate component overrides in [`parse`].
+//! Verifies BOM stripping, `#` comments, `DEFAULT:` entries, and duplicate component overrides across [`parse`].
 
 use super::parse;
 use serde_json::json;
