@@ -63,7 +63,7 @@ fn current_sources(current: Vec<File>) -> io::Result<Sources> {
     }
     Ok((order, sources))
 }
-/// Validates and returns the `files` array from `model`, or an empty slice when `model` is `None`.
+/// Validates and returns the `files` ([`Value`]) array from `model`, or an empty slice when `model` is `None`.
 #[inline]
 fn model_files(model: Option<&Value>) -> io::Result<&[Value]> {
     let files = match model {

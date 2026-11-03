@@ -74,7 +74,7 @@ pub fn effective(
     effective_with_environment(global, scope, workspace, known_keys, |key| std::env::var(key).ok())
 }
 
-/// Resolve the same layers against an explicit environment, without mutating process state.
+/// Resolve the same [`merge_layers`] against an explicit environment, without mutating process state.
 #[must_use]
 pub fn effective_with_environment(
     global: &Value,

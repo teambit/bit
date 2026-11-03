@@ -59,7 +59,7 @@ fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathB
     Ok((paths, bitmaps))
 }
 
-/// Appends validated source paths for `target` into `paths` and records root `.bitmap` files in `bitmaps`.
+/// Appends validated source paths for `target` ([`Target`]) into `paths` ([`PathBuf`]) and records root `.bitmap` files in `bitmaps`.
 #[inline]
 fn append_target_sources(
     root: &Path,

@@ -67,7 +67,7 @@ fn flattened(value: &Value, mut visit: impl FnMut(Value)) -> io::Result<()> {
     Ok(())
 }
 
-/// Populates default empty arrays and objects on `output` for omitted `Version` fields.
+/// Populates default empty arrays and objects on `output` ([`Value`]) for omitted `Version` fields in [`project`].
 fn defaults(output: &mut Value) {
     for field in ["dependencies", "devDependencies", "extensions", "parents", "modified"] {
         if output.get(field).is_none_or(Value::is_null) {

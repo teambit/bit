@@ -5,7 +5,7 @@ use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-/// Bounded directory traversal state for workspace file scanning.
+/// Bounded directory traversal state ([`Path`], [`PathBuf`]) for workspace file scanning via [`scan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Scan<'a> {
     root: &'a Path,

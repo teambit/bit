@@ -49,7 +49,7 @@ pub(super) fn failure_data(error: &io::Error) -> Option<serde_json::Value> {
         .map(|progress| serde_json::json!({"progress":progress}))
 }
 
-/// Returns `true` when `error` wraps a [`CanonicalError`].
+/// Returns `true` when `error` ([`io::Error`]) wraps a [`CanonicalError`].
 #[inline]
 pub(super) fn is_canonical(error: &io::Error) -> bool {
     error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<CanonicalError>)

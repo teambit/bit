@@ -38,7 +38,7 @@ pub(crate) struct Observation {
     pub(crate) contents: Arc<[u8]>,
 }
 
-/// Returns `true` when `hash` is non-empty and free of ASCII or Unicode control characters.
+/// Returns `true` when `hash` is non-empty and free of ASCII or Unicode control characters for [`State::retain`].
 #[inline]
 fn valid_hash(hash: &str) -> bool {
     !hash.is_empty() && !hash.chars().any(char::is_control)

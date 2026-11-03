@@ -29,7 +29,7 @@ struct Data {
     proofs: Vec<proof::Proof>,
     sealed: bool,
 }
-/// Spooled source replacement or removal marker for a path in a [`SourceOverlay`].
+/// Spooled [`source::Spool`] replacement or removal marker for a path in a [`SourceOverlay`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Entry {
     Source(source::Spool),

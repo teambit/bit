@@ -61,7 +61,7 @@ pub(in crate::workspace::engine) fn read_overlay(
     Ok((rows.len(), json!({"parents":rows})))
 }
 
-/// Loads the `ModelComponent` matching `request.identity` from the local scope or `overlay`.
+/// Loads the `ModelComponent` ([`Value`]) matching `request.identity` ([`Request`]) from the local scope or `overlay` via [`load_overlay`].
 fn model(
     request: &Request,
     pool: &ThreadPool,

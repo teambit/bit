@@ -19,7 +19,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-/// Wire request for listing all components and lane heads in a workspace or bare scope.
+/// Wire request for listing all components and lane heads in a workspace or bare scope via [`read`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

@@ -57,7 +57,7 @@ fn rows(remotes_dir: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Valu
     Ok(rows)
 }
 
-/// Validates `row` and inserts `<scope>/<name> -> head` into `refs` when `scope == file_scope`.
+/// Validates `row` ([`Value`]) and inserts `<scope>/<name> -> head` into `refs` ([`HashMap`]) when `scope == file_scope`.
 /// Rejects duplicate component entries within the same remote ref file.
 #[inline]
 fn insert(refs: &mut HashMap<String, String>, row: &Value, file_scope: &str) -> io::Result<()> {

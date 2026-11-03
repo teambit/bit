@@ -71,7 +71,7 @@ fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
     String::from_utf8(body).map(Some).map_err(|_| invalid("dependency cache body UTF-8"))
 }
 
-/// Appends the two-level `cacache` fan-out segments (`hash[..2]/hash[2..4]/hash[4..]`) to `path`.
+/// Appends the two-level `cacache` fan-out segments (`hash[..2]/hash[2..4]/hash[4..]`) to `path` ([`PathBuf`]).
 #[inline]
 fn segmented(mut path: PathBuf, hash: &str) -> PathBuf {
     path.push(&hash[..2]);

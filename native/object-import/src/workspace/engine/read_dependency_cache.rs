@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
-/// Wire request for reading a single `cacache` dependency cache entry by `key`.
+/// Wire request for reading a single `cacache` dependency cache entry by `key` via [`read`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Read {

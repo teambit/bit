@@ -56,7 +56,7 @@ fn node_candidate(
     }
     load_file(&file.join("index"), typed, budget)
 }
-/// Loads and resolves a `package.json` entry (`typings`, `types`, or `main`) under `file`.
+/// Loads and resolves a `package.json` [`entry`] (`typings`, `types`, or `main`) under `file` ([`Path`]) and `budget` ([`Budget`]).
 fn load_package(file: &Path, typed: bool, budget: &Budget) -> io::Result<Option<PathBuf>> {
     let Some(package) = budget.package(&file.join("package.json"))? else { return Ok(None) };
     if !package.is_object() || package.get("typesVersions").is_some() {

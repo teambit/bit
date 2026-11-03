@@ -69,7 +69,7 @@ fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> 
     }
     Ok(())
 }
-/// Returns `true` when `value` is a syntactically valid component identity with at most one `@version` suffix.
+/// Returns `true` when `value` is a syntactically valid component identity with at most one `@version` suffix for [`identities`].
 #[inline]
 fn identity(value: &str) -> bool {
     let trimmed = value.trim();

@@ -28,7 +28,7 @@ pub fn cache_root() -> PathBuf {
     }
 }
 
-/// Resolves the user's home directory from `USERPROFILE` (on Windows) or `HOME`.
+/// Resolves the user's home directory from `USERPROFILE` (on Windows) or `HOME` via [`non_empty_env`].
 /// Returns an empty [`PathBuf`] when neither variable is set to a non-empty value.
 #[inline]
 fn home_dir() -> PathBuf {

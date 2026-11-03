@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-/// Validated byte-range and SHA-1 descriptor for a spooled overlay file.
+/// Validated byte-range and SHA-1 descriptor for a spooled overlay file at [`PathBuf`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Spool {
     pub(super) path: PathBuf,

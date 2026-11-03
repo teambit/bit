@@ -32,7 +32,7 @@ pub(super) fn execute(
     assemble_ordered(files.len(), batches)
 }
 
-/// Executes a single worker loop pulling file indices from `next` until `files` is exhausted.
+/// Executes a single worker loop pulling file indices from `next` ([`AtomicUsize`]) until `files` ([`Prepared`]) is exhausted via [`one`].
 /// Advances `next` to `files.len()` on error so sibling workers stop claiming remaining work.
 #[inline]
 fn worker_batch(

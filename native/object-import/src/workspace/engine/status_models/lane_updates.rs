@@ -23,7 +23,7 @@ pub(in crate::workspace::engine) struct Request {
     targets: Vec<Target>,
     during_merge: Vec<String>,
 }
-/// Component identity and version pair checked for pending updates from `main`.
+/// Component identity and version pair checked for pending updates from `main` in [`Request`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Target {

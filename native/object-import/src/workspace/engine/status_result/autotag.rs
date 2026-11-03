@@ -39,7 +39,7 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     )?;
     selected(&reply, &ordered)
 }
-/// Maps auto-tag `reply` indices back to deduplicated component identities from `ordered`.
+/// Maps auto-tag `reply` ([`Value`]) indices back to deduplicated component identities from `ordered` ([`Target`]).
 /// Skips unversioned targets that have not yet been snapped or tagged.
 #[inline]
 fn selected(reply: &Value, ordered: &[&Target]) -> io::Result<Value> {

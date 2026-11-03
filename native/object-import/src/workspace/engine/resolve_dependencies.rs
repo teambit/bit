@@ -22,7 +22,7 @@ const EXTENSIONS: [&str; 15] = [
     ".js", ".json", ".cjs", ".mjs", ".jsx", ".ts", ".tsx", ".cts", ".mts", ".d.ts", ".css",
     ".scss", ".sass", ".styl", ".less",
 ];
-/// Wire request for resolving `CommonJS` or `TypeScript` 5.9 module specifiers from `filename`.
+/// Wire request for resolving `CommonJS` or `TypeScript` 5.9 module specifiers from `filename` ([`PathBuf`]) via [`resolve`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

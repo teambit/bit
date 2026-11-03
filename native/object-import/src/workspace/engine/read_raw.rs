@@ -20,7 +20,7 @@ struct Record {
     #[serde(rename = "readToken", skip_serializing_if = "Option::is_none")]
     read_token: Option<u64>,
 }
-/// Serialized `files` array wrapper for raw workspace read responses.
+/// Serialized `files` ([`Record`]) array wrapper for [`Response`] raw workspace read payloads.
 #[derive(Serialize)]
 struct Data<'a> {
     files: &'a [Record],

@@ -5,7 +5,7 @@ use crate::workspace::engine::read;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Captured workspace source file metadata, raw bytes, and byte-budget cost.
+/// Captured workspace source file metadata ([`Value`]), raw bytes, and byte-budget cost.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct File {
     pub(super) metadata: Value,

@@ -17,7 +17,7 @@ pub(super) struct Request {
     versions: Vec<(String, Value)>,
     components: Vec<Component>,
 }
-/// Tracked workspace component identity and direct dependency list.
+/// Tracked workspace component identity and direct dependency list in [`Request`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Component {

@@ -1,4 +1,4 @@
-//! Callback source spools [`validate`] as private regular files inside a temporary [`Target`] root.
+//! Callback source spools [`validate`] and [`source_path`] as private regular files inside a temporary [`Target`] root.
 
 #[cfg(test)]
 mod tests;

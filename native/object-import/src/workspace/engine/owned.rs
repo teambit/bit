@@ -52,7 +52,7 @@ pub(super) fn owned_command(
         request => owned_status_command(request, snapshots, pool),
     }
 }
-/// Dispatches status, lane-history, and inventory `request` variants against `snapshots`.
+/// Dispatches status, lane-history, and inventory `request` ([`Request`]) variants against `snapshots` ([`snapshots::State`]).
 /// Falls through to [`apply`] for stateless engine requests.
 #[inline]
 fn owned_status_command(

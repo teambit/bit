@@ -10,7 +10,7 @@ pub fn read_global_config(directory: &Path) -> io::Result<Value> {
     read_global_config_with(directory, |_, error| io::Error::other(error))
 }
 
-/// Preserve a caller's established parse-error report while sharing file and missing-file semantics.
+/// Preserve a caller's established parse-error report while sharing `config.json` ([`Path`]) and missing-file semantics.
 ///
 /// Strips an optional UTF-8 BOM (`\u{feff}`) and rejects files larger than 4 MiB.
 pub fn read_global_config_with(

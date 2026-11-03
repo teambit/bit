@@ -1,4 +1,4 @@
-//! `ScopeJson.toJson` [`render_scope_json`] serialization with four-space indentation and no trailing newline.
+//! `ScopeJson.toJson` [`render_scope_json`] serialization with [`SCOPE_INDENT`] four-space indentation and no trailing newline.
 use serde::Serialize;
 use serde_json::Value;
 use std::io;

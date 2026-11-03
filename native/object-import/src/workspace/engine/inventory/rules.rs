@@ -6,7 +6,7 @@ use regress::Regex;
 use serde::Deserialize;
 use std::{collections::HashMap, io, sync::Arc};
 
-/// Single compiled `node-ignore` regular-expression rule source and negation flag.
+/// Single compiled `node-ignore` regular-expression rule source and negation flag in [`Policy`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Rule {

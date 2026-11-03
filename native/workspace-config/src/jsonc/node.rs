@@ -65,7 +65,7 @@ impl Object {
     }
 }
 
-/// Parses `key` as a canonical `JavaScript` array index (`0`..`u32::MAX - 1`).
+/// Parses `key` as a canonical `JavaScript` array index (`0`..`u32::MAX - 1`) for [`Object::ordered_keys`].
 /// Rejects empty strings, leading zeros on multi-digit keys, and `u32::MAX`.
 #[inline]
 fn array_index(key: &str) -> Option<u32> {

@@ -86,7 +86,7 @@ enum Leading {
     None,
 }
 
-/// Classifies the leading whitespace of `line` into [`Leading`].
+/// Classifies the leading whitespace of `line` into [`Leading`] for [`detect_indent`].
 /// Counts only the initial contiguous run of spaces or tabs.
 #[inline]
 fn leading(line: &str) -> Leading {

@@ -17,7 +17,7 @@ pub(crate) struct Request {
     pub(super) policy: Policy,
     pub(super) grammar: HashMap<String, Grammar>,
 }
-/// Bitmap, lane, model, and component-config version sources for version selection.
+/// Bitmap, lane, model, and component-config [`Versions`] sources for version selection on [`Request`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Sources {

@@ -61,7 +61,7 @@ fn match_parts(parts: &[&str], segments: &[&str]) -> bool {
     }
 }
 
-/// Matches a single `/`-delimited pattern `part` against path `segment`, respecting leading-dot rules.
+/// Matches a single `/`-delimited `pattern` against path `segment` via [`glob`], respecting leading-dot rules.
 #[inline]
 fn match_segment(pattern: &str, segment: &str) -> bool {
     if segment.starts_with('.') && !pattern.starts_with('.') {

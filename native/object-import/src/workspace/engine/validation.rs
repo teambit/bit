@@ -35,7 +35,7 @@ pub(super) fn count(count: usize) -> io::Result<()> {
 pub(super) fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
-/// Parses and validates a 40-character hexadecimal SHA-1 `hash` string into a 20-byte digest.
+/// Parses and validates a 40-character hexadecimal SHA-1 `hash` string into a 20-byte digest via [`crate::merge_history::hash`].
 #[inline]
 pub(super) fn expected_hash(hash: &str) -> io::Result<[u8; 20]> {
     crate::merge_history::hash(hash.trim())

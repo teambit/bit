@@ -64,7 +64,7 @@ pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value
     Ok(global)
 }
 
-/// Shallow-merges `base` and `override_value` JSON objects for dependency-resolver settings.
+/// Shallow-merges `base` and `override_value` ([`Value`]) JSON objects for [`RESOLVER`] settings.
 #[inline]
 fn merge(base: Option<&Value>, override_value: Option<&Value>) -> io::Result<Value> {
     let mut result = serde_json::Map::new();

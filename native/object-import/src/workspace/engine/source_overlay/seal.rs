@@ -31,7 +31,7 @@ pub(super) fn capture(data: &Data) -> io::Result<Vec<proof::Proof>> {
         .collect::<io::Result<Vec<_>>>()?;
     Ok(proof::unique(proofs.into_iter().flatten().collect()))
 }
-/// Captures ancestor lookup and spooled range proofs for a single overlay `entry` at `destination`.
+/// Captures ancestor [`lookup::capture`] and spooled range [`proof::Proof`] records for a single overlay `entry` ([`Entry`]) at `destination` ([`Path`]).
 /// Rejects entries that conflict with an ancestor entry or replace a non-file path on disk.
 fn capture_one(
     data: &Data,

@@ -59,7 +59,7 @@ impl Document {
         &self.root
     }
 
-    /// The value at `path` (object keys), as plain JSON.
+    /// The value at `path` (object keys), as plain JSON ([`Value`]) via [`Node::to_value`].
     #[must_use]
     #[inline]
     pub fn get(&self, path: &[&str]) -> Option<Value> {

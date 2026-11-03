@@ -3,7 +3,7 @@
 use node_semver::{Range, Version};
 use serde_json::{Value, json};
 
-/// HEAD removal and deprecation control state projected across a component's version log.
+/// HEAD removal ([`Range`]) and deprecation ([`Value`]) control state projected across a component's version log.
 #[derive(Default)]
 pub(super) struct Control {
     removed: Option<Range>,

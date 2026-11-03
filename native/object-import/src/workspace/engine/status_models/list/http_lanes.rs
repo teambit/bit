@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Wire request for querying lane descriptors from a remote HTTP scope via `GraphQL`.
+/// Wire request for querying lane descriptors from a remote HTTP scope via `GraphQL` and [`read`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

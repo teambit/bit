@@ -76,7 +76,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     let snapshot = load(request, pool, true)?;
     Ok((snapshot.models.len(), serde_json::to_value(snapshot).map_err(io::Error::other)?))
 }
-/// Loads the status model [`Snapshot`] for `request` without an import overlay.
+/// Loads the status model [`Snapshot`] for `request` ([`Request`]) without an import overlay via [`load_overlay`].
 #[inline]
 fn load(request: &Request, pool: &rayon::ThreadPool, stored_hashes: bool) -> io::Result<Snapshot> {
     load_overlay(request, pool, stored_hashes, None)

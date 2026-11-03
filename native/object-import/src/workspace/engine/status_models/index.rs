@@ -28,7 +28,7 @@ struct Id {
 pub(super) fn read(root: &Path) -> io::Result<Vec<Item>> {
     read_at(&crate::scope_path(root))
 }
-/// Reads and parses non-symlink [`Item`] entries from `<scope>/index.json`.
+/// Reads and parses non-symlink [`Item`] entries from `<scope>/index.json` ([`Path`]) via [`parse_items`].
 pub(super) fn read_at(scope: &Path) -> io::Result<Vec<Item>> {
     let file = match File::open(scope.join("index.json")) {
         Ok(file) => file,

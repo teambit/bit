@@ -65,7 +65,7 @@ fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) 
         .or_else(|| concrete_version(ver).then_some(ver))
         .map(|value| (value.to_owned(), None, false))
 }
-/// Selects a package policy `(version, range)` choice from workspace, merge, or automatic rules.
+/// Selects a package policy [`Choice`] `(version, range)` from workspace, merge, or automatic rules on `request` ([`Request`]).
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {
     let ver = version(identity);
     let pinned = concrete_version(ver);
