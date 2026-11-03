@@ -90,7 +90,7 @@ fn new_lane_does_not_consult_a_remote_history() {
     assert!(fixture.requires("known"));
 }
 
-/// Verifies that [`ci_requires_published_diagnostic`] requires the published diagnostic on `main` or when a `file://` remote key in [`Fixture`] is absent.
+/// Verifies that [`ci_requires_published_diagnostic`] requires the published diagnostic on `main` or when a `file://` remote key in [`Fixture`] is absent ([`new_lane_does_not_consult_a_remote_history`]).
 #[test]
 fn main_and_an_absent_file_remote_key_require_the_released_diagnostic() {
     let fixture = Fixture::new();

@@ -92,7 +92,7 @@ fn a_configured_env_wins() {
     assert_eq!(components[1].env_id, "teambit.harmony/node");
 }
 
-/// Verifies that [`resolve`] identifies an aspect from [`ScopeObjects`] carrying an `env.jsonc` manifest via [`write_object`] as the component's env.
+/// Verifies that [`resolve`] identifies an aspect from [`ScopeObjects`] carrying an `env.jsonc` manifest via [`write_object`] as the [`component`]'s env.
 #[test]
 fn an_aspect_from_the_scope_with_an_env_manifest_is_the_env() {
     let scope = tempfile::tempdir().unwrap();

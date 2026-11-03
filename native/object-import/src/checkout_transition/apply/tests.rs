@@ -33,7 +33,7 @@ fn alias_plan(row: serde_json::Value) -> plan::Plan {
         other: None,
     }
 }
-/// Verifies that [`effects::apply`] preserves causal buffer aliases (`current`, `other`, `new`) on [`alias_plan`] and [`File`] when file bytes match.
+/// Verifies that [`effects::apply`] preserves causal buffer aliases (`current`, `other`, `new`) on [`alias_plan`] and [`File`] when file bytes match ([`canonical_error_paths_preserve_nested_platform_separators`]).
 #[test]
 fn equal_byte_binary_and_updated_assignments_keep_causal_buffer_aliases() {
     for (row, alias) in [

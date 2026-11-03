@@ -63,7 +63,7 @@ fn status_lookup_keeps_first_current_path_and_target_order() {
     );
 }
 
-/// Verifies that [`super::load`] validates the private `Version` manifest against an import overlay on [`retained_plan`] even when `Source` bodies are retained.
+/// Verifies that [`super::load`] validates the private `Version` manifest against an import overlay on [`retained_plan`] even when `Source` bodies are retained ([`target`]).
 #[test]
 fn imported_retarget_verifies_private_manifest_even_when_sources_are_retained() {
     use flate2::{Compression, write::ZlibEncoder};

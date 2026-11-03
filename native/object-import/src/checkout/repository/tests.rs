@@ -44,7 +44,7 @@ fn shared_inflation_rejects_unbounded_headers_and_trailing_compressed_data() {
     assert!(result.is_err());
 }
 
-/// Verifies that [`super::inflate`] resets its thread-local inflater cleanly after size-limit and corruption errors ([`compress`]).
+/// Verifies that [`super::inflate`] resets its thread-local inflater cleanly after size-limit and corruption errors ([`compress`], [`shared_inflation_rejects_unbounded_headers_and_trailing_compressed_data`]).
 #[test]
 fn reusable_inflater_resets_after_success_limits_and_malformed_streams() {
     let body = vec![b'x'; 128 * 1024 + 1];

@@ -88,7 +88,7 @@ fn source_reads_reject_normalization_and_excessive_counts_before_any_acknowledge
     assert!(output.is_empty());
     assert!(!target.exists());
 }
-/// Verifies that skewed source sizes share the aggregate read budget while whole-batch limits still apply on [`read_sources`].
+/// Verifies that skewed source sizes share the aggregate read budget while whole-batch limits still apply on [`read_sources`] ([`response`]).
 #[test]
 fn skewed_source_sizes_share_the_request_budget_and_whole_batch_limits_still_apply() {
     let directory = Directory::new();

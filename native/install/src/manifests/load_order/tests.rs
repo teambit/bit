@@ -8,7 +8,7 @@ use serde_json::json;
 /// Default `Node.js` environment aspect ID used by test [`component`] fixtures.
 const NODE: &str = "teambit.harmony/node";
 
-/// Verifies that [`load_order`] groups environment components first, then configured extensions, then regular [`component`] items (`buildLoadGroups`).
+/// Verifies that [`load_order`] groups environment components first, then configured extensions, then regular [`component`] items (`buildLoadGroups`, [`NODE`]).
 #[test]
 fn envs_then_configured_extensions_then_the_rest() {
     let mut app = component("org.ui", "app", Some("1.0.0"), NODE);

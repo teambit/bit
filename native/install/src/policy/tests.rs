@@ -28,7 +28,7 @@ pub struct TestHost {
     pub calls: Mutex<Vec<String>>,
     /// `registered_env_policy` calls, with the workspace aspects sent along.
     pub registered: Mutex<Vec<(String, Vec<String>)>>,
-    /// Envs the install did not register (`env_falls_back`).
+    /// Envs the install did not register (`env_falls_back`, [`component`]).
     pub fallen_back: Vec<String>,
 }
 

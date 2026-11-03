@@ -30,7 +30,7 @@ fn range_and_undeprecation_have_distinct_config_shapes() {
 fn patterns_include_namespaces_and_exclusions() {
     assert_eq!(selection::select(&bitmap(), "**, !scope/bar").unwrap(), vec!["scope/foo@1.0.0"]);
 }
-/// Verifies that [`validate_range`] rejects invalid `SemVer` range strings before mutating `.bitmap` configuration.
+/// Verifies that [`validate_range`] rejects invalid `SemVer` range strings before mutating `.bitmap` configuration ([`patterns_include_namespaces_and_exclusions`]).
 #[test]
 fn invalid_ranges_are_rejected_before_configuration_changes() {
     assert!(validate_range(Some("not-a-version")).is_err());

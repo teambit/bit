@@ -55,7 +55,7 @@ fn cache_authority_never_hides_invalid_disk_bytes_on_a_cache_miss() {
     assert!(state.get(&directory.0, hash).is_none());
 }
 
-/// Verifies that preflight (`256` files) never widens the public write limit (`64` files) on [`serve`].
+/// Verifies that preflight (`256` files) never widens the public write limit (`64` files) on [`serve`] ([`cached_response`]).
 #[test]
 fn wider_preflight_never_widens_the_public_write_limit() {
     let directory = Directory::new();

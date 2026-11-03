@@ -61,7 +61,7 @@ fn invalid_current_path_leaves_all_input_rows_unchanged() {
     );
     assert_eq!(serde_json::to_value(&current).unwrap(), before);
 }
-/// Verifies that [`align_files`] preserves original model indices across a 513-file reversed [`files`] and [`row`] set.
+/// Verifies that [`align_files`] preserves original model indices across a 513-file reversed [`files`] and [`row`] set ([`invalid_current_path_leaves_all_input_rows_unchanged`]).
 #[test]
 fn large_reversed_file_set_keeps_original_model_positions() {
     let model = files(

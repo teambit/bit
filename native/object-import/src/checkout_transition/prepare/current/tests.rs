@@ -65,7 +65,7 @@ fn retained_reads_count_the_original_bom_bytes_toward_the_whole_plan_budget() {
     assert!(load(&[file], &std::env::temp_dir(), &mut total, &mut 0, Some(&snapshots)).is_err());
 }
 
-/// Loads `files` under `directory` using `snapshots` and no import overlay.
+/// Loads `files` under `directory` using `snapshots` and no import overlay ([`observed`]).
 pub(super) fn load(
     files: &[wire::Current],
     directory: &std::path::Path,

@@ -84,7 +84,7 @@ fn ordered_parallel_reads_match_serial_bom_and_line_ending_semantics() {
     }
 }
 
-/// Verifies that skewed file sizes in a parallel batch ([`load`]) share the exact aggregate [`MAX_BYTES`] budget.
+/// Verifies that skewed file sizes in a parallel batch ([`load`]) share the exact aggregate [`MAX_BYTES`] budget ([`ordered_parallel_reads_match_serial_bom_and_line_ending_semantics`]).
 #[test]
 fn skewed_reads_share_the_exact_aggregate_budget() {
     let fixture = Fixture::new();

@@ -58,7 +58,7 @@ fn changed_remote_component_is_serialized_instead_of_reusing_the_old_stream() {
     );
 }
 
-/// Verifies that `super::reusing` re-serializes when JSON key ordering differs from the [`captured`] stream even if logical values are equal.
+/// Verifies that `super::reusing` re-serializes when JSON key ordering differs from the [`captured`] stream even if logical values are equal ([`unchanged_second_candidate_preserves_the_original_stream_after_a_different_local_value`]).
 #[test]
 fn equal_json_with_different_key_order_does_not_reuse_the_stream() {
     let directory = tempfile::tempdir().unwrap();

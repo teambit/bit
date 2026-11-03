@@ -70,7 +70,7 @@ fn reads_files_and_the_env_descriptor_type() {
     assert!(model.uses_aspect_env());
 }
 
-/// Verifies that [`ScopeObjects::component_or_head`] resolves the component `head` when no version is specified on [`id`].
+/// Verifies that [`ScopeObjects::component_or_head`] resolves the component `head` when no version is specified on [`id`] ([`scope`]).
 #[test]
 fn an_id_without_version_reads_the_head() {
     let dir = scope(&json!([]), &json!([{ "relativePath": "env.json", "file": "abc" }]));

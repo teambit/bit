@@ -79,7 +79,7 @@ fn occupied_target_is_rejected_before_bitmap_or_sources_change() {
     assert!(error.to_string().contains("this directory is not empty"));
 }
 
-/// Verifies that [`Plan::apply_files`] rejects publication before writing any target files if `workspace.jsonc` changed after [`Plan::prepare`].
+/// Verifies that [`Plan::apply_files`] rejects publication before writing any target files if `workspace.jsonc` changed after [`Plan::prepare`] ([`output_replacement_rejects_bitmap_publication_after_materialization`]).
 #[test]
 fn stale_workspace_control_rejects_copy_before_any_target_is_written() {
     let (directory, options, source) = fixture();

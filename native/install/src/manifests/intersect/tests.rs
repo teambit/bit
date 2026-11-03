@@ -26,7 +26,7 @@ fn pairs_match_semver_range_intersect() {
     }
 }
 
-/// Verifies multi-range [`intersect`] results against the `semver-range-intersect` 0.3.1 `multi` [`golden`] corpus via [`expected`].
+/// Verifies multi-range [`intersect`] results against the `semver-range-intersect` 0.3.1 `multi` [`golden`] corpus via [`expected`] ([`pairs_match_semver_range_intersect`]).
 #[test]
 fn many_ranges_match_semver_range_intersect() {
     for case in golden()["multi"].as_array().unwrap() {

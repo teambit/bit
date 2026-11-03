@@ -80,7 +80,7 @@ fn imported_manifest_mismatch_and_aggregate_limits_decline() {
     );
 }
 
-/// Verifies that filtered `files` manifests on [`fixture`] retain complete `Version` proof validation via `proof_files`.
+/// Verifies that filtered `files` manifests on [`fixture`] retain complete `Version` proof validation via `proof_files` ([`imported_manifest_mismatch_and_aggregate_limits_decline`]).
 #[test]
 fn filtered_manifest_retains_complete_version_proof() {
     let (overlay, mut version) = fixture();

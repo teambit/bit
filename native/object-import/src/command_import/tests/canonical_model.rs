@@ -53,7 +53,7 @@ pub(super) fn alternative(compressed: &[u8], compression: Compression) -> Vec<u8
     encoder.finish().unwrap()
 }
 
-/// Writes `.bit/refs/remotes/remote.scope/main` on [`Fixture`] pointing `remote.scope/alpha` at `head`.
+/// Writes `.bit/refs/remotes/remote.scope/main` on [`Fixture`] pointing `remote.scope/alpha` at `head` ([`equal_head_main_refresh_canonicalizes_both_alternative_streams_without_fetching_sources`]).
 pub(super) fn point_main_at(fixture: &Fixture, head: &str) {
     let refs = fixture.root.join(".bit/refs/remotes/remote.scope/main");
     fs::create_dir_all(refs.parent().unwrap()).unwrap();

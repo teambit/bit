@@ -40,7 +40,7 @@ fn lane_history_matches_the_released_node_compressed_stream() {
     );
 }
 
-/// Parses `serialized`, re-encodes and compresses it via `super::super::object`, and asserts byte-identity with `compressed`.
+/// Parses `serialized`, re-encodes and compresses it via `super::super::object`, and asserts byte-identity with `compressed` ([`lane_history_matches_the_released_node_compressed_stream`]).
 fn exact(serialized: &[u8], compressed: &[u8]) {
     let boundary = serialized
         .iter()

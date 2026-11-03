@@ -69,7 +69,7 @@ fn used_new_aspect_is_rejected_before_any_removal() {
     assert!(root.join("beta/index.js").exists());
     fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that [`NewBatch::commit`] aborts without deleting component source files in [`fixture`] if `package.json` changed after [`NewBatch::prepare`].
+/// Verifies that [`NewBatch::commit`] aborts without deleting component source files in [`fixture`] if `package.json` changed after [`NewBatch::prepare`] ([`nested_sources_remove_only_their_immediate_empty_parent`]).
 #[test]
 fn a_changed_cleanup_control_does_not_delete_sources() {
     let root = fixture();
