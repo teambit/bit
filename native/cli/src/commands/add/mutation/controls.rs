@@ -17,7 +17,7 @@ const KEY: &str = "identityControlReadSet";
 /// Maximum byte size (32 MiB) permitted for a single workspace control file in [`refresh`].
 const MAX_CONTROL: u64 = 32 * 1024 * 1024;
 
-/// Validates that the workspace control read-set in `context` remains unchanged on disk.
+/// Validates that the workspace control read-set in `context` remains unchanged on disk via [`Engine::validate_read_set`].
 #[inline]
 pub(super) fn validate(engine: &mut Engine, context: &Value) -> io::Result<()> {
     engine.validate_read_set(

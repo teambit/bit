@@ -46,7 +46,7 @@ pub(in crate::commands) fn cat_prepare(root: &Path, component: Value) -> Option<
 }
 
 impl CatDocs {
-    /// Returns the component entries whose documentation cache entries missed during [`cat_prepare`].
+    /// Returns the component [`Value`] entries whose documentation cache entries missed during [`cat_prepare`].
     #[inline]
     pub(in crate::commands) fn misses(&self) -> &[Value] {
         &self.plan.misses

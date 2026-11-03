@@ -63,7 +63,7 @@ impl ProjectedLinker {
         }
     }
 
-    /// Refreshes retained component versions and projects `bitmap` when all `identities` are already retained.
+    /// Refreshes retained component versions and projects `bitmap` when all `identities` are already retained for [`Self::capture_import`].
     fn refresh_import_projection(
         &mut self,
         root: &Path,

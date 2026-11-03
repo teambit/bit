@@ -22,7 +22,7 @@ pub(super) struct Retained {
 }
 
 impl Retained {
-    /// Clears loaded component rows and selector facts while keeping callback spool ownership.
+    /// Clears loaded component rows and selector [`super::selectors::Facts`] while keeping callback spool ownership.
     #[inline]
     pub(super) fn forget_loaded(&mut self) {
         // Keep source spool ownership and its aggregate budget across reloads.

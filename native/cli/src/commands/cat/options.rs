@@ -60,7 +60,7 @@ fn apply_cat_arg<'a>(
     }
 }
 
-/// Applies a boolean flag (`--config`, `--all`, `--json`) or `--flag=true/false` to `options`.
+/// Applies a boolean flag (`--config`, `--all`, `--json`) or `--flag=true/false` to `options` via [`parse_bool_val`].
 fn apply_cat_bool(options: &mut Options<'_>, arg: &str) -> bool {
     let (flag, val) = match arg.split_once('=') {
         Some((flag, raw)) => {

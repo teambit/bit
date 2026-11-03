@@ -29,7 +29,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit capsule` [`Command`] descriptor.
+/// Native `bit capsule` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "capsule", aliases: &[], run };
 
 /// Global/workspace config key overriding the base directory for component build capsules.

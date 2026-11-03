@@ -1,6 +1,6 @@
 //! Native `bit aspect get <component-name> [aspect-id]` ([`GetOpts`], [`InspectCtx`]) resolution and formatting.
 //!
-//! Implements [`run_get`] for text and `--json` aspect inspection output.
+//! Implements [`run_get`] and [`collect_get_entries`] for text and `--json` aspect inspection output.
 
 use super::{InspectCtx, RawOrigin, collect_raw_origins, debug::run_get_debug, find_ws_comp};
 use crate::{

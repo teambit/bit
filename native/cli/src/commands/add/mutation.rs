@@ -44,7 +44,7 @@ impl ProjectedLinker {
         Ok(linker)
     }
 
-    /// Takes and clears any accumulated provider stdout captured during identity operations.
+    /// Takes and clears any accumulated provider stdout captured during [`ProjectedLinker`] identity operations.
     #[inline]
     pub(in crate::commands) fn take_stdout(&mut self) -> String {
         std::mem::take(&mut self.stdout)

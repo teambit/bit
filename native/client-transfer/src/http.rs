@@ -46,7 +46,7 @@ const CFG_USER_TOKEN: &str = "user.token";
 /// a `User-Agent` with a 403 challenge page.
 const USER_AGENT: &str = "node-fetch";
 
-/// The query `listBackwardCompatible` sends.
+/// The query `listBackwardCompatible` sends for [`Listed`] component inventory.
 const LIST_QUERY: &str = "query list($namespaces: [String!]) { scope { components(namespaces: $namespaces) { id { scope version name } deprecation { isDeprecate } } } }";
 
 /// One component of a remote `list` (`GraphQL` [`LIST_QUERY`]).

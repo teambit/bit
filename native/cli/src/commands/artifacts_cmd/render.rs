@@ -70,7 +70,7 @@ fn save_single_artifact_file(
     fs::write(&target_path, &bytes).map_err(|err| Failure::Declined(err.to_string()))
 }
 
-/// Returns `true` when `relative_path` is a non-empty relative path with only normal components.
+/// Returns `true` when `relative_path` is a non-empty relative path with only normal components for [`save_single_artifact_file`].
 #[inline]
 fn is_safe_artifact_path(relative_path: &str) -> bool {
     !relative_path.trim().is_empty()

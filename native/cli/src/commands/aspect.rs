@@ -35,7 +35,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit aspect` [`Command`] descriptor.
+/// Native `bit aspect` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "aspect", aliases: &[], run };
 
 pub(super) const CORE_ASPECT_IDS: &str =

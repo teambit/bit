@@ -18,7 +18,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Prepares and publishes `ComponentFsCache` documentation entries via [`prepare`] for `components`.
+/// Prepares and publishes `ComponentFsCache` documentation entries via [`prepare`] and [`Prepared::publish`] for `components`.
 #[inline]
 pub(super) fn load(
     root: &Path,

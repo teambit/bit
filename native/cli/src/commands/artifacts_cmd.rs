@@ -21,7 +21,7 @@ use crate::{native::Outcome, workspace};
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Native `bit artifacts` command descriptor.
+/// Native `bit artifacts` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "artifacts", aliases: &[], run };
 
 /// Parsed CLI options and filter arguments for `bit artifacts` built by [`parse_options`].

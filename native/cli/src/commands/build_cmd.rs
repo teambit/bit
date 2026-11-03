@@ -18,7 +18,7 @@ use bit_install::workspace::Bitmap;
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, iter::Peekable, path::Path};
 
-/// Native `bit build` [`Command`] descriptor.
+/// Native `bit build` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "build", aliases: &[], run };
 
 /// Error message emitted when `bit build` is invoked outside a Bit workspace.

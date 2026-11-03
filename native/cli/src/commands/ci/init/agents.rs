@@ -2,7 +2,7 @@
 //!
 //! Renders and updates `AGENTS.md` sync sections between [`START`] and [`END`] markers.
 use std::{io, path::Path, sync::OnceLock};
-/// Opening HTML comment prefix marking the managed CI sync section in `AGENTS.md`.
+/// Opening HTML comment prefix marking the managed CI sync section in `AGENTS.md` for [`write`] and [`fill_repo`].
 const START: &str = "<!-- bit-ci-sync:start";
 /// Closing HTML comment marker ending the managed CI sync section in `AGENTS.md`.
 const END: &str = "<!-- bit-ci-sync:end -->";

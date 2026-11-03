@@ -35,7 +35,7 @@ use crate::{native::Outcome, workspace};
 use bit_object_import::component_tracking::Plan;
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Native `bit add` [`Command`] descriptor and alias table.
+/// Native `bit add` [`Command`] descriptor and alias table (`add`, `a`).
 pub const COMMAND: Command = Command { name: "add", aliases: &["a"], run };
 
 /// Executes `bit add` against `args` via [`run_workspace`], declining when arguments fall outside native tracking support.

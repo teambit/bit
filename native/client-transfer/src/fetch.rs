@@ -47,7 +47,7 @@ pub struct Selection {
 }
 
 impl FetchOptions {
-    /// Trim `lane_id` and return `None` when empty or whitespace-only.
+    /// Trim `lane_id` and return `None` when empty or whitespace-only for [`FetchOptions`].
     #[inline]
     fn normalize_lane_id(lane_id: Option<String>) -> Option<String> {
         let id = lane_id?;

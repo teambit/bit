@@ -84,7 +84,7 @@ pub(super) fn tls(
     Ok(builder.tls_certs_merge(certificates))
 }
 
-/// Parses a boolean or `"1"`/`"true"`/`"0"`/`"false"` string from `value`.
+/// Parses a boolean or `"1"`/`"true"`/`"0"`/`"false"` string from `value` for [`tls`].
 #[inline]
 fn strict_bool(value: &Value) -> Option<bool> {
     if let Some(flag) = value.as_bool() {

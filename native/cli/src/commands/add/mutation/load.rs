@@ -19,7 +19,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
-/// Captured [`Engine`], [`Projection`], and [`capture::Capture`] state for an identity operation.
+/// Captured [`Engine`], [`Projection`], and [`capture::Capture`] state for an identity operation in `bit-cli`.
 pub(super) struct Loaded {
     pub engine: Engine,
     pub projection: Projection,

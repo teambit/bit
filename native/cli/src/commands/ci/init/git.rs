@@ -13,7 +13,7 @@ fn run(root: &Path, args: &[&str]) -> Option<String> {
         .ok()
         .map(|text| super::trim(&text).to_owned())
 }
-/// Returns the trimmed `remote.origin.url` configured in the Git repository at `root`.
+/// Returns the trimmed `remote.origin.url` configured in the Git repository at `root` via [`run`].
 #[inline]
 pub(super) fn origin(root: &Path) -> Option<String> {
     run(root, &["remote", "get-url", "origin"]).filter(|value| !value.is_empty())

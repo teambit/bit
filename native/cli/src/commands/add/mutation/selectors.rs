@@ -31,7 +31,7 @@ impl ProjectedLinker {
         controls::validate(&mut engine, &context)
     }
 
-    /// Evaluates `pattern` against workspace components, loading state predicates lazily in published order.
+    /// Evaluates `pattern` against workspace components via [`Self::selection_context`] and [`Self::criterion`], loading state predicates lazily in published order.
     pub(in crate::commands) fn select_workspace(
         &mut self,
         root: &Path,

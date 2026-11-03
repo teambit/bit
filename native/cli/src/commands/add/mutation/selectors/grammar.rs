@@ -41,7 +41,7 @@ pub(super) fn validate(criterion: &str) -> io::Result<()> {
         STATES.join(", "),
     )))
 }
-/// Returns `true` when `criterion` requires loading full component classes (`$modified`, `$deprecated`, `$deleted`, or `$env:`).
+/// Returns `true` when `criterion` requires loading full component classes (`$modified`, `$deprecated`, `$deleted`, or `$env:`) in `bit-cli`.
 #[inline]
 pub(super) fn loads(criterion: &str) -> bool {
     let criterion = criterion.trim();

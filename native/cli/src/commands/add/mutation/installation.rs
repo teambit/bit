@@ -32,7 +32,7 @@ impl ProjectedLinker {
         Ok(linker)
     }
 
-    /// `RenamingMain.installDepsGracefully` uses the original provider session.
+    /// `RenamingMain.installDepsGracefully` uses the original provider session via [`Self::with_installer`].
     #[inline]
     pub(in crate::commands) fn install_scope_rename(&mut self, root: &Path) -> io::Result<()> {
         self.finish(Installer::validate_workspace(root))?;

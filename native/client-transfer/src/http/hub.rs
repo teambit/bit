@@ -38,7 +38,7 @@ impl Network {
         self.push_central_observed(url, archive, objects_hash, origin, |_| {}).await
     }
 
-    /// Observe each published loader restart while retaining the full acknowledgement receipt.
+    /// Observe each published loader restart while retaining the full [`HubReply`] acknowledgement receipt.
     pub async fn push_central_observed(
         &self,
         url: &str,

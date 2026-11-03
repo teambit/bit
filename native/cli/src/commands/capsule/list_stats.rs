@@ -18,7 +18,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-/// Marker filename written in each Bit capsule root directory to track origin metadata.
+/// Marker filename written in each Bit capsule root directory to track origin metadata in [`inspect`].
 const ORIGIN_FILE: &str = ".bit-capsule-origin.json";
 /// Recognized `kind` values recorded in [`ORIGIN_FILE`] markers.
 const VALID_KINDS: &[&str] = &["workspace", "scope-aspects-root", "scope-aspect", "scope"];

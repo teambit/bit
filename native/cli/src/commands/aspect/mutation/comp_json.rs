@@ -91,7 +91,7 @@ pub(super) fn unset_in_comp_json(
     Ok(CompJsonEdit { path, bytes })
 }
 
-/// Replaces any matching `bare_aspect` key in `component.json` at `path` with `target_aspect_id` and `cfg_val`.
+/// Replaces any matching `bare_aspect` key in `component.json` at `path` with `target_aspect_id` and `cfg_val` via [`find_matching_aspect_key`].
 pub(in crate::commands) fn update_in_comp_json(
     path: PathBuf,
     bare_aspect: &str,

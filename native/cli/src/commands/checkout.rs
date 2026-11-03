@@ -21,7 +21,7 @@ use std::{env, ffi::OsString, io, path::Path, sync::Arc};
 
 /// Native `bit checkout` [`Command`] descriptor and `-U` alias.
 pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
-/// Native `bit revert` [`Command`] descriptor.
+/// Native `bit revert` [`Command`] descriptor handled by [`run_revert`].
 pub const REVERT: Command = Command { name: "revert", aliases: &[], run: run_revert };
 
 /// Executes `bit checkout` against `args` via [`run_options`], falling back to [`fallback_checkout_error`] when applicable.

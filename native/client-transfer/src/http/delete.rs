@@ -91,7 +91,7 @@ impl Network {
         self.delete_hub_ids(url, ids, force, true).await
     }
 
-    /// Sends a single central-hub delete request (`POST <url>/api/delete`) for component or lane `ids`.
+    /// Sends a single central-hub delete request (`POST <url>/api/delete`) on [`Network`] for component or lane `ids`.
     async fn delete_hub_ids(
         &self,
         url: &str,

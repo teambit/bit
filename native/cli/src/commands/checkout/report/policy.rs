@@ -1,4 +1,4 @@
-//! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput` via [`Formatter`] and [`Chalk`].
+//! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput` via [`Formatter`] and [`Chalk`] in `bit-cli`.
 //!
 //! Exposes [`format`] to render workspace dependency update logs and conflict sections via [`updates`] and [`update_pair`].
 use crate::commands::{

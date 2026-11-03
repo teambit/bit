@@ -12,7 +12,7 @@ use std::{
 /// Maximum total byte budget (96 MiB) for observed documentation source files in [`observe`].
 const LIMIT: u64 = 96 * 1024 * 1024;
 
-/// Observed source file bytes and filesystem modification timestamp.
+/// Observed source file bytes and [`SystemTime`] filesystem modification timestamp.
 #[derive(PartialEq)]
 pub(super) struct Source {
     bytes: Vec<u8>,

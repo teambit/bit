@@ -94,7 +94,7 @@ impl Retained {
         Ok(matched)
     }
 }
-/// Extracts a validated absolute filesystem [`Path`] from `proof["path"]`.
+/// Extracts a validated absolute filesystem [`Path`] from `proof["path"]` for [`Retained::acknowledge_import`].
 #[inline]
 fn content_path(proof: &Value) -> io::Result<&Path> {
     proof["path"]

@@ -15,7 +15,7 @@ use bit_object_import::component_tracking::{Options as Tracking, Plan};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Prepares a [`Prepared`] `bit add` plan via [`context`] and captures projected component metadata before mutations.
+/// Prepares a [`Prepared`] `bit add` plan via [`context`] and [`environment_options`] and captures projected component metadata before mutations.
 pub(super) fn prepare(
     root: &Path,
     cwd: &Path,

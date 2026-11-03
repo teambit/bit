@@ -56,7 +56,7 @@ impl Network {
     }
 }
 
-/// Extracts and validates the `data.scope.doctor` [`Value`] object from `value` for remote `scope`.
+/// Extracts and validates the `data.scope.doctor` [`Value`] object from `value` for remote `scope` in [`Network::doctor`].
 #[inline]
 fn projection(mut value: Value, scope: &str) -> io::Result<Value> {
     let scope = scope.trim();

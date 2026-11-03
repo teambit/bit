@@ -31,7 +31,7 @@ pub struct Execution {
     pub skip_install: bool,
 }
 
-/// Mutual-exclusion force flags (`--force-ours`, `--force-theirs`, `--include-new-from-scope`) for checkout.
+/// Mutual-exclusion force flags (`--force-ours`, `--force-theirs`, `--include-new-from-scope`) for [`Options`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Force {
     ours: bool,

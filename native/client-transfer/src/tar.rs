@@ -86,7 +86,7 @@ fn outbound_name(item: &ObjectItem) -> io::Result<String> {
     }
 }
 
-/// Parse a complete fetch response.
+/// Parse a complete fetch response within [`MAX_ARCHIVE_BYTES`] via [`read_bounded`].
 #[inline]
 pub fn read(bytes: &[u8]) -> io::Result<Vec<ObjectItem>> {
     read_bounded(bytes, MAX_ARCHIVE_BYTES)

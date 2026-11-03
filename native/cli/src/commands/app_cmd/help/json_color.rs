@@ -1,4 +1,4 @@
-//! Released yargs unknown-option [`error`] ordering and deduplication for [`is_json_flag`] and color flags in `bit-cli`.
+//! Released yargs unknown-option [`error`] ordering and deduplication for [`is_json_flag`] and color flags in `bit-cli` `app`.
 //!
 //! Formats `Unknown argument` and `Unknown arguments` messages via [`error`] and [`unknown_names`] for invalid `--json`/`--no-color` flags in `bit app`.
 

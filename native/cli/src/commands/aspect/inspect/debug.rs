@@ -28,7 +28,7 @@ use bit_install::{
 use serde_json::{Map, Value, json};
 use std::{ffi::OsString, path::Path};
 
-/// Provenance origin entry before aspect merge resolution in `bit aspect get --debug`.
+/// Provenance origin entry before aspect merge resolution in `bit aspect get --debug` for [`DebugReport`].
 struct DebugOrigin {
     /// Human-readable origin label (such as `.bitmap` or `workspace.jsonc`).
     origin: &'static str,

@@ -23,7 +23,7 @@ pub(super) async fn throw_for_action_status(response: Response) -> io::Result<Re
     Err(action_error(error_code(error).or_else(|| error_code(&parsed)), error, &url, message))
 }
 
-/// Extract a numeric action error code from `error["code"]` ([`Value`] integer or numeric string).
+/// Extract a numeric action error code from `error["code"]` ([`Value`] integer or numeric string) for [`throw_for_action_status`].
 #[inline]
 fn error_code(error: &Value) -> Option<u64> {
     error["code"]

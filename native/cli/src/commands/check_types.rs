@@ -16,7 +16,7 @@ use crate::{native::Outcome, workspace};
 use bit_object_import::parse_jsonc;
 use std::{env, ffi::OsString, fs, io, path::Path};
 
-/// Native `bit check-types` [`Command`] descriptor.
+/// Native `bit check-types` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "check-types", aliases: &[], run };
 
 /// Error message emitted when `bit check-types` is invoked outside a Bit workspace.

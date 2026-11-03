@@ -93,7 +93,7 @@ fn parse_lane_id(id: &Value) -> io::Result<(&str, &str)> {
     }
 }
 
-/// Projects a single remote lane `GraphQL` object `lane` into `{ id: { name, scope }, components }`.
+/// Projects a single remote lane `GraphQL` object `lane` into `{ id: { name, scope }, components }` via [`parse_lane_id`].
 #[inline]
 fn lane_projection(lane: &Value) -> io::Result<Value> {
     let (scope, name) = parse_lane_id(&lane["id"])?;

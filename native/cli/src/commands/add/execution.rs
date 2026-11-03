@@ -95,7 +95,7 @@ fn components(plan: &Plan, projection: &Projection) -> Vec<WorkspaceComponent> {
         .collect()
 }
 
-/// Returns `value` as a trimmed non-empty `&str`, or `None` when not a string or blank.
+/// Returns `value` as a trimmed non-empty `&str`, or `None` when not a string or blank for [`components`].
 #[inline]
 fn non_empty_str(value: &serde_json::Value) -> Option<&str> {
     value

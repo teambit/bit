@@ -1,4 +1,4 @@
-//! [`ComponentDependencies`] and [`PackageDependency`] extraction from the shared native component-load receipt.
+//! [`ComponentDependencies`] and [`PackageDependency`] extraction from the shared native component-load receipt in `bit-cli`.
 //!
 //! Exposes [`packages`] to map captured component dependency rows by [`Lifecycle`] via [`component_packages`] and [`add_lifecycle_packages`].
 use bit_install::model::{ComponentDependencies, Lifecycle, PackageDependency};

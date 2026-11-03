@@ -87,7 +87,7 @@ pub(super) fn run_create(
     }
 }
 
-/// Emits the `--json` payload of [`CreatedCapsule`] entries for `bit capsule create`.
+/// Emits the `--json` payload of [`CreatedCapsule`] entries for `bit capsule create` in [`run_create`].
 fn emit_create_json(
     root: &ScopeRoot,
     args: &[OsString],

@@ -16,7 +16,7 @@ use std::{
 };
 use tokio::sync::Notify;
 
-/// Cloneable cooperative cancellation token backed by [`State`] (`AtomicBool` and [`Notify`]).
+/// Cloneable cooperative cancellation token backed by [`State`] (`AtomicBool` and [`Notify`]) in `bit-client-transfer`.
 #[derive(Debug, Default, Clone)]
 pub struct Cancellation(Arc<State>);
 /// Shared atomic cancellation flag and [`Notify`] wakeup state for [`Cancellation`].

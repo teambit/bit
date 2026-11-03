@@ -80,7 +80,7 @@ fn layers(
     .collect()
 }
 
-/// Trims `key` and returns `None` when the trimmed key is empty or whitespace-only.
+/// Trims `key` and returns `None` when the trimmed key is empty or whitespace-only for [`layers`].
 #[inline]
 fn normalize_entry((key, value): (String, Value)) -> Option<(String, Value)> {
     let trimmed = key.trim();

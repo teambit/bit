@@ -54,7 +54,7 @@ fn number(raw: &str) -> Option<f64> {
     (integer.is_finite() && integer.abs() <= 9_007_199_254_740_991.0).then_some(number)
 }
 
-/// Returns `true` when the suffix after `head~` parses as `NaN` in `JavaScript` `Number(...)`.
+/// Returns `true` when the suffix after `head~` parses as `NaN` in `JavaScript` `Number(...)` for `bit checkout`.
 #[inline]
 pub(super) fn head_tilde_is_nan(after: &str) -> bool {
     let trimmed = after.trim_start();

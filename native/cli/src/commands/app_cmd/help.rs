@@ -15,7 +15,7 @@ fn command_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
         .filter(|name| !name.is_empty())
 }
 
-/// Returns the command spelling when `argv` invokes `app run --help` (or `app c -h`).
+/// Returns the command spelling when `argv` invokes `app run --help` (or `app c -h`) via [`command_name`].
 #[inline]
 pub(super) fn app_run_help_name<'a>(argv: &[&'a str]) -> Option<&'a str> {
     let name = command_name(argv)?;

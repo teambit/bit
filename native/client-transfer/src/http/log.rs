@@ -36,7 +36,7 @@ impl Network {
     }
 }
 
-/// Stream and buffer the body of [`Response`] `response` up to [`MAX_LOG_BYTES`].
+/// Stream and buffer the body of [`Response`] `response` up to [`MAX_LOG_BYTES`] for [`Network::log`].
 async fn bounded_body(response: Response) -> io::Result<Vec<u8>> {
     let mut stream = response.bytes_stream();
     let mut bytes = Vec::new();

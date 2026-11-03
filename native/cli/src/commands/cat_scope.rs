@@ -24,7 +24,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Native `bit cat-scope` [`Command`] descriptor.
+/// Native `bit cat-scope` [`Command`] descriptor handled by [`run`].
 pub const COMMAND: Command = Command { name: "cat-scope", aliases: &[], run };
 
 /// Parsed CLI flags and optional scope path argument for `bit cat-scope` built by [`parse_options`].

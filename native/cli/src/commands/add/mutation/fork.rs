@@ -1,4 +1,4 @@
-//! Advance only the `.bitmap` preimage acknowledged by a completed native fork publication on [`ProjectedLinker`].
+//! Advance only the `.bitmap` preimage acknowledged by a completed native fork publication on [`ProjectedLinker`] in `bit-cli`.
 //!
 //! Validates and updates the retained `.bitmap` control entry via [`controls`] and [`bitmap_path`] after `fork`.
 use super::{ProjectedLinker, controls};

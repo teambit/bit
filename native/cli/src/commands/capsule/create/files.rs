@@ -1,4 +1,4 @@
-//! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`], [`GeneratedPackage`], [`ManifestConfig`], [`ComponentPackage`]).
+//! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`], [`GeneratedPackage`], [`ManifestConfig`], [`ComponentPackage`]) in `bit-cli`.
 
 mod policy;
 

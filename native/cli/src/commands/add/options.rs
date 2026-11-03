@@ -57,7 +57,7 @@ fn apply_arg(
     Some(())
 }
 
-/// Consumes a string-valued flag (`-i`, `-m`, `-n`, `-s`, `-e`) from `arg` and `args` into `options`.
+/// Consumes a string-valued flag (`-i`, `-m`, `-n`, `-s`, `-e`) from `arg` and `args` into `options` via [`consume_inline_value`].
 fn consume_value(
     options: &mut Options,
     arg: &str,

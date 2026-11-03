@@ -80,7 +80,7 @@ pub(super) fn supported(document: &Document) -> bool {
                     && (config.is_object() || !bit_workspace_config::truthy(config)))
         })
 }
-/// Ensures `"teambit.git/ci": { "sync": {} }` is present in `workspace.jsonc` under `root`.
+/// Ensures `"teambit.git/ci": { "sync": {} }` ([`ASPECT`]) is present in `workspace.jsonc` under `root`.
 pub(super) fn config(root: &Path) -> io::Result<bool> {
     let mut document = Document::parse(&fs::read_to_string(root.join("workspace.jsonc"))?)?;
     if document

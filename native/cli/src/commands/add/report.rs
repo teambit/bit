@@ -67,7 +67,7 @@ fn component_text(component: &Value, formatter: &Formatter) -> io::Result<String
     Ok(lines.join("\n"))
 }
 
-/// Extracts the formatted `<scope>/<name>` or `<name>` component identifier from `component`.
+/// Extracts the formatted `<scope>/<name>` or `<name>` component identifier from `component` for [`component_text`].
 #[inline]
 fn component_id(component: &Value) -> io::Result<String> {
     if let Some(id) = component["id"]

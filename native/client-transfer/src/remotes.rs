@@ -73,7 +73,7 @@ pub struct Remotes {
 }
 
 impl Remotes {
-    /// Whether an unconfigured scope would invoke the workspace resolver callback.
+    /// Whether an unconfigured scope would invoke the workspace [`Resolver`] callback.
     #[inline]
     #[must_use]
     pub fn has_custom_resolver(&self) -> bool {
