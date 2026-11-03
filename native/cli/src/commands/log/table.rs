@@ -50,7 +50,7 @@ pub(in crate::commands) fn table(rows: &[Vec<&str>]) -> String {
     table_with_separator(rows, " ")
 }
 
-/// `cli-table` styles its middle border separately from plain cell padding.
+/// Formats `rows` with `separator` via [`format_row_line`] (`cli-table` styles its middle border separately from plain cell padding).
 pub(in crate::commands) fn table_with_separator(rows: &[Vec<&str>], separator: &str) -> String {
     if rows.is_empty() {
         return String::new();

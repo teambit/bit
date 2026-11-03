@@ -57,7 +57,7 @@ pub(in crate::commands) fn workflow<'a>(
     Some((workflow, rest))
 }
 
-/// Plans, executes, installs, and reports a full workspace merge or lane-merge lifecycle for [`Options`].
+/// Plans, executes, installs, and reports a full workspace merge or lane-merge lifecycle for [`Options`] into an [`Outcome`].
 pub(in crate::commands) fn run(
     root: &Path,
     args: &[OsString],

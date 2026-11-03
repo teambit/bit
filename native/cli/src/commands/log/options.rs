@@ -47,7 +47,7 @@ fn consume_trailing_id<'a>(
     Some(())
 }
 
-/// Applies a single `bit log` flag or positional component ID token `trimmed` onto `options`.
+/// Applies a single `bit log` flag or positional component ID token `trimmed` onto `options` ([`Options`]) via [`parse_log_flag_value`].
 fn apply_log_arg<'a>(options: &mut Options<'a>, trimmed: &'a str) -> Option<()> {
     if matches!(
         trimmed,

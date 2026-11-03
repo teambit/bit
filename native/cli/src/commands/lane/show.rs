@@ -86,7 +86,7 @@ fn outside_scope_show(
     )
 }
 
-/// Formats and outputs a [`Selected`] local or remote lane in `--json` or terminal [`Report`] mode.
+/// Formats and outputs a [`Selected`] local or remote lane in `--json` or terminal [`Report`] mode into an [`Outcome`].
 fn emit_selected(
     root: &Path,
     bare: bool,

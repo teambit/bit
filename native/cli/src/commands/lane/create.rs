@@ -59,7 +59,7 @@ fn set_lane_name<'a>(slot: &mut &'a str, name: &'a str) -> bool {
     true
 }
 
-/// Applies a single `bit lane create` flag (and any flag argument from `rest`) onto [`Options`].
+/// Applies a single `bit lane create` flag (and any flag argument from `rest`) onto [`Options`] via [`apply_create_inline`].
 fn apply_create_flag<'a>(
     options: &mut Options<'a>,
     flag: &'a str,

@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path};
 
 /// Handle `bit lane diff [values...]` inside a workspace when a component's base
-/// version object is absent from the local scope.
+/// version object is absent from the local scope, returning an [`Outcome`].
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some(values) = parse_values(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane diff grammar".into()));

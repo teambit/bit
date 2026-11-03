@@ -44,7 +44,7 @@ impl Options {
         (!options.id.is_empty() && options.id.len() <= 256).then_some(options)
     }
 
-    /// Applies a single flag or positional history ID token onto [`Options`].
+    /// Applies a single flag or positional history ID token `value` onto [`Options`] during [`Options::parse`].
     #[inline]
     fn apply_arg(&mut self, value: &str) -> Option<()> {
         match value {

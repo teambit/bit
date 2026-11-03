@@ -31,7 +31,7 @@ pub(super) struct LinkSummary {
     pub target_links: Vec<LinkToDirResult>,
 }
 
-/// Serializes `summary` into the `--json` output object for `bit link`.
+/// Serializes `summary` ([`LinkSummary`]) into the `--json` output [`Value`] object for `bit link`.
 #[inline]
 pub(super) fn render_json(summary: &LinkSummary) -> Value {
     let mut map = serde_json::Map::with_capacity(3);

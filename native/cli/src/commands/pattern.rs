@@ -27,7 +27,7 @@ use std::{
 };
 /// Descriptor for the native `bit pattern <pattern>` CLI command (`PatternCommand`).
 pub const COMMAND: Command = Command { name: "pattern", aliases: &[], run };
-/// Parsed CLI flags and positional pattern string for `bit pattern`.
+/// Parsed CLI flags and positional pattern string for `bit pattern` ([`COMMAND`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Options {
     pattern: String,

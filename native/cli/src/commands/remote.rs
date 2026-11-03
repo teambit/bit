@@ -75,7 +75,7 @@ fn invalid_workspace_config(root: &std::path::Path) -> bool {
     super::aspect::workspace_default_scope(&config).is_err()
 }
 
-/// Commits `prepared` file writes and prints the formatted `bit remote` output to stdout.
+/// Commits `prepared` file writes and prints the formatted `bit remote` output to stdout as an [`Outcome`].
 fn execute(
     root: Option<&std::path::Path>,
     args: &[OsString],

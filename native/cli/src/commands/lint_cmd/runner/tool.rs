@@ -21,7 +21,7 @@ pub(super) struct Session {
 }
 
 impl Session {
-    /// Spawns the `ESLint` worker process and sends `request` over stdin, awaiting readiness.
+    /// Spawns the `ESLint` worker process ([`Session::spawn`]) and sends `request` ([`Value`]) within [`LIMIT`] over stdin, awaiting readiness.
     pub(super) fn prepare(request: &Value, colors: bool) -> io::Result<Self> {
         let mut bytes = serde_json::to_vec(request)?;
         if bytes.len() as u64 >= LIMIT {

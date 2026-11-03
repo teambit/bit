@@ -19,7 +19,7 @@ use std::{
     process::ExitCode,
 };
 
-/// `LaneCurrentCmd`: the bitmap's current lane and the local tracking alias.
+/// `LaneCurrentCmd`: resolves the `.bitmap` current lane and local [`Tracking`] alias via [`read_current`] and [`write_current`] into an [`Outcome`].
 pub(super) fn current(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let mut json = false;
     for (idx, &arg) in lane_args.iter().enumerate() {

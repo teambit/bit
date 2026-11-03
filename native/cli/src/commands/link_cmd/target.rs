@@ -30,7 +30,7 @@ pub(super) struct LinkToDirResult {
     pub links_detail: LinkDetail,
 }
 
-/// Symlinks `selected` component packages (and optional `--peers` packages) into `target_dir/node_modules` as [`LinkToDirResult`] entries.
+/// Symlinks `selected` [`WorkspaceComponent`] packages (and optional `--peers` packages via [`collect_peers`]) into `target_dir/node_modules` as [`LinkToDirResult`] entries.
 pub(super) fn link_to_target(
     root: &Path,
     target_dir: &Path,

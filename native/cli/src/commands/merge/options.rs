@@ -22,7 +22,7 @@ const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--ver
 /// CLI flags that consume a string argument in `bit merge`.
 const VALUED: [&str; 2] = ["--auto-merge-resolve", "--message"];
 
-/// When `args` fails validation in `MergeCmd.report`, return the error message.
+/// When `args` fails validation in `MergeCmd.report`, returns the error message via [`check_merge_flags`].
 #[must_use]
 pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     let mut flags: Vec<(&str, Value)> = Vec::with_capacity(args.len());

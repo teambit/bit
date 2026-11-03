@@ -5,7 +5,7 @@ use crate::commands::{color::Chalk, status::js::array};
 use serde_json::Value;
 use std::io;
 
-/// Rejects merge results containing non-legitimate `failedComponents` entries (formatted via [`row_identity`]) before workspace publication.
+/// Rejects merge `result` ([`Value`]) payloads containing non-legitimate `failedComponents` entries (formatted via [`row_identity`] and [`Chalk`]) before workspace publication.
 pub(super) fn check(result: &Value, chalk: Chalk, lane: bool) -> io::Result<()> {
     let rows = array(result.get("failedComponents"), "merge failed components")?;
     let mut failures = Vec::with_capacity(rows.len());

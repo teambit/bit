@@ -28,7 +28,7 @@ pub(super) const COUNTS: [(&str, &str, &str, &str); 5] = [
     ("warningCount", "totalWarningCount", "totalComponentsWithWarningCount", "Warnings"),
 ];
 
-/// Aggregates per-file `ESLint` diagnostics from `tool` into a single component lint result [`Value`].
+/// Aggregates per-file `ESLint` diagnostics ([`COUNTS`], [`file`]) from `tool` into a single component lint result [`Value`].
 #[inline]
 pub(super) fn component(id: &Value, tool: &Value) -> io::Result<Value> {
     let files = tool["results"].as_array().ok_or_else(|| invalid("linter results"))?;

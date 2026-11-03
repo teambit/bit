@@ -75,7 +75,7 @@ fn conflict_report(conflicts: &[Value], chalk: Chalk, output: &mut Vec<String>) 
     }
 }
 
-/// Appends the out-of-date component re-import instructions for non-deleted `updates` to `output`.
+/// Appends the out-of-date component re-import instructions for non-deleted `updates` to `output` with [`Chalk`].
 fn update_report(updates: &[Value], chalk: Chalk, output: &mut Vec<String>) {
     let updates: Vec<_> = updates
         .iter()

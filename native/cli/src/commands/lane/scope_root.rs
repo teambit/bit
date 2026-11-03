@@ -18,7 +18,7 @@ pub(crate) struct ScopeRoot {
     pub(crate) bare: bool,
 }
 
-/// Locates the enclosing workspace or bare scope starting from the current working directory.
+/// Locates the enclosing workspace or bare scope ([`ScopeRoot`]) via [`read`] starting from the current working directory.
 #[inline]
 pub(crate) fn discover() -> io::Result<Option<ScopeRoot>> {
     let cwd = env::current_dir()?;

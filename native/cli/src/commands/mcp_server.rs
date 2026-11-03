@@ -27,7 +27,7 @@ pub const COMMAND: Command = Command { name: "mcp-server", aliases: &[], run };
 /// Supported editor identifiers for `bit mcp-server setup`.
 const SETUP_EDITORS: &[&str] = &["vscode", "cursor", "windsurf", "roo", "cline", "claude-code"];
 
-/// Parsed options for `bit mcp-server setup [editor]`.
+/// Parsed options for `bit mcp-server setup [editor]` ([`SETUP_EDITORS`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct SetupOptions {
     pub editor: String,

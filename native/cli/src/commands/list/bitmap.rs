@@ -46,7 +46,7 @@ pub(in crate::commands) struct Bitmap {
     pub lane: Option<Value>,
 }
 
-/// Reads and parses `.bitmap` inside `root` into a [`Bitmap`] containing component entries and lane metadata.
+/// Reads and parses `.bitmap` inside `root` into a [`Bitmap`] containing [`Entry`] records and [`lane_id`] metadata.
 pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
     let text = fs::read_to_string(root.join(".bitmap"))?;
     let document = bit_install::jsonc::parse(&text).map_err(|_| decline("bitmap syntax"))?;

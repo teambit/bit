@@ -16,7 +16,7 @@ use std::{
     path::Path,
 };
 
-/// Runs the post-merge auto-snap or tag continuation ([`continue_snapshot`]) against `materialized` and records errors into `result`.
+/// Runs the post-merge auto-snap or tag continuation ([`continue_snapshot`]) for [`Options`] against `materialized` ([`Planned`]) and records errors into `result` ([`Value`]).
 #[inline]
 pub(super) fn run(
     root: &Path,

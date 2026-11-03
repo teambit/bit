@@ -13,7 +13,7 @@ use crate::{native::Outcome, workspace};
 use bit_object_import::lane_remove::Plan;
 use std::{env, ffi::OsString, io};
 
-/// Executes `bit lane remove <lanes...>` locally or delegates `--remote` lane deletions to `delete::hard::lanes`.
+/// Executes `bit lane remove <lanes...>` locally via [`Plan`] into an [`Outcome`] or delegates `--remote` lane deletions to `delete::hard::lanes`.
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some((names, force, remote)) = parse(lane_args) else {
         return Ok(Outcome::Declined("outside the native local lane remove grammar".into()));

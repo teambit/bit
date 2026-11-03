@@ -27,7 +27,7 @@ pub(super) struct Session {
 }
 
 impl Session {
-    /// Initializes a restoration [`Session`] and prepares its first [`Planned`] checkout partition.
+    /// Initializes a restoration [`Session`] for [`Options`] and [`Startup`] and prepares its first [`Planned`] checkout partition.
     pub fn start(
         root: &Path,
         argv: &[&str],

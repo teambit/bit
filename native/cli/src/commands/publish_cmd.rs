@@ -45,7 +45,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
-/// Entry point for `bit publish` that handles empty or outside-workspace cases before delegating.
+/// Entry point for `bit publish` ([`COMMAND`]) that handles empty or outside-workspace cases ([`run_outside_workspace`]) before delegating to [`execute_workspace_publish`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("publish arguments are not UTF-8".into()));

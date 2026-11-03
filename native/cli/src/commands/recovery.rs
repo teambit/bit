@@ -54,7 +54,7 @@ pub(super) struct Options {
 pub(super) fn parse_component(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Component)
 }
-/// Parses CLI flags for `bit lane merge-abort` into lane-level recovery [`Options`].
+/// Parses CLI flags for `bit lane merge-abort` into lane-level recovery [`Options`] (`Kind::Lane`).
 #[inline]
 pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Lane)

@@ -27,7 +27,7 @@ pub(super) struct CodemodResult {
     pub changed_files: Vec<String>,
 }
 
-/// Rewrites cross-component relative imports to package specifiers across all `selected` components.
+/// Rewrites cross-component relative imports to package specifiers across all `selected` [`WorkspaceComponent`]s in [`Workspace`] into [`CodemodResult`]s.
 pub(super) fn rewire_components(
     ws: &Workspace,
     selected: &[&WorkspaceComponent],

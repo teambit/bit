@@ -72,7 +72,7 @@ fn work(
         details: None,
     })
 }
-/// Loads component metadata for `removed` (or all `.bitmap` components when any target is new and `--force` is unset).
+/// Loads component metadata for `removed` (or all `.bitmap` components when any target is new and `--force` is unset) via [`add::ProjectedLinker`].
 fn load(
     root: &Path,
     bitmap: &serde_json::Value,

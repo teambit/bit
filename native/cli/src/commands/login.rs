@@ -56,7 +56,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Declined("interactive browser login delegated".into()))
 }
 
-/// Emits the conflicting `--default-cloud-domain` / `--cloud-domain` error when not running in CI.
+/// Emits the conflicting `--default-cloud-domain` / `--cloud-domain` error ([`CONFLICTING_DOMAIN_ERR`]) into an [`Outcome`] when not running in CI.
 #[inline]
 fn emit_conflicting_domain_error(args: &[OsString], json: bool) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;

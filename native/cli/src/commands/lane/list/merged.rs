@@ -28,7 +28,7 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
     format.section(if merged { "merged lanes" } else { "unmerged lanes" }, "", &items)
 }
 
-/// Extracts the trimmed bare lane name from a structured or string lane `id` value.
+/// Extracts the trimmed bare lane name from a structured or string lane `id` value for [`report`].
 #[inline]
 fn lane_name(id: &serde_json::Value) -> &str {
     id["name"]

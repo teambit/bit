@@ -11,7 +11,7 @@ use bit_object_import::component_move::Plan;
 use std::{env, ffi::OsString, io};
 /// Descriptor for the native `bit move` (`mv`) command.
 pub const COMMAND: Command = Command { name: "move", aliases: &["mv"], run };
-/// Entry point for `bit move`.
+/// Entry point for `bit move` ([`COMMAND`]) delegating workspace execution to [`run_workspace`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("move arguments are not UTF-8".into()));

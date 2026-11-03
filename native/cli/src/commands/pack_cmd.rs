@@ -28,7 +28,7 @@ pub(super) struct Options {
     pub json: bool,
 }
 
-/// Entry point for `bit pack` that validates scope discovery and delegates to [`packer::try_pack`].
+/// Entry point for `bit pack` ([`COMMAND`]) that validates [`is_missing_scope`] and delegates to [`packer::try_pack`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("pack arguments are not UTF-8".into()));

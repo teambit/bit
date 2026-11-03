@@ -41,7 +41,7 @@ enum Prepared {
     Unrecognized { sub: String },
 }
 
-/// Entry point for `bit local-only <set|unset|list>` ([`COMMAND`]) dispatching [`Subcommand`] variants into [`Prepared`].
+/// Entry point for `bit local-only <set|unset|list>` ([`COMMAND`]) dispatching [`Subcommand`] variants into [`Prepared`] and returning an [`Outcome`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(args) else {
         return Ok(Outcome::Declined(

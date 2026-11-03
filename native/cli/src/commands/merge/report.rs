@@ -66,7 +66,7 @@ struct Merge<'r> {
 }
 
 impl Merge<'_> {
-    /// The sections around the skipped list.
+    /// Joins the [`Merge`] sections around the `skipped` list via [`Formatter::join`].
     fn join(&self, skipped: &str) -> String {
         Formatter::join(&[
             self.success(),

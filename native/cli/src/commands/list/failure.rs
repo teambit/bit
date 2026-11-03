@@ -15,7 +15,7 @@ use std::{
 const REMOTE_LOCAL_CONFLICT_ERR: &str =
     "The --local-scope and --scope flags cannot be used when listing a remote scope.";
 
-/// Checks for preflight flag conflicts in `bit list` and returns an immediate error [`Outcome`] when applicable.
+/// Checks for preflight flag conflicts ([`REMOTE_LOCAL_CONFLICT_ERR`]) in `bit list` ([`Options`]) and returns an immediate error [`Outcome`] via [`emit_error`] when applicable.
 #[inline]
 pub(super) fn preflight(
     cwd: &Path,

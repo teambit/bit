@@ -35,7 +35,7 @@ struct ResolvedComponent {
     main_file: String,
     files: Vec<(String, Vec<u8>)>,
 }
-/// Attempts to resolve and pack the requested component into a `.tgz` archive in `cwd` or `--out-dir`.
+/// Attempts to resolve ([`resolve_component`]) and pack the requested component into a `.tgz` archive in `cwd` or `--out-dir` for [`Options`].
 pub(super) fn try_pack(
     cwd: &Path,
     args: &[OsString],

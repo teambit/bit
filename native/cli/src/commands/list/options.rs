@@ -53,7 +53,7 @@ fn long_flag(flag: &str) -> &str {
 }
 
 impl Options {
-    /// Consumes one CLI token (and any value argument) at `args[index]` and returns the step count.
+    /// Consumes one CLI token (and any value argument via [`Options::flag`]) at `args[index]` and returns the step count.
     fn step<'a>(
         &mut self,
         args: &[&'a str],

@@ -50,7 +50,7 @@ fn style(enabled: bool, (open, close): (&str, &str), text: &str) -> String {
     format!("{open}{}{close}", text.replace(close, open))
 }
 
-/// `utils.strlen`: the longest line in UTF-16 units, without SGR codes.
+/// `utils.strlen`: returns the longest line in UTF-16 units, without SGR codes ([`strip_sgr`]).
 #[inline]
 fn strlen(text: &str) -> usize {
     strip_sgr(text)

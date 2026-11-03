@@ -82,7 +82,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     })
 }
 
-/// Deterministic option validation error thrown by `MergeLaneCmd.report` before merging.
+/// Deterministic option validation error thrown by `MergeLaneCmd.report` before merging [`Options`].
 #[must_use]
 #[inline]
 pub fn validate_error(args: &[&str]) -> Option<&'static str> {

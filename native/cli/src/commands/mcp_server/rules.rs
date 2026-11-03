@@ -34,7 +34,7 @@ pub(in crate::commands) struct RulesOptions {
     pub force_standard: bool,
 }
 
-/// Parses CLI tokens after `bit mcp-server rules` into [`RulesOptions`].
+/// Parses CLI tokens after `bit mcp-server rules` into [`RulesOptions`] ([`RULES_EDITORS`]).
 pub(super) fn parse_rules(rest: &[&str]) -> Option<RulesOptions> {
     let mut editor = None;
     let mut is_global = false;

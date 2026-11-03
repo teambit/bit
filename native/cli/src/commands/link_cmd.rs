@@ -32,7 +32,7 @@ pub(super) struct Options {
     pub comp_summary: bool,
 }
 
-/// Entry point for `bit link` that parses [`Options`] and delegates to [`runner::try_run`].
+/// Entry point for `bit link` ([`COMMAND`]) that parses [`Options`] via [`parse_options`] and delegates to [`runner::try_run`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("link arguments are not UTF-8".into()));

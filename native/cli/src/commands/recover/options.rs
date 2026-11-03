@@ -37,7 +37,7 @@ pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     (!options.pattern.is_empty()).then_some(options)
 }
 
-/// Consumes the single trailing pattern argument after `--` into `pattern`.
+/// Consumes the single trailing positional pattern argument after `--` into `pattern`.
 #[inline]
 fn consume_trailing_pattern<'a>(
     iter: impl Iterator<Item = &'a str>,

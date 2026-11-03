@@ -10,7 +10,7 @@ mod tests;
 use bit_install::dependencies::glob;
 use std::io;
 
-/// Filters `identities` against `patterns` using `multimatch` evaluation order (ids outer, patterns inner, last matching clause wins).
+/// Filters `identities` against `patterns` via [`ranges::expand`] and [`matches`] using `multimatch` evaluation order (ids outer, patterns inner, last matching clause wins).
 pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<Vec<&'i str>> {
     let compiled = patterns
         .iter()

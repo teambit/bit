@@ -35,7 +35,7 @@ pub fn split(pattern: &str) -> Vec<String> {
 
 /// `matchComponentPatterns(identities, patterns)`: the ids, in their order,
 /// whose last matching pattern is not negated. A pattern's `@version` is
-/// ignored.
+/// ignored, validating globs via [`supported`] and [`match_segments`].
 pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<Vec<&'i str>> {
     let globs = patterns
         .iter()

@@ -37,7 +37,7 @@ pub(super) fn rename(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcom
     })
 }
 
-/// Executes `bit lane change-scope <remote-scope>` on an unexported local lane.
+/// Executes `bit lane change-scope <remote-scope>` on an unexported local lane via [`parse_lane_target_args`] and [`Change::Scope`].
 pub(super) fn change_scope(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some((new_scope, lane_name)) = parse_lane_target_args(lane_args) else {
         return Ok(Outcome::Declined("outside the native lane change-scope grammar".into()));

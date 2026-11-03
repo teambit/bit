@@ -17,7 +17,7 @@ use std::{
 /// Descriptor for the native `bit npmrc` command.
 pub const COMMAND: Command = Command { name: "npmrc", aliases: &[], run };
 
-/// Entry point for `bit npmrc` that reports unknown subcommands or declines `generate` to the Node.js CLI.
+/// Entry point for `bit npmrc` ([`COMMAND`]) that reports unknown subcommands via [`unknown_subcommand_message`] or declines `generate` to the `Node.js` CLI.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(subcommand) = parse_subcommand(args) else {
         return Ok(Outcome::Declined("arguments outside the native `npmrc` grammar".to_owned()));

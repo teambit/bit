@@ -82,7 +82,7 @@ fn apply_history_arg<'a>(
     }
     Some(())
 }
-/// Executes `bit lane history` across workspace or bare-scope objects via [`Session`] and formats the history report.
+/// Executes `bit lane history` across workspace or bare-scope objects via [`Session`] and formats the history [`Report`] into an [`Outcome`].
 pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
     let Some(options) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane history flags outside the native grammar".into()));

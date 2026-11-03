@@ -72,7 +72,7 @@ fn remote_version(row: &Row) -> &str {
         .unwrap_or("N/A")
 }
 
-/// `ListCmd.report`: the count, then the ids or the table.
+/// `ListCmd.report`: renders the count, then the [`Row`] IDs or the formatted table for [`Options`] and [`Chalk`].
 pub(super) fn report(rows: &[Row], options: &Options, chalk: Chalk, colors: bool) -> String {
     let header = options.remote
         .as_deref()

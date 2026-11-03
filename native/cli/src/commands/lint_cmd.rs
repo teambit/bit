@@ -34,7 +34,7 @@ pub(super) struct Options {
     pub fix_type: Option<String>,
     pub json: bool,
 }
-/// Entry point for `bit lint` that validates workspace/scope state and dispatches to [`runner::run`].
+/// Entry point for `bit lint` ([`COMMAND`]) that validates [`Options`] and workspace/scope state and dispatches to [`runner::run`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("lint arguments are not UTF-8".into()));

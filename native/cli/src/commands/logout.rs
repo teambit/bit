@@ -46,7 +46,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// Returns whether `args` contains only `logout` and optional global `--color` / `--no-color` flags.
+/// Returns whether `args` ([`OsString`]) contains only `logout` and optional global `--color` / `--no-color` flags.
 #[inline]
 fn valid_args(args: &[OsString]) -> bool {
     if args.is_empty() {

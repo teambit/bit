@@ -18,7 +18,7 @@ pub(super) struct Plan {
 }
 
 impl Plan {
-    /// Selects components, prepares temporary `tsconfig` files, and spawns `ESLint` worker sessions.
+    /// Selects [`Component`]s via [`Loaded`], prepares temporary [`Config`] files, and spawns `ESLint` [`Session`] workers for [`Options`].
     pub(super) fn prepare(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
         let selection = Selection {
             pattern: options.pattern.clone(),

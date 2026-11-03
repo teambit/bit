@@ -69,7 +69,7 @@ impl Session {
         self.owned
     }
 
-    /// Returns the accumulated stdout captured from resolver callbacks during this [`Session`].
+    /// Returns the accumulated stdout captured from resolver callbacks during this [`Session`] (`self.output`).
     #[inline]
     pub(super) fn output(&self) -> &str {
         &self.output

@@ -29,7 +29,7 @@ use std::{
 };
 /// Descriptor for the native `bit refactor` CLI command (`RefactorCmd`).
 pub const COMMAND: Command = Command { name: "refactor", aliases: &[], run };
-/// Subcommand action parsed from `bit refactor` CLI arguments.
+/// Subcommand action parsed from `bit refactor` (`RefactorCmd`) CLI arguments.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Action {
     DependencyName { old_id: String, new_id: String },

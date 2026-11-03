@@ -77,7 +77,7 @@ impl LaneData {
             id
         }
     }
-    /// Serializes this [`LaneData`] entry into its `bit lane list --json` [`Value`] representation.
+    /// Serializes this [`LaneData`] entry into its `bit lane list --json` [`Value`] representation via [`Map`].
     pub(super) fn json(&self) -> Value {
         let mut data = Map::with_capacity(9);
         data.insert("name".into(), self.id["name"].clone());

@@ -80,7 +80,7 @@ fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)
     Some((global, values))
 }
 
-/// Consumes non-flag trailing positional tokens after `--` into `values` for `bit remote`.
+/// Consumes non-flag trailing positional tokens after `--` into `values` for `bit remote` (`RemoteCmd`).
 #[inline]
 fn consume_trailing_values<'a>(
     iter: impl Iterator<Item = &'a str>,
