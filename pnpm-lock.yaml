@@ -54592,6 +54592,7 @@ snapshots:
       '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -54638,6 +54639,7 @@ snapshots:
       '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
       '@teambit/legacy.constants': file:components/legacy/constants
@@ -54684,6 +54686,7 @@ snapshots:
       '@teambit/envs.contracts': file:scopes/envs/contracts
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/lane-id': 0.0.312
       '@teambit/legacy.constants': file:components/legacy/constants
