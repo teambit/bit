@@ -1,4 +1,4 @@
-//! The file diffs of `bit diff` ([`format`], [`diff`], `files.ts`): `formatFileDiff` of
+//! The file diffs of `bit diff` ([`format()`], `diff`, `files.ts`): `formatFileDiff` of
 //! `@teambit/legacy.component-diff`, and `diffFiles`, which runs
 //! `git diff --no-index --color` on two files.
 //!
@@ -18,7 +18,7 @@ use std::{
     },
 };
 
-/// `formatFileDiff(fileDiff, labelA, labelB, name)`: the diff from its `--- ` line, with both file headers relabelled via [`headers`] and [`replace_first`].
+/// `formatFileDiff(fileDiff, labelA, labelB, name)`: the diff from its `--- ` line, with both file headers relabelled via `headers` and [`replace_first`].
 pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
     let (name, label_a, label_b) = (name.trim(), label_a.trim(), label_b.trim());
     if name.is_empty() {
@@ -36,7 +36,7 @@ pub fn format(diff: &str, label_a: &str, label_b: &str, name: &str) -> String {
     replace_first(&body, header_b, &format!("+++ {name} ({label_b})\n"))
 }
 
-/// Returns the lazily compiled [`OnceLock`] pair of `--- a...` and `+++ b...` unified diff header [`Regex`] values for [`format`].
+/// Returns the lazily compiled [`OnceLock`] pair of `--- a...` and `+++ b...` unified diff header [`Regex`] values for [`format()`].
 #[inline]
 fn headers() -> &'static (Regex, Regex) {
     static HEADERS: OnceLock<(Regex, Regex)> = OnceLock::new();
@@ -47,7 +47,7 @@ fn headers() -> &'static (Regex, Regex) {
 }
 
 /// `text.replace(regex, replacement)` with JavaScript's `$` patterns
-/// (`$$`, `$&`, `` $` ``, `$'`) for [`format`]; the [`Regex`] values from [`headers`] have no capture groups.
+/// (`$$`, `$&`, `` $` ``, `$'`) for [`format()`]; the [`Regex`] values from [`headers`] have no capture groups.
 fn replace_first(text: &str, regex: &Regex, replacement: &str) -> String {
     let Some(found) = regex.find(text) else { return text.to_string() };
     let range = found.range();

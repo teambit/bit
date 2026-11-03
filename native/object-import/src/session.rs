@@ -21,7 +21,7 @@ pub struct WorkspaceSession {
 }
 
 impl WorkspaceSession {
-    /// Create a [`WorkspaceSession`] backed by a shared thread pool of `threads` workers via [`shared_pool`].
+    /// Create a [`WorkspaceSession`] backed by a shared thread pool of `threads` workers.
     pub fn new(threads: usize) -> io::Result<Self> {
         if !(1..=8).contains(&threads) {
             return Err(io::Error::other("thread count must be between 1 and 8"));

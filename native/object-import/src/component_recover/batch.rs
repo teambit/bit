@@ -26,7 +26,7 @@ pub enum Action {
     ProbeRemote,
     None,
 }
-/// Retained multi-component recovery batch holding classified [`Item`]s, `.bitmap`, and [`Observed`] file proofs.
+/// Retained multi-component recovery batch holding classified `Item`s, `.bitmap`, and `Observed` file proofs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Batch {
     root: PathBuf,

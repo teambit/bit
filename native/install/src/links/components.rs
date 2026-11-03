@@ -247,9 +247,7 @@ async fn package_json(
         is_aspect: options.aspect_env_ids.iter().any(|env| env_matches(env, &component.env_id)),
     };
     let mut manifest = transformed(component, &package_context);
-    if context.tracking {
-        tracking::version(&mut manifest, component, &package_context);
-    }
+    tracking::version(&mut manifest, component, &package_context);
     if env.is_some_and(|env| env.modifies) {
         let id = component.id.to_string_without_version();
         let modified = context.host.transform_package_json(&id, Value::Object(manifest)).await?;

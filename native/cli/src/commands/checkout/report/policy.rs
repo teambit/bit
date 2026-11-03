@@ -1,6 +1,6 @@
 //! `getWsConfigUpdateLogs` and `getWorkspaceConfigUpdateOutput` via [`Formatter`] and [`Chalk`] in `bit-cli`.
 //!
-//! Exposes [`format`] to render workspace dependency update logs and conflict sections via [`updates`] and [`update_pair`].
+//! Exposes [`format()`] to render workspace dependency update logs and conflict sections via [`updates`] and [`update_pair`].
 use crate::commands::{
     color::Chalk,
     status::js::{array, decline, object, text},
@@ -40,7 +40,7 @@ pub(crate) fn format(value: Option<&Value>, chalk: Chalk) -> io::Result<(String,
     Ok((logs, Formatter::join(&[updates, conflicts])))
 }
 
-/// Formats the `workspace.jsonc` dependency update section from `workspaceDepsUpdates` via [`update_pair`] for [`format`].
+/// Formats the `workspace.jsonc` dependency update section from `workspaceDepsUpdates` via [`update_pair`] for [`format()`].
 #[inline]
 fn updates(value: Option<&Value>, formatter: &Formatter) -> io::Result<String> {
     let Some(value) = value.filter(|value| !value.is_null()) else {

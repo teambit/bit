@@ -85,7 +85,7 @@ impl Scope {
             .join("deps")
     }
 
-    /// Read and inflate the raw body of a loose scope object with `hash` and `kind` (up to [`MAX_OBJECT`] bytes); returns `None` when missing.
+    /// Read and inflate the raw body of a loose scope object with `hash` and `kind` (up to `32 MiB`); returns `None` when missing.
     pub fn object(&self, hash: &str, kind: &str) -> io::Result<Option<Vec<u8>>> {
         let hash = hash.trim().to_ascii_lowercase();
         if hash.len() < 3 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {

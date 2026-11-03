@@ -16,7 +16,7 @@ use std::{
 };
 use tokio::sync::Notify;
 
-/// Cloneable cooperative cancellation token backed by [`State`] (`AtomicBool` and [`Notify`]) in `bit-client-transfer`.
+/// Cloneable cooperative cancellation token backed by `State` (`AtomicBool` and [`Notify`]) in `bit-client-transfer`.
 #[derive(Debug, Default, Clone)]
 pub struct Cancellation(Arc<State>);
 /// Shared atomic cancellation flag and [`Notify`] wakeup state for [`Cancellation`].
@@ -46,7 +46,7 @@ impl Cancellation {
             .with(|current| current.borrow().clone())
             .unwrap_or_default()
     }
-    /// Scope synchronous construction on this thread, restoring nested [`Cancellation`] owners via [`Restore`] even on panic.
+    /// Scope synchronous construction on this thread, restoring nested [`Cancellation`] owners via `Restore` even on panic.
     #[inline]
     pub fn scope<ResultValue>(
         cancellation: &Self,

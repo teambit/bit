@@ -178,7 +178,7 @@ fn component(
 fn find_entry(bitmap: &Value, identity: &str, directory: &str) -> io::Result<Value> {
     let identity = identity.trim();
     let directory = directory.trim();
-    let id_parts = identity.rsplit_once('/');
+    let id_parts = identity.split_once('/');
     bitmap
         .as_object()
         .ok_or_else(|| invalid("stash bitmap object"))?

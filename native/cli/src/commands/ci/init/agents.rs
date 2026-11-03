@@ -2,7 +2,7 @@
 //!
 //! Renders and updates `AGENTS.md` sync sections between [`START`] and [`END`] markers.
 use std::{io, path::Path, sync::OnceLock};
-/// Opening HTML comment prefix marking the managed CI sync section in `AGENTS.md` for [`write`] and [`fill_repo`].
+/// Opening HTML comment prefix marking the managed CI sync section in `AGENTS.md` for [`write()`] and [`fill_repo`].
 const START: &str = "<!-- bit-ci-sync:start";
 /// Closing HTML comment marker ending the managed CI sync section in `AGENTS.md`.
 const END: &str = "<!-- bit-ci-sync:end -->";
@@ -65,7 +65,7 @@ pub(super) fn write(
     Ok(("updated", note))
 }
 
-/// Replaces the [`UNKNOWN`] placeholder between [`START`] and [`END`] markers with `repo` for [`write`].
+/// Replaces the [`UNKNOWN`] placeholder between [`START`] and [`END`] markers with `repo` for [`write()`].
 #[inline]
 fn fill_repo(content: &str, repo: &str) -> String {
     let trimmed_repo = super::trim(repo);

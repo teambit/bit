@@ -28,7 +28,7 @@ use pnpm_resolving_resolver_base::{ResolveOptions, ResolverProjectOptions, Wante
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
-/// Merged, serialized `DependenciesGraph` input used by [`write_lockfile`] to restore `pnpm-lock.yaml` before installation.
+/// Merged, serialized `DependenciesGraph` input used to restore `pnpm-lock.yaml` before installation.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct RestoreInput {
     /// Merged `DependenciesGraph` JSON object.

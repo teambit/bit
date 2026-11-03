@@ -1,4 +1,4 @@
-//! `globby` breadth-first traversal ([`captured`], [`files`]), retaining Windows filesystem enumeration order.
+//! `globby` breadth-first traversal ([`captured`], [`filesystem`]), retaining Windows filesystem enumeration order.
 //!
 //! Ensures workspace file diff ordering matches Node.js `globby` output across platforms.
 

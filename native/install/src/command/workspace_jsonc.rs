@@ -18,7 +18,7 @@ use std::{
 /// Workspace configuration filename (`workspace.jsonc`) edited and backed up by [`edit`].
 const FILE: &str = "workspace.jsonc";
 
-/// Apply `edit` to the [`Document`] at [`FILE`] and write it, recording `reason` in the history.
+/// Apply `edit` to the [`Document`] at `FILE` and write it, recording `reason` in the history.
 pub fn edit(
     root: &Path,
     scope_path: &Path,

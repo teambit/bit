@@ -1,7 +1,7 @@
 //! Read-only `multimatch` selection with the shared native minimatch grammar.
 //! Bit splits commas and `@` versions before matching, even inside globs.
 //!
-//! [`matching`] and [`matches`] use [`glob`] and [`ranges`] (`expand`) expansion to evaluate multi-clause component patterns into `io::Result`.
+//! [`matching`] and `matches` use [`glob`] and `ranges` (`expand`) expansion to evaluate multi-clause component patterns into `io::Result`.
 
 mod ranges;
 #[cfg(test)]
@@ -10,7 +10,7 @@ mod tests;
 use bit_install::dependencies::glob;
 use std::io;
 
-/// Filters `identities` against `patterns` via [`ranges::expand`] and [`matches`] using `multimatch` evaluation order (ids outer, patterns inner, last matching clause wins).
+/// Filters `identities` against `patterns` via [`ranges::expand`] and `matches` using `multimatch` evaluation order (ids outer, patterns inner, last matching clause wins).
 pub fn matching<'i>(identities: &[&'i str], patterns: &[String]) -> io::Result<Vec<&'i str>> {
     let compiled = patterns
         .iter()

@@ -45,7 +45,7 @@ pub(super) fn parse(argv: &[&str], scope_fork: bool) -> Option<Options> {
 /// Assigns parsed positional arguments onto `options.source`, `options.scope`/`target`, and `options.pattern` on [`Options`].
 #[inline]
 fn assign_positions(positions: Vec<String>, options: &mut Options) -> Option<()> {
-    let min = if options.scope_fork { 2 } else { 1 };
+    let min = 1;
     let max = if options.scope_fork { 3 } else { 2 };
     if !(min..=max).contains(&positions.len()) {
         return None;

@@ -1,9 +1,9 @@
-//! The subset of `minimatch` dev-file patterns via [`match_patterns`] and [`matches`]: `**`, `*`,
+//! The subset of `minimatch` dev-file patterns via [`match_patterns`] and [`matches()`]: `**`, `*`,
 //! `?`, `[...]`, `{a,b}` and the extglobs `+(..)`, `*(..)`, `?(..)`, `@(..)`, `!(..)`.
 //! Like minimatch's defaults, wildcards never match a leading `.`.
 
 /// `matchPatterns(file, splitPatterns(patterns))` of `@teambit/toolbox.path.match-patterns`:
-/// matches an include pattern via [`matches`] and no `!`-prefixed exclude pattern.
+/// matches an include pattern via [`matches()`] and no `!`-prefixed exclude pattern.
 #[must_use]
 #[inline]
 pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
@@ -19,7 +19,7 @@ pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
             .all(|pattern| !matches(pattern[1..].trim_start(), file))
 }
 
-/// Whether `path` (`/`-separated, relative) matches `pattern` via [`match_parts`].
+/// Whether `path` (`/`-separated, relative) matches `pattern` across path segments and brace expansions.
 #[must_use]
 pub fn matches(pattern: &str, path: &str) -> bool {
     let path = path.trim().trim_start_matches("./");

@@ -127,7 +127,7 @@ fn non_empty_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
 }
 
 fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
-    if !valid_config_keys(value) {
+    if !value.is_object() {
         return Err(invalid("tracking component configuration"));
     }
     let identity = target["identity"]
@@ -162,19 +162,6 @@ fn normalize(value: &Value, target: &Value) -> io::Result<Value> {
     Ok(
         json!({"componentId":{"scope":scope,"name":name},"extensions":extensions,"propagate":propagate.cloned().unwrap_or(json!(false))}),
     )
-}
-
-#[inline]
-fn valid_config_keys(value: &Value) -> bool {
-    value
-        .as_object()
-        .is_some_and(|object| {
-            object
-                .keys()
-                .all(|key| {
-                    matches!(key.as_str(), "componentId" | "extensions" | "propagate" | "$schema")
-                })
-        })
 }
 
 fn optional_jsonc(path: &Path, budget: &Budget) -> io::Result<Value> {

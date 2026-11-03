@@ -53,7 +53,7 @@ pub(crate) fn with_sender<Output>(
     work()
 }
 
-/// Return whether the owning caller received this [`Event`] phase via [`CURRENT`]; no observer means no output.
+/// Return whether the owning caller received this [`Event`] phase via `CURRENT`; no observer means no output.
 #[must_use]
 pub fn emit(event: Event) -> bool {
     let event = match event {

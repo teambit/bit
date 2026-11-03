@@ -1,6 +1,6 @@
 //! `SwitchCmd.report` for local lane switches.
 //!
-//! [`format`] renders lane switch [`Report`] payloads for [`Options`] with [`Chalk`] and declines unsupported receipts via [`decline`].
+//! [`format()`] renders lane switch [`Report`] payloads for [`Options`] with [`Chalk`] and declines unsupported receipts via [`decline`].
 
 #[cfg(test)]
 mod report_tests;

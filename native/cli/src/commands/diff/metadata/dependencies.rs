@@ -1,5 +1,5 @@
-//! The dependency sections ([`Labels`], [`Id`]) of `diffMetadata`: [`packages`] (`packageDependenciesOutput`),
-//! [`components`] (`componentDependenciesOutput`), and `formatDepsDiffAsPlainText`.
+//! The dependency sections ([`Labels`], [`Id`]) of `diffMetadata`: [`package_dependencies`] (`packageDependenciesOutput`),
+//! [`component_dependencies`] (`componentDependenciesOutput`), and `formatDepsDiffAsPlainText`.
 
 use super::{
     super::super::{color::Chalk, ids::Id},

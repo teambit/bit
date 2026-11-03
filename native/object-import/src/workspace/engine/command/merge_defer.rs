@@ -34,9 +34,6 @@ pub(in crate::workspace::engine) fn run(
         return Err(invalid("merge snapshot already finalized"));
     }
     let merge = prepared.plan.merge.as_mut().ok_or_else(|| invalid("merge state absent"))?;
-    if merge.needs_snap().is_none() {
-        return Err(invalid("merge snapshot deferral absent"));
-    }
     let identities = merge.defer_snapshot()?;
     Ok((identities.len(), json!({"token":token,"identities":identities})))
 }

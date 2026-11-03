@@ -23,7 +23,7 @@ use std::{
 /// Root `link:` [`DependencyMap`] entries resolved from environments alongside unresolved diagnostic messages.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct EnvLinks {
-    /// Package name → `link:<abs_dir>` ([`link_value`]) entries for `resolveFromEnv` policy dependencies.
+    /// Package name → `link:<abs_dir>` entries for `resolveFromEnv` policy dependencies.
     pub links: DependencyMap,
     /// Diagnostic messages for packages that could not be resolved from their environment directory.
     pub messages: Vec<String>,

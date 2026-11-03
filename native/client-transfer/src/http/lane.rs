@@ -1,6 +1,6 @@
 //! `Http.listLanes`: the limited remote `GraphQL` projection, including main.
 //!
-//! Extends [`Network`] with [`Network::list_lanes`] using [`LANES_QUERY`] within [`MAX_LANE_BYTES`].
+//! Extends [`Network`] with [`Network::list_lanes`] using `GraphQL` lane queries within a bounded response payload.
 use super::{Network, throw_for_status};
 use crate::invalid;
 use futures_util::StreamExt;
@@ -13,7 +13,7 @@ const LANES_QUERY: &str = "query Lanes($ids: [String!]) { lanes { list(ids: $ids
 const MAX_LANE_BYTES: usize = 4 * 1024 * 1024;
 
 impl Network {
-    /// List remote lanes (or a single lane `id`) from `url` via `GraphQL` [`LANES_QUERY`].
+    /// List remote lanes (or a single lane `id`) from `url` via `GraphQL`.
     pub async fn list_lanes(&self, url: &str, id: Option<&str>) -> io::Result<Vec<Value>> {
         let base = url.trim().trim_end_matches('/');
         if base.is_empty() {

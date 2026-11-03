@@ -64,6 +64,8 @@ fn run_workspace(
     print!("{}", linker.take_stdout());
     let formatter = Formatter::new(Chalk::detect(args));
     workspace_command::execute_then(root, args, command_name(undo), |_output| {
+        let plan = Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
+            .unwrap_or(plan);
         let report = Report {
             data: report::render(&plan, options, undo, &formatter),
             code: 0,

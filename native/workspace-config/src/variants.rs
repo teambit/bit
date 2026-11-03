@@ -42,7 +42,7 @@ pub struct VariantConfig {
 }
 
 /// `byRootDirAndName`: every pattern matching the component's `root_dir` or
-/// `name`, sorted by specificity (ties: the later pattern first) via [`sorted_matches`] and [`merge_matches`].
+/// `name`, sorted by specificity (ties: the later pattern first) and merged.
 #[inline]
 pub fn by_root_dir_and_name(
     variants: &[(String, Map<String, Value>)],

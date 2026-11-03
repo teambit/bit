@@ -1,8 +1,8 @@
 //! The capture of the current workspace, shared by status, diff and the
 //! workspace commands: each selected component's files and
-//! dependencies, and the [`commit`] that writes what the command staged.
+//! dependencies, and the [`commit()`] that writes what the command staged.
 //!
-//! Re-exports [`Capture`], [`CacheWrites`], [`workspace_issues`], [`issue_callbacks`], [`commit_checkout_dependencies`], [`snapshot_data`], and [`commit`].
+//! Re-exports [`Capture`], [`CacheWrites`], [`workspace_issues`], [`issue_callbacks`], [`commit_checkout_dependencies`], [`snapshot_data`], and [`commit()`].
 
 pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
@@ -61,7 +61,7 @@ pub struct Capture {
     /// What the commit writes to the dependency cache.
     pub cache: CacheWrites,
 }
-/// The dependency cache entries a capture's [`commit`] writes.
+/// The dependency cache entries a capture's [`commit()`] writes.
 #[derive(Default)]
 pub struct CacheWrites {
     /// Fresh detections whose cache entries are written on commit.
@@ -83,7 +83,7 @@ pub struct CacheWrites {
 }
 
 impl CacheWrites {
-    /// Marks dependency cache entries matching `identities` (via [`base_identity`]) as blocked from [`CacheWrites`] persistence on [`commit`].
+    /// Marks dependency cache entries matching `identities` (via [`base_identity`]) as blocked from [`CacheWrites`] persistence on [`commit()`].
     #[inline]
     pub(in crate::commands) fn block_dependencies(
         &mut self,

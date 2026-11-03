@@ -44,7 +44,7 @@ impl fmt::Display for UnsupportedPattern {
 
 impl std::error::Error for UnsupportedPattern {}
 
-/// The module state of `node-ignore`: its [`Step`] replacer tables and [`Regex`] source cache.
+/// The module state of `node-ignore`: its `Step` replacer tables and [`Regex`] source cache.
 #[derive(Debug, Clone)]
 pub struct Compiler {
     blank_line: Regex,
@@ -66,7 +66,7 @@ impl Default for Compiler {
 }
 
 impl Compiler {
-    /// Create a new [`Compiler`] initialized with `node-ignore` 3.3.10 [`Step`] replacement tables.
+    /// Create a new [`Compiler`] initialized with `node-ignore` 3.3.10 `Step` replacement tables.
     #[must_use]
     #[inline]
     pub fn new() -> Self {
@@ -81,7 +81,7 @@ impl Compiler {
         }
     }
 
-    /// `_checkPattern` ([`check_supported`]) then `_createRule` into [`Rule`]; `None` for blank lines and comments.
+    /// `_checkPattern` then `_createRule` into [`Rule`]; `None` for blank lines and comments.
     #[inline]
     pub fn rule(&mut self, origin: &str) -> Result<Option<Rule>, UnsupportedPattern> {
         check_supported(origin)?;

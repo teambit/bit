@@ -7,7 +7,7 @@ use std::{io, path::Path};
 /// Aspect identifier for the workspace dependency resolver configuration entry.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
-/// Effective aspect settings using the released global and workspace precedence via [`effective_value`].
+/// Effective aspect settings using the released global and workspace precedence.
 #[inline]
 pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;

@@ -1,7 +1,7 @@
-//! The `minimatch` subset variant namespaces use via [`matches`]: `*`, `**` segments, `?`,
+//! The `minimatch` subset variant namespaces use via [`matches()`]: `*`, `**` segments, `?`,
 //! `[...]` classes, and `{a,b}` alternatives, without matching leading dots.
 
-/// Whether `name` (`/`-separated namespace) matches the `minimatch` `pattern` via [`segments`] and [`expand_braces`].
+/// Whether `name` (`/`-separated namespace) matches the `minimatch` `pattern` via `segments` and brace expansion.
 #[must_use]
 #[inline]
 pub fn matches(pattern: &str, name: &str) -> bool {

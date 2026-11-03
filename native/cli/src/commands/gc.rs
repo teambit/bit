@@ -1,4 +1,4 @@
-//! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`, [`COMMAND`], [`bare`], [`collector`], [`format`], [`graph`], [`inventory`], [`restore`]).
+//! Native `bit gc` (`scopes/workspace/clear-cache/gc-cmd.ts`, [`COMMAND`], [`bare`], [`collector`], [`mod@format`], [`graph`], [`inventory`], [`restore`]).
 //!
 //! Coordinates workspace and bare-scope garbage collection, dry-run analysis, and backup restoration.
 

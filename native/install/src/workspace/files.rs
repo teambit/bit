@@ -67,7 +67,7 @@ fn ignore_file(path: &Path) -> io::Result<Vec<String>> {
     }
 }
 
-/// `retrieveUserIgnoreList`: [`BIT_IGNORE`] (`.bitignore`) when it exists, otherwise [`GIT_IGNORE`] (`.gitignore`).
+/// `retrieveUserIgnoreList`: `.bitignore` when it exists, otherwise `.gitignore`.
 #[inline]
 pub fn user_ignore_list(dir: &Path) -> io::Result<Vec<String>> {
     let bit_ignore = dir.join(BIT_IGNORE);

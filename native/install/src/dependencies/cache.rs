@@ -1,11 +1,11 @@
 //! Bit's dependency cache (`<scope>/cache/components/deps`): read when no file of
 //! the [`WorkspaceComponent`] changed since it was written (`getDependenciesDataFromCacheIfPossible`),
-//! written after a [`Detected`] run (`saveDependenciesDataInCache`).
+//! written after a `Detected` run (`saveDependenciesDataInCache`).
 //!
 //! The cache is a `cacache` 20 store: an entry is appended to the index bucket
 //! `index-v5/<sha256(key)>` as `\n<sha1(json)>\t<json>`, and the content lives at
 //! `content-v2/sha512/<hex digest>`.
-//! Honors the [`NO_FS_CACHE`] (`no-fs-cache`) flag in `BIT_FEATURES` and [`invalidation`] checks.
+//! Honors the `no-fs-cache` flag in `BIT_FEATURES` and [`invalidation`] checks.
 
 pub mod invalidation;
 
@@ -27,7 +27,7 @@ use std::{
 /// `BIT_FEATURES` entry disabling the filesystem cache (`NO_FS_CACHE_FEATURE`) checked by [`disabled`].
 const NO_FS_CACHE: &str = "no-fs-cache";
 
-/// Read the cached [`Detected`] dependency data of `component` from `<scope>/cache/components/deps` when fresh.
+/// Read the cached `Detected` dependency data of `component` from `<scope>/cache/components/deps` when fresh.
 pub fn read(
     scope: &Scope,
     component: &WorkspaceComponent,
@@ -76,7 +76,7 @@ fn key(component: &WorkspaceComponent) -> String {
     }
 }
 
-/// Whether the filesystem cache is disabled through [`NO_FS_CACHE`] in `BIT_FEATURES`.
+/// Whether the filesystem cache is disabled through `no-fs-cache` in `BIT_FEATURES`.
 #[inline]
 #[must_use]
 pub fn disabled() -> bool {
@@ -88,7 +88,7 @@ pub fn disabled() -> bool {
         })
 }
 
-/// Store the [`Detected`] dependency data of `component` the way `saveDependenciesDataInCache` does,
+/// Store the `Detected` dependency data of `component` the way `saveDependenciesDataInCache` does,
 /// so the `TypeScript` loader reads it back.
 #[inline]
 pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected) -> io::Result<()> {

@@ -27,7 +27,9 @@ pub fn prepared_package_manifest(
         windows: cfg!(windows),
         is_aspect,
     };
-    super::finish(super::transformed(component, &context), component, &context)
+    let mut manifest = super::finish(super::transformed(component, &context), component, &context);
+    super::tracking::version(&mut manifest, component, &context);
+    manifest
 }
 
 /// Apply the ordinary component linker to a native prepared package manifest.

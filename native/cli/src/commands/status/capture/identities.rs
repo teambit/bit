@@ -88,7 +88,10 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
     if identity.is_empty() {
         return Err(decline("status dependency entry identity"));
     }
-    Ok(identity.to_string())
+    Ok(identity
+        .strip_suffix("@0.0.1-new")
+        .unwrap_or(identity)
+        .to_string())
 }
 
 /// Returns `identity` stripped of any trailing `@version` suffix for dependency cache matching.

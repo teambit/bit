@@ -237,9 +237,13 @@ pub(super) fn bind_new_dependencies(
             .as_array_mut()
             .ok_or_else(|| invalid("snap dependency entries"))?;
         for entry in entries {
+            if entry["versionFromConfig"] == true {
+                continue;
+            }
             let Some(identity) = entry["identity"]
                 .as_str()
                 .map(str::trim)
+                .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
                 .filter(|identity| identities.contains(*identity))
             else {
                 continue;

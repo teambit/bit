@@ -69,7 +69,7 @@ impl ModelData {
             .any(|file| matches!(file.trim().trim_start_matches("./"), "env.jsonc" | "env.json"))
     }
 
-    /// The component's own env is [`ENV_OF_ENVS`] (`teambit.envs/env`): an env loaded as an env plugin
+    /// The component's own env is `teambit.envs/env`: an env loaded as an env plugin
     /// (`*.bit-env.*`), not as an aspect with a provider.
     #[must_use]
     #[inline]

@@ -12,7 +12,7 @@ use crate::{
     workspace,
 };
 use serde_json::Value;
-use std::{collections::HashMap, env, fs, io, path::Path};
+use std::{collections::HashMap, fs, io, path::Path};
 
 /// Resolved local component target classification ([`Value`]) for `bit log`.
 #[derive(Debug, PartialEq, Eq)]
@@ -130,23 +130,6 @@ fn row_identity_matching(row: &Value, target: &str) -> Option<String> {
     matched.then(|| if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") })
 }
 
-#[inline]
-fn is_ci_active() -> bool {
-    env::var_os("CI")
-        .is_some_and(|val| {
-            let text = val.to_string_lossy();
-            let trimmed = text
-                .trim()
-                .trim_matches(['"', '\''])
-                .trim();
-            !trimmed.is_empty()
-                && !trimmed.eq_ignore_ascii_case("0")
-                && !trimmed.eq_ignore_ascii_case("false")
-                && !trimmed.eq_ignore_ascii_case("no")
-                && !trimmed.eq_ignore_ascii_case("off")
-        })
-}
-
 fn diagnose_missing_local_target(
     root: &Path,
     raw_id: &str,
@@ -155,7 +138,6 @@ fn diagnose_missing_local_target(
 ) -> io::Result<LocalTarget> {
     let scope_dir = workspace::scope_path(root);
     if raw_id.starts_with('@')
-        || is_ci_active()
         || (!scope_dir.join("index.json").is_file() && scope_dir.join("objects").is_dir())
     {
         return Err(decline("log missing target delegated"));

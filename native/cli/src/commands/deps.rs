@@ -1,7 +1,7 @@
 //! Native `bit deps <set|remove|unset|reset|eject|get|usage|diagnose|blame|write|circular|debug>` (`bit dependencies`, [`COMMAND`], [`WHY`], [`BitmapMutation`], [`parse_subcommand`])
 //! (`scopes/dependencies/dependencies/dependencies-cmd.ts`).
 //!
-//! Coordinates [`blame`], [`debug`], [`diagnose`], [`get`], [`mutation`], [`parse`], [`policy`], [`remove`], [`resolve`], [`usage`], and [`write`].
+//! Coordinates [`blame`], [`debug`], [`diagnose`], [`get`], [`mutation`], [`parse`], [`policy`], [`remove`], [`resolve`], [`usage`], and [`mod@write`].
 
 pub(super) use self::{
     mutation::{BitmapMutation, apply_dep_resolver_config},

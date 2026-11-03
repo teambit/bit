@@ -1,4 +1,4 @@
-//! Published stash metadata files ([`PreparedLoad`], [`PreparedSave`], [`Observation`], [`list`]), lexical naming, and retained filesystem observations.
+//! Published stash metadata files ([`PreparedLoad`], [`PreparedSave`], `Observation`, [`list`]), lexical naming, and retained filesystem observations.
 pub use save::PreparedSave;
 mod observation;
 mod save;
@@ -9,7 +9,7 @@ use observation::Observation;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Retained stash metadata file selection and [`Observation`] directory state for `bit stash load`.
+/// Retained stash metadata file selection and `Observation` directory state for `bit stash load`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedLoad {
     observation: Observation,
@@ -17,7 +17,7 @@ pub struct PreparedLoad {
     data: Value,
 }
 impl PreparedLoad {
-    /// Select an explicit stash ID or the lexically latest published filename via [`Observation::read`].
+    /// Select an explicit stash ID or the lexically latest published filename from `Observation`.
     pub fn prepare(scope: &Path, id: Option<&str>) -> io::Result<Self> {
         let observation = Observation::read(scope)?;
         let filename = match id
@@ -57,7 +57,7 @@ impl PreparedLoad {
     pub fn filename(&self) -> &str {
         &self.filename
     }
-    /// Revalidate the selected metadata and the stash filename inventory via [`Observation::validate`].
+    /// Revalidate the selected metadata and the stash filename inventory via `Observation`.
     pub fn validate(&self) -> io::Result<()> {
         self.observation.validate()
     }
@@ -67,7 +67,7 @@ impl PreparedLoad {
         fs::remove_file(self.observation.directory().join(&self.filename))
     }
 }
-/// Maximum byte size (32 MiB) and entry count (4,096) enforced via [`Observation`] on `.bit/stash`.
+/// Maximum byte size (32 MiB) and entry count (4,096) enforced via `Observation` on `.bit/stash`.
 /// Project the published list result in stash filename discovery order.
 pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
     let observation = Observation::read(scope)?;

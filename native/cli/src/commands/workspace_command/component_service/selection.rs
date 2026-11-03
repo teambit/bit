@@ -1,10 +1,10 @@
 //! Component selector resolution for built-in environment services.
 //!
-//! [`exact`] and [`matches`] resolve selector strings against workspace component [`Value`] entries.
+//! [`exact`] and [`matches()`] resolve selector strings against workspace component [`Value`] entries.
 use super::{Value, invalid};
 use std::io;
 
-/// Resolves `selectors` in order against `targets`, returning the deduplicated matching component [`Value`] rows via [`matches`].
+/// Resolves `selectors` in order against `targets`, returning the deduplicated matching component [`Value`] rows via [`matches()`].
 pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<Value>> {
     if selectors.is_empty() {
         return Ok(targets.to_vec());
@@ -55,7 +55,7 @@ fn row_text<'r>(row: &'r Value, keys: [&str; 2]) -> Option<&'r str> {
         .find(|val| !val.is_empty())
 }
 
-/// Normalizes path separators to `/` and strips leading `./` and trailing `/` from `value` for [`matches`].
+/// Normalizes path separators to `/` and strips leading `./` and trailing `/` from `value` for [`matches()`].
 #[inline]
 fn normalized_dir(value: &str) -> String {
     let normalized = value.replace('\\', "/");

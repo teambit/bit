@@ -77,7 +77,7 @@ fn run_workspace(
         print!("{startup_stdout}");
     }
     workspace_command::execute_then(root, args, "move", |output| {
-        let plan = prepared?;
+        let plan = Plan::prepare(root, cwd, from, to).or(prepared)?;
         let report = Report { data: report(&plan, &format)?, code: 0, details: None };
         plan.move_sources()?;
         let identities = plan.identities();

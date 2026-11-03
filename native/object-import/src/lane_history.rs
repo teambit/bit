@@ -1,4 +1,4 @@
-//! Read a local lane's validated `LaneHistory` object ([`read`], [`read_at`], [`hash`], [`ci_requires_published_diagnostic`]) without a `Node.js` object round trip.
+//! Read a local lane's validated `LaneHistory` object ([`read`], `hash`, [`ci_requires_published_diagnostic`]) without a `Node.js` object round trip.
 pub use diagnostic::ci_requires_published_diagnostic;
 mod diagnostic;
 use crate::workspace::engine::command::outbound;
@@ -6,7 +6,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
-/// Returns the validated `LaneHistory` JSON [`Value`] for `lane_hash` in the workspace scope at `root` ([`Path`]) via [`read_at`].
+/// Returns the validated `LaneHistory` JSON [`Value`] for `lane_hash` in the workspace scope at `root` ([`Path`]).
 #[inline]
 pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
     read_at(&crate::scope_path(root), lane_hash)

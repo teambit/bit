@@ -23,7 +23,7 @@ const REMOVE_ASPECT: &str = "teambit.component/remove";
 /// The root dir of the component that owns the workspace root.
 pub const WORKSPACE_ROOT_DIR: &str = ".";
 
-/// The lane the workspace is on ([`LANE_KEY`], `_bit_lane`).
+/// The lane the workspace is on (`_bit_lane`).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct LaneInfo {
     /// Remote scope name owning the lane.
@@ -74,7 +74,7 @@ pub struct LaneFlags {
 }
 
 impl BitmapEntry {
-    /// `isRemoved()`: soft-removed with `bit remove` via [`REMOVE_ASPECT`].
+    /// `isRemoved()`: soft-removed with `bit remove` (`teambit.component/remove`).
     #[must_use]
     pub fn is_removed(&self) -> bool {
         let Some(remove) = self.config

@@ -1,4 +1,4 @@
-//! `fieldsDiff` of `bit diff` ([`diff`]): each [`Side`]'s [`Component`] metadata and
+//! `fieldsDiff` of `bit diff` ([`diff()`]): each [`Side`]'s [`Component`] metadata and
 //! `diffMetadata` of `@teambit/legacy.component-diff` with
 //! `formatDepsAsTable: false`.
 
@@ -15,7 +15,7 @@ use serde_json::{Value, json};
 use side::PACKAGE_FIELDS;
 use std::io;
 
-/// Component dependency field names compared by [`diff`] via [`dependency_fields`].
+/// Component dependency field names compared by [`diff()`] via [`dependency_fields`].
 const ID_FIELDS: [&str; 4] =
     ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"];
 

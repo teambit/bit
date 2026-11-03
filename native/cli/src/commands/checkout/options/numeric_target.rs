@@ -1,4 +1,4 @@
-//! yargs-parser's positional number coercion ([`coerce`]) followed by `CheckoutCmd`'s `String(to)`.
+//! yargs-parser's positional number coercion ([`number`]) followed by `CheckoutCmd`'s `String(to)`.
 //!
 //! Exposes [`normalize`], [`valid_to`], and [`valid_revert_version`] to format numeric and hexadecimal positional arguments like `JavaScript`.
 #[cfg(test)]

@@ -58,6 +58,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let chalk = Chalk::detect(args);
     let fast = match classify_workspace(&cwd, &root, &options, chalk) {
+        Ok(Some(FastOutcome::Error(_)))
+            if super::scope_rename::ci_active()
+                && options.user_pattern
+                    .iter()
+                    .all(|entry| !cwd.join(entry).is_file())
+                && validate_test_pattern(&root, &options, chalk).is_some() =>
+        {
+            return runner::run(&root, args, &options);
+        }
         Ok(Some(fast)) => fast,
         Ok(None) => return runner::run(&root, args, &options),
         Err(_) => return Ok(Outcome::Declined("test requires tester aspect runtime".into())),
@@ -110,11 +119,9 @@ pub(super) fn classify_workspace(
     if let Some(err) = validate_user_patterns(cwd, root, &options.user_pattern, &active_entries) {
         return Ok(Some(FastOutcome::Error(err)));
     }
-    let in_ci = super::scope_rename::ci_active();
-    if !in_ci
-        && options.user_pattern
-            .iter()
-            .all(|entry| !cwd.join(entry).is_file())
+    if options.user_pattern
+        .iter()
+        .all(|entry| !cwd.join(entry).is_file())
         && let Some(err) = validate_test_pattern(root, options, chalk)
     {
         return Ok(Some(FastOutcome::Error(err)));

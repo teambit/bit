@@ -1,6 +1,6 @@
 //! Rust owns component compilation orchestration ([`Options`]); `TypeScript` is an external compiler.
 //!
-//! Coordinates [`plan`], [`limits`], [`linking`], [`emission`], [`write`], and [`report`] phases.
+//! Coordinates [`plan`], [`limits`], [`linking`], [`emission`], [`mod@write`], and [`report`] phases.
 mod emission;
 mod limits;
 mod linking;

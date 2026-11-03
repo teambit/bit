@@ -1,8 +1,8 @@
-//! Shared `minimatch` pattern matcher ([`match_patterns`] and [`matches`]) for component dev-file classification.
+//! Shared `minimatch` pattern matcher ([`match_patterns`] and [`matches()`]) for component dev-file classification.
 //!
-//! [`match_patterns`] and [`matches`] delegate non-empty glob pattern checks to `bit_workspace_config::glob` (`minimatch`).
+//! [`match_patterns`] and [`matches()`] delegate non-empty glob pattern checks to `bit_workspace_config::glob` (`minimatch`).
 
-/// Return `true` when `path` matches at least one non-empty glob pattern in `patterns` (see [`matches`]).
+/// Return `true` when `path` matches at least one non-empty glob pattern in `patterns` (see [`matches()`]).
 #[inline]
 #[must_use]
 pub fn match_patterns(path: &str, patterns: &[String]) -> bool {

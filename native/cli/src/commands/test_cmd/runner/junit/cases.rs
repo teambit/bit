@@ -60,7 +60,7 @@ fn message(output: &mut String, kind: &str, message: Option<&str>) {
         writeln!(output, r#"      <{kind} message="{}"/>"#, xml::attribute(&message)).unwrap();
     }
 }
-/// Collects [`Case`] records across all `testFiles` and assertions in `component` ([`Value`]) via [`test_case`].
+/// Collects [`Case`] records across all `testFiles` and assertions in `component` ([`Value`]) via [`test_case()`].
 pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
     let mut cases = Vec::new();
     let source = source_rows(component, raw);

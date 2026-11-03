@@ -4,7 +4,7 @@
 //! removed and conflict sections stay empty. `bit lane merge` gets the
 //! whole result (`MergeLaneCmd`).
 //!
-//! Formats workspace config updates via [`policy`] ([`Mode`], [`format`], [`REMOVED`]) and renders output with [`Chalk`].
+//! Formats workspace config updates via `policy` ([`Mode`], [`format()`], `REMOVED`) and renders output with [`Chalk`].
 
 mod policy;
 
@@ -21,7 +21,7 @@ use std::io;
 /// `compHasBeenRemovedMsg`.
 const REMOVED: &str = "component has been removed";
 
-/// Presentation mode controlling whether [`format`] renders a component merge or full lane merge report.
+/// Presentation mode controlling whether [`format()`] renders a component merge or full lane merge report.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Mode {
     pub verbose: bool,

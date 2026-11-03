@@ -1,7 +1,7 @@
 //! `bit install` orchestration: `install.cmd.tsx` and `InstallMain.install`.
 //!
-//! Coordinates [`Session`] workspace loading, [`add_root_policy_entries`], [`edit_workspace_config`], and [`engine`] execution.
-//! Supports recurring watch/postinstall flows, [`stored_graphs`] lockfile restoration, and [`summary`] reporting.
+//! Coordinates `Session` workspace loading, [`add_root_policy_entries`], [`edit_workspace_config`], and [`engine`] execution.
+//! Supports recurring watch/postinstall flows, [`stored_graphs`] lockfile restoration, and `summary` reporting.
 
 pub use packages::policy_edit::{
     remove_from_document as remove_root_policy_entries, update_document as add_root_policy_entries,

@@ -1,4 +1,4 @@
-//! Reset graph-selected local lane snapshots ([`Batch`], [`Plan`], [`BitmapState`], [`Repository`], [`ObjectChange`], [`apply_error_prefix`], [`diagnostic`]) without changing workspace source files.
+//! Reset graph-selected local lane snapshots ([`Batch`], [`Plan`], `Repository`, [`apply_error_prefix`], [`diagnostic`]) without changing workspace source files.
 
 pub(crate) mod bitmap;
 pub(crate) mod controls;

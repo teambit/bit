@@ -43,7 +43,7 @@ impl Ignore {
         Self::default()
     }
 
-    /// `add(patterns)` on [`Ignore`] with the process-wide regex cache ([`process_compiler`]).
+    /// `add(patterns)` on [`Ignore`] with the process-wide regex cache.
     #[inline]
     pub fn add<'pattern>(
         &mut self,

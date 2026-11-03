@@ -1,13 +1,13 @@
 //! Keep qualified diagnostic details outside the command error's red message.
 //!
-//! [`WithDetails`], [`with_error_details`], and [`print`] pair an [`io::Error`] message with uncolored diagnostic detail lines for [`Chalk`] output.
+//! [`WithDetails`], [`with_error_details`], and [`print()`] pair an [`io::Error`] message with uncolored diagnostic detail lines for [`Chalk`] output.
 use crate::commands::color::Chalk;
 use std::{
     fmt,
     io::{self, Write},
 };
 
-/// Error wrapper pairing an [`io::Error`] with uncolored diagnostic detail lines for [`print`].
+/// Error wrapper pairing an [`io::Error`] with uncolored diagnostic detail lines for [`print()`].
 #[derive(Debug)]
 struct WithDetails {
     error: io::Error,

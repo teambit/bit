@@ -1,11 +1,11 @@
 //! `JavaScript` value semantics the Node.js CLI relies on, over `serde_json` [`Value`] items.
 //!
-//! Exposes [`decline`], [`nullish`], [`truthy`], [`text`], [`array`], [`object`], [`string_map`], and [`assign`] coercion helpers.
+//! Exposes [`decline`], [`nullish`], [`truthy`], [`text`], [`array()`], [`object`], [`string_map`], and [`assign`] coercion helpers.
 
 use serde_json::{Map, Value};
 use std::io;
 
-/// Constructs an [`io::Error`] indicating that native status execution should decline (`reason`) cleanly ([`object`], [`string_map`], [`array`], [`text`]).
+/// Constructs an [`io::Error`] indicating that native status execution should decline (`reason`) cleanly ([`object`], [`string_map`], [`array()`], [`text`]).
 #[must_use]
 #[inline]
 pub fn decline(reason: impl Into<String>) -> io::Error {

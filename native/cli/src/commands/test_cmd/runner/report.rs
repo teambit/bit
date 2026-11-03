@@ -1,6 +1,6 @@
 //! Project external Jest results into the released tester JSON contract.
 //!
-//! [`report`] transforms raw Jest [`Value`] output at a workspace [`Path`] into a command [`Report`] via [`file`] and [`test`].
+//! [`report`] transforms raw Jest [`Value`] output at a workspace [`Path`] into a command [`Report`] via [`file()`] and [`test()`].
 use crate::commands::workspace_command::results::Report;
 use serde_json::{Value, json};
 use std::{io, path::Path};
@@ -47,7 +47,7 @@ pub(super) fn report(raw: &Value, identity: &str) -> io::Result<Report> {
         details: None,
     })
 }
-/// Projects a single Jest `testResults` `row` [`Value`] into a Bit tester `testFiles` entry via [`test`].
+/// Projects a single Jest `testResults` `row` [`Value`] into a Bit tester `testFiles` entry via [`test()`].
 fn file(row: &Value) -> io::Result<Value> {
     let non_empty = |key: &str| {
         row[key]

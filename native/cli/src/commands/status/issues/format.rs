@@ -1,12 +1,12 @@
 //! String forms of issue data in status JSON.
 //!
-//! [`join`], [`list_or_text`], and [`item_text`] serialize issue [`Value`] payloads with [`array`] and [`text`] into comma-separated strings.
+//! [`join`], [`list_or_text`], and [`item_text`] serialize issue [`Value`] payloads with [`array()`] and [`text`] into comma-separated strings.
 
 use super::{array, text};
 use serde_json::Value;
 use std::io;
 
-/// Joins the string elements of JSON [`array`] `data` ([`Value`]) with `", "` (`array.join(', ')`) via [`item_text`].
+/// Joins the string elements of JSON [`array()`] `data` ([`Value`]) with `", "` (`array.join(', ')`) via [`item_text`].
 #[inline]
 pub(super) fn join(data: &Value) -> io::Result<String> {
     let items = array(Some(data), "issue data")?;

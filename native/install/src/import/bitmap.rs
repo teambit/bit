@@ -76,7 +76,7 @@ impl Id {
     }
 }
 
-/// The active lane entry ([`LANE_KEY`]) that `.bitmap` says the workspace is checked out on.
+/// The active lane entry (`_bit_lane`) that `.bitmap` says the workspace is checked out on.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LaneId {
     pub scope: String,

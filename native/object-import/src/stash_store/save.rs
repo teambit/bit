@@ -1,9 +1,9 @@
-//! `StashFiles` lexical next-name selection ([`next_index`]) and four-space JSON publication ([`PreparedSave`]).
+//! `StashFiles` lexical next-name selection and four-space JSON publication ([`PreparedSave`]).
 use super::{invalid, observation::Observation};
 use serde::Serialize;
 use serde_json::Value;
 use std::{fs, io, path::Path};
-/// Retained stash metadata file payload and [`Observation`] directory preimage for `bit stash save`.
+/// Retained stash metadata file payload and `Observation` directory preimage for `bit stash save`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedSave {
     observation: Observation,
@@ -11,7 +11,7 @@ pub struct PreparedSave {
     bytes: Vec<u8>,
 }
 impl PreparedSave {
-    /// Retains the metadata inventory and serialized payload via [`Observation::read`] and [`next_index`] before any detached objects are published.
+    /// Retains the metadata inventory and serialized payload via `Observation` before any detached objects are published.
     pub fn prepare(scope: &Path, data: &Value) -> io::Result<Self> {
         if !data.is_object() {
             return Err(invalid("stash metadata must be a JSON object"));

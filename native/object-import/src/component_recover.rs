@@ -22,7 +22,7 @@ use std::{
 /// Maximum number of component source files (`4096`) and byte budget ([`MAX_BYTES`], `32 MiB`) for [`Plan`] recovery.
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
-/// Retained single-component recovery plan restoring [`SourceFile`]s and [`Bitmap`] state from local [`Repository`] objects.
+/// Retained single-component recovery plan restoring source files and `Bitmap` state from local `Repository` objects.
 pub struct Plan {
     root: PathBuf,
     bitmap: Bitmap,

@@ -45,7 +45,7 @@ fn parse_scope(scope_id: Option<&str>) -> (Option<&str>, Option<&str>) {
     }
 }
 
-/// The package name of a [`ComponentId`]: [`PKG_ASPECT`] (`teambit.pkg/pkg`) `packageJson.name` when
+/// The package name of a [`ComponentId`]: `teambit.pkg/pkg` `packageJson.name` when
 /// configured (with `{name}`, `{scope}`, `{scopeId}`, `{owner}` and `{main}`
 /// placeholders), otherwise `<binding prefix>/<scope>.<name with dots>` with
 /// the owner removed from the scope part.

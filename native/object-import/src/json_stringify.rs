@@ -1,9 +1,9 @@
-//! `JavaScript` `JSON.stringify` formatting ([`stringify_json`], [`convert`], [`convert_object`], [`Value`]) for JSON values captured by the native workspace engine.
+//! `JavaScript` `JSON.stringify` formatting ([`stringify_json`], `convert`, `Value`) for JSON values captured by the native workspace engine.
 
 use crate::js_json::{Value, stringify};
 use std::io;
 
-/// Serializes JSON `value` via [`convert`] and [`stringify`] with `JavaScript` property ordering and `binary64` number formatting.
+/// Serializes JSON `value` via `convert` and `stringify` with `JavaScript` property ordering and `binary64` number formatting.
 #[inline]
 pub fn stringify_json(value: &serde_json::Value, pretty: bool) -> io::Result<String> {
     let bytes = stringify(&convert(value)?, pretty)?

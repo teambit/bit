@@ -90,6 +90,9 @@ fn dependency_id(state: &Value, index: &Value) -> io::Result<String> {
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("issue dependency identity"))?;
     Ok(match id.rsplit_once('@') {
+        Some((base, ver)) if !base.trim().is_empty() && ver.trim() == "0.0.1-new" => {
+            base.trim().to_owned()
+        }
         Some((base, ver)) if !base.trim().is_empty() && !ver.trim().is_empty() => {
             format!("{}@{}", base.trim(), ver.trim())
         }

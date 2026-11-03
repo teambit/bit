@@ -87,7 +87,7 @@ impl Network {
         inventory_rows(&response, include_deleted).map(|rows| (rows, false))
     }
 
-    /// `Http.latestVersions`: `GraphQL` [`LATEST_VERSIONS_QUERY`] returns ids in the remote's own order.
+    /// `Http.latestVersions`: `GraphQL` `getLatestVersions` query returns ids in the remote's own order.
     pub async fn latest_versions(&self, url: &str, ids: &[String]) -> io::Result<Vec<String>> {
         let base = url.trim().trim_end_matches('/');
         if base.is_empty()

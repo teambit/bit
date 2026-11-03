@@ -1,6 +1,6 @@
 //! Snapshot consumers follow the published loader's breadth-first source traversal.
 //!
-//! [`snapshot`] and [`snapshot_file_path`] reorder component source file lists in [`Capture`] ([`array`], [`decline`]) to match breadth-first traversal.
+//! [`snapshot`] and [`snapshot_file_path`] reorder component source file lists in [`Capture`] ([`array()`], [`decline`]) to match breadth-first traversal.
 use super::{Capture, array, decline, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};

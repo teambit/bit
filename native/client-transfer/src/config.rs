@@ -1,6 +1,6 @@
 //! Published config-getter precedence for transport, authentication and remote resolution.
 //!
-//! Normalizes `BIT_CONFIG_*` environment variables against persisted [`GlobalConfig`] and [`TRANSPORT_KEYS`] via [`effective`] and [`layers`].
+//! Normalizes `BIT_CONFIG_*` environment variables against persisted [`GlobalConfig`] transport keys via [`effective`] and `layers`.
 #[cfg(test)]
 mod tests;
 
@@ -43,7 +43,7 @@ const TRANSPORT_KEYS: &[&str] = &[
     "network.key",
 ];
 
-/// `BIT_CONFIG_*` overrides `workspace` ([`Value`]) settings, then `scope` settings, then `global` ([`GlobalConfig`]) settings via [`layers`].
+/// `BIT_CONFIG_*` overrides `workspace` ([`Value`]) settings, then `scope` settings, then `global` ([`GlobalConfig`]) settings via `layers`.
 #[inline]
 #[must_use]
 pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> GlobalConfig {

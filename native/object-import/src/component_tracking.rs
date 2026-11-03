@@ -1,4 +1,4 @@
-//! Retained component tracking plans ([`Plan`], [`Options`], [`identity`], [`observe`]) publishing `.bitmap` only after linking succeeds.
+//! Retained component tracking plans ([`Plan`], [`Options`], `identity`, `observe`) publishing `.bitmap` only after linking succeeds.
 //!
 //! Captures directory listings and file SHA-256 preimages ([`Plan::prepare`], [`Plan::validate`]) before computing projected `.bitmap` entries ([`Plan::commit`]).
 pub(crate) mod identity;
@@ -32,7 +32,7 @@ pub struct Plan {
     dirty: bool,
 }
 impl Plan {
-    /// Resolve selectors from [`Options`] at [`Path`] `root` and retain all [`Observed`] filesystem preimages without writing.
+    /// Resolve selectors from [`Options`] at [`Path`] `root` and retain all `Observed` filesystem preimages without writing.
     pub fn prepare(root: &Path, cwd: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
         let mut observed = Observed::default();
         observed.ancestors(root, root)?;
@@ -80,7 +80,7 @@ impl Plan {
     pub const fn warnings(&self) -> &Value {
         &self.warnings
     }
-    /// Reject changes to retained [`Observed`] files and directory entries before publication.
+    /// Reject changes to retained `Observed` files and directory entries before publication.
     #[inline]
     pub fn validate(&self) -> io::Result<()> {
         self.observed.validate()

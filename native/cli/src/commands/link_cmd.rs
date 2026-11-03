@@ -1,6 +1,6 @@
 //! Native `bit link [component-names...]` (`scopes/workspace/install/link/link.cmd.ts`).
 //!
-//! Coordinates [`COMMAND`], [`Options`], [`parse_options`], [`runner`], [`rewire`], [`target`], and [`format`] for workspace and target linking.
+//! Coordinates [`COMMAND`], [`Options`], [`parse_options`], [`runner`], [`rewire`], [`target`], and [`mod@format`] for workspace and target linking.
 
 mod format;
 mod rewire;

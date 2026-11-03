@@ -1,9 +1,9 @@
-//! Pre-ignore directory scan ([`has_scanned_files`], [`is_removed_row`]) determining `BitMap` missing-directory errors even for empty directories.
+//! Pre-ignore directory scan ([`has_scanned_files`]) determining `BitMap` missing-directory errors even for empty directories.
 use crate::workspace::engine::inventory;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Whether the canonical pre-ignore component scan finds any files in `directory` under [`Path`] `root` outside [`is_removed_row`] entries.
+/// Whether the canonical pre-ignore component scan finds any files in `directory` under [`Path`] `root` outside soft-removed entries.
 pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Result<bool> {
     let normalized = normalize_dir(directory);
     let directory = normalized.trim_matches('/');

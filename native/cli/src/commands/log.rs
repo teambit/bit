@@ -2,7 +2,7 @@
 //! with the Node CLI's report and JSON views. Missing objects and unusual
 //! graph or metadata forms delegate before output.
 //!
-//! Re-exports [`COMMAND`], [`table`], and [`table_with_separator`] for [`run`] log and blame formatting.
+//! Re-exports [`COMMAND`], [`table()`], and [`table_with_separator`] for [`run`] log and blame formatting.
 
 pub(super) use table::{table, table_with_separator};
 
@@ -92,6 +92,9 @@ fn execute_log(
     } else if let Some(root) = root {
         match read(root, options, chalk) {
             Ok(Ok(logs)) => Ok(logs),
+            Ok(Err(_)) if super::scope_rename::ci_active() => {
+                return Ok(Outcome::Declined("log missing target delegated".into()));
+            }
             Ok(Err(err)) => {
                 return emit_pattern_error(root, args, "log", options.json, err);
             }

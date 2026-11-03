@@ -1,6 +1,6 @@
 //! Remote scope resolution (`getScopeRemotes` and the hub `remoteResolver`).
 //!
-//! Resolves [`Remote`] scope URLs across workspace `remotes`, [`GLOBAL_REMOTES`], [`Resolver`], and [`Network`].
+//! Resolves [`Remote`] scope URLs across workspace `remotes`, `global-remotes.json`, [`Resolver`], and [`Network`].
 
 use crate::{GlobalConfig, http::Network, invalid, resolver::Resolver};
 use indexmap::IndexMap;
@@ -63,7 +63,7 @@ impl Remote {
     }
 }
 
-/// The remotes a workspace scope knows: `scope.json` remotes layered over [`GLOBAL_REMOTES`] and [`Resolver`].
+/// The remotes a workspace scope knows: `scope.json` remotes layered over `global-remotes.json` and [`Resolver`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Remotes {
     hosts: IndexMap<String, String>,
@@ -89,7 +89,7 @@ impl Remotes {
             .transpose()
     }
 
-    /// Load [`Remotes`] from `scope_json`, [`GLOBAL_REMOTES`], and `global` [`GlobalConfig`] settings.
+    /// Load [`Remotes`] from `scope_json`, `global-remotes.json`, and `global` [`GlobalConfig`] settings.
     #[inline]
     pub fn load(
         scope_json: &Value,

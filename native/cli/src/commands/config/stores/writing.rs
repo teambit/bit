@@ -1,6 +1,6 @@
 //! [`Store`] persistence follows `GlobalConfig`, `ScopeJson`, and `WorkspaceConfig` [`Document`]s independently.
 //!
-//! Exposes [`write`] to persist updated configuration stores atomically.
+//! Exposes [`write()`] to persist updated configuration stores atomically.
 use super::{Document, Map, Store, Value, aspect};
 use std::{
     fs,
@@ -42,7 +42,7 @@ pub(super) fn write(store: &Store) -> io::Result<()> {
     }
 }
 
-/// Rebuilds the `scope.json` [`Value`] for `store` ([`Store`]) with canonical top-level key ordering and updated `config` values for [`write`].
+/// Rebuilds the `scope.json` [`Value`] for `store` ([`Store`]) with canonical top-level key ordering and updated `config` values for [`write()`].
 fn scope(store: &Store) -> io::Result<Value> {
     let mut source = store.source
         .as_object()

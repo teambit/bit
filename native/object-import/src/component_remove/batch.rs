@@ -28,7 +28,7 @@ pub struct NewBatch {
     cleanup: Cleanup,
 }
 impl NewBatch {
-    /// Captures one [`BitmapChange`] preimage at [`Path`] `root` and validates every [`Selected`] component destination.
+    /// Captures one `.bitmap` change preimage at [`Path`] `root` and validates every `Selected` component destination.
     #[inline]
     pub fn prepare(root: &Path, identities: &[String]) -> io::Result<Self> {
         Self::prepare_with_components(root, identities, &[])
@@ -61,7 +61,7 @@ impl NewBatch {
             cleanup,
         })
     }
-    /// Check all [`Cleanup`] controls and filesystem destinations before the first removal.
+    /// Check all `Cleanup` controls and filesystem destinations before the first removal.
     pub fn validate(&self) -> io::Result<()> {
         if fs::read(self.root.join(".bitmap"))? != self.bitmap.before {
             return Err(invalid("component bitmap changed before removal"));

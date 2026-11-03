@@ -1,11 +1,11 @@
-//! Invoke only the external Prettier API ([`format`], [`Target`], [`MAX_TOOL_BYTES`], [`write_formatter_input`]), without loading Bit runtime modules.
+//! Invoke only the external Prettier API ([`format()`], [`Target`], [`MAX_TOOL_BYTES`], [`write_formatter_input`]), without loading Bit runtime modules.
 use super::{Value, invalid};
 use crate::discovery::{self, Target};
 use std::{
     io::{self, Write},
     process::{Command, Stdio},
 };
-/// Maximum JSON byte payload accepted on stdin or stdout when communicating with `tool.cjs` in [`format`] and [`write_formatter_input`].
+/// Maximum JSON byte payload accepted on stdin or stdout when communicating with `tool.cjs` in [`format()`] and [`write_formatter_input`].
 const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
 /// Formats `files` in a single batch by spawning `tool.cjs` against the bundled Prettier package (up to [`MAX_TOOL_BYTES`]).
 #[inline]
@@ -46,7 +46,7 @@ pub(super) fn format(files: &[Value]) -> io::Result<Vec<Value>> {
     Ok(formatted)
 }
 
-/// Writes `bytes` to `child`'s stdin and flushes for [`format`], killing the child process if writing fails.
+/// Writes `bytes` to `child`'s stdin and flushes for [`format()`], killing the child process if writing fails.
 #[inline]
 fn write_formatter_input(child: &mut std::process::Child, bytes: &[u8]) -> io::Result<()> {
     let mut stdin = child.stdin.take().ok_or_else(|| invalid("formatter tool stdin"))?;
