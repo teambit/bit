@@ -20,7 +20,7 @@ fn replaced_history_cannot_become_an_accepted_published_proof() {
     assert!(error.to_string().contains("changed after publication"));
 }
 
-/// Verifies that [`verify_published`] rejects corrupted zlib payloads under the configured [`Budget`].
+/// Verifies that [`verify_published`] rejects corrupted [`ZlibEncoder`] payloads under the configured [`Budget`].
 #[test]
 fn corrupted_zlib_payload_fails_published_history_verification() {
     let expected = b"VersionHistory abc 2\0{}";

@@ -64,7 +64,7 @@ fn token_exhaustion_declines_without_reusing_an_observation_identity() {
     assert_eq!(state.records.len(), 1);
 }
 
-/// Verifies that [`State::retain`] rejects a single [`Observation`] whose size exceeds [`MAX_BYTES`].
+/// Verifies that [`State::retain`] rejects a single [`snapshot`] ([`Observation`]) whose size exceeds [`MAX_BYTES`].
 #[test]
 fn oversized_single_snapshot_beyond_byte_limit_is_rejected() {
     let mut state = State::default();

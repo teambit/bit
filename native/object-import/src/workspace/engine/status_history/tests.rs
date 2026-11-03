@@ -82,7 +82,7 @@ fn commit_uses_canonical_utf16_header_and_preserves_history_fields() {
     assert_eq!(body, expected);
 }
 
-/// Verifies that [`validate`] and [`commit`] succeed with `written: 0` when `plans` is empty.
+/// Verifies that [`validate`] and [`commit`] on [`Fixture`] succeed with `written: 0` when [`Request`] `plans` is empty.
 #[test]
 fn empty_plan_batch_validates_and_commits_zero_histories() {
     let fixture = Fixture::new();

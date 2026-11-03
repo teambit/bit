@@ -29,7 +29,7 @@ fn single_negation_cannot_turn_canonical_literal_resolution_into_glob_selection(
     assert!(filter_pattern(known.clone(), &known, &[known[0].clone()], &options).is_err());
 }
 
-/// Verifies that [`filter_pattern`] selects the matching known component when given an exact literal pattern in [`Options`].
+/// Verifies that [`filter_pattern`] selects the matching known component when given an exact literal pattern in [`Options`] ([`json`]).
 #[test]
 fn exact_literal_pattern_selects_matching_known_component() {
     let known = vec!["scope/one".to_owned(), "scope/two".to_owned()];

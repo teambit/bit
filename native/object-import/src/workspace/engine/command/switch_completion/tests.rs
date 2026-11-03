@@ -88,7 +88,7 @@ fn completion_rejects_unowned_installer_write_receipts_before_any_publication() 
     assert_eq!(error.to_string(), "switch completion has no acknowledged installer bitmap writes");
 }
 
-/// Verifies that `publish_checkout: false` skips the intermediate checkout `.bitmap` write and updates `.bitmap` only in [`Retained::commit`].
+/// Verifies that `publish_checkout: false` in [`prepare`] skips the intermediate checkout `.bitmap` (`BitMap`) write and updates `.bitmap` only in [`Retained::commit`].
 #[test]
 fn keep_ours_updates_only_the_final_bitmap_without_a_component_writer_stage() {
     let directory = tempfile::tempdir().unwrap();

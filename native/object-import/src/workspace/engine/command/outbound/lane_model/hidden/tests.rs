@@ -50,7 +50,7 @@ fn reconciles_advanced_diverged_missing_and_promoted_entries() {
     assert_eq!(expected.pop().unwrap(), row("removed", &new));
     assert_eq!(expected.len(), 3);
 }
-/// Verifies that [`merge`] preserves the remote head when local and remote heads are equal or local `VersionHistory` is absent.
+/// Verifies that [`merge`] preserves the remote [`row`] head when local and remote heads are equal or local `VersionHistory` ([`history`]) is absent.
 #[test]
 fn equal_heads_and_missing_history_keep_remote() {
     let old = "a".repeat(40);

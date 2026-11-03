@@ -25,7 +25,7 @@ fn inactive_metadata_and_new_directory_are_revalidated_before_publication() {
     assert!(lane_context::validate_additions(&root.0, &context, &mut Vec::new()).is_err());
 }
 
-/// Verifies that [`component_controls`] and [`lane_context::validate_additions`] emit no proofs when the lane context is empty.
+/// Verifies that [`component_controls`] and [`lane_context::validate_additions`] emit no [`proof`]s in [`Directory`] when the lane context is empty.
 #[test]
 fn empty_lane_context_produces_no_component_control_or_addition_proofs() {
     let root = Directory::create().unwrap();

@@ -38,7 +38,7 @@ fn scope_json_rendering_has_four_space_indentation_without_a_final_newline() {
     );
 }
 
-/// Verifies that [`merge_layers`] returns an empty map when all three configuration layers are empty objects.
+/// Verifies that [`merge_layers`] returns an empty map when all three configuration layers are empty [`json`] objects.
 #[test]
 fn merge_layers_returns_empty_map_when_all_layers_are_empty_objects() {
     let empty = json!({});

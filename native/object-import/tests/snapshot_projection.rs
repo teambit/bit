@@ -76,7 +76,7 @@ fn identities_preserve_preallocated_version_and_lane_hashes() {
     assert_ne!(scope, snapshot_projection::identity("VersionHistory", &fields, None).unwrap());
 }
 
-/// Verifies that [`snapshot_projection::serialize`] and [`snapshot_projection::identity`] reject unknown object kinds.
+/// Verifies that [`snapshot_projection::serialize`] and [`snapshot_projection::identity`] reject unknown object kinds on [`Value`].
 #[test]
 fn unknown_object_kind_declines_snapshot_projection_and_identity() {
     let fields = Value::Object(vec![]);

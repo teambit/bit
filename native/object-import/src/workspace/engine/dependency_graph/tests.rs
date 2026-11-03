@@ -86,7 +86,7 @@ fn traverses_cycles_and_opaque_files_with_deterministic_order() {
         ]),
     );
 }
-/// Verifies that [`Fixture::run`] keeps separate per-root `pathMap` entries when `visited` is omitted and deduplicates them when `visited` is shared.
+/// Verifies that [`Fixture::run`] via [`apply`] keeps separate per-root `pathMap` entries when `visited` is omitted and deduplicates them when `visited` is shared.
 #[test]
 fn separate_root_caches_preserve_distinct_path_map_objects() {
     let fixture = Fixture::new();

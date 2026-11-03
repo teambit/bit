@@ -23,7 +23,7 @@ fn explicit_first_match_and_default_cover_selected_and_automatic_components() {
     );
 }
 
-/// Verifies that [`tag_data`] returns `Value::Null` when no `--versions-file` is provided and declines non-array `entries`.
+/// Verifies that [`tag_data`] returns [`Value::Null`] when no `--versions-file` is provided and declines non-array `entries` ([`json`]).
 #[test]
 fn absent_versions_file_returns_null_and_malformed_entries_field_declines() {
     assert_eq!(tag_data(None, "remote/foo").unwrap(), Value::Null);

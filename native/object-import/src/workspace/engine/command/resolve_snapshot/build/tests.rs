@@ -67,7 +67,7 @@ fn oversized_artifacts_are_rejected_before_reading_their_bytes() {
     assert!(proofs.is_empty());
 }
 
-/// Verifies that [`artifacts`] rejects symlinked artifact files and symlinked parent directories on Unix.
+/// Verifies that [`artifacts`] rejects symlinked artifact files and symlinked parent directories in [`Directory`] ([`receipt`]) on Unix.
 #[cfg(unix)]
 #[test]
 fn symlink_artifacts_and_symlink_parents_are_rejected() {

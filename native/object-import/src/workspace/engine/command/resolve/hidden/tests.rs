@@ -65,7 +65,7 @@ fn peer_and_aspect_dependencies_participate_but_core_names_and_changed_edges_do_
     );
 }
 
-/// Verifies that [`reports`] does not cascade a hidden dependent when a dependency is tagged with an older semantic version.
+/// Verifies that [`reports`] does not cascade a hidden [`candidate`] dependent when a dependency [`id`] is tagged with an older semantic version.
 #[test]
 fn hidden_dependency_does_not_cascade_to_an_older_semantic_tag() {
     let semver = json!({"1.0.0":{"version":{"major":1,"minor":0,"patch":0,"prerelease":[]}},"2.0.0":{"version":{"major":2,"minor":0,"patch":0,"prerelease":[]}}});

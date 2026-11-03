@@ -26,7 +26,7 @@ fn switch_patterns_use_full_id_and_no_match_is_the_published_error() {
     assert!(filter("$modified", &[entry("scope/alpha")]).is_err());
 }
 
-/// Verifies that `ordered` sorts [`Entry`] records by their position in the `selected` identity slice.
+/// Verifies that `ordered` sorts [`entry`] ([`Entry`]) records by their position in the `selected` identity slice.
 #[test]
 fn ordered_sorts_entries_by_selected_identity_position() {
     let entries = vec![entry("scope/alpha"), entry("scope/beta")];

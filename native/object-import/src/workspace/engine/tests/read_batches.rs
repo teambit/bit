@@ -90,7 +90,7 @@ fn mixed_file_sizes_keep_successful_reads_on_the_worker_pool() {
     }
 }
 
-/// Verifies that [`response`] returns `completed: 0` and an empty `files` array for an empty `read` request.
+/// Verifies that [`response`] returns `completed: 0` and an empty `files` array ([`json`]) for an empty `read` request.
 #[test]
 fn empty_file_batch_returns_empty_files_array_with_zero_completed() {
     let output = response(&json!({"kind":"read", "files":[]}));

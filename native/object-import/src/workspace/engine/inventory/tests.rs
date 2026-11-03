@@ -11,7 +11,7 @@ fn parent_budget_declines_before_recursive_policy_evaluation() {
     assert!(validate_prefixes(&["a/b/file".to_owned()]).is_ok());
 }
 
-/// Verifies that [`validate_prefixes`] accepts empty slices and root-level relative file paths without directory separators.
+/// Verifies that [`validate_prefixes`] accepts empty slices and root-level relative file paths (`SourceFile`) without directory separators.
 #[test]
 fn empty_and_root_level_file_lists_pass_prefix_validation() {
     assert!(validate_prefixes(&[]).is_ok());

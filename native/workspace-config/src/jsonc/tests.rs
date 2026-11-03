@@ -91,7 +91,7 @@ fn get_set_and_assign() {
     assert_eq!(document.get(&["a", "c"]), None);
 }
 
-/// Verifies that [`Document::parse`] and [`parse`] reject invalid `JSONC` syntax that `comment-json` rejects.
+/// Verifies that [`Document::parse`] and [`parse`] reject invalid `JSONC` syntax (`WorkspaceConfig`) that `comment-json` rejects.
 #[test]
 fn rejects_what_json_parse_rejects() {
     for input in [

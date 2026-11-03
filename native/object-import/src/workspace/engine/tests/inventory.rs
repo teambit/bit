@@ -96,7 +96,7 @@ fn inventory_failure_releases_retained_paths_and_unicode_declines_before_publica
     assert_eq!(begin(&directory, &mut owner)["failed"], false);
 }
 
-/// Verifies that [`State`] caps concurrent pending inventories and `inventoryCancel` frees capacity for subsequent [`begin`] calls.
+/// Verifies that [`State`] caps concurrent pending inventories in [`Directory`] and `inventoryCancel` frees capacity for subsequent [`begin`] calls.
 #[test]
 fn pending_inventory_count_is_bounded_and_cancellation_frees_capacity() {
     let directory = Directory::new();

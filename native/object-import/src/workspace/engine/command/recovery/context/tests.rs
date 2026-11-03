@@ -37,7 +37,7 @@ fn all_abort_follows_pending_insertion_order() {
     assert!(select(&context, &json!([pending[0], pending[0]]), &request(None)).is_err());
 }
 
-/// Verifies that [`select`] declines an ambiguous unscoped pattern while accepting a fully scoped component identity.
+/// Verifies that [`select`] via [`request`] declines an ambiguous unscoped pattern while accepting a fully scoped component identity.
 #[test]
 fn ambiguous_plain_pattern_declines_before_selection() {
     let context = json!({"targets":[{"identity":"one/name","directory":"one"},{"identity":"two/name","directory":"two"}]});

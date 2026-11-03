@@ -88,7 +88,7 @@ fn latest_on_a_lane_uses_the_lane_head_instead_of_a_main_tag() {
     assert_eq!(resolved, lane);
 }
 
-/// Verifies that [`select`] with `to: "head"` labels the head using the last regular `versions` tag before `orphanedVersions`.
+/// Verifies that [`select`] via [`skipped`] with `to: "head"` labels the head using the last regular `versions` tag before `orphanedVersions`.
 #[test]
 fn head_names_use_last_regular_tag_before_orphaned_tag() {
     let hash = "a".repeat(40);

@@ -80,7 +80,7 @@ fn head_ranges_and_snap_removals_apply_to_history_and_staged_undeprecation() {
     assert_eq!(rows[2]["deleted"], true);
 }
 
-/// Verifies that [`tags`] returns an empty map when a model object has no `versions` or `orphanedVersions` entries.
+/// Verifies that [`tags`] returns an empty map when a model object (`ModelComponent`) has no `versions` or `orphanedVersions` entries ([`json`]).
 #[test]
 fn empty_model_versions_produce_empty_tag_map() {
     let mapped = tags(&json!({})).unwrap();

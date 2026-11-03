@@ -83,7 +83,7 @@ fn checkout_target_records_follow_the_published_status_order() {
     );
 }
 
-/// Verifies that [`validate_lane`] accepts `None` when switching to the `main` [`Id`].
+/// Verifies that [`validate_lane`] accepts `None` ([`Record`]) when switching to the `main` [`Id`].
 #[test]
 fn validate_lane_accepts_absent_lane_when_switching_to_main() {
     let main = Id { scope: String::new(), name: "main".into() };

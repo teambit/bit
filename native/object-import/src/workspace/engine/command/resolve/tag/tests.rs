@@ -55,7 +55,7 @@ fn each_wildcard_must_match_an_eligible_component() {
     );
 }
 
-/// Verifies that [`pattern_order`] counts every overlapping pattern match in `load_count` while deduplicating `identities`.
+/// Verifies that [`pattern_order`] counts every overlapping pattern match in `load_count` while deduplicating `identities` ([`json`]).
 #[test]
 fn overlapping_matches_count_loads_before_unique_publication() {
     let candidates = vec!["scope/component".into()];

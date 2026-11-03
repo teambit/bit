@@ -49,7 +49,7 @@ fn outbound_prepare_rejects_unknown_fields_in_flat_protocol() {
     assert!(serde_json::from_value::<Request>(input).is_err());
 }
 
-/// Verifies that `commandOutboundPrepare` [`Request`] deserialization requires `globalRemotesFile`, `nodeExecutable`, and boolean `skipRemoteResolution`.
+/// Verifies that `commandOutboundPrepare` ([`outbound_prepare`]) [`Request`] deserialization requires `globalRemotesFile`, `nodeExecutable`, and boolean `skipRemoteResolution`.
 #[test]
 fn outbound_prepare_requires_typed_resolution_fields() {
     for field in ["globalRemotesFile", "nodeExecutable"] {

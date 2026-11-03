@@ -32,7 +32,7 @@ fn component_id_matches_accepts_object_and_string_ids() {
     assert!(component_id_matches(&string_id, "scope.test/comp"));
 }
 
-/// Verifies that [`component_id_matches`] returns `false` when `componentId` differs or is absent.
+/// Verifies that [`component_id_matches`] returns `false` when `componentId` (`ComponentID`) differs or is absent ([`json`]).
 #[test]
 fn component_id_matches_rejects_mismatched_or_missing_component_id() {
     let object_id = json!({"componentId":{"scope":"scope.test","name":"other"}});

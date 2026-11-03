@@ -7,7 +7,7 @@ use crate::workspace::engine::command::scratch;
 use serde_json::json;
 use std::fs;
 
-/// Verifies that an empty [`Prepared`] [`merge`] still emits `onPostObjectsPersist` in [`scratch`] without creating `.bit/unmerged.json`.
+/// Verifies that an empty [`Prepared`] [`merge`] still emits `onPostObjectsPersist` in [`scratch`] without creating `.bit/unmerged.json` ([`json`]).
 #[test]
 fn empty_merge_still_invokes_repository_persistence_notification() {
     let root = scratch::Directory::create().unwrap();

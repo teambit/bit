@@ -65,7 +65,7 @@ fn environment_self_policy_prefers_installed_version_over_workspace_range() {
     assert_eq!(output["state"]["packages"][0]["sample-peer"], "~1.2.3");
 }
 
-/// Verifies that [`finish`] returns empty `added` and `missing` arrays when given a default [`input`].
+/// Verifies that [`finish`] via [`apply`] returns empty `added` and `missing` arrays when given a default [`input`].
 #[test]
 fn empty_finalize_input_produces_no_added_or_missing_packages() {
     let output = finish(input());

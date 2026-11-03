@@ -81,7 +81,7 @@ fn tag_ranges_rewrite_only_same_batch_direct_dependencies() {
     assert!(super::ranges::update(&mut materials).is_err());
 }
 
-/// Verifies that [`plan`] assigns `"0.0.1-<preReleaseId>.0"` when tagging a new component with `releaseType: "prerelease"`.
+/// Verifies that [`plan`] assigns `"0.0.1-<preReleaseId>.0"` on [`material`] when tagging a new component with `releaseType: "prerelease"`.
 #[test]
 fn prerelease_tag_planning_assigns_initial_prerelease_version_for_new_component() {
     let mut materials = [material("scope/new", false, &json!({}))];

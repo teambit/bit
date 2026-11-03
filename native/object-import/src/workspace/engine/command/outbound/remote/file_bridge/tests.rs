@@ -49,7 +49,7 @@ impl Drop for Fixture {
     }
 }
 
-/// Verifies that a single [`FileBridge`] child process handles multiple remote scopes and recovers after an action error.
+/// Verifies that a single [`FileBridge`] child process in [`Fixture`] handles multiple remote scopes (`ExportValidate`, `ExportPersist`) and recovers after an action error.
 #[test]
 fn one_child_handles_multiple_scopes_and_errors() {
     let fixture = Fixture::new();

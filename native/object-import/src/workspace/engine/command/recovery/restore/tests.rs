@@ -62,7 +62,7 @@ fn restore_removes_only_new_roots_and_preserves_backup_bytes() {
     assert!(!root.join(".bit/staged-snaps").exists());
 }
 
-/// Verifies that [`proof::restored_control`] preserves read, probe, and metadata proof forms and requires exact byte matches.
+/// Verifies that [`proof::restored_control`] in [`scratch::Directory`] preserves read, probe, and metadata proof forms and requires exact byte matches.
 #[test]
 fn projected_controls_preserve_proof_forms_and_require_exact_bytes() {
     let directory = scratch::Directory::create().unwrap();

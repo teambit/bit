@@ -79,7 +79,7 @@ process.stdout.write(JSON.stringify(rows));
     }
 }
 
-/// Verifies that [`is_plus`] and [`resolve`] handle `+`, `+^`, and `+~` prefixes and fallback versions directly.
+/// Verifies that [`is_plus`] and [`resolve`] handle `+`, `+^`, and `+~` prefixes and fallback versions (`SemVer`) directly.
 #[test]
 fn direct_plus_version_unit_checks_cover_prefixes_and_fallbacks() {
     assert!(is_plus("+"));

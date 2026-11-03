@@ -90,7 +90,7 @@ fn missing_grammar_and_unrelated_histories_decline() {
     assert!(read(&serde_json::from_value(input).unwrap()).is_err());
 }
 
-/// Verifies that [`result`] on a non-`main` lane stages only lane-head components while keeping `main`-only components clean.
+/// Verifies that [`result`] via [`read`] on [`fixture`] on a non-`main` lane stages only lane-head components while keeping `main`-only components clean.
 #[test]
 fn current_lane_stages_only_lane_heads_and_keeps_main_components_clean() {
     let mut input = fixture();

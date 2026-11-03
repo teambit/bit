@@ -23,7 +23,7 @@ fn detects_newlines_like_detect_newline() {
     assert_eq!(detect_newline("{\r\n}\n\n"), Some("\n"));
 }
 
-/// Verifies that [`detect_indent`] returns an empty string and [`detect_newline`] returns `None` for empty input.
+/// Verifies that [`detect_indent`] returns an empty string and [`detect_newline`] returns `None` for empty `package.json` input.
 #[test]
 fn empty_input_has_empty_indent_and_no_newline() {
     assert_eq!(detect_indent(""), "");

@@ -90,7 +90,7 @@ fn workspace_aspect_identity_keeps_version_for_added_other_lane_config() {
     assert_eq!(unversioned["legacy"], "scope/env/install-compat");
 }
 
-/// Verifies that [`Prepared`] configuration conflict formatting accepts an object `extensionId` (`scope`, `name`, `version`).
+/// Verifies that [`Prepared`] configuration conflict formatting on [`row`] accepts an object `extensionId` (`scope`, `name`, `version`).
 #[test]
 fn conflict_aspect_text_accepts_object_extension_id() {
     let mut policy = Prepared::new();

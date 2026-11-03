@@ -75,7 +75,7 @@ fn detects_packages_types_and_original_file_lifecycles() {
     fixture.write("comp/internal.ts", "export const x = 2;");
     assert!(proof::verify(&read_set).is_err());
 }
-/// Verifies that [`detect`] resolves `@types/*` package versions according to workspace, merge, and model policy precedence.
+/// Verifies that [`detect`] in [`Fixture`] resolves `@types/*` package versions according to workspace, merge, and model policy precedence.
 #[test]
 fn type_packages_follow_workspace_merge_and_model_precedence() {
     let fixture = Fixture::new();

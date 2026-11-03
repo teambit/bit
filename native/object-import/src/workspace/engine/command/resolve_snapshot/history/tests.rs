@@ -73,7 +73,7 @@ fn material(head: &str) -> Material {
     }
 }
 
-/// Verifies that [`tag_histories`] stages only a pre-existing `current_head` absent from the existing `VersionHistory` object.
+/// Verifies that [`tag_histories`] stages only a pre-existing `current_head` on [`material`] in [`Fixture`] absent from the existing `VersionHistory` object.
 #[test]
 fn tag_stages_only_preexisting_head_missing_from_existing_history() {
     let fixture = Fixture::new();

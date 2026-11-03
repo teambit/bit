@@ -82,7 +82,7 @@ fn skips_existing_files_and_directories_without_overwrite() {
     assert_eq!(fs::read(file).unwrap(), b"original");
 }
 
-/// Verifies that [`serve`] halts after the first failed file write without materializing subsequent entries.
+/// Verifies that [`serve`] via [`response`] and [`request`] halts after the first failed file write in [`Directory`] without materializing subsequent entries.
 #[test]
 fn stops_after_first_failed_file() {
     let directory = Directory::new();

@@ -71,7 +71,7 @@ fn fetches_remote_lane_and_retains_hidden_entries() {
     assert_eq!(body["ids"], json!(["example.scope/dev"]));
     assert_eq!(body["fetchOptions"]["type"], "lane");
 }
-/// Verifies that [`fetch_http`] treats HTTP `404` with error code `138` (`LaneNotFound`) as an absent lane (`Ok(None)`) while surfacing other `404` codes as errors.
+/// Verifies that [`fetch_http`] via [`network`] and [`serve`] treats HTTP `404` with error code `138` (`LaneNotFound`) as an absent lane (`Ok(None)`) while surfacing other `404` codes as errors.
 #[test]
 fn only_lane_not_found_is_treated_as_an_absent_lane() {
     for (code, absent) in [(138, true), (129, false), (130, false)] {

@@ -81,7 +81,7 @@ fn current_component_policy_is_reread_without_harmony() {
     }
 }
 
-/// Verifies that [`Fixture::context`] ignores `.bitTmp` and `merge-conflict` artifacts while declining invalid custom `component.json` extensions.
+/// Verifies that [`Fixture::context`] via [`read`] ignores `.bitTmp` and `merge-conflict` artifacts while declining invalid custom `component.json` extensions.
 #[test]
 fn temporary_output_is_not_source_and_invalid_component_configuration_declines() {
     let fixture = Fixture::new();

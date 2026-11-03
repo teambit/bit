@@ -5,7 +5,7 @@
 use super::lane_id;
 use serde_json::json;
 
-/// Verifies that [`lane_id`] resolves `main` against the component `scope` and preserves explicit named lane scopes across object and string inputs.
+/// Verifies that [`lane_id`] resolves `main` against the component `scope` and preserves explicit named lane scopes across object and string inputs ([`json`]).
 #[test]
 fn default_pending_lane_uses_component_scope_while_named_lane_retains_its_scope() {
     let model = json!({"scope":"component.scope"});

@@ -84,7 +84,7 @@ fn binary_reads_preserve_order_bom_hashes_and_non_utf8_bytes() {
     }
     assert_eq!(offset, bytes.len());
 }
-/// Verifies that [`raw`] binary read failures on oversized or missing files emit an empty binary payload and `completed: 0`.
+/// Verifies that [`raw`] binary read failures on oversized or missing files in [`Directory`] emit an empty binary payload and `completed: 0`.
 #[test]
 fn binary_read_failures_emit_no_payload_or_completed_prefix() {
     let directory = Directory::new();
