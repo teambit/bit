@@ -1,5 +1,5 @@
 //! Unit tests for accepting verified recovery objects ([`publish`], [`object_hash`], [`Fixture`], [`restored_models_are_verified_and_not_replayed_by_the_pending_import`]) during pending imports in
-//! `bit-object-import` post-delete recovery.
+//! `bit-object-import` post-delete recovery ([`crate::store::Store`]).
 
 use super::{Fixture, object_hash, publish};
 use std::fs;

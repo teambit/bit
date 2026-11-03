@@ -4,7 +4,7 @@
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::Write;
 
-/// Compresses `body` using default zlib compression.
+/// Compresses `body` using default zlib compression ([`ZlibEncoder`], [`Compression`]).
 fn compress(body: &[u8]) -> Vec<u8> {
     let mut compressor = ZlibEncoder::new(Vec::new(), Compression::default());
     compressor.write_all(body).unwrap();

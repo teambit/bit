@@ -10,7 +10,7 @@ use crate::{
 use pretty_assertions::assert_eq;
 use serde_json::{Map, Value, json};
 
-/// Converts a JSON object [`Value`] into ordered `(pattern, config)` variant entries.
+/// Converts a JSON object [`Value`] into ordered `(pattern, config)` variant entries ([`Map`], [`by_root_dir_and_name`]).
 fn variants(value: &Value) -> Vec<(String, Map<String, Value>)> {
     value
         .as_object()

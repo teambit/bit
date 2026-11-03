@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-/// Spinner frame interval used by the loader test harness.
+/// Spinner frame interval used by the loader test harness ([`Duration`], [`restarts_leave_one_spinner`]).
 const FRAME: Duration = Duration::from_millis(80);
 
 /// Creates an in-memory [`Sink`] and shared buffer for capturing spinner and console output.

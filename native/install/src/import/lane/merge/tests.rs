@@ -12,7 +12,7 @@ use tempfile::TempDir;
 
 /// Default remote scope name for lane merge tests ([`component`], [`lane_object`], [`remote_lane`]).
 const SCOPE: &str = "org";
-/// Default lane name for lane merge tests.
+/// Default lane name for lane merge tests ([`remote_lane`]).
 const LANE: &str = "dev";
 
 /// Compresses and writes a typed Bit object (`kind`, `hash`, `value`) into `repo`.

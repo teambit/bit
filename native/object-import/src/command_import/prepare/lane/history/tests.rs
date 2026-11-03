@@ -4,7 +4,7 @@
 use super::merge_history;
 use serde_json::json;
 
-/// Verifies that [`merge_history`] overwrites matching `history` keys in place while preserving existing `name` and `scope` metadata.
+/// Verifies that [`merge_history`] overwrites matching `history` keys in place while preserving existing `name` and `scope` metadata ([`incoming_history_for_another_stable_lane_is_rejected`]).
 #[test]
 fn refresh_overwrites_entries_in_place_and_keeps_existing_history_metadata() {
     let hash = "a".repeat(40);

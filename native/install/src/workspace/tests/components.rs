@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use std::{fs, io::Write, path::Path};
 use tempfile::tempdir;
 
-/// Core aspect IDs recognized during workspace component loading tests.
+/// Core aspect IDs recognized during workspace component loading tests ([`core`]).
 const CORE: [&str; 8] = [
     "teambit.envs/envs",
     "teambit.envs/env",

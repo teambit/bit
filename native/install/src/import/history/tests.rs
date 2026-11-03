@@ -23,7 +23,7 @@ fn write(repo: &Repo, kind: &str, hash: &str, value: &Value) {
         .unwrap();
 }
 
-/// Builds a `VersionHistory` JSON value for `remote/comp1` with `versions` and `graphCompleteRefs`.
+/// Builds a `VersionHistory` JSON value for `remote/comp1` with `versions` and `graphCompleteRefs` ([`Value`], [`check`]).
 fn history(versions: &Value, complete: &[&str]) -> Value {
     json!({ "name": "comp1", "scope": "remote", "versions": versions, "graphCompleteRefs": complete })
 }

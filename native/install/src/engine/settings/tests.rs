@@ -17,7 +17,7 @@ fn patterns(items: &[&str]) -> Vec<String> {
         .collect()
 }
 
-/// Verifies that [`hoist_pattern`] prefers non-default `.npmrc` patterns when Bit's config is unset or `["*"]`.
+/// Verifies that [`hoist_pattern`] prefers non-default `.npmrc` patterns when Bit's config is unset or `["*"]` ([`patterns`]).
 #[test]
 fn hoist_pattern_prefers_a_non_default_pnpm_pattern_over_the_bit_default() {
     assert_eq!(hoist_pattern(None, None), patterns(&["*"]));

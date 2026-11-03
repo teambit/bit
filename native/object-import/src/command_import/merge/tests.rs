@@ -2,7 +2,7 @@
 //! in `bit-object-import` component imports ([`omitted_schema_with_head_matches_canonical_harmony_parse_default`], [`a_cached_model_orphans_new_tags_and_keeps_the_head`]).
 
 use super::{json, model_from};
-/// Verifies that [`model_from`] defaults omitted `schema` fields to `"1.0.0"` when `head` is present and rejects missing `head`.
+/// Verifies that [`model_from`] defaults omitted `schema` fields to `"1.0.0"` when `head` is present and rejects missing `head` ([`a_cached_model_orphans_new_tags_and_keeps_the_head`]).
 #[test]
 fn omitted_schema_with_head_matches_canonical_harmony_parse_default() {
     let raw = json!({"name":"component","scope":"scope","versions":{},"lang":"javascript","deprecated":false,"bindingPrefix":"@bit","remotes":[],"head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"});

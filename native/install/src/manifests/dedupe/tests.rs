@@ -8,7 +8,7 @@ use crate::{
 };
 use indexmap::IndexMap;
 
-/// Default package dependency name used across deduplication unit tests.
+/// Default package dependency name used across deduplication unit tests ([`single`], [`root`], [`component`]).
 const DEP: &str = "package-dependency";
 
 /// Formats a synthetic dependent component ID (`dependent-component-{index}`).

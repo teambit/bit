@@ -5,7 +5,7 @@ use super::load_order;
 use crate::manifests::tests::component;
 use serde_json::json;
 
-/// Default `Node.js` environment aspect ID used by test [`component`] fixtures.
+/// Default `Node.js` environment aspect ID used by test [`component`] fixtures ([`load_order`]).
 const NODE: &str = "teambit.harmony/node";
 
 /// Verifies that [`load_order`] groups environment components first, then configured extensions, then regular [`component`] items (`buildLoadGroups`, [`NODE`]).

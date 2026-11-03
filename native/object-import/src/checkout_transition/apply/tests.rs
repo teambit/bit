@@ -13,7 +13,7 @@ use super::{File, effects};
 use crate::checkout_transition::plan;
 use serde_json::{Map, json};
 use std::path::PathBuf;
-/// Builds a single-file [`plan::Plan`] with `row` in `merge_rows` for buffer alias tests.
+/// Builds a single-file [`plan::Plan`] with `row` in `merge_rows` for buffer alias tests ([`plan::Current`]).
 fn alias_plan(row: serde_json::Value) -> plan::Plan {
     plan::Plan {
         bodies: vec![plan::Body::new(b"same".to_vec())],

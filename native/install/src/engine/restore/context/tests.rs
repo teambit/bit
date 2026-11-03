@@ -42,7 +42,7 @@ fn link_only_sides_do_not_invalidate_the_other_sides_resolution_settings() {
     }
 }
 
-/// Builds a synthetic lockfile side with optional `packages` entries and resolution metadata tagged with `value`.
+/// Builds a synthetic lockfile side with optional `packages` entries and resolution metadata tagged with `value` ([`Value`], [`merge`]).
 fn side(resolutions: bool, value: &str) -> Value {
     json!({"packages":if resolutions {json!({"sample-package@1.0.0":{}})} else {json!({})},
         "pnpmfileChecksum":value,"overrides":{"sample-package":value},"settings":{"resolutionMode":value}})

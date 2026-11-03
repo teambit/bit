@@ -20,7 +20,7 @@ fn core(id: &str, package_name: &str, dir: &Path) -> CoreAspect {
     CoreAspect { id: id.into(), package_name: package_name.into(), dir: dir.to_path_buf() }
 }
 
-/// A bit installation in `<base>/bit` with one core aspect and the two core packages.
+/// A bit installation in `<base>/bit` with one core aspect and the two core packages ([`HostInfo`], [`core`]).
 fn host_info(base: &Path) -> HostInfo {
     let modules = base.join("bit/node_modules/@teambit");
     HostInfo {

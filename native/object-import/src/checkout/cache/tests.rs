@@ -3,7 +3,7 @@
 
 use super::State;
 use std::path::Path;
-/// Verifies that [`State`] isolates cached entries by repository path and overwrites duplicate hashes.
+/// Verifies that [`State`] isolates cached entries by repository path and overwrites duplicate hashes ([`Path`]).
 #[test]
 fn separates_repositories_and_replaces_duplicate_entries() {
     let directory = std::env::temp_dir();

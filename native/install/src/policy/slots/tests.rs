@@ -25,7 +25,7 @@ fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     fs::write(dir.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
-/// The e2e fixture `extension-add-dependencies`: an aspect that registers a policy.
+/// The e2e fixture `extension-add-dependencies`: an aspect that registers a policy ([`Registration`], [`component_slots`]).
 fn registration() -> Registration {
     (
         "my-scope/extension-add-dependencies".to_owned(),

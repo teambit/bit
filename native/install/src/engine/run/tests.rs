@@ -40,7 +40,7 @@ fn workspace_settings(root: &Path) -> EngineSettings {
     settings
 }
 
-/// Creates an [`InstallPlan`] with a root workspace project and a local `comps/a` component under `root`.
+/// Creates an [`InstallPlan`] with a root workspace project and a local `comps/a` component under `root` ([`Project`], [`object`]).
 fn plan(root: &Path) -> InstallPlan {
     let component = root.join("comps").join("a");
     fs::create_dir_all(&component).expect("mkdir");

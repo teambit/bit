@@ -17,7 +17,7 @@ fn symlink_kind_creates_an_absolute_symlink() {
     assert_eq!(fs::read_to_string(&dest).unwrap(), "content");
 }
 
-/// Verifies that [`LinkKind::HardLinkOrSymlink`] hard-links files by inode and symlinks directories on Unix.
+/// Verifies that [`LinkKind::HardLinkOrSymlink`] hard-links files by inode and symlinks directories on Unix ([`create_link_or_symlink`]).
 #[test]
 fn hard_link_kind_hard_links_files_and_symlinks_directories() {
     use std::os::unix::fs::MetadataExt;

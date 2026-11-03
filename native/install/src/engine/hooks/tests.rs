@@ -15,7 +15,7 @@ fn hooks() -> BitHooks {
     BitHooks { root: PathBuf::from("/ws"), ..BitHooks::default() }
 }
 
-/// Verifies that `@teambit/legacy` and `@teambit/harmony` are stripped unless they use a `link:` specifier.
+/// Verifies that `@teambit/legacy` and `@teambit/harmony` are stripped unless they use a `link:` specifier ([`hooks`]).
 #[test]
 fn legacy_and_harmony_are_removed_unless_linked() {
     let manifest = json!({

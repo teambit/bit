@@ -5,7 +5,7 @@ use super::{Directory, frame, pool, store, store_raw};
 use crate::checkout::{cache::State, serve};
 use serde_json::Value;
 use std::{io::Cursor, path::Path};
-/// Runs [`serve`] in preflight mode against `state` and returns the parsed JSON response.
+/// Runs [`serve`] in preflight mode against `state` and returns the parsed JSON response ([`State`], [`Value`], [`frame`], [`pool`]).
 fn cached_response(
     directory: &Path,
     inputs: &[([u8; 20], &Path, u32, u32)],

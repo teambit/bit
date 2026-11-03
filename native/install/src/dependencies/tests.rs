@@ -54,7 +54,7 @@ fn packages(dependencies: &ComponentDependencies, lifecycle: Lifecycle) -> Vec<(
 }
 
 /// `acme/ui/button` imports a package, a workspace component, a missing package in
-/// a spec file and a TypeScript package whose `@types` is in the workspace policy.
+/// a spec file and a TypeScript package whose `@types` is in the workspace policy ([`WorkspaceComponent`], [`component`], [`package`]).
 fn fixture(root: &Path) -> Vec<WorkspaceComponent> {
     let mut button = component(root, "acme/ui/button@1.0.0", "teambit.harmony/node");
     button.files = vec!["index.ts".into(), "utils.ts".into(), "button.spec.ts".into()];

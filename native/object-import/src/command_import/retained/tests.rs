@@ -4,7 +4,7 @@
 use crate::command_import::capture::Capture;
 use std::{collections::HashMap, fs, path::PathBuf};
 
-/// Temporary directory guard that removes its root on drop during [`Capture`] tests.
+/// Temporary directory guard that removes its root on drop during [`Capture`] tests ([`PathBuf`]).
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {

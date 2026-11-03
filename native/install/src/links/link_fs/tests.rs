@@ -22,7 +22,7 @@ fn hard_link_kind_links_a_file_that_shares_writes_with_its_source() {
     assert_eq!(fs::read_to_string(&dest).unwrap(), r#"{"name":"changed"}"#);
 }
 
-/// Verifies that [`LinkKind::HardLinkOrSymlink`] creates a directory symlink resolving to the source directory.
+/// Verifies that [`LinkKind::HardLinkOrSymlink`] creates a directory symlink resolving to the source directory ([`create_link_or_symlink`]).
 #[test]
 fn hard_link_kind_links_a_directory_that_resolves_to_its_source() {
     let dir = tempfile::tempdir().unwrap();

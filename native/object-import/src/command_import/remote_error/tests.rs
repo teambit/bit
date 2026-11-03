@@ -2,7 +2,7 @@
 //! messages ([`message`]) in `bit-object-import` import diagnostics ([`remote_inflate_keeps_legacy_display_but_exposes_real_scoped_zlib_failure`], [`local_and_non_inflate_failures_are_not_reclassified`]).
 
 use super::{mark, message};
-/// Verifies that [`mark`] and [`message`] preserve legacy display text while surfacing scoped remote `zlib.inflate` guidance.
+/// Verifies that [`mark`] and [`message`] preserve legacy display text while surfacing scoped remote `zlib.inflate` guidance ([`local_and_non_inflate_failures_are_not_reclassified`]).
 #[test]
 fn remote_inflate_keeps_legacy_display_but_exposes_real_scoped_zlib_failure() {
     let error = crate::checkout::repository::inflate(b"not a zlib object", 1024).unwrap_err();

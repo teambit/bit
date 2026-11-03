@@ -16,7 +16,7 @@ fn global(entries: &[(&str, Value)]) -> GlobalConfig {
         .collect()
 }
 
-/// Verifies that proxy settings on [`DependencyResolverConfig`] take precedence over `.npmrc` and global config.
+/// Verifies that proxy settings on [`DependencyResolverConfig`] take precedence over `.npmrc` and global config ([`proxy`], [`ProxySettings`]).
 #[test]
 fn the_dependency_resolver_proxy_wins() {
     let config = DependencyResolverConfig {

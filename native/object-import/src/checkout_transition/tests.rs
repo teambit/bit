@@ -10,7 +10,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
 };
-/// Monotonic counter for unique checkout transition test directory names.
+/// Monotonic counter for unique checkout transition test directory names ([`Fixture`], [`AtomicU64`]).
 static NEXT: AtomicU64 = AtomicU64::new(0);
 /// Temporary directory fixture for checkout transition state and publication tests.
 struct Fixture(PathBuf);

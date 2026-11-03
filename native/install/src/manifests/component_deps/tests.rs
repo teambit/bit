@@ -46,7 +46,7 @@ fn manifest_object_snaps_versions() {
     assert!(object.peer_meta.is_empty());
 }
 
-/// Builds a [`Dep`] fixture for `pkg` with `version` and `lifecycle`.
+/// Builds a [`Dep`] fixture for `pkg` with `version` and `lifecycle` ([`Lifecycle`], [`update_version`]).
 fn dep(version: &str, lifecycle: Lifecycle) -> Dep<'static> {
     Dep {
         package_name: "pkg",

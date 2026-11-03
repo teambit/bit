@@ -1,5 +1,5 @@
 //! Unit tests for command-driven remote object import planning ([`PreparedImport`], [`prepare`], [`prepare_cached`], [`canonical_model`], [`graph`], [`recovery_objects`], [`NEXT`], [`Target`]) and publication ([`publish`], [`Fixture`])
-//! in `bit-object-import` import workflows ([`file_refresh_is_staged_and_validated_before_publication`]).
+//! in `bit-object-import` import workflows ([`file_refresh_is_staged_and_validated_before_publication`], [`Overlay`]).
 
 mod canonical_model;
 mod graph;

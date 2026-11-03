@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
-/// Monotonic counter for unique checkout plan test directory names.
+/// Monotonic counter for unique checkout plan test directory names ([`Directory`], [`AtomicUsize`]).
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 /// Temporary test directory that removes itself when dropped.
 struct Directory(PathBuf);

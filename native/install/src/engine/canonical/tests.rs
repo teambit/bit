@@ -30,7 +30,7 @@ fn request(root: &Path) -> Value {
     input
 }
 
-/// Verifies that [`Request::new`] accepts a valid baseline canonical pnpm install request.
+/// Verifies that [`Request::new`] accepts a valid baseline canonical pnpm install [`request`].
 #[test]
 fn accepts_actual_scalar_package_boundary() {
     let dir = tempfile::tempdir().expect("private root");

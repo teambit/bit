@@ -40,7 +40,7 @@ pub(super) const REGEXES: &[(&str, &str, &str)] = &[
     ("$x^", r"(?:^|\/)\$x\^(?=$|\/)", r"(?:^|\/)\$x\^(?=$|\/$)"),
     ("docs/sub/local.env", r"^docs\/sub\/local\.env(?=$|\/)", r"^docs\/sub\/local\.env(?=$|\/$)"),
 ];
-/// Sample relative paths tested against `node-ignore` 3.3.10 [`FILTERS`] rules.
+/// Sample relative paths tested against `node-ignore` 3.3.10 [`FILTERS`] rules ([`REGEXES`]).
 pub(super) const PATHS: &[&str] = &[
     "src/index.ts",
     "src/debug.log",

@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Compresses and writes a loose Bit object (`kind`, `hash`, `body`) into `scope/objects`.
+/// Compresses and writes a loose Bit object (`kind`, `hash`, `body`) into `scope/objects` ([`Path`], [`Value`]).
 fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     let body = body.to_string();
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());

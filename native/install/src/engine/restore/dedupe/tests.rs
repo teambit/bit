@@ -59,7 +59,7 @@ fn root_versions_and_peers_win_without_overriding_explicit_overrides() {
     }
 }
 
-/// Verifies that [`dedupe`] matches `@teambit/pnpm` `convertGraphToLockfile` deduplication when `BIT_TEST_SNAPSHOT_CLI` is set.
+/// Verifies that [`dedupe`] matches `@teambit/pnpm` `convertGraphToLockfile` deduplication when `BIT_TEST_SNAPSHOT_CLI` is set ([`fixture`], [`Command`]).
 #[test]
 fn released_graph_conversion_deduplicates_before_resolution() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else { return };

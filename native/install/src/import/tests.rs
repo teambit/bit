@@ -43,7 +43,7 @@ fn write(repo: &Repo, kind: &str, hash: &str, value: &Value) {
         .unwrap();
 }
 
-/// A dependency as written in `flattenedDependencies`.
+/// A dependency as written in `flattenedDependencies` ([`tag`]).
 struct Dependency<'a> {
     name: &'a str,
     version: &'a str,

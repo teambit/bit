@@ -43,7 +43,7 @@ fn disjoint_ranges_conflict() {
     assert_eq!(safe_intersect(["^1.0.0", "^2.0.0"].into_iter()), None);
 }
 
-/// Verifies that [`intersections`] skips optional missing peers and conflicting peer ranges.
+/// Verifies that [`intersections`] skips optional missing peers and conflicting peer ranges ([`missing`], [`PeerDependencyIssues`]).
 #[test]
 fn intersections_skip_optional_peers_and_conflicts() {
     let issues = PeerDependencyIssues {

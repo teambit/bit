@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-/// Serializes tests that exercise the process-wide spinner/loader state.
+/// Serializes tests that exercise the process-wide spinner/loader state ([`writes_like_ora_without_a_tty`]).
 static STATUS_TEST: Mutex<()> = Mutex::new(());
 
 /// Creates an in-memory [`Sink`] and shared buffer for inspecting rendered CLI output.

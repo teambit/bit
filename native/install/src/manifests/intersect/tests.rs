@@ -5,7 +5,7 @@ use super::intersect;
 use crate::manifests::semver::tests::golden;
 use serde_json::Value;
 
-/// `"THROW"` in the fixture is a `JavaScript` exception, mapped to `Err(())` here.
+/// `"THROW"` in the fixture is a `JavaScript` exception, mapped to `Err(())` here ([`Value`], [`intersect`]).
 fn expected(value: &Value) -> Result<Option<String>, ()> {
     match value.as_str() {
         Some("THROW") => Err(()),

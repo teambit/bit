@@ -4,7 +4,7 @@
 use super::{Id, append};
 use serde_json::json;
 
-/// Verifies that [`append`] records the first remote tracking alias and preserves an existing alias for that remote lane.
+/// Verifies that [`append`] records the first remote tracking alias and preserves an existing alias for that remote lane ([`Id`]).
 #[test]
 fn first_remote_switch_appends_alias_but_existing_remote_alias_is_preserved() {
     let id = Id { scope: "remote.scope".into(), name: "dev".into() };

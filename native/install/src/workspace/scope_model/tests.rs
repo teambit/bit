@@ -29,7 +29,7 @@ fn id(version: Option<&str>) -> ComponentId {
     }
 }
 
-/// A model with a tagged head Version carrying `extensions`.
+/// A model with a tagged head Version carrying `extensions` ([`write_object`], [`sha1_hex`]).
 fn scope(extensions: &Value, files: &Value) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let version_hash = sha1_hex("version");

@@ -15,7 +15,7 @@ fn allow(entries: &[(&str, Value)]) -> IndexMap<String, Value> {
         .collect()
 }
 
-/// Verifies that the vendored trusted build scripts list contains all 367 expected packages including `esbuild`.
+/// Verifies that the vendored trusted build scripts list contains all 367 expected packages including `esbuild` ([`trusted_package_names`]).
 #[test]
 fn the_trusted_list_is_vendored() {
     let names = trusted_package_names();

@@ -5,7 +5,7 @@ use super::merge;
 use crate::command_import::publish;
 use serde_json::{Value, json};
 
-/// Builds a synthetic `VersionHistory` row at `index` parented by `index - 1`.
+/// Builds a synthetic `VersionHistory` row at `index` parented by `index - 1` ([`Value`], [`history`]).
 fn row(index: usize) -> Value {
     json!({"hash":format!("{index:040x}"),"parents":if index == 0 {Vec::new()} else {vec![format!("{:040x}", index-1)]}})
 }

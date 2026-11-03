@@ -5,7 +5,7 @@ use super::{coerce, gt, satisfies, satisfies_including_prerelease, valid_range};
 use serde_json::Value;
 
 /// Outputs of npm's `semver` 7.7.1 and `semver-range-intersect` 0.3.1, generated
-/// with Node.js from the packages Bit ships.
+/// with `Node.js` from the packages Bit ships ([`Value`], [`valid_range`], [`satisfies`], [`coerce`]).
 pub(in crate::manifests) fn golden() -> Value {
     serde_json::from_str(include_str!("golden.json")).expect("golden fixture")
 }

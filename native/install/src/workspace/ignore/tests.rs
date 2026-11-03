@@ -1,7 +1,7 @@
 //! Unit tests for `node-ignore` 3.3.10 regex generation ([`parts`], [`source`]) and path filtering ([`Ignore`])
 //! against [`golden`] cases in `bit-install` file discovery ([`regex_sources_match_node_ignore`], [`filters_match_node_ignore`]).
 
-/// Golden `node-ignore` 3.3.10 regex and path filter fixtures.
+/// Golden `node-ignore` 3.3.10 regex and path filter fixtures ([`regex_sources_match_node_ignore`], [`filters_match_node_ignore`]).
 mod golden;
 
 use super::{Ignore, parts, source};

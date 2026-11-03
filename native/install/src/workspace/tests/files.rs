@@ -6,7 +6,7 @@ use crate::workspace::rebase_ignore_pattern;
 use pretty_assertions::assert_eq;
 use tempfile::tempdir;
 
-/// Verifies that [`FileRules::component_files`] applies built-in Bit exclusions along with `.gitignore` and `.bitignore`.
+/// Verifies that [`FileRules::component_files`] applies built-in Bit exclusions along with `.gitignore` and `.bitignore` ([`write`]).
 #[test]
 fn component_files_apply_bit_and_user_ignore_rules() {
     let dir = tempdir().unwrap();

@@ -22,7 +22,7 @@ fn write_object(scope: &Path, hash: &str, kind: &str, body: &Value) {
     fs::write(dir.join(&hash[2..]), encoder.finish().unwrap()).unwrap();
 }
 
-/// The scope holds `org.remote/envs/my-env@1.0.0`, published under a custom name.
+/// The scope holds `org.remote/envs/my-env@1.0.0`, published under a custom name ([`write_object`], [`sha1_hex`]).
 fn scope() -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let version_hash = sha1_hex("version");
