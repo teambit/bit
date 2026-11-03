@@ -29,7 +29,7 @@ fn naming_conflict_introduced_during_the_merge() {
             .exists(),
     );
 }
-/// Verifies merging `main` into `lane-b` after `lane-a` (from which `lane-b` forked) was squashed into `main` ([`naming_conflict_introduced_during_the_merge`], [`Helper`], [`renaming_files_from_uppercase_to_lowercase`]).
+/// Verifies merging `main` into `lane-b` after `lane-a` (from which `lane-b` forked) was squashed into `main` ([`naming_conflict_introduced_during_the_merge`], [`Helper`], [`renaming_files_from_uppercase_to_lowercase`], [`parse`]).
 #[test]
 fn merge_lane_a_to_main_with_squashing_then_from_main_to_lane_b_which_forked_from_lane_a() {
     let helper = Helper::new();

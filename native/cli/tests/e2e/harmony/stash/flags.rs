@@ -25,7 +25,7 @@ fn aliases_messages_explicit_ids_and_empty_operations_match_node() {
     assert!(helper.scopes.local_path.join(".bit/stash/stash-2.json").exists());
 }
 
-/// Verifies `--force-ours`, `--force-theirs`, and `--auto-merge-resolve` (`-r`) on `bit stash load`.
+/// Verifies `--force-ours`, `--force-theirs`, and `--auto-merge-resolve` (`-r`) on `bit stash load` ([`workspace`], [`command`], [`write_both`]).
 #[test]
 fn forced_and_named_merge_strategies_preserve_local_and_stashed_files() {
     for strategy in ["--force-ours", "--force-theirs", "--auto-merge-resolve ours", "-r theirs"] {

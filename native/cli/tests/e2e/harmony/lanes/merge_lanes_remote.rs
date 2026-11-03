@@ -64,7 +64,7 @@ fn merging_remote_lane_into_main_and_exporting() {
     assert_eq!(remote_comp1["head"], local_comp1["head"]);
 }
 
-/// merge lanes - remote lane operations › export a local lane into a remote scope › merging remote lane into main when components are not in workspace using --workspace flag ([`setup_exported_dev_lane`], [`config`])
+/// merge lanes - remote lane operations › export a local lane into a remote scope › merging remote lane into main when components are not in workspace using --workspace flag ([`setup_exported_dev_lane`], [`config`], [`merging_remote_lane_into_main_and_exporting`])
 #[test]
 fn merging_remote_lane_into_main_with_workspace_flag_skips_non_workspace_components() {
     let (helper, _) = setup_exported_dev_lane();

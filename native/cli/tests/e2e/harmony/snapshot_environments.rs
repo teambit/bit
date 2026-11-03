@@ -15,7 +15,7 @@ fn workspace() -> Helper {
     helper
 }
 
-/// Reads and normalizes `cat-component bar/foo@latest --json` from `root` for parity comparison ([`HOOK`], [`Value`], [`parse`]).
+/// Reads and normalizes `cat-component bar/foo@latest --json` from `root` for parity comparison ([`HOOK`], [`Value`], [`parse`], [`config::read_jsonc`]).
 pub(super) fn version(root: &std::path::Path) -> Value {
     let run = Helper::cmd_in_with(
         root,

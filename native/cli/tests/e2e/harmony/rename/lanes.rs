@@ -66,7 +66,7 @@ pub(super) fn install_delay(helper: &Helper) {
     );
 }
 
-/// Installs the lane-delay provider and records `target` in `identity-load-delay-target` ([`workspace`], [`Helper`], [`install_delay`], [`config`]).
+/// Installs the lane-delay provider and records `target` in `identity-load-delay-target` ([`workspace`], [`Helper`], [`install_delay`], [`config`], [`lane_rename_removal_merges_to_main_only_when_the_source_exists_on_main`]).
 pub(super) fn delay_new(helper: &Helper, target: &str) {
     install_delay(helper);
     helper.output_file("identity-load-delay-target", target);

@@ -38,7 +38,7 @@ fn basic_save_and_load_restore_sources_without_advancing_heads() {
     compare_status(&helper, &oracle, 1);
 }
 
-/// Verifies that `bit stash load --manual` writes canonical conflict markers (`<<<<<<< 0.0.1 modified` / `>>>>>>> stash`).
+/// Verifies that `bit stash load --manual` writes canonical conflict markers (`<<<<<<< 0.0.1 modified` / `>>>>>>> stash`, [`workspace`], [`command`], [`write_both`]).
 #[test]
 fn manual_load_preserves_the_published_conflict_labels() {
     let helper = workspace();

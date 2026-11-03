@@ -34,7 +34,7 @@ fn parity(helper: &Helper, pattern: &str) {
 }
 
 /// Component patterns preserve minimatch classes, extglobs and ordered
-/// negation without changing the grammar of native write commands.
+/// negation without changing the grammar of native write commands ([`workspace`], [`parity`]).
 #[test]
 fn advanced_component_globs_match_native_diff() {
     let helper = workspace();

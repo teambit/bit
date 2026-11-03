@@ -66,7 +66,7 @@ fn rename_an_exported_component_with_refactor_flag() {
     assert!(file.contains("new-comp2"), "{file}");
 }
 
-/// Verifies `bit fork --refactor` on local components and rejects `--refactor` on remote component IDs ([`read_comp1`], [`Helper`], [`remote::publish`]).
+/// Verifies `bit fork --refactor` on local components and rejects `--refactor` on remote component IDs ([`read_comp1`], [`Helper`], [`remote::publish`], [`refactoring_with_refactor_command`]).
 #[test]
 fn fork_command_with_refactor_flag() {
     let helper = Helper::new();

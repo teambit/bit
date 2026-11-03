@@ -4,7 +4,7 @@ use super::{compare, pending};
 use crate::helper::config;
 use std::fs;
 
-/// Workspace-root filename holding per-component configuration merge conflicts ([`resolved_configuration_is_snapshotted_and_conflict_document_is_consumed`]).
+/// Workspace-root filename holding per-component configuration merge conflicts ([`resolved_configuration_is_snapshotted_and_conflict_document_is_consumed`], [`pending`]).
 const MERGE_CONFLICT_FILE: &str = "merge-conflict";
 
 /// Verifies that `bit merge --resolve` snapshots resolved per-component config and removes [`MERGE_CONFLICT_FILE`] ([`compare`], [`pending`], [`config`]).

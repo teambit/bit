@@ -10,7 +10,7 @@ fn save_populates_missing_existing_history_before_detached_objects() {
     qualify(true);
 }
 
-/// Verifies that `bit stash save` populates missing `VersionHistory` even when no components are modified.
+/// Verifies that `bit stash save` populates missing `VersionHistory` even when no components are modified ([`qualify`]).
 #[test]
 fn unmodified_save_still_populates_missing_existing_history() {
     qualify(false);

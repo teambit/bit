@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, len, parse, remote};
 
-/// Verifies `bit lane remove` guards for active, default, and unmerged lanes as well as `--force` removal ([`remote::publish`]).
+/// Verifies `bit lane remove` guards for active, default, and unmerged lanes as well as `--force` removal ([`remote::publish`], [`Helper`], [`remove_remote_lane`]).
 #[test]
 fn remove_local_lanes() {
     let helper = Helper::new();

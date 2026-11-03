@@ -4,7 +4,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 
-/// Returns the extension entry for `aspect_id` from `bit show <comp> --json` ([`diverge_with_config_possible_to_merge_and_different_versions`], [`Helper`], [`Value`], [`parse`]).
+/// Returns the extension entry for `aspect_id` from `bit show <comp> --json` ([`diverge_with_config_possible_to_merge_and_different_versions`], [`Helper`], [`Value`], [`parse`], [`diverge_with_conflicted_config_ours_and_theirs`]).
 fn show_aspect_config(helper: &Helper, comp: &str, aspect_id: &str) -> Option<Value> {
     let show = parse(&helper.show_component_parsed(comp));
     show["extensions"]

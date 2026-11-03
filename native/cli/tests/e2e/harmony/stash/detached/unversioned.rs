@@ -30,7 +30,7 @@ fn tracked_component_using_a_new_aspect_keeps_the_exact_pre_persistence_failure(
     }
 }
 
-/// Adds and links an unversioned `fresh/aspect` component in `helper` and returns its full scoped ID.
+/// Adds and links an unversioned `fresh/aspect` component in `helper` and returns its full scoped ID ([`Helper`], [`config::set_component_env`]).
 fn new_aspect(helper: &Helper) -> String {
     let source = "class Aspect {static dependencies=[];static async provider(){console.log('fixture new aspect provider');return {};}};module.exports={default:Aspect};";
     helper.output_file("fresh-aspect/index.js", source);

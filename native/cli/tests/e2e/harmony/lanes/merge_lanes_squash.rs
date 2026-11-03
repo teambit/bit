@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Verifies `bit lane merge` squash behavior when a lane is ahead by one snap versus three snaps ([`Helper`]).
+/// Verifies `bit lane merge` squash behavior when a lane is ahead by one snap versus three snaps ([`Helper`], [`parse`], [`merge_with_squash_after_exporting_and_importing_lane_to_new_workspace`]).
 #[test]
 fn merge_with_squash_one_snap_and_three_snaps() {
     let helper = Helper::new();

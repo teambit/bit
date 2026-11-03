@@ -6,7 +6,7 @@ use crate::helper::{Helper, len, parse};
 use serde_json::json;
 use std::path::{Path, PathBuf};
 
-/// Fixture source for `bar/foo.js` version 2.
+/// Fixture source for `bar/foo.js` version 2 ([`setup_diverged`]).
 const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; }";
 /// Fixture source for `bar/foo.js` version 3.
 const FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; }";

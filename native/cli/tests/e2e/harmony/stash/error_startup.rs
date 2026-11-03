@@ -44,7 +44,7 @@ fn report_errors_keep_root_provider_effects_output_and_complete_history() {
         assert_eq!(actual, vec![b'x'; index + 1]);
     }
 }
-/// Verifies that `bit stash save --include-new -m ""` delegates before side effects and preserves boolean message metadata.
+/// Verifies that `bit stash save --include-new -m ""` delegates before side effects and preserves boolean message metadata ([`fixture`], [`compare_stashes`]).
 #[test]
 fn empty_message_preserves_the_released_boolean_metadata_through_pre_effect_fallback() {
     let helper = fixture();

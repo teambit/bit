@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/set-default-owner-and-scope.e2e.ts` ([`set_default_owner_and_scope_author_export_import`], [`DEFAULT_OWNER`]).
-//! Verifies authoring, exporting, and importing components with an `owner.scope` `defaultScope`.
+//! Verifies authoring, exporting, and importing components with an `owner.scope` `defaultScope` ([`Helper`], [`config`]).
 
 use crate::helper::{Helper, config};
 use serde_json::json;

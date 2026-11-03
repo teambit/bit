@@ -48,7 +48,7 @@ fn new_aspect(helper: &Helper) -> String {
     helper.output_file(&format!("node_modules/.bit_roots/teambit.harmony_aspect/node_modules/@{}/fresh.aspect/dist/index.js", helper.scopes.remote), source);
     format!("{}/fresh/aspect", helper.scopes.remote)
 }
-/// Verifies that `bit stash save --include-new` removes stashed aspect keys and generator env entries from `workspace.jsonc`.
+/// Verifies that `bit stash save --include-new` removes stashed aspect keys and generator env entries from `workspace.jsonc` ([`new_aspect`], [`command`], [`compare_stashes`]).
 #[test]
 fn new_aspect_cleanup_removes_root_configuration_and_generator_entries() {
     let helper = Helper::new();

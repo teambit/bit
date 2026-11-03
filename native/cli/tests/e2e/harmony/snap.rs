@@ -6,7 +6,7 @@ mod merge;
 use crate::helper::{FOO_FIXTURE, Helper, config, len, parse};
 use serde_json::json;
 
-/// Fixture source for `bar/foo.js` version 2.
+/// Fixture source for `bar/foo.js` version 2 ([`snap_before_tag_and_untag_a_snap`]).
 const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; }";
 /// Fixture source for `comp3/index.js` version 2.
 const COMP3_V2: &str = "module.exports = () => 'comp3 v2';";

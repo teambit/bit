@@ -86,7 +86,7 @@ fn scope_fork_rejects_an_original_already_tracked_with_the_same_scope() {
     assert!(bitmap(&helper).get("comp1").is_some());
 }
 
-/// Verifies that `bit scope fork --ast` rewrites cross-component import specifiers to the new target scope ([`fork`], [`remote::publish`]).
+/// Verifies that `bit scope fork --ast` rewrites cross-component import specifiers to the new target scope ([`fork`], [`remote::publish`], [`scope_fork_reports_every_copy_and_preserves_original_scope_and_name`]).
 #[test]
 fn scope_fork_ast_refactors_cross_component_imports_to_the_new_scope() {
     let helper = support::workspace(2, false);

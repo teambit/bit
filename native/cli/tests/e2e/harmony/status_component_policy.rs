@@ -44,7 +44,7 @@ fn parity(helper: &Helper, command: &str) {
 }
 
 /// Forced runtime/dev/peer entries, removals and resolve-from-env values use
-/// the same status issues and diff metadata as the Node dependency loader.
+/// the same status issues and diff metadata as the Node dependency loader ([`workspace`], [`parity`]).
 #[test]
 fn object_component_policy_matches_status_and_diff() {
     let helper = workspace(&json!({

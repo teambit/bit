@@ -10,7 +10,7 @@ fn object_rel_path(hash: &str) -> String {
     format!(".bit/objects/{}/{}", &hash[..2], &hash[2..])
 }
 
-/// Computes the lowercase hex SHA-1 digest of `input` via [`Sha1`] and [`Digest`] for [`local_head_version_object_missing_from_scope`].
+/// Computes the lowercase hex SHA-1 digest of `input` via [`Sha1`] and [`Digest`] for [`local_head_version_object_missing_from_scope`] and [`object_rel_path`].
 fn sha1_hex(input: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(input.as_bytes());

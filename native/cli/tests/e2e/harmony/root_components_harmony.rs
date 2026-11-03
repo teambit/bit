@@ -68,7 +68,7 @@ fn assert_node_module_version(base: &Path, pkg: &str, expected: &str) {
     assert_eq!(parsed["version"].as_str(), Some(expected));
 }
 
-/// Verifies `pnpm` installation, linking, compilation, and testing with `rootComponents: true` ([`setup_bar_and_precision_range`], [`assert_node_module_version`], [`Helper`]).
+/// Verifies `pnpm` installation, linking, compilation, and testing with `rootComponents: true` ([`setup_bar_and_precision_range`], [`assert_node_module_version`], [`Helper`], [`configure_root_components`]).
 #[test]
 fn pnpm_root_components_install_and_link() {
     let helper = Helper::new();
