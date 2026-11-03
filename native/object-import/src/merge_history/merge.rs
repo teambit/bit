@@ -29,7 +29,7 @@ pub(super) struct Request {
     other: Vec<Model>,
     current: Vec<Current>,
 }
-/// Conflict marker labels (`current` and `other`) passed to `git merge-file`.
+/// Conflict marker labels (`current` and `other`) on [`Request`] passed to `git merge-file`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Labels {

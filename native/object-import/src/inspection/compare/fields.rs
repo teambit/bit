@@ -49,7 +49,7 @@ pub(super) fn set(value: &mut Js, key: &str, new: Js) -> io::Result<()> {
 pub(super) fn text(value: &Js) -> io::Result<Vec<u16>> {
     text_slice(value).map(<[u16]>::to_vec)
 }
-/// Borrows the `UTF-16` code-unit slice of `Js::String` `value` (rejecting strings over `32768` units).
+/// Borrows the `UTF-16` code-unit slice of [`Js::String`] `value` (rejecting strings over `32768` units).
 #[inline]
 pub(super) fn text_slice(value: &Js) -> io::Result<&[u16]> {
     if let Js::String(text) = value {

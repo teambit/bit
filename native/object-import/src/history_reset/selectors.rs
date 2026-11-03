@@ -19,7 +19,7 @@ struct Pattern {
     components: Vec<String>,
     matches: Vec<String>,
 }
-/// Deserialized `historyResetSoft` request payload (`versions` and optional `aliases`).
+/// Deserialized `historyResetSoft` request payload (`versions` and optional `aliases`) for [`soft`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Soft {

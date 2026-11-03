@@ -19,7 +19,7 @@ pub(crate) struct Reader<'a> {
     metadata: Option<(String, usize, usize)>,
 }
 impl<'a> Reader<'a> {
-    /// Creates a bounded `Version` object reader rooted at the scope objects `directory`.
+    /// Creates a bounded `Version` object [`Reader`] rooted at the scope objects `directory` ([`Path`]).
     #[inline]
     pub(crate) fn new(directory: &'a Path) -> io::Result<Self> {
         merge_history::path(directory)?;

@@ -31,7 +31,7 @@ pub(super) struct Input {
 pub(super) struct Token {
     pub(super) token: String,
 }
-/// Deserialized `inspectionFiles` request payload comparing retained files against `modelFiles`.
+/// Deserialized `inspectionFiles` request payload comparing retained files against `modelFiles` ([`Model`]).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Files {

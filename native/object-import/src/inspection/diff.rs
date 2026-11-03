@@ -20,7 +20,7 @@ struct Request {
     git_executable: String,
     color: bool,
 }
-/// Plans unified file diffs between model `Source` objects and retained workspace file snapshots.
+/// Plans unified file diffs for [`Request`] between model `Source` objects and retained [`super::Plans`] workspace file snapshots.
 pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current =

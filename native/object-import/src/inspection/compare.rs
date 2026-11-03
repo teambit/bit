@@ -50,7 +50,7 @@ pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io:
         json!({"modified":left_semantic.hash!=right_semantic.hash,"leftHash":left_semantic.hash,"rightHash":right_semantic.hash,"mutations":{"left":left_mutations,"right":right_mutations}}),
     )
 }
-/// Compares sorted `files` arrays of `left` and `right` `Version` objects in `sourceCode` mode.
+/// Compares sorted `files` arrays of `left` and `right` [`Js`] `Version` objects in `sourceCode` mode and returns [`Value`].
 fn source_code(mut left: Js, mut right: Js) -> io::Result<Value> {
     let left_order =
         sort::rows(&mut left, "files", |row| fields::text(fields::get(row, "relativePath")))?;

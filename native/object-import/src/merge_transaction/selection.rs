@@ -33,7 +33,7 @@ pub(super) fn results(input: &Value) -> io::Result<Value> {
     let visible = visible(input)?;
     Ok(json!({"failed":failed,"remove":removed,"succeeded":succeeded,"visible":visible}))
 }
-/// Extracts the validated `(scope, name)` identity tuple from a merge result or hidden row `value`.
+/// Extracts the validated `(scope, name)` identity tuple from a merge result or hidden row [`Value`].
 fn identity(value: &Value) -> io::Result<(Option<&str>, &str)> {
     let target = value.get("id").unwrap_or(value);
     if let Some(raw) = target.as_str() {

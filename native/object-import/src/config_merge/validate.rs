@@ -65,7 +65,7 @@ fn semver_entry(input: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-/// Validates a single `SemVer` comparator object (`operator` and optional `version`).
+/// Validates a single `SemVer` comparator [`Value`] object (`operator` and optional `version`).
 fn semver_comparator(input: &Value) -> io::Result<()> {
     fields(input, &["operator", "version"])?;
     let operator = text(input, "operator")?.trim();

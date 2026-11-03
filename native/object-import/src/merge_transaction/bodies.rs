@@ -24,7 +24,7 @@ struct Binding {
     ordered: bool,
 }
 impl State {
-    /// Prepares a merge file-body plan without an in-memory object overlay.
+    /// Prepares a merge file-body plan via [`Self::prepare_overlay`] without an in-memory object overlay.
     pub(super) fn prepare(
         &mut self,
         input: Value,

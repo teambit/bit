@@ -19,7 +19,7 @@ struct Capsules {
     retained: HashMap<String, (PathBuf, Option<u64>)>,
 }
 impl Capsules {
-    /// Resolves or spools the `Source` body capsule for `side` (`base` or `other`) at `index`.
+    /// Resolves or spools the `Source` body capsule [`Value`] for `side` (`base` or `other`) at `index`.
     fn reference(&mut self, input: &Value, side: &str, index: usize) -> io::Result<Value> {
         let field = if side == "other" { "target" } else { "base" };
         let raw_hash = input[field]["files"][index]["hash"]

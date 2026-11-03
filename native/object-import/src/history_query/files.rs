@@ -48,7 +48,7 @@ pub(super) fn lineage(request: Request, plan: &Value) -> io::Result<Value> {
     });
     Ok(json!({"logs":results}))
 }
-/// Resolves `fileHash`, `parentFileHash`, and `parentHashes` for `log` at `relative` path.
+/// Resolves `fileHash`, `parentFileHash`, and `parentHashes` [`Value`] fields for `log` at `relative` path.
 fn result(log: Value, index: usize, rows: &[Value], relative: &str) -> io::Result<Option<Value>> {
     let hash = log
         .get("hash")

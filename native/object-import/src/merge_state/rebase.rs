@@ -33,7 +33,7 @@ pub(super) fn plan(existing: &[String], incoming: &[Version]) -> io::Result<Valu
     Ok(json!({}))
 }
 
-/// Validates `incoming` count, unique SHA-1 hashes, non-self parents, and unrelated/squashed refs.
+/// Validates `incoming` ([`Version`]) count, unique SHA-1 hashes, non-self parents, and unrelated/squashed refs via [`references_valid`].
 fn validate_incoming(incoming: &[Version]) -> io::Result<()> {
     if incoming.len() > 4096 {
         return Err(super::invalid("history rebase count limit"));

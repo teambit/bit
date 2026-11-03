@@ -3,7 +3,7 @@
 use super::{invalid, read, wire};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
-/// Classifies each retained workspace file (`new`, `unchanged`, `modified`, `deleted`) against model hashes.
+/// Classifies each retained workspace file in [`super::Plans`] (`new`, `unchanged`, `modified`, `deleted`) against [`wire::Files`] model hashes.
 pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: wire::Files = serde_json::from_value(input).map_err(io::Error::other)?;
     if request.token.trim().is_empty() {

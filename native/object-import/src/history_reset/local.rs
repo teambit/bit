@@ -45,7 +45,7 @@ struct Select {
     last_found_tag: Option<String>,
     reverse: Option<bool>,
 }
-/// Deserialized per-`Version` ancestry flags (`missing`, `originLane`, `squashed`, `unrelated`) for local reset selection.
+/// Deserialized per-`Version` ancestry flags (`missing`, `originLane`, `squashed`, `unrelated`) for [`Select`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Metadata {

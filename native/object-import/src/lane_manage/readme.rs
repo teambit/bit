@@ -15,7 +15,7 @@ pub enum ReadmePlan {
     Remove(Box<ReadmeRemoval>),
 }
 
-/// Retained lane `Objects` and `.bitmap` update for removing a lane's `readmeComponent`.
+/// Retained lane [`Objects`] and `.bitmap` [`Value`] update for removing a lane's `readmeComponent`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReadmeRemoval {
     root: PathBuf,

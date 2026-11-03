@@ -1,4 +1,4 @@
-//! Read-only `Version` ancestry divergence calculation ([`distance`], [`graph::Version`], [`graph::diverge`], [`graph::subset`], [`graph::validate`]) for `bit status` ahead/behind counts.
+//! Read-only `Version` ancestry divergence calculation ([`distance`], [`Value`], [`graph::Version`], [`graph::diverge`], [`graph::subset`], [`graph::validate`]) for `bit status` ahead/behind counts.
 
 use super::{graph, hash, invalid};
 use serde_json::{Value, json};

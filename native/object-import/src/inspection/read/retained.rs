@@ -7,7 +7,7 @@ use crate::{
 };
 use std::io;
 
-/// Loads raw file bytes, size, and SHA-1 digest from disk or retained `snapshots`.
+/// Loads raw file bytes, size, and SHA-1 digest for `file` ([`wire::Input`]) from disk or retained `snapshots` ([`State`]).
 pub(super) fn load(
     file: &wire::Input,
     maximum: usize,

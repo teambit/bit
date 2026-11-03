@@ -27,7 +27,7 @@ struct Node {
     id: String,
     index: usize,
 }
-/// Directed `Version` history graph edge (`source`, `target`, and relationship `kind`).
+/// Directed [`Version`] history graph edge (`source`, `target`, and relationship `kind`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Edge {
     source: String,

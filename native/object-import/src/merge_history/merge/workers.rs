@@ -25,7 +25,7 @@ pub(super) fn classify_all(execution: &Execution<'_>) -> io::Result<Vec<Value>> 
     }
 }
 
-/// Returns `true` when `execution` has too few files or threads to benefit from `Rayon` parallelism.
+/// Returns `true` when `execution` ([`Execution`]) has too few files or threads to benefit from `Rayon` parallelism.
 #[inline]
 fn should_classify_serially(execution: &Execution<'_>) -> bool {
     execution.request.current.len() < 2

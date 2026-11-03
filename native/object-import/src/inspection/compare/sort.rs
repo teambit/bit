@@ -40,7 +40,7 @@ pub(super) fn all(value: &mut Js) -> io::Result<Value> {
         json!({"fileOrder":files,"dependencyOrder":dependencies,"devDependencyOrder":dev,"extensionOrder":extensions,"packageKeys":package_keys,"overrideKeys":override_keys}),
     )
 }
-/// Extracts the canonical `UTF-16` sort key for an extension entry `row`.
+/// Extracts the canonical `UTF-16` sort key for an extension entry [`Js`] `row`.
 #[inline]
 fn extension_id(row: &Js) -> io::Result<Vec<u16>> {
     let id = fields::get(row, "extensionId");

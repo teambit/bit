@@ -45,7 +45,7 @@ fn aggregate(records: &[Value], field: &str) -> io::Result<Groups> {
     sort_versions(&mut groups);
     Ok(groups)
 }
-/// Aggregates dependency entries from a single component `record` under `field` into `groups`.
+/// Aggregates [`FIELDS`] dependency entries from a single component `record` [`Value`] under `field` into [`Groups`].
 fn aggregate_record(groups: &mut Groups, record: &Value, field: &str) -> io::Result<()> {
     let component = text(record, "compId")?;
     for dependency_field in FIELDS {

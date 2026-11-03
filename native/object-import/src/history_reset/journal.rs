@@ -31,7 +31,7 @@ struct Begin {
     head: bool,
     force: bool,
 }
-/// Deserialized `historyResetReceipt` request payload acknowledging completion of `phase`.
+/// Deserialized `historyResetReceipt` request payload acknowledging completion of a [`Record`] `phase`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Receipt {

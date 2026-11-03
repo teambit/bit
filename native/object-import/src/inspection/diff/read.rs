@@ -43,7 +43,7 @@ pub(super) fn load(
     }
     Ok(output)
 }
-/// Reads `Source` records for `files` in parallel using shared atomic byte budgets.
+/// Reads [`SourceRecord`]s for `files` in parallel using shared atomic [`Budget`]s.
 #[inline]
 fn parallel(
     directory: &Path,

@@ -23,7 +23,7 @@ fn removed_entry(file: &Value, path: &str) -> Value {
         .unwrap_or(path);
     Value::String(entry.to_owned())
 }
-/// Filters `current` component files for `"removed"` status entries while preserving root `.bitmap`.
+/// Filters `current` component [`Value`] files via [`status`] for `"removed"` status entries while preserving root `.bitmap`.
 pub(super) fn apply(input: &Value, current: &[Value]) -> io::Result<Value> {
     let statuses = input["filesStatus"]
         .as_array()

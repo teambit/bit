@@ -20,7 +20,7 @@ impl Handler {
     ) -> Self {
         Self(Arc::new(callback))
     }
-    /// Invokes the underlying file-remote action `name` at scope `path` with `options`.
+    /// Invokes the underlying file-remote action `name` at scope `path` with `options` [`Value`].
     #[inline]
     pub(crate) fn call(&self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
         let path = path.to_str().map_or(path, |text| Path::new(text.trim()));

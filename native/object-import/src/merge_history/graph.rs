@@ -46,7 +46,7 @@ pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
     }
     Ok(())
 }
-/// Validates parent, unrelated, and squashed edges on `version` and enforces the total edge budget.
+/// Validates parent, unrelated, and squashed edges on `version` ([`Version`]) and enforces the total edge budget.
 fn validate_version_edges(version: &Version, current: &str, edges: &mut usize) -> io::Result<()> {
     for parent in edges_of(version, true) {
         let parent = parent.trim();

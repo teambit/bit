@@ -42,7 +42,7 @@ pub(crate) fn current() -> Option<SyncSender<Event>> {
     CURRENT.with_borrow(Clone::clone)
 }
 
-/// Installs `sender` as the thread-local [`Event`] sink for the duration of `work`.
+/// Installs `sender` ([`SyncSender`]) as the thread-local [`Event`] sink for the duration of `work`.
 #[inline]
 pub(crate) fn with_sender<Output>(
     sender: Option<SyncSender<Event>>,

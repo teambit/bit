@@ -45,7 +45,7 @@ pub(super) fn plan(filename: &Path, current: &[String]) -> io::Result<Value> {
         .collect();
     Ok(json!({"removeDirs":remove}))
 }
-/// Extracts and validates unique component `rootDir` entries from a parsed `.bitmap` JSON `value`.
+/// Extracts and validates unique component `rootDir` [`HashSet`] entries from a parsed `.bitmap` JSON `value` ([`Value`]).
 fn roots(value: &Value) -> io::Result<HashSet<&str>> {
     let entries = value.as_object().ok_or_else(|| invalid("bitmap object"))?;
     if entries.len() > 4098 {

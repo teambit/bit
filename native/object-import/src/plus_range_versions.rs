@@ -27,7 +27,7 @@ pub fn usages(
     }
     unique
 }
-/// Formats a `<name>: "<range>"` usage entry when `dependency` carries a `+^` or `+~` range.
+/// Formats a `<name>: "<range>"` usage entry when `dependency` [`Value`] carries a `+^` or `+~` range.
 fn dependency_usage(dependency: &Value) -> Option<String> {
     if !is_range(&dependency["versionRange"]) {
         return None;

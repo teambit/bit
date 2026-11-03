@@ -53,7 +53,7 @@ fn is_non_empty_string_array(value: &Value) -> bool {
         })
 }
 
-/// Validates a single `LaneHistory` map entry (`id`, `log.date`, `components`, `updateDependents`).
+/// Validates a single `LaneHistory` map entry [`Value`] (`id`, `log.date`, `components`, `updateDependents`) via [`is_non_empty_string_array`].
 fn valid_history_entry(id: &str, entry: &Value) -> bool {
     let id = id.trim();
     !id.is_empty()

@@ -24,7 +24,7 @@ struct HistoryPlan {
     incoming: Vec<String>,
     stored: Vec<String>,
 }
-/// Deserialized `Component` import merge input (tags, orphaned tags, heads, and deleted versions).
+/// Deserialized `Component` import merge input ([`Tags`], orphaned tags, heads, and deleted versions).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct ComponentPlan {
     existing: Tags,

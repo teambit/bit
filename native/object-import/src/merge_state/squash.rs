@@ -47,7 +47,7 @@ pub(super) fn policy(input: &Policy) -> io::Result<Value> {
     }
     rewrite(input, parents, common)
 }
-/// Returns `true` when `input` has divergent or detached target-only commits eligible for squashing.
+/// Returns `true` when `input` ([`Policy`]) has divergent or detached target-only commits eligible for squashing.
 fn eligible(input: &Policy) -> bool {
     if input.source_only.is_empty() {
         !input.target_only.is_empty()

@@ -18,7 +18,7 @@ pub(super) fn run(
     }
 }
 
-/// Returns `true` when `request` is eligible to execute inside the `Rayon` worker pool.
+/// Returns `true` when `request` ([`Request`]) is eligible to execute inside the `Rayon` worker pool.
 #[inline]
 const fn is_parallel(request: &Request) -> bool {
     matches!(

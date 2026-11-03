@@ -69,7 +69,7 @@ impl Plan {
     }
 }
 
-/// Returns `true` when `index.json` lane `row` matches `(scope, name)`.
+/// Returns `true` when `index.json` lane `row` [`Value`] matches `(scope, name)`.
 #[inline]
 fn lane_matches(row: &Value, scope: &str, name: &str) -> bool {
     crate::workspace::engine::command::inbound::remote::file_list::row_lane_matches(

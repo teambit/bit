@@ -41,7 +41,7 @@ pub(crate) fn commit_metadata(
     }
     Ok(())
 }
-/// Validates that `path` is an absolute `UTF-8` path without `..` or NUL bytes.
+/// Validates that `path` ([`Path`]) is an absolute `UTF-8` path without `..` or NUL bytes.
 fn validate_path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
     if !path.is_absolute()

@@ -29,7 +29,7 @@ pub(crate) fn validate(value: &Value) -> io::Result<()> {
     lane(value, "squashed")
 }
 
-/// Validates the `files` array (`relativePath` and `file` `Source` hash) on a `Version` JSON object.
+/// Validates the `files` array (`relativePath` and `file` `Source` hash) on a `Version` JSON [`Value`].
 fn validate_files(value: &Value) -> io::Result<()> {
     let files = value
         .get("files")

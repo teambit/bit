@@ -62,7 +62,7 @@ fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
     unicode(writer, u32::from(unit))
 }
 
-/// Encodes a validated Unicode `scalar` value as `UTF-8` bytes into `writer`.
+/// Encodes a validated Unicode `scalar` value as `UTF-8` bytes into [`Writer`] `writer`.
 #[inline]
 fn unicode(writer: &mut Writer, scalar: u32) -> io::Result<()> {
     let mut buffer = [0; 4];

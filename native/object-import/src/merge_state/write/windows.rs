@@ -45,7 +45,7 @@ fn same_file_identity(
         && before.file_index() == after.file_index()
 }
 
-/// Rejects files with multiple hard links or reparse-point/directory/device attributes.
+/// Rejects files with multiple hard links or [`REPARSE_POINT`]/[`DIRECTORY_ATTRIBUTE`]/[`DEVICE_ATTRIBUTE`] flags.
 #[inline]
 fn validate(info: &winapi_util::file::Information) -> io::Result<()> {
     if info.number_of_links() != 1

@@ -15,7 +15,7 @@ pub(super) struct Plan {
     previously_used_version: Option<String>,
     entry: Entry,
 }
-/// Unmerged component entry from `unmerged.json` (`head`, `lane`, `unrelated`, `shouldSquash`).
+/// Unmerged component entry from `unmerged.json` (`head`, `lane` [`Lane`], `unrelated` [`Unrelated`], `shouldSquash`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Entry {

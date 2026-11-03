@@ -43,7 +43,7 @@ fn read(
         Err(error) => Err(error),
     }
 }
-/// Projects and validates a `Version` row (`hash`, `parents`, `unrelated`, `squashed`) from `value`.
+/// Projects and validates a `Version` row [`Value`] (`hash`, `parents`, `unrelated`, `squashed`) from `value`.
 fn record(hash: &str, value: &Value) -> io::Result<Value> {
     crate::merge_history::hash(hash)?;
     let parents = value

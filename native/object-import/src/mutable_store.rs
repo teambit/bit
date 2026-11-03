@@ -4,7 +4,7 @@ use crate::store::Store;
 use flate2::{Compression, write::ZlibEncoder};
 use std::io::{self, Write};
 
-/// Validates header invariants, zlib-compresses `serialized`, and writes it to `store` under `hash`.
+/// Validates header invariants via [`check_header`], zlib-compresses `serialized`, and writes it to `store` ([`Store`]) under `hash`.
 pub(crate) fn persist_serialized(
     store: &Store,
     hash: &str,

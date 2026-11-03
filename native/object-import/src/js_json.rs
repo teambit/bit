@@ -87,7 +87,7 @@ impl Value {
     }
 }
 
-/// Serializes [`Value`] using `ECMAScript` `JSON.stringify` semantics (returning `None` for `Undefined`).
+/// Serializes [`Value`] via [`stringify_indented`] using `ECMAScript` `JSON.stringify` semantics (returning `None` for [`Value::Undefined`]).
 #[inline]
 pub fn stringify(value: &Value, pretty: bool) -> io::Result<Option<Vec<u8>>> {
     if matches!(value, Value::Undefined) {

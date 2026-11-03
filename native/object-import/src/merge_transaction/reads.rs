@@ -14,7 +14,7 @@ pub(super) struct Trace {
     compressed: usize,
     retained_bytes: usize,
 }
-/// Recorded `Source` object body and compressed/inflated byte sizes from a single read.
+/// Recorded `Source` object body and compressed/inflated byte sizes from a single [`Trace`] read.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Receipt {
     pub(super) body: Vec<u8>,

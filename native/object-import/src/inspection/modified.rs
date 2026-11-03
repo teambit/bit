@@ -1,4 +1,4 @@
-//! Cold-command in-memory workspace file modification check ([`modified`]) against model [`wire::Model`] hashes via [`read::capture`] within [`MAX_FILES`] and [`MAX_BYTES`].
+//! Cold-command in-memory workspace file modification check ([`modified`]) against model [`wire::Model`] hashes via [`read::capture`] and [`files::validated_models`] within [`MAX_FILES`] and [`MAX_BYTES`].
 
 use super::{MAX_BYTES, MAX_FILES, files, invalid, read, wire};
 use serde_json::Value;

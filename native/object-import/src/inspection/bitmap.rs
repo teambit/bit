@@ -32,7 +32,7 @@ pub(crate) fn render(value: &Value) -> io::Result<Vec<u8>> {
     output.extend(js_json::stringify_indented(&ast(value)?, 4)?);
     Ok(output)
 }
-/// Returns `true` when `.bitmap` component `entry` is unavailable on lane or marked removed.
+/// Returns `true` when `.bitmap` component `entry` ([`Map`]<[`String`], [`Value`]>) is unavailable on lane or marked removed.
 fn removed(entry: &Map<String, Value>) -> bool {
     entry.get("isAvailableOnCurrentLane") == Some(&Value::Bool(false))
         || entry
