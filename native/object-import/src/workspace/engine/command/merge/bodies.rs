@@ -91,7 +91,7 @@ impl BodyInput<'_> {
             "other":format!("{} ({})",self.sides[2].hash.trim(),if same {"incoming"} else {&incoming})}),
         )
     }
-    /// Verifies that `base`, `current`, and `incoming` `Version` metadata satisfy [`harmony::project`] three-way merge guards.
+    /// Verifies that `base`, `current`, and `incoming` [`VersionSide`] metadata satisfy [`harmony::project`] three-way merge guards.
     fn metadata_guard(&self) -> io::Result<()> {
         let projected = self.sides
             .iter()

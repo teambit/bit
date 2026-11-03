@@ -4,7 +4,7 @@ use super::super::{config, invalid};
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Builds the workspace dependency policy update receipt for imported `targets` when `teambit.dependencies/dependency-resolver` policy rules exist.
+/// Builds the workspace dependency policy update receipt for imported `targets` ([`super::Target`]) when `teambit.dependencies/dependency-resolver` policy rules exist.
 pub(super) fn receipt(
     root: &Path,
     targets: &[super::Target],

@@ -19,7 +19,7 @@ pub(super) struct Prepared {
     ready: bool,
 }
 
-/// Deserialized completion request carrying semver resolution results for checkout policy updates.
+/// Deserialized completion request carrying semver resolution results for [`complete`] checkout policy updates.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

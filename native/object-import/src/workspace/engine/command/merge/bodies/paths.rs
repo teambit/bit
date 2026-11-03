@@ -8,7 +8,7 @@ use std::{
     path::{Component, Path},
 };
 
-/// Validates that `path` is a [`canonical_relative`] ordinary destination under `root` without symlinks.
+/// Validates that `path` is a [`canonical_relative`] ordinary destination under `root` without symlinks or traversal segments.
 #[inline]
 pub(super) fn validate(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;

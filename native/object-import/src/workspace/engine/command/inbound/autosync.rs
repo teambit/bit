@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Deserialized auto-sync finalization request binding the workspace root, git head, and `.bitmap` history ID.
+/// Deserialized auto-sync finalization request binding the workspace root, git head, and `.bitmap` history ID for [`finalize`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

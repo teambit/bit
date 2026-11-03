@@ -5,7 +5,7 @@ use super::{LaneFinalize, State, invalid, proof, scratch};
 use serde_json::{Value, json};
 use std::io;
 
-/// Finalizes lane histories, rebased version histories, and referenced objects for `input` ([`LaneFinalize`]) on `state` ([`State`]).
+/// Finalizes lane histories, rebased version histories, and referenced objects via [`proof::verify`] for `input` ([`LaneFinalize`]) on `state` ([`State`]).
 #[inline]
 pub(super) fn run(input: &LaneFinalize, state: &mut State) -> io::Result<(usize, Value)> {
     let mut record = state.record.take().ok_or_else(|| invalid("command lane owner absent"))?;

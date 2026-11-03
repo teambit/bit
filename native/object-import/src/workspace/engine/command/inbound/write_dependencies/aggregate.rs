@@ -34,7 +34,7 @@ pub(super) fn prepare(facts: &Value) -> io::Result<Map<String, Value>> {
     dedupe(&rows)
 }
 
-/// Appends `dependencies`, `devDependencies`, and `peerDependencies` entries from `policy` into `rows`.
+/// Appends `dependencies`, `devDependencies`, and `peerDependencies` entries from `policy` into `rows` for [`prepare`].
 fn policy_rows(policy: &Value, rows: &mut Vec<Value>) -> io::Result<()> {
     if policy.is_null() {
         return Ok(());

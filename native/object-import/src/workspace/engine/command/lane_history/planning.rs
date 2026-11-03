@@ -45,7 +45,7 @@ pub(in crate::workspace::engine::command) fn attach(
     Ok(())
 }
 
-/// Removes and returns the captured component matching `identity` from `captured`.
+/// Removes and returns the [`capture::Captured`] component matching `identity` from `captured` via [`bare_id`].
 #[inline]
 fn take_captured(
     captured: &mut [Option<capture::Captured>],

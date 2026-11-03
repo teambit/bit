@@ -45,7 +45,7 @@ pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) ->
     Ok(Value::Object(fields))
 }
 
-/// Computes the `(package_version, component_id_version)` pair for `input` from its semantic version or hash.
+/// Computes the `(package_version, component_id_version)` pair for `input` ([`Input`]) from its semantic version or hash for [`manifest`].
 #[inline]
 fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
     let hash = input.hash.trim();

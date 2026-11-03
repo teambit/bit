@@ -19,7 +19,7 @@ pub(super) fn rows(bitmap: &Value) -> io::Result<Vec<Value>> {
         .collect()
 }
 
-/// Normalizes a single `.bitmap` component row by populating missing `name` and `scope` fields from `key`.
+/// Normalizes a single `.bitmap` component row for [`rows`] by populating missing `name` and `scope` fields from `key`.
 fn normalized_row(key: &str, entry: &Value) -> io::Result<Value> {
     if entry
         .get("name")

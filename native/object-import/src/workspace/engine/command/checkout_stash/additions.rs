@@ -67,7 +67,7 @@ fn trimmed_field<'a>(row: &'a Value, key: &str, message: &str) -> io::Result<&'a
         .ok_or_else(|| invalid(message))
 }
 
-/// Materializes stashed new components from `record.context["stashAdditions"]` into `plan`.
+/// Materializes stashed new components from `record.context["stashAdditions"]` ([`Record`]) into `plan` ([`planning::Planned`]).
 pub(in crate::workspace::engine::command) fn materialize(
     record: &mut Record,
     plan: &mut planning::Planned,

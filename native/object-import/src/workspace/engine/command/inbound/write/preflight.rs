@@ -42,7 +42,7 @@ pub(in super::super) fn check(
     Ok(())
 }
 
-/// Validates that an existing `.bitmap` target can be updated or merged cleanly under `options`.
+/// Validates that an existing `.bitmap` [`Target`] can be updated or merged cleanly under `options` ([`Options`]) via [`find_existing_model`].
 fn existing_target(
     root: &Path,
     target: &Target,

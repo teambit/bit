@@ -53,7 +53,7 @@ impl Prepared {
         Ok(())
     }
 
-    /// Publishes `.bitmap` history backup/metadata files followed by the updated `.bitmap` document.
+    /// Publishes `.bitmap` [`History`] backup/metadata files followed by the updated `.bitmap` document via [`Self::check_bitmap`].
     fn publish_history_and_bitmap(&self, history_published: &mut bool) -> io::Result<()> {
         self.check_bitmap("during publication")?;
         self.history.publish(&self.root, &self.bitmap_before)?;

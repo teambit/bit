@@ -24,7 +24,7 @@ struct Writes {
     removals: Vec<String>,
     license: Option<license::Prepared>,
 }
-/// Borrowed inputs for preparing component file materialization and `LICENSE` writes for one target.
+/// Borrowed inputs for preparing component file materialization ([`prepare`]) and `LICENSE` writes ([`license::Prepared`]) for one [`Captured`] target.
 pub(super) struct Input<'a> {
     pub(super) root: &'a Path,
     pub(super) directory: &'a Path,

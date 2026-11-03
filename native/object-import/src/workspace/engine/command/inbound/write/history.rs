@@ -46,7 +46,7 @@ pub(super) fn prepare(root: &Path, file_id: Option<&str>) -> io::Result<History>
     })
 }
 
-/// Retained filesystem metadata preimages for `.bitmap` and its history backup file.
+/// Retained filesystem metadata preimages for `.bitmap` and its [`History`] backup file.
 #[derive(Debug, Default, Clone)]
 pub(super) struct Attributes {
     pub(super) source: Option<fs::Metadata>,

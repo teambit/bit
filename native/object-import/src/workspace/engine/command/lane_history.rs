@@ -36,7 +36,7 @@ struct Flags {
     revert: bool,
     restore_deleted: bool,
 }
-/// Single checkout or revert phase (`versions` and `revert` flag) in a retained lane-history operation.
+/// Single checkout or revert phase (`versions` and `revert` flag) in a [`Retained`] lane-history operation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Phase {
     pub(super) versions: Vec<(String, String)>,

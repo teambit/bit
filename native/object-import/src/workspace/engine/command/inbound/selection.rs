@@ -43,7 +43,7 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
     Ok(targets)
 }
 
-/// Parses and validates an explicit `<scope>/<name>[@<version>]` import identifier into a [`Target`].
+/// Parses and validates an explicit `<scope>/<name>[@<version>]` import identifier into a [`Target`] via [`valid_target_parts`] and [`normalize_target_version`].
 pub(super) fn requested_target(id: &str) -> io::Result<Target> {
     let (scope, rest) = id
         .trim()

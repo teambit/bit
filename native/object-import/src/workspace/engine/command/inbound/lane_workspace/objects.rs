@@ -39,7 +39,7 @@ pub(super) fn prepare(
     Ok((selected, import))
 }
 
-/// Captures virtual remote overlays for `id` and any unmatched `main`-only roots.
+/// Captures [`VirtualRemote`] overlays for `id` ([`lane::Id`]) and any [`unmatched_roots`] `main`-only roots.
 fn capture_remotes(
     input: &Prepare,
     roots: &[Target],

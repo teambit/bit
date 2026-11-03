@@ -40,7 +40,7 @@ pub(super) fn model<'a>(
     Ok(Cow::Owned(model))
 }
 
-/// Resolves the `head` hash of `model` (`versions` or `orphanedVersions`) to its matching version tag when one exists, or returns the raw hash.
+/// Resolves the `head` hash of `model` (`versions` or `orphanedVersions`) to its matching version tag when one exists, or returns the raw hash for [`details`].
 pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
     let head = model["head"]
         .as_str()

@@ -36,7 +36,7 @@ pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
     })()
 }
 
-/// Allocates a unique `.bit-package-<pid>-<seq>` temporary file in the parent directory of `path`.
+/// Allocates a unique `.bit-package-<pid>-<seq>` [`Temporary`] file via [`SEQUENCE`] in the parent directory of `path`.
 fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
     let parent = path
         .parent()

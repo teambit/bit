@@ -26,7 +26,7 @@ pub(super) fn prepare(
     }
 }
 
-/// Prepares a file-remote lane workspace import for `id` and retains remote lane refs.
+/// Prepares a file-remote lane workspace import for `id` ([`lane::Id`]) via [`choose`] and retains remote lane refs.
 fn prepare_file(
     input: &Prepare,
     roots: &[Target],

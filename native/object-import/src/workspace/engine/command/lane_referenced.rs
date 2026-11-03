@@ -52,7 +52,7 @@ struct Projection<'a> {
     on_main: bool,
 }
 impl Projection<'_> {
-    /// Resolves the post-squash head `Version` object for `identity` from planned snapshots, rebased versions, or `repository`.
+    /// Resolves the post-squash head `Version` object for `identity` from [`Self::projected`], rebased versions, or `repository` ([`Repository`]).
     fn version(&self, identity: &str, repository: &mut Repository) -> io::Result<Option<Value>> {
         if self.on_main
             && let Some(value) = self.projected(identity)

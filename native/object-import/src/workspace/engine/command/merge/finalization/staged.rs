@@ -46,7 +46,7 @@ pub(super) fn prepare(
     output.writes.push((index, pretty(&current, true)?));
     Ok(())
 }
-/// Prepares `staged-config/<lane>.json` updates in `output` for finalized workspace components.
+/// Prepares `staged-config/<lane>.json` updates in `output` ([`Prepared`]) for finalized workspace [`Input`] components.
 fn config(
     root: &Path,
     scope: &Path,

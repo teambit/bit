@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-/// Deserialized completion request carrying workspace dependency facts and read proofs.
+/// Deserialized completion request carrying workspace dependency facts and read proofs consumed by [`complete`].
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

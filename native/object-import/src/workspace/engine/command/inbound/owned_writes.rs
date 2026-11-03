@@ -29,7 +29,7 @@ pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
     Ok(result)
 }
 
-/// Extracts and validates `(path, before_hash, after_hash)` from a single file write `receipt`.
+/// Extracts and validates `(path, before_hash, after_hash)` via [`digest`] from a single file write `receipt` for [`combine`].
 #[inline]
 fn normalize_receipt(receipt: &Value) -> io::Result<(String, Value, Value)> {
     let path = receipt["path"]

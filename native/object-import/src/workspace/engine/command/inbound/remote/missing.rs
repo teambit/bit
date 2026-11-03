@@ -11,7 +11,7 @@ use serde_json::Value;
 use sha1::Digest;
 use std::{borrow::Cow, collections::HashMap, path::Path};
 
-/// The objects one request returned ([`HashMap`]), then the workspace's own local object directory.
+/// The objects one [`requests`] fetch returned ([`HashMap`]), paired with the workspace's own local object directory.
 #[derive(Debug, Clone)]
 struct Objects<'a> {
     fetched: HashMap<&'a str, &'a [u8]>,

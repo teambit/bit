@@ -77,7 +77,7 @@ pub(super) fn lane_objects(
     })
 }
 
-/// `Lister.remoteList` preserves transport order for [`List`] unless fork file-scope ordering is requested.
+/// `Lister.remoteList` preserves transport order for [`List`] into [`Listed`] items unless fork file-scope ordering is requested.
 pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
     let (remotes, network, _, _) = connect(&input.root, &input.transport)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;

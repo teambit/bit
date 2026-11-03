@@ -23,7 +23,7 @@ pub(super) fn new_only(options: &Options) -> bool {
         .is_some_and(|stash| stash.reset_ids.is_none() && stash.versions.is_empty())
 }
 
-/// Returns the stashed `Version` hash for `identity` from `options` when present.
+/// Returns the stashed `Version` hash for `identity` from `options` ([`Options`]) when present.
 #[inline]
 pub(super) fn version<'a>(options: &'a Options, identity: &str) -> Option<&'a str> {
     let identity = identity.trim();

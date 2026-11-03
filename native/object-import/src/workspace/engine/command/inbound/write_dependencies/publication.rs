@@ -67,7 +67,7 @@ fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> 
     )
 }
 
-/// Updates `workspace.jsonc` dependency policy entries and sets `linkCoreAspects` when absent.
+/// Updates `workspace.jsonc` dependency policy entries on [`RESOLVER`] and sets `linkCoreAspects` when absent for [`write`].
 fn workspace(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
     let mut document = Document::parse(text)?;
     let mut entries = dependencies

@@ -31,7 +31,7 @@ fn row_effective_scope<'a>(row_scope: Option<&'a str>, row: &'a Value) -> Option
         })
 }
 
-/// Returns `true` when `rows` contains an unscoped component entry with `name`.
+/// Returns `true` when `rows` contains an unscoped component entry with `name` via [`is_component_bitmap_entry`].
 pub(super) fn has_unscoped_entry(rows: &Map<String, Value>, name: &str) -> bool {
     let name = name.trim();
     rows.iter()

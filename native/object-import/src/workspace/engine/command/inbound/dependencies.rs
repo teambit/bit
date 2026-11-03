@@ -46,7 +46,7 @@ fn heads(dependencies: Vec<Target>) -> io::Result<Vec<Target>> {
     Ok(heads)
 }
 
-/// Appends non-root `dependencies` to `roots`, enforcing the 4,096-target budget.
+/// Appends non-root [`Target`] `dependencies` to `roots` for [`expand`], enforcing the 4,096-target budget.
 fn append(roots: &[Target], dependencies: Vec<Target>) -> io::Result<Vec<Target>> {
     let selected = roots
         .iter()

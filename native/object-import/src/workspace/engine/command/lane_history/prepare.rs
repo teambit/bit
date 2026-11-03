@@ -41,7 +41,7 @@ pub(in crate::workspace::engine) fn run(
     let result = select(input, state, lane_id, &lane.hash, &bitmap, committed);
     if committed { result.map_err(owned) } else { result }
 }
-/// Selects the requested `history_id` entry from `lane_hash`'s `LaneHistory` and retains its execution phases.
+/// Selects the requested `history_id` entry from `lane_hash`'s `LaneHistory` via [`read`] and retains its execution phases via [`retain::run`].
 fn select(
     input: Prepare,
     state: &mut State,

@@ -18,7 +18,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Input descriptor for a finalized component version during post-merge package and staged-snap preparation.
+/// Input descriptor for a finalized component version during post-merge [`packages`] and [`staged`]-snap [`prepare`]ation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::workspace::engine::command) struct Input<'a> {
     pub identity: &'a str,

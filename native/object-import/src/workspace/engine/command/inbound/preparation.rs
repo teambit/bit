@@ -37,7 +37,7 @@ pub(super) fn prepare_targets(
     Ok((targets, import))
 }
 
-/// Prepares retained workspace file and `.bitmap` writes for `targets` unless `objects_only` is set.
+/// Prepares retained workspace file and `.bitmap` writes ([`write::Prepared`]) for `targets` ([`Target`]) unless `objects_only` is set.
 pub(super) fn prepare_workspace(
     input: &Prepare,
     targets: &[Target],

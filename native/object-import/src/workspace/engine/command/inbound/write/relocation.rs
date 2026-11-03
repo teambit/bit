@@ -18,7 +18,7 @@ impl Retained {
         self.observed.validate()
     }
 
-    /// Relocates `directory` under `<owner>/<directory>` when `directory` is already used by another component.
+    /// Relocates `directory` under `<owner>/<directory>` when `directory` is already used by another component via [`has_nested_tracked`].
     pub(super) fn avoid_tracked(
         &mut self,
         root: &Path,
