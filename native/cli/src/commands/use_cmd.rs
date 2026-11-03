@@ -1,6 +1,6 @@
 //! Native `bit use <component-id>` ([`COMMAND`]; `UseCmd` in `scopes/workspace/workspace/use.cmd.ts`).
 //!
-//! Registers aspect entries in `workspace.jsonc` [`Document`] files and formats a [`Report`] with [`Formatter`].
+//! Registers aspect entries in `workspace.jsonc` [`Document`] files via [`prepare`] and formats a [`Report`] with [`Formatter`].
 
 #[cfg(test)]
 mod tests;

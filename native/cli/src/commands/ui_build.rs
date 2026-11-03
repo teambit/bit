@@ -1,6 +1,6 @@
 //! Native `bit ui-build [type]` ([`COMMAND`]; `scopes/ui-foundation/ui/ui-build.cmd.tsx`).
 //!
-//! Validates workspace and [`Options`] preconditions for `bit ui-build` into [`Outcome`].
+//! Validates workspace ([`is_outside_workspace_and_scope`]) and [`Options`] ([`parse_options`]) preconditions for `bit ui-build` into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

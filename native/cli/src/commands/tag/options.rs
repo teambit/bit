@@ -2,7 +2,7 @@
 //! ordinary and soft tags. Editor, build and publish flags stay
 //! with the Node.js CLI.
 //!
-//! Validates [`RELEASE_TYPES`], [`PRE_RELEASE_TYPES`], [`BOOLEANS`], and [`STRINGS`] and serializes tag flags into JSON [`Value`] payloads.
+//! Validates [`RELEASE_TYPES`], [`PRE_RELEASE_TYPES`], [`BOOLEANS`], and [`STRINGS`] via [`parse`] and [`invalid_ver`] into JSON [`Value`] payloads.
 
 #[cfg(test)]
 mod options_tests;

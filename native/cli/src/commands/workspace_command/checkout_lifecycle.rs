@@ -1,6 +1,6 @@
 //! Checkout provider startup and observable callback output, without Node VCS writes.
 //!
-//! [`bootstrap`] coordinates [`Engine`], [`Startup`] autosync, [`capture`], and [`Environments`] during checkout.
+//! [`bootstrap`], [`bootstrap_inherited`], and [`retain`] coordinate [`Engine`], [`Startup`] autosync, [`capture`], and [`Environments`] during checkout.
 
 use crate::commands::{
     engine::Engine,

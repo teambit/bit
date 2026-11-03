@@ -38,7 +38,7 @@ pub(super) fn read(context: &Value) -> io::Result<Workspace> {
     Ok(Workspace { policy, package_json })
 }
 
-/// Extracts `[dependencies, peerDependencies]` [`Map`] entries from a workspace dependency resolver `policy` object.
+/// Extracts `[dependencies, peerDependencies]` [`Map`] entries from a workspace dependency resolver `policy` [`Value`] object.
 fn root_policy(policy: &Value) -> io::Result<[Map<String, Value>; 2]> {
     for field in ["dependencies", "peerDependencies"] {
         let Some(values) = nullish(policy.get(field)) else { continue };

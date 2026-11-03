@@ -51,7 +51,7 @@ pub(super) fn try_run(
     Ok(Some(outcome))
 }
 
-/// Loads `root` as a [`Workspace`] when eligible for native `bit validate` execution.
+/// Loads `root` ([`Path`]) as a [`Workspace`] when eligible for native `bit validate` execution ([`CORE_ASPECT_IDS`], [`CORE_ENVS`]).
 fn load_eligible_workspace(root: &Path) -> Option<Workspace> {
     let raw_ws = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     let has_custom_root = raw_ws

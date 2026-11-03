@@ -44,7 +44,7 @@ pub(super) fn render(
     Ok(())
 }
 
-/// Renders `loading <n> component(s)` spinner lines and flushes buffered load/issue stdout.
+/// Renders `loading <n> component(s)` spinner lines and flushes buffered load/issue stdout onto [`Output`].
 #[inline]
 fn render_loads(output: &Output, loaded: usize, loads: usize, progress: &Progress) {
     let mut printed_load_stdout = false;

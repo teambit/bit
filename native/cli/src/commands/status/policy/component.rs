@@ -1,7 +1,7 @@
 //! `EnvPolicy.fromConfigObject`, `VariantPolicy.mergePolices`, and their
 //! legacy forced/auto-detected projections. Later policies win per lifecycle.
 //!
-//! [`Policy`] merges [`FIELDS`] and [`RESOLVER`] dependency policies across environment and variant layers.
+//! [`Policy`] merges [`FIELDS`], [`NODE_DEV_DEPENDENCIES`], [`NODE_PEERS`], and [`RESOLVER`] dependency policies across environment and variant layers.
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! `JavaScript` value semantics the Node.js CLI relies on, over `serde_json` [`Value`] items.
 //!
-//! Exposes [`decline`], [`nullish`], [`truthy`], [`text`], [`array`], and [`object`] coercion helpers.
+//! Exposes [`decline`], [`nullish`], [`truthy`], [`text`], [`array`], [`object`], [`string_map`], and [`assign`] coercion helpers.
 
 use serde_json::{Map, Value};
 use std::io;

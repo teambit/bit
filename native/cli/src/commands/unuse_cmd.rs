@@ -1,6 +1,6 @@
 //! Native `bit unuse <component-id>` ([`COMMAND`]; `UnuseCmd` in `scopes/workspace/workspace/unuse.cmd.ts`).
 //!
-//! Removes aspect entries from `workspace.jsonc` [`Document`] files and formats a [`Report`] with [`Formatter`].
+//! Removes aspect entries from `workspace.jsonc` [`Document`] files via [`prepare`] and [`apply_unuse`] and formats a [`Report`] with [`Formatter`].
 
 #[cfg(test)]
 mod tests;

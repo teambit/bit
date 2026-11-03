@@ -1,6 +1,6 @@
 //! How `formatStatusOutput` and `renderSections` put the sections together.
 //!
-//! Extends [`Status`] with [`Status::pending_merge`] and section assembly using [`Formatter`] and [`CLEAN`].
+//! Extends [`Status`] with [`Status::pending_merge`], [`Status::joined`], and [`Status::rendered`] using [`Formatter`] and [`CLEAN`].
 
 use super::{CLEAN, Status, array, ids};
 use crate::commands::{status::js::decline, workspace_command::format::Formatter};

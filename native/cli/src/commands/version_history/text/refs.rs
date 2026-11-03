@@ -1,6 +1,6 @@
 //! Qualify tracked remote lane labels without relying on filesystem iteration order.
 //!
-//! [`lanes`] and [`qualify_shared_heads`] collect deterministic lane head references for a component from [`Path`] objects.
+//! [`lanes`], [`lane_paths`], and [`qualify_shared_heads`] collect deterministic lane head references for a component from [`Path`] objects.
 use serde_json::Value;
 use std::{
     fs, io,

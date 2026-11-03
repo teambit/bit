@@ -1,6 +1,6 @@
 //! Ordered sections of `formatStatusOutput`.
 //!
-//! [`Status::sections`] renders [`Status`] sections (new, modified, staged, outdated, pending-merge) with [`Formatter`].
+//! [`Status::sections`] renders [`Status`] sections (new, modified, staged, [`OUTDATED`], [`PENDING_MERGE`]) with [`Formatter`].
 
 use super::{AUTO_TAG, FAILURE, Status, array, decline, ids, lane_updates, text};
 use crate::commands::workspace_command::format::Formatter;

@@ -1,6 +1,6 @@
 //! Aggregate released tester JSON into the versionless component summary.
 //!
-//! [`project`] normalizes component test [`Value`] results into versionless summary payloads.
+//! [`project`] normalizes component test [`Value`] results into versionless summary payloads via [`component`] and [`env_errors`].
 use serde_json::{Value, json};
 
 /// Projects single-component tester JSON `data` ([`Value`]) for `identity` and `environment` into a versionless summary [`Value`].

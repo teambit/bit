@@ -1,6 +1,6 @@
 //! Native `bit system <sub-command>` ([`COMMAND`]; `SystemCmd` and `SystemLogCmd` in `scopes/harmony/global-config/system.cmd.ts`).
 //!
-//! Resolves `debug.log` in [`cache_root`] and records invocations in [`History`] into [`Outcome`].
+//! Resolves `debug.log` in [`cache_root`] via [`run_log`] and records invocations in [`History`] into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

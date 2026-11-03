@@ -40,7 +40,7 @@ pub(super) fn prepare(
 ) -> Option<Plan> {
     planning::prepare(root, id, from, all_lanes, delete_existing)
 }
-/// Reads an existing `VersionHistory` object and file mode at `path` when present, recording its proof in `proofs`.
+/// Reads an existing `VersionHistory` object and file mode ([`existing_mode`]) at `path` ([`Path`]) when present, recording its proof in `proofs`.
 fn stored(
     root: &Path,
     hash: &str,

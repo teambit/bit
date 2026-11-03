@@ -1,6 +1,6 @@
 //! List the default scope through native inbound transport before checkout preparation.
 //!
-//! [`candidates`] and [`default_workspace_scope`] query [`Engine`] and [`NodeCli`] for remote scope candidates on [`Request`].
+//! [`candidates`], [`list`], and [`default_workspace_scope`] query [`Engine`] and [`NodeCli`] for remote scope candidates on [`Request`].
 use super::{NodeCli, Request, decline};
 use crate::commands::{engine::Engine, status::cache::cache_root};
 use serde_json::{Value, json};

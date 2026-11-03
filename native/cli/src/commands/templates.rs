@@ -1,6 +1,6 @@
 //! Native `bit templates` ([`COMMAND`]; `scopes/generator/generator/templates.cmd.ts`).
 //!
-//! Queries [`select_templates`] and [`WORKSPACE_STARTER_ASPECTS`] and renders via [`format_templates_report`].
+//! Queries [`select_templates`], [`CORE_ASPECT_IDS`], and [`WORKSPACE_STARTER_ASPECTS`] and renders via [`format_templates_report`].
 
 mod catalog;
 #[cfg(test)]

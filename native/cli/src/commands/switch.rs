@@ -1,7 +1,7 @@
 //! Native `bit switch <lane>` ([`COMMAND`]) through the workspace
 //! command's prepare, plan, capture and apply lifecycle.
 //!
-//! Coordinates [`installation`], [`options`], [`report`], and [`run`] and re-exports [`import_options`].
+//! Coordinates [`installation`], [`options`], [`report`], [`run`], and [`lane_import`] and re-exports [`import_options`].
 
 pub(super) use options::parse_import as import_options;
 mod installation;

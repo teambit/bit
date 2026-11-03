@@ -4,7 +4,7 @@
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 
-/// Vertex in the `version-history` DAG holding a snap hash and outgoing parent edges.
+/// Vertex in the `version-history` DAG ([`Graph`]) holding a snap hash and outgoing parent edges.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Node {
     pub hash: String,

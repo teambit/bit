@@ -18,7 +18,7 @@ fn read(root: &Path, directory: &str, main: &str) -> io::Result<Value> {
         Coverage { directory: directory.trim().to_owned(), main: main.trim().to_owned() };
     Ok(read_many(root, &[component])?.remove(0))
 }
-/// Reads coverage summaries for `components` from `coverage/coverage-summary.json` and removes the `coverage` directory.
+/// Reads coverage summaries for `components` from `coverage/coverage-summary.json` via [`project`] and removes the `coverage` directory.
 fn read_many(root: &Path, components: &[Coverage]) -> io::Result<Vec<Value>> {
     let path = root.join("coverage/coverage-summary.json");
     if !path.exists() {

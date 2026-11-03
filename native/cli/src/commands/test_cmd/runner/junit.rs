@@ -48,7 +48,7 @@ fn component_identity(id: &Value) -> Option<String> {
     Some(format!("{scope}/{name}"))
 }
 
-/// Appends the `<testsuite>` XML element and its [`cases`] for `component` onto `output`.
+/// Appends the `<testsuite>` XML element and its [`cases`] for `component` ([`Value`]) onto `output` via [`component_identity`].
 fn suite(output: &mut String, component: &Value, raw: &Value) -> io::Result<()> {
     let identity = component_identity(&component["componentId"])
         .ok_or_else(|| io::Error::other("JUnit identity"))?;

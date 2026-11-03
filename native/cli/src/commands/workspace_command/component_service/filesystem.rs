@@ -1,6 +1,6 @@
 //! Filesystem failures serialized by the released environment service runner.
 //!
-//! [`error`] and [`non_empty`] encode [`io::Error`] and [`Path`] details into a JSON [`Value`].
+//! [`error`], [`message`], and [`non_empty`] encode [`io::Error`] and [`Path`] details into a JSON [`Value`].
 use super::{Value, invalid, json};
 use std::{io, path::Path};
 

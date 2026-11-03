@@ -52,7 +52,7 @@ pub(super) fn diagnose(
     }
     Ok(None)
 }
-/// Checks whether any active `.bitmap` entry in `root` ([`Path`]) has a removed `mainFile` while retaining other files.
+/// Checks whether any active `.bitmap` entry in `root` ([`Path`]) has a removed `mainFile` while retaining other files ([`entry_missing_main`]).
 fn main_file_removed(root: &Path, chalk: Chalk) -> io::Result<Option<io::Error>> {
     let raw = fs::read(root.join(".bitmap"))?;
     let Ok(bitmap) = bit_object_import::parse_jsonc(&raw) else { return Ok(None) };

@@ -22,7 +22,7 @@ pub(super) fn exact(targets: &[Value], selectors: &[String]) -> io::Result<Vec<V
     Ok(selected)
 }
 
-/// Returns `true` when component `row` matches `selector` by ID, bare name, or directory path.
+/// Returns `true` when component `row` ([`Value`]) matches `selector` by ID, bare name, or directory path ([`row_text`], [`normalized_dir`]).
 #[inline]
 fn matches(row: &Value, selector: &str) -> bool {
     let selector = selector.trim();

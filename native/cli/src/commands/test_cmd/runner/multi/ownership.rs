@@ -1,6 +1,6 @@
 //! Validate component path ownership before running a shared tester.
 //!
-//! [`validate`] checks [`Component`] directories under [`Path`] roots for non-overlapping, canonical paths.
+//! [`validate`] checks [`Component`] directories under [`Path`] roots for non-overlapping, canonical paths via [`check`] and [`reject_symlinks`].
 use super::{Component, Path, invalid, io};
 use std::fs;
 

@@ -33,7 +33,7 @@ pub(super) fn has_bool_flag(args: &[OsString], bare: &str, truthy: &str, falsy: 
         })
 }
 
-/// Executes `bit version-history build <id>` in `root` ([`ScopeRoot`]) into [`Outcome`].
+/// Executes `bit version-history build <id>` in `root` ([`ScopeRoot`]) via [`bare::prepare`] or [`select`] into [`Outcome`].
 pub(super) fn run(
     root: &ScopeRoot,
     args: &[OsString],

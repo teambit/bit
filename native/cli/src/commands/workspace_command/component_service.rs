@@ -22,7 +22,7 @@ pub(in crate::commands) struct Selection {
     pub explicit_file_order: bool,
 }
 
-/// Loader progress metadata (environment ID, task name, component identities, and batch load counts).
+/// Loader progress metadata (environment ID, task name, component identities, and batch load counts via [`initial_loads`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(in crate::commands) struct Progress {
     pub environment: String,

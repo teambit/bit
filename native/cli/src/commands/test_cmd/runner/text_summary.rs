@@ -13,7 +13,7 @@ impl Summary<'_> {
     fn number(&self, key: &str) -> u64 {
         self.0["totals"][key].as_u64().unwrap_or(0)
     }
-    /// Counts `(failed_components, error_components)` across `componentsWithTests`.
+    /// Counts `(failed_components, error_components)` across `componentsWithTests` in [`Summary`].
     fn counts(&self) -> (usize, usize) {
         self.0["componentsWithTests"]
             .as_array()

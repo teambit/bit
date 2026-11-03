@@ -1,6 +1,6 @@
 //! Stored `Version` selection and Harmony dependency validation for status metadata.
 //!
-//! [`model_of`] locates the stored component [`Value`] model for a workspace identity.
+//! [`model_of`] and [`stored_version`] locate the stored component [`Value`] model and version for a workspace identity.
 
 use crate::commands::status::js::{array, decline, nullish, truthy};
 use serde_json::Value;

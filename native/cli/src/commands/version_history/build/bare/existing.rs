@@ -1,6 +1,6 @@
 //! Preserve canonical entries outside the selected ancestry.
 //!
-//! [`valid_rows`] and [`canonical`] validate stored version-history [`Value`] rows using a [`HashSet`].
+//! [`valid_rows`], [`canonical`], and [`complete_refs`] validate stored version-history [`Value`] rows using a [`HashSet`].
 use super::{HashSet, Value, json};
 
 /// Validates that `rows` ([`Value`]) has at most 128 canonical, unique version-history entries via [`canonical`].

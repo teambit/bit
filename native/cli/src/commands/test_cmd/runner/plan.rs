@@ -1,6 +1,6 @@
 //! Tester execution planning across [`Loaded`] components, [`Coverage`], and [`Session`] workers.
 //!
-//! [`Plan`] orchestrates single-component and [`multi`] Jest runs for [`Options`] and [`Settings`] into a [`Report`].
+//! [`Plan`] orchestrates single-component and [`multi`] Jest runs for [`Options`] and [`Settings`] into an [`Execution`] and [`Report`].
 use super::{
     Execution, Options, config, coverage::Coverage, invalid, json, junit, multi, report,
     settings::Settings, summary, tool::Session,

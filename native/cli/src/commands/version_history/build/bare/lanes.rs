@@ -30,7 +30,7 @@ pub(super) fn lane_heads(
     Some(heads)
 }
 
-/// Extracts the 40-hex-character head hash for `scope`/`name` from a `Lane` object `lane`.
+/// Extracts the 40-hex-character head hash for `scope`/`name` from a `Lane` object `lane` ([`Value`]) via [`lane_component_id`] and [`hidden_head`].
 pub(super) fn lane_head(lane: &Value, scope: &str, name: &str) -> Option<Option<String>> {
     let (scope, name) = (scope.trim(), name.trim());
     identifier(lane["name"].as_str()?)?;

@@ -40,7 +40,7 @@ enum Subcommand {
     Unrecognized(String),
 }
 
-/// Parses `args` into a `bit version-history` [`Subcommand`].
+/// Parses `args` into a `bit version-history` [`Subcommand`] via [`parse_build`] or `show`.
 fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
     let filtered = args
         .iter()

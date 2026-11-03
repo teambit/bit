@@ -1,6 +1,6 @@
 //! Component service workspace loading and environment verification.
 //!
-//! [`Loaded`] and [`Loaded::dependency_state`] coordinate [`Engine`], [`Environments`], [`Workspace`], and [`startup`] checks.
+//! [`Loaded`], [`Loaded::prepare`], and [`Loaded::dependency_state`] coordinate [`Engine`], [`Environments`], [`Workspace`], and [`startup`] checks.
 use super::{Value, invalid, json};
 use crate::commands::{
     engine::Engine,

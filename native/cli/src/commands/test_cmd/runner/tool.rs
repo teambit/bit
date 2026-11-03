@@ -60,7 +60,7 @@ struct Quiet {
 }
 
 impl Quiet {
-    /// Spawns a [`Quiet`] Jest worker and sends the initial preparation `request`.
+    /// Spawns a [`Quiet`] Jest worker and sends the initial preparation `request` ([`Value`], [`LIMIT`]).
     pub(super) fn prepare(request: &Value, colors: bool, args: &[OsString]) -> io::Result<Self> {
         let mut session = Self::spawn(colors, args)?;
         let mut request = request.clone();

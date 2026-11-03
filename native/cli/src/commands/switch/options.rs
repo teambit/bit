@@ -1,6 +1,6 @@
 //! `SwitchCmd` and `LaneImportCmd` retain distinct released flag grammars.
 //!
-//! Defines [`Options`] and [`Adoption`] and serializes switch flags via [`parse`] into JSON [`Value`] payloads.
+//! Defines [`Options`] and [`Adoption`] and serializes switch flags via [`parse`] and [`parse_import`] into JSON [`Value`] payloads.
 use serde_json::{Value, json};
 use std::collections::HashSet;
 

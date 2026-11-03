@@ -65,7 +65,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     emit_fast_outcome(&root, args, options, fast)
 }
 
-/// Renders and emits a [`FastOutcome`] (empty selection or validation error) for `bit test`.
+/// Renders and emits a [`FastOutcome`] (empty selection or validation error) for `bit test` ([`Options`]).
 fn emit_fast_outcome(
     root: &Path,
     args: &[OsString],

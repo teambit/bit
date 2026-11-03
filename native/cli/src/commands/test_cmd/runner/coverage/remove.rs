@@ -24,7 +24,7 @@ pub(super) fn directory(path: &Path) -> io::Result<()> {
     ignore_not_found(fs::remove_dir(path), "rmdir", path)
 }
 
-/// Suppresses `NotFound` errors and wraps any other error with its syscall `op` and `path`.
+/// Suppresses `NotFound` errors and wraps any other error with its syscall `op` and `path` ([`Path`]) via [`failure`].
 #[inline]
 fn ignore_not_found(result: io::Result<()>, op: &'static str, path: &Path) -> io::Result<()> {
     match result {

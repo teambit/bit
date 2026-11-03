@@ -1,6 +1,6 @@
 //! Native `bit whoami` ([`COMMAND`]; `WhoamiCmd` in `scopes/cloud/cloud/whoami.cmd.ts`).
 //!
-//! Queries the authenticated Bit Cloud user from [`global_config_dir`] and formats the response with [`Formatter`] and [`Chalk`].
+//! Queries the authenticated Bit Cloud user from [`global_config_dir`] via [`run`] and formats the response with [`Formatter`] and [`Chalk`].
 
 #[cfg(test)]
 mod tests;

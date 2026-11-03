@@ -1,7 +1,7 @@
 //! Native `bit uninstall` (`docs/rust-cli.md`): removes specified packages from
 //! `workspace.jsonc` dependency policy and runs [`install`] to update `node_modules`.
 //!
-//! Coordinates [`Input`], [`Terminal`], and [`Installed`] with [`workspace_command`] execution.
+//! Coordinates [`Input`], [`Terminal`], [`Prepared`], and [`Installed`] with [`workspace_command`] execution.
 
 #[cfg(test)]
 mod tests;

@@ -32,7 +32,7 @@ pub(super) fn apply_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Resu
     Ok(())
 }
 
-/// Applies workspace-level and variant dependency updates from `updates` to `workspace.jsonc`.
+/// Applies workspace-level and variant dependency updates from `updates` ([`ResolvedUpdate`]) to `workspace.jsonc` via [`apply_single_ws_update`].
 fn apply_workspace_jsonc_updates(root: &Path, updates: &[ResolvedUpdate]) -> io::Result<()> {
     let ws_updates: Vec<ResolvedUpdate> = updates
         .iter()

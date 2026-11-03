@@ -35,7 +35,7 @@ pub(super) struct Stream {
     assets: Assets,
 }
 impl Stream {
-    /// Binds a loopback control [`TcpListener`], spawns the Jest worker, and verifies readiness for `request` ([`Value`]).
+    /// Binds a loopback control [`TcpListener`], spawns the Jest worker ([`Stream::spawn`]), and verifies readiness for `request` ([`Value`]).
     pub(super) fn prepare(request: &Value, colors: bool, args: &[OsString]) -> io::Result<Self> {
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let token = crate::commands::workspace_command::uuid_v4()?;

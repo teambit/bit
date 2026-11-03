@@ -1,6 +1,6 @@
 //! Read, compute, prepare presentation, then publish status caches and retained history.
 //!
-//! [`read`] coordinates [`Engine`], [`capture`], [`grammar`], [`issues`], [`lane_refresh`], and [`report`] for `bit status`.
+//! [`read`] and [`local_result`] coordinate [`Engine`], [`capture`], [`grammar`], [`issues`], [`lane_refresh`], and [`report`] for `bit status`.
 
 use super::{
     Component, Engine, active_components, array, capture, current_lane_id, decline, grammar,

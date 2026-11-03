@@ -1,6 +1,6 @@
 //! Native `bit watch` ([`COMMAND`]; `scopes/workspace/watcher/watch.cmd.ts`).
 //!
-//! Validates workspace and [`Options`] watcher flags before delegating long-running file watching into [`Outcome`].
+//! Validates workspace ([`OUTSIDE_WORKSPACE_ERR`]) and [`Options`] ([`parse_options`], [`check_types_error`]) watcher flags before delegating long-running file watching into [`Outcome`].
 
 #[cfg(test)]
 mod tests;

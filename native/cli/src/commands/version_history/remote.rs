@@ -49,7 +49,7 @@ pub(super) fn run(
     })
 }
 
-/// Builds the JSON request payload for `BuildVersionHistoryAction`.
+/// Builds the JSON request payload ([`Value`]) for `BuildVersionHistoryAction` via [`build::has_bool_flag`].
 #[inline]
 fn payload(args: &[OsString], pattern: &str, from: Option<&str>) -> Value {
     let mut payload = json!({
