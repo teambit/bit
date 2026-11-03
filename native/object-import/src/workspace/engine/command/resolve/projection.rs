@@ -237,18 +237,7 @@ pub(super) fn bind_new_dependencies(
             .as_array_mut()
             .ok_or_else(|| invalid("snap dependency entries"))?;
         for entry in entries {
-            if entry["versionFromConfig"] == true {
-                continue;
-            }
-            let Some(identity) = entry["identity"]
-                .as_str()
-                .map(str::trim)
-                .map(|raw| raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim()))
-                .filter(|identity| identities.contains(*identity))
-            else {
-                continue;
-            };
-            entry["identity"] = json!(format!("{identity}@__bit_pending_snapshot__:{identity}"));
+            bind_new_entry(entry, identities);
         }
         bind_new_extensions(&mut component.extensions, identities);
         if let Some(callbacks) = &mut component.callback_extensions {
@@ -256,6 +245,21 @@ pub(super) fn bind_new_dependencies(
         }
     }
     Ok(())
+}
+
+/// Marks a dependency `entry` on a newly snapped component as pending its snapshot.
+fn bind_new_entry(entry: &mut Value, identities: &HashSet<String>) {
+    if entry["versionFromConfig"] == true {
+        return;
+    }
+    let Some(raw) = entry["identity"].as_str().map(str::trim) else {
+        return;
+    };
+    let identity = raw.rsplit_once('@').map_or(raw, |(base, _)| base.trim());
+    if !identities.contains(identity) {
+        return;
+    }
+    entry["identity"] = json!(format!("{identity}@__bit_pending_snapshot__:{identity}"));
 }
 
 fn bind_new_extensions(extensions: &mut Value, identities: &HashSet<String>) {
