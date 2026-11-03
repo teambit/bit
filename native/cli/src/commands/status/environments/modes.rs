@@ -100,7 +100,7 @@ pub(in crate::commands::status) fn dev_files(
     target: &Value,
     files: &[String],
 ) -> io::Result<Vec<String>> {
-    use bit_install::dependencies::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns};
+    use bit_install::dependencies::{DevPatternConfig, dev_files, dev_patterns};
     let mut comp = component(root, context, target)?;
     comp.files = files.to_vec();
     let identity = text(
@@ -118,6 +118,16 @@ pub(in crate::commands::status) fn dev_files(
     {
         env_id.clone_into(&mut comp.env_id);
     }
+    let env = env_dev_patterns(facts);
+    let config = DevPatternConfig::from_aspects(&|id| {
+        crate::commands::update_cmd::aspect_entry(&context["workspace"], id)
+            .map(|(_, val)| val.clone())
+    });
+    Ok(dev_files(&comp, &dev_patterns(&comp, &config, &env)))
+}
+
+/// The env's `getDevPatterns()` facts: manifest patterns first, then the hook lists.
+fn env_dev_patterns(facts: &Value) -> bit_install::dependencies::EnvDevPatterns {
     let hooks = &facts["devPatterns"];
     let list = |key: &str| {
         hooks
@@ -125,7 +135,7 @@ pub(in crate::commands::status) fn dev_files(
             .filter(|val| !val.is_null())
             .map(strings)
     };
-    let env = EnvDevPatterns {
+    bit_install::dependencies::EnvDevPatterns {
         patterns: facts
             .get("manifestPatterns")
             .filter(|val| !val.is_null())
@@ -138,12 +148,7 @@ pub(in crate::commands::status) fn dev_files(
         tests: list("tests"),
         docs: list("docs"),
         compositions: list("compositions"),
-    };
-    let config = DevPatternConfig::from_aspects(&|id| {
-        crate::commands::update_cmd::aspect_entry(&context["workspace"], id)
-            .map(|(_, val)| val.clone())
-    });
-    Ok(dev_files(&comp, &dev_patterns(&comp, &config, &env)))
+    }
 }
 
 #[inline]

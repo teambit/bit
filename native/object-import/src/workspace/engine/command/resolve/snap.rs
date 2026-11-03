@@ -183,25 +183,35 @@ pub(super) fn prepare_graph_imports(
         let pinned = super::super::resolve_snapshot::pinned_dependencies(&material.version);
         let source = material_graph_source(material);
         for edge in super::graph::edges(&source, &material.version)? {
-            let id = &edge["target"];
-            let identity = selection::identity(id)?;
-            if (!pinned.contains(&identity)
-                && materials
-                    .iter()
-                    .any(|material| material.identity == identity))
-                || !known.insert(id_key(id)?)
-            {
-                continue;
+            if let Some(target) = import_target(&edge["target"], &pinned, materials, &mut known)? {
+                targets.push(target);
             }
-            // A never-exported dependency left out of the batch has no remote
-            // objects; the caller explains it (`command dependency version`).
-            if id["version"].as_str().map(str::trim) == Some("0.0.1-new") {
-                return Err(invalid("command dependency version"));
-            }
-            targets.push(dependency_target(id)?);
         }
     }
     retained.record.repository.prepare_versions(&targets)
+}
+
+/// The dependency `id` to import, or `None` when it is in the batch or already known.
+fn import_target(
+    id: &Value,
+    pinned: &HashSet<String>,
+    materials: &[super::super::resolve_snapshot::Material],
+    known: &mut HashSet<String>,
+) -> io::Result<Option<crate::command_import::Target>> {
+    let identity = selection::identity(id)?;
+    let in_batch = !pinned.contains(&identity)
+        && materials
+            .iter()
+            .any(|material| material.identity == identity);
+    if in_batch || !known.insert(id_key(id)?) {
+        return Ok(None);
+    }
+    // A never-exported dependency left out of the batch has no remote
+    // objects; the caller explains it (`command dependency version`).
+    if id["version"].as_str().map(str::trim) == Some("0.0.1-new") {
+        return Err(invalid("command dependency version"));
+    }
+    dependency_target(id).map(Some)
 }
 
 fn dependency_target(id: &Value) -> io::Result<crate::command_import::Target> {
