@@ -222,7 +222,7 @@ export class ApplicationMain {
     return appsComponents;
   }
 
-  private hasAppTypePattern(component: Component, appTypesPatterns?: string[]): boolean {
+  hasAppTypePattern(component: Component, appTypesPatterns?: string[]): boolean {
     const patterns = appTypesPatterns || this.getAppPatterns();
     // has app plugin from registered types.
     const files = component.filesystem.byGlob(patterns);

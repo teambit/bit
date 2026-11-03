@@ -31,6 +31,10 @@ export class PreparePackagesTask implements BuildTask {
     return result;
   }
 
+  requiresCapsuleInstallation(): boolean {
+    return false;
+  }
+
   private async writeNpmIgnoreFile(context: BuildContext) {
     await Promise.all(
       context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
