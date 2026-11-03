@@ -1,4 +1,4 @@
-//! Main-lane `bit reset` ([`Batch`], [`Selection`], [`backup_bitmap`]): select local `Version` history, project the scope
+//! Main-lane `bit reset` ([`Batch`], [`Plan`], [`Selection`], [`backup_bitmap`]): select local `Version` history, project the scope
 //! object and `.bitmap` changes, then publish only after a fresh validation.
 
 pub use batch::Batch;

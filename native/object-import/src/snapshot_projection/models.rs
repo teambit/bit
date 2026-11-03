@@ -5,7 +5,7 @@ use std::io;
 use super::{choose, get, insert, invalid, object};
 use crate::js_json::Value;
 
-/// Projects raw `Component` `fields` into their canonical snapshot object representation.
+/// Projects raw `Component` `fields` into their canonical snapshot object representation (including [`detached`]).
 pub(super) fn component(fields: &Value) -> io::Result<Value> {
     let mut output = choose(
         fields,

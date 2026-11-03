@@ -1,4 +1,4 @@
-//! Single publication ([`Batch`], [`Plan`]) for `bit reset --silent` across staged `main`-lane `Component` objects.
+//! Single publication ([`Batch`], [`Plan`], [`Selected`], [`BytesChange`]) for `bit reset --silent` across staged `main`-lane `Component` objects.
 
 use super::{BytesChange, Plan, bitmap::find_key, invalid, outbound};
 use serde_json::Value;

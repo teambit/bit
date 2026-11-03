@@ -1,4 +1,4 @@
-//! Phase-ordered execution journal ([`FULL`], [`SOFT`]) for full-snap, soft-tag, and repository-persist transactions.
+//! Phase-ordered execution journal ([`State`], [`Journal`], [`Begin`], [`Receipt`], [`FULL`], [`SOFT`], [`REPOSITORY`]) for full-snap, soft-tag, and repository-persist transactions.
 
 #[cfg(test)]
 #[path = "journal_tests.rs"]

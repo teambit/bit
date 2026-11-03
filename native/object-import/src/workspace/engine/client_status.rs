@@ -55,7 +55,7 @@ pub(super) struct Finish {
     own: Value,
     ignored_root: Vec<String>,
 }
-/// Prepares an incremental client status [`Plan`] in `state` from `input`.
+/// Prepares an incremental client status [`Plan`] in `state` ([`State`]) from `input` ([`Prepare`]).
 pub(super) fn prepare(input: Prepare, state: &mut State) -> io::Result<(usize, Value)> {
     state.plan = None;
     super::path(&input.root)?;

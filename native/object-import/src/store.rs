@@ -41,7 +41,7 @@ impl Store {
         Ok(Self { directory, owner, written: Mutex::new(HashMap::new()) })
     }
 
-    /// Atomically writes `compressed` object bytes for 40-hex `hash` into the loose-object directory.
+    /// Atomically writes `compressed` object bytes for 40-hex `hash` into the loose-object directory via [`NEXT_TEMPORARY`].
     pub(crate) fn write(&self, hash: &str, compressed: &[u8]) -> io::Result<()> {
         let hash = hash.trim();
         if hash.len() != 40

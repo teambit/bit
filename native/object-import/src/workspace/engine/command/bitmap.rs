@@ -23,7 +23,7 @@ use std::{
 pub(super) fn active_tracked_checkout(context: &Value, identity: &str) -> bool {
     lane::tracked_checkout(context, identity)
 }
-/// Planned `.bitmap` component row update (`identity`, `version`, `main_file`, and `keep_ours`).
+/// Planned `.bitmap` component row update (`identity`, `version`, `main_file`, and `keep_ours`) consumed by [`Prepared`].
 pub(super) struct Update {
     pub(super) identity: String,
     pub(super) version: String,

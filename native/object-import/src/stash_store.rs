@@ -17,7 +17,7 @@ pub struct PreparedLoad {
     data: Value,
 }
 impl PreparedLoad {
-    /// Select an explicit stash ID or the lexically latest published filename.
+    /// Select an explicit stash ID or the lexically latest published filename via [`Observation::read`].
     pub fn prepare(scope: &Path, id: Option<&str>) -> io::Result<Self> {
         let observation = Observation::read(scope)?;
         let filename = match id

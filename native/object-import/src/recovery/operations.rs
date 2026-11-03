@@ -1,4 +1,4 @@
-//! Token-guarded step-by-step filesystem recovery operation queue ([`Operation`], [`State`]).
+//! Token-guarded step-by-step filesystem recovery operation queue ([`Operation`], [`State`], [`copy`], [`path`]).
 
 #[cfg(test)]
 #[path = "operations_tests.rs"]

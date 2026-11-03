@@ -1,4 +1,4 @@
-//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection ([`project`], [`Semantic`], [`semantic`]).
+//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection ([`project`], [`identity`], [`serialize`], [`Semantic`], [`semantic`]).
 
 pub use semantic::{Semantic, semantic};
 

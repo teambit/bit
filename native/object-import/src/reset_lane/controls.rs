@@ -1,4 +1,4 @@
-//! Repository reset pruning ([`Control`], [`prepare`], [`publish`]) of selected `unmerged.json` entries while leaving workspace `Source` files untouched.
+//! Repository reset pruning ([`Control`], [`prepare`], [`publish`], [`matches_identity`]) of selected `unmerged.json` entries while leaving workspace `Source` files untouched.
 use super::invalid;
 use serde_json::Value;
 use std::{

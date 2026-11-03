@@ -1,4 +1,4 @@
-//! Snapshot object commit, head-policy, and scope-index frame handler ([`Request`], [`Store`], `BSS1`).
+//! Snapshot object commit, head-policy, and scope-index frame handler ([`Request`], [`Response`], [`Owner`], [`Store`], [`serve`], `BSS1`).
 
 mod commit;
 mod policy;

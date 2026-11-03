@@ -1,4 +1,4 @@
-//! `Component` object and scope-index projection ([`Repository`], [`ObjectChange`], [`Selection`]) for a `main`-lane reset.
+//! `Component` object and scope-index projection ([`Repository`], [`ObjectChange`], [`BytesChange`], [`Selection`]) for a `main`-lane reset.
 
 use super::{BytesChange, ObjectChange, invalid, outbound, selection::Selection};
 use serde_json::Value;

@@ -1,4 +1,4 @@
-//! `.bitmap` lane header parsing, soft-deleted row restoration, and version projection ([`BitmapState`], [`parse_lane_header`]) for lane resets.
+//! `.bitmap` lane header parsing, soft-deleted row restoration, and version projection ([`BitmapState`], [`parse_lane_header`], [`bitmap_key`]) for lane resets.
 
 use super::{BitmapState, bitmap, bitmap_key, invalid};
 use serde_json::Value;

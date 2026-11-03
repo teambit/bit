@@ -1,4 +1,4 @@
-//! `removeComponentVersions` model head/tag mutation ([`project`], [`Repository`], [`Selection`]) without deleting `Version` or `Source` objects.
+//! `removeComponentVersions` model head/tag mutation ([`project`], [`remove_versions`], [`remove_detached`], [`Repository`], [`Selection`]) without deleting `Version` or `Source` objects.
 #[cfg(test)]
 mod tests;
 use super::{ObjectChange, Repository, Selection, changed, diagnostics, invalid};

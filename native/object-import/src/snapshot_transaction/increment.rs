@@ -1,4 +1,4 @@
-//! Semver release-type version incrementing ([`increment`]: `major`, `minor`, `patch`, `prerelease`, and `pre*`).
+//! Semver release-type version incrementing ([`increment`], [`stable`], [`pre`]: `major`, `minor`, `patch`, `prerelease`, and `pre*`).
 
 use serde_json::{Value, json};
 use std::io;

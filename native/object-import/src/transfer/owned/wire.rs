@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use super::super::{collection, invalid};
 
-/// Validates and deserializes a `transferCollect` JSON request into a [`Collect`] struct.
+/// Validates and deserializes a `transferCollect` JSON request into a [`Collect`] struct with [`Options`] and [`Version`] entries.
 pub(super) fn collect(input: &serde_json::Value) -> std::io::Result<Collect> {
     let fields = input.as_object().ok_or_else(|| invalid("invalid collection request"))?;
     if fields

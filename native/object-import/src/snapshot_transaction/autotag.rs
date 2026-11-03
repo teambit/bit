@@ -1,4 +1,4 @@
-//! Transitive dependent auto-tag candidate discovery ([`plan`], [`Node`], `snapshotAutoTag`).
+//! Transitive dependent auto-tag candidate discovery ([`plan`], [`graph`], [`walk`], [`Node`], `snapshotAutoTag`).
 
 use super::invalid;
 use serde_json::{Value, json};

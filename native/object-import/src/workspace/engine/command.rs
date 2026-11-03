@@ -76,7 +76,7 @@ struct Record {
     planned: Option<PreparedPlan>,
     history: history::State,
 }
-/// Planned workspace command artifacts (`plan`, `bitmap`, `snap_bitmap`, `reset_config`, `checkout_policy`, `switch_completion`).
+/// Planned workspace command artifacts (`plan`, [`bitmap`], `snap_bitmap`, [`reset_config`], [`checkout_policy`], [`switch_completion`]).
 struct PreparedPlan {
     plan: planning::Planned,
     bitmap: bitmap::Prepared,

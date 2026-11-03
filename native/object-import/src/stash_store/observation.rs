@@ -1,4 +1,4 @@
-//! Bounded stash metadata directory reads ([`Observation`]) and unchanged-directory validation.
+//! Bounded stash metadata directory reads ([`Observation`], [`LIMIT`], [`ENTRY_LIMIT`]) and unchanged-directory validation.
 use super::invalid;
 use std::{
     collections::BTreeMap,

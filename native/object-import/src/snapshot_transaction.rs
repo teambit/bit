@@ -1,4 +1,4 @@
-//! Snap/tag transaction serialization, version incrementing, auto-tagging, and journal state ([`State`]).
+//! Snap/tag transaction serialization, version incrementing, auto-tagging, and journal state ([`State`], [`Plan`], [`apply`], [`MAX_RAW`], [`MAX_OBJECTS`]).
 
 mod autotag;
 mod dependencies;

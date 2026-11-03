@@ -22,7 +22,7 @@ pub(crate) struct State {
 }
 
 impl State {
-    /// Cancels all active collections, plans, and transactions, removing any unreferenced spool files.
+    /// Cancels all active collections, plans, and transactions, removing any unreferenced spool files via [`Self::cleanup_unused`].
     pub(super) fn cancel(&mut self, input: &Value) -> io::Result<Value> {
         if !input.is_null()
             && input

@@ -5,7 +5,7 @@ use crate::workspace::engine::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
-/// Promotes every selected export row in one `.bitmap` write and one history entry.
+/// Promotes every selected export row in one `.bitmap` write and one history entry via [`find_export_row`] and [`promote_export_row`].
 pub(in crate::workspace::engine::command) fn prepare_export_scopes(
     root: &Path,
     original: Vec<u8>,

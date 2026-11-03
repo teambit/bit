@@ -1,4 +1,4 @@
-//! Retained workspace status ([`client_status`]), snapshot, dependency ([`dependency_policy`]), and command engine ([`command`], [`inventory`], [`diff`]) coordination.
+//! Retained workspace status ([`client_status`], [`status`]), snapshot ([`snapshot_request`]), dependency ([`dependency_policy`], [`dependency_graph`]), and command engine ([`command`], [`inventory`], [`diff`]) coordination.
 
 pub(crate) mod client_status;
 pub(crate) mod command;

@@ -11,7 +11,7 @@ use std::{
 use super::{Plan, wire};
 use crate::transfer::{Archive, Body, Descriptor, header, invalid, object, prepare};
 
-/// Writes an export or fetch tar archive to `request.path` from a frozen owned transfer [`Plan`].
+/// Writes an export or fetch tar archive to `request.path` from a frozen owned transfer [`Plan`] via [`export_archive`] or [`fetch_archive`].
 pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
     let fetch = match request.mode.as_deref().map(str::trim) {
         None | Some("" | "export") => false,

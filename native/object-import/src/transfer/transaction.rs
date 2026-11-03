@@ -49,7 +49,7 @@ enum Phase {
 }
 
 impl Transaction {
-    /// Validates `input` and initializes a multi-scope export [`Transaction`] under `token`.
+    /// Validates `input` ([`Initialize`]) and initializes a multi-scope export [`Transaction`] under `token` in its initial [`Phase`].
     pub(super) fn initialize(input: &Initialize, token: String) -> io::Result<Self> {
         if input.scopes.is_empty()
             || input.scopes.len() > MAX_OBJECTS

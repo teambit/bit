@@ -11,7 +11,7 @@ pub(super) struct Frozen {
     pub(super) missing: HashSet<[u8; 20]>,
 }
 
-/// Reads and freezes `descriptors` from `directory` within compressed and raw byte budgets.
+/// Reads and freezes `descriptors` ([`Descriptor`]) from `directory` into a [`Frozen`] result via [`entry`] within compressed and raw byte budgets.
 pub(super) fn freeze(
     directory: &Path,
     descriptors: Vec<Descriptor>,

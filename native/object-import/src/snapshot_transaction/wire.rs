@@ -1,4 +1,4 @@
-//! Wire request structs ([`Serialize`], [`Object`], [`Workspace`]) for snapshot object serialization and end-of-line normalization.
+//! Wire request structs ([`Serialize`], [`Object`], [`Workspace`], [`Repository`], [`Commit`], [`Owner`], [`Normalization`]) for snapshot object serialization and end-of-line normalization.
 
 use serde::Deserialize;
 use std::path::PathBuf;

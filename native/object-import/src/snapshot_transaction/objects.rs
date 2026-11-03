@@ -1,4 +1,4 @@
-//! Parallel zlib compression and staging-file preparation ([`Prepared`], [`prepare`], [`compress`]) for snapshot transaction objects.
+//! Parallel zlib compression and staging-file preparation ([`Prepared`], [`prepare`], [`compress`], [`body`]) for snapshot transaction objects.
 
 #[cfg(test)]
 #[path = "header_tests.rs"]

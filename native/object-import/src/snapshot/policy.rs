@@ -1,4 +1,4 @@
-//! Snapshot head, parent, and detached-head policy evaluation ([`Plan`], [`HeadPolicy`], [`plan`]).
+//! Snapshot head, parent, and detached-head policy evaluation ([`Plan`], [`HeadPolicy`], [`plan`], [`validate`], [`detached`], [`parent`]).
 
 use super::{hash, invalid};
 use serde::Deserialize;

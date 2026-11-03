@@ -1,4 +1,4 @@
-//! File-scope side ([`Plan`], [`ScopeGuard`], [`Readset`], [`Basis`], [`Selection`], [`LoadedComponents`]) of the published remote hard-delete component and lane operations.
+//! File-scope side ([`Plan`], [`ScopeGuard`], [`Readset`], [`Basis`], [`Selection`], [`LoadedComponents`], [`Store`]) of the published remote hard-delete component and lane operations.
 //!
 //! The legacy repository removes `Component` and tagged `Version` refs only. `Source`,
 //! `VersionHistory`, orphaned `Version`, and `Lane` references intentionally survive.

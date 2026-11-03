@@ -1,4 +1,4 @@
-//! Next published version computation ([`Request`], [`Component`], [`Tag`]) for explicit, soft, and auto-tagged components.
+//! Next published version computation ([`Request`], [`Component`], [`Tag`], [`Params`], [`Choice`], [`plan`]) for explicit, soft, and auto-tagged components.
 
 use super::{increment, invalid};
 use serde::Deserialize;

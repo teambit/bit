@@ -1,4 +1,4 @@
-//! `DependencyGraph.getImmediateDependentsPerId` guard ([`validate`], [`Selection`], [`validate_row`]) for a local `main`-lane reset.
+//! `DependencyGraph.getImmediateDependentsPerId` guard ([`validate`], [`Selection`], [`validate_row`], [`references`]) for a local `main`-lane reset.
 
 use super::{invalid, outbound, selection::Selection};
 use serde_json::Value;
