@@ -1,6 +1,6 @@
 //! End-to-end tests verifying published application registration (`.node-app.js`) participates in snapshot metadata ([`node_application_registration_matches_node_snapshot`]).
 //!
-//! Ensures `bit snap` records `teambit.harmony/application` aspect metadata matching Node.js.
+//! Ensures `bit snap` records `teambit.harmony/application` aspect metadata ([`NODE_APP_PLUGIN`]) matching `Node.js`.
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;

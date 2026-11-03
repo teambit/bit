@@ -1,6 +1,6 @@
 //! End-to-end port of `e2e/commands/config.e2e.ts` for native `bit config` get, set, del, and list CLI parity.
 //!
-//! Verifies [`run_config`] and [`list_config_locally`] across global, workspace, and local origins.
+//! Verifies [`run_config`] and [`list_config_locally`] across global, workspace, and local origins via [`Helper`] and [`setup`].
 
 use crate::helper::{Helper, Run, setup};
 use serde_json::Value;

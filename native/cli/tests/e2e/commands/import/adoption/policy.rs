@@ -1,6 +1,6 @@
 //! End-to-end dependency policy update tests ([`RESOLVER`]) for workspace adoption and `bit import --write-deps` manifests.
 //!
-//! Verifies [`fixture`] and [`command`] policy range updates in `workspace.jsonc` and `package.json`.
+//! Verifies [`fixture`] and [`command`] policy range updates in `workspace.jsonc` and `package.json` via [`config`] and [`support`].
 
 use super::command;
 use crate::{

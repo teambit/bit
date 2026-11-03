@@ -1,6 +1,6 @@
 //! End-to-end tests verifying remote lane refresh retains advanced lane metadata during historical `bit checkout` operations.
 //!
-//! Verifies [`Helper`] and [`read_jsonc`] lane object and `.bitmap` state across historical checkouts.
+//! Verifies [`Helper`], [`history_fixture`], [`compare_versions`], and [`read_jsonc`] lane object and `.bitmap` state across historical checkouts.
 
 use crate::helper::{Helper, config::read_jsonc};
 use std::{ffi::OsStr, fs};

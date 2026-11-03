@@ -1,6 +1,6 @@
 //! End-to-end tests verifying lane versions are served by the lane scope even when their component has another origin scope repository.
 //!
-//! Verifies [`fixture`] and [`compare`] across cross-scope lane component models and references.
+//! Verifies [`fixture`], [`compare`], and [`state`] across cross-scope lane component models and references.
 
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};

@@ -1,6 +1,6 @@
 //! Pending-directory probes ([`normalize`]) append same-category answers in asynchronous completion order.
 //!
-//! Provides deterministic output normalization for two-scope asynchronous `bit resume-export` probes.
+//! Provides deterministic output normalization for two-scope asynchronous `bit resume-export` probes via [`normalize`].
 
 /// Canonicalizes the two-scope `pending objects to delete (2)` probe permutation in `output` for `mixed_scope` tested by [`only_the_complete_two_scope_probe_permutation_is_normalized`].
 pub(super) fn normalize(output: &str, mixed_scope: Option<&str>) -> String {

@@ -1,6 +1,6 @@
 //! End-to-end port of `e2e/commands/remove.e2e.ts` for native `bit remove` local and remote parity ([`with_tagged_components_and_track_false`], [`with_tagged_components_and_track_true`]).
 //!
-//! Validates local and remote component removal across tagged, modified, and dependent states.
+//! Validates local and remote component removal across tagged, modified, and dependent states via [`Helper`] and [`remote`].
 
 use crate::helper::{Helper, remote};
 use std::fs;

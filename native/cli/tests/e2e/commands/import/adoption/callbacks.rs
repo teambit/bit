@@ -1,6 +1,6 @@
 //! End-to-end tests verifying configured provider effects precede graph facts and `--write-deps` loads published target components.
 //!
-//! Verifies [`command`], [`dependents`], [`exported`], and [`file`] with custom aspect callbacks.
+//! Verifies [`command`], [`configure`], [`dependents`], [`exported`], and [`file`] with custom aspect callbacks.
 
 use super::{command, dependents, exported, file};
 use crate::{

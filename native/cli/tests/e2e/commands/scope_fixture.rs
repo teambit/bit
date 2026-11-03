@@ -1,6 +1,6 @@
 //! Shared remote scope [`fixture`] and comparison helpers ([`compare`], [`compare_with_cleanup`], [`compare_with_snapshot`]) for bare-scope command tests.
 //!
-//! Builds a two-version exported scope fixture and compares native vs. Node.js bare-scope runs.
+//! Builds a two-version exported scope [`fixture`] and compares native vs. `Node.js` bare-scope [`Run`] outputs.
 
 use crate::{
     commands::move_paths::support::{self, tree},

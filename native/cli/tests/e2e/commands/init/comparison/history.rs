@@ -1,6 +1,6 @@
 //! Map only validated clock IDs ([`Histories`], [`History`]); metadata order preserves every `.bitmap` and config snapshot and collision group.
 //!
-//! Coordinates [`clock`] aging and backup metadata normalization for `bit init` replay tests.
+//! Coordinates [`clock`] aging and [`Histories::read`] / [`Histories::path`] backup metadata normalization for `bit init` replay tests.
 
 mod clock;
 mod tests;

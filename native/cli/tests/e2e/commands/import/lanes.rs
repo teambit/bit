@@ -1,6 +1,6 @@
 //! End-to-end tests verifying main and implicit lane fetches preserve fetch ordering, lane-first result ordering, and `.bitmap` entries.
 //!
-//! Includes [`cross_scope`] lane fetch tests and [`fixture`] / [`read_jsonc`] comparisons.
+//! Includes [`cross_scope`] lane fetch tests and [`fixture`], [`dependency_fixture`], and [`read_jsonc`] comparisons.
 
 mod cross_scope;
 use crate::helper::{Helper, config::read_jsonc};

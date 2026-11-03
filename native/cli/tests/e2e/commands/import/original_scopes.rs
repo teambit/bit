@@ -1,6 +1,6 @@
 //! End-to-end tests verifying `bit fetch --from-original-scopes` is accepted while reading `fromOriginalScope` options.
 //!
-//! `FetchCmd` declares the plural option yet reads the singular `fromOriginalScope`.
+//! `FetchCmd` declares the plural option yet reads the singular `fromOriginalScope` via [`fixture`], [`serve`], and [`compare`].
 
 use super::{
     Duration, Helper, OsStr, ScopeServer, Stdio, TcpListener, TcpStream, fs, setup, thread,

@@ -1,6 +1,6 @@
 //! End-to-end tests verifying workspace state filters (`$new`, `$modified`, `$env`) retain loader phases and cached classes through removal ([`new_selector_preserves_tagged_components`]).
 //!
-//! Tests state-based component selection (`$new`, `$modified`, `$codeModified`) with `bit remove`.
+//! Tests state-based component selection (`$new`, `$modified`, `$codeModified`) with `bit remove` via [`successful`] and [`bitmap`].
 
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use std::fs;

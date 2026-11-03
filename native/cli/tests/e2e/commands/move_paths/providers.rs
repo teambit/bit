@@ -1,6 +1,6 @@
 //! End-to-end tests ensuring [`configured`] provider writes occur before authoritative operation planning, once per command.
 //!
-//! Verifies custom aspect providers are invoked once prior to `bit move` planning and `.bitmap` persistence.
+//! Verifies custom aspect providers are invoked once ([`assert_once`]) prior to `bit move` planning and [`bitmap`] persistence.
 
 use super::support::{self, bitmap, setup, successful};
 use crate::helper::{Helper, config};

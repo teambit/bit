@@ -1,6 +1,6 @@
 //! End-to-end tests verifying snapshot source manifests use the linker's `package.json` exclusion rule under `trackAllFiles` ([`tracked_package_json_is_linked_without_generated_metadata_matching_node`]).
 //!
-//! Confirms user-tracked `package.json` files are preserved without generated linker metadata on `bit snap`.
+//! Confirms user-tracked `package.json` files are preserved without generated linker metadata on `bit snap` via [`source_objects`].
 
 use crate::helper::{Helper, config};
 use std::{

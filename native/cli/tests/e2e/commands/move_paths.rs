@@ -1,6 +1,6 @@
 //! End-to-end tests for original `bit move` directory, imported-directory, and manually moved source contracts ([`workspace`], [`cleanup`], [`internal`], [`providers`]).
 //!
-//! Validates physical source relocation, `.bitmap` root updates, and aspect provider integration.
+//! Validates physical source relocation, `.bitmap` root updates, and aspect provider integration via [`compare`] and [`successful`].
 
 pub(crate) mod support;
 

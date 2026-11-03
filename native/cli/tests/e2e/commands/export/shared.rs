@@ -1,6 +1,6 @@
 //! End-to-end tests for public `bit export` into an actual Unix shared-group (`group-shares`) file scope repository.
 //!
-//! Verifies [`decoded`] scope objects, group ownership, and directory mode bits after export.
+//! Verifies [`decoded`] scope objects, [`normalized_clock`] timestamps, group ownership, and directory mode bits after export.
 
 use crate::helper::{Helper, parse};
 use serde_json::Value;

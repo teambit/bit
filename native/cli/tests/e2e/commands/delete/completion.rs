@@ -1,6 +1,6 @@
 //! End-to-end tests ([`successful`]) verifying soft-deletion batches preserve unrelated component configuration and historic snap sources.
 //!
-//! Verifies [`bitmap`] `teambit.component/remove` markers and [`setup`] workspace state preservation.
+//! Verifies [`bitmap`] `teambit.component/remove` markers, [`successful`] runs, and [`setup`] workspace state preservation.
 
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! End-to-end tests ([`Snapshot`]) verifying only the validated recovery timestamp and process ID differ between `bit gc --restore` invocations.
 //!
-//! Verifies failed backup cleanup diagnostics and recovery directory preservation across [`fixture`] runs.
+//! Verifies failed backup cleanup diagnostics and [`staging_directory`] preservation across [`fixture`] and [`capture`] runs.
 
 use super::super::{compare, fixture, objects, orphan, tree};
 use crate::helper::{Helper, Run};

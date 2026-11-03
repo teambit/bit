@@ -1,6 +1,6 @@
 //! End-to-end tests for default installation during `bit import` where JSON mode suppresses `pnpm` timed reporter output.
 //!
-//! Verifies [`fixture`], [`file`], and [`untrack`] installation state across text and `--json` imports.
+//! Verifies [`fixture`], [`file`], [`install`], [`assert_linked`], and [`untrack`] installation state across text and `--json` imports.
 
 use super::{file, untrack};
 use crate::{

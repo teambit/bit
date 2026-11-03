@@ -1,6 +1,6 @@
 //! End-to-end tests for file pending-object recovery (`bit resume-export`) against restored scopes and the released CLI ([`order`]).
 //!
-//! Verifies `--delete`, `--force`, and pending-export cleanup on filesystem-backed remote scopes.
+//! Verifies `--delete`, `--force`, and pending-export cleanup on filesystem-backed remote scopes via [`Helper`] and [`Run`].
 
 mod order;
 

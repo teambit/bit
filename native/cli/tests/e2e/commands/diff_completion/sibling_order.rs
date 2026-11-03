@@ -1,6 +1,6 @@
 //! Normalize ([`normalize`]) only independently completed sibling directory batches and their exact `Files` summary order.
 //!
-//! Root placement, ancestor order, paths, statuses, and every diff byte remain checked.
+//! Root placement ([`ROOT_PATHS`]), ancestor order, paths, statuses, and every diff byte remain checked by [`normalize`].
 
 use serde_json::Value;
 

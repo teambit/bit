@@ -1,6 +1,6 @@
 //! Age real setup backup IDs ([`wait`], [`date`], [`past`]) before replay; `bit init` creates one backup per history store.
 //!
-//! Ensures setup backup timestamps precede both replay runs in [`Histories`].
+//! Ensures setup backup timestamps precede both replay runs in [`Histories`] via [`validate_id`].
 
 mod tests;
 use super::{Histories, validate_id};

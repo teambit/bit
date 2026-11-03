@@ -1,6 +1,6 @@
 //! End-to-end tests comparing released `Node.js` hard-delete (`--hard`) state and output on independent remote copies.
 //!
-//! Verifies [`compare_file_remote`] and [`tree`] object-store state after `bit delete --hard`.
+//! Verifies [`compare_file_remote`], [`removal_order`], and [`tree`] object-store state after `bit delete --hard`.
 
 use super::Helper;
 use crate::{commands::move_paths::support::tree, helper::config};

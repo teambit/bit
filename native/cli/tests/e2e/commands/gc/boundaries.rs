@@ -1,6 +1,6 @@
 //! End-to-end tests ensuring unsupported version or log metadata is delegated while the original scope object store remains intact.
 //!
-//! Verifies [`fixture`], [`objects`], [`orphan`], and [`tree`] preservation when `bit gc` declines.
+//! Verifies [`fixture`], [`objects`], [`orphan`], [`early_move_error`], and [`tree`] preservation when `bit gc` declines.
 
 use super::{fixture, objects, orphan, tree};
 use crate::helper::Helper;

@@ -1,6 +1,6 @@
 //! End-to-end destination directory conflict, `--path`, and `--write-to-empty-dir` relocation tests for `bit import` commands.
 //!
-//! Verifies [`command`], [`exported`], [`file`], and [`untrack`] directory relocation rules.
+//! Verifies [`command`], [`exported`], [`file`], [`occupied`], [`relocate`], and [`untrack`] directory relocation rules.
 
 use super::{command, exported, file, untrack};
 use crate::{

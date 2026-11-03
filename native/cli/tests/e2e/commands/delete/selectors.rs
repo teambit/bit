@@ -1,6 +1,6 @@
 //! End-to-end tests ([`successful`]) verifying soft deletion shares workspace state/env predicates without recovery's scope-pool semantics.
 //!
-//! Verifies `$modified`, `$codeModified`, and `$env` intersection/union selectors in [`bitmap`].
+//! Verifies `$modified`, `$codeModified`, and `$env` intersection/union selectors in [`bitmap`] via [`successful`].
 
 use crate::commands::move_paths::support::{self, bitmap, successful};
 

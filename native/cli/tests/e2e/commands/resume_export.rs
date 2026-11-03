@@ -1,6 +1,6 @@
 //! End-to-end tests for `bit resume-export` recovery protocol, failures, and reports against the released CLI ([`file`]).
 //!
-//! Validates HTTP and filesystem pending-object validation, persistence, and cleanup across remotes.
+//! Validates HTTP and filesystem pending-object validation, persistence, and cleanup across remotes via [`Server`] and [`validation_server`].
 
 mod file;
 

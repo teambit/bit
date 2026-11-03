@@ -1,6 +1,6 @@
 //! Unit tests for history backup ID normalization ([`inventory`]) and collision-group preservation across [`FIRST`]..[`FOURTH`].
 //!
-//! Verifies [`fixture`] backup metadata and snapshot file mapping across `.bitmap` and config histories.
+//! Verifies [`fixture`] backup metadata and [`inventory`] snapshot file mapping across `.bitmap` and config histories.
 
 use super::super::inventory;
 use std::{fmt::Write as _, fs, path::Path};

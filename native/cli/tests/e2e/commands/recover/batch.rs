@@ -1,6 +1,6 @@
 //! End-to-end tests verifying ordinary `bit recover` uses one final `.bitmap` publication after all selected [`REMOVE`] actions.
 //!
-//! Ensures wildcard and multi-component recovery restores all matching components in a single batch.
+//! Ensures wildcard and multi-component recovery restores all matching components in a single batch via [`successful`] and [`bitmap`].
 
 use crate::commands::move_paths::support::{bitmap, setup, successful, workspace};
 use std::fs;

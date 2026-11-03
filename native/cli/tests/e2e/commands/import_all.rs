@@ -1,6 +1,6 @@
 //! End-to-end port of `e2e/commands/import-all.e2e.ts` for native `bit import` workspace-wide object and source file parity.
 //!
-//! Verifies [`FOO_FIXTURE`], [`FOO_V2`], and [`bitmap_without_objects`] workspace-wide imports.
+//! Verifies [`FOO_FIXTURE`], [`FOO_V2`], [`failure`], [`modified_locally`], and [`bitmap_without_objects`] workspace-wide imports.
 
 use crate::{
     helper::{FOO_FIXTURE, Helper, Run},

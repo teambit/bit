@@ -1,4 +1,4 @@
-//! End-to-end local and remote `bit delete` parity tests ([`compare_result`], [`scope_objects`], [`completion`], [`hard`], [`selectors`]) against the pinned `Node.js` CLI via [`Helper`].
+//! End-to-end local and remote `bit delete` parity tests ([`compare_result`], [`scope_objects`], [`completion`], [`hard`], [`selectors`], [`tagged_component_delete_matches_node`]) against the pinned `Node.js` CLI via [`Helper`].
 
 mod completion;
 mod hard;

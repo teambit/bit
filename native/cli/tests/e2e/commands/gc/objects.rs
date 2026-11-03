@@ -1,6 +1,6 @@
 //! Scope object builders ([`digest`], [`path`], [`write`], [`dependency_graph`]) adding isolated graph branches for the `bit gc` collector test oracle.
 //!
-//! Constructs compressed `Component`, `Version`, `VersionHistory`, and `Source` scope objects.
+//! Constructs compressed `Component`, `Version`, `VersionHistory`, and `Source` scope objects via [`write_json`] and [`alias_graph`].
 
 use crate::helper::Helper;
 use flate2::{Compression, write::ZlibEncoder};

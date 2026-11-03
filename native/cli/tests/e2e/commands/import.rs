@@ -1,4 +1,4 @@
-//! End-to-end port of `e2e/commands/import.e2e.ts` for native `bit import` ([`import`], [`read_bitmap`]) and `bit fetch` CLI parity via [`Helper`], [`ScopeServer`], and [`FOO_FIXTURE`].
+//! End-to-end port of `e2e/commands/import.e2e.ts` for native `bit import` ([`import`], [`read_bitmap`], [`expect_id`], [`consumer_files`]) and `bit fetch` CLI parity via [`Helper`], [`ScopeServer`], and [`FOO_FIXTURE`].
 
 mod adoption;
 mod authored_install;

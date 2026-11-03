@@ -1,4 +1,4 @@
-//! End-to-end parity tests ([`assert_matches_node`], [`capsule_list_with_stats_matches_node`], [`capsule_prune_empty_cache_matches_node`]) for the native `bit capsule` list, create, and delete CLI command family.
+//! End-to-end parity tests ([`assert_matches_node`], [`capsule_list_with_stats_matches_node`], [`capsule_prune_empty_cache_matches_node`], [`capsule_prune_removes_the_same_roots_as_node`]) for the native `bit capsule` list, create, and delete CLI command family.
 
 use crate::{
     helper::{Helper, parse},
