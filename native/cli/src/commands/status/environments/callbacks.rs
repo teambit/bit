@@ -275,6 +275,12 @@ pub(in crate::commands::status) fn apply(capture: &mut Capture, row: &Value) -> 
     Ok(())
 }
 
+/// Trims `id` and drops the `@0.0.1-new` suffix of a never-tagged component, as the captured dependency identities do.
+fn without_new_version(id: &str) -> &str {
+    let id = id.trim();
+    id.strip_suffix("@0.0.1-new").unwrap_or(id)
+}
+
 fn dependencies(
     component: &mut crate::commands::status::issues::Component,
     row: &Value,
@@ -284,10 +290,10 @@ fn dependencies(
     component.dependencies.retain(|id| {
         !original
             .iter()
-            .any(|value| value.as_str() == Some(id))
+            .any(|value| value.as_str().map(without_new_version) == Some(id.as_str()))
     });
     for id in array(row.get("dependencyIdentities"), "callback dependency identities")? {
-        let id = text(Some(id))?.trim();
+        let id = without_new_version(text(Some(id))?);
         if !id.is_empty()
             && !component.dependencies
                 .iter()

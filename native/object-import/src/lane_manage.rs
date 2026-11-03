@@ -387,7 +387,9 @@ fn valid_name(value: &str) -> bool {
             })
 }
 fn valid_scope(value: &str) -> bool {
-    (value.len() >= 2 || value.contains('.')) && value.split('.').all(valid_name)
+    value.split('.').count() <= 2
+        && (value.len() >= 2 || value.contains('.'))
+        && value.split('.').all(valid_name)
 }
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "unsupported local lane metadata change")

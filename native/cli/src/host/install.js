@@ -74,6 +74,8 @@ async function installCanonical({ options, writer = false, loaderText }) {
     if (!install || typeof install.install !== 'function') {
       throw new Error('published InstallMain.install unavailable');
     }
+    // A merge rewrote the component files and the config-merge file after Node loaded them.
+    if (mergeCommand) await workspace.clearCache();
     return await installEngineBegin(async () => {
       try {
         await install.install(undefined, invocation);

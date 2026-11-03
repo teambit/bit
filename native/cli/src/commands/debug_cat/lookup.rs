@@ -85,7 +85,7 @@ fn resolve_head_version_label(comp_val: &Value) -> Option<String> {
     )
 }
 
-fn current_lane_head(
+pub(in crate::commands) fn current_lane_head(
     root: &ScopeRoot,
     scope_dir: &Path,
     comp_scope: Option<&str>,

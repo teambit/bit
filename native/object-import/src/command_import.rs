@@ -11,8 +11,8 @@ pub(crate) use prepare::{
         prepare_graph_inbound_with_virtual, prepare_inbound_with_virtual,
         prepare_recovery_with_virtual,
     },
-    prepare, prepare_cached, prepare_lane, prepare_lane_at, prepare_lane_with_virtual,
-    prepare_status_with_virtual,
+    prepare, prepare_cached, prepare_ignoring_missing, prepare_lane, prepare_lane_at,
+    prepare_lane_with_virtual, prepare_status_with_virtual,
 };
 pub(crate) use remote_error::message as remote_inflate_message;
 pub(crate) use retained::write_receipt;

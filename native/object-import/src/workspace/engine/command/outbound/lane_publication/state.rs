@@ -17,11 +17,7 @@ impl Prepared {
         let mut after = crate::recovery::jsonc::parse(&self.published.bitmap.after)?;
         for (key, row) in after.as_object_mut().ok_or_else(|| invalid("outbound lane bitmap"))? {
             let Some(old) = before.get(key) else { continue };
-            if old.get("rootDir").is_none()
-                || !old["scope"]
-                    .as_str()
-                    .is_none_or(|scope| scope.trim().is_empty())
-            {
+            if !is_promotion_candidate(old, row) {
                 continue;
             }
             let identity = promoted_identity(key, row)?;
@@ -85,6 +81,16 @@ impl Prepared {
             && object_bytes(root, &self.objects.lane_hash)? == self.objects.lane
             && object_bytes(root, &self.objects.history_hash)? == self.objects.history)
     }
+}
+
+/// Returns `true` when a `.bitmap` row that was new (rooted, scope-less) before the export now carries a scope.
+fn is_promotion_candidate(old: &serde_json::Value, row: &serde_json::Value) -> bool {
+    let blank = |value: &serde_json::Value| {
+        value["scope"]
+            .as_str()
+            .is_none_or(|scope| scope.trim().is_empty())
+    };
+    old.get("rootDir").is_some() && blank(old) && !blank(row)
 }
 
 /// Resolves the promoted `scope/name` component identity from `.bitmap` entry `key` and `row` for [`Prepared::reconcile`].

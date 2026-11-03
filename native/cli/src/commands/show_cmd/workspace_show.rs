@@ -173,7 +173,9 @@ fn resolve_target_in_workspace(
         return TargetOutcome::Declined;
     }
     let Some((entry, component)) = find_component(ws, &options.id) else {
-        if let Some(loaded) = remote_show::load_from_local_scope(&ws.scope_path, &options.id) {
+        if let Some(loaded) =
+            remote_show::load_from_workspace_scope(root, &ws.scope_path, &options.id)
+        {
             return TargetOutcome::Loaded(Box::new(loaded));
         }
         return TargetOutcome::Declined;

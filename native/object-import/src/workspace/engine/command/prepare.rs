@@ -97,6 +97,11 @@ fn prepare_checkout_import(
         {
             return Ok(cached);
         }
+        return command_import::prepare_ignoring_missing(
+            &request.root,
+            &request.global_remotes_file,
+            &targets,
+        );
     }
     command_import::prepare(&request.root, &request.global_remotes_file, &targets)
 }

@@ -5,6 +5,7 @@ pub(super) mod prefilter;
 mod all_versions;
 mod candidates;
 mod history;
+mod referenced;
 mod repeat;
 mod selection;
 #[cfg(test)]
@@ -81,10 +82,12 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         input.options.all || input.options.all_versions || input.options.head_only,
     )?;
     ensure_explicit_ids_in_bitmap(input, &selected)?;
-    selected
+    let mut rows = selected
         .into_iter()
         .map(|(row, model)| select_one(input, &row, model))
-        .collect()
+        .collect::<io::Result<Vec<_>>>()?;
+    referenced::add(&crate::scope_path(&input.root).join("objects"), &mut rows)?;
+    Ok(rows)
 }
 
 fn read_index_rows(root: &Path) -> io::Result<Option<Vec<Value>>> {

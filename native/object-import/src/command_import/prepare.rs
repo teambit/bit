@@ -64,6 +64,16 @@ pub(crate) fn prepare_with_virtual(
     )
 }
 
+/// Prepare like [`prepare`], but skip a component whose remote has never received a main head (it exists only locally or on lanes).
+#[inline]
+pub(crate) fn prepare_ignoring_missing(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+) -> io::Result<PreparedImport> {
+    prepare_status_with_virtual(root, global_remotes_file, targets, &[])
+}
+
 /// `status --lanes` ignores a component that has never been exported to main.
 #[inline]
 pub(crate) fn prepare_status_with_virtual(

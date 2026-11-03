@@ -23,7 +23,7 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
         if name.is_empty() {
             return Err(invalid("inbound bitmap name"));
         }
-        let raw_version = row["version"]
+        let Some(raw_version) = row["version"]
             .as_str()
             .map(str::trim)
             .filter(|ver| !ver.is_empty())
@@ -32,7 +32,10 @@ pub(super) fn bitmap_targets(root: &Path) -> io::Result<Vec<Target>> {
                     .map(|(_, ver)| ver.trim())
                     .filter(|ver| !ver.is_empty())
             })
-            .unwrap_or("latest");
+        else {
+            // A component without a version in `.bitmap` is new, so there is nothing to fetch.
+            continue;
+        };
         let version = normalize_target_version(raw_version);
         targets.push(Target {
             scope: Some(scope.to_owned()),

@@ -8,7 +8,11 @@ use super::{
     workspace_show::LoadedComponent,
 };
 use crate::{
-    commands::{debug_cat::lookup::resolve_component_entry, status::cache},
+    commands::{
+        debug_cat::lookup::{current_lane_head, resolve_component_entry},
+        lane::scope_root::ScopeRoot,
+        status::cache,
+    },
     native::Outcome,
     workspace,
 };
@@ -60,6 +64,25 @@ pub(super) fn load_from_local_scope(scope_dir: &Path, raw_id: &str) -> Option<Lo
         return None;
     }
     load_scope_component(scope_dir, None, bare_id, explicit_ver)
+}
+
+/// Loads the unversioned `raw_id` from the workspace scope at the head the checked-out lane records for it, else its main head.
+#[inline]
+pub(super) fn load_from_workspace_scope(
+    root: &Path,
+    scope_dir: &Path,
+    raw_id: &str,
+) -> Option<LoadedComponent> {
+    let raw_id = raw_id.trim();
+    let scope_root = ScopeRoot { path: root.to_path_buf(), bare: false };
+    let lane_head = resolve_component_entry(scope_dir, raw_id)
+        .and_then(|(scope, name, _)| {
+            current_lane_head(&scope_root, scope_dir, scope.as_deref(), &name)
+        });
+    match lane_head {
+        Some(head) => load_from_local_scope(scope_dir, &format!("{raw_id}@{head}")),
+        None => load_from_local_scope(scope_dir, raw_id),
+    }
 }
 
 pub(super) fn remote_has_version(root: &Path, scope_name: &str, name: &str, ver: &str) -> bool {
