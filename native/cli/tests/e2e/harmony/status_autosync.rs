@@ -92,7 +92,7 @@ fn qualify(helper: &Helper, command: &str, ci: bool) {
     assert!(!second.stdout.contains("bitmapAutoSync: synced"));
 }
 
-/// Verifies that `bitmapAutoSync` updates `.bitmap` and `.bit/last-pull-sync` on `bit status --json` ([`parity`]).
+/// Verifies that `bitmapAutoSync` updates `.bitmap` and `.bit/last-pull-sync` on `bit status --json` ([`parity`], [`qualify`]).
 #[test]
 fn startup_autosync_matches_node_bitmap_and_sentinel() {
     parity("status --json", false);

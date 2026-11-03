@@ -3,7 +3,7 @@
 
 /// Spinner startup prefix preceding pnpm installation progress output ([`project`]).
 const MARKER: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
-/// Single-package zero-add pnpm progress frame and cursor-up redraw escape sequence.
+/// Single-package zero-add pnpm progress frame and cursor-up redraw escape sequence ([`project`]).
 const FRAME: &str =
     "Progress: resolved 1, reused 0, downloaded 0, added 0\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 /// Non-coalescible pnpm content-addressable store banner line.

@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/log.e2e.ts` for the global `--log` flag ([`STATUS_LOG_CMD`], [`the_global_log_flag_logs`]).
 //!
-//! Verifies that running a command with `--log` emits command startup log lines.
+//! Verifies that running a command with `--log` emits command startup log lines ([`Helper`]).
 
 use crate::helper::Helper;
 

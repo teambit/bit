@@ -45,7 +45,7 @@ fn merge_with_squash_one_snap_and_three_snaps() {
     assert_eq!(log_arr[1]["parents"][0].as_str(), Some(head_on_main.as_str()));
 }
 
-/// merge lanes - squash functionality › merge with squash after exporting and importing the lane to a new workspace ([`Helper`], [`parse`])
+/// merge lanes - squash functionality › merge with squash after exporting and importing the lane to a new workspace ([`Helper`], [`parse`], [`merge_with_squash_one_snap_and_three_snaps`])
 #[test]
 fn merge_with_squash_after_exporting_and_importing_lane_to_new_workspace() {
     let helper = Helper::new();

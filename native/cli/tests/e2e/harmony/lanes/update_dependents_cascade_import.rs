@@ -4,7 +4,7 @@
 
 /// Cross-scope hidden `updateDependents` merge tests.
 mod merge;
-/// Object-only lane import parity tests ([`scenario_13_workspace_lane_merge_main_refreshes_update_dependents`]).
+/// Object-only lane import parity tests ([`scenario_13_workspace_lane_merge_main_refreshes_update_dependents`], [`build_base_remote_state`]).
 mod objects;
 
 use crate::helper::{Helper, parse};

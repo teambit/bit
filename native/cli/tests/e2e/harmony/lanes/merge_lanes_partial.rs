@@ -60,7 +60,7 @@ fn partial_merge_from_a_lane_to_main_with_include_deps() {
     assert_eq!(model_head(&helper, &format!("{scope}/comp3")), comp3_head_on_lane);
 }
 
-/// merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag ([`Helper`])
+/// merge lanes - partial merge functionality › partial merge › from a lane to main › without --include-deps › should throw an error asking to enter --include-deps flag ([`Helper`], [`remote::publish`])
 #[test]
 fn partial_merge_from_a_lane_to_main_without_include_deps() {
     let helper = Helper::new();

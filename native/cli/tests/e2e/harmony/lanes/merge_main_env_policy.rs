@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/lanes/merge-main-env-policy.e2e.ts` for custom env policy during `lane merge main` ([`EMPTY_ENV`], [`lane_merge_main_with_custom_env_policy`]).
 //!
-//! Verifies that external env dependency policies do not trigger false config conflicts.
+//! Verifies that external env dependency policies do not trigger false config conflicts ([`Helper`]).
 
 use crate::helper::{Helper, parse};
 

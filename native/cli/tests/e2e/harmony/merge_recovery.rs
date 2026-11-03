@@ -82,7 +82,7 @@ fn configured_merge_resolution_runs_published_presnap_and_load_callbacks() {
     assert!(!helper.scopes.local_path.join(".bitTmp").exists());
 }
 
-/// Verifies that `bit lane merge-abort` restores workspace config, sources, and `.bitTmp` cleanup ([`pending`]).
+/// Verifies that `bit lane merge-abort` restores workspace config, sources, and `.bitTmp` cleanup ([`pending`], [`node`]).
 #[test]
 fn configured_lane_abort_restores_config_sources_and_temporary_prefix() {
     let helper = pending();

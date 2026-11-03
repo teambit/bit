@@ -67,7 +67,7 @@ fn modeled_state(root: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
     files
 }
 
-/// Compares native and Node `bit revert comp1 0.0.1 -x` across stdout, stderr, and [`modeled_state`] ([`durations`], [`Helper`]).
+/// Compares native and Node `bit revert comp1 0.0.1 -x` across stdout, stderr, and [`modeled_state`] ([`durations`], [`Helper`], [`parse`]).
 fn revert_against_node(helper: &Helper) {
     let command = "revert comp1 0.0.1 -x";
     let node_root = helper.clone_workspace();

@@ -43,7 +43,7 @@ fn build_workspace_with(fail: bool, package_fail: bool) -> Helper {
     build_workspace_options(fail, package_fail, false)
 }
 
-/// Creates a workspace configured with [`BUILD_ENV`] and optional builder, `modifyPackageJson`, or version override flags ([`Helper`]).
+/// Creates a workspace configured with [`BUILD_ENV`] and optional builder, `modifyPackageJson`, or version override flags ([`Helper`], [`workspace`]).
 fn build_workspace_options(fail: bool, package_fail: bool, override_version: bool) -> Helper {
     let helper = workspace();
     let id = format!("{}/env/build", helper.scopes.remote);

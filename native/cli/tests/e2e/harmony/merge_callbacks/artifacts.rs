@@ -80,7 +80,7 @@ fn archive(root: &Path, bytes: &[u8]) -> Value {
     json!(entries)
 }
 
-/// Normalizes every artifact file entry in `builder`, returning the normalized `.tgz` archive payload if present ([`source`], [`archive`], [`Path`], [`Value`]).
+/// Normalizes every artifact file entry in `builder`, returning the normalized `.tgz` archive payload if present ([`source`], [`archive`], [`Path`], [`Value`], [`normalize`]).
 fn artifacts(root: &Path, builder: &mut Value) -> Option<Value> {
     let mut package = None;
     for artifact in builder["data"]["artifacts"].as_array_mut().unwrap() {

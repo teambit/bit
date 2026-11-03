@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use sha1::{Digest, Sha1};
 
-/// Formats the relative `.bit/objects` path for a 40-char hex `hash`.
+/// Formats the relative `.bit/objects` path for a 40-char hex `hash` ([`local_head_version_object_missing_from_scope`]).
 fn object_rel_path(hash: &str) -> String {
     format!(".bit/objects/{}/{}", &hash[..2], &hash[2..])
 }

@@ -83,7 +83,7 @@ fn invalid_scope_inside_target_name_is_rejected_without_partial_files() {
     assert!(!compare(&helper, "rename owner.scope/comp1 owner.scope2/comp2").status.success());
     assert!(bitmap(&helper).get("comp1").is_some());
 }
-/// Verifies that `bit rename --scope` controls `MissingPackagesDependenciesOnFs` issues depending on `--refactor` ([`lanes::install_delay`]).
+/// Verifies that `bit rename --scope` controls `MissingPackagesDependenciesOnFs` issues depending on `--refactor` ([`lanes::install_delay`], [`successful`]).
 #[test]
 fn scope_refactoring_controls_missing_package_dependency_issues() {
     for refactor in [false, true] {

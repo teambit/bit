@@ -2,7 +2,7 @@
 //!
 //! Covers transitive `updateDependents` cascades, promotion on import, and divergence guards.
 
-/// Older-snapshot hidden dependency cascade regression tests ([`scenarios_3_4_5_6_local_snap_cascades_update_dependents`]).
+/// Older-snapshot hidden dependency cascade regression tests ([`scenarios_3_4_5_6_local_snap_cascades_update_dependents`], [`Helper`]).
 mod older;
 
 use crate::helper::{Helper, parse};

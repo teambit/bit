@@ -32,7 +32,7 @@ fn embedded_scope_restores_new_components_without_creating_model_heads() {
     assert!(!helper.scopes.local_path.join(".git/bit/stash/stash-1.json").exists());
 }
 
-/// Verifies that `bit stash load` skips a stashed new component when its ID already exists in `.bitmap` ([`workspace`], [`command`], [`node`]).
+/// Verifies that `bit stash load` skips a stashed new component when its ID already exists in `.bitmap` ([`workspace`], [`command`], [`node`], [`config::read_jsonc`]).
 #[test]
 fn existing_new_identity_is_skipped_without_replacing_its_root_or_sources() {
     let helper = workspace();

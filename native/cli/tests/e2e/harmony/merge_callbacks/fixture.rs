@@ -68,7 +68,7 @@ pub(super) fn output(text: &str, root: &Path) -> String {
         .collect::<Vec<_>>()
         .join("\n")
 }
-/// Asserts `.bitmap`, `Version` objects, or `staged-snaps` parity between `helper` and `oracle` ([`output`], [`Helper`], [`Path`]).
+/// Asserts `.bitmap`, `Version` objects, or `staged-snaps` parity between `helper` and `oracle` ([`output`], [`Helper`], [`Path`], [`config`]).
 pub(super) fn publication(helper: &Helper, oracle: &Path, success: bool) {
     let actual = config::read_jsonc(&helper.scopes.local_path.join(".bitmap"));
     let expected = config::read_jsonc(&oracle.join(".bitmap"));

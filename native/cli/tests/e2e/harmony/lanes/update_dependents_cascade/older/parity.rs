@@ -73,7 +73,7 @@ fn version(helper: &Helper, id: &str) -> Value {
     value
 }
 
-/// Replaces every hash in `hashes` with its deterministic `SNAP_<index>` placeholder in `text` for [`state`].
+/// Replaces every hash in `hashes` with its deterministic `SNAP_<index>` placeholder in `text` for [`state`] and [`direct_hidden_cascade_matches_released_output_and_object_metadata`].
 fn normalize(text: &str, hashes: &[String]) -> String {
     let mut result = text.to_owned();
     for (index, hash) in hashes.iter().enumerate() {

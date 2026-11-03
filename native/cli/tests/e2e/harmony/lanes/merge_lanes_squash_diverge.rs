@@ -66,7 +66,7 @@ fn single_scope_two_diverged_lanes_squash_on_merge() {
     assert!(!hashes.contains(&head_on_lane_b.as_str()));
 }
 
-/// Verifies `--squash` merge parent and history behavior when `lane-a` and `lane-b` reside on separate scopes ([`Helper`], [`parse`]).
+/// Verifies `--squash` merge parent and history behavior when `lane-a` and `lane-b` reside on separate scopes ([`Helper`], [`parse`], [`single_scope_two_diverged_lanes_squash_on_merge`]).
 #[test]
 fn multi_scope_lane_a_on_scope_a_lane_b_on_scope_b_diverged_squash() {
     let helper = Helper::new();

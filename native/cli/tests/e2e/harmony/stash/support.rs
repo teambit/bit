@@ -47,7 +47,7 @@ pub(super) fn write_both(helper: &Helper, oracle: &Path, path: &str, contents: &
         fs::write(path, contents).unwrap();
     }
 }
-/// Compares all `.bit/stash/*.json` files and their referenced detached `Version` objects between `root` and `oracle` ([`Path`]).
+/// Compares all `.bit/stash/*.json` files and their referenced detached `Version` objects between `root` and `oracle` ([`Path`], [`stash_data`], [`compare_versions`]).
 pub(super) fn compare_stashes(root: &Path, oracle: &Path) {
     let actual = stash_data(root);
     let expected = stash_data(oracle);

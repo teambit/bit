@@ -10,7 +10,7 @@ use crate::helper::{Helper, config};
 use std::{fs, path::Path};
 use support::{command, compare_stashes, controls, node, workspace, write_both};
 
-/// Verifies that `bit stash save` and `bit stash load` restore component sources without advancing scope heads ([`workspace`], [`command`], [`compare_stashes`]).
+/// Verifies that `bit stash save` and `bit stash load` restore component sources without advancing scope heads ([`workspace`], [`command`], [`compare_stashes`], [`controls`]).
 #[test]
 fn basic_save_and_load_restore_sources_without_advancing_heads() {
     let helper = workspace();

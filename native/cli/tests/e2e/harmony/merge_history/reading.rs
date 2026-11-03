@@ -76,7 +76,7 @@ fn historical_deprecation_and_removal_overlays_match_log_views() {
     assert!(bitmap["bar/foo"]["version"].is_string());
 }
 
-/// Verifies that historical `bit checkout` after merging an unrelated lane matches Node ([`compare_log`]).
+/// Verifies that historical `bit checkout` after merging an unrelated lane matches Node ([`compare_log`], [`versions`]).
 #[test]
 fn historical_checkout_after_unrelated_merge_matches_node() {
     let (helper, _) = super::unrelated();

@@ -75,7 +75,7 @@ fn prepared_stash_histories_write_nothing_and_reject_duplicate_preparation() {
     assert_eq!(objects(root), before);
 }
 
-/// Builds a `commandStashPlan` request payload for `comp1` from `context` and `token` ([`Value`]).
+/// Builds a `commandStashPlan` request payload for `comp1` from `context` and `token` ([`Value`], [`a_source_changed_after_stash_planning_cannot_publish_any_detached_objects`]).
 fn plan(context: &Value, token: &Value) -> Value {
     let target = &context["targets"][0];
     let model = &context["models"][0];

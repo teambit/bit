@@ -7,7 +7,7 @@ use crate::{
     helper::config,
 };
 use std::fs;
-/// Verifies that `bit scope rename` without `-x` runs package installation and compilation like Node ([`durations`]).
+/// Verifies that `bit scope rename` without `-x` runs package installation and compilation like Node ([`durations`], [`completion`]).
 #[test]
 fn ordinary_scope_rename_runs_real_installation_and_then_compilation() {
     let helper = support::workspace(1, false);

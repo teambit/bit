@@ -26,7 +26,7 @@ fn set_env(helper: &Helper, component: &str, env: &str) {
     crate::helper::config::set_component_env(&helper.scopes.local_path, component, env);
 }
 
-/// Runs `command` in native and Node workspaces, asserting identical callback stdout prefix and JSON payload ([`Value`]).
+/// Runs `command` in native and Node workspaces, asserting identical callback stdout prefix and JSON payload ([`Value`], [`json_output`], [`parse`]).
 fn parity(helper: &Helper, command: &str) -> Value {
     let copy = helper.clone_workspace();
     let native = helper.native_run(command);

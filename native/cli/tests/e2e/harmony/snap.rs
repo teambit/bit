@@ -48,7 +48,7 @@ fn snap_before_tag_and_untag_a_snap() {
     assert_untag_head_snap(&helper);
 }
 
-/// Verifies `bit reset bar/foo --head` rewinds the component head to its previous snap ([`Helper`]).
+/// Verifies `bit reset bar/foo --head` rewinds the component head to its previous snap ([`Helper`], [`parse`]).
 fn assert_untag_head_snap(helper: &Helper) {
     helper.re_init_workspace();
     helper.create_component_bar_foo("");
