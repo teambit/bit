@@ -29,7 +29,7 @@ struct FileDiag {
     errors: Vec<String>,
 }
 
-/// Attempts native `TypeScript` type checking in `root`, returning `Ok(None)` when delegation is required.
+/// Attempts native `TypeScript` type checking in `root` via [`load_workspace`] and [`match_components`], returning `Ok(None)` when delegation is required.
 pub(super) fn try_run(
     root: &Path,
     args: &[OsString],

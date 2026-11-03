@@ -36,7 +36,7 @@ struct Compiled {
     errors: Vec<Diagnostic>,
 }
 
-/// Attempts native component compilation in `root`, returning `Ok(None)` when delegation is needed.
+/// Attempts native component compilation in `root` via [`plan::Plan::prepare`], returning `Ok(None)` when delegation is needed.
 pub(super) fn try_run(
     root: &Path,
     args: &[OsString],

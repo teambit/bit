@@ -56,7 +56,7 @@ impl ProjectedLinker {
         self.retained.forget_loaded();
     }
 
-    /// Read native source and dependency metadata on the same hydrated provider session.
+    /// Reads native source and dependency metadata via [`load::capture`] on the same hydrated provider session.
     pub(in crate::commands) fn capture(
         &mut self,
         root: &Path,

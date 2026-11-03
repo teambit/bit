@@ -38,7 +38,7 @@ pub(super) fn host(remote: &str) -> Option<String> {
     capture(super::trim(remote), r"^(?:[a-z+]+://)?(?:[^@/]+@)?([^:/]+)", 1)
         .map(|value| value.to_lowercase())
 }
-/// Parses a `GitHub` or `GITHUB_SERVER_URL` Git `remote` into a [`Repository`] descriptor.
+/// Parses a `GitHub` or `GITHUB_SERVER_URL` Git `remote` into a [`Repository`] descriptor via [`parse_repository`].
 pub(super) fn repository(remote: &str) -> Option<Repository> {
     let remote = super::trim(remote);
     let host = host(remote)?;

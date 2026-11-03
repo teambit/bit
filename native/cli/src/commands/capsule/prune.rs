@@ -30,7 +30,7 @@ pub(in crate::commands) struct PruneArgs {
     with_sizes: bool,
     json: bool,
 }
-/// Serialized record for a single capsule root directory removed (or planned for removal) by `capsule prune`.
+/// Serialized record for a single capsule root directory removed (or planned for removal) by `capsule prune` in [`PruneReport`].
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct Removed {

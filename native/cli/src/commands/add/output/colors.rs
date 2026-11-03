@@ -12,7 +12,7 @@ const NO_FILES: &str = "warning: no files to add";
 /// Clause separator preceding the bold list of ignored files in [`NO_FILES`] warnings.
 const IGNORED: &str = ", the following files were ignored: ";
 
-/// Applies inner [`Chalk`] styling to `InvalidInput` tracking errors when colors are enabled.
+/// Applies inner [`Chalk`] styling to `InvalidInput` tracking errors via [`message_color`] when colors are enabled.
 pub(super) fn error(error: io::Error, chalk: Chalk) -> io::Error {
     if !chalk.enabled() || error.kind() != io::ErrorKind::InvalidInput {
         return error;

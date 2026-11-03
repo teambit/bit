@@ -8,7 +8,7 @@ use crate::{
     native::Outcome,
 };
 use std::{ffi::OsString, io, path::Path};
-/// Renders a `bit add` failure [`Outcome`] after provider effects in text or `--json` mode via [`colors::error`].
+/// Renders a `bit add` failure [`Outcome`] after provider effects in text or `--json` mode via [`colors::error`] and [`downcast_callback`].
 pub(super) fn failure(
     root: &Path,
     args: &[OsString],

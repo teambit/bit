@@ -40,7 +40,7 @@ pub(super) struct Options {
     pub generate_types: bool,
 }
 
-/// Executes `bit compile`, validating component selectors before running [`runner::try_run`].
+/// Executes `bit compile`, validating component selectors before running [`runner::try_run`] or [`emit_compile_error`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("compile arguments are not UTF-8".into()));

@@ -26,7 +26,7 @@ struct Plan {
     repository_root: Option<PathBuf>,
     scope: Option<String>,
 }
-/// Executes `bit ci sync --init` (or `bit ci init`) in `root`.
+/// Executes `bit ci sync --init` (or `bit ci init`) in `root` via [`prepare`] and [`Plan::execute`].
 pub(super) fn run(root: &Path, args: &[OsString]) -> io::Result<Outcome> {
     let plan = match prepare(root) {
         Ok(Some(plan)) => plan,

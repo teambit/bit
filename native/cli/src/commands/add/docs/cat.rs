@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Staged cold `cat-component` documentation state and observed source preimages.
+/// Staged cold `cat-component` documentation state, [`cache_hits::Plan`], and observed source preimages.
 pub(in crate::commands) struct CatDocs {
     root: PathBuf,
     components: Vec<Value>,

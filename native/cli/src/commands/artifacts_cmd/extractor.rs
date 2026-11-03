@@ -1,6 +1,6 @@
 //! Artifact extraction, [`Options`] filtering, and [`render_artifacts_report`] dispatch for `bit artifacts`.
 //!
-//! Defines [`ArtifactFile`], [`ArtifactItem`], [`ComponentArtifacts`], and [`TargetComponent`] records for [`extract_and_render`].
+//! Defines [`ArtifactFile`], [`ArtifactItem`], [`ComponentArtifacts`], and [`TargetComponent`] records for [`extract_and_render`] and [`extract_scope_and_render`].
 
 use super::{
     Options,

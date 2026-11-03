@@ -35,7 +35,7 @@ const BOLD: Style = Style("\u{1b}[1m", "\u{1b}[22m");
 /// ANSI dim intensity [`Style`] (`\x1b[2m` / `\x1b[22m`).
 const DIM: Style = Style("\u{1b}[2m", "\u{1b}[22m");
 
-/// ANSI color wrapper matching `chalk` 4.1.2 behavior in the Node.js CLI.
+/// ANSI color wrapper matching `chalk` 4.1.2 behavior in the `Node.js` CLI via [`Style`] pairs.
 #[derive(Debug, Clone, Copy)]
 pub struct Chalk {
     enabled: bool,

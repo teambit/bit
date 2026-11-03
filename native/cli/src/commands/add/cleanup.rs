@@ -1,4 +1,4 @@
-//! Consumer destruction cleans [`temporary`] files before publishing `.bitmap`.
+//! Consumer destruction cleans [`temporary`] files before publishing `.bitmap` in `bit-cli`.
 //!
 //! Removes `.bitTmp` via [`temporary`] and [`has_temporary_path`] when it exists as a live filesystem entry under the workspace root.
 use std::{fs, io, path::Path};

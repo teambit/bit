@@ -25,7 +25,7 @@ const BUILD_TASKS: &[&str] = &[
     "teambit.harmony/application:build_application",
     "teambit.pkg/pkg:PublishComponents",
 ];
-/// Default deploy pipeline task identifiers displayed by `bit build --list-tasks`.
+/// Default deploy pipeline task identifiers displayed by `bit build --list-tasks` in [`run_list_tasks`].
 const DEPLOY_TASKS: &[&str] =
     &["teambit.pkg/pkg:PublishComponents", "teambit.harmony/application:deploy_application"];
 

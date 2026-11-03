@@ -48,7 +48,7 @@ pub(super) fn warn(
     output.warning(&text);
 }
 
-/// Formats a remote component identifier from `value` as `<scope>/<name>` or `<name>`.
+/// Formats a remote component identifier from `value` via [`non_empty_str`] as `<scope>/<name>` or `<name>`.
 #[inline]
 fn remote_id_str(value: &Value) -> Option<String> {
     if let Some(id) = non_empty_str(value)

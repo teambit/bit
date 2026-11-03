@@ -52,7 +52,7 @@ pub(super) fn prepare(
     }
     Ok(compiled)
 }
-/// Groups emitted files and compiler errors for a single `identity` component.
+/// Groups emitted files and compiler errors for a single `identity` component via [`source_path`].
 fn compile(
     files: &[Value],
     result: &[Value],

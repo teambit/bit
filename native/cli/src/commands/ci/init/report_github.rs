@@ -8,7 +8,7 @@ use super::{
 };
 use crate::commands::color::Chalk;
 
-/// Renders the numbered GitHub onboarding checklist steps for `input` and `repository`.
+/// Renders the numbered `GitHub` onboarding checklist steps for `input` and `repository` via [`permissions`].
 #[inline]
 pub(super) fn steps(input: &Report, repository: &Repository, chalk: Chalk) -> Vec<String> {
     let mut commit = report::commit(input, chalk);

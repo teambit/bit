@@ -61,7 +61,7 @@ enum BuildError {
     AfterWrite(io::Error),
 }
 
-/// Executes `bit capsule create` in `root` using `create_args` and renders text or `--json` output.
+/// Executes `bit capsule create` in `root` using `create_args` and renders text or `--json` output via [`emit_create_json`].
 pub(super) fn run_create(
     cwd: &Path,
     root: &ScopeRoot,

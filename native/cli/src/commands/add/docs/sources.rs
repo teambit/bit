@@ -39,7 +39,7 @@ fn milliseconds(duration: std::time::Duration) -> f64 {
     (duration.as_secs() as f64).mul_add(1000.0, f64::from(duration.subsec_nanos()) / 1_000_000.0)
 }
 
-/// Observes non-test component source files under `root` within the shared [`LIMIT`] byte budget.
+/// Observes non-test component source files under `root` via [`read_source`] within the shared [`LIMIT`] byte budget.
 pub(super) fn observe(root: &Path, components: &[Value]) -> io::Result<BTreeMap<PathBuf, Source>> {
     let mut output = BTreeMap::new();
     let mut remaining = LIMIT;

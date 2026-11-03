@@ -1,6 +1,6 @@
 //! Keep callback [`Retained`] source spools alive until identity publication and tooling finish.
 //!
-//! Tracks [`Capture`] instances, control preimages, and [`super::selectors::Facts`] across reloads.
+//! Tracks [`Capture`] instances, control preimages, and [`super::selectors::Facts`] across reloads on [`Retained`].
 mod import;
 #[cfg(test)]
 mod tests;

@@ -26,7 +26,7 @@ pub(super) struct Loaded {
     pub capture: capture::Capture,
 }
 
-/// Prepares [`Loaded`] component metadata and invalidates the dependency cache for `identities`.
+/// Prepares [`Loaded`] component metadata via [`prepare_with`] and invalidates the dependency cache for `identities`.
 #[inline]
 pub(super) fn prepare(
     root: &Path,

@@ -39,7 +39,7 @@ const SCOPE_ASPECTS_BASE_KEY: &str = "capsules_scopes_aspects_base_dir";
 /// Global config key overriding the shared global base directory for scope aspect capsules.
 const GLOBAL_SCOPE_ASPECTS_BASE_KEY: &str = "capsules_global_scope_aspects_base_dir";
 
-/// Parsed `bit capsule` subcommand and subcommand-specific options.
+/// Parsed `bit capsule` subcommand and subcommand-specific options dispatched by [`run`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     BareList,

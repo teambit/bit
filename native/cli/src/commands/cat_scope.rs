@@ -43,7 +43,7 @@ struct ScopeEntry {
     json_obj: Option<Value>,
 }
 
-/// Parses CLI arguments after `bit cat-scope` into [`Options`], returning `None` on unsupported flags.
+/// Parses CLI arguments after `bit cat-scope` into [`Options`] via [`apply_cat_scope_arg`], returning `None` on unsupported flags.
 fn parse_options(args: &[&str]) -> Option<Options> {
     let mut opts = Options::default();
     let mut iter = args.iter().copied();

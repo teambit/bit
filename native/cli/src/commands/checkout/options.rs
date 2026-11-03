@@ -80,7 +80,7 @@ pub fn validate_error(args: &[&str]) -> Option<&'static str> {
     validate_target_error(&flags, &to)
 }
 
-/// Validates target-dependent flags (`--workspace-only`, `--include-new-from-scope`, `head~N`).
+/// Validates target-dependent flags (`--workspace-only`, `--include-new-from-scope`, `head~N`) for [`validate_error`].
 fn validate_target_error(flags: &Map<String, Value>, to: &str) -> Option<&'static str> {
     let to = to.trim();
     if flags.get("--workspace-only") == Some(&Value::Bool(true)) && to != "head" {

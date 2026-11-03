@@ -12,7 +12,7 @@ pub(super) struct Options<'a> {
     pub(super) json: bool,
 }
 
-/// Parses `args` into [`Options`], requiring exactly one component ID positional argument.
+/// Parses `args` into [`Options`] via [`apply_cat_arg`], requiring exactly one component ID positional argument.
 pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
     let mut options = Options::default();
     let mut index = 0;

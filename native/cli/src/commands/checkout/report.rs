@@ -22,7 +22,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     format_title(result, options, chalk, None)
 }
 
-/// `checkoutOutput` accepts a lane-history title without changing its checkout sections.
+/// `checkoutOutput` accepts a lane-history title via [`Checkout`] without changing its checkout sections.
 pub(in crate::commands) fn format_title(
     result: &Value,
     options: &Options,

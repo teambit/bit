@@ -15,7 +15,7 @@ pub(in crate::commands) fn packages(
         .map(component_packages)
         .collect()
 }
-/// Extracts the bare component identity and [`ComponentDependencies`] from a single captured `row`.
+/// Extracts the bare component identity and [`ComponentDependencies`] from a single captured `row` via [`add_lifecycle_packages`].
 #[inline]
 fn component_packages(row: &Value) -> io::Result<(String, ComponentDependencies)> {
     let identity = row["identity"]

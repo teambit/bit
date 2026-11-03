@@ -44,7 +44,7 @@ pub(super) fn run(
     report(&prepared.plan, json, chalk)
 }
 
-/// Commits captured component caches, links [`WorkspaceComponent`]s, and returns the tracking [`Host`].
+/// Commits captured component caches, links [`WorkspaceComponent`]s via [`components`], and returns the tracking [`Host`].
 fn publish(
     root: &Path,
     prepared: &mut Prepared,

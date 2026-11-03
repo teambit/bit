@@ -6,7 +6,7 @@ use super::extractor::{ArtifactFile, ArtifactItem, ComponentArtifacts};
 use crate::commands::{scope_set::Failure, workspace_command::format::Formatter};
 use std::{env, fs, path::Path};
 
-/// Materializes extracted [`ComponentArtifacts`] files into `out_dir` from `scope_dir`.
+/// Materializes extracted [`ComponentArtifacts`] files into `out_dir` from `scope_dir` via [`save_component_artifacts`].
 pub(super) fn save_artifacts_to_dir(
     scope_dir: &Path,
     results: &[ComponentArtifacts],

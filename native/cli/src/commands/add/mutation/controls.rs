@@ -28,7 +28,7 @@ pub(super) fn validate(engine: &mut Engine, context: &Value) -> io::Result<()> {
     )
 }
 
-/// Refreshes and retains the current on-disk control file preimages into `capture`.
+/// Refreshes via [`refresh`] and retains the current on-disk control file preimages into `capture`.
 pub(super) fn retain(context: &Value, capture: &mut Capture) -> io::Result<()> {
     let current = context["controlReadSet"]
         .as_array()

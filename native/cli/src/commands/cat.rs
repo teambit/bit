@@ -37,7 +37,7 @@ const FILE_WITH_CONFIG_ERR: &str =
     "--file cannot be used with --config. use --all to show both files and config";
 const NO_HOST_ERR: &str =
     "unable to find a component host. please run this command from within a Bit workspace or scope";
-/// Executes `bit cat`, validating options and dispatching workspace or outside-workspace handling.
+/// Executes `bit cat`, validating options and dispatching workspace or [`run_outside_workspace`] handling.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(arguments) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("outside native cat grammar".into()));

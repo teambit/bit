@@ -1,6 +1,6 @@
 //! Reuse native [`WorkspaceComponent`] links with the final component-load metadata and canonical IO errors.
 //!
-//! Provides [`overlay`] to synchronize captured files and main files onto workspace components.
+//! Provides [`overlay`] and [`error`] to synchronize captured files and main files onto workspace components.
 #[cfg(test)]
 mod tests;
 

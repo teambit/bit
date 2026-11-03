@@ -36,7 +36,7 @@ pub(super) fn set_in_comp_json(
     Ok(CompJsonEdit { path, bytes })
 }
 
-/// Applies an aspect `set` or `--merge` update to a `.bitmap` component `entry`.
+/// Applies an aspect `set` or `--merge` update to a `.bitmap` component `entry` via [`find_bitmap_row_mut`].
 pub(super) fn apply_set_to_entry(
     bitmap_val: &mut Value,
     entry: &BitmapEntry,

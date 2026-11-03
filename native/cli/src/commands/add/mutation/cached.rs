@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
 impl ProjectedLinker {
-    /// Captures or reuses retained component rows for `identities` against `bitmap`.
+    /// Captures or reuses retained component rows for `identities` against `bitmap` via [`Self::capture_cached_inner`].
     #[inline]
     pub(in crate::commands) fn capture_cached(
         &mut self,

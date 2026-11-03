@@ -38,7 +38,7 @@ use std::{env, ffi::OsString, io, path::Path};
 /// Native `bit add` [`Command`] descriptor and alias table.
 pub const COMMAND: Command = Command { name: "add", aliases: &["a"], run };
 
-/// Executes `bit add` against `args`, declining when arguments fall outside native tracking support.
+/// Executes `bit add` against `args` via [`run_workspace`], declining when arguments fall outside native tracking support.
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("tracking arguments are not UTF-8".to_owned()));

@@ -25,7 +25,7 @@ use std::{
 /// Native `bit clear-cache` (`cc`) [`Command`] descriptor.
 pub const COMMAND: Command = Command { name: "clear-cache", aliases: &["cc"], run };
 
-/// Executes `bit clear-cache` locally or against a `--remote` scope.
+/// Executes `bit clear-cache` locally or against a `--remote` scope via [`parse_args`] and [`run_remote`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(remote) = parse_args(args) else {
         return Ok(Outcome::Declined(
