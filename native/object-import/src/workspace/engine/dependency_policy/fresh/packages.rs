@@ -19,7 +19,7 @@ pub(super) struct Package {
     pub(super) manifest: Value,
     pub(super) directory: PathBuf,
 }
-/// Cached `node_modules` `package.json` reader that records cryptographic read proofs.
+/// Cached `node_modules` `package.json` reader that records cryptographic [`proof::Proof`] entries and caches [`Package`] manifests.
 pub(super) struct Reader {
     pub(super) proofs: Vec<proof::Proof>,
     dependent: Option<String>,

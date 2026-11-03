@@ -11,7 +11,7 @@ pub(super) struct Prepared {
     staged: bool,
 }
 impl Prepared {
-    /// Commits pending `unmerged.json` and `merge-conflict` updates early and returns post-write read proofs.
+    /// Commits pending `unmerged.json` and `merge-conflict` updates via [`Prepared::commit`] and returns post-write [`proof::Proof`] entries.
     pub(super) fn stage(&mut self) -> io::Result<Vec<proof::Proof>> {
         self.commit()?;
         let mut proofs = Vec::new();

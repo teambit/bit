@@ -25,7 +25,7 @@ impl Projection<'_> {
         )
     }
 
-    /// Serializes non-empty issue maps and missing-package lists into wire issue records.
+    /// Serializes non-empty issue maps and missing-package lists into wire issue records via [`serialized_issue`].
     fn collect_issues(&self) -> io::Result<Vec<Value>> {
         let mut issues = Vec::with_capacity(8);
         for (kind, data) in [

@@ -25,7 +25,7 @@ pub(super) fn rewrite_batch_refs(
     Ok(())
 }
 
-/// Updates scoped ID, string ID, root, and child references on a JSON object `fields` map.
+/// Updates scoped ID ([`update_scoped_id`]), string ID, root, and child references on a JSON object `fields` ([`Map`]) map.
 #[inline]
 fn update_object(
     fields: &mut Map<String, Value>,

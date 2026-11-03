@@ -5,7 +5,7 @@ use super::{Retained, invalid};
 use serde_json::{Map, Value, json};
 use std::io;
 
-/// Applies per-component editor, soft-tag, and auto-tag log messages to the snap receipt.
+/// Applies per-component [`editor`], soft-tag, and [`automatic`] log messages to the snap receipt.
 pub(super) fn apply(retained: &Retained, receipt: &mut Value) -> io::Result<()> {
     if retained.snap.is_none() {
         return Ok(());

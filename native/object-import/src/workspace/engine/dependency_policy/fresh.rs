@@ -20,7 +20,7 @@ use crate::workspace::engine::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Detects fresh source dependencies for `request` directly from the workspace filesystem.
+/// Detects fresh source dependencies for `request` ([`Detect`]) directly from the workspace filesystem via [`detect_view`].
 #[inline]
 pub(in crate::workspace::engine) fn detect(
     request: &Detect,

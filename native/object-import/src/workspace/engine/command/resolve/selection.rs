@@ -55,7 +55,7 @@ fn pending_identities(pending: &[Value]) -> io::Result<Vec<String>> {
     Ok(unresolved)
 }
 
-/// Parses and validates a bare `scope/name` component identity from string or `{scope, name}` `value`.
+/// Parses and validates a bare `scope/name` component identity from string or `{scope, name}` `value` for [`pending_identities`].
 pub(super) fn identity(value: &Value) -> io::Result<String> {
     let (scope, name) = if let Some(raw) = value.as_str() {
         let raw = raw.trim().trim_start_matches('/');

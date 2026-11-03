@@ -1,4 +1,4 @@
-//! `Lane` and `LaneHistory` object synthesis via [`lane_objects`] for resolved [`Material`] snapshots.
+//! `Lane` and `LaneHistory` object synthesis via [`lane_objects`], [`apply_allocations`], and [`update`] for resolved [`Material`] snapshots.
 
 use super::{super::repository::Repository, Material, invalid, snapshot};
 use serde_json::{Value, json};

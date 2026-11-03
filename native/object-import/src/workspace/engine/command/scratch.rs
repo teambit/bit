@@ -34,7 +34,7 @@ impl Directory {
         Err(io::Error::other("command scratch directory allocation limit"))
     }
 
-    /// An empty subdirectory for one of several users of this directory.
+    /// Creates an empty `0o700` subdirectory via [`private_builder`] for user `index` under this [`Directory`].
     pub(super) fn child(&self, index: usize) -> io::Result<PathBuf> {
         let meta = fs::symlink_metadata(&self.0)?;
         if index > 65536 || !meta.is_dir() || meta.file_type().is_symlink() {

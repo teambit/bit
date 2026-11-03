@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
-/// Wire payload for applying dependency policies to a cached pre-policy detection snapshot.
+/// Wire payload for applying dependency policies to a cached pre-policy detection snapshot via [`apply`] and [`Complete`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

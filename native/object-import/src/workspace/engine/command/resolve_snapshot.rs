@@ -24,7 +24,7 @@ use std::{
     path::Path,
 };
 
-/// Component model, projected `Version`, source files, and participation flags for snapshot resolution.
+/// Component model, projected `Version`, source files, [`VersionState`], and [`Participation`] flags for [`Snapshot`] resolution.
 pub(super) struct Material {
     pub identity: String,
     pub model: Value,

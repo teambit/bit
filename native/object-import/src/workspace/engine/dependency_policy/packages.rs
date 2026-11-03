@@ -15,7 +15,7 @@ pub(super) fn prepare(request: &Request, plan: &mut Plan) {
     components(request, plan);
     legacy(plan);
 }
-/// Promotes runtime or dev packages listed in model-peer policies into peer package dependencies on `plan`.
+/// Promotes runtime or dev packages listed in model-peer policies on `request` ([`Request`]) into peer package dependencies on `plan` ([`Plan`]).
 fn model_peers(request: &Request, plan: &mut Plan) {
     if request.policies.model_peers.is_empty() {
         return;

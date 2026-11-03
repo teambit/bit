@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-/// Deserialized component aspect extensions, package name, default node settings, and dependency state.
+/// Deserialized component aspect extensions, package name, [`policy::projection::Defaults`], and dependency state.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine::command) struct Component {

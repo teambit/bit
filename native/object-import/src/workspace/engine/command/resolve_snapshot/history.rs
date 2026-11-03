@@ -9,7 +9,7 @@ use crate::workspace::engine::{command::repository::Repository, status_history};
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Populate pre-tag heads in existing `VersionHistory` objects during staging.
+/// Populates pre-tag heads in existing `VersionHistory` objects via [`tag_history`] across `materials` ([`Material`]) in `repository` ([`Repository`]).
 /// The newly published semantic tag is absent from the canonical history at this stage.
 #[inline]
 pub(super) fn tag_histories(

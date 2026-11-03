@@ -6,7 +6,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-/// Deserialized package finalization payload carrying `package.json` manifest plans and read proofs.
+/// Deserialized package finalization payload carrying `package.json` manifest plans and [`proof::Proof`] records.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct PackageFinalize {

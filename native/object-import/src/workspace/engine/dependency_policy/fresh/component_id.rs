@@ -57,7 +57,7 @@ fn parse_parts(raw: &Value) -> io::Result<(&str, &str, Option<&str>)> {
         .ok_or_else(|| invalid("fresh component scope"))?;
     Ok((scope, name, raw["version"].as_str().map(str::trim)))
 }
-/// Inserts `version` into `id` while preserving name-first (`unscoped`) vs scope-first key order.
+/// Inserts `version` into `id` ([`Map`]) while preserving name-first (`unscoped`) vs scope-first key order.
 #[inline]
 pub(super) fn set_version(id: &mut Map<String, Value>, version: String) {
     // Projection already applied the actual legacy scoped/default-scope constructor.

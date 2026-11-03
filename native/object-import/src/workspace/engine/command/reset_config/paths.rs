@@ -38,7 +38,7 @@ pub(super) fn capture(
     Err(invalid("reset config workspace ancestor"))
 }
 
-/// Returns `symlink_metadata(parent)` after verifying `parent` is a non-symlink directory.
+/// Returns `symlink_metadata(parent)` after verifying `parent` is a non-symlink directory for [`capture`].
 #[inline]
 fn ordinary_directory_metadata(parent: &Path) -> io::Result<fs::Metadata> {
     let metadata = fs::symlink_metadata(parent)?;

@@ -27,7 +27,7 @@ pub(in crate::workspace::engine) struct BuildFinalize {
     dependency_read_set: Vec<proof::Proof>,
 }
 
-/// Stages `staged-snaps` identities on `state.resolve` before running the builder pipeline.
+/// Stages `staged-snaps` identities on `state.resolve` via [`stage_prepared`] before running the builder pipeline.
 pub(in crate::workspace::engine::command::resolve) fn stage(
     input: &StageBuild,
     state: &mut State,

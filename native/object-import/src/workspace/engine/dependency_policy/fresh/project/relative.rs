@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Mutable accumulator for relative component and untracked file import issues.
+/// Mutable accumulator for relative component ([`Owner`]) and untracked file import issues.
 #[derive(Default)]
 pub(super) struct State {
     owners: Option<Vec<Owner>>,

@@ -37,7 +37,7 @@ pub(super) fn resolved(
     };
     Ok(Some(json!({"name":name,"componentIdentity":identity,"concreteVersion":concrete})))
 }
-/// Parses a package `componentId` `value` into a formatted component identity and optional version.
+/// Parses a package `componentId` `value` ([`Value`]) into a formatted component identity and optional [`concrete_version`].
 fn identity(value: &Value) -> io::Result<(String, Option<&str>)> {
     let (scope, name, version) = if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, version) = raw

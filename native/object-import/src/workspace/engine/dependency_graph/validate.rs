@@ -42,7 +42,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
-/// Validates custom detector overrides, hashes, and lookup paths on `request`.
+/// Validates custom detector overrides, hashes, and lookup paths on `request` ([`Request`]) under [`MAX_FILES`].
 #[inline]
 fn custom(request: &Request) -> io::Result<()> {
     for (file, custom) in request.detector.custom.iter().flat_map(|custom| custom.iter()) {

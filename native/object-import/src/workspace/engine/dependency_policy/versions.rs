@@ -33,7 +33,7 @@ pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usiz
         .collect::<io::Result<Vec<_>>>()?;
     Ok((1, json!({"entries":entries,"extensions":extensions})))
 }
-/// Updates `entry` with the selected version and version range from `index` for `field`.
+/// Updates `entry` ([`super::wire::Entry`]) with the selected version and [`updated_range`] from `index` ([`index::Index`]) for `field`.
 #[inline]
 fn update(
     index: &index::Index<'_>,

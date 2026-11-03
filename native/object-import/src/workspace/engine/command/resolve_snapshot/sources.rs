@@ -40,7 +40,7 @@ pub(super) fn sources(
     Ok(())
 }
 
-/// Normalizes EOL/BOM, hashes the content of `file`, and returns its `(file_entry, source_object)` pair.
+/// Normalizes EOL/BOM, hashes the content of `file` via [`observation`], and returns its `(file_entry, source_object)` ([`Value`]) pair.
 pub(in crate::workspace::engine::command) fn capture_file(
     version: &Value,
     file: &Value,

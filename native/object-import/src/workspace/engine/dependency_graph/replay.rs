@@ -12,7 +12,7 @@ struct Receipts {
     bytes: usize,
     steps: usize,
 }
-/// Mutable replay accumulator tracking visited nodes, path maps, npm packages, and diagnostics.
+/// Mutable replay accumulator tracking visited nodes, path maps, npm packages, [`Receipts`], and [`Diagnostics`].
 #[derive(Default)]
 struct Replay {
     visited: Map<String, Value>,

@@ -1,4 +1,4 @@
-//! Snapshot and tag [`prepare`] planning, [`Material`] order, [`select_current`] [`Selection`], and [`report`] on [`Retained`] ([`Plan`]).
+//! Snapshot and tag [`prepare`] planning, [`Material`] order, [`select_current`] [`Selection`], [`snapshot_metadata`], and [`report`] on [`Retained`] ([`Plan`]).
 use super::{
     super::{
         capture, invalid, repository,

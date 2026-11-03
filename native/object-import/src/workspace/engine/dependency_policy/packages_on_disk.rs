@@ -17,7 +17,7 @@ use std::{
     sync::OnceLock,
 };
 
-/// Wire request for resolving installed `node_modules` package metadata across `names`.
+/// Wire request for resolving installed `node_modules` package metadata across `names` via [`read`] and [`read_overlay`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

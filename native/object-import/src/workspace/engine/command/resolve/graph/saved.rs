@@ -37,7 +37,7 @@ pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io
     Ok(graph)
 }
 
-/// Validates and appends `edges` into `graph` within node and edge budget limits.
+/// Validates and appends `edges` into `graph` via [`insert_edge`] within node and edge budget limits.
 pub(super) fn append(graph: &mut Graph, edges: &Value) -> io::Result<()> {
     let edges = edges.as_array().ok_or_else(|| invalid("resolve saved graph edges"))?;
     if edges.is_empty() {

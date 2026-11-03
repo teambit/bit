@@ -13,7 +13,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-/// Cryptographic file content, existence, metadata, or byte-range read proof for a workspace path.
+/// Cryptographic file content, existence, [`Metadata`], or byte-[`Range`] read proof for a workspace [`PathBuf`].
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Proof {

@@ -36,7 +36,7 @@ pub(super) fn scan_request(
     Ok((count, output))
 }
 
-/// Wire request for capturing or scanning a workspace source dependency graph.
+/// Wire request for capturing or scanning a workspace source dependency graph via [`apply`] and [`DetectorOptions`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

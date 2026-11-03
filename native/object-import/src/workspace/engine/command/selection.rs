@@ -9,7 +9,7 @@ use super::{super::invalid, input::Options, repository::Repository};
 use serde_json::{Value, json};
 use std::io;
 
-/// Per-component target, model, head, and modification inputs for checkout transition selection.
+/// Per-component target, model, head, and modification inputs for checkout transition selection via [`select`] and [`Options`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Selection<'a> {
     pub(super) target: &'a Value,

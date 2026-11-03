@@ -5,7 +5,7 @@ use crate::command_import;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Validates switch-specific merge strategy, alias, and flag combinations on `request`.
+/// Validates switch-specific merge strategy, alias ([`validate_alias`]), and flag combinations on `request` ([`Prepare`]).
 pub(in super::super) fn options(request: &Prepare) -> io::Result<()> {
     let options = request.options.lane.as_ref().ok_or_else(|| invalid("switch lane missing"))?;
     if request.options.strategy

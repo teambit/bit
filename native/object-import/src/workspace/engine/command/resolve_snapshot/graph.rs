@@ -1,4 +1,4 @@
-//! Flattened dependency edge rewriting via [`graph`] and [`rewrite_batch_refs`] for [`Material`].
+//! Flattened dependency edge rewriting via [`graph`], [`read`], [`rekey`], [`store`], and [`rewrite_batch_refs`] for [`Material`].
 
 use super::{Material, invalid, references::rewrite_batch_refs};
 use crate::workspace::engine::dependency_graph::proof;

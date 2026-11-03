@@ -40,7 +40,7 @@ pub(super) fn project(
     }
     projection.finish()
 }
-/// Active state for projecting a scanned dependency graph into component, package, and issue records.
+/// Active state for projecting a scanned dependency graph into [`ComponentVersion`], package, and [`Metadata`] issue records.
 struct Projection<'a> {
     request: &'a Detect,
     graph: &'a Value,

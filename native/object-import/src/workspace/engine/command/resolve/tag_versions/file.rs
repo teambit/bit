@@ -7,7 +7,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
-/// Resolves the `versionToTag` and `prereleaseId` override for `identity` from a parsed versions `file`.
+/// Resolves the `versionToTag` and `prereleaseId` override for `identity` from a parsed versions `file` for [`for_component`].
 pub(super) fn tag_data(file: Option<&Value>, identity: &str) -> io::Result<Value> {
     let Some(file) = file.filter(|file| !file.is_null()) else { return Ok(Value::Null) };
     let identity = identity.trim();

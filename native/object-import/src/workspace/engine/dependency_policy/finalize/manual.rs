@@ -26,7 +26,7 @@ pub(super) fn apply(request: &Request, output: &mut Output) {
     output.missing.retain(|name| !additions.removals.contains(name));
     promote(output, &additions.components, &additions.packages);
 }
-/// Processes a single manual dependency policy entry `(name, value)` in bucket `field`.
+/// Processes a single manual dependency policy entry `(name, value)` in bucket `field` onto `output` ([`Output`]) and `additions` ([`Additions`]).
 fn add(
     request: &Request,
     output: &mut Output,

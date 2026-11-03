@@ -11,7 +11,7 @@ use std::{
     io::{self, Read},
 };
 
-/// Reads pending `VersionHistory` plans from [`status_models`] for the selected stash targets.
+/// Reads pending `VersionHistory` plans from [`status_models`] for the selected [`targets`] on `retained` ([`Retained`]).
 fn plans(
     retained: &Retained,
     selected: Option<&[String]>,

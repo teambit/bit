@@ -16,7 +16,7 @@ pub(super) fn apply(context: &mut Value, lane: &[command_import::lane::Entry]) -
     Ok(())
 }
 
-/// Computes the `.bitmap`-first, `lane`-second component identity load order for `context`.
+/// Computes the `.bitmap`-first, `lane`-second ([`command_import::lane::Entry`]) component identity load order via [`target_identity`] for `context`.
 pub(super) fn status_load_order(
     context: &Value,
     lane: &[command_import::lane::Entry],

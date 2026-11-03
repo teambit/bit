@@ -73,7 +73,7 @@ fn inbound_overlay<'a>(
     command::inbound::overlay(state, import_token(token)?)
 }
 
-/// Dispatches diff and lane-update [`Request`] variants that read through an optional inbound overlay.
+/// Dispatches diff and lane-update [`Request`] variants that read through an optional [`inbound_overlay`] on `snapshots` ([`snapshots::State`]).
 fn overlay_reads(
     request: Request,
     snapshots: &mut snapshots::State,

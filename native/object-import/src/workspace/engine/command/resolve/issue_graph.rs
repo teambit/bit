@@ -50,7 +50,7 @@ pub(super) fn capture(
     external(seeds, &workspace, &saved, repository)
 }
 
-/// Collects direct component dependency seed IDs across all `components`.
+/// Collects direct component dependency seed IDs across all `components` via [`component_dependencies`].
 #[inline]
 fn dependencies(components: &[Component]) -> io::Result<Vec<String>> {
     let mut output = Vec::new();

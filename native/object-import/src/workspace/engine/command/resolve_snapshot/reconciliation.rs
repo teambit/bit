@@ -1,4 +1,4 @@
-//! Merge parent, squash, and unrelated-history reconciliation via [`reconcile`] for [`Material`].
+//! Merge parent ([`merge_parent`]), [`squash`], and [`unrelated`]-history reconciliation via [`reconcile`] for [`Material`].
 
 use super::{Material, invalid};
 use serde_json::{Value, json};

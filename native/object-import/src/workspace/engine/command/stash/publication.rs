@@ -8,7 +8,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Staged detached snapshot objects and stash metadata file ready for atomic commit.
+/// Staged detached [`snapshot::Snapshot`] objects and [`PreparedSave`] stash metadata file ready for atomic [`Prepared::commit`].
 pub(super) struct Prepared {
     _directory: scratch::Directory,
     objects: snapshot::Snapshot,

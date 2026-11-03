@@ -25,7 +25,7 @@ pub(in crate::workspace::engine::command) fn capture(
         .map(|file| retain(file, snapshots))
         .collect()
 }
-/// Verifies the retained source snapshot for `file` and constructs its content [`proof::Proof`].
+/// Verifies the retained source snapshot for `file` and constructs its content [`proof::Proof`] for [`capture`].
 #[inline]
 fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof> {
     let path = Path::new(

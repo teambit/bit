@@ -4,7 +4,7 @@ use super::{Record, invalid};
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
-/// Synthesizes the replacement `component.json` document for `target` at `version` during checkout reset.
+/// Synthesizes the replacement `component.json` document for `target` at `version` via [`add_config`] during checkout reset.
 #[inline]
 pub(super) fn document(
     record: &Record,

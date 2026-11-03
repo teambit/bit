@@ -5,7 +5,7 @@ use crate::workspace::{engine::dependency_graph::proof, snapshots};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
-/// Shared batch context and hash/version maps for per-component `Version` object assembly.
+/// Shared batch context, [`snapshots::State`], and hash/version maps for per-component `Version` object assembly via [`prepare`].
 pub(super) struct Context<'a> {
     pub root: &'a Path,
     pub receipt: &'a Value,

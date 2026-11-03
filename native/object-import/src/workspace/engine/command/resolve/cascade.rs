@@ -69,7 +69,7 @@ fn build_rows(
         .collect()
 }
 
-/// Orders non-selected candidate rows ahead of `selected` rows to match `workspace.getAutoTagInfo`.
+/// Orders non-selected candidate rows ahead of `selected` rows for [`reports`] to match `workspace.getAutoTagInfo`.
 fn ordered<'a>(
     current: &'a [Value],
     selected: &[String],

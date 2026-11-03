@@ -52,7 +52,7 @@ pub(super) fn prepare(
     };
     Ok(initial(record, pending, selected, request))
 }
-/// Resolves workspace `targets`, `unmerged.json` pending rows, and initial `selected` identities into [`Retained`].
+/// Resolves workspace `targets`, [`pending_rows`], and initial `selected` identities into [`Retained`].
 fn selection_state(
     request: &Prepare,
     context: &mut Value,

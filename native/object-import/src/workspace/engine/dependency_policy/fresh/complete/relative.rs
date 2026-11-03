@@ -25,7 +25,7 @@ pub(super) fn validate(kind: &str, data: &str) -> io::Result<()> {
     Ok(())
 }
 
-/// Validates an `UntrackedDependencies` issue entry `value`.
+/// Validates an `UntrackedDependencies` issue entry `value` ([`Value`]) via [`non_empty_str`].
 #[inline]
 fn untracked(value: &Value) -> io::Result<()> {
     if !value["nested"].is_boolean() {

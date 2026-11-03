@@ -6,7 +6,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
-/// Reject unsupported or stale inputs before the caller allocates UUIDs and logs.
+/// Rejects unsupported or stale [`Material`] inputs via [`validate_identity`], [`validate_projection`], and [`validate_graph`] before UUID allocation.
 pub(in crate::workspace::engine::command) fn preflight(
     root: &Path,
     materials: &[Material],

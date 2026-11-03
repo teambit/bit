@@ -87,7 +87,7 @@ fn validated_parents(previous: Option<&str>) -> io::Result<Vec<&str>> {
     Ok(parents)
 }
 
-/// Captures `Source` objects for `component.files` and attaches the file manifest array to `version`.
+/// Captures `Source` objects for `component.files` ([`Component`]) from `snapshots` ([`snapshots::State`]) and attaches the file manifest array to `version`.
 #[inline]
 fn capture_files(
     version: &mut Value,
