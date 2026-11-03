@@ -5,7 +5,7 @@
 use super::writer_ids;
 use serde_json::json;
 
-/// Verifies [`writer_ids`] extracts only materialized writer component IDs from `switchWriterIds`.
+/// Verifies [`writer_ids`] extracts only materialized writer component IDs from `switchWriterIds` [`json`] payloads.
 ///
 /// Also confirms that missing `switchWriterIds` or `null` array elements return an error.
 #[test]

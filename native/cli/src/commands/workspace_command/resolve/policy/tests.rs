@@ -5,7 +5,7 @@
 use super::parse;
 use serde_json::json;
 
-/// Verifies [`parse`] separates policy flag values from positional component patterns.
+/// Verifies [`parse`] separates [`json`] policy flag values from positional component patterns.
 ///
 /// Checks `-i` (`ignoreIssues`), `-I` (`ignoreNewestVersion`), and `--no-lock-deps` extraction.
 #[test]

@@ -4,7 +4,7 @@
 use super::support::{compare, workspace};
 use std::fs;
 
-/// Verifies [`compare`] removes `.bitTmp` after successful and no-op `bit add` runs in [`workspace`].
+/// Verifies [`compare`] removes `.bitTmp` after successful and no-op `bit add` tracking runs in [`workspace`].
 #[test]
 fn successful_and_no_added_tracking_clean_workspace_temporary_files() {
     let helper = workspace();

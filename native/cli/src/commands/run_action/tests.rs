@@ -5,7 +5,7 @@
 use super::{Options, parse_options, report};
 use serde_json::json;
 
-/// Verifies `bit run-action` [`Options`] JSON payload parsing via [`parse_options`].
+/// Verifies `bit run-action` [`Options`] [`json`] payload parsing via [`parse_options`].
 ///
 /// Confirms malformed JSON payloads and unknown flags return `None`.
 #[test]

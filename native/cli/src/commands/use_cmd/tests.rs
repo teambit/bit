@@ -13,7 +13,7 @@ fn os_args(args: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
-/// Verifies that [`parse_target`] extracts the aspect target argument and ignores `--no-color`.
+/// Verifies that [`parse_target`] extracts the aspect target argument from [`os_args`] and ignores `--no-color`.
 #[test]
 fn parses_target() {
     assert_eq!(parse_target(&os_args(&["use", "my-aspect"])), Some("my-aspect".to_owned()));

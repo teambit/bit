@@ -4,7 +4,7 @@
 
 use super::{Options, parse_options};
 
-/// Verifies `bit resume-export` [`Options`] parsing via [`parse_options`].
+/// Verifies `bit resume-export` [`Options`] CLI flag parsing via [`parse_options`].
 ///
 /// Checks required remote scope arguments alongside `--delete` and `--force` boolean flags.
 #[test]

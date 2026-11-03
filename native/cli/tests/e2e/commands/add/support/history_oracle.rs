@@ -11,7 +11,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path};
 
-/// Compares `command` against the `Node.js` CLI while verifying `WRITE_COUNT` history transitions.
+/// Compares `command` against the `Node.js` CLI via [`compare_mode`] while verifying `WRITE_COUNT` history transitions.
 pub(crate) fn compare<const WRITE_COUNT: usize>(
     helper: &Helper,
     command: &str,

@@ -30,7 +30,7 @@ fn policy() -> crate::commands::status::policy::Policy {
     }
 }
 
-/// Verifies default dev-file grouping for `.spec.ts` files and decline on `.docs.mdx` or `.node-app.ts` files.
+/// Verifies default dev-file grouping for `.spec.ts` files with [`policy`] and decline on `.docs.mdx` or `.node-app.ts` files.
 ///
 /// Ensures components with callback-requiring docs or app files decline fast-path receipt generation.
 #[test]

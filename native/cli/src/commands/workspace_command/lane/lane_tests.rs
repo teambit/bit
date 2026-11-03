@@ -8,7 +8,7 @@ use serde_json::json;
 /// Canonical 40-hex snap hash fixture used in [`squash_hashes`] tests.
 const HASH: &str = "0123456789abcdef0123456789abcdef01234567";
 
-/// Verifies that [`pattern_ids`] filters lane targets by glob pattern and returns `None` outside lane merges.
+/// Verifies that [`pattern_ids`] filters [`json`] lane targets by glob pattern and returns `None` outside lane merges.
 #[test]
 fn lane_patterns_match_the_lane_targets() {
     let context =

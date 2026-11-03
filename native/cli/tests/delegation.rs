@@ -65,6 +65,7 @@ fn delegates_arguments_and_exit_code() {
     assert_eq!(output.status.code(), Some(7));
 }
 
+/// Verifies [`bit`] delegates to [`STUB`] with an empty argument list when invoked without CLI arguments.
 #[test]
 fn delegates_without_arguments() {
     let dir = TempDir::new().unwrap();

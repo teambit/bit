@@ -77,6 +77,7 @@ fn bit_node_cli_wins_and_runs_with_node_from_path() {
     assert_eq!(cli.bvm_link, None);
 }
 
+/// Verifies `BIT_NODE_BINARY` in [`Environment`] overrides the default `"node"` executable in [`find_in`].
 #[test]
 fn bit_node_binary_overrides_node() {
     let dir = TempDir::new().unwrap();

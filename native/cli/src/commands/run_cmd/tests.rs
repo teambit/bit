@@ -4,7 +4,7 @@
 
 use super::{Options, parse_options};
 
-/// Verifies `bit run` [`Options`] flag parsing via [`parse_options`].
+/// Verifies `bit run` [`Options`] CLI flag parsing via [`parse_options`].
 ///
 /// Covers `-d`, `-p`, `-w`, `-n`, and `--args` flag extraction alongside the positional app name.
 #[test]

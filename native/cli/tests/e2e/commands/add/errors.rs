@@ -14,7 +14,7 @@ fn invalid_id_version_and_conflicting_name_flags_leave_state_unchanged() {
         assert!(!compare(&helper, command).status.success());
     }
 }
-/// Verifies [`compare`] matches error output when adding individual files, missing paths, or paths outside the workspace.
+/// Verifies [`compare`] matches error output when adding individual files, missing paths, or paths outside [`workspace`].
 #[test]
 fn individual_files_and_missing_or_outside_paths_match_errors() {
     for command in ["add bar/foo.js", "add missing", "add ../outside"] {

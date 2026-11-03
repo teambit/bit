@@ -5,7 +5,7 @@
 use super::support::{compare, workspace};
 use crate::helper::config;
 use serde_json::json;
-/// Verifies [`compare`] matches multi-path, glob, `--scope`, `--env`, `--override`, and `--json` options.
+/// Verifies [`compare`] matches multi-path, glob, `--scope`, `--env`, `--override`, and `--json` options in [`workspace`].
 #[test]
 fn multiple_paths_globs_scope_env_and_json_match_published_add() {
     for command in [

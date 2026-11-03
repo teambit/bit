@@ -14,7 +14,7 @@ use crate::helper::config;
 use std::fs;
 use support::{compare, workspace};
 
-/// Verifies [`compare`] tracks named, namespaced, and single-level components in `.bitmap`.
+/// Verifies [`compare`] tracks named, namespaced, and single-level components in `.bitmap` via [`workspace`].
 #[test]
 fn tracks_named_namespaced_and_single_level_components() {
     for (command, id) in [

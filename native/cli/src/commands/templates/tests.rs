@@ -10,7 +10,7 @@ use super::{
 use crate::commands::color::Chalk;
 use std::fs;
 
-/// Verifies `bit templates` [`Options`] parsing via [`parse_options`].
+/// Verifies `bit templates` [`Options`] CLI flag parsing via [`parse_options`].
 #[test]
 fn parses_templates_options() {
     assert_eq!(

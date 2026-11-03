@@ -4,7 +4,7 @@
 
 use super::{Plan, fs};
 
-/// Verifies [`Plan`] publication does not delete an existing temporary file when creation fails.
+/// Verifies [`Plan`] publication does not delete an existing [`fs`] temporary file when creation fails.
 ///
 /// Ensures a pre-existing `.object.<pid>.1` file from another operation is left untouched.
 #[test]

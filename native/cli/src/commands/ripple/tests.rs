@@ -4,7 +4,7 @@
 
 use super::{Subcommand, parse_positive_int, parse_subcommand};
 
-/// Verifies bare `bit ripple` [`Subcommand`] parsing via [`parse_subcommand`] and [`parse_positive_int`].
+/// Verifies bare `bit ripple` [`Subcommand`] CLI parsing via [`parse_subcommand`] and [`parse_positive_int`].
 ///
 /// Covers `list --limit`, `simulate --lane`, `retry -j`, and non-positive integer rejection.
 #[test]

@@ -11,7 +11,7 @@ use std::{
     time::Duration,
 };
 
-/// Verifies [`accept`] authenticates the control token and awaits delayed messages from the child stream.
+/// Verifies [`accept`] authenticates the control token on [`TcpListener`] and awaits delayed messages from the child stream.
 ///
 /// Spawns a local [`TcpStream`] sender that delivers `ready\n` after the token handshake line.
 #[test]

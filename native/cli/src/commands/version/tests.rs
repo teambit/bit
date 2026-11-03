@@ -5,7 +5,7 @@
 use super::{parse_json_flag, render_version};
 use std::ffi::OsString;
 
-/// Verifies `bit version` JSON flag parsing via [`parse_json_flag`].
+/// Verifies `bit version` [`OsString`] JSON flag parsing via [`parse_json_flag`].
 ///
 /// Checks `-j`, `--json`, `--json=false`, and rejection of `--no-json` and `--help`.
 #[test]

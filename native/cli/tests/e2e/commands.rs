@@ -2,7 +2,7 @@
 //!
 //! Organizes [`add`], [`diff_completion`], [`move_paths`], and individual command parity test suites.
 
-/// End-to-end parity tests for `bit add`.
+/// End-to-end parity tests for `bit add` component tracking, main-file resolution, and `.bitmap` history.
 pub(crate) mod add;
 /// End-to-end completion and fallback tests for `bit diff`.
 ///

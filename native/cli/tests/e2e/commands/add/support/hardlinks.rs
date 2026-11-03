@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Device and inode pair `(dev, ino)` identifying a hardlinked regular file.
+/// Device and inode pair `(dev, ino)` identifying a hardlinked regular file on disk.
 type Identity = (u64, u64);
 /// Captured multi-path hardlink alias groups within a workspace directory tree.
 pub(super) struct Snapshot(Vec<Vec<PathBuf>>);

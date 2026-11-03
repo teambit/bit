@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 /// Canonical 40-hex snap hash fixture used in [`ordinary_heads`] tests.
 const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
 
-/// Evaluates [`ordinary_heads_for`] without a custom scope filter.
+/// Evaluates [`ordinary_heads_for`] over [`Value`] `context` and `receipt` without a custom scope filter.
 fn ordinary_heads(context: &Value, receipt: &Value) -> bool {
     ordinary_heads_for(context, receipt, None)
 }

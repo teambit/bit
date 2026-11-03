@@ -5,7 +5,7 @@
 use super::render;
 use serde_json::json;
 
-/// Verifies [`render`] escapes XML attribute characters and emits `<failure>` and `<skipped>` nodes.
+/// Verifies [`render`] escapes XML attribute characters and emits `<failure>` and `<skipped>` nodes for [`json`] test cases.
 ///
 /// Checks `&amp;`, `&lt;`, and `&#xA;` escaping inside `testcase` and `failure` attributes.
 #[test]

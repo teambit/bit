@@ -5,8 +5,7 @@
 use super::super::Issue;
 use serde_json::Value;
 
-/// Captured from the released `@teambit/component-issues` 2.2.94 classes,
-/// including their `deserialize`, `toObject` and `dataToString` methods.
+/// Verifies [`Issue`] `deserialize`, `toObject`, and `dataToString` parity against `oracle.json` [`Value`] fixtures.
 #[test]
 fn detection_issue_objects_match_released_node_classes() {
     let fixtures: Vec<Value> = serde_json::from_str(include_str!("oracle.json")).unwrap();

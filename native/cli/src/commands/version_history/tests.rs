@@ -4,7 +4,7 @@
 
 use super::{Subcommand, parse_subcommand};
 
-/// Verifies `bit version-history` [`Subcommand`] parsing via [`parse_subcommand`].
+/// Verifies `bit version-history` [`Subcommand`] CLI parsing via [`parse_subcommand`].
 ///
 /// Covers `show --json`, `show -s`, `build --from-snap`, `build --delete-existing`, and unrecognized subcommands.
 #[test]

@@ -5,7 +5,7 @@ use super::support::{compare, workspace};
 use crate::helper::{config, remote};
 use serde_json::json;
 
-/// Verifies [`compare`] preserves exported component scopes when re-adding after `defaultScope` changes.
+/// Verifies [`compare`] preserves exported component scopes in `.bitmap` when re-adding after `defaultScope` changes.
 #[test]
 fn exported_component_readd_keeps_its_scope_after_default_scope_changes() {
     let helper = workspace();

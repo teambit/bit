@@ -6,7 +6,7 @@ use super::{Chalk, Options, format};
 use crate::commands::test_support::expected_success_symbols;
 use serde_json::json;
 
-/// Verifies [`format`] renders an empty-workspace switch report with [`expected_success_symbols`].
+/// Verifies [`format`] renders an empty-workspace [`Options`] switch report with [`expected_success_symbols`].
 #[test]
 fn reports_an_empty_switch() {
     let report = format(

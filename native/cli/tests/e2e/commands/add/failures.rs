@@ -61,6 +61,7 @@ fn ci_fully_ignored_input_delegates_before_effects_with_exact_error_stack() {
     assert!(!result.status.success());
 }
 
+/// Verifies that a blocked `node_modules` link parent under `CI=true` delegates before effects with the exact error stack.
 #[test]
 fn ci_blocked_link_parent_delegates_before_effects_with_exact_error_stack() {
     let helper = workspace();

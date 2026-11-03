@@ -5,7 +5,7 @@
 use super::parse_arguments;
 use std::ffi::OsString;
 
-/// Verifies [`parse_arguments`] extracts positional package names while ignoring `--no-color`.
+/// Verifies [`parse_arguments`] extracts positional [`OsString`] package names while ignoring `--no-color`.
 ///
 /// Confirms multiple package arguments preserve their CLI order.
 #[test]

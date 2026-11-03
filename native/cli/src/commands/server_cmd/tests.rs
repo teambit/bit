@@ -4,7 +4,7 @@
 
 use super::{Options, parse_options};
 
-/// Verifies `bit server` [`Options`] port and `--compile` flag parsing via [`parse_options`].
+/// Verifies `bit server` [`Options`] `--port` and `--compile` flag parsing via [`parse_options`].
 ///
 /// Also confirms that non-numeric `--port` values return `None`.
 #[test]

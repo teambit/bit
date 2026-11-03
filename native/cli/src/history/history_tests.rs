@@ -6,7 +6,7 @@ use super::{History, iso};
 use std::{ffi::OsString, fs};
 use tempfile::TempDir;
 
-/// Verifies [`iso`] matches `JavaScript` `Date.prototype.toISOString` formatting.
+/// Verifies [`iso`] matches `JavaScript` `Date.prototype.toISOString` UTC millisecond formatting.
 ///
 /// Covers epoch `0`, sub-second milliseconds (`999`), arbitrary timestamps, and leap-year dates.
 #[test]

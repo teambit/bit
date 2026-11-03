@@ -3,7 +3,7 @@
 //! Verifies single, double, and backtick quote rules and control character formatting against `node`.
 use std::process::Command;
 
-/// Verifies error property quoting matches `Node.js` `util.inspect` across quotes and control characters.
+/// Verifies error property quoting matches `Node.js` `util.inspect` across quotes and control characters via [`Command`].
 ///
 /// Spawns [`Command`] running `node -e` to compare `util.inspect` against [`super::quote`].
 #[test]

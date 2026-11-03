@@ -6,7 +6,7 @@ use crate::discovery::{NodeCli, Source};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
-/// Verifies [`Host`] retains its private `.cjs` [`SCRIPT`] until session drop even after callback failures.
+/// Verifies [`Host`] retains its private `.cjs` [`SCRIPT`] until session drop even after JSON-RPC callback failures.
 ///
 /// Tests both `"result": true` and `"error": "callback rejected"` JSON-RPC responses.
 #[test]

@@ -14,7 +14,7 @@ const SECOND: u128 = 1_000_000_000;
 const START: u128 = 50_000_000;
 /// Exclusive upper bound (`100_000_000` ns) of the sub-second launch window.
 const END: u128 = 100_000_000;
-/// Aligns multi-write replay commands (`fork`, `scope fork`, `recover`) to the [`START`]..[`END`] sub-second window.
+/// Aligns multi-write replay commands (`fork`, `scope fork`, `recover`) to the [`START`]..[`END`] sub-second window via [`delay`].
 pub(super) fn align(command: &str) {
     if !multiple_bitmap_writes(command) {
         return;

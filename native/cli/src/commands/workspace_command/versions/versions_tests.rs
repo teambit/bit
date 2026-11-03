@@ -50,6 +50,7 @@ fn auto_snapped_dependents_are_counted_and_detailed() {
     ))));
 }
 
+/// Verifies [`format`] declines when `totalComponentsCount` or `triggeredBy` entries are inconsistent with [`SNAP`].
 #[test]
 fn inconsistent_results_decline() {
     let wrong_total = json!({ "snappedComponents": [ONE], "autoSnappedResults": [], "newComponents": [], "laneName": null, "totalComponentsCount": 2 });

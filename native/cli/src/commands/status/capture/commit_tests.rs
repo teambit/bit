@@ -12,7 +12,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-/// Builds a test [`Capture`] fixture with [`CacheWrites`] reset enabled and `loader_checked` status.
+/// Builds a test [`Capture`] fixture with [`CacheWrites`] reset enabled and `loader_checked` [`json`] status.
 fn capture(loader_checked: bool) -> Capture {
     Capture {
         captured: Vec::new(),

@@ -5,7 +5,7 @@
 use super::complete;
 use serde_json::json;
 
-/// Verifies [`complete`] proves full parent ancestry and respects `graphCompleteRefs`.
+/// Verifies [`complete`] proves full parent ancestry and respects `graphCompleteRefs` [`json`] lists.
 ///
 /// Checks complete two-snap chains, missing heads, incomplete parents, and `graphCompleteRefs` short-circuits.
 #[test]

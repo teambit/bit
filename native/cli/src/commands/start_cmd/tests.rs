@@ -4,7 +4,7 @@
 
 use super::{is_outside_workspace_and_scope, parse_options};
 
-/// Verifies `bit start` option parsing via [`parse_options`] and host checks via [`is_outside_workspace_and_scope`].
+/// Verifies `bit start` CLI option parsing via [`parse_options`] and host checks via [`is_outside_workspace_and_scope`].
 ///
 /// Covers explicit long flags, combined short flags (`-drsnv`), and uninitialized directory detection.
 #[test]

@@ -14,7 +14,7 @@ fn os_args(items: &[&str]) -> Vec<OsString> {
         .collect()
 }
 
-/// Writes a minimal `workspace.jsonc` and `.bit` directory with `default_scope` at `root`.
+/// Writes a minimal `workspace.jsonc` and `.bit` directory with `default_scope` at [`Path`] `root`.
 fn write_workspace(root: &Path, default_scope: &str) {
     fs::create_dir_all(root.join(".bit")).unwrap();
     fs::write(

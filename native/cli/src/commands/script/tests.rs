@@ -10,7 +10,7 @@ use super::{
 use crate::commands::color::Chalk;
 use std::fs;
 
-/// Verifies `bit script` [`Options`] flag and script-name parsing via [`parse_options`].
+/// Verifies `bit script` [`Options`] CLI flag and script-name parsing via [`parse_options`].
 ///
 /// Checks `-l` (`list: true`), positional script names, and default empty arguments.
 #[test]

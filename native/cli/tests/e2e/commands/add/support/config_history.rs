@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-/// Captured `workspace-config-history` metadata and [`Backup`] file map for a workspace root.
+/// Captured `workspace-config-history` `metadata.txt` text and [`Backup`] file map for a workspace root.
 pub(super) struct Snapshot {
     metadata: String,
     files: BTreeMap<String, Backup>,

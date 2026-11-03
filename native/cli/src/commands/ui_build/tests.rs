@@ -4,7 +4,7 @@
 
 use super::{Options, is_outside_workspace_and_scope, parse_options};
 
-/// Verifies `bit ui-build` [`Options`] parsing via [`parse_options`] and host checks via [`is_outside_workspace_and_scope`].
+/// Verifies `bit ui-build` [`Options`] CLI parsing via [`parse_options`] and host checks via [`is_outside_workspace_and_scope`].
 ///
 /// Checks both empty arguments (`ui_root_name: None`) and explicit UI root aspect IDs.
 #[test]

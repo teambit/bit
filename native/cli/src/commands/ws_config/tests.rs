@@ -12,7 +12,7 @@ use super::{
 use crate::commands::color::Chalk;
 use std::fs;
 
-/// Verifies [`parse_unrecognized`] identifies unknown `bit ws-config` subcommands while accepting known ones.
+/// Verifies [`parse_unrecognized`] identifies unknown `bit ws-config` subcommands while accepting `write`, `clean`, and `list`.
 #[test]
 fn parses_unrecognized_ws_config_subcommand() {
     assert_eq!(parse_unrecognized(&["foo"]), Some("foo"));

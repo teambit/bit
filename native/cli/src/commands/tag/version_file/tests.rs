@@ -5,7 +5,7 @@
 use super::parse;
 use serde_json::json;
 
-/// Verifies `bit tag --versions-file` [`parse`] handles BOMs, comments, `DEFAULT:` entries, and malformed lines.
+/// Verifies `bit tag --versions-file` [`parse`] handles BOMs, comments, `DEFAULT:` [`json`] entries, and malformed lines.
 ///
 /// Confirms duplicate component entries are preserved in order while later `DEFAULT:` lines override earlier ones.
 #[test]

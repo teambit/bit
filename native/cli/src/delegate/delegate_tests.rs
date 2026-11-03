@@ -68,6 +68,7 @@ fn wrapper_runs_directly() {
     assert_eq!(args(&command), [OsString::from("-v")]);
 }
 
+/// Verifies [`path_with`] prepends a directory once and preserves empty `PATH` segments.
 #[test]
 fn path_with_prepends_once_and_keeps_empty_components() {
     let dir = Path::new("/bvm/nodejs/22.22.0/bin");

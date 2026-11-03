@@ -13,7 +13,7 @@ use serde_json::json;
 use std::{fs, io::Write, path::Path};
 use tempfile::tempdir;
 
-/// Verifies `bit schema` [`Options`] and [`ParsedCommand`] parsing via [`parse_options`], [`parse_command`], and [`is_missing_host`].
+/// Verifies `bit schema` [`Options`], [`DiffOptions`], and [`ParsedCommand`] parsing via [`parse_options`], [`parse_command`], and [`is_missing_host`].
 #[test]
 fn parses_schema_options_and_detects_missing_host() {
     assert_eq!(parse_options(&[]), None);

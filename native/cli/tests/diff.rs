@@ -18,7 +18,7 @@ fn write(path: &Path, content: &str) {
     fs::write(path, content).unwrap();
 }
 
-/// A workspace with one new component.
+/// Creates a [`TempDir`] workspace fixture containing [`STUB`] (`bin/bit.js`) and one `alpha` component.
 fn workspace() -> TempDir {
     let dir = TempDir::new().unwrap();
     let root = dir.path();
