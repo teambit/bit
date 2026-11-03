@@ -3,7 +3,7 @@
 
 use crate::helper::Helper;
 
-/// uninstall command › root policies removed › should remove packages from `node_modules` that were uninstalled ([`Helper`]).
+/// uninstall command › root policies removed › should remove packages from `node_modules` that were uninstalled ([`Helper`], [`should_not_remove_packages_from_node_modules_that_were_not_uninstalled`]).
 #[test]
 fn should_remove_packages_from_node_modules_that_were_uninstalled() {
     let helper = Helper::new();

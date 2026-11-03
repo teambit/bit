@@ -10,7 +10,7 @@ use std::{
     time::Duration,
 };
 
-/// Verifies that [`Network::action`] HTTP requests send canonical route headers (`x-verb: write`) and JSON bodies ([`GlobalConfig`], [`Value`]).
+/// Verifies that [`Network::action`] HTTP requests send canonical route headers (`x-verb: write`) and JSON bodies ([`GlobalConfig`], [`Value`], [`TcpListener`]).
 #[test]
 fn action_posts_canonical_route_headers_and_json() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();

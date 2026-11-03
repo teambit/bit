@@ -40,7 +40,7 @@ fn cancellation_wakes_an_already_pending_operation() {
     assert_eq!(task.join().unwrap().unwrap_err().kind(), io::ErrorKind::Interrupted);
 }
 
-/// Verifies that [`Cancellation::scope`] restores the outer cancellation owner even if the inner closure panics ([`Cancellation::current`]).
+/// Verifies that [`Cancellation::scope`] restores the outer cancellation owner even if the inner closure panics ([`Cancellation::current`], [`Cancellation::is_cancelled`]).
 #[test]
 fn construction_scope_restores_nested_owners_after_a_panic() {
     let outer = Cancellation::new();

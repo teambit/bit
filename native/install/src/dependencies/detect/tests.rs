@@ -36,7 +36,7 @@ fn core_aspects_follow_tree_order_and_repeat_for_each_origin() {
     );
 }
 
-/// Creates a mock `@teambit/{name}` core aspect directory and `package.json` under `root` ([`CoreAspect`], [`Path`]).
+/// Creates a mock `@teambit/{name}` core aspect directory and `package.json` under `root` ([`CoreAspect`], [`Path`], [`detect_provider`]).
 fn aspect(root: &Path, name: &str) -> CoreAspect {
     let directory = root.join("node_modules/@teambit").join(name);
     fs::create_dir_all(&directory).unwrap();

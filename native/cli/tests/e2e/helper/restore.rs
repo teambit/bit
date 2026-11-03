@@ -4,7 +4,7 @@ pub(super) mod remote;
 
 use std::{fs, io, path::Path};
 
-/// Removes a fixture directory tree, restoring write permissions first if needed ([`Path`], [`writable_directories`]).
+/// Removes a fixture directory tree, restoring write permissions first if needed ([`Path`], [`writable_directories`], [`remote`]).
 pub(super) fn remove(path: &Path) {
     match fs::remove_dir_all(path) {
         Ok(()) => return,

@@ -24,7 +24,7 @@ fn network(cancellation: Option<Cancellation>) -> Network {
     }
 }
 
-/// Reads a complete HTTP request (headers and `content-length` body) from `stream` ([`TcpStream`]).
+/// Reads a complete HTTP request (headers and `content-length` body) from `stream` ([`TcpStream`], [`serve`]).
 fn request(stream: &TcpStream) -> String {
     let mut reader = BufReader::new(stream.try_clone().unwrap());
     let mut text = String::new();

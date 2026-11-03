@@ -10,7 +10,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-/// Writes `{}` to `path` and sets its modification timestamp to `time` ([`Path`], [`SystemTime`]).
+/// Writes `{}` to `path` and sets its modification timestamp to `time` ([`Path`], [`SystemTime`], [`needs_invalidation`]).
 fn touch(path: &Path, time: SystemTime) {
     fs::write(path, "{}").expect("write");
     fs::File::options()

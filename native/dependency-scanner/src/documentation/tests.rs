@@ -78,7 +78,7 @@ fn documentation_and_react_component_shapes_always_defer() {
     }
 }
 
-/// Verifies that invalid syntax, dynamic `require` calls, and non-`CommonJS` files defer to the full parser ([`proves_empty_docs`]).
+/// Verifies that invalid syntax, dynamic `require` calls, and non-`CommonJS` files defer to the full parser ([`proves_empty_docs`], [`ordinary_commonjs_data_and_literal_dependency_modules_are_empty`]).
 #[test]
 fn invalid_unsupported_and_nonliteral_modules_defer() {
     for source in [

@@ -4,7 +4,7 @@
 use crate::helper::Helper;
 use serde_json::json;
 
-/// Verifies `bit start --help` output after exporting components to a bare remote scope ([`Helper`]).
+/// Verifies `bit start --help` output after exporting components to a bare remote scope ([`Helper`], [`workspace_ui`]).
 #[test]
 fn scope_ui_on_bare_scope() {
     let helper = Helper::new();

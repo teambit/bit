@@ -9,7 +9,7 @@ use std::{
     thread,
 };
 
-/// Answers one HTTP request with `body` and returns the captured request text ([`TcpListener`]).
+/// Answers one HTTP request with `body` and returns the captured request text ([`TcpListener`], [`lists_a_remote_scope_with_node_fetch_headers`]).
 fn serve_once(body: &'static str) -> (String, thread::JoinHandle<String>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

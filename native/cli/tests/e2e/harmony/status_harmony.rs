@@ -7,7 +7,7 @@ use crate::{
 };
 use std::ffi::OsStr;
 
-/// Compare the complete JSON status report on fresh copies of one workspace ([`Helper`], [`parse`]).
+/// Compare the complete JSON status report on fresh copies of one workspace ([`Helper`], [`parse`], [`status_text_parity`]).
 fn status_json_parity(helper: &Helper) {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status --json");

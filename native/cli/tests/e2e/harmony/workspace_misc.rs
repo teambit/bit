@@ -24,7 +24,7 @@ use crate::{
 };
 use serde_json::json;
 use std::fs;
-/// Aspect ID for the workspace dependency resolver configuration in `workspace.jsonc` ([`corrupted_objects_status_and_import_fix`], [`load_bit_scopes_and_invalid_default_scope`], [`Helper`]).
+/// Aspect ID for the workspace dependency resolver configuration in `workspace.jsonc` ([`corrupted_objects_status_and_import_fix`], [`load_bit_scopes_and_invalid_default_scope`], [`Helper`], [`KnownResult`]).
 const DEP_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
 #[test]

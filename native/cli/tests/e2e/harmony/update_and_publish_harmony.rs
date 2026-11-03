@@ -4,7 +4,7 @@
 use crate::helper::{Helper, config};
 use serde_json::{Value, json};
 
-/// Verifies that `bit update --yes --latest` upgrades dependency policies across workspace, variant, and `component.json` configs ([`Helper`]).
+/// Verifies that `bit update --yes --latest` upgrades dependency policies across workspace, variant, and `component.json` configs ([`Helper`], [`updates_selected_patterns_and_preserves_comments`]).
 #[test]
 fn updates_policies_added_by_user_to_latest_versions() {
     let helper = Helper::new();

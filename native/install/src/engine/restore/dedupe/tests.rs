@@ -5,7 +5,7 @@ use super::dedupe;
 use serde_json::{Value, json};
 use std::process::Command;
 
-/// Builds a v9 lockfile JSON fixture with `fixture-parent@1.0.0` and `fixture-leaf@2.0.0` for [`dedupe`] ([`Value`]).
+/// Builds a v9 lockfile JSON fixture with `fixture-parent@1.0.0` and `fixture-leaf@2.0.0` for [`dedupe`] ([`Value`], [`root_versions_and_peers_win_without_overriding_explicit_overrides`]).
 fn fixture(peer: bool) -> Value {
     json!({"lockfileVersion":"9.0", "importers":{"component":{"dependencies":{
         "fixture-parent":{"specifier":"1.0.0","version":"1.0.0"}}}},

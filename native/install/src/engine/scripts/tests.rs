@@ -7,7 +7,7 @@ use indexmap::IndexMap;
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
 
-/// Builds an ordered `allowScripts` map from `(name, value)` pairs ([`IndexMap`], [`Value`]).
+/// Builds an ordered `allowScripts` map from `(name, value)` pairs ([`IndexMap`], [`Value`], [`resolve`]).
 fn allow(entries: &[(&str, Value)]) -> IndexMap<String, Value> {
     entries
         .iter()

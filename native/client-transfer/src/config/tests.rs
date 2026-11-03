@@ -4,7 +4,7 @@
 use super::{GlobalConfig, layers};
 use serde_json::json;
 
-/// Verifies transport config override precedence across environment, workspace, scope, and global [`layers`] ([`GlobalConfig`]).
+/// Verifies transport config override precedence across environment, workspace, scope, and global [`layers`] ([`GlobalConfig`], [`bare_scope_transport_uses_scope_and_global_without_workspace_policy`]).
 #[test]
 fn transport_overrides_preserve_layer_precedence_and_empty_environment_fallback() {
     let global: GlobalConfig =

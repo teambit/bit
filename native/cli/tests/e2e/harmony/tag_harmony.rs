@@ -8,7 +8,7 @@ mod extra;
 use crate::helper::{Helper, parse};
 use serde_json::Value;
 
-/// Verifies tagging, exporting, importing, and status checks for standard Harmony workspace components (`2.0.0` schema, [`Helper`], [`parse`]).
+/// Verifies tagging, exporting, importing, and status checks for standard Harmony workspace components (`2.0.0` schema, [`Helper`], [`parse`], [`Value`]).
 #[test]
 fn workspace_with_standard_components_and_tag_on_harmony() {
     let helper = Helper::new();

@@ -8,7 +8,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// Captured HTTP request path and parsed JSON body received by the test [`Server`].
+/// Captured HTTP request path and parsed JSON body received by the test [`Server`] ([`Value`], [`exchange`]).
 #[derive(Debug, PartialEq, Eq)]
 pub struct Request {
     pub path: String,

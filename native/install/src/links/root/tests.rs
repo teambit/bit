@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Constructs a [`CoreAspect`] fixture with `id`, `package_name`, and `dir` ([`Path`]).
+/// Constructs a [`CoreAspect`] fixture with `id`, `package_name`, and `dir` ([`Path`], [`host_info`]).
 fn core(id: &str, package_name: &str, dir: &Path) -> CoreAspect {
     CoreAspect { id: id.into(), package_name: package_name.into(), dir: dir.to_path_buf() }
 }

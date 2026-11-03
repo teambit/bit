@@ -34,7 +34,7 @@ fn comment_preservation_in_workspace_jsonc() {
     assert!(after.contains(r#""name": "test-workspace""#), "{after}");
 }
 
-/// workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error ([`Helper`], [`config::set_workspace_key`]).
+/// workspace config (workspace.jsonc) › adding a non-component key › any command should throw a descriptive error ([`Helper`], [`config::set_workspace_key`], [`adding_a_non_existing_component_to_a_variant`]).
 #[test]
 fn adding_a_non_component_key() {
     let helper = Helper::new();

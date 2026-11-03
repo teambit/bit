@@ -66,7 +66,7 @@ impl Host for FakeHost {
     }
 }
 
-/// Builds a [`WorkspaceComponent`] fixture under `comps/{name}` with default scope `org.scope` ([`ComponentId`], [`Path`]).
+/// Builds a [`WorkspaceComponent`] fixture under `comps/{name}` with default scope `org.scope` ([`ComponentId`], [`Path`], [`write_sources`]).
 fn component(root: &Path, name: &str, files: &[&str]) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {

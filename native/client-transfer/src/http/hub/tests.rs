@@ -42,7 +42,7 @@ fn missing_terminal_data_and_server_failure_never_become_success() {
     assert!(line(b"{", &mut end, &mut Vec::new()).is_err());
 }
 
-/// Verifies that JSON lines omitting `message` repeat the most recently observed wire message ([`line`]).
+/// Verifies that JSON lines omitting `message` repeat the most recently observed wire message ([`line`], [`Value`]).
 #[test]
 fn omitted_messages_retain_the_callers_loader_seed_then_the_last_wire_message() {
     let mut end = Value::Null;

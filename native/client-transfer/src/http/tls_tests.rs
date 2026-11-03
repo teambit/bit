@@ -9,7 +9,7 @@ use std::{
     process::{Child, Command, Stdio},
 };
 
-/// Guard that terminates and reaps the child `Node.js` TLS server process on drop ([`Child`]).
+/// Guard that terminates and reaps the child `Node.js` TLS server process on drop ([`Child`], [`network_certificate_and_legacy_proxy_fallback_authenticate_mutual_tls`]).
 struct Server(Child);
 impl Drop for Server {
     fn drop(&mut self) {

@@ -5,7 +5,7 @@ use super::{intersections, safe_intersect};
 use pnpm_resolving_deps_resolver::{MissingPeer, PeerDependencyIssues};
 use pretty_assertions::assert_eq;
 
-/// Constructs a [`MissingPeer`] fixture with `wanted_range` and `optional` flag ([`intersections`]).
+/// Constructs a [`MissingPeer`] fixture with `wanted_range` and `optional` flag ([`intersections`], [`safe_intersect`]).
 fn missing(wanted_range: &str, optional: bool) -> MissingPeer {
     MissingPeer {
         parents: pnpm_resolving_deps_resolver::ParentChain::default(),

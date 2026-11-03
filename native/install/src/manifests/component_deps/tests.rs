@@ -10,7 +10,7 @@ use crate::{
     model::{ComponentDependencies, Lifecycle, MissingPackages},
 };
 
-/// Verifies that [`dependency_list`] places component dependencies before packages and deduplicates by package name ([`ComponentDependencies`], [`Lifecycle`]).
+/// Verifies that [`dependency_list`] places component dependencies before packages and deduplicates by package name ([`ComponentDependencies`], [`Lifecycle`], [`to_deps_object`]).
 #[test]
 fn list_puts_components_first_and_is_unique_by_id() {
     let button = component("org.ui", "button", Some("1.0.0"), "teambit.harmony/node");

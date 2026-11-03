@@ -4,7 +4,7 @@
 use super::throttle;
 use serde_json::json;
 use std::time::Duration;
-/// Verifies that an explicit numeric `throttleProgress` option overrides the default and `null` restores 200ms via [`throttle`] ([`Duration`]).
+/// Verifies that an explicit numeric `throttleProgress` option overrides the default and `null` restores 200ms via [`throttle`] ([`Duration`], [`numeric_values_follow_napi_unsigned32_conversion_and_non_numbers_are_rejected`]).
 #[test]
 fn explicit_install_option_overrides_the_default_and_null_restores_it() {
     assert_eq!(throttle(None).unwrap(), None);

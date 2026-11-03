@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Recursively captures relative file paths and their contents under `root.join(relative)` into `files` ([`Path`], [`PathBuf`]).
+/// Recursively captures relative file paths and their contents under `root.join(relative)` into `files` ([`Path`], [`PathBuf`], [`BTreeMap`]).
 fn capture(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>) {
     let path = root.join(relative);
     if path.is_file() {

@@ -20,7 +20,7 @@ fn object(value: Value) -> Map<String, Value> {
     }
 }
 
-/// Builds a schema `2.0` dependency graph fixture with `a@1.0.0(b@2.0.0)`, optional `opt@1.0.0`, and an orphan node ([`Graph`], [`Value`]).
+/// Builds a schema `2.0` dependency graph fixture with `a@1.0.0(b@2.0.0)`, optional `opt@1.0.0`, and an orphan node ([`Graph`], [`Value`], [`to_lockfile`]).
 fn graph() -> Value {
     json!({
         "schemaVersion": "2.0",

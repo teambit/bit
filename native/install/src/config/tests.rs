@@ -12,7 +12,7 @@ use serde_json::json;
 use std::fs;
 use tempfile::tempdir;
 
-/// Sample `workspace.jsonc` document with header comments, dependency policies, and variants ([`WorkspaceConfig`]).
+/// Sample `workspace.jsonc` document with header comments, dependency policies, and variants ([`WorkspaceConfig`], [`loads_workspace_jsonc`]).
 const WORKSPACE: &str = r#"/**
  * header
  **/

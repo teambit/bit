@@ -5,7 +5,7 @@ use super::{admits, config_entries, to_config_object, update_config_policy};
 use crate::{jsonc::Document, options::ExistingEntries};
 use serde_json::json;
 
-/// Verifies that newly added policy entries override existing ranges and output keys in sorted order ([`config_entries`], [`to_config_object`]).
+/// Verifies that newly added policy entries override existing ranges and output keys in sorted order ([`config_entries`], [`to_config_object`], [`update_config_policy`]).
 #[test]
 fn added_entries_win_and_fields_are_sorted() {
     let mut entries = config_entries(&json!({

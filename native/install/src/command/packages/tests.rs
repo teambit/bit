@@ -3,7 +3,7 @@
 
 use super::{extract_package_name, is_valid_package_name, version_with_save_prefix};
 
-/// Verifies [`extract_package_name`] across scoped, versioned, and URL specifiers ([`is_valid_package_name`]).
+/// Verifies [`extract_package_name`] across scoped, versioned, and URL specifiers ([`is_valid_package_name`], [`version_with_save_prefix`]).
 #[test]
 fn extracts_package_names() {
     assert_eq!(extract_package_name("lodash@4.17.21"), "lodash");

@@ -4,7 +4,7 @@
 use super::prune_modules;
 use std::{collections::HashSet, fs, path::Path};
 
-/// Sample `pnpm-lock.yaml` content referencing `a@1.0.0(b@2.0.0)` and `b@2.0.0` snapshots ([`prune_modules`]).
+/// Sample `pnpm-lock.yaml` content referencing `a@1.0.0(b@2.0.0)` and `b@2.0.0` snapshots ([`prune_modules`], [`virtual_store`]).
 const CURRENT_LOCKFILE: &str = "lockfileVersion: '9.0'
 
 importers:

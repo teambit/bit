@@ -40,7 +40,7 @@ fn unsuccessful_uploads_preserve_published_exception_primary_messages() {
         server.join().unwrap();
     }
 }
-/// Spawns a single-request TCP server that replies with HTTP 500 and `body` ([`TcpListener`]).
+/// Spawns a single-request TCP server that replies with HTTP 500 and `body` ([`TcpListener`], [`unsuccessful_uploads_preserve_published_exception_primary_messages`]).
 fn reject(listener: TcpListener, body: &'static str) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let (mut socket, _) = listener.accept().unwrap();
