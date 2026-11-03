@@ -35,7 +35,7 @@ impl PreparedImport {
         self.capture.accept_published(&files)?;
         Ok((files, receipts))
     }
-    /// Commit all planned import writes, update capture proofs, and return the published file map.
+    /// Commit all planned import writes on [`PreparedImport`], update capture proofs, and return the published [`PathBuf`] file [`HashMap`].
     #[inline]
     pub(crate) fn commit_retained(&mut self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
         let files = self.publication_files()?;

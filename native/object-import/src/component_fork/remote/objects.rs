@@ -11,7 +11,7 @@ use std::{
 /// Tuple of `(version_json, source_files, versioned_id, raw_compressed_objects)` for a captured remote component.
 type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
 
-/// Reads a remote file-scope's `Component`, head `Version`, and `Source` blobs for `id`.
+/// Reads a remote file-scope's `Component`, head `Version`, and `Source` blobs at [`Path`] `scope` for `id` into [`Captured`].
 pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Result<Captured> {
     let index: Value = crate::parse_jsonc(&required(observed, &scope.join("index.json"))?)?;
     let hash = trimmed_str(&model_row(&index, id)?["hash"])

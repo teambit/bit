@@ -2,7 +2,7 @@
 
 use super::{Change, Plan, Value, dependent_file, refactor, unsupported};
 use std::io;
-/// Applies multi-package `matchers` across all source files in `plan` and reports whether bytes changed.
+/// Applies multi-package `matchers` ([`refactor::PackageMatchers`]) across all source files in [`Plan`] `plan` and reports whether bytes changed.
 #[inline]
 pub(in crate::component_rename) fn packages_all(
     plan: &mut Plan,

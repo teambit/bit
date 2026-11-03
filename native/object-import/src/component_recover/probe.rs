@@ -50,7 +50,7 @@ pub fn probe_remote(
         })
 }
 
-/// Extract the non-empty [`Remote`] scope prefix from a `scope/name[@version]` component ID string.
+/// Extract the non-empty [`Remote`] scope prefix from a `scope/name[@version]` component ID string in [`probe_remote`].
 #[inline]
 fn extract_scope(trimmed: &str) -> io::Result<&str> {
     let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());

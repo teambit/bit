@@ -29,7 +29,7 @@ pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
     }
     error
 }
-/// Format a remote scope zlib inflate [`Failure`] message with the `--all-history` recovery hint.
+/// Format a remote scope zlib inflate [`Failure`] message from [`io::Error`] `error` with the `--all-history` recovery hint.
 #[inline]
 pub(crate) fn message(error: &io::Error) -> Option<String> {
     let failure = error.get_ref()?.downcast_ref::<Failure>()?;

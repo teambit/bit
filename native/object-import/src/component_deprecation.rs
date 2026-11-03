@@ -25,7 +25,7 @@ pub struct Plan {
     proofs: crate::component_tracking::observe::Observed,
 }
 impl Plan {
-    /// Prepare a deprecation or undeprecation [`Plan`] for components matching `pattern`.
+    /// Prepare a deprecation or undeprecation [`Plan`] at [`Path`] `root` for components matching `pattern`.
     pub fn prepare(
         root: &Path,
         pattern: &str,

@@ -2,7 +2,7 @@
 
 use super::{Batch, Value, invalid, repository};
 use std::io;
-/// Extracts the canonical scoped component ID (with optional version) from a `.bitmap` row.
+/// Extracts the canonical scoped component ID (with optional version) from a `.bitmap` `row` [`Value`].
 pub(super) fn identity(key: &str, row: &Value) -> Option<String> {
     let key = key.trim();
     if key.starts_with('$') || key == "_bit_lane" || key == "version" || !row.is_object() {

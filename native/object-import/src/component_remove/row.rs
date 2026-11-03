@@ -4,7 +4,7 @@ use super::{RowKind, invalid, valid_name, valid_scope};
 use serde_json::Value;
 use std::io;
 
-/// Validates that `.bitmap` entry `(key, row)` matches [`RowKind`] and returns its `(scope, name)`.
+/// Validates that `.bitmap` entry `(key, row)` ([`Value`]) matches [`RowKind`] and returns its `(scope, name)`.
 pub(super) fn supported_row<'a>(
     key: &'a str,
     row: &'a Value,

@@ -30,7 +30,7 @@ pub struct Pin {
     pub version: String,
 }
 
-/// Compute the [`DependencyComponent`] [`Pin`] [`Decision`] when deleting `selected` on a lane.
+/// Compute the [`DependencyComponent`] [`Pin`] [`Decision`] when deleting [`Selected`] `selected` at [`Path`] `root` on a lane.
 pub(super) fn plan(
     root: &Path,
     bitmap: &Value,

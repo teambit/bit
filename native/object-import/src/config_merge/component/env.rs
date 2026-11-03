@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Populates [`Engine`] `envs` with the resolved environment aspect descriptor for each merge side.
+/// Populates [`Engine`] `envs` with the resolved environment aspect descriptor ([`one`]) for each merge side.
 pub(super) fn populate(engine: &mut Engine<'_>) -> io::Result<()> {
     for side in ["current", "other", "base"] {
         let env = one(engine, side)?;

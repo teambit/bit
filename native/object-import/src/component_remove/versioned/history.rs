@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, fs, io, path::Path};
 
-/// Walks linear `Version` parents from `head` in `objects` to build `VersionHistory` graph entries.
+/// Walks linear `Version` parents from `head` in [`Path`] `objects` to build `VersionHistory` graph [`Value`] entries.
 pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
     let mut current = crate::validate::hexadecimal(&crate::merge_history::hash(head.trim())?);
     let mut seen = HashSet::new();

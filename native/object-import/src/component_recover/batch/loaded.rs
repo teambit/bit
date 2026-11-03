@@ -2,7 +2,7 @@
 use super::{Action, Batch, REMOVE, Value, configuration, invalid, selection};
 use std::io;
 
-/// Refines [`Action`] classifications and `component.json` edits in [`Batch`] using loaded workspace aspect receipts.
+/// Refines [`Action`] classifications and `component.json` edits in [`Batch`] using loaded workspace aspect [`Value`] receipts.
 pub(super) fn refresh(batch: &mut Batch, rows: &[Value]) -> io::Result<()> {
     let mut items = std::mem::take(&mut batch.items);
     for item in &mut items {

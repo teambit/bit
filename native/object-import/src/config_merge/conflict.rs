@@ -10,7 +10,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-/// Maximum byte budget (`32 MiB`) for `config-merge` conflict files.
+/// Maximum byte budget (`32 MiB`) for `config-merge` [`Conflict`] files.
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 /// Monotonic counter used to disambiguate concurrent temporary directories for `git merge-file`.
 static NEXT: AtomicUsize = AtomicUsize::new(0);

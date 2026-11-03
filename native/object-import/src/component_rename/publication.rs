@@ -2,7 +2,7 @@
 use super::{Plan, invalid};
 use std::{fs, io, path::Path};
 
-/// Publishes the intermediate `.bitmap` state before dependent refactoring runs.
+/// Publishes the intermediate `.bitmap` state for [`Plan`] `plan` via [`write`] before dependent refactoring runs.
 #[inline]
 pub(super) fn initial(plan: &mut Plan, file_id: &str, reason: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.initial, file_id, reason)

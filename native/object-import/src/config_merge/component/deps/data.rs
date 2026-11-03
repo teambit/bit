@@ -4,7 +4,7 @@ use super::{State, append, field, model::version};
 use serde_json::{Value, json};
 use std::io;
 
-/// Merges auto-detected dependency-resolver `data` entries across `current`, `other`, and `base` in [`State`].
+/// Merges auto-detected dependency-resolver `data` entries across `current`, `other`, and `base` in [`State`] via [`one`].
 pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
     for (index, side) in ["current", "other", "base"].iter().enumerate() {
         log_side_data(state, index, side);

@@ -43,7 +43,7 @@ impl PreparedImport {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct LooseObject;
 impl LooseObject {
-    /// Compute the two-level loose object path (`<dir>/<xx>/<yyyy...>`) under `objects_dir` for `canonical_hash`.
+    /// Compute the two-level loose object path (`<dir>/<xx>/<yyyy...>`) under [`Path`] `objects_dir` for `canonical_hash`.
     #[inline]
     fn path(objects_dir: &Path, canonical_hash: &str) -> std::path::PathBuf {
         objects_dir

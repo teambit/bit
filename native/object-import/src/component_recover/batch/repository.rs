@@ -2,7 +2,7 @@
 
 use super::{Batch, REMOVE, Value, invalid, required, unsupported};
 use std::{collections::HashSet, io};
-/// Reads and parses the local scope `index.json` while recording its preimage in `batch.proofs`.
+/// Reads and parses the local scope `index.json` [`Value`] while recording its preimage in [`Batch`] `batch.proofs`.
 #[inline]
 pub(super) fn index(batch: &mut Batch) -> io::Result<Value> {
     let path = crate::scope_path(&batch.root).join("index.json");

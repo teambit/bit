@@ -6,7 +6,7 @@ mod tests;
 use super::{Observed, Value, invalid, paths, unsupported};
 use serde_json::json;
 use std::{io, path::Path};
-/// Applies `source`-to-`destination` directory and file path updates to `bitmap`.
+/// Applies `source`-to-`destination` [`Path`] directory and file path updates to `bitmap` [`Value`].
 pub(super) fn apply(
     root: &Path,
     bitmap: &mut Value,

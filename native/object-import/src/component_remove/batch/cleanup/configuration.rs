@@ -10,7 +10,7 @@ use std::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Configuration(Change);
 impl Configuration {
-    /// Prepare a comment-preserving `workspace.jsonc` [`Change`] removing aspect entries for `identities`.
+    /// Prepare a comment-preserving `workspace.jsonc` [`Change`] at [`Path`] `root` removing aspect entries for `identities`.
     pub(super) fn prepare(root: &Path, identities: &[&str]) -> io::Result<Option<Self>> {
         let path = root.join("workspace.jsonc");
         let Some(before) = read_optional(&path)? else {

@@ -2,7 +2,7 @@
 use super::super::invalid;
 use serde_json::Value;
 use std::io;
-/// Rejects removing a new aspect component when retained workspace `components` still use it.
+/// Rejects removing a new aspect component when retained workspace `components` ([`Value`]) still use it.
 pub(in crate::component_remove) fn validate(
     identities: &[String],
     components: &[Value],

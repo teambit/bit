@@ -23,7 +23,7 @@ pub struct RemoteCapture {
     observed: Observed,
 }
 impl RemoteCapture {
-    /// Fetch [`Remote`] component metadata and source files for `ids` into memory and temporary directories.
+    /// Fetch [`Remote`] component metadata and source files for `ids` via [`Remotes`] and [`Network`] into memory and temporary directories.
     pub fn fetch(ids: &[String], remotes: &Remotes, network: &Network) -> io::Result<Self> {
         if ids.len() > 4096 {
             return Err(unsupported("fork remote component budget"));

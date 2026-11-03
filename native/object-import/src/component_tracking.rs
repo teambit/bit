@@ -32,7 +32,7 @@ pub struct Plan {
     dirty: bool,
 }
 impl Plan {
-    /// Resolve selectors from [`Options`] and retain all [`Observed`] filesystem preimages without writing.
+    /// Resolve selectors from [`Options`] at [`Path`] `root` and retain all [`Observed`] filesystem preimages without writing.
     pub fn prepare(root: &Path, cwd: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
         let mut observed = Observed::default();
         observed.ancestors(root, root)?;

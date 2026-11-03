@@ -4,7 +4,7 @@ use super::{Change, VersionedPlan, history, invalid, outbound};
 use serde_json::Value;
 use std::{collections::HashSet, fs, io, path::PathBuf};
 
-/// Publishes all scope object deletions, index updates, and lane history writes in `plans`.
+/// Publishes all scope object deletions, index updates, and lane history writes across [`VersionedPlan`] `plans`.
 pub(in crate::component_remove) fn publish(
     plans: &[VersionedPlan],
     _track: bool,

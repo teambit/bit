@@ -14,7 +14,7 @@ pub struct Options {
     pub deprecate: bool,
 }
 impl Options {
-    /// Return a copy of [`Options`] with trimmed identifiers and a normalized forward-slash relative `path`.
+    /// Return a copy of [`Options`] with trimmed `source`, `target`, `scope`, and a normalized forward-slash relative `path`.
     #[must_use]
     #[inline]
     pub(super) fn normalized(&self) -> Self {

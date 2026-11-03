@@ -9,7 +9,7 @@ use std::{
     io::{self, Write},
 };
 
-/// Projects `.bitmap` row updates, aspect renames, and deprecation/removal metadata into `plan`.
+/// Projects `.bitmap` row updates, aspect renames, and deprecation/removal metadata from [`Value`] `facts` into [`Plan`] `plan`.
 pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     let (source_key, source) = identity::selected(&plan.controls.bitmap, &plan.identity.source)?;
     let source_key = source_key.to_owned();

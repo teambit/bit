@@ -44,7 +44,7 @@ pub struct Plan {
     output: Observed,
 }
 impl Plan {
-    /// Prepare a retained component fork [`Plan`] from [`Options`] and `source` without writing to disk.
+    /// Prepare a retained component fork [`Plan`] at [`Path`] `root` from [`Options`] and [`Value`] `source` without writing to disk.
     pub fn prepare(root: &Path, options: &Options, source: &Value) -> io::Result<Self> {
         if !root.is_absolute() {
             return Err(invalid("fork workspace root must be absolute"));

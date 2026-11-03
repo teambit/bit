@@ -2,7 +2,7 @@
 
 use super::{Action, Batch, invalid};
 use std::{fs, io, path::Path};
-/// Validates all observed preimages and publishes recovered files, `component.json`, and `.bitmap`.
+/// Validates all observed preimages in [`Batch`] and publishes recovered files, `component.json`, and `.bitmap`.
 pub(super) fn commit(batch: &Batch, file_id: &str) -> io::Result<()> {
     crate::component_remove::validate_file_id(file_id)?;
     batch.validate()?;

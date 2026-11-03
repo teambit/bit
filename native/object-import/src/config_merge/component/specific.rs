@@ -3,7 +3,7 @@ use super::{Engine, array, invalid};
 use serde_json::{Value, json};
 use std::io;
 
-/// Preserves `specific` aspect configuration markers from `other` on [`Engine`] when `other` wins the merge.
+/// Preserves `specific` aspect configuration markers ([`preserve`]) from `other` on [`Engine`] when `other` wins the merge.
 pub(super) fn retain(engine: &mut Engine<'_>) -> io::Result<()> {
     for row in &mut engine.rows {
         if let Some(entry) = incoming(engine.input, row)?

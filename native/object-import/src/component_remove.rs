@@ -85,7 +85,7 @@ impl Plan {
         })
     }
 
-    /// Return the canonical `<scope>/<name>` identity of the component in this removal plan.
+    /// Return the canonical `<scope>/<name>` identity of the component in this removal [`Plan`].
     #[must_use]
     #[inline]
     pub fn identity(&self) -> &str {

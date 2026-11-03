@@ -3,7 +3,7 @@
 #[cfg(test)]
 mod tests;
 
-/// End-of-line normalization policy distinguishing `ComponentWriter` from `Workspace.write()`.
+/// End-of-line normalization policy ([`Writer::target`]) distinguishing `ComponentWriter` from `Workspace.write()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Writer {
     /// Normalize text files through `eol.auto()` like `ComponentWriter` on [`Writer::Component`].

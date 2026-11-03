@@ -42,7 +42,7 @@ struct BitmapChange {
     after: Vec<u8>,
 }
 
-/// Pre-deletion `index.json`, loose [`FrozenObject`] preimages, and dependency pinning decision.
+/// Pre-deletion `index.json`, loose [`FrozenObject`] preimages, and dependency pinning [`policy::Decision`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct RepositorySnapshot {
     index_before: Vec<u8>,

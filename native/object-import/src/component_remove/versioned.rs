@@ -49,7 +49,7 @@ struct ModelSelection<'a> {
 }
 
 impl VersionedPlan {
-    /// Prepare a local [`VersionedPlan`] removal plan for a staged tagged component `name`.
+    /// Prepare a local [`VersionedPlan`] removal plan at [`Path`] `root` for a staged tagged component `name`.
     #[inline]
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
         Self::prepare_kind(root, name, keep_files, RowKind::Staged, false)

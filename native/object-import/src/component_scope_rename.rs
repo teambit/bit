@@ -31,7 +31,7 @@ pub struct Selection {
     key: String,
 }
 impl Selection {
-    /// Select components matching [`Options`] `old` and capture `workspace.jsonc` and `.bitmap` preimages.
+    /// Select components matching [`Options`] `old` at [`Path`] `root` and capture `workspace.jsonc` and `.bitmap` preimages.
     pub fn prepare(root: &Path, options: &Options) -> io::Result<Self> {
         if !root.is_absolute() || options.old.trim().is_empty() || options.new.trim().is_empty() {
             return Err(io::Error::new(

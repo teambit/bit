@@ -28,7 +28,7 @@ pub struct NewBatch {
     cleanup: Cleanup,
 }
 impl NewBatch {
-    /// Captures one [`BitmapChange`] preimage and validates every [`Selected`] component destination.
+    /// Captures one [`BitmapChange`] preimage at [`Path`] `root` and validates every [`Selected`] component destination.
     #[inline]
     pub fn prepare(root: &Path, identities: &[String]) -> io::Result<Self> {
         Self::prepare_with_components(root, identities, &[])

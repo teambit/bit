@@ -13,7 +13,7 @@ use std::{
     path::Path,
 };
 
-/// Encodes a parsed scope object `value` into a zlib-compressed loose [`Object`].
+/// Encodes a parsed scope object [`Value`] `value` into a zlib-compressed loose [`Object`].
 #[inline]
 pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object> {
     let kind = kind.trim();

@@ -21,7 +21,7 @@ pub struct Batch {
     packages: Option<super::refactor::PackageMatchers>,
 }
 impl Batch {
-    /// Prepare independent read-only [`Plan`]s concurrently from [`Options`], preserving caller order and first error.
+    /// Prepare independent read-only [`Plan`]s concurrently at [`Path`] `root` from [`Options`], preserving caller order and first error.
     pub fn prepare_plans(
         root: &Path,
         options: &[Options],
