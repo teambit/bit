@@ -5,7 +5,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{collections::BTreeMap, fs, io::Read, path::Path};
 
-/// Verifies that `bit stash save --include-new` fails before persisting detached objects when a component uses an unversioned aspect.
+/// Verifies that `bit stash save --include-new` fails before persisting detached objects when a component uses an unversioned aspect ([`new_aspect`], [`assert_history_prefix`]).
 #[test]
 fn tracked_component_using_a_new_aspect_keeps_the_exact_pre_persistence_failure() {
     let helper = workspace();

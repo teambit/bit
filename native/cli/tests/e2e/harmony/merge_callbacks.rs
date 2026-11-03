@@ -40,7 +40,7 @@ fn force_local_build_is_honored_for_configured_lane_merge() {
     );
     compare(&helper, "lane merge dev --auto-merge-resolve theirs -m merged -x", true, true);
 }
-/// Verifies that a failing `bit lane merge --build` retains workspace materialization and the staged snap prefix.
+/// Verifies that a failing `bit lane merge --build` retains workspace materialization and the staged snap prefix ([`qualify`]).
 #[test]
 fn failing_lane_merge_builder_retains_materialization_and_staged_snap_prefix() {
     qualify("lane merge dev --auto-merge-resolve theirs --build -m rejected -x", true, true);

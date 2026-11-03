@@ -50,7 +50,7 @@ fn create_snap_on_main_then_on_new_lane_and_block_tag_on_lane() {
     );
 }
 
-/// bit lane snapping and tagging › auto-snap when on a lane ([`parse`], [`len`])
+/// bit lane snapping and tagging › auto-snap when on a lane ([`Helper`], [`parse`], [`len`])
 #[test]
 fn auto_snap_when_on_a_lane() {
     let helper = Helper::new();

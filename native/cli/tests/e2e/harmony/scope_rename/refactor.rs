@@ -7,7 +7,7 @@ use crate::{
 };
 use serde_json::json;
 use std::fs;
-/// Verifies that `bit scope rename --refactor --deprecate` rewrites require chains and aspect keys across mixed components.
+/// Verifies that `bit scope rename --refactor --deprecate` rewrites require chains and aspect keys across mixed components ([`compile_mixed_baseline`], [`assert_mixed_results`]).
 #[test]
 fn mixed_exported_and_new_scope_refactoring_rewrites_the_chain_and_aspect_key() {
     let helper = support::workspace(3, false);

@@ -90,7 +90,7 @@ fn invalid_name_and_occupied_destination_do_not_leave_new_component_directories(
     }
 }
 
-/// Verifies that renaming an exported component with `--refactor` preserves CRLF line endings on loaded files.
+/// Verifies that renaming an exported component with `--refactor` preserves CRLF line endings on loaded files ([`workspace`]).
 #[test]
 fn exported_target_and_refactored_dependent_preserve_loaded_crlf_bytes() {
     let helper = support::workspace(2, false);

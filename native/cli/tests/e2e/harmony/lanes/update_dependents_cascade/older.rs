@@ -79,7 +79,7 @@ fn fixture(transitive: bool) -> Helper {
     helper
 }
 
-/// Runs `command` natively and asserts that `commandSnapApply` succeeded ([`Helper`]).
+/// Runs `command` natively and asserts that `commandSnapApply` succeeded ([`fixture`], [`Helper`]).
 fn snap(helper: &Helper, command: &str) {
     let run = helper.native_run(command);
     assert!(run.status.success(), "{run:?}");

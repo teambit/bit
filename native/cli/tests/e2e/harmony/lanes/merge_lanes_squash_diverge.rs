@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Verifies `--squash` merge parent and `squashed` metadata when two lanes in a single scope diverge ([`Helper`]).
+/// Verifies `--squash` merge parent and `squashed` metadata when two lanes in a single scope diverge ([`Helper`], [`parse`]).
 #[test]
 fn single_scope_two_diverged_lanes_squash_on_merge() {
     let helper = Helper::new();

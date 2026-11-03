@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Seeds an exported `dev` lane with `comp3` snapped and `comp2` in `updateDependents`, returning their initial hashes ([`Helper`], [`parse`]).
+/// Seeds an exported `dev` lane with `comp3` snapped and `comp2` in `updateDependents`, returning their initial hashes ([`scenarios_7_and_8_local_cascade_survives_fetch_and_reset_reverts_cascade`], [`Helper`], [`parse`]).
 fn build_base_remote_state(helper: &Helper) -> (String, String) {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(3, true, "");

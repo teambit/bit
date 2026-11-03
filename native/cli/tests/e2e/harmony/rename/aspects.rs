@@ -73,7 +73,7 @@ fn exported_aspect_rename_changes_only_the_new_component_sources() {
     assert!(!original.contains("FooAspect"));
 }
 
-/// Verifies that `bit rename --ast` rewrites `TypeScript` identifiers and module paths while preserving string literals.
+/// Verifies that `bit rename --ast` rewrites `TypeScript` identifiers and module paths while preserving string literals ([`workspace`]).
 #[test]
 fn ast_rename_transforms_types_identifiers_and_module_paths_but_preserves_literal_text() {
     let helper = support::workspace(0, false);

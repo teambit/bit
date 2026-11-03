@@ -92,7 +92,7 @@ fn no_id_lane_import_refreshes_hidden_versions_without_promoting_them() {
     );
 }
 
-/// Runs `bit import` natively in non-CI mode via [`import_with`] ([`Helper`], [`Run`]).
+/// Runs `bit import` natively in non-CI mode via [`import_with`] ([`compare`], [`Helper`], [`Run`]).
 fn import(helper: &Helper) -> Run {
     import_with(helper, "import", false)
 }

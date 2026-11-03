@@ -25,7 +25,7 @@ fn fixture() -> Helper {
     helper
 }
 
-/// Verifies that report-level `bit stash load` errors still run root aspect providers and preserve `VersionHistory`.
+/// Verifies that report-level `bit stash load` errors still run root aspect providers and preserve `VersionHistory` ([`fixture`], [`command`]).
 #[test]
 fn report_errors_keep_root_provider_effects_output_and_complete_history() {
     let helper = fixture();

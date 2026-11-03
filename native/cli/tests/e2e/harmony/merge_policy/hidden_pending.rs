@@ -93,7 +93,7 @@ fn hash(root: &Path) -> String {
         .to_owned()
 }
 
-/// Compares `.bitmap`, `comp2` version metadata, and source files between `helper` and `oracle` ([`Path`]).
+/// Compares `.bitmap`, `comp2` version metadata, and source files between `helper` and `oracle` ([`Helper`], [`Path`]).
 fn compare(helper: &Helper, oracle: &Path, actual: &str, expected: &str) {
     assert_eq!(
         config::read_jsonc(&helper.scopes.local_path.join(".bitmap"))

@@ -2,7 +2,7 @@
 //! Covers `stash s`, `stash pop`, `--force-ours`, `--force-theirs`, and `-r` flags.
 use super::support::{command, compare_stashes, workspace, write_both};
 use std::fs;
-/// Verifies `bit stash list`, `stash s`, `stash pop`, messages, and explicit stash IDs against Node.
+/// Verifies `bit stash list`, `stash s`, `stash pop`, messages, and explicit stash IDs against Node ([`workspace`], [`command`], [`compare_stashes`]).
 #[test]
 fn aliases_messages_explicit_ids_and_empty_operations_match_node() {
     let helper = workspace();

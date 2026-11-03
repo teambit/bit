@@ -16,7 +16,7 @@ fn populate_three(helper: &Helper, suffix: &str) {
     }
 }
 
-/// lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff diff should not throw ([`populate_three`], [`remote::publish`])
+/// lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff diff should not throw ([`populate_three`], [`Helper`], [`remote::publish`])
 /// lanes with various issues › issue - object of head of main is missing from the filesystem and remote › bit diff main should not throw
 #[test]
 fn issue_object_of_head_of_main_is_missing_from_the_filesystem_and_remote() {

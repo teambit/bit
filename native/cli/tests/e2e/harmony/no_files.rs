@@ -3,7 +3,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Error class name reported in `invalidComponents` when a component directory or its files are missing.
+/// Error class name reported in `invalidComponents` when a component directory or its files are missing ([`component_files_or_directory_missing_or_gitignored`]).
 const MISSING_IN_PATH_ERR: &str = "ComponentNotFoundInPath";
 
 /// Verifies `bit list` and `bit status` when a component's files or directory are deleted or `.gitignore`d ([`MISSING_IN_PATH_ERR`], [`Helper`], [`parse`]).

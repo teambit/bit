@@ -1,7 +1,7 @@
 //! One optional wall-clock sampled redraw ([`MARKER`], [`FRAME`], [`BANNER`], [`project`]) before pnpm's first package banner
 //! during `bit scope rename` installation output normalization.
 
-/// Spinner startup prefix preceding pnpm installation progress output.
+/// Spinner startup prefix preceding pnpm installation progress output ([`project`]).
 const MARKER: &str = "- running package installation using pnpm\n\r\n\u{1b}[K\u{1b}[0J\r\u{1b}[1A";
 /// Single-package zero-add pnpm progress frame and cursor-up redraw escape sequence.
 const FRAME: &str =

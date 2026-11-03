@@ -5,7 +5,7 @@ use crate::{
     helper::{Helper, config},
 };
 
-/// Scoped component ID of the delay environment aspect used to separate second-resolution backups.
+/// Scoped component ID of the delay environment aspect used to separate second-resolution backups ([`delay`]).
 const SCOPE_DELAY_ENV: &str = "fixture.tools/env/scope-delay";
 
 /// Registers and assigns the [`SCOPE_DELAY_ENV`] environment aspect to `names` ([`Helper`]).

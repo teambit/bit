@@ -46,7 +46,7 @@ fn remove_local_lanes() {
     assert!(out_merged.contains("successfully removed the following lane(s)"));
 }
 
-/// remove lanes › removing a remote lane ([`remote::publish`], [`parse`], [`len`])
+/// remove lanes › removing a remote lane ([`Helper`], [`remote::publish`], [`parse`], [`len`])
 #[test]
 fn remove_remote_lane() {
     let helper = Helper::new();

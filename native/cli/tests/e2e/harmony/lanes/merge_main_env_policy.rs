@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Custom environment ID applied to `comp1` before testing `bit lane merge main`.
+/// Custom environment ID applied to `comp1` before testing `bit lane merge main` ([`lane_merge_main_with_custom_env_policy`]).
 const EMPTY_ENV: &str = "empty-env";
 
 /// Verifies that `bit lane merge main` succeeds without false config conflicts when a component uses an external env policy ([`EMPTY_ENV`], [`Helper`], [`parse`]).

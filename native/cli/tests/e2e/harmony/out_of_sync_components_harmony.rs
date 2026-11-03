@@ -81,7 +81,7 @@ fn out_of_sync_components_between_scope_and_consumer() {
     assert!(lane_curr.contains("dev"), "{lane_curr}");
 }
 
-/// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit build › should build the component successfully`
+/// - `components that are not synced between the scope and the consumer › consumer with a tagged component and scope with no components › bit build › should build the component successfully` ([`Helper`])
 #[test]
 fn build_tagged_component_when_scope_has_no_components() {
     let helper = Helper::new();

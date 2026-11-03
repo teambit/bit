@@ -6,7 +6,7 @@ use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use serde_json::{Value, json};
 use std::ffi::OsStr;
 
-/// Creates a workspace with `bar/foo` added and ready for snapshot environment hook tests.
+/// Creates a workspace with `bar/foo` added and ready for snapshot environment hook tests ([`Helper`], [`FOO_FIXTURE`]).
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

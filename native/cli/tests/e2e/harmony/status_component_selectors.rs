@@ -4,7 +4,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use std::ffi::OsStr;
 
-/// Creates a workspace with modified `bar/foo` and new `baz/card` for component selector tests.
+/// Creates a workspace with modified `bar/foo` and new `baz/card` for component selector tests ([`Helper`], [`FOO_FIXTURE`]).
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

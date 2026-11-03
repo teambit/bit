@@ -4,7 +4,7 @@ use super::support::{command, compare_stashes, workspace, write_both};
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::fs;
-/// Verifies that `bit stash save --include-new` cleans `package.json` dependencies while preserving `devDependencies` and unrelated staged configs.
+/// Verifies that `bit stash save --include-new` cleans `package.json` dependencies while preserving `devDependencies` and unrelated staged configs ([`workspace`], [`command`], [`compare_stashes`]).
 #[test]
 fn new_component_cleanup_preserves_dev_dependencies_and_unrelated_staged_config() {
     let helper = workspace();

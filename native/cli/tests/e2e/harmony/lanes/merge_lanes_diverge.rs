@@ -28,7 +28,7 @@ fn setup_diverged_lane() -> (Helper, String, PathBuf) {
     (helper, comp2_head_on_main, before_merge)
 }
 
-/// merge lanes - diverge functionality › getting updates from main when lane is diverge ([`setup_diverged_lane`], [`parse`])
+/// merge lanes - diverge functionality › getting updates from main when lane is diverge ([`setup_diverged_lane`], [`Helper`], [`parse`])
 #[test]
 fn getting_updates_from_main_when_lane_is_diverged() {
     let (helper, comp2_head_on_main, before_merge) = setup_diverged_lane();

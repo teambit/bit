@@ -21,7 +21,7 @@ struct DivergedSetup {
     local_scope: PathBuf,
 }
 
-/// Initializes a workspace where local and remote `main` heads of `bar/foo` diverge after `first_snap`.
+/// Initializes a workspace where local and remote `main` heads of `bar/foo` diverge after `first_snap` ([`DivergedSetup`], [`FOO_V2`], [`FOO_V3`]).
 fn setup_diverged() -> DivergedSetup {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

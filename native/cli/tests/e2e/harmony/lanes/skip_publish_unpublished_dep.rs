@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Snap message passed when snapping `comp1` with an unpublished lane dependency.
+/// Snap message passed when snapping `comp1` with an unpublished lane dependency ([`snap_dependent_of_unmodified_unpublished_dependency`]).
 const SNAP_MSG: &str = "snap-message";
 
 /// Verifies snapping a dependent component on a lane when its unmodified dependency has not been published as a package ([`SNAP_MSG`], [`Helper`]).

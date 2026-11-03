@@ -72,7 +72,7 @@ fn recover_after_snapping_and_remove_after_recovering() {
     assert!(show.contains("removed") || show.contains("true"));
 }
 
-/// bit recover command › export the soft-remove component, start a new workspace and recover from there
+/// bit recover command › export the soft-remove component, start a new workspace and recover from there ([`Helper`])
 /// bit recover command › import soft-removed component
 #[test]
 fn export_soft_removed_and_recover_or_import() {

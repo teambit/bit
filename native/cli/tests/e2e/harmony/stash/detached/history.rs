@@ -4,7 +4,7 @@ use super::{command, compare_stashes, controls, object_path, workspace};
 use sha1::{Digest, Sha1};
 use std::{fs, io::Read, path::Path};
 
-/// Verifies that `bit stash save` lazily populates missing `VersionHistory` objects when components are modified.
+/// Verifies that `bit stash save` lazily populates missing `VersionHistory` objects when components are modified ([`qualify`]).
 #[test]
 fn save_populates_missing_existing_history_before_detached_objects() {
     qualify(true);

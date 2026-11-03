@@ -3,7 +3,7 @@
 use crate::commands::move_paths::support::{self, bitmap, successful};
 use std::fs;
 
-/// Relative path of the gitignored file inside `comp1` used to test directory cleanup on `bit rename`.
+/// Relative path of the gitignored file inside `comp1` used to test directory cleanup on `bit rename` ([`relocated_new_component_removes_ignored_files_and_nested_empty_directories`]).
 const IGNORED_SECRET_PATH: &str = "comp1/private/secret.txt";
 
 /// Verifies that relocating a new component removes ignored files and empty directories unless `--preserve` is passed ([`IGNORED_SECRET_PATH`], [`bitmap`], [`successful`]).

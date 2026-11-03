@@ -5,7 +5,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::fs;
 
-/// Default scope owner prefix tested for `@owner/scope.component` package binding.
+/// Default scope owner prefix tested for `@owner/scope.component` package binding ([`set_default_owner_and_scope_author_export_import`]).
 const DEFAULT_OWNER: &str = "owner";
 
 /// Verifies authoring, exporting, and importing components when `defaultScope` includes an owner prefix ([`DEFAULT_OWNER`], [`Helper`]).

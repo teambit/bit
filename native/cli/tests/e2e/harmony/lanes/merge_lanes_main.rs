@@ -62,7 +62,7 @@ fn merging_main_retains_the_types_package_added_by_the_incoming_side() {
         assert_eq!(native_version[field], oracle_version[field], "{field}");
     }
 }
-/// Verifies merging `main` into a local lane and handling deleted or tagged components across `main` and lanes.
+/// Verifies merging `main` into a local lane and handling deleted or tagged components across `main` and lanes ([`Helper`]).
 #[test]
 fn merging_main_into_local_lane_and_when_deleted_or_tagged() {
     // 1. merging main into local lane: should not throw an error that main lane doesn't exist
