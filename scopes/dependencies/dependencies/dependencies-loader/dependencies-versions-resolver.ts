@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -32,6 +33,8 @@ export async function updateDependenciesVersions(
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
   const dependenciesWithVersionFromConfig: string[] = [];
   component.dependenciesWithVersionFromConfig = dependenciesWithVersionFromConfig;
+  // components deleted from the workspace (e.g. "bit delete"). calculated lazily, only when needed.
+  let removedIds: ComponentIdList | undefined;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -78,8 +81,14 @@ export async function updateDependenciesVersions(
     const getFromDepPackageJsonDueToAutoDetectOverrides = () => (pkg && isPkgInAutoDetectOverrides(pkg) ? id : null);
     // If there is a version in the node_modules/package folder, but it's not in the ws policy,
     // prefer the version from the model over the version from the node_modules
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const getFromModel = () => getIdFromModelDeps(component.componentFromModel!, id);
+    const getFromModel = () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const idFromModel = getIdFromModelDeps(component.componentFromModel!, id);
+      // the model can point to a version that was deleted from the workspace (e.g. "bit delete --lane"). this version
+      // is not available anymore, so skip it and let the next strategies resolve the installed or configured version.
+      if (idFromModel && getRemovedIds().has(idFromModel)) return null;
+      return idFromModel;
+    };
 
     const strategies = [
       getFromComponentConfig,
@@ -180,6 +189,11 @@ export async function updateDependenciesVersions(
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
     return dependency;
+  }
+
+  function getRemovedIds(): ComponentIdList {
+    if (!removedIds) removedIds = consumer.bitMap.getRemoved();
+    return removedIds;
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
