@@ -279,7 +279,13 @@ export class RippleLogCmd implements Command {
     const { nodes, logMap } = await this.fetchLogs(job, componentId);
     if (!nodes.length) {
       lines.push('');
-      lines.push(chalk.yellow(`No build log found for component "${componentId}" in this job.`));
+      lines.push(
+        chalk.yellow(
+          componentId
+            ? `No build log found for component "${componentId}" in this job.`
+            : 'No build logs found in this job.'
+        )
+      );
       return;
     }
     for (const node of nodes) {

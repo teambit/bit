@@ -313,4 +313,8 @@ describe('RippleMain.getCiGraphNodesOfComponent()', () => {
   it('should return no nodes when the component is not in the job', () => {
     expect(ripple.getCiGraphNodesOfComponent(job, 'org.scope/other')).to.deep.equal([]);
   });
+
+  it('should return no nodes when the job built another version of the component', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job, 'org.scope/card@other789')).to.deep.equal([]);
+  });
 });

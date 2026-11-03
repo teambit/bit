@@ -292,6 +292,7 @@ export class RippleMain {
     const nodes = this.getCiGraphNodes(job);
     if (!componentId) return nodes;
     const idWithoutVersion = stripComponentVersion(componentId);
+    if (idWithoutVersion !== componentId) return nodes.filter((node) => node.versionedIds.includes(componentId));
     return nodes.filter((node) => node.componentIds.includes(idWithoutVersion));
   }
 
