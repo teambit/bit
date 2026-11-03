@@ -48,7 +48,7 @@ pub(super) fn source(
     }
     Ok(())
 }
-/// Refactors workspace dependents to import `target`'s package name when `--refactor` is used on a local fork.
+/// Refactors workspace dependents via [`Refactor`] to import `target`'s package name when `--refactor` is used on a local fork.
 #[inline]
 pub(super) fn local(
     root: &Path,

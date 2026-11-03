@@ -59,7 +59,7 @@ pub struct DependencyOptions {
     pub raw_depth: Option<String>,
 }
 
-/// `args` starts with the command name.
+/// Parses [`Options`] from `args` (where `args` starts with the command name).
 pub fn parse(args: &[&str]) -> Option<Options> {
     let operation = match *args.first()? {
         "fetch" => "fetch",

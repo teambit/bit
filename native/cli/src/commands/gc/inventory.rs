@@ -60,7 +60,7 @@ pub(super) struct ScopeInventory {
     pub started_at_ms: u64,
 }
 
-/// Scans `scope_dir` objects, trashed lanes, remote refs, stashes, and stray files into a [`ScopeInventory`].
+/// Scans `scope_dir` objects ([`ObjectEntry`]), trashed lanes, remote refs ([`ScopeRootRefs`]), stashes, and [`StrayTempFiles`] into a [`ScopeInventory`].
 pub(super) fn load_scope_inventory(scope_dir: &Path) -> Result<ScopeInventory, String> {
     let started_at_ms = now_ms();
     let backup_dir_size = dir_size(&scope_dir.join("deleted-objects"));

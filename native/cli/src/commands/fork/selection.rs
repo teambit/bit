@@ -39,7 +39,7 @@ pub(super) fn select(root: &Path, options: &Options, state: &Value) -> io::Resul
     require_new_targets(options, &selected)?;
     Ok(selected)
 }
-/// Classifies a single non-pattern `options.source` into a local or remote [`Selected`] target.
+/// Classifies a single non-pattern `options.source` ([`Options`]) into a local or remote [`Selected`] target via [`inventory::selected`].
 #[inline]
 fn single(options: &Options, state: &Value, scope: String) -> Selected {
     match inventory::selected(state, &options.source).and_then(row_bare_id) {

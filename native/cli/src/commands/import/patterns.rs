@@ -26,7 +26,7 @@ pub struct Selection {
 
 /// The explicit ids, and each pattern's listed components without the
 /// deprecated ones unless `--include-deprecated`, in `sortListScopeResults`
-/// order. Duplicates are dropped, as `ComponentIdList.uniqFromArray` does.
+/// order, returning a [`Selection`] for [`Options`]. Duplicates are dropped, as `ComponentIdList.uniqFromArray` does.
 pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
     let wildcards = options.wildcards();
     if wildcards.is_empty() {

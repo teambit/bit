@@ -16,7 +16,7 @@ struct Results {
     captures: Vec<RemoteCapture>,
 }
 impl Results {
-    /// Pre-allocates result vectors sized for `local` and `remote` forked component counts.
+    /// Pre-allocates [`Results`] vectors sized for `local` and `remote` forked component counts.
     #[inline]
     fn with_capacity(local: usize, remote: usize) -> Self {
         Self {

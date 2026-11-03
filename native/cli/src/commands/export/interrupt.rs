@@ -66,7 +66,7 @@ impl Drop for Guard {
         ACTIVE.store(false, Ordering::Release);
     }
 }
-/// Returns the plain or ANSI-colored Ctrl+C warning bytes when the interrupt guard is enabled.
+/// Returns the [`PLAIN`] or [`COLORED`] Ctrl+C warning bytes when the interrupt [`Guard`] ([`ENABLED`], [`COLOR`]) is enabled.
 #[inline]
 fn message() -> &'static [u8] {
     if !ENABLED.load(Ordering::Acquire) {

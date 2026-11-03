@@ -1,7 +1,7 @@
 //! Unix `SIGINT` signal handler installation ([`install`], [`restore`], [`Previous`]) and restoration during `bit export`.
 
 use std::{io, mem::MaybeUninit};
-/// Saved `libc::sigaction` disposition restored when the export interrupt guard drops.
+/// Saved `libc::sigaction` disposition restored by [`restore`] when the export interrupt guard drops.
 pub(super) type Previous = libc::sigaction;
 
 /// Async-signal-safe `SIGINT` handler installed by [`install`] that writes the export cancellation warning to stdout.

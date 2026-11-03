@@ -18,7 +18,7 @@ pub(super) struct Prepared {
     docs: Vec<crate::commands::add::docs::CatDocs>,
 }
 
-/// Stage the published pre-import status load without filesystem publication.
+/// Stages the published pre-import status load ([`Prepared`]) for [`Options`] without filesystem publication.
 pub(super) fn prepare(
     root: &Path,
     options: &Options,

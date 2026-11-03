@@ -17,7 +17,7 @@ impl Exported {
         }
     }
 
-    /// Handles a streaming [`Event`] from the remote export pipeline and updates `output`.
+    /// Handles a streaming [`Event`] from the remote export pipeline and updates `output` ([`Output`]) via [`Self::fork_progress`].
     pub(super) fn observe(&mut self, event: Event, output: &Output) {
         self.output.observed = true;
         match event {

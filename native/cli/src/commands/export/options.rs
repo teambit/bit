@@ -49,7 +49,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
     valid_combination(&options).then_some(options)
 }
 
-/// Validates and appends a single component ID or wildcard pattern `item` onto `options.ids`.
+/// Validates and appends a single component ID or wildcard pattern `item` onto `options.ids` ([`Options`]) for [`parse`].
 #[inline]
 fn push_export_id(options: &mut Options, item: &str) -> Option<()> {
     let item = item.trim();

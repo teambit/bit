@@ -37,7 +37,7 @@ pub(super) fn run(
     print!("{}", linker.take_stdout());
     Ok(target)
 }
-/// Builds the normalized source JSON object and [`component_fork::Options`] kernel descriptor.
+/// Builds the normalized source JSON [`Value`] object and [`component_fork::Options`] kernel descriptor for [`run`].
 #[inline]
 fn prepare(
     options: &Options,

@@ -13,7 +13,7 @@ pub(in crate::commands::gc) struct Models {
     aliases: HashMap<String, String>,
 }
 impl Models {
-    /// Indexes all `Component` and `Symlink` objects in `inventory` by identity and hash.
+    /// Indexes all `Component` and `Symlink` objects in `inventory` ([`ScopeInventory`]) by identity and hash.
     pub(super) fn new(inventory: &ScopeInventory) -> Self {
         let mut identities = HashMap::new();
         let mut hashes = HashMap::new();

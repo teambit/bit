@@ -4,7 +4,7 @@
 use super::repository::{Object, identity, text, unsupported};
 use std::{collections::BTreeMap, io};
 
-/// Verifies that `objects` and `deleted` have deterministic verbose report ordering.
+/// Verifies that `objects` ([`Object`]) and `deleted` have deterministic verbose report ordering before [`deleted`].
 #[inline]
 pub(super) fn preflight(objects: &BTreeMap<String, Object>, deleted: &[String]) -> io::Result<()> {
     if objects

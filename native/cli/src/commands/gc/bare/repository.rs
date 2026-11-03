@@ -36,7 +36,7 @@ pub(super) fn read(directory: &Path) -> io::Result<BTreeMap<String, Object>> {
     }
     Ok(objects)
 }
-/// Validates a `<bucket>/<leaf>` loose object entry and returns its 40-char hex hash when valid.
+/// Validates a `<bucket>/<leaf>` loose object entry and returns its 40-char hex hash when valid for [`read`].
 fn object_name(bucket: &str, entry: &fs::DirEntry) -> io::Result<Option<String>> {
     let leaf = entry.file_name();
     let Some(leaf) = leaf

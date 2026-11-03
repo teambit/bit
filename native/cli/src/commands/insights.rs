@@ -28,7 +28,7 @@ pub const COMMAND: Command = Command { name: "insights", aliases: &[], run };
 
 /// Supported built-in insight names (`circular` and `duplicate dependencies`).
 const CORE_INSIGHTS: [&str; 2] = ["circular", "duplicate dependencies"];
-/// Parsed CLI flags and insight names for `bit insights`.
+/// Parsed CLI flags and insight names for `bit insights` ([`COMMAND`]).
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct Options {
     pub list: bool,

@@ -15,7 +15,7 @@ pub(super) struct Assets {
     mcp: Option<(PathBuf, Vec<u8>)>,
 }
 impl Assets {
-    /// Prepares optional agent and MCP files when `plan.created` is true and `--bare` is not set.
+    /// Prepares optional [`agent`] and [`mcp`] files when `plan.created` ([`Plan`]) is true and `--bare` ([`Options`]) is not set.
     #[inline]
     pub(super) fn prepare(plan: &Plan, options: &Options) -> io::Result<Self> {
         if !plan.created || options.bare.is_some() {

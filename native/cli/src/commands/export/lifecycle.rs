@@ -15,7 +15,7 @@ use std::{
     sync::Arc,
 };
 
-/// Optional Node.js [`Host`] bridge for pre/post export callbacks and interrupt coordination.
+/// Optional `Node.js` [`Host`] bridge for pre/post export callbacks and interrupt coordination.
 pub(super) struct Lifecycle {
     host: Option<Arc<Host>>,
     root: PathBuf,

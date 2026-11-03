@@ -36,7 +36,7 @@ pub fn pattern(pattern: &str, dir: &str) -> String {
 
 /// `pathJoinLinux`: `path.join`, then `normalize-path`, which uses forward
 /// slashes and drops a trailing one. On Windows `path.join` also splits on
-/// backslashes.
+/// backslashes, normalizing segments via [`normalize`].
 #[must_use]
 #[inline]
 pub fn join_linux(parts: &[&str]) -> String {

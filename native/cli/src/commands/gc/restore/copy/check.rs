@@ -4,7 +4,7 @@
 use super::failure;
 use std::{fs, io, path::Path};
 
-/// Validates that `source` and `target` do not conflict in entry type or subdirectory nesting.
+/// Validates via [`entry_types`] and [`subdirectory`] that `source` and `target` do not conflict in entry type or subdirectory nesting.
 #[inline]
 pub(super) fn target(
     source: &Path,

@@ -24,7 +24,7 @@ use std::{io, path::Path, sync::Arc};
 const YARN: &str = "teambit.dependencies/yarn";
 
 /// Versions passed to `ComponentWriter.finalizeWrite`: changed components and
-/// newly added lane components, without duplicates.
+/// newly added lane components ([`changed_component_ids`]), without duplicates.
 pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
     let mut ids = changed_component_ids(result)?;
     for id in array(result.get("addedComponents"), "added components")? {

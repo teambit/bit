@@ -24,7 +24,7 @@ pub(super) struct Values<'a> {
     pub write_deps: Option<String>,
     pub dependents_via: Option<String>,
 }
-/// Splits out `--write-deps` and `--dependents-via` flag values from `args` before standard flag parsing.
+/// Splits out `--write-deps` and `--dependents-via` flag values into [`Values`] from `args` before standard flag parsing.
 pub(super) fn values<'a>(args: &[&'a str]) -> Option<Values<'a>> {
     let mut values =
         Values { args: Vec::with_capacity(args.len()), write_deps: None, dependents_via: None };

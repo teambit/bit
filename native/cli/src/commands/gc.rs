@@ -44,7 +44,7 @@ const NO_SCOPE_ERR: &str = "unable to find a scope. run this command inside a wo
 const DRY_RUN_RESTORE_ERR: &str =
     "--dry-run cannot be combined with --restore or --restore-overwrite";
 
-/// Parsed CLI options and flags for `bit gc`.
+/// Parsed CLI options and flags for `bit gc` ([`COMMAND`], [`run_workspace_gc`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub dry_run: bool,

@@ -85,7 +85,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_in_workspace(&root, args, path, include_message)
 }
 
-/// Runs `bit blame` inside `root` after classifying `path` against `.bitmap`.
+/// Runs `bit blame` ([`COMMAND`]) inside `root` after classifying `path` ([`classify_target`], [`Target`]) against `.bitmap`.
 fn run_in_workspace(
     root: &Path,
     args: &[OsString],

@@ -11,7 +11,7 @@ const WORKSPACE: &str = "teambit.workspace/workspace";
 /// Aspect ID of the Bit dependency resolver aspect in `workspace.jsonc`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 
-/// Generates a new `workspace.jsonc` byte buffer from the installed template and `options`.
+/// Generates a new `workspace.jsonc` byte buffer from the installed [`template`] [`Document`] and `options` ([`Options`]).
 pub(super) fn create(root: &Path, modules: &Path, options: &Options) -> io::Result<Vec<u8>> {
     let mut document = template(modules)?;
     let name = options.defaults.name

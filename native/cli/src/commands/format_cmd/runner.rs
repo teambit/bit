@@ -49,7 +49,7 @@ fn invalid(message: &str) -> io::Error {
     io::Error::other(message.trim())
 }
 
-/// Verifies that every component's formatted file writes are disjoint and safe to apply natively.
+/// Verifies via [`component_writes_supported`] that every component's formatted file writes are disjoint and safe to apply natively.
 #[inline]
 fn supported_writes(
     check: bool,

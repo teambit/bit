@@ -25,7 +25,7 @@ pub(super) fn execute_scope_graph(
     render_scope_graph(&graph, options.json, formatter)
 }
 
-/// Builds the bare-scope [`CompGraph`] and local component ID list for `bit insights`.
+/// Builds the bare-scope [`CompGraph`] and local component ID list for `bit insights` or returns a [`Failure`].
 pub(crate) fn scope_insight_graph(scope_dir: &Path) -> Result<(CompGraph, Vec<String>), Failure> {
     let scope_name = validate_bare_scope(scope_dir)?;
     let local_components = load_local_scope_components(scope_dir, &scope_name)?;

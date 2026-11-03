@@ -78,7 +78,7 @@ struct Nested {
 }
 
 impl Inventory {
-    /// `ignore().add([...patterns, ...IGNORE_LIST, ...ignoredFiles])` from [`Options`].
+    /// Builds an [`Inventory`] via `ignore().add([...patterns, ...IGNORE_LIST, ...ignoredFiles])` from [`Options`].
     #[inline]
     pub fn new(options: &Options) -> io::Result<Self> {
         let hard = if options.track_all_files { ALWAYS_IGNORE } else { IGNORE_ALL };

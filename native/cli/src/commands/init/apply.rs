@@ -4,7 +4,7 @@
 use super::plan::{Action, Plan};
 use std::{fs, io, path::Path};
 
-/// Executes all staged filesystem [`Action`]s in `plan` in order.
+/// Executes all staged filesystem [`Action`]s in `plan` ([`Plan`]) in order.
 #[inline]
 pub(super) fn apply(plan: Plan) -> io::Result<()> {
     for action in plan.actions {

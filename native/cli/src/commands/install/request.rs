@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use std::{io, path::Path, sync::Arc};
 
-/// Returns whether `root` configures non-core root, scope, or global aspects requiring canonical host installation.
+/// Returns whether `root` configures non-core root, scope, or global aspects ([`configured_root_aspects`]) requiring canonical host installation.
 #[inline]
 pub(super) fn needs_canonical_install(root: &Path) -> bool {
     configured_root_aspects(root).unwrap_or(true)

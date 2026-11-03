@@ -66,7 +66,7 @@ fn remove_file(path: &Path) -> io::Result<()> {
         result => result.map_err(|error| failure(error, "unlink", path)),
     }
 }
-/// Unlinks loose object `hash` under `scope/objects` and prunes its bucket directory when empty.
+/// Unlinks loose object `hash` under `scope/objects` ([`Path`]) and prunes its bucket directory when empty via [`remove_empty_bucket`].
 fn remove_object(scope: &Path, hash: &str) -> io::Result<()> {
     let trimmed = hash.trim();
     if trimmed.len() != 40

@@ -18,7 +18,7 @@ pub struct Id {
 }
 
 impl Id {
-    /// `ComponentID.fromString(text)` (`BitId.parse(text, true)`).
+    /// Parses an [`Id`] via `ComponentID.fromString(text)` (`BitId.parse(text, true)`).
     pub fn parse(id: &str) -> io::Result<Self> {
         let id = id.trim();
         let (id, version) = match id.rsplit_once('@') {

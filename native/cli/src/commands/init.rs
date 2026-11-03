@@ -52,7 +52,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     execute(args, &options, plan, assets)
 }
 
-/// Applies `plan` and `assets` to disk and prints the `bit init` terminal summary.
+/// Applies `plan` ([`plan::Plan`]) via [`apply::apply`] and `assets` ([`assets::Assets`]) to disk and prints the `bit init` terminal summary.
 fn execute(
     args: &[OsString],
     options: &options::Options,

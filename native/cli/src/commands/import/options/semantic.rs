@@ -3,7 +3,7 @@
 //! [`error`] returns the first incompatible flag combination diagnostic ([`directories`], [`missing_ids`], [`dependencies_depth`], [`has_dependency_import_flag`]) for [`Options`].
 use super::Options;
 
-/// Returns the first user-facing semantic validation error for `options`, if any.
+/// Returns the first user-facing semantic validation error for `options` ([`Options`]), if any.
 #[inline]
 pub(super) fn error(options: &Options) -> Option<String> {
     directories(options)

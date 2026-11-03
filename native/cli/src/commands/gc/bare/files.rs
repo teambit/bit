@@ -21,7 +21,7 @@ pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) 
     Ok(())
 }
 
-/// Moves a single bare-scope object `hash` from `objects/` to `deleted-objects/`.
+/// Moves a single bare-scope object `hash` from `objects/` to `deleted-objects/` after [`check_target`] and [`check_parents`].
 pub(super) fn move_object(scope: &Path, hash: &str) -> io::Result<()> {
     let (source, target) = object_move_paths(scope, hash)?;
     let metadata = fs::symlink_metadata(&source).map_err(|error| failure(error, "lstat", &source))?;

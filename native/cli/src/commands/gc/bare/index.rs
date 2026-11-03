@@ -5,7 +5,7 @@ use super::repository::{Object, text};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, fs, io, path::Path};
 
-/// Builds a replacement `index.json` byte buffer from `objects` when `scope/index.json` is absent.
+/// Builds a replacement `index.json` byte buffer from `objects` ([`Object`]) via [`component`] and [`lane`] when `scope/index.json` is absent.
 pub(super) fn prepare(
     scope: &Path,
     objects: &BTreeMap<String, Object>,

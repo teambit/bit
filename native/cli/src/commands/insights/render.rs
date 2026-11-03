@@ -14,7 +14,7 @@ const ARROW_LEN: usize = 8;
 /// Maximum display width before `cycles` switches from horizontal to vertical layout.
 const MAX_HORIZONTAL_WIDTH: usize = 90;
 
-/// Formats circular dependency `cycles` into horizontal or vertical arrow chains ([`ARROW`], [`MAX_HORIZONTAL_WIDTH`]).
+/// Formats circular dependency `cycles` into horizontal or vertical arrow chains ([`ARROW`], [`MAX_HORIZONTAL_WIDTH`]) styled with [`Chalk`].
 pub(crate) fn cycles(cycles: &[Vec<String>], chalk: Chalk) -> String {
     if cycles.is_empty() {
         return "No circular dependencies found".into();

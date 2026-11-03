@@ -19,7 +19,7 @@ use std::{
     path::{Component, Path},
 };
 
-/// Ownership classification of a workspace file path for `bit blame` and `bit log-file`.
+/// Ownership classification of a workspace file path for `bit blame` ([`BLAME`]) and `bit log-file` ([`LOG_FILE`]).
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Target {
     Versioned { identity: String, file: String, lane: Option<Value> },

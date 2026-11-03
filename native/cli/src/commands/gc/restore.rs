@@ -29,7 +29,7 @@ pub(super) enum Error {
     Filesystem(io::Error),
 }
 impl Error {
-    /// Formats this [`Error`] into a user-facing [`io::Error`].
+    /// Formats this [`Error`] into a user-facing [`io::Error`] via [`Chalk`].
     #[inline]
     pub(super) fn report(self, chalk: Chalk) -> io::Error {
         match self {

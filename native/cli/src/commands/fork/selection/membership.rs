@@ -27,7 +27,7 @@ pub(super) fn classify(
     remotes.reverse();
     (locals, remotes)
 }
-/// Compares two component IDs by bare identity and resolved version in `pool`.
+/// Compares two component IDs by [`bare`] identity and resolved [`version`] in `pool` ([`Value`]).
 #[inline]
 fn equal(left: &str, right: &str, pool: &[Value]) -> bool {
     bare(left) == bare(right) && version(left, pool) == version(right, pool)

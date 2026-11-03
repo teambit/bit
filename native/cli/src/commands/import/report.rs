@@ -75,7 +75,7 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
     })
 }
 
-/// Versioned ids, distinct without their versions.
+/// Parses versioned [`Id`] entries from `rows`, distinct without their versions.
 fn imported_ids(rows: &[Value], multi_lane: bool) -> io::Result<(Vec<String>, HashSet<String>)> {
     let mut imported = HashSet::with_capacity(rows.len());
     let mut ids = Vec::with_capacity(rows.len());

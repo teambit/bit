@@ -90,7 +90,7 @@ pub(super) fn format_bytes(bytes: u64) -> String {
     format!("{}.{} {unit}", tenths / 10, tenths % 10)
 }
 
-/// Formats a [`GcResult`] into the human-readable terminal garbage-collection report.
+/// Formats a [`GcResult`] into the human-readable terminal garbage-collection report via [`Formatter`] and [`Chalk`].
 #[inline]
 pub(super) fn format_gc_report(result: &GcResult, chalk: Chalk) -> String {
     let formatter = Formatter::new(chalk);

@@ -18,7 +18,7 @@ use bit_install::{
 };
 use serde_json::{Value, json};
 use std::{fs, path::Path};
-/// Builds the workspace dependency [`CompGraph`], applies CLI filters, and writes SVG or `--json` output.
+/// Builds the workspace dependency [`CompGraph`] for [`Options`], applies CLI filters, and writes SVG ([`write_svg_file`]) or `--json` output.
 pub(super) fn execute_workspace_graph(
     root: &Path,
     options: &Options,

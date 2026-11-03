@@ -38,7 +38,7 @@ fn trim_owned(val: String) -> String {
 }
 
 impl CompGraph {
-    /// Inserts `id` into `self.nodes` if it is non-empty and not already present.
+    /// Inserts `id` (trimmed via [`trim_owned`]) into `self.nodes` if it is non-empty and not already present.
     #[inline]
     pub(crate) fn add_node(&mut self, id: String) {
         let id = trim_owned(id);

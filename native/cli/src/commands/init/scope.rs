@@ -4,7 +4,7 @@
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Builds the serialized `scope.json` byte buffer for a fresh or existing scope at `path`.
+/// Builds the serialized `scope.json` byte buffer via [`current`] and [`valid_name`] for a fresh or existing scope at `path`.
 pub(super) fn document(
     path: &Path,
     name: &str,

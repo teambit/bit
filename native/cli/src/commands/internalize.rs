@@ -40,7 +40,7 @@ const INTERNALIZE_ASPECT_ID: &str = "teambit.component/internalize";
 /// Error message emitted when `bit internalize` is invoked without a pattern or `--list`.
 const MISSING_PATTERN_ERR: &str =
     "please specify a component-pattern, or use --list to show the internal components";
-/// Parsed CLI options for `bit internalize`.
+/// Parsed CLI options for `bit internalize` ([`COMMAND`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub pattern: Option<String>,

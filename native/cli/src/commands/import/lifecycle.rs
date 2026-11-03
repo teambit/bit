@@ -17,7 +17,7 @@ pub(super) struct Lifecycle {
     json: bool,
 }
 impl Lifecycle {
-    /// Returns whether `options` and workspace configuration require bootstrapping a [`ProjectedLinker`] host.
+    /// Returns whether `options` ([`Options`]) and [`WorkspaceConfig`] require bootstrapping a [`ProjectedLinker`] host.
     pub(super) fn required(root: &Path, options: &Options, preflight_ok: bool) -> io::Result<bool> {
         if options.operation != "import" {
             return Ok(false);

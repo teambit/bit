@@ -28,7 +28,7 @@ pub(super) fn install() -> io::Result<Previous> {
         Ok(())
     }
 }
-/// Unregisters the Windows console control handler installed by [`install`].
+/// Unregisters the Windows console control [`interrupt`] handler installed by [`install`] via [`SetConsoleCtrlHandler`].
 #[inline]
 pub(super) fn restore(_previous: &Previous) {
     // SAFETY: this removes the exact static callback registered by install.

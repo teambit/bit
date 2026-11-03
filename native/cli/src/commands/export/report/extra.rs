@@ -26,7 +26,7 @@ fn entry_text(entry: &Value) -> Option<&str> {
         .filter(|text| !text.is_empty())
 }
 
-/// Formats the warning section and hint for components skipped due to missing remote scope configuration.
+/// Formats the warning section and hint via [`Formatter`] and [`ids`] for components skipped due to missing remote scope configuration.
 #[inline]
 pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
     let missing = ids(receipt, "missingScope");

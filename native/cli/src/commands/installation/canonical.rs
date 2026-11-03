@@ -41,7 +41,7 @@ pub(super) fn call(
     Ok(receipt)
 }
 
-/// Runs a single native stock pnpm installation step if supported by the current umask and options.
+/// Runs a single native stock pnpm installation step ([`CanonicalInstall`]) into a [`Continuation`] if supported by the current umask and options.
 fn run(host: &Host, payload: &Value, info: &HostInfo) -> io::Result<Continuation> {
     if payload["umask"].as_u64() != Some(u64::from(pnpm_fs::file_mode::current_umask())) {
         crate::trace::log("stock pnpm installation uses a different Host file mask");

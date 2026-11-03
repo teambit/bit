@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Deserialized per-component package link payload produced by the export engine.
+/// Deserialized per-component package link payload ([`WorkspaceComponent`], [`ComponentDependencies`]) produced by the export engine.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Plan {

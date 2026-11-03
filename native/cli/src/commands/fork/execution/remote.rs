@@ -47,7 +47,7 @@ fn connection(
     let transport = json!({"globalConfigDir":crate::commands::status::cache::cache_root().join("config"),"nodeExecutable":cli.node,"bitDir":cli.bit_dir,"bitVersion":cli.version});
     bit_object_import::recovery_remote_connection(root, &workspace_command::home(), &transport)
 }
-/// Hydrates `captured` objects into the workspace and copies each selected `ids` component.
+/// Hydrates `captured` ([`RemoteCapture`]) objects into the workspace via [`ProjectedLinker`] and copies each selected `ids` component.
 fn copy_sources(
     root: &Path,
     options: &Options,

@@ -10,7 +10,7 @@ impl Progress {
             self.component(output, index);
         }
     }
-    /// Emits component-loading counts and the overall `formatting components (total: N)` status line.
+    /// Emits component-loading counts and the overall `formatting components (total: N)` status line onto [`Output`].
     #[inline]
     pub fn start(&self, output: &Output) {
         for count in &self.loads {
