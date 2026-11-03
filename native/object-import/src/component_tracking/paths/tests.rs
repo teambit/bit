@@ -14,7 +14,7 @@ fn diagnostics_use_platform_paths_without_changing_stored_paths() {
     assert_eq!(stored, "bar/nested/foo.js");
 }
 
-/// Verifies that [`relative`] formats `OutsideWorkspaceError` diagnostics using native platform path separators ([`diagnostics_use_platform_paths_without_changing_stored_paths`]).
+/// Verifies that [`relative`] formats `OutsideWorkspaceError` diagnostics (`tracking-workspace`, `outside`) using native platform path separators ([`diagnostics_use_platform_paths_without_changing_stored_paths`]).
 #[test]
 fn outside_workspace_errors_keep_native_separators() {
     let parent = std::env::temp_dir();

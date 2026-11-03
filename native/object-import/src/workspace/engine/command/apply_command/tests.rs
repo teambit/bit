@@ -27,7 +27,7 @@ fn persistence_notification_failure_remains_best_effort_but_records_invocation()
     assert_eq!(fs::read(directory.0.join(".bit")).unwrap(), b"not a directory");
 }
 
-/// Verifies that `super::run` rejects an `Apply` request when a file in `dependency_read_set` has been modified since capture ([`notify`]).
+/// Verifies that `super::run` rejects an `Apply` request when a file in `dependency_read_set` has been modified since capture ([`notify`], [`persistence_notification_failure_remains_best_effort_but_records_invocation`]).
 #[test]
 fn changed_final_dependency_proof_is_rejected_before_command_publication() {
     let directory = scratch::Directory::create().unwrap();

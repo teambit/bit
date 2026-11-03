@@ -63,7 +63,7 @@ fn reusable_package_matchers_preserve_regex_capture_and_literal_replacement_sema
     let mut captures = refactor::PackageMatchers::new(&[("@org/(old)".into(), "@new/pkg".into())]);
     assert_eq!(captures.apply(b"'@org/old'").unwrap(), b"'@new/pkgold");
 }
-/// Verifies that [`refactor::PackageMatchers`] skips regex compilation on NUL-containing binary payloads and reports syntax errors in pair order ([`refactor::package`], [`reusable_empty_package_matcher_preserves_lossy_text_and_binary_behavior`]).
+/// Verifies that [`refactor::PackageMatchers`] skips regex compilation on NUL-containing binary payloads and reports syntax errors in pair order ([`refactor::package`], [`reusable_empty_package_matcher_preserves_lossy_text_and_binary_behavior`], [`ordered_package_matchers_preserve_unmatched_and_lossy_sources`]).
 #[test]
 fn ordered_package_matchers_compile_only_after_binary_files_and_fail_in_pair_order() {
     let mut matchers = refactor::PackageMatchers::new(&[

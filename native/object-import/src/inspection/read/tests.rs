@@ -75,7 +75,7 @@ fn parallel_capture_preserves_input_order_hashes_and_binary_normalization() {
     }
 }
 
-/// Verifies that [`capture`] succeeds at the exact byte budget on [`request`] ([`Fixture`]) and fails cleanly when the budget is exceeded.
+/// Verifies that [`capture`] succeeds at the exact byte budget on [`request`] ([`Fixture`]) and fails cleanly when the budget is exceeded ([`parallel_capture_preserves_input_order_hashes_and_binary_normalization`]).
 #[test]
 fn skewed_batches_retry_within_the_budget_and_reject_an_exhausted_budget() {
     let pool = rayon::ThreadPoolBuilder::new()

@@ -69,7 +69,7 @@ fn dense_workspace_graph_rejects_path_explosion_before_the_processed_limit() {
     assert_eq!(error.to_string(), "inbound dependent graph path payload limit");
 }
 
-/// Verifies that [`select`] bounds the initial `sources` payload size in [`HashMap`] before enqueuing BFS [`target`] ([`Target`]) paths.
+/// Verifies that [`select`] bounds the initial `sources` payload size in [`HashMap`] before enqueuing BFS [`target`] ([`Target`]) paths ([`dense_workspace_graph_rejects_path_explosion_before_the_processed_limit`]).
 #[test]
 fn initial_source_payload_is_bounded_before_it_enters_the_queue() {
     let sources = vec!["x".repeat(1024 * 1024); 33];

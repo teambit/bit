@@ -79,7 +79,7 @@ fn stale_configuration_fails_before_removing_any_source() {
     assert!(root.join("alpha/index.js").is_file());
     fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that removing a component rooted at `.` keeps the workspace root and nested component files intact ([`stale_configuration_fails_before_removing_any_source`]).
+/// Verifies that removing a component rooted at `.` keeps the workspace root and nested component files intact ([`stale_configuration_fails_before_removing_any_source`], [`track_keeps_bitmap_packages_and_configuration`]).
 #[test]
 fn root_untracking_keeps_workspace_and_nested_components() {
     let root = fixture();

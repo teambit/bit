@@ -89,7 +89,7 @@ fn root_tracks_bitmap_but_not_scope() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that tracking the workspace root in [`fixture`] excludes files belonging to nested tracked components ([`Plan::prepare`], [`root_tracks_bitmap_but_not_scope`]).
+/// Verifies that tracking the workspace root in [`fixture`] excludes files belonging to nested tracked components ([`Plan::prepare`], [`root_tracks_bitmap_but_not_scope`], [`root_explicit_main_is_respected`]).
 #[test]
 fn root_excludes_nested_component_sources() {
     let root = fixture();

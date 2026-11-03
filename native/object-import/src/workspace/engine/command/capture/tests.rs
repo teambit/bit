@@ -90,7 +90,7 @@ fn private_capture_retains_large_parallel_sources_without_expanding_the_wire_bud
     );
 }
 
-/// Verifies that [`all_for_checkout`] retains callback-supplied sources in [`Fixture`] at private spool paths without mutating workspace files ([`snapshots`], [`read`]).
+/// Verifies that [`all_for_checkout`] retains callback-supplied sources in [`Fixture`] at private spool paths without mutating workspace files ([`snapshots`], [`read`], [`private_capture_retains_large_parallel_sources_without_expanding_the_wire_budget`]).
 #[test]
 fn callback_sources_are_retained_at_private_paths_without_materializing_the_workspace() {
     let fixture = Fixture::new();

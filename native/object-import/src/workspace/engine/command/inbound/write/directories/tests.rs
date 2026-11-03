@@ -5,7 +5,7 @@
 use super::default_directory;
 use std::fs;
 
-/// Verifies that [`default_directory`] falls back to `components/{name}` when unset and appends `/{name}` to custom `workspace.jsonc` (`WorkspaceConfig`) templates.
+/// Verifies that [`default_directory`] falls back to `components/{name}` when unset and appends `/{name}` to custom `workspace.jsonc` (`WorkspaceConfig`, `custom/{name}`) templates.
 #[test]
 fn absent_template_uses_the_legacy_consumer_default_without_harmony() {
     let root = tempfile::tempdir().unwrap();

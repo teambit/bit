@@ -74,7 +74,7 @@ fn invalid_bitmap_identity_and_duplicate_dirs_decline() {
         assert!(bitmap(&path, &[]).is_err());
     }
 }
-/// Verifies that [`State::initialize`] rejects the entire [`Operation`] list on [`Fixture`] without mutating disk files if any path is relative ([`failed_prefix_does_not_repeat_completed_steps`]).
+/// Verifies that [`State::initialize`] rejects the entire [`Operation`] list on [`Fixture`] without mutating disk files if any path is relative ([`failed_prefix_does_not_repeat_completed_steps`], [`invalid_bitmap_identity_and_duplicate_dirs_decline`]).
 #[test]
 fn malformed_whole_operation_list_never_mutates() {
     let fixture = Fixture::new();

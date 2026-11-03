@@ -66,7 +66,7 @@ fn selected_history_proof_is_propagated_and_rejects_later_content_changes() {
     assert!(super::proof::verify(&phase_proofs).is_err());
 }
 
-/// Verifies that [`selection::accept_bitmap`] verifies the retained `.bitmap` (`BitMap`) preimage and post-write bytes before updating proofs.
+/// Verifies that [`selection::accept_bitmap`] verifies the retained `.bitmap` (`BitMap`) preimage and post-write bytes before updating proofs ([`selected_history_proof_is_propagated_and_rejects_later_content_changes`]).
 #[test]
 fn bitmap_acknowledgment_requires_retained_preimage_and_actual_written_bytes() {
     let directory = tempfile::tempdir().unwrap();

@@ -5,7 +5,7 @@
 use super::reorder_bitmap;
 use serde_json::Value;
 
-/// Verifies that [`reorder_bitmap`] reorders authored `.bitmap` component [`Value`] fields (`name`, `scope`, `version`, `mainFile`, `rootDir`) into `ComponentMap` order.
+/// Verifies that [`reorder_bitmap`] reorders authored `.bitmap` component [`Value`] fields (`name`, `scope`, `version`, `mainFile`, `rootDir`, `bar/foo`) into `ComponentMap` order.
 #[test]
 fn authored_rows_use_component_map_serialization_order() {
     let mut row: Value = serde_json::from_str(

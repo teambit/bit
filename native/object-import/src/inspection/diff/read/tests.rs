@@ -45,7 +45,7 @@ fn parallel_model_reads_preserve_order_and_retry_skewed_budgets() {
     }
 }
 
-/// Verifies that [`load`] fails the entire batch on [`Fixture`] when any stored `Source` object ([`store`], [`hash`]) is missing or invalid.
+/// Verifies that [`load`] fails the entire batch on [`Fixture`] when any stored `Source` object ([`store`], [`hash`]) is missing or invalid ([`parallel_model_reads_preserve_order_and_retry_skewed_budgets`]).
 #[test]
 fn invalid_stored_sources_do_not_return_a_partial_parallel_result() {
     let fixture = Fixture::new();

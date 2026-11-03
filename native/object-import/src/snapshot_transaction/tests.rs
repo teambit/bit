@@ -86,7 +86,7 @@ fn multiple_plans_preserve_frozen_bytes_and_commit_prefix() {
         assert_eq!(ack["failed"], false);
     }
 }
-/// Verifies that `snapshotSerialize` via [`apply`] converts a workspace `Source` file ([`source`]) in [`Fixture`] by stripping its UTF-8 BOM and normalizing CRLF to LF.
+/// Verifies that `snapshotSerialize` via [`apply`] converts a workspace `Source` file ([`source`]) in [`Fixture`] by stripping its UTF-8 BOM and normalizing CRLF to LF ([`multiple_plans_preserve_frozen_bytes_and_commit_prefix`]).
 #[test]
 fn workspace_source_uses_raw_snapshot_and_canonical_bom_lf_conversion() {
     let fixture = Fixture::new();

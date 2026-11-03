@@ -17,7 +17,7 @@ fn failed_import_omits_only_its_in_flight_row_and_keeps_completed_receipts() {
     discard_incomplete(&mut progress, &context);
     assert_eq!(progress["imports"], json!([earlier, later]));
 }
-/// Verifies that [`discard_incomplete`] retains completed import progress rows ([`json`]) and ignores out-of-range start indices.
+/// Verifies that [`discard_incomplete`] retains completed import progress rows ([`json`]) and ignores out-of-range start indices ([`failed_import_omits_only_its_in_flight_row_and_keeps_completed_receipts`]).
 #[test]
 fn completed_import_is_retained_in_full_and_absent_row_does_not_remove_another() {
     let row = json!({"ids":["s/component@1"],"components":1,"objects":0});

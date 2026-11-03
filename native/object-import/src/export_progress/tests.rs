@@ -51,7 +51,7 @@ fn panic_inner() {
     panic!("fixture observer unwind");
 }
 
-/// Runs [`scope`] with `sender`, synchronizes on `barrier`, and emits an [`Event::Persist`] notification for `name` ([`concurrent_export_owners_do_not_receive_each_others_events`]).
+/// Runs [`scope`] with `sender`, synchronizes on `barrier`, and emits an [`Event::Persist`] notification for `name` ([`concurrent_export_owners_do_not_receive_each_others_events`], [`nested_observer_unwind_restores_the_outer_operation`]).
 fn observe_owner(sender: &std::sync::mpsc::SyncSender<Event>, barrier: &Barrier, name: &str) {
     scope(sender, || {
         barrier.wait();

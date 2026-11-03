@@ -80,7 +80,7 @@ fn late_read_error_and_duplicate_path_never_write_private_snapshots() {
         assert!(state.plans.is_empty());
     }
 }
-/// Verifies that `inspectionFiles` via [`apply`] reports `modified: false` in [`State`] when `modelFiles` is empty even if workspace files exist ([`Fixture`]).
+/// Verifies that `inspectionFiles` via [`apply`] reports `modified: false` in [`State`] when `modelFiles` is empty even if workspace files exist ([`Fixture`], [`late_read_error_and_duplicate_path_never_write_private_snapshots`]).
 #[test]
 fn empty_model_is_not_modified_even_when_current_files_exist() {
     let fixture = Fixture::new();

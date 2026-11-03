@@ -92,7 +92,7 @@ fn policy_conflict_is_rendered_before_checkout_writes_the_workspace() {
     assert!(after.contains(">>>>>>> theirs"));
 }
 
-/// Verifies that [`Prepared::validate`] rejects a `workspace.jsonc` (`WorkspaceConfig`) file in [`Fixture`] that has been hardlinked after [`Prepared::new`].
+/// Verifies that [`Prepared::validate`] rejects a `workspace.jsonc` (`WorkspaceConfig`) file in [`Fixture`] that has been hardlinked after [`Prepared::new`] ([`policy_conflict_is_rendered_before_checkout_writes_the_workspace`]).
 #[cfg(unix)]
 #[test]
 fn hardlinked_workspace_config_declines_during_validation() {

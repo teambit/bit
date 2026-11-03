@@ -86,7 +86,7 @@ fn dedup_preserves_scope_and_first_order_with_frozen_archive() {
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Verifies that [`prepare`] leaves the destination tar archive absent when a later [`Descriptor`] ([`descriptor`], [`source`]) references a missing object.
+/// Verifies that [`prepare`] leaves the destination tar archive absent when a later [`Descriptor`] ([`descriptor`], [`source`]) references a missing object ([`dedup_preserves_scope_and_first_order_with_frozen_archive`]).
 #[test]
 fn full_preflight_leaves_archive_absent_when_later_source_corrupt() {
     let root = directory();

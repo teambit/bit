@@ -44,7 +44,7 @@ fn hex(body: &[u8]) -> String {
 fn source(body: &[u8]) -> Value {
     json!({"type":"Source","hash":hash(body),"body":hex(body)})
 }
-/// Encodes `value` into a length-prefixed opcode-27 snapshot wire frame for [`serve`] ([`response`], [`read`], [`policy`]).
+/// Encodes `value` into a length-prefixed opcode-27 snapshot wire frame for [`serve`] ([`response`], [`read`], [`policy`], [`commits_sources_and_random_identity_versions_with_canonical_headers`]).
 fn frame(value: &Value) -> Vec<u8> {
     let body = serde_json::to_vec(value).unwrap();
     let mut bytes = 27_u32.to_be_bytes().to_vec();

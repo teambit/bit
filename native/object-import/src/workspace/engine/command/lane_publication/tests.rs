@@ -68,7 +68,7 @@ fn removed_snapshot_marks_the_lane_component_deleted() {
     assert_eq!(lane["components"][0]["isDeleted"], true);
 }
 
-/// Verifies that `finalize_snap` stages lane snapshot [`objects`] in `lane-snapshot` separately from existing staged component objects ([`json`]).
+/// Verifies that `finalize_snap` stages lane snapshot [`objects`] in `lane-snapshot` separately from existing staged component objects ([`json`], [`removed_snapshot_marks_the_lane_component_deleted`]).
 #[test]
 fn lane_snapshot_stages_separately_from_existing_component_objects() {
     let directory = super::super::scratch::Directory::create().unwrap();

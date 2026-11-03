@@ -87,7 +87,7 @@ fn fetch_archive_contains_exact_start_end_and_count() {
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Verifies that `transferCollect` via [`apply`] leaves the private staging [`directory`] empty when a requested `Version` object is missing.
+/// Verifies that `transferCollect` via [`apply`] leaves the private staging [`directory`] empty when a requested `Version` object is missing ([`compressed`], [`initialize`]).
 #[test]
 fn whole_invalid_collection_leaves_private_directory_empty() {
     let root = directory();

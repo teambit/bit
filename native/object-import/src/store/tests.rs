@@ -86,7 +86,7 @@ fn failed_writes_are_not_marked_complete_and_failed_renames_clean_temporary_file
     );
 }
 
-/// Verifies that [`Store::new`] and [`Store::write`] reject relative roots and non-hexadecimal or path-traversal object hashes in [`Directory`] ([`concurrent_writes_are_atomic_and_duplicate_identities_keep_first_payload`]).
+/// Verifies that [`Store::new`] and [`Store::write`] reject relative roots and non-hexadecimal or path-traversal object hashes in [`Directory`] ([`concurrent_writes_are_atomic_and_duplicate_identities_keep_first_payload`], [`failed_writes_are_not_marked_complete_and_failed_renames_clean_temporary_files`]).
 #[test]
 fn invalid_paths_and_identities_cannot_escape_object_directory() {
     let directory = Directory::new();

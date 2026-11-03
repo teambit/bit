@@ -39,7 +39,7 @@ fn source(root: &std::path::Path, path: &str) {
     fs::create_dir_all(root.join(path).parent().unwrap()).unwrap();
     fs::write(root.join(path), "module.exports=1;\n").unwrap();
 }
-/// Builds tracking [`Options`] for the given relative `paths` ([`Plan`]).
+/// Builds tracking [`Options`] for the given relative `paths` ([`Plan`], [`fixture`], [`facts`], [`source`]).
 fn options(paths: &[&str]) -> Options {
     Options {
         paths: paths

@@ -61,7 +61,7 @@ fn individual_files_are_rejected() {
     );
     std::fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that a component-local `.bitignore` file excludes matching [`source`] files in [`fixture`] during [`Plan::prepare`] ([`generated_configuration_is_not_main`]).
+/// Verifies that a component-local `.bitignore` file excludes matching [`source`] files in [`fixture`] during [`Plan::prepare`] ([`generated_configuration_is_not_main`], [`equal_names_in_different_scopes_have_distinct_keys_and_roots`]).
 #[test]
 fn own_ignore_removes_sources() {
     let root = fixture();

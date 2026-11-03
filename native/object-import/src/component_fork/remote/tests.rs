@@ -85,7 +85,7 @@ fn forged_http_source_identity_and_duplicate_logical_paths_are_rejected() {
     items[1] = object(directory.path(), "Version", &hash, &serde_json::to_vec(&version).unwrap());
     assert!(objects::http(&items, "old.scope/source").is_err());
 }
-/// Verifies that [`single_error`] preserves permission and unsupported errors while translating missing remote component errors ([`forged_http_source_identity_and_duplicate_logical_paths_are_rejected`]).
+/// Verifies that [`single_error`] preserves permission and unsupported errors while translating missing remote component errors ([`forged_http_source_identity_and_duplicate_logical_paths_are_rejected`], [`file_and_http_capture_preserve_identical_version_and_binary_source_without_publication`]).
 #[test]
 fn single_remote_not_found_translation_does_not_hide_permissions_or_budget_failures() {
     for kind in [io::ErrorKind::PermissionDenied, io::ErrorKind::Unsupported] {

@@ -10,7 +10,7 @@ use std::{
 /// Monotonic sequence counter for unique [`Plan`] soft-reset test directories.
 static NEXT: AtomicU64 = AtomicU64::new(0);
 
-/// Verifies that [`Plan::prepare`] and [`Plan::commit`] remove `nextVersion` entries from `.bitmap` (`BitMap`) and reject stale plans ([`NEXT`]).
+/// Verifies that [`Plan::prepare`] and [`Plan::commit`] remove `nextVersion` entries (`alpha`, `beta`) from `.bitmap` (`BitMap`) and reject stale plans ([`NEXT`]).
 #[test]
 fn clears_all_pending_tags_and_refuses_a_stale_plan() {
     let serial = NEXT.fetch_add(1, Ordering::Relaxed);

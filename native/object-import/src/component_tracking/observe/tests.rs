@@ -71,7 +71,7 @@ fn an_ancestor_swapped_for_a_symlink_cannot_reuse_identical_sources() {
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Creates a directory symlink on Unix from `destination` to `source` ([`an_existing_symlink_ancestor_declines_before_source_capture`]).
+/// Creates a directory symlink on Unix from `destination` to `source` ([`an_existing_symlink_ancestor_declines_before_source_capture`], [`an_ancestor_swapped_for_a_symlink_cannot_reuse_identical_sources`]).
 #[cfg(unix)]
 fn link(source: &std::path::Path, destination: &std::path::Path) {
     std::os::unix::fs::symlink(source, destination).unwrap();
