@@ -45,7 +45,7 @@ fn parses_show_json_and_unrecognized_subcommands() {
         Some(Subcommand::Build("comp1".into(), Some("abc".into()), Some("my-scope".into()))),
     );
     // The released CLI rejects the color flags here, so they are not recognized natively.
-    assert_eq!(parse_subcommand(&["build", "comp1", "--from-snap=abc", "--no-color"]), None,);
+    assert_eq!(parse_subcommand(&["build", "comp1", "--from-snap=abc", "--no-color"]), None);
     assert_eq!(
         parse_subcommand(&["show", "comp1", "-js"]),
         Some(Subcommand::ShowJson("comp1".into())),
