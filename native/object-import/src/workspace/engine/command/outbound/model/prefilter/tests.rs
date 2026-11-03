@@ -63,7 +63,7 @@ fn stale_discovery_prevents_history_publication_even_without_transfer_batches() 
     }
 }
 
-/// Verifies that [`Prepared::stage`] in [`Scratch`] rejects concurrent creation of a history object that was absent when [`Prepared::capture`] ran.
+/// Verifies that [`Prepared::stage`] in [`Scratch`] rejects concurrent creation of a history object that was absent when [`Prepared::capture`] ran ([`stale_discovery_prevents_history_publication_even_without_transfer_batches`]).
 #[test]
 fn absent_history_preimage_rejects_concurrent_history_creation() {
     let scratch = Scratch::new();

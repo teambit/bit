@@ -80,7 +80,7 @@ fn scope_projection_preserves_specific_precedence_and_propagation() {
     );
 }
 
-/// Verifies that [`Prepared::validate`] checks [`proof`] preimages in [`Fixture`] before publishing `component.json` (`ComponentConfigFile`) replacements.
+/// Verifies that [`Prepared::validate`] checks [`proof`] preimages in [`Fixture`] before publishing `component.json` (`ComponentConfigFile`) replacements ([`scope_projection_preserves_specific_precedence_and_propagation`]).
 #[test]
 fn metadata_write_validates_proofs_before_publishing_on_supported_platforms() {
     let fixture = Fixture::new();

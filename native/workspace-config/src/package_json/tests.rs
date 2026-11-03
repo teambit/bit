@@ -1,6 +1,6 @@
 //! Unit tests for `package.json` [`detect_indent`] indentation and [`detect_newline`] newline detection in `bit-workspace-config`.
 //!
-//! Confirms `detect-indent` ([`detect_indent`], [`detects_indentation_like_detect_indent`]) and `detect-newline` ([`detect_newline`], [`detects_newlines_like_detect_newline`]) tie-breaking parity on JSON documents in `bit-workspace-config`.
+//! Confirms `detect-indent` ([`detect_indent`], [`detects_indentation_like_detect_indent`]) and `detect-newline` ([`detect_newline`], [`detects_newlines_like_detect_newline`], [`empty_input_has_empty_indent_and_no_newline`]) tie-breaking parity on JSON documents in `bit-workspace-config`.
 
 use super::{detect_indent, detect_newline};
 

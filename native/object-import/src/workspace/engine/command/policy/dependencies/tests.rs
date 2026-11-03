@@ -83,7 +83,7 @@ fn issue_projection_uses_final_native_state_in_lifecycle_order() {
     );
 }
 
-/// Verifies that `snapshot_identities` excludes fast-forward [`cascade_row`] entries so fixed fast-forward dependencies do not trigger pending snapshot cascades.
+/// Verifies that `snapshot_identities` excludes fast-forward [`cascade_row`] entries so fixed fast-forward dependencies do not trigger pending snapshot cascades ([`issue_projection_uses_final_native_state_in_lifecycle_order`]).
 #[test]
 fn fixed_fast_forward_dependency_is_not_a_pending_snapshot_cascade() {
     let rows = [cascade_row("scope/ff", true), cascade_row("scope/snapshot", false)];

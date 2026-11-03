@@ -1,6 +1,6 @@
 //! Differential tests for canonical `Version` [`snapshot_projection`] and hashing.
 //!
-//! Validates [`js_json`] [`Value`] projection, pretty serialization, and semantic hash calculation ([`real_default_versions_match_native_canonical_projection`], [`identities_preserve_preallocated_version_and_lane_hashes`]) against `@teambit/objects` via [`Command`].
+//! Validates [`js_json`] [`Value`] projection, pretty serialization, and semantic hash calculation ([`real_default_versions_match_native_canonical_projection`], [`identities_preserve_preallocated_version_and_lane_hashes`], [`unknown_object_kind_declines_snapshot_projection_and_identity`]) against `@teambit/objects` via [`Command`].
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

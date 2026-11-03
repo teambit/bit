@@ -22,7 +22,7 @@ fn dependency_roots_follow_bitmap_sort_without_reordering_materials() {
     assert_eq!(files[0]["relativePath"], "index.js");
 }
 
-/// Verifies that an added component inherits the model `bindingPrefix` or `@<scope>` default without fabricating current metadata ([`json`]).
+/// Verifies that an added component inherits the model `bindingPrefix` or `@<scope>` default without fabricating current metadata ([`json`], [`sorted_files`]).
 #[test]
 fn added_component_uses_model_prefix_without_fabricating_current_metadata() {
     let current = crate::workspace::engine::command::capture::addition(

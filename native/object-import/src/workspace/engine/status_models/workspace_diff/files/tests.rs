@@ -1,6 +1,6 @@
 //! Unit tests for shared [`Budgets`] output patch budgets across workspace diff [`Request`] and [`read`] in `bit-object-import`.
 //!
-//! Confirms that [`File`] diff generation via [`read`] and [`Request`] enforces shared raw, packed, and output [`Budgets`] [`Budget`] limits ([`patch_limit_is_shared_across_components_and_allows_empty_batches`], [`empty_file_batch_with_zero_output_budget_succeeds_without_git`]).
+//! Confirms that [`File`] diff generation via [`read`] and [`Request`] enforces shared raw, packed, and output [`Budgets`] [`Budget`] limits ([`patch_limit_is_shared_across_components_and_allows_empty_batches`], [`empty_file_batch_with_zero_output_budget_succeeds_without_git`]) using [`json`].
 
 use super::{Budgets, File, Request, read};
 use crate::read_budget::Budget;

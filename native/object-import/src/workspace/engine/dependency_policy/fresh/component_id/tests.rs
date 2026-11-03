@@ -1,6 +1,6 @@
 //! Unit tests for fresh dependency component ID [`serialize`] and [`set_version`] property order in `bit-object-import`.
 //!
-//! Verifies that scoped and default-scope component IDs serialize keys in constructor order via [`serialize`] and [`set_version`] ([`scoped_and_default_scope_serialization_match_actual_constructor_order`], [`resolved_versions_precede_appended_default_scope_without_changing_scoped_order`]).
+//! Verifies that scoped and default-scope component IDs serialize keys in constructor order via [`serialize`] and [`set_version`] ([`scoped_and_default_scope_serialization_match_actual_constructor_order`], [`resolved_versions_precede_appended_default_scope_without_changing_scoped_order`], [`malformed_component_id_inputs_decline_cleanly`]).
 
 use super::{serialize, set_version};
 use serde_json::json;

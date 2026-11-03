@@ -1,6 +1,6 @@
 //! Unit tests for parallel workspace file read batches ([`Directory`], [`response`]) and hash normalization in `bit-object-import`.
 //!
-//! Verifies that parallel file reads match serial ordering, raw hashes, and normalized snapshot hashes ([`parallel_reads_match_serial_order_bytes_and_three_hashes`], [`parallel_reads_preserve_exact_aggregate_limit_and_return_no_partial_data`]).
+//! Verifies that parallel file reads match serial ordering, raw hashes, and normalized snapshot hashes ([`parallel_reads_match_serial_order_bytes_and_three_hashes`], [`large_single_file_can_use_the_shared_request_budget`], [`parallel_reads_preserve_exact_aggregate_limit_and_return_no_partial_data`]).
 
 use super::{Directory, response};
 use serde_json::json;

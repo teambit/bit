@@ -1,6 +1,6 @@
 //! Unit tests for fresh component [`Detect`] dependency [`detect`]ion and [`proof`] policy resolution.
 //!
-//! Exercises source file import scanning, dev-file classification, and workspace policy matching in [`Fixture`] ([`NEXT`], [`detects_packages_types_and_original_file_lifecycles`], [`type_packages_follow_workspace_merge_and_model_precedence`]).
+//! Exercises source file import scanning, dev-file classification, and workspace policy matching in [`Fixture`] ([`NEXT`], [`detects_packages_types_and_original_file_lifecycles`], [`type_packages_follow_workspace_merge_and_model_precedence`]) using [`json`].
 
 use super::{Detect, detect, proof};
 use serde_json::{Value, json};

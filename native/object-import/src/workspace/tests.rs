@@ -1,6 +1,6 @@
 //! Unit tests for workspace file materialization framing and overwrite rules in `bit-object-import`.
 //!
-//! Exercises [`serve`] binary frame parsing via [`request`] and [`response`], [`Directory`] fixtures ([`NEXT`]), and atomic file write safety ([`creates_nested_empty_and_binary_files`], [`stops_after_first_failed_file`]).
+//! Exercises [`serve`] binary frame parsing via [`request`] and [`response`], [`Directory`] fixtures ([`NEXT`]), and atomic file write safety ([`creates_nested_empty_and_binary_files`], [`skips_existing_files_and_directories_without_overwrite`], [`stops_after_first_failed_file`]).
 
 use std::{
     fs,

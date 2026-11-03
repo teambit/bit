@@ -1,6 +1,6 @@
 //! Unit tests for retaining BOM-stripped source observation [`proof`]s via [`retain`] until publication in `bit-object-import`.
 //!
-//! Ensures captured BOM-prefixed sources in [`snapshots`] remain bound to their raw on-disk hash via [`retain`] and [`proof`] ([`captured_bom_source_remains_bound_until_publication`], [`mismatched_raw_hash_or_missing_token_is_rejected_during_retain`]).
+//! Ensures captured BOM-prefixed sources in [`snapshots`] remain bound to their raw on-disk hash via [`retain`] and [`proof`] ([`captured_bom_source_remains_bound_until_publication`], [`mismatched_raw_hash_or_missing_token_is_rejected_during_retain`]) using [`json`].
 
 use super::{proof, retain, snapshots};
 use serde_json::json;

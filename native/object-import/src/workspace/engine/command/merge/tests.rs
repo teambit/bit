@@ -69,7 +69,7 @@ fn optional_dependency_package_name_does_not_change_policy() {
     assert!(super::bodies::equivalent_dependencies(&wrong, &current).is_err());
 }
 
-/// Verifies that `metadata_guard` permits schema `1.0.0`/`2.0.0` `packageDependencies` projection differences ([`json`]) while rejecting `mainFile` changes.
+/// Verifies that `metadata_guard` permits schema `1.0.0`/`2.0.0` `packageDependencies` projection differences ([`json`], [`lane_no_snap_keeps_fast_forward_pending_when_a_common_version_exists`]) while rejecting `mainFile` changes.
 #[test]
 fn mixed_harmony_schemas_allow_policy_projection_but_guard_other_metadata() {
     use crate::workspace::engine::status_models::harmony;

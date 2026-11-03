@@ -1,6 +1,6 @@
 //! Unit tests for layered workspace configuration [`merge_layers`], [`environment_key`], and [`parse_jsonc`] in `bit-workspace-config`.
 //!
-//! Checks global/scope/workspace config precedence ([`later_origins_replace_values_without_reordering_keys_or_discarding_empty_values`]), env var key mapping ([`environment_names_preserve_hyphens_and_jsonc_preserves_url_strings`]), and `ScopeJson` formatting ([`scope_json_rendering_has_four_space_indentation_without_a_final_newline`]).
+//! Checks global/scope/workspace config precedence ([`later_origins_replace_values_without_reordering_keys_or_discarding_empty_values`], [`merge_layers_returns_empty_map_when_all_layers_are_empty_objects`]), env var key mapping ([`environment_names_preserve_hyphens_and_jsonc_preserves_url_strings`]), and `ScopeJson` formatting ([`scope_json_rendering_has_four_space_indentation_without_a_final_newline`]).
 
 use super::{environment_key, merge_layers, parse_jsonc};
 use serde_json::{Value, json};

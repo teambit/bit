@@ -1,6 +1,6 @@
 //! Unit tests for status `VersionHistory` [`Request`] readset [`validate`] and [`commit`] phases in `bit-object-import`.
 //!
-//! Confirms that [`identity`] history plans in [`Fixture`] ([`NEXT`], [`validates_whole_batch_before_writing_any_history`], [`commit_uses_canonical_utf16_header_and_preserves_history_fields`]) validate [`proof`]s before writing `.bit/objects`.
+//! Confirms that [`identity`] history plans in [`Fixture`] ([`NEXT`], [`validates_whole_batch_before_writing_any_history`], [`commit_uses_canonical_utf16_header_and_preserves_history_fields`], [`empty_plan_batch_validates_and_commits_zero_histories`]) validate [`proof`]s before writing `.bit/objects`.
 
 use super::{Request, commit, identity, proof, validate};
 use flate2::read::ZlibDecoder;

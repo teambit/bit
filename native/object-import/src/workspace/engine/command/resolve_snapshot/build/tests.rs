@@ -85,7 +85,7 @@ fn symlink_artifacts_and_symlink_parents_are_rejected() {
     assert!(artifacts(&mut value, &mut Vec::new(), &mut Vec::new()).is_err());
 }
 
-/// Verifies that [`metadata`] replaces stale builder pipeline/artifact data with `plannedTasks` and creates a missing builder entry.
+/// Verifies that [`metadata`] replaces stale builder pipeline/artifact data with `plannedTasks` and creates a missing builder entry ([`oversized_artifacts_are_rejected_before_reading_their_bytes`], [`symlink_artifacts_and_symlink_parents_are_rejected`]).
 #[test]
 fn unbuilt_tasks_replace_old_builder_data_and_create_missing_builder_entry() {
     let tasks = json!([{"taskId": "sample.build/task", "taskName": "Compile", "taskDescription": "Compile sources"}]);

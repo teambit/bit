@@ -1,6 +1,6 @@
 //! Unit tests for [`canonical`] error progress retention ([`with_progress`], [`failure_data`]) in workspace responses in `bit-object-import`.
 //!
-//! Ensures [`is_canonical`] errors preserve attached progress metadata via [`with_progress`] and [`failure_data`] ([`canonical_failure_retains_actual_progress_without_changing_message_or_class`], [`plain_canonical_error_without_progress_has_no_failure_data`]) without altering error messages.
+//! Ensures [`is_canonical`] errors preserve attached progress metadata via [`with_progress`] and [`failure_data`] ([`canonical_failure_retains_actual_progress_without_changing_message_or_class`], [`plain_canonical_error_without_progress_has_no_failure_data`]) without altering error messages ([`json`]).
 
 use super::{canonical, failure_data, is_canonical, with_progress};
 use serde_json::json;

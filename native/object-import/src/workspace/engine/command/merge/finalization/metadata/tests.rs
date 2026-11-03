@@ -6,7 +6,7 @@ use super::replace;
 use crate::workspace::engine::command::scratch;
 use std::fs;
 
-/// Verifies that [`replace`] unlinks existing `package.json` hardlinks in [`scratch::Directory`] before writing updated manifest bytes while preserving file permissions.
+/// Verifies that [`replace`] unlinks existing `package.json` (`injected-package.json`) hardlinks in [`scratch::Directory`] before writing updated manifest bytes while preserving file permissions.
 #[test]
 fn replacing_generated_manifest_preserves_injected_hardlink_contents() {
     let directory = scratch::Directory::create().unwrap();

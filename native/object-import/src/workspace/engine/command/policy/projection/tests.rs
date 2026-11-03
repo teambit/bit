@@ -86,7 +86,7 @@ fn dependency_serialization_preserves_component_first_deduplication_and_canonica
     assert!(dependencies(&unsupported, &[]).is_err());
 }
 
-/// Verifies that [`extensions`] preserves passive `teambit.component/deprecation` configuration against [`defaults`] without adding a default callback slot.
+/// Verifies that [`extensions`] preserves passive `teambit.component/deprecation` configuration against [`defaults`] without adding a default callback slot ([`dependency_serialization_preserves_component_first_deduplication_and_canonical_field_order`]).
 #[test]
 fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot() {
     let stored =

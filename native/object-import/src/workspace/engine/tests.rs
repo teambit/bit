@@ -1,6 +1,6 @@
 //! Unit tests for workspace engine [`serve`] framing, batch reads, and status queries.
 //!
-//! Exercises [`inventory`], [`read_batches`], [`read_raw`], and [`status`] sub-suites across [`POOL`] workers ([`NEXT`], [`Directory`], [`scans_dotfiles_hard_exclusions_literal_nested_components_and_bitmap_policy`]).
+//! Exercises [`inventory`], [`read_batches`], [`read_raw`], and [`status`] sub-suites across [`POOL`] workers ([`NEXT`], [`Directory`], [`frame`], [`response`], [`scans_dotfiles_hard_exclusions_literal_nested_components_and_bitmap_policy`]).
 
 mod inventory;
 mod read_batches;

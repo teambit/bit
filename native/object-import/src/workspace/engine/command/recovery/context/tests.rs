@@ -47,7 +47,7 @@ fn ambiguous_plain_pattern_declines_before_selection() {
     assert!(select(&context, &pending, &request(Some("one/name"))).is_ok());
 }
 
-/// Verifies that `guards::extensions` declines historical versions containing duplicate extension entries before capture.
+/// Verifies that `guards::extensions` declines historical versions containing duplicate extension entries before capture ([`ambiguous_plain_pattern_declines_before_selection`], [`explicit_nonpending_and_empty_abort_decline`]).
 #[test]
 fn duplicate_historical_extensions_decline_before_capture() {
     let single = serde_json::json!({"versions":[["head",{"extensions":[{"name":"teambit.pkg/pkg","config":{}}]}]]});

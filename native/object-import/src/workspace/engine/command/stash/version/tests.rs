@@ -1,6 +1,6 @@
 //! Unit tests for detached stash `Version` [`Allocation`] and [`Component`] object [`prepare`] and log retention in `bit-object-import`.
 //!
-//! Verifies that detached stash versions in [`snapshots`] preserve [`Component`] and [`Allocation`] consumer log metadata, builder data, and graph edges via [`prepare`] ([`detached_version_preserves_consumer_log_builder_and_old_graph_identity`], [`a_preserved_consumer_log_cannot_be_overridden_by_allocation`]).
+//! Verifies that detached stash versions in [`snapshots`] preserve [`Component`] and [`Allocation`] consumer log metadata, builder data, and graph edges via [`prepare`] ([`detached_version_preserves_consumer_log_builder_and_old_graph_identity`], [`a_preserved_consumer_log_cannot_be_overridden_by_allocation`], [`new_component_without_consumer_log_uses_allocation_log_and_empty_parents`]).
 
 use super::{Allocation, Component, prepare, snapshots};
 use serde_json::json;

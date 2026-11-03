@@ -53,7 +53,7 @@ fn saved_graph_leaf_does_not_require_external_model_or_version_objects() {
     assert!(!directory.0.join(".bit/objects").exists());
 }
 
-/// Verifies that `traverse` declines when a retained saved graph cycle reaches a prior selected version in the batch ([`json`]).
+/// Verifies that `traverse` declines when a retained saved graph cycle reaches a prior selected version in the batch ([`json`], [`saved_graph_leaf_does_not_require_external_model_or_version_objects`]).
 #[test]
 fn retained_graph_cycle_declines_before_prior_selected_version_can_be_rewritten() {
     let directory = crate::workspace::engine::command::scratch::Directory::create().unwrap();

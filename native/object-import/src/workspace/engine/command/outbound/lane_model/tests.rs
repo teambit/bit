@@ -16,7 +16,7 @@ fn write_version(dir: &Path, hash: &str, value: &Value) {
     .unwrap();
 }
 
-/// Verifies that [`lane_versions`] selects every unexported lane snap written via [`write_version`] and stops traversal at the remote head.
+/// Verifies that [`lane_versions`] selects every unexported lane snap (`scope.one/feature`) written via [`write_version`] and stops traversal at the remote head.
 #[test]
 fn selects_every_unexported_lane_snap_and_stops_at_remote_head() {
     let unique = SystemTime::now()

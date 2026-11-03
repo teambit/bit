@@ -1,6 +1,6 @@
 //! Unit tests for semantic version [`plan`]ning across [`Material`], [`Participation`], and [`VersionState`] in `bit-object-import`.
 //!
-//! Ensures selected components use the requested release bump while auto-tagged dependents bump patch via [`material`] and [`plan`] ([`selected_major_and_automatic_patch_keep_separate_semantic_allocations`], [`existing_exact_tag_declines_before_any_semantic_assignment`]).
+//! Ensures selected components use the requested release bump while auto-tagged dependents bump patch via [`material`] and [`plan`] ([`selected_major_and_automatic_patch_keep_separate_semantic_allocations`], [`existing_exact_tag_declines_before_any_semantic_assignment`], [`selected_automatic_report_overlap_keeps_selected_increment`]).
 
 use super::{Material, plan};
 use crate::workspace::engine::command::resolve_snapshot::{Participation, VersionState};

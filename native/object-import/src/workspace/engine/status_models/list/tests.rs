@@ -1,6 +1,6 @@
 //! Unit tests for reading [`deprecated`] flags, [`lane_readme_of`], and [`parse_lane_heads`] mappings in `bit-object-import`.
 //!
-//! Checks [`deprecated`], [`lane_readme_of`] ([`reads_deprecation_and_lane_readmes_from_core_extensions`]), and [`parse_lane_heads`] ([`parse_lane_heads_supports_string_and_object_component_ids`]) extraction from core extension configurations.
+//! Checks [`deprecated`], [`lane_readme_of`] ([`reads_deprecation_and_lane_readmes_from_core_extensions`]), and [`parse_lane_heads`] ([`parse_lane_heads_supports_string_and_object_component_ids`], [`empty_lane_components_array_produces_empty_head_map`]) extraction from core extension configurations.
 
 use super::{deprecated, lane_readme_of, parse_lane_heads};
 use serde_json::json;

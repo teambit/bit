@@ -1,6 +1,6 @@
 //! Unit tests for `fileStatus` target comparison, [`response`] payloads, and batch size limits in `bit-object-import`.
 //!
-//! Checks target-ordered unchanged flags via [`response`] ([`file_status_preserves_first_matches_target_order_and_raw_content_identity`]), invalid hash rejection ([`file_status_rejects_invalid_hashes_and_oversized_batches_without_a_prefix`]), and batch count bounds.
+//! Checks target-ordered unchanged flags via [`response`] ([`file_status_preserves_first_matches_target_order_and_raw_content_identity`], [`file_status_marks_target_unchanged_only_when_path_and_hash_match`]), invalid hash rejection ([`file_status_rejects_invalid_hashes_and_oversized_batches_without_a_prefix`]), and batch count bounds.
 
 use serde_json::json;
 

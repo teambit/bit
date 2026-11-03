@@ -84,7 +84,7 @@ fn checkout_head_without_a_pattern_selects_only_current_lane_components() {
     );
 }
 
-/// Verifies that [`bitmap_identities`] includes tracked, removed, inactive, and default-scoped `.bitmap` (`BitMap`) rows while ignoring schema and lane metadata keys.
+/// Verifies that [`bitmap_identities`] includes tracked, removed, inactive, and default-scoped `.bitmap` (`BitMap`) rows while ignoring schema and lane metadata keys ([`checkout_head_without_a_pattern_selects_only_current_lane_components`]).
 #[test]
 fn lane_addition_selection_counts_only_ids_absent_from_entire_bitmap() {
     let bitmap = json!({

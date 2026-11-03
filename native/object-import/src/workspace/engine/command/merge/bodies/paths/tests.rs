@@ -64,7 +64,7 @@ fn backslashes_in_native_unix_filenames_remain_unsupported() {
     assert!(canonical_relative(Path::new(r"bar\file.js")).is_err());
 }
 
-/// Verifies that [`validate`] rejects merge destination [`Path`] targets in [`Directory`] that traverse through symlinks on Unix.
+/// Verifies that [`validate`] rejects merge destination [`Path`] targets in [`Directory`] that traverse through symlinks on Unix ([`canonical_relative`], [`nested_native_destinations_validate_existing_and_new_merge_files`]).
 #[cfg(unix)]
 #[test]
 fn merge_destination_symlinks_remain_rejected() {

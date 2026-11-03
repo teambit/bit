@@ -93,7 +93,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
-/// Verifies that [`Fixture::compare`] permits [`Source`] edits with unchanged imports and declines when imports are added or removed.
+/// Verifies that [`Fixture::compare`] permits [`Source`] edits with unchanged imports and declines when imports are added or removed ([`retained_fast_forward_sources_preserve_imports_and_detect_stale_capture`]).
 #[test]
 fn source_edits_keep_imports_but_new_or_removed_imports_decline() {
     let fixture = Fixture::new();

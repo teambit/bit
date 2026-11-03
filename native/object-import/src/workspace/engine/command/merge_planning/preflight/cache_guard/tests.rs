@@ -4,7 +4,7 @@
 
 use serde_json::json;
 
-/// Verifies that preflight `metadata` cache rekeying requires identical file classification, `mainFile`, extensions, and `packageDependencies` ([`json`]).
+/// Verifies that preflight `metadata` cache rekeying requires identical file classification (`files`), `mainFile`, `extensions`, and `packageDependencies` ([`json`]).
 #[test]
 fn cache_rekey_requires_same_file_classification_and_component_policy() {
     let current = json!({"mainFile":"index.js","bindingPrefix":"@scope","dependencies":[],

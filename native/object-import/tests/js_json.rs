@@ -1,6 +1,6 @@
 //! Differential tests for `JavaScript`-compatible [`js_json`] JSON serialization against Node in `bit-object-import`.
 //!
-//! Verifies [`Value`] property key ordering and [`stringify`] formatting parity via [`next`] and [`oracle`] ([`seeded_binary64_utf16_and_own_keys_match_node_stringify`]) in `bit-object-import`.
+//! Verifies [`Value`] property key ordering and [`stringify`] formatting parity via [`next`] and [`oracle`] ([`seeded_binary64_utf16_and_own_keys_match_node_stringify`]) with [`Command`] and [`Stdio`] in `bit-object-import`.
 
 #[path = "../src/js_json.rs"]
 pub mod js_json;

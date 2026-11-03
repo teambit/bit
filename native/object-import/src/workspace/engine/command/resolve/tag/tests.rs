@@ -1,6 +1,6 @@
 //! Unit tests for tag [`pattern_order`] matching order and wildcard eligibility checks.
 //!
-//! Verifies that overlapping patterns preserve outer pattern order ([`patterns_preserve_candidate_and_outer_order_with_overlap`]) and every wildcard matches an eligible component ([`each_wildcard_must_match_an_eligible_component`]) without duplicates.
+//! Verifies that overlapping patterns preserve outer pattern order ([`patterns_preserve_candidate_and_outer_order_with_overlap`], [`overlapping_matches_count_loads_before_unique_publication`]) and every wildcard matches an eligible component ([`each_wildcard_must_match_an_eligible_component`], [`empty_patterns_return_empty_selection_with_zero_loads`]) without duplicates.
 
 use super::pattern_order;
 use serde_json::json;

@@ -1,6 +1,6 @@
 //! Unit tests for spooled [`SourceOverlay`] resolution and [`proof`] validation without disk mutations.
 //!
-//! Validates [`resolve_one`] and [`Budget`] enforcement across spooled overlay slices in [`Fixture`] ([`NEXT`], [`added_and_deleted_candidates_change_resolution_without_touching_disk`], [`retained_ranges_validate_without_reading_unrelated_large_spool_prefix`]).
+//! Validates [`resolve_one`] and [`Budget`] enforcement across spooled overlay slices in [`Fixture`] ([`NEXT`], [`added_and_deleted_candidates_change_resolution_without_touching_disk`], [`retained_ranges_validate_without_reading_unrelated_large_spool_prefix`]) using [`json`].
 
 use super::SourceOverlay;
 use crate::workspace::engine::{

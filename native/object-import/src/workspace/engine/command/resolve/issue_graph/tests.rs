@@ -35,7 +35,7 @@ fn external_adjacency_is_complete_and_absent_models_remain_proven() {
     assert!(repository.validate().is_err());
 }
 
-/// Verifies that [`external`] declines unproven external adjacency or corrupt existing model objects in [`Repository`] ([`scratch`]) instead of treating them as leaf receipts.
+/// Verifies that [`external`] declines unproven external adjacency or corrupt existing model objects in [`Repository`] ([`scratch`]) instead of treating them as leaf receipts ([`external_adjacency_is_complete_and_absent_models_remain_proven`]).
 #[test]
 fn unproven_external_adjacency_and_corrupt_model_never_become_leaf_receipts() {
     let directory = scratch::Directory::create().unwrap();

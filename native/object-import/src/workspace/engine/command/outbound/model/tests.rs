@@ -48,7 +48,7 @@ fn scoped_id_wins_over_name_containing_slash() {
     assert!(requested(&["scope.one/missing".to_owned()], rows, false).is_err());
 }
 
-/// Verifies that [`staged_versions`] exports every local tag and snap along with the component `head` ([`json`]) and rejects non-local heads or missing tag refs.
+/// Verifies that [`staged_versions`] exports every local tag and snap along with the component `head` ([`json`], [`scoped_id_wins_over_name_containing_slash`]) and rejects non-local heads or missing tag refs.
 #[test]
 fn every_local_version_is_exported_with_the_head() {
     let head = "cccccccccccccccccccccccccccccccccccccccc";

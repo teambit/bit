@@ -1,6 +1,6 @@
 //! Unit tests for workspace file [`equivalent`] byte-equivalence and [`frozen`] unchanged diff batching in `bit-object-import`.
 //!
-//! Ensures EOL/binary byte comparison via [`equivalent`] ([`byte_equality_preserves_eol_binary_and_missing_file_semantics`]) and parallel unchanged diff filtering via [`frozen`] ([`unchanged_batches_preserve_order_on_the_configured_workers_without_running_git`]) avoid unnecessary `git` spawns.
+//! Ensures EOL/binary byte comparison via [`equivalent`] ([`byte_equality_preserves_eol_binary_and_missing_file_semantics`]) and parallel unchanged diff filtering via [`frozen`] ([`unchanged_batches_preserve_order_on_the_configured_workers_without_running_git`], [`empty_frozen_diff_batch_returns_empty_vec_immediately`]) avoid unnecessary `git` spawns.
 
 use super::{equivalent, frozen};
 

@@ -1,6 +1,6 @@
 //! Unit tests for retained workspace snapshot [`Observation`] and [`State`] ownership and LRU eviction in `bit-object-import`.
 //!
-//! Validates [`MAX_BYTES`], [`MAX_FILES`], and [`MAX_TOKEN`] bounds for retained file observations via [`snapshot`] ([`ownership_requires_the_exact_read_token_path_and_disk_identity`], [`snapshots_evict_oldest_observations_at_both_limits`]).
+//! Validates [`MAX_BYTES`], [`MAX_FILES`], and [`MAX_TOKEN`] bounds for retained file observations via [`snapshot`] ([`ownership_requires_the_exact_read_token_path_and_disk_identity`], [`snapshots_evict_oldest_observations_at_both_limits`], [`token_exhaustion_declines_without_reusing_an_observation_identity`]).
 
 use super::{MAX_BYTES, MAX_FILES, MAX_TOKEN, Observation, State};
 use std::path::PathBuf;

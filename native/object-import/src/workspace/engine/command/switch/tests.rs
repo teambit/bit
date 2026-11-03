@@ -1,6 +1,6 @@
 //! Unit tests for lane switch [`Entry`], [`Id`], and [`Record`] eligibility, [`lane_only`] tracking, and [`progress`] in `bit-object-import`.
 //!
-//! Checks [`validate_lane`] ([`forked_lane_provenance_does_not_change_checkout_eligibility`]), [`order_targets`], [`status_load_order`], forked lane provenance, and unavailable [`lane_only`] `.bitmap` row tracking.
+//! Checks [`validate_lane`] ([`forked_lane_provenance_does_not_change_checkout_eligibility`], [`validate_lane_accepts_absent_lane_when_switching_to_main`]), [`order_targets`], [`status_load_order`], forked lane provenance, and unavailable [`lane_only`] `.bitmap` row tracking.
 
 use super::{
     command_import::lane::{Entry, Id, Record},

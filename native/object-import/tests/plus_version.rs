@@ -1,7 +1,7 @@
 //! Differential qualification of published dependency placeholder resolution.
 //! Verifies [`is_plus`] and [`resolve`] against `@teambit/dependency-resolver`.
 //!
-//! Compares `+`, `+^`, `+~`, and `+>` range expansion via [`is_plus`] and [`resolve`] ([`placeholders_match_released_dependency_resolver`], [`snapshot_range_usage_matches_released_component_guard`]) across valid, prerelease, and malformed version inputs using [`Command`].
+//! Compares `+`, `+^`, `+~`, and `+>` range expansion via [`is_plus`] and [`resolve`] ([`placeholders_match_released_dependency_resolver`], [`snapshot_range_usage_matches_released_component_guard`], [`direct_plus_version_unit_checks_cover_prefixes_and_fallbacks`]) across valid, prerelease, and malformed version inputs using [`Command`].
 use bit_object_import::plus_version::{is_plus, resolve};
 use std::process::Command;
 

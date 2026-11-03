@@ -14,7 +14,7 @@ fn incoming_fast_forward_application_files_decline_before_autosnap_allocation() 
     assert!(validate_target(&json!({"files":[{"relativePath":"index.js"}]})).is_ok());
 }
 
-/// Verifies that preflight dependent rejection only declines dependencies that require future snapshot replacement ([`json`]).
+/// Verifies that preflight dependent rejection only declines dependencies that require future snapshot replacement ([`json`], [`validate_target`]).
 #[test]
 fn preflight_only_rejects_dependencies_requiring_future_snapshot_replacement() {
     let snapshots = std::collections::HashSet::from(["scope/pending"]);

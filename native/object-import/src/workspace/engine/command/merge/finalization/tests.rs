@@ -62,7 +62,7 @@ fn new_links_are_planned_without_writes_on_supported_platforms() {
     assert!(!directory.0.join("node_modules/@scope/alpha/index.js").exists());
     assert_eq!(fs::read(directory.0.join("alpha/index.js")).unwrap(), b"module.exports = 1;\n");
 }
-/// Verifies that [`prepare`] accepts pre-existing `node_modules` symlinks in [`fixture`] ([`Directory`]) without replacing them or writing `.bit/staged-snaps`.
+/// Verifies that [`prepare`] accepts pre-existing `node_modules` symlinks in [`fixture`] ([`Directory`]) without replacing them or writing `.bit/staged-snaps` ([`lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes`]).
 #[cfg(unix)]
 #[test]
 fn existing_links_remain_eligible_and_do_not_get_replaced_during_preparation() {

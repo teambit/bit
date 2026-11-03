@@ -1,6 +1,6 @@
 //! Unit tests for file history [`validate_file`] path traversal guards and [`file_hash`] duplicate rejection in `bit-object-import`.
 //!
-//! Confirms that relative component paths via [`validate_file`] ([`file_history_paths_cannot_escape_a_component`]) cannot escape the component root or duplicate [`file_hash`] entries ([`duplicate_version_file_paths_decline`]).
+//! Confirms that relative component paths via [`validate_file`] ([`file_history_paths_cannot_escape_a_component`]) cannot escape the component root or duplicate [`file_hash`] entries ([`duplicate_version_file_paths_decline`], [`missing_file_in_version_returns_none_while_unique_match_returns_hash`]).
 
 use super::{file_hash, validate_file};
 use serde_json::json;

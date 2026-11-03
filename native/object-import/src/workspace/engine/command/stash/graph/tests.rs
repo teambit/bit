@@ -1,6 +1,6 @@
 //! Unit tests for stash cross-component flattened dependency graph [`traverse`], [`key`], and [`Repository`] lookup in `bit-object-import`.
 //!
-//! Ensures stashed dependency graphs in [`HashMap`] inputs via [`traverse`], [`key`], and [`Repository`] ([`cross_component_graph_uses_existing_versions_instead_of_new_snapshot_markers`], [`isolated_component_without_dependencies_produces_empty_flattened_list_and_graph`]) reference existing component versions.
+//! Ensures stashed dependency graphs in [`HashMap`] inputs via [`traverse`], [`key`], and [`Repository`] ([`cross_component_graph_uses_existing_versions_instead_of_new_snapshot_markers`], [`isolated_component_without_dependencies_produces_empty_flattened_list_and_graph`]) reference existing component versions using [`json`].
 
 use super::{HashMap, Repository, key, traverse};
 use serde_json::json;

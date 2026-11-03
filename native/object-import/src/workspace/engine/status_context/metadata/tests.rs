@@ -1,6 +1,6 @@
 //! Unit tests for status context component [`configuration`] and [`component_id_matches`] checks in `bit-object-import`.
 //!
-//! Verifies environment extension validation via [`configuration`] ([`environment_shapes_are_admitted_but_invalid_callbacks_decline`]) and object/string component ID matching via [`component_id_matches`] ([`component_id_matches_accepts_object_and_string_ids`]).
+//! Verifies environment extension validation via [`configuration`] ([`environment_shapes_are_admitted_but_invalid_callbacks_decline`]) and object/string component ID matching via [`component_id_matches`] ([`component_id_matches_accepts_object_and_string_ids`], [`component_id_matches_rejects_mismatched_or_missing_component_id`]).
 
 use super::{component_id_matches, configuration};
 use serde_json::json;

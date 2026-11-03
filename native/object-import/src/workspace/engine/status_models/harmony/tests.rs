@@ -1,6 +1,6 @@
 //! Unit tests for Harmony `Version` schema [`project`]ion, [`validate`] checks, and semantic hashing in `bit-object-import`.
 //!
-//! Verifies legacy flattened dependency normalization ([`harmony_projection_normalizes_old_ids_without_mutating_stored_objects`]) and unsupported schema rejection ([`legacy_and_historical_unscoped_aliases_do_not_enter_harmony_projection`]) in `bit-object-import`.
+//! Verifies legacy flattened dependency normalization ([`harmony_projection_normalizes_old_ids_without_mutating_stored_objects`], [`status_semantic_hash_is_independent_of_harmony_schema_and_storage_defaults`]) and unsupported schema rejection ([`legacy_and_historical_unscoped_aliases_do_not_enter_harmony_projection`]) in `bit-object-import`.
 
 use super::{project, validate};
 use serde_json::json;
