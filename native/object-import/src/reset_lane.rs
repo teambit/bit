@@ -41,7 +41,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Preimage and optional postimage bytes for a scope object mutated or deleted by a lane reset.
+/// Preimage and optional postimage bytes for a scope object mutated or deleted by a lane reset [`Plan`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct ObjectChange {
     hash: String,

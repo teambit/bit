@@ -20,7 +20,7 @@ struct Loaded {
 }
 
 impl Repository {
-    /// Loads `Component` and `Lane` objects for `(scope, name)` requiring a `.bitmap` entry.
+    /// Loads `Component` and `Lane` objects for `(scope, name)` at `root` ([`Path`]) requiring a [`BitmapState`] `.bitmap` entry.
     #[inline]
     pub(super) fn load(
         root: &Path,

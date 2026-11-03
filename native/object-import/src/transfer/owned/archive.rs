@@ -39,7 +39,7 @@ pub(super) fn write(plan: &Plan, request: &wire::Archive) -> io::Result<Value> {
     export_archive(plan, request, parent)
 }
 
-/// Writes an export-mode tar archive from frozen [`Plan`] entries and verifies its objects hash.
+/// Writes an export-mode tar archive from frozen [`Plan`] entries via [`prepare`] and verifies its objects hash.
 fn export_archive(plan: &Plan, request: &wire::Archive, parent: &Path) -> io::Result<Value> {
     let descriptors = plan.entries
         .iter()

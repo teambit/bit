@@ -36,7 +36,7 @@ const KEYS: &[&str] = &[
     "batchId",
 ];
 
-/// Project raw `Version` fields into their canonical snapshot object representation over [`KEYS`].
+/// Projects raw `Version` fields into their canonical snapshot object representation over [`KEYS`] via [`field`].
 pub(super) fn project(fields: &Value) -> io::Result<Value> {
     let mut output = Vec::with_capacity(KEYS.len());
     for &name in KEYS {

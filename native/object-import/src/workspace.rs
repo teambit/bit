@@ -29,7 +29,7 @@ struct File {
     contents: Vec<u8>,
 }
 
-/// Wire response returned after processing a workspace file-write or filesystem action frame.
+/// Wire response returned by [`serve`] after processing a workspace [`File`]-write or filesystem action frame.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 struct Response {
     version: u8,

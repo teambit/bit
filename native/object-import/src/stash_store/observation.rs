@@ -15,7 +15,7 @@ pub(super) struct Observation {
     files: BTreeMap<String, Vec<u8>>,
 }
 impl Observation {
-    /// Reads and sorts all `.json` stash metadata files under `scope/stash`.
+    /// Reads and sorts all `.json` stash metadata files under `scope/stash` via [`read_files`].
     pub(super) fn read(scope: &Path) -> io::Result<Self> {
         let directory = scope.join("stash");
         let files = read_files(&directory)?;

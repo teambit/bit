@@ -10,7 +10,7 @@ pub(super) fn version_history(repository: &Repository, identity: &str) -> io::Re
     project_history(&repository.objects, identity, &repository.heads.current)
 }
 
-/// Loads or initializes `VersionHistory` for `identity` and appends missing ancestors from `current`.
+/// Loads or initializes `VersionHistory` for `identity` and appends missing ancestors from `current` into an [`ObjectChange`].
 fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<ObjectChange> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("lane history identity"))?;
     let hash = object_hash(&format!("{identity}:VersionHistory"));

@@ -38,7 +38,7 @@ struct Plan {
     objects: Vec<objects::Prepared>,
 }
 
-/// Dispatches a snapshot transaction or journal operation (`kind`) against session `state`.
+/// Dispatches a snapshot transaction or journal operation (`kind`) against session `state` ([`State`]).
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind {
         "snapshotSerialize" => serialize(&input, state),

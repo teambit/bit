@@ -9,7 +9,7 @@ use observation::Observation;
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Retained stash metadata file selection and directory observation for `bit stash load`.
+/// Retained stash metadata file selection and [`Observation`] directory state for `bit stash load`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedLoad {
     observation: Observation,

@@ -7,7 +7,7 @@ use serde_json::Value;
 use super::{References, Version};
 use crate::transfer::{MAX_BYTES, MAX_OBJECTS, invalid, object};
 
-/// Compressed `Version` object bytes paired with its extracted child object [`References`].
+/// Compressed [`Version`] object bytes paired with its extracted child object [`References`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Loaded {
     pub(super) compressed: Vec<u8>,

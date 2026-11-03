@@ -45,7 +45,7 @@ pub(super) fn collect(input: &serde_json::Value) -> std::io::Result<Collect> {
     Ok(request)
 }
 
-/// Deserialized `transferCollect` request payload (`mode`, `objectsDirectory`, `versions`, `scope`, `stagingDirectory`, `refs`, `options`).
+/// Deserialized `transferCollect` request payload (`mode`, `objectsDirectory`, `versions` ([`Version`]), `scope`, `stagingDirectory`, `refs`, `options` ([`Options`])).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Collect {

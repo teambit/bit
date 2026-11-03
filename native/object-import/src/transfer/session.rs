@@ -11,7 +11,7 @@ use sha1::{Digest, Sha1};
 
 use super::{invalid, owned, transaction};
 
-/// Session-scoped registry of spooled transfer paths, frozen collections, plans, and export transaction state.
+/// Session-scoped registry of spooled transfer paths, frozen [`owned::Entry`] collections, [`owned::Plan`]s, and export [`transaction::Transaction`] state.
 #[derive(Default)]
 pub(crate) struct State {
     pub(super) spool_paths: HashSet<PathBuf>,

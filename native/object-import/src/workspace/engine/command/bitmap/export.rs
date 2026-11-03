@@ -46,7 +46,7 @@ impl Prepared {
     }
 }
 
-/// Locates the mutable `.bitmap` row matching `(scope, name)` for export scope promotion.
+/// Locates the mutable `.bitmap` row matching `(scope, name)` for export scope promotion via [`export_row_matches`].
 #[inline]
 fn find_export_row<'a>(
     rows: &'a mut serde_json::Map<String, Value>,

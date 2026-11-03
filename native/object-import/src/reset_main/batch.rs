@@ -58,7 +58,7 @@ impl Batch {
         Self::prepare_with(root, head_only, Some(Selected { identities: normalized, force }))
     }
 
-    /// Discovers candidate `main`-lane components and prepares per-component reset plans.
+    /// Discovers candidate `main`-lane components and prepares per-component reset [`Plan`]s with `selected` ([`Selected`]).
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
         let mut ids = candidates(root)?;
         if let Some(selected) = &selected {

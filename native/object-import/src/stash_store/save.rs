@@ -3,7 +3,7 @@ use super::{invalid, observation::Observation};
 use serde::Serialize;
 use serde_json::Value;
 use std::{fs, io, path::Path};
-/// Retained stash metadata file payload and directory preimage for `bit stash save`.
+/// Retained stash metadata file payload and [`Observation`] directory preimage for `bit stash save`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PreparedSave {
     observation: Observation,

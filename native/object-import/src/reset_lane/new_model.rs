@@ -6,7 +6,7 @@ use std::{fs, io, path::Path};
 
 /// Prepares deletion of the `Component` [`ObjectChange`] and `index.json` [`BytesChange`] for a lane-only component reset.
 ///
-/// Validates both `index.json` and `Component` object byte budgets before removing the index row.
+/// Validates both `index.json` at `root` ([`Path`]) and `Component` object byte budgets before removing the [`unique_position`] row.
 pub(super) fn remove_new_model(
     root: &Path,
     scope: &str,

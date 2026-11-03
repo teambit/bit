@@ -35,7 +35,7 @@ pub(super) fn files(root: &Path, target: &Target) -> io::Result<Value> {
     ))
 }
 
-/// Reads and parses the stored `Component` object for `id` from `directory`, checking `index.json` first.
+/// Reads and parses the stored `Component` object for `id` from `directory`, checking `index.json` first via [`index_component_hash`].
 fn read_component(scope: &Path, directory: &Path, id: &str) -> io::Result<Option<Value>> {
     let bare_name = id.split_once('/').map_or(id, |(_, name)| name);
     let candidates = index_component_hash(scope, id)

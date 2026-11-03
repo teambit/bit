@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// A component and the pending tag removed from its bitmap entry.
+/// A component and the pending tag removed from its `.bitmap` entry in [`Plan`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Entry {
     pub identity: String,

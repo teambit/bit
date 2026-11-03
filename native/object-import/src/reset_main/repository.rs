@@ -20,7 +20,7 @@ pub(super) struct Repository {
 }
 
 impl Repository {
-    /// Loads `index.json` and the `Component` object for `(scope, name)` at `root`.
+    /// Loads `index.json` and the `Component` object for `(scope, name)` at `root` ([`Path`]).
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let scope_dir = crate::scope_path(root);
         let index_before = fs::read(scope_dir.join("index.json"))?;

@@ -50,7 +50,7 @@ impl Bitmap {
     }
 }
 
-/// Finds the unique `.bitmap` entry key matching `(scope, name)` in `fields`.
+/// Finds the unique `.bitmap` entry key matching `(scope, name)` in `fields` ([`Value`] map).
 pub(super) fn find_key(
     fields: &serde_json::Map<String, Value>,
     scope: &str,

@@ -24,7 +24,7 @@ pub(super) fn single(path: &Path) -> io::Result<bool> {
     Ok(is_single_regular_handle(&info))
 }
 
-/// Returns `true` when `info` has a single link and no directory, device, reparse-point, or offline flags.
+/// Returns `true` when `info` has a single link and no [`DIRECTORY`], [`DEVICE`], [`REPARSE_POINT`], or [`OFFLINE`] flags.
 #[inline]
 fn is_single_regular_handle(info: &winapi_util::file::Information) -> bool {
     info.number_of_links() == 1

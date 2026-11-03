@@ -35,7 +35,7 @@ pub(super) fn configs(value: &Value) -> io::Result<(Value, Vec<(usize, Value)>)>
     Ok((Value::Array(output), assignments))
 }
 
-/// Sorts a raw extension `config` object by `UTF-16` key, mapping `"-"` to an empty object.
+/// Sorts a raw extension `config` [`Value`] object by `UTF-16` key, mapping `"-"` to an empty object.
 fn sorted_config(value: &Value) -> io::Result<Value> {
     if matches!(value,Value::String(units) if units.as_slice()==[u16::from(b'-')]) {
         return Ok(Value::Object(Vec::new()));

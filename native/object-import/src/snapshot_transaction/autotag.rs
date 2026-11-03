@@ -15,7 +15,7 @@ struct Node {
     locator: Value,
     edges: Vec<String>,
 }
-/// Computes auto-tag candidate indices and triggering dependency edges from `input`.
+/// Computes auto-tag candidate indices and triggering dependency edges from `input` via [`graph`] and [`walk`].
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     let components = array(input, "components")?;
     let changed = array(input, "changed")?;

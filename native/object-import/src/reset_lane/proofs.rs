@@ -9,7 +9,7 @@ use std::{
 /// Ordered list of `(path, preimage_bytes)` pairs retained for lane-reset revalidation.
 pub(super) type ReadSet = Vec<(PathBuf, Option<Vec<u8>>)>;
 
-/// Reads regular file `path` and appends its preimage bytes to `proofs`.
+/// Reads regular file `path` ([`Path`]) and appends its preimage bytes to `proofs` ([`ReadSet`]).
 #[inline]
 pub(super) fn read(path: &Path, proofs: &mut ReadSet) -> io::Result<Option<Vec<u8>>> {
     let bytes = regular(path)?;

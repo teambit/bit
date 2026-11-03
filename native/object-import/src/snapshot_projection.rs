@@ -59,7 +59,7 @@ pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Resu
     Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
 }
 
-/// Extracts and validates `(name, scope)` from raw component/history `fields`.
+/// Extracts and validates `(name, scope)` from raw component/history `fields` ([`Value`]).
 fn component_name_and_scope(fields: &Value) -> io::Result<(String, String)> {
     let raw_name = text(get(fields, "name"))?;
     let name = raw_name.trim();

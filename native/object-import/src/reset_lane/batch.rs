@@ -64,7 +64,7 @@ impl Batch {
         Self::prepare_with(root, head_only, Some(Selected { identities: normalized, force }))
     }
 
-    /// Discovers candidate lane components and prepares per-component reset plans with `selected` filtering.
+    /// Discovers candidate lane components and prepares per-component reset [`Plan`]s with `selected` ([`Selected`]) filtering.
     fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
         let discovery = candidates::prepare(root)?;
         let mut identities = discovery.identities.clone();

@@ -41,7 +41,7 @@ pub(crate) fn read(
         .transpose()
 }
 
-/// Reconstructs a `.bitmap` component row for a soft-deleted component from the lane staged-config file.
+/// Reconstructs a `.bitmap` component row [`Value`] for a soft-deleted component via [`find_removed_staged`].
 pub(crate) fn removed_lane_row(
     root: &Path,
     lane_scope: &str,

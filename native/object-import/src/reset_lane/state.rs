@@ -19,7 +19,7 @@ fn parse_lane_header(rows: &serde_json::Map<String, Value>) -> io::Result<(Strin
 }
 
 impl BitmapState {
-    /// Loads `.bitmap` at `root`, restoring any soft-deleted row for `(scope, name)`.
+    /// Loads `.bitmap` at `root` ([`Path`]), restoring any soft-deleted row for `(scope, name)`.
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
         if before.len() > 4 * 1024 * 1024 {

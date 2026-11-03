@@ -55,7 +55,7 @@ pub(super) struct Commit {
     pub(super) owner: Option<Owner>,
 }
 
-/// Deserializes and validates a non-empty snapshot staging `token` without path-traversal characters.
+/// Deserializes and validates a non-empty snapshot staging `token` for [`Commit`] without path-traversal characters.
 #[inline]
 fn deserialize_token<'de, Deser>(deserializer: Deser) -> Result<String, Deser::Error>
 where

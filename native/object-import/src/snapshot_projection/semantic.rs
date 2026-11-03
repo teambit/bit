@@ -57,7 +57,7 @@ pub fn semantic(fields: &Value) -> io::Result<Semantic> {
     })
 }
 
-/// Returns `true` when semantic property `name` with `value` should be included in the hashed `Version` object.
+/// Returns `true` when semantic property `name` with `value` ([`Value`]) should be included in the hashed `Version` object.
 fn retain(name: &str, value: &Value) -> io::Result<bool> {
     if matches!(
         name,

@@ -30,7 +30,7 @@ pub(super) fn select(repository: &Repository, head_only: bool) -> io::Result<Sel
     Ok(selection)
 }
 
-/// Replaces raw hashes in `selection.labels` with their tag names from `model` when tagged.
+/// Replaces raw hashes in `selection` ([`Selection`]) labels with their tag names from `model` ([`Value`]) when tagged.
 fn tag_labels(selection: &mut Selection, model: &Value) {
     for label in &mut selection.labels {
         if let Some(tag) = model["versions"]

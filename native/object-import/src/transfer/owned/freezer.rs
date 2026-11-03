@@ -4,7 +4,7 @@ use std::{collections::HashSet, io, path::Path};
 
 use super::{Descriptor, Entry, MAX_BYTES, invalid, object};
 
-/// Frozen transfer object [`Entry`] list and set of missing object hashes when `skip_missing` is enabled.
+/// Frozen transfer object [`Entry`] list and set of missing object hashes produced by [`freeze`] when `skip_missing` is enabled.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Frozen {
     pub(super) entries: Vec<Entry>,

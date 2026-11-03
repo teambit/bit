@@ -30,7 +30,7 @@ struct BytesChange {
     after: Vec<u8>,
 }
 
-/// Preimage and optional postimage bytes for a `Component` or `VersionHistory` object during a `main` reset.
+/// Preimage and optional postimage bytes for a `Component` or `VersionHistory` object in a `main` reset [`Plan`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct ObjectChange {
     hash: String,

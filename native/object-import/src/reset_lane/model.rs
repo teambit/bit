@@ -5,7 +5,7 @@ use super::{ObjectChange, Repository, Selection, changed, diagnostics, invalid};
 use serde_json::{Map, Value};
 use std::io;
 
-/// Projects head, version-map, and detached-head removals on `repository.model` for `selection`.
+/// Projects head, version-map, and detached-head removals on `repository` ([`Repository`]) for `selection` ([`Selection`]) into [`ObjectChange`].
 pub(super) fn project(
     repository: &mut Repository,
     selection: &Selection,

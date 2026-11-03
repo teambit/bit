@@ -24,7 +24,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    /// Prepares a `bit reset --never-exported` plan across unscoped `.bitmap` entries at `root`.
+    /// Prepares a `bit reset --never-exported` plan across unscoped `.bitmap` entries at `root` ([`Path`]).
     pub fn prepare(root: &Path) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
         if before.len() > 4 * 1024 * 1024 {

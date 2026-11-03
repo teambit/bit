@@ -1,4 +1,4 @@
-//! Canonical workspace (`.bit` / `.git/bit`) and bare-scope directory discovery ([`path`], [`bit_workspace_config::scope_path`]) shared by native operations.
+//! Canonical workspace (`.bit` / `.git/bit`) and bare-scope directory discovery ([`path`], [`Path`], [`PathBuf`], [`bit_workspace_config::scope_path`]) shared by native operations.
 use std::path::{Path, PathBuf};
 
 /// Locates the workspace (`.bit` / `.git/bit`) or bare-scope [`PathBuf`] for `root` via [`bit_workspace_config::scope_path`].

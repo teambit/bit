@@ -12,7 +12,7 @@ use std::{
 
 use super::{MAX_RAW, invalid, path, wire};
 
-/// Reads, validates, and normalizes a snapshot `Source` payload within `maximum` bytes.
+/// Reads, validates, and normalizes a snapshot `Source` payload within `maximum` bytes via [`workspace`] or [`hex`].
 pub(super) fn read(
     object: &wire::Object,
     maximum: usize,

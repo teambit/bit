@@ -12,7 +12,7 @@ pub fn read_scope_object(scope: &Path, identity: &str) -> io::Result<Option<(Str
     read_object_directory(&scope.join("objects"), identity)
 }
 
-/// Decode metadata from a repository object directory, including its trash or pending directory.
+/// Decode [`Value`] metadata from a repository object `directory` ([`Path`]), including its trash or pending directory.
 /// Missing objects return `None`; the normal repository size and header checks still apply.
 pub fn read_object_directory(
     directory: &Path,

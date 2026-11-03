@@ -25,7 +25,7 @@ pub(super) fn validate(
     Ok(())
 }
 
-/// Validates that indexed component `row` does not depend on any `removed` version of `(scope, name)`.
+/// Validates in `objects` ([`Path`]) that indexed component `row` ([`Value`]) does not depend on any `removed` version of `(scope, name)`.
 fn validate_row(
     objects: &Path,
     row: &Value,

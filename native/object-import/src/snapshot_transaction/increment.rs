@@ -5,7 +5,7 @@ use std::io;
 
 use super::invalid;
 
-/// Increments parsed semver descriptor `version` by `release` (`major`, `minor`, `patch`, `pre*`) and optional `identifier`.
+/// Increments parsed semver descriptor `version` by `release` (`major`, `minor`, `patch`, `pre*`) and optional `identifier` via [`stable`] and [`pre`].
 pub(super) fn increment(
     version: &Value,
     release: &str,

@@ -41,7 +41,7 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     }
     Ok((count, output))
 }
-/// Commits imported objects, history, sources, configuration updates, `.bitmap`, and checkout policy for `prepared`.
+/// Commits imported objects, history, sources via [`publish_sources`], configuration updates, `.bitmap`, and checkout policy for `prepared` ([`PreparedPlan`]).
 fn publish(
     record: &Record,
     prepared: &mut PreparedPlan,

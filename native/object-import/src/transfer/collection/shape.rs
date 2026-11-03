@@ -27,7 +27,7 @@ pub(crate) fn query(value: &Value) -> io::Result<()> {
     prepare(value, true)
 }
 
-/// Validates `Version` dependency, flattened dependency, parent, edge, and extension fields before metadata validation.
+/// Validates `Version` dependency, flattened dependency, parent, edge, and extension fields via [`dependencies`] and [`flattened`] before metadata validation.
 fn prepare(value: &Value, artifacts: bool) -> io::Result<()> {
     let mut clean = value.clone();
     dependencies(value, &mut clean)?;

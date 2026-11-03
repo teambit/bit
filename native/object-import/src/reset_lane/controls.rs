@@ -14,7 +14,7 @@ pub(crate) struct Control {
     after: Vec<u8>,
 }
 
-/// Prepares an `unmerged.json` control-file update pruning entries matching `identities`.
+/// Prepares an `unmerged.json` [`Control`] update at `root` ([`Path`]) pruning entries matching `identities`.
 pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Control>> {
     if identities.is_empty() {
         return Ok(Vec::new());

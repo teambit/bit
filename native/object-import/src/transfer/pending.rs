@@ -6,7 +6,7 @@ use std::{collections::HashMap, io, path::PathBuf};
 
 use super::{State, invalid};
 
-/// Deserialized `transferWritePending` request (`token`, `pendingDir`, optional `chown`).
+/// Deserialized `transferWritePending` request (`token`, `pendingDir`, optional `chown` ([`Owner`])) consumed by [`write`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
