@@ -38,7 +38,7 @@ pub fn resolve(
     Ok(())
 }
 
-/// Return the first configured aspect on [`WorkspaceComponent`] that is an environment; core aspects never are.
+/// Return the first configured aspect on [`WorkspaceComponent`] `component` that is an environment; core aspects never are.
 fn first_env(
     component: &WorkspaceComponent,
     envs: &std::collections::HashMap<String, bool>,

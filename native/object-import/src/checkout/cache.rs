@@ -22,7 +22,7 @@ pub(crate) struct State {
     /// Total byte weight of all directory and hash keys in `sources`.
     key_bytes: usize,
 }
-/// Maximum total key byte budget (`4 MiB`) for cached `Source` object entries.
+/// Maximum total key byte budget (`4 MiB`) for cached `Source` object entries in [`State`].
 const MAX_KEY_BYTES: usize = 4 * 1024 * 1024;
 /// Maximum number of cached `Source` object entries (`4096`) retained in [`State`].
 const MAX_ENTRIES: usize = 4096;

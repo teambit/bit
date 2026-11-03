@@ -4,7 +4,7 @@
 use super::{PreparedImport, Target, VirtualRemote};
 use std::{io, path::Path};
 
-/// Prepare an inbound [`PreparedImport`] plan with optional [`VirtualRemote`]s, `all_history`, and `fetch_dependencies`.
+/// Prepare an inbound [`PreparedImport`] plan at [`Path`] `root` with optional [`VirtualRemote`]s, `all_history`, and `fetch_dependencies`.
 #[inline]
 pub(crate) fn prepare_inbound_with_virtual(
     root: &Path,

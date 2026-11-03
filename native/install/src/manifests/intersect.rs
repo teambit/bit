@@ -1,7 +1,7 @@
 //! `semver-range-intersect` 0.3.1: the intersection of npm ranges as a range
 //! string, on semver 6 comparators.
 //!
-//! Computes pairwise intersections across multi-range comparator sets via [`Multi`].
+//! Computes pairwise intersections across multi-range comparator sets via [`Multi`] and [`intersect`].
 
 mod bounds;
 mod single;

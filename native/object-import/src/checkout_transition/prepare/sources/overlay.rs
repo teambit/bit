@@ -82,7 +82,7 @@ pub(super) fn files(
         .collect()
 }
 
-/// Load a single `Source` body by `hash` from [`Overlay`] `overlay` or `directory` within [`MAX_BYTES`] budgets.
+/// Load a single `Source` body by `hash` from [`Overlay`] `overlay` or [`Path`] `directory` within [`MAX_BYTES`] budgets.
 #[inline]
 pub(in crate::checkout_transition::prepare) fn body(
     directory: &Path,

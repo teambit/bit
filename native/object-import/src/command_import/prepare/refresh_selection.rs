@@ -49,7 +49,7 @@ pub(super) fn refresh_all<'a>(
     Ok(available)
 }
 
-/// Extract the required non-empty scope name from `target`.
+/// Extract the required non-empty scope name from [`Target`] `target` (or fail with [`invalid`]).
 #[inline]
 fn target_scope(target: &Target) -> io::Result<&str> {
     target.scope

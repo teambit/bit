@@ -47,7 +47,7 @@ pub(crate) struct VirtualRemote {
     pub(crate) objects: Vec<(String, Vec<u8>)>,
 }
 
-/// Prepare a read-only [`PreparedImport`] plan for `targets` using optional [`VirtualRemote`]s.
+/// Prepare a read-only [`PreparedImport`] plan for [`Target`] `targets` at [`Path`] `root` using optional [`VirtualRemote`]s.
 #[inline]
 pub(crate) fn prepare_with_virtual(
     root: &Path,

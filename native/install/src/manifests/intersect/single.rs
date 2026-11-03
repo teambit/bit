@@ -55,7 +55,7 @@ fn bounds(single: &Single) -> Option<(&Comparator, &Comparator)> {
     }
 }
 
-/// The merged bound of two lower (or two upper) bounds; `None` when a
+/// The merged [`Comparator`] bound of two lower (or two upper) bounds at [`End`] `end`; `None` when a
 /// prerelease prevents merging.
 fn merge_bound(left: &Comparator, right: &Comparator, end: End) -> Option<Comparator> {
     let (Some(left_semver), Some(right_semver)) = (&left.semver, &right.semver) else {

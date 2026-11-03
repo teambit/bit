@@ -6,7 +6,7 @@ use super::{
 };
 use serde_json::{Map, Value, json};
 use std::io;
-/// Apply three-way merge row effects from [`plan::Plan`] onto [`File`] entries and `status`.
+/// Apply three-way merge row effects from [`plan::Plan`] onto [`File`] entries and `status` [`Map`] via [`effect`].
 pub(super) fn apply(
     plan: &plan::Plan,
     files: &mut Vec<File>,

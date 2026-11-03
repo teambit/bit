@@ -65,7 +65,7 @@ fn retain_version(
     Ok(())
 }
 
-/// Record local `main` progress entries and `ScopeMeta` objects for staged recovery `targets`.
+/// Record local `main` progress entries and `ScopeMeta` objects ([`object_hash`]) for staged recovery [`Target`] `targets` on [`PreparedImport`].
 pub(super) fn record_local_main(
     plan: &mut PreparedImport,
     targets: &[&Target],

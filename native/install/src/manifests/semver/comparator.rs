@@ -89,7 +89,7 @@ impl Comparator {
         matches!(self.operator.trim(), ">=" | "<=")
     }
 
-    /// `comparator.intersects(comp)` of semver 6.
+    /// `comparator.intersects(comp)` of `semver` 6 ([`Flavor::V6`]).
     pub(crate) fn intersects(&self, other: &Self) -> io::Result<bool> {
         if self.operator.trim().is_empty() {
             if self.value.trim().is_empty() {

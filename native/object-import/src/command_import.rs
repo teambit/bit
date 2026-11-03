@@ -66,7 +66,7 @@ impl Overlay {
             })
             .transpose()
     }
-    /// Borrow the raw `Source` file payload for `hash` when staged in this overlay.
+    /// Borrow the raw `Source` file payload for `hash` when staged in this [`Overlay`].
     #[inline]
     pub(crate) fn source(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash.trim()).and_then(|record| record.source.as_deref())

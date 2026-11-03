@@ -41,7 +41,7 @@ impl PreparedImport {
         }
         Ok(missing)
     }
-    /// Stage graph [`Target`] versions and their transitive dependencies from [`VirtualRemote`]s and `root`.
+    /// Stage graph [`Target`] versions and their transitive dependencies from [`VirtualRemote`]s and [`Path`] `root`.
     pub(crate) fn prepare_graph_versions(
         &mut self,
         root: &Path,

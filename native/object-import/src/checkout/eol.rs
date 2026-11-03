@@ -1,4 +1,4 @@
-//! Binary file detection ([`binary`], `isbinaryfile` 4.0.6) and platform line-ending normalization.
+//! Binary file detection ([`binary`], `isbinaryfile` 4.0.6) and platform line-ending normalization ([`auto`], [`normalize`]).
 
 #[cfg(test)]
 mod tests;

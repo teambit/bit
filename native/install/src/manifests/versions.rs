@@ -7,7 +7,7 @@ use crate::model::{Lifecycle, PolicyEntry};
 use regress::Regex;
 use std::{io, sync::OnceLock};
 
-/// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters.
+/// `isHash` of `@teambit/component-version`: 3 to 40 lowercase hex characters checked by [`snap_to_semver`].
 #[inline]
 pub(super) fn is_hash(version: &str) -> bool {
     let trimmed = version.trim();

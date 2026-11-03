@@ -21,7 +21,7 @@ use std::io;
     expect(perfectionist::too_many_struct_fields, reason = "One field per `bit install` flag.")
 )]
 pub struct InstallOptions {
-    /// Positional `[packages...]` arguments passed to `bit install`.
+    /// Positional `[packages...]` arguments passed to `bit install` in [`InstallOptions`].
     pub packages: Vec<String>,
     /// `-t, --type [lifecycleType]`
     pub lifecycle_type: Option<String>,

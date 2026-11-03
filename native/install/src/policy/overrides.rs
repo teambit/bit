@@ -12,7 +12,7 @@ pub type FieldMaps = [IndexMap<String, String>; 3];
 
 /// `-`: remove the dependency (`MANUALLY_REMOVE_DEPENDENCY`).
 pub const REMOVE: &str = "-";
-/// `+`: take the version from the workspace (`MANUALLY_ADD_DEPENDENCY`).
+/// `+`: take the version from the workspace (`MANUALLY_ADD_DEPENDENCY`) in [`deps`].
 pub const ADD: &str = "+";
 
 /// Return the [`FieldMaps`] array index (`0..=2`) corresponding to [`Lifecycle`] `lifecycle`.

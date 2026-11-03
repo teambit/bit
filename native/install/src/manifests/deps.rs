@@ -18,7 +18,7 @@ pub(super) enum Field {
 }
 
 impl Field {
-    /// The order `toDependenciesManifest` creates the fields in.
+    /// The order `toDependenciesManifest` creates the [`Field`]s in [`DepsObject`].
     pub(super) const ALL: [Field; 4] = [
         Field::Dependencies,
         Field::OptionalDependencies,

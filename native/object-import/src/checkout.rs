@@ -56,7 +56,7 @@ impl Input {
             .flatten()
     }
 }
-/// Decoded binary checkout or source-read request header and file list.
+/// Decoded binary checkout or source-read request header and [`Input`] file list.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Request {
     id: u32,

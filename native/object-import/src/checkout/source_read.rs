@@ -72,7 +72,7 @@ fn records(
             .collect()
     })
 }
-/// Read uncached `Source` [`Record`]s for `request` sequentially within [`MAX_BYTES`] budgets.
+/// Read uncached `Source` [`Record`]s for [`Request`] `request` sequentially from [`cache::State`] within [`MAX_BYTES`] budgets.
 #[inline]
 fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Option<Record>>> {
     let mut raw = 0_usize;

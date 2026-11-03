@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Workspace `.bitmap` filename.
+/// Workspace `.bitmap` filename read by [`Bitmap`].
 pub const BITMAP: &str = ".bitmap";
 /// Legacy `.bit.map.json` fallback filename.
 const OLD_BITMAP: &str = ".bit.map.json";

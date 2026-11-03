@@ -77,7 +77,7 @@ fn initial(
     insert_statuses(&mut status, removal_rows, "checkout removal path")?;
     Ok((files, status, removal))
 }
-/// Insert `(relativePath, status)` pairs from `rows` into `status`, returning an error with `message` if any path is missing.
+/// Insert `(relativePath, status)` pairs from [`Value`] `rows` into `status`, returning an [`invalid`] error with `message` if any path is missing.
 #[inline]
 fn insert_statuses(
     status: &mut serde_json::Map<String, Value>,

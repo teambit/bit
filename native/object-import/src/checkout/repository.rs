@@ -38,7 +38,7 @@ pub(crate) struct SourceRecord {
     /// Total inflated byte length (including the object header).
     pub(crate) inflated_size: usize,
 }
-/// Inflate, verify, and record the `Source` object at `hash` in the active merge receipt trace.
+/// Inflate, verify, and record the `Source` object at `hash` under [`Path`] `directory` in the active merge receipt trace ([`SourceRecord`]).
 #[inline]
 pub(crate) fn source_record(
     directory: &Path,

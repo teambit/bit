@@ -35,7 +35,7 @@ fn set_root(deduped: &mut Deduped, field: Field, name: &str, version: &str) {
     deduped.root.get_mut(field).insert(name.to_string(), version.to_string());
 }
 
-/// `handlePreserved`: the workspace policy version goes to the root, keeping incompatible component ranges in their components.
+/// `handlePreserved`: the workspace policy version in [`IndexEntry`] goes to the root, keeping incompatible component ranges in their components.
 fn handle_preserved(deduped: &mut Deduped, name: &str, entry: &IndexEntry) -> io::Result<bool> {
     let Some((version, field)) = &entry.preserved else { return Ok(true) };
     let version = version.trim();

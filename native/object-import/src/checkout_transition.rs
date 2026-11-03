@@ -53,7 +53,7 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     prepare::prepare(input, &mut state.plans, Some(snapshots))
 }
-/// Prepare a checkout plan in `state` using optional workspace `snapshots` and an import `overlay`.
+/// Prepare a checkout plan in [`State`] `state` using optional workspace `snapshots` and an import `overlay` via [`prepare::prepare_with_overlay`].
 #[inline]
 pub(crate) fn prepare_with_overlay(
     input: &Value,

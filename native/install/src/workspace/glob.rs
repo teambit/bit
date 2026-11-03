@@ -1,4 +1,4 @@
-//! Shared native variant namespace glob matching helpers.
+//! Shared native variant namespace glob matching helpers ([`matches`]).
 //!
 //! Re-exports [`matches`] (`bit_workspace_config::variants::matches_namespace`) for workspace variant glob tests.
 

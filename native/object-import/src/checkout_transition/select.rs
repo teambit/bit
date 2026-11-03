@@ -81,7 +81,7 @@ impl State {
         }
         Ok(output)
     }
-    /// Advance an active selection [`Record`] using the observation [`Receipt`] in `input`.
+    /// Advance an active selection [`Record`] using the observation [`Receipt`] in [`Value`] `input`.
     pub(super) fn receipt(&mut self, input: Value) -> io::Result<Value> {
         let request: Receipt = serde_json::from_value(input).map_err(io::Error::other)?;
         let token = request.token.trim();

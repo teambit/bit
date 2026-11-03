@@ -5,7 +5,7 @@ use super::{PreparedImport, Target, invalid, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
 impl PreparedImport {
-    /// Seed remote lane head versions for [`Id`] and off-lane `.bitmap` [`Target`] versions for a lane checkout.
+    /// Seed remote lane head versions for [`Id`] and off-lane `.bitmap` [`Target`] versions for a lane checkout at [`Path`] `root`.
     pub(crate) fn prepare_checkout_lane(
         &mut self,
         root: &Path,

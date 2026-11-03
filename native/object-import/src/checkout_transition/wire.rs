@@ -15,7 +15,7 @@ pub(super) struct Prepare {
     pub(super) base: Option<Version>,
     pub(super) labels: Option<Labels>,
 }
-/// Target or base `Version` manifest wire payload with optional `proofFiles`.
+/// Target or base `Version` manifest wire payload containing [`Manifest`] `files` and optional `proofFiles`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {

@@ -19,7 +19,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Maximum inflated byte size (`64 MiB`) allowed when reading a component or `Version` object.
+/// Maximum inflated byte size (`64 MiB`) allowed when reading a component or `Version` object in [`ScopeObjects`].
 const MAX_OBJECT_BYTES: u64 = 64 * 1024 * 1024;
 
 /// Aspect ID (`teambit.envs/envs`) storing the environment descriptor on a `Version` object.

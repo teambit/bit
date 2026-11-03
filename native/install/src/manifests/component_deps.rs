@@ -37,7 +37,7 @@ pub(super) struct Dep<'a> {
 }
 
 impl Dep<'_> {
-    /// `dependency.id`: the package name, or `scope/name@version`.
+    /// `dependency.id`: the package name, or `scope/name@version` for a [`ComponentId`].
     #[inline]
     fn id(&self) -> String {
         match self.component {

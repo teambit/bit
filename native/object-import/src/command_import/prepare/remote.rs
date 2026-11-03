@@ -87,7 +87,7 @@ pub(super) fn remote(
     }
     Ok(directory)
 }
-/// Resolve and validate the local `objects` directory path for remote `name` from `remote_overrides` or `remotes`.
+/// Resolve and validate the local `objects` directory [`PathBuf`] for remote `name` on [`PreparedImport`] from `remote_overrides` or `remotes` [`Value`].
 pub(super) fn raw_remote(
     plan: &mut PreparedImport,
     remotes: &Value,

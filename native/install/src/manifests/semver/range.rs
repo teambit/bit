@@ -22,7 +22,7 @@ pub(crate) struct Range {
 /// Unsatisfiable comparator sentinel (`<0.0.0-0`) emitted for empty range parts.
 const NULL_SET: &str = "<0.0.0-0";
 
-/// The comparator strings of one `||` part (`Range.parseRange`).
+/// The comparator strings of one `||` part (`Range.parseRange`) for [`Flavor`] `flavor`.
 fn comparator_strings(range: &str, flavor: Flavor) -> Vec<String> {
     let range = replace_hyphen(range, flavor);
     let range = replace_all(Token::ComparatorTrim, &range, "$1$2$3");

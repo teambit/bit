@@ -1,5 +1,5 @@
-//! Package names of external envs: envs that are neither core envs nor
-//! workspace components, as `getPackageName` names the env component.
+//! Package names of external envs (`getPackageName`): envs that are neither [`CORE_ENVS`] nor
+//! workspace components.
 //!
 //! Resolves external environment package names from [`ScopeObjects`] metadata or [`default_package_name`] rules via [`external_env_packages`] (using [`bare_id`]).
 

@@ -6,7 +6,7 @@
 use crate::model::{Lifecycle, Manifest, PolicyEntry};
 use serde_json::{Map, Value};
 
-/// The `package.json` dependency fields in Bit's `DEPENDENCIES_FIELDS` order.
+/// The `package.json` dependency fields (`dependencies`, `devDependencies`, `peerDependencies`) in Bit's `DEPENDENCIES_FIELDS` [`Lifecycle`] order.
 pub const FIELDS: [(&str, Lifecycle); 3] = [
     ("dependencies", Lifecycle::Runtime),
     ("devDependencies", Lifecycle::Dev),

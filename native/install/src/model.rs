@@ -11,7 +11,7 @@ use std::path::PathBuf;
 /// Ordered `package.json`-shaped JSON object [`Map`] of [`Value`] fields.
 pub type Manifest = Map<String, Value>;
 
-/// `{ name: range }` [`IndexMap`] of one dependency field.
+/// `{ name: range }` [`IndexMap`] of one dependency field in a [`Manifest`].
 pub type DependencyMap = IndexMap<String, String>;
 
 /// A component id as Bit prints it: `scope/name@version`. `scope` is `None` for

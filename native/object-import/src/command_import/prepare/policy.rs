@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::io;
 
 impl PreparedImport {
-    /// Resolve and validate the `Version` [`Value`] for [`Target`] from `self.overlay` ([`read_model`], [`version_ref`], [`read_version`]) or the local scope (returning [`invalid`] on missing models).
+    /// Resolve and validate the `Version` [`Value`] for [`Target`] on [`PreparedImport`] from `self.overlay` ([`read_model`], [`version_ref`], [`read_version`]) or the local scope (returning [`invalid`] on missing models).
     #[inline]
     pub(crate) fn policy_version(&mut self, target: &Target) -> io::Result<Value> {
         let local = self.environment.local_directory.clone();

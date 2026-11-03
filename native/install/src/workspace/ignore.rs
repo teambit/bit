@@ -67,7 +67,7 @@ impl Ignore {
         self.rules.is_empty()
     }
 
-    /// The paths that are not ignored, in order.
+    /// The paths from `paths` that are not ignored (`self.keep`), in order.
     #[inline]
     pub fn filter(&mut self, paths: &[String]) -> Vec<String> {
         paths

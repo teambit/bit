@@ -8,7 +8,7 @@ use crate::read_budget::Budget;
 use rayon::prelude::*;
 use std::io;
 
-/// Maximum total byte budget (`32 MiB`) for parallel workspace file loading.
+/// Maximum total byte budget (`32 MiB`) for parallel workspace file loading in [`load`].
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 
 /// Load and verify [`wire::Current`] `files` in parallel via [`read_shared`] under [`MAX_BYTES`] [`Budget`], falling back to [`serial`] on error.

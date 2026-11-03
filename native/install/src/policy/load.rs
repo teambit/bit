@@ -31,7 +31,7 @@ pub const CORE_ENVS: [&str; 10] = [
     "teambit.harmony/empty-env",
 ];
 
-/// Maximum recursion depth (`16`) when following `extends` chains in `env.jsonc`.
+/// Maximum recursion depth (`16`) when following `extends` chains in `env.jsonc` via [`EnvJsoncReader`].
 const MAX_EXTENDS: usize = 16;
 
 /// Whether `id` (with or without a version via [`split_version`]) is one of [`CORE_ENVS`].

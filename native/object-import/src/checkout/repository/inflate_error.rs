@@ -27,7 +27,7 @@ pub(super) fn retain(error: flate2::DecompressError) -> io::Error {
 const fn is_trim_char(ch: char) -> bool {
     ch.is_whitespace() || ch.is_control()
 }
-/// Extract the trimmed underlying zlib error message ([`is_trim_char`]) from `error` when wrapped in [`Failure`].
+/// Extract the trimmed underlying zlib error message ([`is_trim_char`]) from [`io::Error`] `error` when wrapped in [`Failure`].
 #[inline]
 pub(crate) fn message(error: &io::Error) -> Option<&str> {
     error

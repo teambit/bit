@@ -15,7 +15,7 @@ use std::{
     sync::{Arc, Mutex, PoisonError},
 };
 
-/// Maximum inflated byte size (`64 MiB`) allowed when reading a loose scope object.
+/// Maximum inflated byte size (`64 MiB`) allowed when reading a loose [`Scope`] object in [`Scope::object`].
 const MAX_OBJECT: u64 = 64 * 1024 * 1024;
 
 /// The workspace scope: `.bit`, or `.git/bit` in a git repository.

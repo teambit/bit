@@ -1,4 +1,4 @@
-//! Checkout manifest verification ([`verify_manifest`], [`verify_manifest_value`]) against stored `Version` objects and tag syntax validation.
+//! Checkout manifest verification ([`verify_manifest`], [`verify_manifest_value`]) against stored `Version` objects and [`plain_tag`] syntax validation.
 
 use super::{
     MAX_FILES, ManifestFile, hash, invalid, manifest, metadata, same_manifest, validate_files,

@@ -82,7 +82,7 @@ fn split_envs<'a>(
     (envs, configured.into_iter().collect())
 }
 
-/// Partition `envs` into environments used as the environment of another listed environment, followed by the rest (`regroupEnvsIdsFromTheList`).
+/// Partition `envs` into environments used as the environment of another listed environment, followed by the rest (`regroupEnvsIdsFromTheList`) for [`env_components`].
 fn env_layers<'a>(
     components: &[WorkspaceComponent],
     envs: &[&'a str],

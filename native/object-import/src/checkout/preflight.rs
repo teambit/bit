@@ -63,7 +63,7 @@ fn parallel(
     }
     Ok(files)
 }
-/// Load a single [`Input`] `Source` body from [`cache::State`] or inflate it from disk via [`repository::read_source_shared`] under `budget`.
+/// Load a single [`Input`] `Source` body from [`cache::State`] or inflate it from disk via [`repository::read_source_shared`] under [`Budget`] `budget` for [`Request`].
 #[inline]
 fn read(
     request: &Request,

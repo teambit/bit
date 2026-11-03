@@ -62,7 +62,7 @@ fn retain(row: &mut Value, bodies: &mut Vec<plan::Body>, offset: usize) -> io::R
     }
     Ok(())
 }
-/// Remove string `field` from `row`, append its bytes to `bodies`, and record `output` plan index.
+/// Remove string `field` from [`Value`] `row`, append its bytes to [`plan::Body`] `bodies`, and record `output` plan index.
 #[inline]
 fn retain_field(
     row: &mut Value,

@@ -18,7 +18,7 @@ pub(super) fn prepare(
 ) -> io::Result<Value> {
     prepare_with_overlay(input, state, snapshots, None)
 }
-/// Prepare a checkout plan from `input` using optional workspace `snapshots` and import `overlay`.
+/// Prepare a checkout plan in [`plan::State`] from [`Value`] `input` using optional workspace `snapshots` and import `overlay`.
 pub(super) fn prepare_with_overlay(
     input: &Value,
     state: &mut plan::State,

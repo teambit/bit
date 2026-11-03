@@ -47,7 +47,7 @@ fn prerelease() -> String {
     format!(r"(?:-({id}(?:\.{id})*))")
 }
 
-/// Format the `(?:-?({id}(?:\.{id})*))` loose prerelease regex fragment.
+/// Format the `(?:-?({id}(?:\.{id})*))` loose prerelease regex fragment using [`NUMERIC_LOOSE`] and [`NON_NUMERIC`].
 #[inline]
 fn prerelease_loose() -> String {
     let id = format!("(?:{NUMERIC_LOOSE}|{NON_NUMERIC})");

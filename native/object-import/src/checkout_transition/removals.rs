@@ -15,7 +15,7 @@ struct Request {
     /// Whether the component owns the workspace root directory (preserving `.bitmap`).
     workspace_root: bool,
 }
-/// Compute removed file statuses and absolute removal paths for a prepared checkout [`plan::Plan`] and [`Request`] via [`normalize_rel`].
+/// Compute removed file statuses and absolute removal paths for [`Value`] `input` ([`Request`]) against [`plan::State`] via [`normalize_rel`].
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let plan =

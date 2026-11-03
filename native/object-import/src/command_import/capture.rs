@@ -46,7 +46,7 @@ pub(super) struct Capture {
     raw_bytes: usize,
 }
 impl Capture {
-    /// Update the recorded [`Sha256`] proof for `path` after an owned in-process write of `bytes`.
+    /// Update the recorded [`Sha256`] proof for [`Path`] `path` after an owned in-process write of `bytes`.
     #[inline]
     pub(super) fn accept_known(&mut self, path: &Path, bytes: &[u8]) {
         if let Some(proof) = self.proofs.get_mut(path) {

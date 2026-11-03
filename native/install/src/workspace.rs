@@ -50,7 +50,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// The env of env components.
+/// The env of env components (`"teambit.envs/env"`).
 pub(super) const ENV_OF_ENVS: &str = "teambit.envs/env";
 
 /// Loaded workspace state combining `.bitmap` entries, resolved [`WorkspaceComponent`]s, root `package.json`, and [`MergeConfig`].

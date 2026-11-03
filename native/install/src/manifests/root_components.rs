@@ -30,7 +30,7 @@ fn root_dir(input: &ManifestInput<'_>, id: &str) -> PathBuf {
     input.options.root_components_dir.join(name.replace('/', "_"))
 }
 
-/// `_getEnvDependencies`: the env's forced own peers, `+` from the workspace dependencies.
+/// `_getEnvDependencies`: the env's forced own peers, resolving `+` from `workspace_deps` ([`DependencyMap`]).
 fn env_dependencies(
     input: &ManifestInput<'_>,
     env_id: &str,

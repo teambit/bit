@@ -71,8 +71,8 @@ struct Response {
     plan: Option<Plan>,
 }
 
-/// Resolve a repository target, verify the complete manifest and Source set, and
-/// plan statuses/removals against caller-owned current snapshots without writes.
+/// Resolve a repository target, verify the complete manifest and `Source` set, and
+/// plan [`FileStatus`]es and removals against caller-owned [`Current`] snapshots without writes.
 pub(crate) fn serve(
     reader: &mut impl Read,
     writer: &mut impl Write,

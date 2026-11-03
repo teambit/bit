@@ -28,7 +28,7 @@ impl SwitchTracking {
         }
         Ok(())
     }
-    /// Validate and atomically write the updated `scope.json` lane tracking file, returning its write receipt.
+    /// Validate ([`Self::validate`]) and atomically write the updated `scope.json` lane tracking file, returning its write receipt [`Value`].
     #[inline]
     pub(crate) fn commit(&self) -> io::Result<Value> {
         self.validate()?;

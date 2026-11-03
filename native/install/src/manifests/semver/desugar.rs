@@ -18,7 +18,7 @@ fn is_x(id: Option<&str>) -> bool {
     })
 }
 
-/// `+id + 1` for a numeric identifier.
+/// `+id + 1` for a numeric identifier in [`caret`] and [`tilde`].
 #[inline]
 fn next(id: Option<&str>) -> u64 {
     id.and_then(|id| id.trim().parse::<u64>().ok())

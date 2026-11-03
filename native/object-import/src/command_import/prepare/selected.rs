@@ -45,7 +45,7 @@ impl PreparedImport {
         }
         self.validate()
     }
-    /// Filter `targets` to those belonging to an external scope distinct from `local_scope`.
+    /// Filter [`Target`] `targets` to those belonging to an external scope distinct from `local_scope`.
     #[inline]
     fn external_targets(&self, targets: &[Target]) -> Vec<Target> {
         targets

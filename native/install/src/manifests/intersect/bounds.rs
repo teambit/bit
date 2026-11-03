@@ -46,7 +46,7 @@ pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) ->
     !left_version.is_empty() && left_version == version_text(right)
 }
 
-/// `isEqualsComparator`.
+/// Return `true` (`isEqualsComparator`) when [`Comparator`] `comparator` has a [`SemVer`] and an empty or `"="` operator.
 #[inline]
 pub(super) fn is_equals(comparator: &Comparator) -> bool {
     comparator.semver.is_some() && matches!(comparator.operator.trim(), "" | "=")

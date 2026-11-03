@@ -53,7 +53,7 @@ fn bit_list(track_all_files: bool) -> Vec<&'static str> {
     list
 }
 
-/// parse-gitignore: non-blank lines that do not start with `#`, untrimmed.
+/// `parse-gitignore`: non-blank lines in [`Path`] `path` that do not start with `#`, untrimmed.
 fn ignore_file(path: &Path) -> io::Result<Vec<String>> {
     match fs::read_to_string(path) {
         Ok(text) => Ok(text
