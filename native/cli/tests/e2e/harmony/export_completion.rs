@@ -52,7 +52,7 @@ fn compare(helper: &Helper, command: &str, native: bool) {
     super::export_hub::comparison::remote_objects(&helper.scopes.remote_path, &expected_remote);
 }
 
-/// Compares `.bitmap` and scope control files (`staged-snaps`, `staged-config/main.json`, `last-merged`, `index.json`) via [`config::read_jsonc`].
+/// Compares `.bitmap` and scope control files (`staged-snaps`, `staged-config/main.json`, `last-merged`, `index.json`) via [`config::read_jsonc`] and [`Path`].
 fn compare_controls(actual: &Path, expected: &Path) {
     assert_eq!(
         config::read_jsonc(&actual.join(".bitmap")),

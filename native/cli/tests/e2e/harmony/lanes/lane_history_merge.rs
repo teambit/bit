@@ -1,6 +1,6 @@
 //! Port of `e2e/harmony/lanes/lane-history-merge.e2e.ts` for lane history entries during merge ([`MERGED_LANE`], [`lane_history_records_fast_forward_merge_entry`]).
 //!
-//! Verifies that fast-forward `bit lane merge` records a merge entry in `bit lane history --json`.
+//! Verifies that fast-forward `bit lane merge` records a merge entry in `bit lane history --json` ([`Helper`]).
 
 use crate::helper::{Helper, parse};
 

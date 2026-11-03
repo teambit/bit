@@ -51,7 +51,7 @@ fn main_to_lane_a_to_lane_b_branching_and_switching() {
     assert_eq!(len(&parse(&helper.native("list --json"))), 1);
 }
 
-/// bit lane command › creating a lane from main after merging another lane into main locally ([`Helper`], [`parse`], [`len`])
+/// bit lane command › creating a lane from main after merging another lane into main locally ([`Helper`], [`parse`], [`len`], [`main_to_lane_a_to_lane_b_branching_and_switching`])
 /// bit lane command › snapping on lane-b when the components are checked out to lane-a snaps
 #[test]
 fn create_lane_from_main_after_local_merge_and_block_snap_on_foreign_lane_deps() {

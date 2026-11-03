@@ -51,7 +51,7 @@ fn rename_exported_lane_with_alias() {
     assert_eq!(remote_after["lanes"][0]["name"].as_str(), Some("new-lane"));
 }
 
-/// bit lane management › a new lane with a snapped component ([`rename_exported_lane_with_alias`], [`Helper`], [`remote::publish`])
+/// bit lane management › a new lane with a snapped component ([`rename_exported_lane_with_alias`], [`Helper`], [`remote::publish`], [`config`])
 #[test]
 fn new_lane_with_snapped_component_and_change_scope() {
     let helper = Helper::new();

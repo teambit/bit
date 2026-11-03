@@ -42,7 +42,7 @@ fn completion_duration(body: &str) -> Option<&str> {
     }
     None
 }
-/// Asserts that `duration` consists of a valid decimal number followed by a recognized time unit (`ns`..`h`) for [`completion`].
+/// Asserts that `duration` consists of a valid decimal number followed by a recognized time unit (`ns`..`h`) for [`completion`] and [`durations`].
 fn validate_duration(duration: &str) {
     let numeric = duration
         .bytes()

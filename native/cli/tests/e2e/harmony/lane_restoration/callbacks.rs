@@ -69,7 +69,7 @@ fn assert_phase_order(helper: &Helper) {
     }
 }
 
-/// Verifies an `onLoad` failure during `bit lane revert` preserves `.bitmap` and component sources ([`prepared`], [`durations`]).
+/// Verifies an `onLoad` failure during `bit lane revert` preserves `.bitmap` and component sources ([`prepared`], [`durations`], [`support`]).
 #[test]
 fn real_onload_failure_preserves_the_exact_owned_prefix_before_historical_writes() {
     let (helper, history) = prepared();

@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config};
 use serde_json::json;
 
-/// Active lane name used in the `bit lane eject` end-to-end tests.
+/// Active lane name used in the `bit lane eject` end-to-end tests ([`lane_eject_when_no_main_version`]).
 const DEV_LANE: &str = "dev";
 
 /// Verifies `bit eject` on a lane for components with and without a `main` version ([`DEV_LANE`], [`Helper`], [`config`]).

@@ -12,7 +12,7 @@ use std::fs;
 /// Component ID of the selected local member added on top of the inherited lane fixture.
 const SELECTED_MEMBER: &str = "comp2";
 
-/// Verifies that resetting a selected local component succeeds even when an unselected lane member has no base head ([`SELECTED_MEMBER`], [`fixture`], [`node`]).
+/// Verifies that resetting a selected local component succeeds even when an unselected lane member has no base head ([`SELECTED_MEMBER`], [`fixture`], [`node`], [`support`]).
 #[test]
 fn selected_local_member_resets_while_unselected_inherited_member_has_no_replacement() {
     let helper = fixture::unknown_inherited();

@@ -68,7 +68,7 @@ fn ci_missing_history_errors_preserve_the_published_stack_before_any_native_effe
     }
 }
 
-/// Verifies that CI `main`-lane errors delegate for the published stack trace before history resolution ([`support`]).
+/// Verifies that CI `main`-lane errors delegate for the published stack trace before history resolution ([`support`], [`main_lane_error_precedes_history_resolution_and_preserves_the_workspace`]).
 #[test]
 fn ci_main_lane_errors_preserve_the_published_stack_before_history_resolution() {
     let helper = support::workspace(1, false);

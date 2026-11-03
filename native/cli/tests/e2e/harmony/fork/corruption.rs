@@ -40,7 +40,7 @@ fn missing_remote_source_keeps_the_released_error_and_no_tracked_target() {
     assert!(support::ids(&helper).is_empty());
     assert!(!source.exists());
 }
-/// Verifies remote `bit fork` preserves corrupt remote `Source` bytes and fails without tracking the target ([`source_object`], [`compare`]).
+/// Verifies remote `bit fork` preserves corrupt remote `Source` bytes and fails without tracking the target ([`source_object`], [`compare`], [`support::exported`]).
 #[test]
 fn corrupt_remote_source_keeps_its_bytes_and_the_complete_canonical_failure_prefix() {
     let helper = support::exported(1);

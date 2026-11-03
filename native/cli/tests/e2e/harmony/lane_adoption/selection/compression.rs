@@ -72,7 +72,7 @@ fn stored_stream(path: &Path) -> Vec<u8> {
     raw
 }
 
-/// Decompresses a `zlib`-encoded object slice via [`ZlibDecoder`] for [`stored_stream`].
+/// Decompresses a `zlib`-encoded object slice via [`ZlibDecoder`] for [`stored_stream`] and [`main_switch_canonicalizes_an_unchanged_main_only_component_zlib_stream`].
 fn inflate(bytes: &[u8]) -> Vec<u8> {
     let mut raw = Vec::new();
     ZlibDecoder::new(bytes).read_to_end(&mut raw).unwrap();

@@ -39,7 +39,7 @@ fn hidden(lane: &Value) -> String {
     rows[0].as_str().unwrap().to_owned()
 }
 
-/// Verifies `bit reset --silent` rewinds a hidden `updateDependents` cascade without adding `.bitmap` rows ([`seeded`], [`hidden`], [`fixture`]).
+/// Verifies `bit reset --silent` rewinds a hidden `updateDependents` cascade without adding `.bitmap` rows ([`seeded`], [`hidden`], [`fixture`], [`support`]).
 #[test]
 fn all_reset_rewinds_the_real_hidden_cascade_without_adding_bitmap_rows() {
     let helper = seeded();

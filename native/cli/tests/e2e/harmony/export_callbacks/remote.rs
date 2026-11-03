@@ -6,7 +6,7 @@
 use crate::helper::Helper;
 use std::process::Child;
 
-/// Running [`Child`] HTTP remote server and base URL for `bit export` callback tests.
+/// Running [`Child`] HTTP remote server and base URL for `bit export` callback tests ([`start`]).
 pub(super) struct Remote {
     child: Child,
     pub(super) url: String,

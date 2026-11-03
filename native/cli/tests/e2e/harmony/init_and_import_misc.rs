@@ -48,7 +48,7 @@ fn invalid_bitmap_and_invalid_workspace_jsonc_status_errors() {
     assert!(out_ws.contains("failed parsing the workspace.jsonc file at"), "{out_ws}");
 }
 
-/// Verifies `bit init --reset-hard` restores a clean workspace status after `.bitmap` version modifications ([`Helper`], [`FOO_FIXTURE`], [`config`]).
+/// Verifies `bit init --reset-hard` restores a clean workspace status after `.bitmap` version modifications ([`Helper`], [`FOO_FIXTURE`], [`config`], [`json`]).
 /// Covers:
 /// - `e2e/commands/init.e2e.ts:207`
 ///   run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › bit status should show nothing-to-tag

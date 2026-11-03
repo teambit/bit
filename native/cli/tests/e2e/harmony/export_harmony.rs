@@ -59,7 +59,7 @@ fn export_tag_and_export() {
     helper.native("reset comp1");
 }
 
-/// Verifies `bit export` succeeds across merged lanes when remote version history is out of date ([`remote::publish`], [`Helper`]).
+/// Verifies `bit export` succeeds across merged lanes when remote version history is out of date ([`remote::publish`], [`Helper`], [`export_tag_and_export`]).
 /// export functionality on Harmony › when version history is out of date
 #[test]
 fn export_when_version_history_is_out_of_date() {

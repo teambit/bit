@@ -18,7 +18,7 @@ fn re_eject_and_check_status_before(helper: &Helper, full_id: &str) {
     );
 }
 
-/// Verifies `bit status` and `bit diff` output when adding, removing, or modifying extension configs ([`re_eject_and_check_status_before`], [`strip_ansi`], [`Helper`]).
+/// Verifies `bit status` and `bit diff` output when adding, removing, or modifying extension configs ([`re_eject_and_check_status_before`], [`strip_ansi`], [`Helper`], [`parse`]).
 /// - `extensions config diff › component status and diff › add new extension › should make the component modified`
 /// - `extensions config diff › component status and diff › add new extension › should show it in bit diff`
 /// - `extensions config diff › component status and diff › add new extension › bit diff should not show internal config fields`

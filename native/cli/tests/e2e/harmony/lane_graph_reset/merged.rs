@@ -94,7 +94,7 @@ fn ci_all_reset_of_a_two_parent_merge_remains_native_and_preserves_merged_source
     fixture::modified_only(&helper, 1);
 }
 
-/// Verifies CI `bit reset --head` on a two-parent merge delegates the canonical error and stack ([`diverged`], [`fixture`]).
+/// Verifies CI `bit reset --head` on a two-parent merge delegates the canonical error and stack ([`diverged`], [`fixture`], [`head_only_reset_keeps_the_released_multiple_parent_failure`]).
 #[test]
 fn ci_head_only_merge_reset_delegates_the_exact_published_error_and_stack() {
     let (helper, _, merged) = diverged(false);

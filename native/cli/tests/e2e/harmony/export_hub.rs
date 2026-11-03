@@ -88,7 +88,7 @@ impl Drop for Hub {
     }
 }
 
-/// Creates a workspace with `bar/foo` (and optional second component or `dev` lane) ready for [`Hub`] export via [`Helper`].
+/// Creates a workspace with `bar/foo` (and optional second component or `dev` lane) ready for [`Hub`] export via [`Helper`] and [`second_component`].
 fn pending(lane: bool, mode: &str) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
