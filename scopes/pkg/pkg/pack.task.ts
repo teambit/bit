@@ -2,6 +2,8 @@ import type { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@te
 import type { Logger } from '@teambit/logger';
 import type { Packer } from './packer';
 import { Extensions } from '@teambit/legacy.constants';
+import type { Component } from '@teambit/component';
+import { PACK_LIFECYCLE_SCRIPTS, packageJsonRequiresInstallation } from './package-json-requires-installation';
 
 /**
  * pack components to a .tgz file
@@ -27,5 +29,12 @@ export class PackTask implements BuildTask {
       componentsResults: packResults,
       artifacts: [packArtifactsDefs],
     };
+  }
+
+  /**
+   * packing runs the pack lifecycle scripts and bundles dependencies, which need the packages.
+   */
+  requiresCapsuleInstallation(components: Component[]): boolean {
+    return packageJsonRequiresInstallation(components, this.aspectId, PACK_LIFECYCLE_SCRIPTS);
   }
 }

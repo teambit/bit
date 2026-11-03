@@ -77,6 +77,13 @@ export class DeployTask implements BuildTask {
     };
   }
 
+  /**
+   * apps are loaded from the capsules in order to deploy them, which needs the packages.
+   */
+  requiresCapsuleInstallation(components: Component[]): boolean {
+    return components.some((component) => this.application.hasAppTypePattern(component));
+  }
+
   private async runForOneApp(
     app: Application,
     capsule: Capsule,
