@@ -9,7 +9,7 @@ use std::{ffi::OsStr, fs};
 /// Environment ID that requires `Node.js` `bit env set` resolution in capsule fixture setup.
 const CUSTOM_ASPECT_ENV: &str = "teambit.harmony/bit-custom-aspect";
 
-/// Configures `comp1` with `environment` (or [`CUSTOM_ASPECT_ENV`]) and returns `--require` `NODE_OPTIONS` for offline built-in env capsule tests ([`Helper`]).
+/// Configures `comp1` with `environment` (or [`CUSTOM_ASPECT_ENV`]) and returns `--require` `NODE_OPTIONS` for offline built-in env capsule tests ([`Helper`], [`config::read_jsonc`]).
 pub(super) fn prepare(helper: &Helper, environment: &str) -> Option<String> {
     if environment == CUSTOM_ASPECT_ENV {
         let assign = Helper::cmd_in_with(

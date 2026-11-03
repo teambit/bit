@@ -53,7 +53,7 @@ fn peer_dependencies_regular_and_unused_in_code() {
     assert!(cat_unused["peerPackageDependencies"].get("chai").is_none());
 }
 
-/// Verifies component peer dependency recording and `package.json` emission across `deps set --peer` and `snap` ([`Helper`], [`parse`]).
+/// Verifies component peer dependency recording and `package.json` emission across `deps set --peer` and `snap` ([`Helper`], [`parse`], [`json`]).
 /// - `peer-dependencies functionality › a component is a peer dependency › should save the peer dependency in the model`
 /// - `peer-dependencies functionality › a component is a peer dependency › adds peer dependency to the generated package.json`
 /// - `peer-dependencies functionality › a component is a peer dependency › installs a hidden peer in the workspace but excludes it from the capsule manifest`

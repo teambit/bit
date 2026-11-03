@@ -12,7 +12,7 @@ mod components_index;
 mod dev_dependencies;
 /// End-to-end multi-level dynamic namespace component ID tests.
 mod dynamic_namespaces;
-/// End-to-end environment peer dependency installation and typechecking tests.
+/// End-to-end environment peer dependency installation and typechecking (`bit check-types`) tests.
 mod env_peer_deps_install;
 mod merge;
 mod peer_dependencies;

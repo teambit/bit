@@ -58,7 +58,7 @@ fn explicit_member_version_brings_modified_root_with_its_own_patch() {
     assert_eq!(bitmap(&helper.scopes.local_path)["ws-root"]["version"], "0.0.2");
 }
 
-/// Asserts that `ws-root@latest` excludes `comp1/` files and matches `node_workspace`'s `.bitmap` source hash.
+/// Asserts that `ws-root@latest` excludes `comp1/` files and matches `node_workspace`'s `.bitmap` source hash via [`parse`].
 fn assert_root_sources(helper: &Helper, node_workspace: &std::path::Path) {
     let root_version = parse(&helper.run("cat-component ws-root@latest --json"));
     let root_files = root_version["files"].as_array().unwrap();

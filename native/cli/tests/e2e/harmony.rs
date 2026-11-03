@@ -12,7 +12,7 @@ mod aspect;
 mod bit_ignore;
 /// End-to-end `.bitmap` status section parity tests (`localOnly`, `softTaggedComponents`, `importPendingComponents`).
 mod bitmap_states;
-/// End-to-end Harmony build and multi-compiler pipeline tests.
+/// End-to-end Harmony build and multi-compiler (`Babel`, `TypeScript`) pipeline tests.
 mod build_and_compilers_harmony;
 mod checkout_callbacks;
 mod checkout_harmony;

@@ -89,7 +89,7 @@ fn dependencies_env_component_and_missing_dist_and_auto_detect_peers() -> KnownR
     Ok(())
 }
 
-/// Verifies peer component diffing, `bit deps write`, and `teambit.pkg/pkg` custom `package.json` properties ([`Helper`], [`KnownResult`]).
+/// Verifies peer component diffing, `bit deps write`, and `teambit.pkg/pkg` custom `package.json` properties ([`Helper`], [`KnownResult`], [`parse`]).
 #[test]
 fn diff_component_peer_and_deps_write_and_pkg() -> KnownResult<()> {
     let helper = Helper::new();

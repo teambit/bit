@@ -69,7 +69,7 @@ fn junit_empty_tests_and_exit_code_preserve_output() {
     assert_eq!(result.status.code(), Some(7));
 }
 
-/// Verifies `--junit` write failures do not replay test side effects.
+/// Verifies `--junit` write failures do not replay test side effects via [`move_paths::support::compare`].
 #[test]
 fn junit_write_failure_does_not_replay_test_effects() {
     let helper = move_paths::support::workspace(1, true);

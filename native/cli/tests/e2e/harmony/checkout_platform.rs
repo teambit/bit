@@ -71,7 +71,7 @@ fn checkout_stored_sources_preserves_binary_and_platform_eol_and_removes_obsolet
     assert_eq!(fs::read(helper.scopes.local_path.join("bar/data.bin")).unwrap(), b"binary\0\r\n");
 }
 
-/// Verifies that `bit revert` restores version `0.0.1` sources while keeping `"0.0.2"` in `.bitmap` ([`versions`], [`compare`]).
+/// Verifies that `bit revert` restores version `0.0.1` sources while keeping `"0.0.2"` in `.bitmap` ([`versions`], [`compare`], [`config::read_jsonc`]).
 #[test]
 fn revert_stored_sources_preserves_current_version_and_obsolete_file_behavior() {
     let helper = versions();

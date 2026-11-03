@@ -59,7 +59,7 @@ fn compare_owned(
     native
 }
 
-/// Strips variable `importing components (completed in ...)` progress lines from `text`.
+/// Strips variable `importing components (completed in ...)` progress lines from `text` for [`compare_owned`].
 fn normalized_progress(text: &str) -> String {
     text.lines()
         .filter(|line| !line.contains("importing components (completed in"))

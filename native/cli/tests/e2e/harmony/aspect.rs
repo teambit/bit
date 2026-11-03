@@ -66,7 +66,7 @@ fn aspect_loading_failures() {
     assert!(combined.contains("Require stack") || combined.contains("my-aspect"), "{combined}");
 }
 
-/// Verifies `bit aspect set --merge`, `aspect get`, `aspect list`, and `aspect unset` on `.bitmap` ([`parse`]).
+/// Verifies `bit aspect set --merge`, `aspect get`, `aspect list`, and `aspect unset` on `.bitmap` ([`parse`], [`json`]).
 /// - `aspect › bit aspect update command › should output the affected components`
 /// - `aspect › bit aspect update command › should not add the previous aspect with minus to .bitmap file`
 /// - `aspect › bit aspect update command › bit show should show the new aspect`

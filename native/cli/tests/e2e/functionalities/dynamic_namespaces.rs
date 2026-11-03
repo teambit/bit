@@ -30,7 +30,7 @@ fn should_save_the_component_correctly_on_the_model() {
     assert!(cat.get("box").is_none());
 }
 
-/// Verifies `bit status` lists [`VERY_LONG_NAME`] under staged components ([`setup_multi_level`]).
+/// Verifies `bit status` lists [`VERY_LONG_NAME`] under staged components ([`setup_multi_level`], [`Helper`]).
 /// dynamic namespaces › multi-level namespace. using name "${veryLongName}" › bit status should show the component as staged
 #[test]
 fn status_should_show_the_component_as_staged() {

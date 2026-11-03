@@ -62,7 +62,7 @@ fn wildcard_replacement_and_invalid_range_errors_do_not_publish_invalid_config()
         assert!(aspect(&helper, "comp1", DEPRECATION).is_none());
     }
 }
-/// Verifies undeprecating unmodified components is a no-op and `bit checkout reset` clears staged deprecation ([`DEPRECATION`]).
+/// Verifies undeprecating unmodified components is a no-op and `bit checkout reset` clears staged deprecation ([`DEPRECATION`], [`successful`]).
 #[test]
 fn undeprecating_unmodified_components_is_a_noop_and_checkout_reset_clears_staged_deprecation() {
     let helper = support::workspace(3, true);

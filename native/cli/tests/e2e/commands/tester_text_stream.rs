@@ -60,7 +60,7 @@ fn text_single_test_preserves_inherited_subprocess_output() {
     assert!(result.status.success());
 }
 
-/// Verifies `bit test` preserves direct `process.exit(7)` status codes and pre-exit stream writes.
+/// Verifies `bit test` preserves direct `process.exit(7)` status codes and pre-exit stream writes via [`support::compare_with_streams`].
 #[test]
 fn text_single_test_preserves_direct_exit() {
     let helper = support::workspace(1, true);

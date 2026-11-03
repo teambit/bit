@@ -54,7 +54,7 @@ mod qualification {
         assert!(output.contains("error: main file") && output.contains("was removed"), "{output}");
     }
 
-    /// `components/{patch,minor,major,exact}` tagged under the `components` namespace.
+    /// `components/{patch,minor,major,exact}` tagged under the `components` namespace via [`create_file`] and [`Helper`].
     fn semver_workspace() -> Helper {
         let helper = Helper::new();
         helper.re_init_workspace_with(false);

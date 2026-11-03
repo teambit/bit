@@ -81,7 +81,7 @@ fn builtin_test_summary_preserves_environment_failure_details_and_test_side_effe
     );
 }
 
-/// Verifies explicit test file selection excludes other spec files and deduplicates duplicate paths.
+/// Verifies explicit test file selection excludes other spec files and deduplicates duplicate paths via [`timings`].
 #[test]
 fn builtin_test_explicit_file_selection_excludes_other_tests_and_deduplicates_paths() {
     let helper = support::workspace(1, true);

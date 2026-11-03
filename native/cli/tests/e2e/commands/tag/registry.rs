@@ -80,7 +80,7 @@ fn respond(connection: &mut TcpStream, always_taken: bool) -> io::Result<()> {
     write!(connection, "HTTP/1.1 {status}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
 }
 
-/// Creates a workspace where `bar/foo`'s `publishConfig.registry` points to `registry`.
+/// Creates a workspace where `bar/foo`'s `publishConfig.registry` points to `registry` via [`FOO_FIXTURE`] and [`config::write_json`].
 fn workspace(registry: &Registry) -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);

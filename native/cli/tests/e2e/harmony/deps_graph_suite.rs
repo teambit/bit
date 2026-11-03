@@ -11,7 +11,7 @@ mod core_manifest_setup;
 use crate::helper::{Helper, config, parse};
 use serde_json::{Value, json};
 use std::{ffi::OsStr, fs};
-/// Verifies `bit deps debug` matches `Node.js` when a package has `"+"` in both `dependencies` and `devDependencies` ([`Helper`], [`core_manifest_setup`], [`compare_debug_with_node`]).
+/// Verifies `bit deps debug` matches `Node.js` when a package has `"+"` in both `dependencies` and `devDependencies` ([`Helper`], [`core_manifest_setup`], [`compare_debug_with_node`], [`fs`]).
 #[test]
 fn deps_debug_duplicate_runtime_dev_plus_matches_node() {
     let helper = Helper::new();

@@ -71,7 +71,7 @@ fn allow_scripts_default_blocked_workspace_jsonc_flags_and_env_var() {
     assert!(r3.status.success(), "{}{}", r3.stdout, r3.stderr);
 }
 
-/// Verifies `neverBuiltDependencies` blocks dependency build scripts during `bit install` ([`write_postinstall_dep`]).
+/// Verifies `neverBuiltDependencies` blocks dependency build scripts during `bit install` ([`write_postinstall_dep`], [`Helper`]).
 /// Covers:
 /// - `e2e/harmony/dependencies/never-built-dependencies.e2e.ts:30`
 ///   using pnpm › should not build the dependency

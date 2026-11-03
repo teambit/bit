@@ -6,7 +6,7 @@ use crate::helper::{Helper, config};
 use serde_json::Value;
 use std::path::Path;
 
-/// Verifies that workspace-root components snap with zero dependencies and support `trackAllFiles` workspace cloning ([`Helper`], [`Value`]).
+/// Verifies that workspace-root components snap with zero dependencies and support `trackAllFiles` workspace cloning ([`Helper`], [`Value`], [`Path`]).
 #[test]
 fn root_snap_no_deps_and_cloning_workspace_from_root_and_lane() {
     let helper = Helper::new();

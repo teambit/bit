@@ -8,7 +8,7 @@ use serde_json::json;
 /// Aspect ID for dependency-resolver peer configuration in component extensions and `.bitmap`.
 const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
 
-/// Verifies `bit set-peer` and `bit unset-peer` [`DEPENDENCY_RESOLVER_ASPECT`] persistence across `.bitmap`, model, and `package.json` ([`Helper`], [`parse`]).
+/// Verifies `bit set-peer` and `bit unset-peer` [`DEPENDENCY_RESOLVER_ASPECT`] persistence across `.bitmap`, model, and `package.json` ([`Helper`], [`parse`], [`json`]).
 #[test]
 fn set_peer_and_unset_peer_component_workflows() {
     let helper = Helper::new();

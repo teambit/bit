@@ -53,7 +53,7 @@ fn re_exporting_and_importing_an_existing_version() {
     assert!(!import_combined.contains("unhandled rejection found"));
 }
 
-/// Verifies `bit import --merge` strategies (`manual`, `theirs`, `ours`) across [`IS_TYPE_V1`], [`IS_TYPE_V2`], and [`IS_TYPE_V3`] ([`config`]).
+/// Verifies `bit import --merge` strategies (`manual`, `theirs`, `ours`) across [`IS_TYPE_V1`], [`IS_TYPE_V2`], and [`IS_TYPE_V3`] ([`config`], [`remote`]).
 /// merge functionality › importing a component with --merge flag
 #[test]
 fn importing_a_component_with_merge_flag() {

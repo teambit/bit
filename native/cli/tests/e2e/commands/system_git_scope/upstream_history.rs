@@ -78,7 +78,7 @@ pub(super) fn compare_deduplicated(helper: &Helper, expected_count: usize) -> Ru
     native
 }
 
-/// Normalizes `output` hash counts across pinned (`2.2.146`) and current (`2.2.168`) reference releases for [`compare_deduplicated`].
+/// Normalizes `output` hash counts across pinned (`2.2.146`) and current (`2.2.168`) reference releases for [`compare_deduplicated`] and [`compare_hidden_lane`].
 fn upstream_output(output: &str, version: &str, count: usize) -> String {
     if version == "2.2.146" {
         let old = format!(": added {} hashes\n", count + 1);

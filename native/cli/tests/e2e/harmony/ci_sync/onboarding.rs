@@ -76,7 +76,7 @@ fn ignored_workflows_are_force_added_without_committing_unrelated_staged_files()
     assert!(helper.git("diff --cached --name-only").contains("unrelated.txt"));
 }
 
-/// Verifies `.gitignore`-matched workflow files are force-added even before the repository has its first commit ([`empty_repository`]).
+/// Verifies `.gitignore`-matched workflow files are force-added even before the repository has its first commit ([`empty_repository`], [`run_bit`]).
 #[test]
 fn ignored_workflows_are_force_added_before_the_first_commit() {
     let helper = empty_repository();
