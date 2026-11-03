@@ -65,7 +65,7 @@ fn consume_trailing_names<'a>(
     Some(())
 }
 
-/// Applies a single `bit scope rename` or `rename-owner` flag or positional name onto `options` and `names`.
+/// Applies a single `bit scope rename` or `rename-owner` flag or positional name onto `options` ([`Options`]) and `names`.
 #[inline]
 fn apply_arg<'a>(
     arg: &'a str,

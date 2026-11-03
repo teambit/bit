@@ -70,7 +70,7 @@ fn callback_info(host: &Host, context: &Value, capture: &Capture) -> io::Result<
     Ok(info)
 }
 
-/// Records `statusDependencyCacheChecked` from `host` into `capture.environment_facts`.
+/// Records `statusDependencyCacheChecked` from `host` ([`Host`]) into `capture.environment_facts` ([`Capture`]).
 #[inline]
 fn checked_cache(host: &Host, capture: &mut Capture) -> io::Result<()> {
     let checked = host.call("statusDependencyCacheChecked", &json!({}))?;

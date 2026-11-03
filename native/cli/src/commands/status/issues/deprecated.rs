@@ -28,7 +28,7 @@ impl Checks<'_> {
     }
 }
 
-/// Evaluates whether `full_id` is marked deprecated in workspace overrides or its scope model head.
+/// Evaluates whether `full_id` is marked deprecated in workspace overrides or its scope model head ([`head_deprecation`]).
 fn deprecated(context: &Value, full_id: &str) -> io::Result<bool> {
     let identity = without_version(full_id.trim()).trim();
     if identity.is_empty() {

@@ -75,7 +75,7 @@ fn load_all_version_refs(scope: &Path) -> io::Result<Vec<(String, String)>> {
     Ok(refs)
 }
 
-/// Append `(version_hash, "scope/name@version")` entries for one `Component` model.
+///Append `(version_hash, "scope/name@version")` entries for one `Component` model via [`model_scope_and_name`].
 fn append_model_version_refs(
     model: &Value,
     row: &Value,

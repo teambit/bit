@@ -58,7 +58,7 @@ pub(super) fn record_remote(
     Ok(())
 }
 
-/// Returns `true` when `extension` is a `teambit.component/remove` aspect entry with `removed: true`.
+/// Returns `true` when `extension` is a `teambit.component/remove` aspect entry with `removed: true` for [`record_remote`].
 #[inline]
 fn is_remotely_removed_extension(extension: &Value) -> bool {
     crate::commands::update_cmd::matches_aspect(extension, "teambit.component/remove")

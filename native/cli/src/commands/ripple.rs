@@ -27,7 +27,7 @@ const BARE_RIPPLE_MSG: &str =
     "[ripple] please specify a subcommand. See --help for available commands.";
 /// Diagnostic emitted when a `bit ripple` job operation cannot resolve a Ripple CI job ID.
 const NO_JOB_MSG: &str = "Could not find a Ripple CI job. Provide a job ID, use --lane, or run from a workspace with a recent export.";
-/// Native-handled `bit ripple` subcommand variants.
+/// Native-handled `bit ripple` (`RippleCmd`) subcommand variants.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subcommand {
     Bare,

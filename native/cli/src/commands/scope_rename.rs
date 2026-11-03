@@ -61,7 +61,7 @@ fn first_subcommand(args: &[OsString]) -> Option<String> {
         .map(str::to_owned)
 }
 
-/// Emits the red unrecognized-subcommand report for `bit scope <subcommand>`.
+/// Emits the red unrecognized-subcommand report for `bit scope <subcommand>` with [`Chalk`].
 fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
     if ci_active() {
         return Ok(Outcome::Declined("CI scope unrecognized subcommand".into()));

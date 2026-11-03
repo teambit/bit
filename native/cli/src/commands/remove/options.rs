@@ -56,7 +56,7 @@ fn is_valid_pattern(value: &str) -> bool {
             .is_empty()
 }
 
-/// Applies combined short flags (`-s`, `-f`, `-t`) onto `silent` and `options`.
+/// Applies combined short flags (`-s`, `-f`, `-t`) onto `silent` and `options` ([`Options`]).
 #[inline]
 fn apply_short_bundle(arg: &str, silent: &mut bool, options: &mut Options<'_>) -> Option<()> {
     let flags = arg

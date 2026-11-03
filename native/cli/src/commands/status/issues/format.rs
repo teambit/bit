@@ -29,7 +29,7 @@ pub(super) fn list_or_text(value: &Value) -> io::Result<String> {
     }
 }
 
-/// Extracts a display string from a JSON issue [`Value`] element (object field or string value).
+/// Extracts a display string from a JSON issue [`Value`] element (object field or string value via [`text`]).
 #[inline]
 fn item_text(value: &Value) -> io::Result<&str> {
     if let Some(object) = value.as_object()

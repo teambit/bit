@@ -52,7 +52,7 @@ fn run_set(args: &[OsString]) -> io::Result<Outcome> {
     run_action(args, "set-peer", &action)
 }
 
-/// Entry point for `bit unset-peer` that parses `<component-id>` and delegates to [`run_action`].
+/// Entry point for `bit unset-peer` (`UNSET_PEER`) that parses `<component-id>` and delegates to [`run_action`].
 fn run_unset(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("unset-peer arguments are not UTF-8".into()));

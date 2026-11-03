@@ -66,7 +66,7 @@ pub(super) async fn run(
     deletion_report::result(&formatter, &options.export_id, &probe, result)
 }
 
-/// Prompts the interactive terminal via [`install::confirm`] before deleting pending export objects.
+/// Prompts the interactive terminal via [`install::confirm`] and [`Formatter`] before deleting pending export objects.
 fn confirm(formatter: &Formatter, export_id: &str, count: usize) -> io::Result<()> {
     let export_id = export_id.trim();
     if !io::stdout().is_terminal()

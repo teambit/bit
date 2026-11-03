@@ -33,7 +33,7 @@ enum Action {
     Add(String),
     Remove(String),
 }
-/// Error classification distinguishing declined `bit scope trust` inputs from user-facing errors.
+/// Error classification distinguishing declined `bit scope trust` (`ScopeTrustCmd`) inputs from user-facing errors.
 #[derive(Debug)]
 enum Failure {
     Declined(String),

@@ -84,7 +84,7 @@ pub fn collect_resolved(
     collect_graph(root, context, components, &graph)
 }
 
-/// The issues of `components`, whose dependencies are all in `graph` ([`Component`]).
+/// The issues of `components`, whose dependencies are all in `graph` ([`Component`]) under `root` ([`Path`]).
 pub(super) fn collect_graph(
     root: &Path,
     context: &Value,

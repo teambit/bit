@@ -27,7 +27,7 @@ pub(super) fn complex(pattern: &str) -> bool {
     pattern.contains(['*', '?', '[', ']', '{', '}', '!', ',', '$', ' '])
 }
 
-/// Resolves a single main or lane component identity and lane presence flag from `pattern`.
+/// Resolves a single main or lane component identity and lane presence flag from `pattern` via [`bitmap::read`].
 pub(super) fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
     let pattern = pattern.trim();
     let bitmap = bitmap::read(root)?;

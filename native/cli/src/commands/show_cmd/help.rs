@@ -48,7 +48,7 @@ fn split_id_from_argv<'a>(argv: &'a [&'a str]) -> (bool, &'a [&'a str]) {
     }
 }
 
-/// Evaluates `argv` for `--help` or missing-ID errors and returns `(exit_code, optional_warning)`.
+/// Evaluates `argv` for `--help` or missing-ID errors and returns `(exit_code, optional_warning)` via [`argument_error`].
 fn presentation(argv: &[&str]) -> Option<(ExitCode, Option<&'static str>)> {
     let (id, flags) = split_id_from_argv(argv);
     let (help, flags) = match flags {

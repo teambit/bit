@@ -77,7 +77,7 @@ pub(in crate::commands) fn run(
     synchronize(engine, root, startup, &head, &ids)
 }
 
-/// Synchronizes `ids` against the latest scope HEAD via `engine` and updates the `last-pull-sync` sentinel.
+/// Synchronizes `ids` against the latest scope HEAD via `engine` ([`Engine`]) and updates the `last-pull-sync` sentinel.
 fn synchronize(
     engine: &mut Engine,
     root: &Path,

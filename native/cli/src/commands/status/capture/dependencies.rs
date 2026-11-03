@@ -42,7 +42,7 @@ impl Scan<'_> {
         Ok(Some(dependencies))
     }
 
-    /// Returns the cached dependency state for `target` or `{ "needsDetection": true }` when [`policy::Policy`] invalidation applies.
+    /// Returns the cached dependency state for `target` or `{ "needsDetection": true }` when [`policy::Policy`] invalidation applies in `captured` ([`Capture`]).
     fn observed(
         &mut self,
         target: &Value,

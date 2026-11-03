@@ -6,7 +6,7 @@ use crate::commands::status::js::{array, decline, full_identity, text};
 use serde_json::{Value, json};
 use std::io;
 
-/// Appends environment diagnostic issues (`MultipleEnvs`, `RemovedEnv`, `NonLoadedEnv`, `ExternalEnvWithoutVersion`) onto `dependencies`.
+/// Appends environment diagnostic issues (`MultipleEnvs`, `RemovedEnv`, `NonLoadedEnv`, `ExternalEnvWithoutVersion`) onto `dependencies` ([`Value`]).
 pub(in crate::commands::status) fn issues(
     context: &Value,
     target: &Value,

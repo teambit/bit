@@ -49,7 +49,7 @@ pub(super) fn try_run(
     };
     render_remote_outcome(cwd, args, options, &loaded)
 }
-/// Loads a [`LoadedComponent`] from a local bare scope directory `scope_dir` by `raw_id`.
+/// Loads a [`LoadedComponent`] from a local bare scope directory `scope_dir` by `raw_id` via [`load_scope_component`].
 #[inline]
 pub(super) fn load_from_local_scope(scope_dir: &Path, raw_id: &str) -> Option<LoadedComponent> {
     let raw_id = raw_id.trim();

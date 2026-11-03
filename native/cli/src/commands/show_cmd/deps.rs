@@ -68,7 +68,7 @@ fn eq_or_subpath(candidate: &str, target: &str) -> bool {
             .is_some_and(|rest| rest.starts_with('/'))
 }
 
-/// Strips the trailing `@version` suffix from a scoped (`@scope/pkg@ver`) or unscoped (`pkg@ver`) package specifier.
+/// Strips the trailing `@version` suffix from a scoped (`@scope/pkg@ver`) or unscoped (`pkg@ver`) package specifier for [`Identity::is_self`].
 #[inline]
 fn strip_pkg_version(raw: &str) -> &str {
     if let Some(rest) = raw.strip_prefix('@') {

@@ -59,7 +59,7 @@ fn primary(character: char) -> Option<u8> {
     })
 }
 
-/// Returns `true` when every character of `text` has a known [`primary`] root collation weight.
+/// Returns `true` when every character of `text` has a known [`primary`] root collation weight for [`compare`].
 #[must_use]
 #[inline]
 pub fn supported(text: &str) -> bool {

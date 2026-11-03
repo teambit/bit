@@ -48,7 +48,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     run_workspace(&root, args, &options, &workflow, &policy)
 }
 
-/// Handles `bit snap` when invoked outside a workspace.
+/// Handles `bit snap` when invoked outside a workspace, printing [`MESSAGE_WARNING`] when required.
 fn outside_workspace_snap(
     cwd: &Path,
     args: &[OsString],

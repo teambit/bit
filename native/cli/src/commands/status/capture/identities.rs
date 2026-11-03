@@ -91,7 +91,7 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
     Ok(identity.to_string())
 }
 
-/// Returns `identity` stripped of any trailing `@version` suffix.
+/// Returns `identity` stripped of any trailing `@version` suffix for dependency cache matching.
 #[must_use]
 #[inline]
 pub(super) fn base_identity(identity: &str) -> &str {

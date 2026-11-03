@@ -86,7 +86,7 @@ fn source_callbacks(
     Ok(array(manifest.get("files"), "snapshot source names")?.iter().any(is_callback_source_file))
 }
 
-/// Collects sibling component directories under `root` to exclude when scanning a root-level (`.`) component in `context`.
+/// Collects sibling component directories under `root` to exclude when scanning a root-level (`.`) component in `context` ([`Value`]).
 #[inline]
 fn root_excludes(
     root: &Path,

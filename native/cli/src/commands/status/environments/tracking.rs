@@ -41,7 +41,7 @@ impl Environments {
         Self::new()
     }
 
-    /// Retain one [`Host`] provider session across native identity and path mutations.
+    /// Retain one [`Host`] provider session across native identity and path mutations (`self.host`).
     pub(in crate::commands) fn identity_call(
         &mut self,
         root: &Path,

@@ -83,7 +83,7 @@ pub struct CacheWrites {
 }
 
 impl CacheWrites {
-    /// Marks dependency cache entries matching `identities` (via [`base_identity`]) as blocked from cache persistence.
+    /// Marks dependency cache entries matching `identities` (via [`base_identity`]) as blocked from [`CacheWrites`] persistence.
     #[inline]
     pub(in crate::commands) fn block_dependencies(
         &mut self,

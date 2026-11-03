@@ -56,7 +56,7 @@ pub(super) fn report(args: &[OsString], identity: &str, labels: &[String]) -> Re
     }
 }
 
-/// Formats a multi-component reset [`Report`] from `(identity, version_labels)` pairs.
+/// Formats a multi-component reset [`Report`] from `(identity, version_labels)` pairs with [`Formatter`].
 pub(super) fn batch_report<'a>(
     args: &[OsString],
     results: impl Iterator<Item = (&'a str, &'a [String])>,

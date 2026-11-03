@@ -95,7 +95,7 @@ fn refactor_load(
     Ok(())
 }
 
-/// Formats the source component identity from `prepared` for rename reports.
+/// Formats the source component identity from `prepared` ([`Prepared`]) for rename reports.
 #[inline]
 fn source_display(prepared: &Prepared) -> String {
     let source = prepared.plan.identity.source.trim();

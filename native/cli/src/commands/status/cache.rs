@@ -57,7 +57,7 @@ fn mentions_no_fs_cache(value: &str) -> bool {
         })
 }
 
-/// Encodes `bytes` as a lowercase ASCII hexadecimal string (`2 * bytes.len()` chars).
+/// Encodes `bytes` as a lowercase ASCII hexadecimal string (`2 * bytes.len()` chars) for cache keys.
 #[must_use]
 #[inline]
 pub fn hex(bytes: &[u8]) -> String {

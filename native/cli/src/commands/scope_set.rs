@@ -39,7 +39,7 @@ impl From<io::Error> for Failure {
         Self::Declined(error.to_string())
     }
 }
-/// Staged `workspace.jsonc` and `.bitmap` updates when changing the workspace default scope (`bit scope set <scope>`).
+/// Staged `workspace.jsonc` and `.bitmap` updates when changing the workspace default scope (`bit scope set <scope>`, `ScopeSetCmd`).
 struct WorkspacePlan {
     root: PathBuf,
     ws_key: String,

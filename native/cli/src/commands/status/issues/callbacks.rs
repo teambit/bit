@@ -55,7 +55,7 @@ pub(super) fn merge(
     Ok(())
 }
 
-/// Validates that `object` is a well-formed Harmony callback issue [`Value`] and returns its trimmed `type` string.
+/// Validates that `object` is a well-formed Harmony callback issue [`Value`] and returns its trimmed `type` string for [`merge`].
 #[inline]
 fn validate_callback_object(object: &Value) -> io::Result<&str> {
     if !object.is_object() {

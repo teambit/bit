@@ -5,7 +5,7 @@ use super::{Capture, array, decline, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Reorders component source file lists in `capture` ([`Capture`]) to match the breadth-first traversal order expected by snapshots.
+/// Reorders component source file lists in `capture` ([`Capture`]) via [`snapshot_file_path`] to match the breadth-first traversal order expected by snapshots.
 #[inline]
 pub(super) fn snapshot(root: &Path, capture: &mut Capture) -> io::Result<()> {
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {

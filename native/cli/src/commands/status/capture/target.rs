@@ -87,7 +87,7 @@ impl Scan<'_> {
     }
 }
 
-/// Trims whitespace and leading `./` from `file`, returning `None` when the resulting relative path is empty.
+/// Trims whitespace and leading `./` from `file`, returning `None` when the resulting relative path is empty for [`Scan::loaded_target`].
 #[inline]
 fn normalize_target_file(file: String) -> Option<String> {
     let trimmed = file.trim().trim_start_matches("./");

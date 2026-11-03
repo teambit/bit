@@ -43,7 +43,7 @@ impl Environments {
             .map_err(|error| self.callback_failure(capture, error))
     }
 
-    /// Stages the captured component row for `identity` on the active checkout callback [`Host`].
+    /// Stages the captured component row for `identity` on the active checkout callback [`Host`] via [`callbacks::switch_stage_row`].
     #[inline]
     pub(in crate::commands::status) fn switch_stage_row(
         &self,
