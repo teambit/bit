@@ -12,6 +12,19 @@ use std::{
     process::{Child, ChildStdin, ChildStdout, Command, Stdio},
 };
 
+/// Sets the Jest worker's color environment for `colors` ([`Command`]).
+///
+/// On Windows the released CLI leaves `FORCE_COLOR` untouched for the worker when the parent
+/// has no colors, and Jest's own detection keeps the code frame highlighted, so it is not forced to `0` there.
+pub(super) fn configure_colors(command: &mut Command, colors: bool) {
+    if colors {
+        command.env("FORCE_COLOR", "1");
+    } else if !cfg!(windows) {
+        command.env("FORCE_COLOR", "0");
+    }
+    command.env_remove("NO_COLOR");
+}
+
 /// Active Jest worker process session running in either buffered ([`Quiet`]) or inherited-stdio ([`stream::Stream`]) mode.
 pub(super) struct Session {
     inner: Inner,
@@ -96,12 +109,12 @@ impl Quiet {
             .join("package.json");
         let assets = Assets::prepare(&package)?;
         let errors = tempfile::tempfile()?;
-        let mut child = Command::new(cli.node)
+        let mut command = Command::new(cli.node);
+        configure_colors(&mut command, colors);
+        let mut child = command
             .arg(assets.root.join("runner.cjs"))
             .arg(cli.entry)
             .args(args)
-            .env("FORCE_COLOR", if colors { "1" } else { "0" })
-            .env_remove("NO_COLOR")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(errors.try_clone()?)

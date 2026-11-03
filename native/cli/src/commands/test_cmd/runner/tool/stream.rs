@@ -89,12 +89,12 @@ impl Stream {
         let assets = Assets::prepare(&package)?;
         let output = tempfile::NamedTempFile::new()?;
         let errors = tempfile::NamedTempFile::new()?;
-        let mut child = Command::new(cli.node)
+        let mut command = Command::new(cli.node);
+        super::configure_colors(&mut command, colors);
+        let mut child = command
             .arg(assets.root.join("runner.cjs"))
             .arg(cli.entry)
             .args(args)
-            .env("FORCE_COLOR", if colors { "1" } else { "0" })
-            .env_remove("NO_COLOR")
             .env("BIT_NATIVE_TESTER_CONTROL", format!("{}:{token}", listener.local_addr()?.port()))
             .stdin(Stdio::piped())
             .stdout(output.reopen()?)

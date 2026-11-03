@@ -105,13 +105,7 @@ pub(super) fn errors(row: &Compiled, output: &bit_install::output::Output) {
     let errors = row.errors
         .iter()
         .map(|error| {
-            let normalized;
-            let msg = if error.message.contains('\r') {
-                normalized = error.message.replace("\r\n", "\n").replace('\r', "\n");
-                normalized.as_str()
-            } else {
-                error.message.as_str()
-            };
+            let msg = error.message.as_str();
             if msg.trim().is_empty() {
                 format!("{}\nError", error.path.display())
             } else {

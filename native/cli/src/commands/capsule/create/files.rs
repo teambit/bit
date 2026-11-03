@@ -1,5 +1,6 @@
 //! Isolated capsule source copying and `package.json` manifest generation ([`BitmapEntry`], [`ScopeObjects`], [`policy`], [`GeneratedPackage`], [`ManifestConfig`], [`ComponentPackage`]) in `bit-cli`.
 
+mod component_policy;
 mod policy;
 
 use bit_install::workspace::{BitmapEntry, ScopeObjects};
@@ -51,6 +52,7 @@ struct ComponentPackage<'a> {
 pub(super) struct ManifestConfig {
     pub(super) env: BuiltinEnv,
     overrides: PackageOverrides,
+    component_policy: component_policy::ComponentPolicy,
 }
 
 #[derive(Default)]
@@ -146,18 +148,13 @@ fn plan_manifest(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Manif
     else {
         return Ok(None);
     };
-    if !entry.root_dir.is_empty()
-        && ws_root
-            .join(&entry.root_dir)
-            .join("component.json")
-            .exists()
-    {
+    let Some(component_policy) = component_policy::read(ws_root, entry) else {
         return Ok(None);
-    }
+    };
     if policy::has_custom_builtin_env_config(config) {
         return Ok(None);
     }
-    Ok(Some(ManifestConfig { env: builtin, overrides }))
+    Ok(Some(ManifestConfig { env: builtin, overrides, component_policy }))
 }
 
 fn model_package_json(ws_root: &Path, entry: &BitmapEntry) -> io::Result<Option<Value>> {
@@ -351,7 +348,10 @@ pub(super) fn write_default_package_json(
                 }
             }),
         component_id: configured_component_id(manifest, entry),
-        dependencies: policy::package_dependencies(manifest.env, dependencies),
+        dependencies: component_policy::apply(
+            &manifest.component_policy,
+            policy::package_dependencies(manifest.env, dependencies),
+        ),
         license: manifest.overrides.license
             .clone()
             .unwrap_or_else(|| "SEE LICENSE IN UNLICENSED".into()),
