@@ -92,7 +92,8 @@ fn prepare_checkout_import(
         )["defaultScope"]
             .as_str()
             .ok_or_else(|| invalid("command default scope"))?;
-        if targets.iter().all(|target| target.scope.is_none())
+        if request.options.revert
+            || targets.iter().all(|target| target.scope.is_none())
             || cached.all_external_targets_unmapped(&targets, default_scope)
         {
             return Ok(cached);

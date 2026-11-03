@@ -93,11 +93,12 @@ fn agent(plan: &Plan, options: &Options) -> io::Result<Option<(PathBuf, Vec<u8>)
 #[inline]
 fn mcp(root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
     let path = root.join(".mcp.json");
-    let mut value = fs::read(&path)
-        .ok()
-        .and_then(|bytes| bit_object_import::parse_jsonc(&bytes).ok())
-        .filter(|val| !val.is_null())
-        .unwrap_or_else(|| json!({}));
+    let mut value = match fs::read(&path) {
+        Ok(bytes) => bit_object_import::parse_jsonc(&bytes)
+            .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.to_string()))?,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => json!({}),
+        Err(error) => return Err(error),
+    };
     if !value.is_array() {
         let object = value.as_object_mut().ok_or_else(|| io::Error::other("MCP object"))?;
         let servers = object.entry("mcpServers").or_insert(Value::Null);

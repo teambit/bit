@@ -22,6 +22,12 @@ pub(super) fn run_outside_scope(
     chalk: Chalk,
     subcommand: &Subcommand,
 ) -> io::Result<Outcome> {
+    if argv
+        .iter()
+        .any(|arg| arg.starts_with("--no-color"))
+    {
+        return Ok(Outcome::Declined("capsule --no-color outside a scope delegated".into()));
+    }
     match subcommand {
         Subcommand::Create(create_args) => run_create_outside_scope(chalk, argv, create_args),
         Subcommand::Delete { all: false, scope_aspects: true } => run_outside_failure(

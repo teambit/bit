@@ -70,18 +70,11 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     let valid = origin
         .as_ref()
         .filter(|value| {
-            value
-                .get("originPath")
-                .and_then(Value::as_str)
-                .is_some_and(|origin_path| !origin_path.trim().is_empty())
-                && value
-                    .get("createdAt")
-                    .and_then(Value::as_str)
-                    .is_some_and(|created_at| !created_at.trim().is_empty())
+            value.get("originPath").is_some_and(Value::is_string)
                 && value
                     .get("kind")
                     .and_then(Value::as_str)
-                    .is_some_and(|kind| VALID_KINDS.contains(&kind.trim()))
+                    .is_some_and(|kind| VALID_KINDS.contains(&kind))
         });
     let stamp = valid
         .and_then(|_| fs::metadata(&marker).ok())
@@ -90,12 +83,12 @@ pub(super) fn inspect(path: &Path, with_sizes: bool) -> RootEntry {
     RootEntry {
         path: path.to_string_lossy().into_owned(),
         kind: valid
-            .and_then(|value| value["kind"].as_str().map(str::trim))
+            .and_then(|value| value["kind"].as_str())
             .unwrap_or("unmarked")
             .into(),
         origin_path: valid
             .and_then(|value| value["originPath"].as_str())
-            .map(|origin_path| origin_path.trim().to_owned()),
+            .map(str::to_owned),
         last_used_ms: stamp.map_or(0, millis),
         size_bytes: if with_sizes { dir_size(path) } else { 0 },
     }

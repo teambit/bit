@@ -385,7 +385,8 @@ fn consume_trailing_app_list<'a>(
 #[inline]
 fn inline_json_value(flag: &str) -> Option<&str> {
     flag.strip_prefix("--json=")
-        .or_else(|| flag.strip_prefix("-j="))
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            flag.strip_prefix("-j=")
+                .filter(|value| !value.is_empty())
+        })
 }

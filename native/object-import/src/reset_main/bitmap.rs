@@ -83,13 +83,10 @@ fn is_component_bitmap_row(key: &str, row: &Value) -> bool {
         && row.is_object()
 }
 
-/// Verifies that `row` is available on `main`, not lane-only, and not soft-deleted.
+/// Verifies that `row` is available on `main`, and not lane-only (a soft-deleted component can still be reset).
 #[inline]
 fn validate_row(row: &Value) -> io::Result<()> {
-    if row["isAvailableOnCurrentLane"] == false
-        || row["onLanesOnly"] == true
-        || crate::workspace::engine::client_status::config::is_config_removed(&row["config"])
-    {
+    if row["isAvailableOnCurrentLane"] == false || row["onLanesOnly"] == true {
         return Err(invalid("reset component unavailable on main"));
     }
     Ok(())

@@ -115,15 +115,18 @@ fn append(
     if directories.is_empty() {
         return Ok(());
     }
-    for file in files {
-        let (relative, content) = parse_emitted_file(file)?;
-        for directory in directories {
+    let parsed = files
+        .iter()
+        .map(parse_emitted_file)
+        .collect::<io::Result<Vec<_>>>()?;
+    for directory in directories {
+        for (relative, content) in &parsed {
             compiled.files.push(Emitted {
                 path: directory
                     .join(relative)
                     .components()
                     .collect(),
-                content: content.to_owned(),
+                content: (*content).to_owned(),
             });
         }
     }

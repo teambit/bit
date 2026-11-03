@@ -62,9 +62,8 @@ fn execute(
     let chalk = Chalk::detect(args);
     let output = workspace_command::loader_output(chalk, false);
     output.restart(r#"running command "init"..."#);
-    let warning = plan.warning.trim();
-    if !warning.is_empty() {
-        output.console(warning);
+    if !plan.warning.trim().is_empty() {
+        output.console(&plan.warning);
     }
     let root = plan.root.clone();
     let created = plan.created;

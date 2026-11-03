@@ -13,7 +13,6 @@ pub(super) fn report(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
         .filter_map(|lane| {
             let name = lane_name(&lane.id);
             let matches = !name.is_empty()
-                && name != "main"
                 && (lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none());
             matches.then(|| format.item(name))
         })

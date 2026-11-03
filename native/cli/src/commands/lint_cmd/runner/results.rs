@@ -78,12 +78,15 @@ fn file(raw: &Value) -> Value {
 #[inline]
 pub(super) fn aggregate(rows: Vec<Value>, errors: Vec<Value>) -> Value {
     let mut result = json!({});
-    for (_, total, components, _) in COUNTS {
+    result["results"] = json!([]);
+    for (_, total, _, _) in COUNTS {
         result[total] = json!(
             rows.iter()
                 .map(|row| row[total].as_u64().unwrap_or(0))
                 .sum::<u64>()
         );
+    }
+    for (_, total, components, _) in COUNTS {
         result[components] = json!(
             rows.iter()
                 .filter(|row| row[total].as_u64().unwrap_or(0) > 0)

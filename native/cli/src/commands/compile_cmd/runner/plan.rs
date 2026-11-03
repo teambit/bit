@@ -25,7 +25,11 @@ impl Plan {
         let exact_count = selection.exact.as_ref().map_or(0, Vec::len);
         let mut loaded = Loaded::prepare(root, &selection)?;
         if exact_count > 0 {
-            loaded.progress.loads = vec![exact_count];
+            let requested = options.components
+                .iter()
+                .filter(|component| !component.trim().is_empty())
+                .count();
+            loaded.progress.loads = vec![requested];
         }
         let components = loaded.components()?;
         let links = Links::prepare(root, &loaded)?;
