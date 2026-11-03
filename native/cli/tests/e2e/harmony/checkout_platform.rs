@@ -2,7 +2,7 @@
 //!
 //! Covers CRLF and binary preservation, obsolete file cleanup, corrupt object atomicity, `.git/bit` scopes, and root checkout.
 
-/// End-to-end `ScopeMeta` license materialization tests during `bit checkout`.
+/// End-to-end `ScopeMeta` license materialization tests during `bit checkout` via [`compare`] and [`versions`].
 mod license;
 
 use crate::helper::{Helper, config};

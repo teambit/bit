@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper};
 use std::{fs, path::Path};
 
-/// Loads `e2e/fixtures/big-text-file-fixture.txt` and converts all line endings to CRLF (`\r\n`).
+/// Loads `e2e/fixtures/big-text-file-fixture.txt` via [`fs::read_to_string`] and converts all line endings to CRLF (`\r\n`).
 fn fixture_content() -> String {
     let path =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../e2e/fixtures/big-text-file-fixture.txt");

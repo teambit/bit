@@ -12,7 +12,7 @@ use super::support::{
 use crate::helper::{Helper, setup};
 use serde_json::json;
 use std::{fs, io::Write};
-/// Verifies developer snapping and exporting from a synced branch is recognized as converged state ([`sync_run`], [`seed_sync`], [`setup_sync_workspace`], [`Helper`]).
+/// Verifies developer snapping and exporting from a synced branch is recognized as converged state ([`sync_run`], [`seed_sync`], [`setup_sync_workspace`], [`Helper`], [`json`]).
 #[test]
 fn ci_sync_developer_snapping_and_exporting_from_branch_advances_state() {
     let helper = Helper::new();

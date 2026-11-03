@@ -2,7 +2,7 @@
 //!
 //! Groups auto-tagging, binary asset tracking, component index, dependency resolution, merge, and `workspace.jsonc` policy tests.
 
-/// End-to-end dependent auto-tagging tests across transitive, cyclic, and diamond graphs.
+/// End-to-end dependent auto-tagging tests across transitive, cyclic, and diamond graphs (`auto-tagging.e2e.ts`).
 mod auto_tagging;
 /// End-to-end binary file tracking and export tests.
 mod binary_files;

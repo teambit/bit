@@ -2,7 +2,7 @@
 //!
 //! Exercises semantic version bumps, pre-release tags, auto-tagged dependents, and lane restrictions.
 
-/// End-to-end tests for lane-level soft tagging (`bit tag --soft`) and non-soft lane tag rejection.
+/// End-to-end tests for lane-level soft tagging (`bit tag --soft`) and non-soft lane tag rejection alongside [`soft`].
 mod lane;
 /// End-to-end tests for npm registry version conflict checks during `bit tag`.
 mod registry;

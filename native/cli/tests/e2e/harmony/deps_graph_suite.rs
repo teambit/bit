@@ -5,7 +5,7 @@
 //! - `e2e/harmony/deps-in-capsules.e2e.ts`
 //! - `e2e/harmony/global-virtual-store.e2e.ts`
 //! - `e2e/harmony/isolate-cyclic-deps.e2e.ts`
-/// Offline built-in environment and custom aspect capsule fixture helpers.
+/// Offline built-in environment and custom aspect capsule fixture helpers ([`core_manifest_setup::prepare`]).
 mod core_manifest_setup;
 
 use crate::helper::{Helper, config, parse};

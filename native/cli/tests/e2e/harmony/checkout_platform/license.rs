@@ -9,7 +9,7 @@ use serde_json::json;
 use sha1::{Digest, Sha1};
 use std::{fs, io::Write};
 
-/// Writes a zlib-compressed `ScopeMeta` object with `license` and `name` into the local scope object store.
+/// Writes a zlib-compressed `ScopeMeta` object ([`ZlibEncoder`], [`Sha1`]) with `license` and `name` into the local scope object store.
 fn scope_license(helper: &Helper, name: &str, text: &str) {
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     let hash = format!("{:x}", Sha1::digest(name.as_bytes()));

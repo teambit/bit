@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, remote};
 
-/// Verifies that wildcard `bit import <scope>/*` skips deleted components unless imported explicitly by ID.
+/// Verifies that wildcard `bit import <scope>/*` skips deleted components unless imported explicitly by ID ([`Helper`], [`remote`]).
 #[test]
 fn import_a_scope_with_deleted_components() {
     let helper = Helper::new();

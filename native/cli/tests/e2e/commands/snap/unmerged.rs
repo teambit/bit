@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
-/// Canonical `bit snap --unmerged` command string used in [`pending_package_configuration_matches_node_snap`].
+/// Canonical `bit snap --unmerged` command string used in [`pending_package_configuration_matches_node_snap`] with [`Helper`].
 const COMMAND: &str = "snap --unmerged --ignore-issues * --message merge";
 
 /// Verifies [`COMMAND`] (`bit snap --unmerged`) captures pending `teambit.pkg/pkg` configuration ([`FOO_FIXTURE`]) and matches `Node.js` via [`parse`], [`config::read_jsonc`], [`Helper`], and [`OsStr`].

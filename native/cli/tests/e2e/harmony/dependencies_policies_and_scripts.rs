@@ -16,7 +16,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
 
-/// Writes a fake dependency package at `dir` with a `postinstall` script that creates `built.txt`.
+/// Writes a fake dependency package at `dir` with a `postinstall` script that creates `built.txt` via [`Helper`] and [`json`].
 fn write_postinstall_dep(helper: &Helper, dir: &str, name: &str) {
     helper.output_file(
         &format!("{dir}/package.json"),

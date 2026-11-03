@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, config};
 use std::{ffi::OsStr, fs, path::Path};
 
-/// Reads `node_modules/@my-scope/bar.foo/package.json` bytes from `root`.
+/// Reads `node_modules/@my-scope/bar.foo/package.json` bytes from `root` via [`fs::read`] for [`compare`].
 fn package(root: &Path) -> Vec<u8> {
     fs::read(root.join("node_modules/@my-scope/bar.foo/package.json")).unwrap()
 }

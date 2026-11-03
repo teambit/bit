@@ -4,7 +4,7 @@
 
 use crate::helper::{FOO_FIXTURE, Helper};
 
-/// Verifies `bit init --force` succeeds after `.bitmap` is deleted while scope objects remain ([`FOO_FIXTURE`]).
+/// Verifies `bit init --force` succeeds after `.bitmap` is deleted while scope objects remain ([`FOO_FIXTURE`], [`Helper`]).
 #[test]
 fn tagging_a_component_then_deleting_bitmap_file_init_force() {
     let helper = Helper::new();

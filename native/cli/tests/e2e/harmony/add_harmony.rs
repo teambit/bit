@@ -2,7 +2,7 @@
 //!
 //! Covers `.bitmap` convergence on `bit snap`, root component removal, root import guards, and member-only imports.
 
-/// Extended workspace-root snapping and lane-cloning test cases.
+/// Extended workspace-root snapping and lane-cloning test cases (`add_harmony/extra.rs`).
 #[path = "add_harmony/extra.rs"]
 mod extra;
 

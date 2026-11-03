@@ -2,7 +2,7 @@
 //!
 //! Verifies `localOnly`, `softTaggedComponents`, `locallySoftRemoved`, `remotelySoftRemoved`, and `importPendingComponents` in `bit status`.
 
-/// End-to-end `importPendingComponents` status parity verification helpers.
+/// End-to-end `importPendingComponents` status parity verification helpers ([`pending_import::verify`]).
 mod pending_import;
 
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};

@@ -16,7 +16,7 @@ use std::{
     time::Duration,
 };
 
-/// Local mock HTTP npm registry server used in `bit tag` version conflict tests.
+/// Local mock HTTP npm registry server used in `bit tag` version conflict tests via [`workspace`] and [`compare_command`].
 struct Registry {
     url: String,
     stop: Arc<AtomicBool>,

@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
-/// Canonical `bit checkout head --include-new-from-scope` command line used in default-scope tests.
+/// Canonical `bit checkout head --include-new-from-scope` command line used in [`checkout_head_includes_new_components_from_the_default_scope`].
 const COMMAND: &str = "checkout head --include-new-from-scope -x";
 
 /// Verifies that [`COMMAND`] (`bit checkout head --include-new-from-scope`) imports newly published default-scope components like `Node.js` ([`Helper`], [`config::read_jsonc`], [`OsStr`]).

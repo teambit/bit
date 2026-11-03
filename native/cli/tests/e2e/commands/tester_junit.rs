@@ -6,7 +6,7 @@ use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};
 use std::collections::BTreeMap;
 
-/// Compares `command` against `Node.js` while validating `reports/test.xml` `JUnit` output and remote scope invariance.
+/// Compares `command` against `Node.js` while validating `reports/test.xml` `JUnit` output via [`project`] and [`timings`].
 fn compare(helper: &Helper, command: &str) -> Run {
     let remote = move_paths::support::tree(&helper.scopes.remote_path);
     let result = support::compare_with_artifacts(helper, command, timings, &project);

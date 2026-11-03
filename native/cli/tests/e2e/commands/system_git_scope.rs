@@ -1,5 +1,5 @@
 //! End-to-end parity coverage for `details`, `globals`, `system`, `version`, `version-history` ([`remote_history`], [`upstream_history`], [`version_history_rejects_no_color_before_changing_history`], [`version_history_rebuilds_missing_bare_history_without_runtime`]), `git`, and `scope trust` via [`Helper`].
-/// End-to-end remote `bit version-history` action request and report parity tests via [`Helper`].
+/// End-to-end remote `bit version-history` action request and report parity tests via [`Helper`] and [`parse`].
 mod remote_history;
 /// End-to-end upstream `version-history` hidden-lane and deduplication qualification helpers (`VersionHistory`) via [`Helper`] and [`upstream_history::compare_hidden_lane`].
 mod upstream_history;

@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
-/// Verifies that `bit checkout` and `bit revert` with compiled `onLoad` callbacks match Node and clean `.bitTmp`.
+/// Verifies that `bit checkout` and `bit revert` with compiled `onLoad` callbacks match `Node.js` and clean `.bitTmp` via [`compare`].
 #[test]
 fn checkout_with_compiled_onload_callbacks_matches_node() {
     let helper = super::snapshot_environments::callback_workspace(false);

@@ -6,7 +6,7 @@ use crate::helper::{Helper, config};
 use serde_json::json;
 use std::{ffi::OsStr, fs};
 
-/// Environment ID that requires `Node.js` `bit env set` resolution in capsule fixture setup.
+/// Environment ID that requires `Node.js` `bit env set` resolution in capsule fixture setup ([`prepare`]).
 const CUSTOM_ASPECT_ENV: &str = "teambit.harmony/bit-custom-aspect";
 
 /// Configures `comp1` with `environment` (or [`CUSTOM_ASPECT_ENV`]) and returns `--require` `NODE_OPTIONS` for offline built-in env capsule tests ([`Helper`], [`config::read_jsonc`], [`OsStr`]).

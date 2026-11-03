@@ -2,7 +2,7 @@
 //!
 //! Groups Harmony aspect, status, checkout, export, import, lane, merge, and dependency end-to-end suites.
 
-/// End-to-end Harmony `bit add` callback, inspection, policy, and workspace-root suites.
+/// End-to-end Harmony `bit add` callback, inspection, policy, and workspace-root suites alongside [`add_harmony`].
 mod add;
 /// End-to-end Harmony workspace-root tracking and cloning tests.
 mod add_harmony;

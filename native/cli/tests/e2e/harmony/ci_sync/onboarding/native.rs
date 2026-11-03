@@ -5,7 +5,7 @@
 use crate::{commands::add::support, helper::Helper};
 use std::{collections::BTreeMap, fs};
 
-/// Verifies that `bit ci sync --init` matches Node scaffolding without invoking the `JavaScript` runtime.
+/// Verifies that `bit ci sync --init` matches `Node.js` scaffolding without invoking the `JavaScript` runtime ([`generated`], [`support::compare`]).
 #[test]
 fn initial_scaffolding_matches_node_and_writes_without_the_published_runtime() {
     let helper = super::empty_repository();

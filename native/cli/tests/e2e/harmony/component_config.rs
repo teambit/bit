@@ -5,7 +5,7 @@
 use crate::helper::{Helper, parse};
 use serde_json::{Value, json};
 
-/// Verifies `bit eject-conf` output path, `component.json` contents, `--propagate`, and `--override` on a new component.
+/// Verifies `bit eject-conf` output path, `component.json` contents, `--propagate`, and `--override` on a new component ([`Helper`], [`json`]).
 #[test]
 fn eject_config_for_new_component() {
     let helper = Helper::new();

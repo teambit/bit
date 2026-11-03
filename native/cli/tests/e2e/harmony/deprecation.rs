@@ -9,7 +9,7 @@ mod ranges;
 
 use crate::commands::move_paths::support::{self, aspect, bitmap, compare, json, successful};
 
-/// Aspect ID for component deprecation metadata (`teambit.component/deprecation`).
+/// Aspect ID for component deprecation metadata (`teambit.component/deprecation`) in [`tagged_deprecation_marks_the_component_modified_and_survives_tagging`].
 const DEPRECATION: &str = "teambit.component/deprecation";
 
 /// Verifies that `bit deprecate` marks a tagged component modified and persists deprecation across `bit tag`.

@@ -11,7 +11,7 @@ use std::ffi::OsStr;
 // The pinned release predates hidden-head traversal. Give it the same head as a
 // visible entry, then restore the hidden lane bytes before comparing scope effects.
 // The current upstream release is compared against the original hidden lane.
-/// Compares `bit version-history build --from-all-lanes` against `Node.js` with hidden-lane head qualification.
+/// Compares `bit version-history build --from-all-lanes` against `Node.js` with hidden-lane head qualification via [`tree`] and [`OsStr`].
 pub(super) fn compare_hidden_lane(
     helper: &Helper,
     lane_path: &std::path::Path,

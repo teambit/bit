@@ -6,7 +6,7 @@ use super::soft::{bitmap, compare_command};
 use crate::helper::{Helper, parse};
 use std::ffi::OsStr;
 
-/// Creates a workspace with `comp1` and a `--root` component (`ws-root`) tagged at their initial versions.
+/// Creates a workspace with `comp1` and a `--root` component (`ws-root`) tagged at their initial versions via [`Helper`] and [`OsStr`].
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);

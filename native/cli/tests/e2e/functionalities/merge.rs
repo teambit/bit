@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse, remote};
 use std::fs;
 
-/// Fixture source for `utils/is-type` version 1.
+/// Fixture source for `utils/is-type` version 1 in [`importing_a_component_with_merge_flag`].
 const IS_TYPE_V1: &str = "module.exports = function isType() { return 'got is-type v1'; };";
 /// Fixture source for `utils/is-type` version 2.
 const IS_TYPE_V2: &str = "module.exports = function isType() { return 'got is-type v2'; };";

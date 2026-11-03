@@ -4,7 +4,7 @@
 
 use crate::helper::Helper;
 
-/// Verifies `bit checkout head`, `checkout latest`, and missing local version checkout behavior ([`assert_latest_without_tag_and_missing_local_version`]).
+/// Verifies `bit checkout head`, `checkout latest`, and missing local version checkout behavior ([`assert_latest_without_tag_and_missing_local_version`], [`Helper`]).
 #[test]
 fn checkout_head_and_latest_and_non_existing_local_version() {
     let helper = Helper::new();

@@ -2,7 +2,7 @@
 //!
 //! Groups cross-command flow integration tests ported from the upstream `e2e/flows/` suite.
 
-/// End-to-end CRLF large-file tracking and tagging flow tests.
+/// End-to-end CRLF large-file tracking and tagging flow tests (`big-file.e2e.ts`).
 mod big_file;
 /// End-to-end `bit init` and `bit init --force` tests when `.bitmap` is deleted.
 mod bitmap_deleted;

@@ -5,7 +5,7 @@
 use super::move_paths::support;
 use serde_json::Value;
 
-/// Validates and normalizes `start` and `duration` fields in `bit test --json` output.
+/// Validates and normalizes `start` and `duration` fields in `bit test --json` output via [`component_timings`] and [`Value`].
 pub(super) fn timings(output: &str) -> String {
     let mut value: Value = serde_json::from_str(output).expect("tester JSON");
     for environment in value.as_array_mut().expect("tester environments") {

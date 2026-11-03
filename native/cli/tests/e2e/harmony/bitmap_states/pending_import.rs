@@ -6,7 +6,7 @@ use crate::helper::{Helper, parse};
 use serde_json::json;
 use std::ffi::OsStr;
 
-/// Asserts `bit status --json` and [`verify_text`] output for components in `importPendingComponents` state.
+/// Asserts `bit status --json` ([`parse`], [`json`]) and [`verify_text`] output for components in `importPendingComponents` state.
 pub(super) fn verify(helper: &Helper) {
     let copy = helper.clone_workspace();
     let native = helper.native_run("status --json");

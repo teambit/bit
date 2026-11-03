@@ -5,7 +5,7 @@
 use super::move_paths::support;
 use serde_json::Value;
 
-/// Sorts two-component summary arrays in `bit test --summary --json` output for deterministic comparison.
+/// Sorts two-component summary arrays in `bit test --summary --json` output via [`sort_component_pair`] for deterministic comparison.
 pub(super) fn summary_order(output: &str) -> String {
     let mut data: Value = serde_json::from_str(output).unwrap();
     sort_component_pair(&mut data["componentsWithTests"], true);

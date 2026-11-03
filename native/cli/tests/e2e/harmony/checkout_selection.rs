@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config};
 use std::{ffi::OsStr, fs};
 
-/// Creates a workspace with three dependent components tagged at `0.0.1` and `0.0.2`.
+/// Creates a workspace with three dependent components tagged at `0.0.1` and `0.0.2` via [`Helper`].
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);

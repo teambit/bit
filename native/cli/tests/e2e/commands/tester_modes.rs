@@ -4,7 +4,7 @@
 
 use super::{move_paths::support, tester::timings};
 
-/// Verifies `bit test --json --summary --verbose` counts statuses and preserves process exit codes.
+/// Verifies `bit test --json --summary --verbose` counts statuses and preserves process exit codes via [`support::compare`].
 #[test]
 fn builtin_test_summary_counts_statuses_and_preserves_exit_codes() {
     let helper = support::workspace(1, true);

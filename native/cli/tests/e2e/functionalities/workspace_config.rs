@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse, strip_ansi};
 
-/// Aspect ID for dependency-resolver variant overrides in `workspace.jsonc`.
+/// Aspect ID for dependency-resolver variant overrides in `workspace.jsonc` via [`set_policy_to_variant`].
 const OVERRIDE_EXTENSION: &str = "teambit.dependencies/dependency-resolver";
 
 /// Attaches a dependency-resolver `policy` object to `variant` in `workspace.jsonc` ([`OVERRIDE_EXTENSION`]).

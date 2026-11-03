@@ -8,7 +8,7 @@ use crate::{
 };
 use std::fs;
 
-/// Verifies that tracking `.` with `--root` preserves nested component `.bitmap` ownership and skips root package linking.
+/// Verifies that tracking `.` with `--root` preserves nested component `.bitmap` ownership and skips root package linking ([`assert_loaded_root_sources`]).
 #[test]
 fn root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries() {
     let helper = workspace();

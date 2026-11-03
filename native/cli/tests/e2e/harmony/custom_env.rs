@@ -1,4 +1,4 @@
-//! End-to-end cases ([`custom_env_issues_tag_untag_and_env_replacement`]) from:
+//! End-to-end cases ([`custom_env_issues_tag_untag_and_env_replacement`]) via [`Helper`] from:
 //! - `e2e/harmony/custom-env.e2e.ts`
 //! - `e2e/harmony/custom-env-operations.e2e.ts`
 //!

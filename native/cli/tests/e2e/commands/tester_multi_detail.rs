@@ -5,7 +5,7 @@
 use super::{move_paths::support, tester::timings};
 use serde_json::Value;
 
-/// Normalizes timings and sorts two-component detail arrays in `bit test --json` output.
+/// Normalizes timings via [`timings`] and sorts two-component detail arrays in `bit test --json` output.
 pub(super) fn detail_order(output: &str) -> String {
     let mut data: Value = serde_json::from_str(&timings(output)).unwrap();
     for environment in data.as_array_mut().unwrap() {

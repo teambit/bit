@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config, parse};
 use serde_json::json;
 
-/// Verifies `bit aspect set`, `eject-conf`, `aspect unset`, and `aspect list-core` on `component.json` and `.bitmap`.
+/// Verifies `bit aspect set`, `eject-conf`, `aspect unset`, and `aspect list-core` on `component.json` and `.bitmap` ([`Helper`], [`parse`]).
 #[test]
 fn aspect_set_eject_conf_and_unset_on_component_json() {
     let helper = Helper::new();
