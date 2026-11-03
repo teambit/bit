@@ -55,6 +55,33 @@ Here's some text with \\escaped\\characters that MDX v3 doesn't like
     });
   });
 
+  describe('compilation failure warning', () => {
+    const src = `<!-- an html comment -->
+import { Button } from './button';
+`;
+    const createLogger = () => {
+      const calls = { warning: 0, debug: 0 };
+      const logger = { consoleWarning: () => calls.warning++, debug: () => calls.debug++ } as any;
+      return { logger, calls };
+    };
+
+    it('should warn for .mdx files', () => {
+      const { logger, calls } = createLogger();
+      const detector = new MDXDependencyDetector(['.mdx'], logger);
+      detector.isSupported({ ext: '.mdx', filename: '/ws/comp/docs.mdx' } as any);
+      expect(detector.detect(src)).to.deep.equal(['./button']);
+      expect(calls).to.deep.equal({ warning: 1, debug: 0 });
+    });
+
+    it('should not warn for plain .md files', () => {
+      const { logger, calls } = createLogger();
+      const detector = new MDXDependencyDetector(['.md'], logger);
+      detector.isSupported({ ext: '.md', filename: '/ws/comp/readme.md' } as any);
+      expect(detector.detect(src)).to.deep.equal(['./button']);
+      expect(calls).to.deep.equal({ warning: 0, debug: 1 });
+    });
+  });
+
   describe('isSupported', () => {
     it('should return true for supported extensions', () => {
       const detector = new MDXDependencyDetector(['mdx', 'md']);
