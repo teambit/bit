@@ -88,7 +88,7 @@ fn blank_string(ver: &serde_json::Value) -> bool {
         .is_none_or(|text| text.trim().is_empty())
 }
 
-/// Serialize workspace component rows with the published bitmap header and property order.
+/// Serialize workspace component rows with the published bitmap header and property order via [`inspection::render_workspace_bitmap`].
 pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
     if value
         .as_object()

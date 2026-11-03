@@ -61,7 +61,7 @@ pub(super) fn blame(request: Request, cache: &mut Cache) -> io::Result<Value> {
     sources.response(&mut response);
     Ok(response)
 }
-/// Splits `text` into 1-based (`lineNumber`, `lineContent`) JSON row objects.
+/// Splits `text` into 1-based (`lineNumber`, `lineContent`) JSON row [`Value`] objects for [`blame`].
 #[inline]
 fn initial_rows(text: &str) -> Vec<Value> {
     text.split('\n')

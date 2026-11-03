@@ -15,7 +15,7 @@ pub(super) struct Request {
     #[serde(default)]
     overlays: Vec<Value>,
 }
-/// Filters `request.logs` to entries touching `request.relative_path` and links hidden parents.
+/// Filters `request.logs` ([`Request`]) to entries touching `request.relative_path` and links hidden parents.
 pub(super) fn lineage(request: Request, plan: &Value) -> io::Result<Value> {
     if request.logs.len() > 4096
         || request.relative_path.trim().is_empty()

@@ -26,7 +26,7 @@ use std::{
     path::PathBuf,
 };
 const MAX_JSON: usize = 4 * 1024 * 1024;
-/// Deserialized session-scoped merge, history, inspection, snapshot, or transfer wire request carrying a [`Value`] payload.
+/// Deserialized session-scoped merge, history, inspection, snapshot, or transfer wire request carrying a [`Value`] payload (up to [`MAX_JSON`]).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(
     tag = "kind",

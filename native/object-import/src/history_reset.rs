@@ -13,7 +13,7 @@ mod tests;
 use serde_json::Value;
 use std::io;
 
-/// Dispatches a `bit reset` history or journal operation (`kind`) against session [`State`].
+/// Dispatches a `bit reset` history or journal operation (`kind`) with `input` [`Value`] against session [`State`].
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     if !input.is_object() {
         return Err(invalid("history reset request"));

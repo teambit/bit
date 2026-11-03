@@ -3,7 +3,7 @@
 use super::{Request, State, apply};
 use serde_json::Value;
 use std::io;
-/// Dispatches [`Request`] `request` inside `pool` when parallel-eligible, or directly on the current thread.
+/// Dispatches [`Request`] `request` on [`State`] inside `pool` when [`is_parallel`], or directly on the current thread.
 #[inline]
 pub(super) fn run(
     request: Request,

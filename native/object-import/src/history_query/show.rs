@@ -34,7 +34,7 @@ struct Edge {
     target: String,
     kind: &'static str,
 }
-/// Builds the `historyQueryShow` [`Node`], [`Edge`], and topological-order graph payload for `input`.
+/// Builds the `historyQueryShow` [`Node`], [`Edge`], and topological-order graph [`Value`] payload for `input`.
 pub(super) fn show(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     if request.versions.len() > 4096 {

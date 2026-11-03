@@ -26,7 +26,7 @@ struct Model {
     main_head: Option<String>,
     main_model_known: bool,
 }
-/// Evaluates the lane-merge squash policy (`skip`, `requireVersion`, `requireMainModel`, or `rewrite`).
+/// Evaluates the lane-merge squash [`Policy`] (`skip`, `requireVersion`, `requireMainModel`, or `rewrite`).
 pub(super) fn policy(input: &Policy) -> io::Result<Value> {
     validate(input)?;
     if !eligible(input) {

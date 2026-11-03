@@ -65,7 +65,7 @@ pub fn scope<Output>(handler: Option<Handler>, work: impl FnOnce() -> Output) ->
     work()
 }
 
-/// Bind an adapter [`Handler`] on the dispatch thread until the returned [`Binding`] guard is dropped.
+/// Bind an adapter [`Handler`] on the dispatch thread via [`CURRENT`] until the returned [`Binding`] guard is dropped.
 #[inline]
 pub fn bind(handler: Option<Handler>) -> Binding {
     Binding(CURRENT.with_borrow_mut(|current| std::mem::replace(current, handler)))

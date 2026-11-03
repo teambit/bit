@@ -4,7 +4,7 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
-/// Evaluates per-component merge action, head policy, and squash flags from `input`.
+/// Evaluates per-component merge action, head policy, and squash flags from `input` ([`Value`]).
 pub(super) fn apply(input: &Value) -> io::Result<Value> {
     let has_merge = boolean(input, "hasMerge")?;
     let conflicts = boolean(input, "conflicts")?;

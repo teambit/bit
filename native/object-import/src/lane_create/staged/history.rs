@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
-/// Populates and stages the `VersionHistory` object for `model` across `heads` in `moved`.
+/// Populates and stages the `VersionHistory` object for `model` ([`Value`]) across `heads` in `moved` ([`Moved`]).
 pub(super) fn prepare(
     moved: &mut Moved,
     directory: &Path,

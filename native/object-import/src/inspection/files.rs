@@ -33,7 +33,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     Ok(json!({"modified":!request.model_files.is_empty() && any_changed,"statuses":statuses}))
 }
 
-/// Validates [`wire::Model`] file entries (relative paths, SHA-1 hashes, and duplicate detection).
+/// Validates [`wire::Model`] file entries (`relativePath` via [`read::relative`], SHA-1 hashes, and duplicate detection).
 #[inline]
 pub(super) fn validated_models(
     files: &[wire::Model],

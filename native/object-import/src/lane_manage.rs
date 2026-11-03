@@ -17,7 +17,7 @@ pub enum Change<'a> {
     Rename(&'a str),
     Scope(&'a str),
 }
-/// Retained local lane rename or scope-change plan ready to commit to scope objects and `.bitmap`.
+/// Retained local lane rename or scope-change plan ([`Original`], [`Objects`], [`Documents`]) ready to commit to scope objects and `.bitmap`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

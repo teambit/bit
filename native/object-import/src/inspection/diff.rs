@@ -56,7 +56,7 @@ pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     )
 }
 
-/// Validates `objectsDirectory`, `gitExecutable`, and model file paths/hashes on [`Request`].
+/// Validates `objectsDirectory`, `gitExecutable`, and [`wire::Model`] file paths/hashes on [`Request`].
 fn validate_request(request: &Request) -> io::Result<()> {
     let git_executable = request.git_executable.trim();
     if !request.objects_directory.is_absolute()

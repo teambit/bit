@@ -70,7 +70,7 @@ impl Moved {
     }
 }
 
-/// Stages unexported `main` snaps at `root` into the newly created lane (`scope`/`name`).
+/// Stages unexported `main` snaps at `root` ([`Path`]) from `documents` ([`Documents`]) into the newly created lane (`scope`/`name`).
 pub(super) fn prepare(
     root: &Path,
     documents: &Documents,

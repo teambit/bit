@@ -20,7 +20,7 @@ struct Request {
     workspace_root: bool,
     mode: String,
 }
-/// Dispatches an `inspectionCompare` request in `sourceCode` or semantic `modified` mode.
+/// Dispatches an `inspectionCompare` [`Request`] in `sourceCode` or semantic [`modified`] mode.
 pub(super) fn plan(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     match request.mode.trim() {

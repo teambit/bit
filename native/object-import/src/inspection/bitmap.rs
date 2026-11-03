@@ -25,7 +25,7 @@ pub(crate) fn normalize(bytes: &[u8]) -> io::Result<Vec<u8>> {
     }
     render(&value)
 }
-/// Renders a normalized `.bitmap` JSON `value` with the standard Bit header and 4-space indentation.
+/// Renders a normalized `.bitmap` JSON `value` ([`Value`]) with [`PREFIX`] and 4-space indentation.
 #[inline]
 pub(crate) fn render(value: &Value) -> io::Result<Vec<u8>> {
     let mut output = PREFIX.as_bytes().to_vec();

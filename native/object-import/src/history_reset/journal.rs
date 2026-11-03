@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
-/// Session-scoped `bit reset` execution journal tracking active reset phase records.
+/// Session-scoped `bit reset` execution journal tracking active reset phase [`Record`]s.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct State {
     records: HashMap<String, Record>,

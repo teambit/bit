@@ -8,7 +8,7 @@ use std::{
     io::{self, Write},
     path::PathBuf,
 };
-/// Deduplicated `Source` body capsule accumulator and reference indexer for a merge batch.
+/// Deduplicated `Source` body capsule accumulator ([`Trace`], [`Value`]) and reference indexer for a merge batch.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Capsules {
     trace: Trace,

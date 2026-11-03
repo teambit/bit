@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, io};
-/// Session-scoped per-component merge status state machine registry.
+/// Session-scoped per-component merge status state machine registry mapping tokens to [`Cursor`]s.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct State {
     records: HashMap<String, Cursor>,

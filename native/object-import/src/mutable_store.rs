@@ -21,7 +21,7 @@ pub(crate) fn persist_serialized(
     Ok(compressed.len())
 }
 
-/// Validates the `<kind> <hash> <utf16-len>\0` header of a mutable `serialized` object.
+/// Validates the `<kind> <hash> <utf16-len>\0` header of a mutable `serialized` object for [`persist_serialized`].
 fn check_header(hash: &str, serialized: &[u8], models: bool) -> io::Result<()> {
     crate::merge_history::hash(hash)?;
     let end = serialized

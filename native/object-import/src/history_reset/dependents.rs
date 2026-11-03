@@ -23,7 +23,7 @@ struct Row {
     id: String,
     dependencies: Vec<String>,
 }
-/// Builds the reverse dependency index for `input` and resolves dependent and outside sets.
+/// Builds the reverse dependency index for `input` ([`Request`]) and resolves dependent and outside sets.
 pub(super) fn index(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     bound(request.rows.len())?;

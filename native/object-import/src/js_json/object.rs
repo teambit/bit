@@ -3,7 +3,7 @@
 use super::{Value, invalid};
 use std::{collections::HashSet, io};
 
-/// Orders object `fields` per `ECMAScript` `OwnPropertyKeys` (array indices ascending, then insertion order) and omits `undefined` values.
+/// Orders [`Value`] object `fields` per `ECMAScript` `OwnPropertyKeys` (array indices ascending, then insertion order) and omits `undefined` values.
 pub(super) fn entries(fields: &[(Vec<u16>, Value)]) -> io::Result<Vec<(&[u16], &Value)>> {
     if fields.is_empty() {
         return Ok(Vec::new());

@@ -73,7 +73,7 @@ impl Origin {
         Self::from_lane_object(root, bitmap, parent, &lane, scope, new_scope)
     }
 
-    /// Resolves origin state from a pre-merge backup `Lane` object during `lane merge-move`.
+    /// Resolves [`Origin`] state from a pre-merge backup `Lane` [`Value`] object during `lane merge-move`.
     pub(super) fn from_backup_lane(
         root: &Path,
         bitmap: &Value,

@@ -21,7 +21,7 @@ pub(super) fn validate(value: &Value) -> io::Result<()> {
     };
     validate_artifacts(artifacts)
 }
-/// Validates the `teambit.pipelines/builder` `artifacts` array and per-artifact file budgets.
+/// Validates the `teambit.pipelines/builder` `artifacts` [`Value`] array and per-artifact file budgets via [`validate_file`].
 fn validate_artifacts(artifacts: &Value) -> io::Result<()> {
     let artifacts =
         artifacts.as_array().ok_or_else(|| invalid("history query builder artifact array"))?;

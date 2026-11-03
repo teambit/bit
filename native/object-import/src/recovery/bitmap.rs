@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-/// Diffs `.bitmap` at `filename` against `current` component root directories for crash recovery.
+/// Diffs `.bitmap` at `filename` ([`Path`]) against `current` component root directories for crash recovery, returning [`Value`].
 pub(super) fn plan(filename: &Path, current: &[String]) -> io::Result<Value> {
     path(filename)?;
     if current.len() > 4096

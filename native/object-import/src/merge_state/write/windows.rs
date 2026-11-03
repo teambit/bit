@@ -14,7 +14,7 @@ const DIRECTORY_ATTRIBUTE: u64 = 0x0010;
 const DEVICE_ATTRIBUTE: u64 = 0x0040;
 const REPARSE_POINT: u64 = 0x0400;
 
-/// Opens `path` for writing on Windows while verifying handle identity against reparse-point swaps.
+/// Opens `path` ([`Path`]) for writing on Windows via [`OPEN_REPARSE_POINT`] while verifying handle identity against reparse-point swaps.
 #[inline]
 pub(super) fn open(path: &Path) -> io::Result<fs::File> {
     let original = OpenOptions::new()

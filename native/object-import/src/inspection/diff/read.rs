@@ -11,7 +11,7 @@ use crate::{
 use rayon::prelude::*;
 use std::{io, path::Path};
 
-/// Loads `Source` object bodies for `models` from `directory` within `maximum` bytes.
+/// Loads `Source` object bodies for `models` ([`wire::Model`]) from `directory` ([`Path`]) within `maximum` bytes.
 pub(super) fn load(
     directory: &Path,
     models: &[wire::Model],

@@ -39,7 +39,7 @@ struct Relation {
     unrelated_lane: Lane,
     head_on_current_lane: String,
 }
-/// Target lane `(name, scope)` identity recorded in an `unmerged.json` reconciliation entry.
+/// Target lane `(name, scope)` identity recorded in an `unmerged.json` reconciliation [`Entry`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Lane {

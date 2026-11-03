@@ -5,7 +5,7 @@ use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 use std::io;
 
-/// Sorts array `field` on `value` by `key` and returns the original element indices.
+/// Sorts array `field` on `value` ([`Js`]) by `key` and returns the original element indices.
 pub(super) fn rows(
     value: &mut Js,
     field: &str,

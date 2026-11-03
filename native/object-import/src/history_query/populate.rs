@@ -18,7 +18,7 @@ struct Request {
     #[serde(default)]
     overlays: Vec<Value>,
 }
-/// Reads a `Version` JSON record by `hash` from `overlays` or the local object `reader`.
+/// Reads a `Version` JSON [`Value`] record by `hash` from `overlays` or the local object `reader`.
 fn read(
     reader: &mut crate::read_version::Reader<'_>,
     overlays: &[Value],

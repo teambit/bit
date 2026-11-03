@@ -44,7 +44,7 @@ fn convert(value: &serde_json::Value) -> io::Result<Value> {
     })
 }
 
-/// Converts a `serde_json::Map` into an ordered `UTF-16`-keyed [`Value::Object`].
+/// Converts a `serde_json::Map` into an ordered `UTF-16`-keyed [`Value::Object`] via [`convert`].
 fn convert_object(values: &serde_json::Map<String, serde_json::Value>) -> io::Result<Value> {
     if values.len() > 262_144 {
         return Err(io::Error::other("JSON object limit"));

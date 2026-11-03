@@ -5,7 +5,7 @@ use crate::checkout::repository::SourceRecord;
 use serde_json::{Value, json};
 use std::{cell::RefCell, collections::HashMap, io};
 thread_local! {static ACTIVE: RefCell<Option<Trace>> = const {RefCell::new(None)};}
-/// Thread-local accumulator of `Source` object read receipts and byte budgets during merge prep.
+/// Thread-local accumulator of `Source` object read [`Receipt`]s and byte budgets during merge prep.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Trace {
     pub(super) records: HashMap<String, Receipt>,

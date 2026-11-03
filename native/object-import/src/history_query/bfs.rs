@@ -40,7 +40,7 @@ struct Tag {
     label: String,
     hash: String,
 }
-/// Validated BFS history traversal request combining [`Fields`], [`Labels`], overlays, stops, and tag index.
+/// Validated BFS history traversal request combining [`Fields`], [`Labels`], overlays, stops, and [`crate::tag_index::TagIndex`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Request {
     fields: Fields,

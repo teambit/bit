@@ -6,7 +6,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{io, path::Path};
 
-/// Returns the validated `LaneHistory` JSON for `lane_hash` in the workspace scope at `root`.
+/// Returns the validated `LaneHistory` JSON [`Value`] for `lane_hash` in the workspace scope at `root` ([`Path`]) via [`read_at`].
 #[inline]
 pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
     read_at(&crate::scope_path(root), lane_hash)

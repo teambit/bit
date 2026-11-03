@@ -55,7 +55,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         _ => policy(kind, &input, &state.journal),
     }
 }
-/// Prepares component merge file bodies using retained workspace `snapshots`.
+/// Prepares component merge file bodies in `state` ([`State`]) using retained workspace `snapshots`.
 pub(crate) fn prepare_with_workspace(
     input: Value,
     state: &mut State,

@@ -11,7 +11,7 @@ pub(super) struct State {
     checkout: crate::checkout_transition::State,
     bindings: HashMap<String, Binding>,
 }
-/// Retained per-component merge body binding associating checkout token, owner journal, and `Source` groups.
+/// Retained per-component merge body binding associating checkout token, owner journal, and `Source` groups ([`Value`]).
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Binding {
     owner: String,

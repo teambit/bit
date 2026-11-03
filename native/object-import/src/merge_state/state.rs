@@ -44,7 +44,7 @@ pub(super) struct Identity {
     name: String,
 }
 impl Identity {
-    /// Returns `true` when `entry` has the same normalized `(scope, name)` identity as `self`.
+    /// Returns `true` when `entry` ([`Value`]) has the same normalized `(scope, name)` [`Identity`] as `self`.
     fn matches(&self, entry: &Value) -> bool {
         let self_scope = self.scope
             .as_deref()

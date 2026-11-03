@@ -12,7 +12,7 @@ use std::{
 pub(crate) struct Budget(AtomicUsize);
 
 impl Budget {
-    /// Creates a shared atomic byte budget initialized with `bytes` remaining capacity.
+    /// Creates a shared atomic [`Budget`] initialized with `bytes` remaining capacity.
     #[inline]
     pub(crate) fn new(bytes: usize) -> Self {
         Self(AtomicUsize::new(bytes))

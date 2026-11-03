@@ -3,7 +3,7 @@
 use super::invalid;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
-/// Extracts a bounded array slice for `field` from `input` (at most 4,096 dependency rows).
+/// Extracts a bounded array slice for `field` from `input` ([`Value`], at most 4,096 dependency rows).
 #[inline]
 fn rows<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
     Ok(input[field]

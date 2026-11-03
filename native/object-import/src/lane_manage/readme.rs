@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Outcome of preparing a `bit lane remove-readme` operation (`NoReadme` message or `Remove` plan).
+/// Outcome of preparing a `bit lane remove-readme` operation (`NoReadme` message or [`ReadmeRemoval`] `Remove` plan).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReadmePlan {
     NoReadme(String),

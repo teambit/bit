@@ -29,7 +29,7 @@ impl Writer {
         self.spaces = spaces;
     }
 
-    /// Consumes the [`Writer`] and returns the accumulated JSON output byte buffer.
+    /// Consumes the [`Writer`] and returns the accumulated JSON output byte buffer (`self.output`).
     #[inline]
     pub(super) fn finish(self) -> Vec<u8> {
         self.output

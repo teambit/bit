@@ -33,7 +33,7 @@ impl<'a> Reader<'a> {
             metadata: None,
         })
     }
-    /// Creates a bounded `Version` object reader in history-query validation mode.
+    /// Creates a bounded `Version` object [`Reader`] in history-query validation mode.
     #[inline]
     pub(crate) fn query(directory: &'a Path) -> io::Result<Self> {
         let mut reader = Self::new(directory)?;

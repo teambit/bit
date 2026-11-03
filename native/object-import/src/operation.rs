@@ -9,7 +9,7 @@ use std::{
 /// Ordered list of `[tag, hash]` string pairs in `Component` import merge plans.
 type Tags = Vec<[String; 2]>;
 
-/// Deserialized import merge operation variant (`Version`, `VersionHistory`, or `Component`).
+/// Deserialized import merge operation variant (`Version`, `VersionHistory` [`HistoryPlan`], or `Component` [`ComponentPlan`]).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum Operation {
