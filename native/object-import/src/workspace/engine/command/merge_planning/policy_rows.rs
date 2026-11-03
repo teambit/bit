@@ -33,7 +33,7 @@ pub(super) fn fast_forward(
     Ok(())
 }
 
-/// Resolves the npm binding prefix for `current` from its existing consumer projection or `context` model.
+/// Resolves the npm binding prefix for `current` from its existing consumer projection or `context` model for [`fast_forward`].
 fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<String> {
     if !current.added {
         return current.target.current["bindingPrefix"]

@@ -38,7 +38,7 @@ pub(super) fn report_if_applicable(
     Ok(())
 }
 
-/// Extracts and validates the relative `directory` and `mainFile` paths from `target`.
+/// Extracts and validates the relative `directory` and `mainFile` paths from `target` for [`report_if_applicable`].
 #[inline]
 fn target_paths(target: &Value) -> io::Result<(&str, &str)> {
     let directory = target["directory"]

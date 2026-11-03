@@ -75,7 +75,7 @@ impl Controls {
         }
         Ok(())
     }
-    /// Returns the sorted list of control file paths tracked in `self.expected`.
+    /// Returns the sorted list of control file paths tracked in `self.expected` on [`Controls`].
     #[inline]
     pub(in super::super) fn paths(&self) -> Vec<PathBuf> {
         self.expected.keys().cloned().collect()

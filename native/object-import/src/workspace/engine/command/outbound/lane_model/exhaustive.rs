@@ -71,7 +71,7 @@ pub(super) fn workspace_entries(
     Ok(extra)
 }
 
-/// Resolves a single tracked main component entry `(scope, name)` from `indexed` when absent from `lane_rows`.
+/// Resolves a single tracked main component entry `(scope, name)` from `indexed` when absent from `lane_rows` for [`workspace_entries`].
 fn resolve_workspace_entry(
     dir: &Path,
     indexed: &[Value],

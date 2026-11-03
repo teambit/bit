@@ -21,7 +21,7 @@ pub(super) fn select_versions(
     }
 }
 
-/// Selects only the current `model["head"]` version and its unambiguous tag label for `--head-only` exports.
+/// Selects only the current `model["head"]` version and its unambiguous tag label via [`validate_label`] for `--head-only` exports.
 fn head_only(model: &Value) -> io::Result<Staged> {
     let head = model["head"]
         .as_str()

@@ -16,7 +16,7 @@ use std::{
     sync::Mutex,
 };
 
-/// Resolved remote scope host URL and central-hub flag.
+/// Resolved remote scope host URL and central-hub flag returned by [`resolve`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in super::super) struct Resolved {
     pub host: String,

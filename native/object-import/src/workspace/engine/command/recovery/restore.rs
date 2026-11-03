@@ -26,7 +26,7 @@ pub(super) struct Prepared {
     lane: bool,
     objects: Objects,
 }
-/// Optional lane and main-component object restoration states for `last-merged` recovery.
+/// Optional lane and main-component object restoration states for `last-merged` recovery on [`Prepared`].
 #[derive(Default)]
 struct Objects {
     lane: Option<super::lane::Lane>,

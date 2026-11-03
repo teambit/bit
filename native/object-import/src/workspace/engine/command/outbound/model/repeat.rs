@@ -1,5 +1,5 @@
 //! A selected, already-exported component still gets a remote persistence
-//! round via [`select`] and [`non_empty`] into [`Staged`] with zero objects and no local `Version` promotion.
+//! round via [`select`], [`non_empty`], and [`invalid`] into [`Staged`] with zero objects and no local `Version` promotion.
 
 use super::{Staged, invalid};
 use serde_json::Value;

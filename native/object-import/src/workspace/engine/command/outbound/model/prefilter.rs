@@ -52,7 +52,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
 }
 
 impl Prepared {
-    /// Records the current on-disk byte preimage of `path` inside `self.preimages`.
+    /// Records the current on-disk byte preimage of `path` inside `self.preimages` via [`read`].
     #[inline]
     fn capture(&mut self, path: PathBuf) -> io::Result<()> {
         let before = read(&path)?;

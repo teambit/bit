@@ -23,7 +23,7 @@ pub(super) struct Planned {
     pub(super) result: Value,
     pub(super) merge: Option<super::merge_planning::Prepared>,
 }
-/// Plans a standard workspace checkout across `current` components using `semver` and `snapshots` via [`checkout_captured`].
+/// Plans a standard workspace checkout across `current` components using `semver` and `snapshots` via [`validate_current`] and [`checkout_captured`].
 #[inline]
 pub(super) fn checkout(
     record: &mut Record,

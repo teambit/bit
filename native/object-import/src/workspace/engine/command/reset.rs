@@ -59,7 +59,7 @@ fn configuration(record: &Record, plan: &planning::Planned) -> io::Result<reset_
     }
 }
 
-/// Verifies all recorded read proofs and retained checkout reset inputs before mutating workspace files.
+/// Verifies all recorded read proofs and retained checkout reset inputs via [`validate_inputs`] before mutating workspace files.
 #[inline]
 pub(super) fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;

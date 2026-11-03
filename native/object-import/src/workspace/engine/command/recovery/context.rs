@@ -61,7 +61,7 @@ pub(super) fn prepare(
         restored_file_id: None,
     })
 }
-/// Reads `unmerged.json`, selects recovery targets, and returns the remaining pending unmerged entries.
+/// Reads `unmerged.json`, selects recovery targets via [`select`], and returns the remaining pending unmerged entries.
 fn capture_targets(
     request: &Prepare,
     context: &Value,

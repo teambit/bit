@@ -43,7 +43,7 @@ fn entry_head(entry: &Value) -> Option<&str> {
         .filter(|head| !head.is_empty())
 }
 
-/// Extracts the `(scope, name)` pair from a lane component or `readmeComponent` `entry`.
+/// Extracts the `(scope, name)` pair from a lane component or `readmeComponent` `entry` for [`validate`].
 #[inline]
 fn id_pair(entry: &Value) -> Option<(&str, &str)> {
     let value = entry

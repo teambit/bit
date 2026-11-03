@@ -54,7 +54,7 @@ pub(super) fn prepare(input: &Prepare, plan: &Plan) -> io::Result<Prepared> {
     Ok(prepared)
 }
 
-/// Resolves the configured cloud domain for `input`, defaulting to `"bit.cloud"`.
+/// Resolves the configured cloud domain for `input` on [`Prepare`], defaulting to `"bit.cloud"`.
 #[inline]
 fn cloud_domain(input: &Prepare) -> io::Result<String> {
     Ok(super::hub::configuration(input)?

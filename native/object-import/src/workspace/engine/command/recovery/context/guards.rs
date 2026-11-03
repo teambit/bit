@@ -27,7 +27,7 @@ fn extension_identity(row: &Value) -> Option<String> {
         .find_map(parse_extension_value)
 }
 
-/// Parses a string or `{ scope, name }` object `value` into a normalized extension identity.
+/// Parses a string or `{ scope, name }` object `value` into a normalized extension identity for [`extension_identity`].
 #[inline]
 fn parse_extension_value(value: &Value) -> Option<String> {
     if let Some(text) = value

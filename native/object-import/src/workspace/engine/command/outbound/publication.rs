@@ -38,7 +38,7 @@ struct Output {
     non_existing_ids: Vec<String>,
     removed_ids: Vec<String>,
 }
-/// Retained main-lane export publication state, [`Preimage`], [`Output`], and expected [`Component`] acknowledgements.
+/// Retained main-lane export publication state, [`Preimage`], [`Output`], and expected [`Component`] acknowledgements from [`prepare`].
 pub(super) struct Prepared {
     root: PathBuf,
     components: Vec<Component>,

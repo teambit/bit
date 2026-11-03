@@ -1,4 +1,4 @@
-//! Checkout refresh uses remote [`lane`] versions and [`has_lane_assignment`] before its selected target import.
+//! Checkout refresh uses remote [`lane`] versions, [`command_import`], and [`has_lane_assignment`] before its selected target import.
 
 use super::Prepare;
 use crate::{command_import, workspace::engine::client_status::config};

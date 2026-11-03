@@ -4,7 +4,7 @@ use super::super::{invalid, lane_model::LaneSelected};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Classified updated and removed component identities for an exported lane.
+/// Classified updated and removed component identities for an exported [`LaneSelected`] lane.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Reported {
     pub(super) updates: Vec<String>,

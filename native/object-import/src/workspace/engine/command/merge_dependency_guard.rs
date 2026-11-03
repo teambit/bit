@@ -22,7 +22,7 @@ use std::{
 
 /// Maximum cumulative source bytes (`64 MiB`) inspected across a single [`verify`] dependency guard pass.
 const MAX_BYTES: usize = 64 * 1024 * 1024;
-/// Maximum byte length (`1 MiB`) allowed for a single source file during dependency guard verification.
+/// Maximum byte length (`1 MiB`) allowed for a single source file during [`verify`] dependency guard verification.
 const MAX_FILE: usize = 1024 * 1024;
 
 /// Verifies that `merged` files preserve the [`Captured`] dependency graph under [`MAX_BYTES`] and returns read proofs.

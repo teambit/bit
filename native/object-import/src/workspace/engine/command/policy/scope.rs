@@ -73,7 +73,7 @@ pub(super) fn identity(value: &Value) -> io::Result<String> {
     object_extension_identity(id)
 }
 
-/// Strips a trailing `@latest` or `@head` version selector from `id`.
+/// Strips a trailing `@latest` or `@head` version selector from `id` for [`identity`].
 #[inline]
 fn strip_head_or_latest(id: &str) -> &str {
     match id.rsplit_once('@') {

@@ -33,7 +33,7 @@ fn lane_id(model: &Value, lane: Option<&Value>) -> Value {
         .unwrap_or_else(|| json!({"scope": model_field(model, "scope"), "name": "main"}))
 }
 
-/// Returns the trimmed string value of `model[key]` or clones the raw JSON value when non-string.
+/// Returns the trimmed string value of `model[key]` or clones the raw JSON value when non-string for [`entry`].
 #[inline]
 fn model_field(model: &Value, key: &str) -> Value {
     model[key]

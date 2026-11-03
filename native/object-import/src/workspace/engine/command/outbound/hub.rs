@@ -14,7 +14,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io};
 
-/// Resolved central hub endpoint and cloud domain for an outbound export plan.
+/// Resolved central hub endpoint and cloud domain for an outbound export [`plan`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Plan {
     endpoint: String,

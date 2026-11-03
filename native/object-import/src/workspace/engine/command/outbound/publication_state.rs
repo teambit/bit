@@ -74,7 +74,7 @@ pub(super) fn components(retained: &super::Retained, exported_ids: &[String]) ->
     result
 }
 
-/// Strips any `@version` suffix from `id` and returns the trimmed `scope/name` identity.
+/// Strips any `@version` suffix from `id` and returns the trimmed `scope/name` identity for [`components`].
 #[inline]
 fn strip_exported_version(id: &str) -> String {
     let trimmed = id.trim();

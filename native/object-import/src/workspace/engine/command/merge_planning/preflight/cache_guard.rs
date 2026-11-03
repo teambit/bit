@@ -71,7 +71,7 @@ pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io:
     Ok(())
 }
 
-/// Collects the sorted set of trimmed relative file paths declared on `target["files"]`.
+/// Collects the sorted set of trimmed relative file paths declared on `target["files"]` for [`metadata`].
 fn incoming_files(target: &Value) -> io::Result<BTreeSet<&str>> {
     let mut set = BTreeSet::new();
     for file in target["files"].as_array().ok_or_else(|| invalid("command fast-forward files"))? {

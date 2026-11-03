@@ -55,7 +55,7 @@ fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     Ok(Value::Object(merged))
 }
 
-/// Resolves a merged aspect configuration entry either from an inline `value` or by indexing `input[side]`.
+/// Resolves a merged aspect configuration entry either from an inline `value` or by indexing `input[side]` for [`merged_config`].
 #[inline]
 pub(super) fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
     if let Some(value) = value.get("value") {

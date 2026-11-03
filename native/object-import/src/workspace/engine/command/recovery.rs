@@ -26,7 +26,7 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(default)]
     dependency_grammar: Value,
 }
-/// Supported recovery operations (`componentAbort` and `laneAbort`).
+/// Supported recovery operations (`componentAbort` and `laneAbort`) for [`Prepare`] and [`Retained`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
 enum Operation {

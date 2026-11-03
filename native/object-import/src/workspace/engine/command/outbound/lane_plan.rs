@@ -1,4 +1,4 @@
-//! Group a [`LaneSelected`] component closure and [`lane_publication`] into a [`Plan`] via [`prepare`] and [`parse_resume_id`].
+//! Group a [`LaneSelected`] component closure and [`lane_publication`] into a [`Plan`] via [`prepare`], [`Pending`], and [`parse_resume_id`].
 
 use super::{
     Pending, Plan, Prepare, Publication, ResumeContext, invalid, lane_model::LaneSelected,

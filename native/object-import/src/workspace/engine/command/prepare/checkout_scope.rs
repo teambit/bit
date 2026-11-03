@@ -49,7 +49,7 @@ fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
         .collect()
 }
 
-/// Converts discovered default-scope [`Candidate`] entries into [`command_import::Target`] descriptors.
+/// Converts discovered default-scope [`Candidate`] entries into [`command_import::Target`] descriptors for [`attach`].
 fn import_targets(candidates: &[Candidate]) -> Vec<command_import::Target> {
     candidates
         .iter()

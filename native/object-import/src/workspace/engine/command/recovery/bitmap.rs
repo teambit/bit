@@ -7,7 +7,7 @@ use super::super::invalid;
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-/// Extracts and validates per-component `.bitmap` `config` maps via [`project_with`] for recovery preparation.
+/// Extracts and validates per-component `.bitmap` `config` maps via [`project_with`] and [`validate`] for recovery preparation.
 #[inline]
 pub(in crate::workspace::engine::command) fn project(
     bitmap: &Value,

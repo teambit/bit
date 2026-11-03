@@ -37,7 +37,7 @@ pub(super) struct Selected {
     pub(super) labels: Vec<String>,
     pub(super) objects: Vec<ObjectItem>,
 }
-/// Compressed `ModelComponent` object hash together with its pre-export and post-export byte payloads.
+/// Compressed `ModelComponent` object hash together with its pre-export and post-export byte payloads on [`Selected`].
 pub(super) struct ModelBytes {
     pub(super) hash: String,
     pub(super) before: Vec<u8>,

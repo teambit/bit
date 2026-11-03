@@ -77,7 +77,7 @@ impl FileBridge {
         Ok(bridge)
     }
 
-    /// Sends a single JSON action request `(path, name, options)` to the bridge process and returns its reply value.
+    /// Sends a single JSON action request `(path, name, options)` to the [`FileBridge`] process and returns its reply value.
     pub(super) fn call(&mut self, path: &Path, name: &str, options: &Value) -> io::Result<Value> {
         let name = name.trim();
         if name.is_empty()

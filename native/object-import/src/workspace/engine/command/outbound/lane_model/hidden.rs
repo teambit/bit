@@ -73,7 +73,7 @@ pub(super) fn prepare(
     set_override(&mut local_lane, false)?;
     Ok(Reconciled { exported, local: local_lane })
 }
-/// Extracts the trimmed `updateDependents` string entries from `lane`.
+/// Extracts the trimmed `updateDependents` string entries from `lane` for [`prepare`].
 fn entries(lane: &Value) -> io::Result<Vec<String>> {
     match lane.get("updateDependents") {
         None | Some(Value::Null) => Ok(Vec::new()),

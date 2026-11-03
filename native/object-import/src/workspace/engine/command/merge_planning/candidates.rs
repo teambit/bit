@@ -1,4 +1,4 @@
-//! Implicit [`Operation::Merge`] component merges select diverged local and remote heads via [`select_targets`] and [`target_identity`].
+//! Implicit [`Operation::Merge`] component merges select diverged local and remote heads via [`select_targets`], [`model`], and [`target_identity`].
 
 use super::{
     super::input::{Operation, Prepare},

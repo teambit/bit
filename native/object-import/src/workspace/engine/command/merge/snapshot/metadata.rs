@@ -4,7 +4,7 @@ use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 use std::io;
 
-/// Validates the snap allocation receipt rows against `inputs` and checks scalar receipt fields for [`Input`].
+/// Validates the snap allocation receipt rows against `inputs` and checks scalar receipt fields for [`Input`] via [`receipt_scalars`].
 pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
     let rows = value["versions"].as_array().ok_or_else(|| invalid("command snap allocations"))?;
     if rows.len() != inputs.len() || inputs.len() > 4096 {

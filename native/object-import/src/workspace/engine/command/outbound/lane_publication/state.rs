@@ -87,7 +87,7 @@ impl Prepared {
     }
 }
 
-/// Resolves the promoted `scope/name` component identity from `.bitmap` entry `key` and `row`.
+/// Resolves the promoted `scope/name` component identity from `.bitmap` entry `key` and `row` for [`Prepared::reconcile`].
 fn promoted_identity(key: &str, row: &serde_json::Value) -> io::Result<String> {
     let scope = row["scope"]
         .as_str()

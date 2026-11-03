@@ -22,7 +22,7 @@ pub(in crate::workspace::engine::command::merge_planning) fn prepare_hidden_meta
     Ok(())
 }
 
-/// Backfills `packageName` on `dependency` from `resolver` entries when `packageName` is absent.
+/// Backfills `packageName` on `dependency` from `resolver` entries via [`same_component_id`] when `packageName` is absent.
 fn package_name(dependency: &mut Value, resolver: Option<&[Value]>) {
     if dependency
         .get("packageName")

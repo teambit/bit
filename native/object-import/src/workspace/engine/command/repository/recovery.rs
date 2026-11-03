@@ -1,4 +1,4 @@
-//! Project retained model [`proof`] records on [`Repository`] via [`Repository::accept_recovery_objects`] after restoring `main`'s `Component` objects.
+//! Project retained model [`proof`] records on [`Repository`] via [`Repository::accept_recovery_objects`] and [`proof::restored_control`] after restoring `main`'s `Component` objects.
 
 use super::{Repository, proof};
 use std::{io, path::Path};

@@ -63,7 +63,7 @@ fn accept_restored_objects(retained: &mut super::Retained) -> io::Result<()> {
     Ok(())
 }
 
-/// Reloads `record.context["models"]` entries whose `Component` object hashes were restored in `objects`.
+/// Reloads `record.context["models"]` entries whose `Component` object hashes were restored in `objects` via [`model_identity`].
 #[inline]
 fn restore_models(
     record: &mut super::super::Record,

@@ -74,7 +74,7 @@ fn addition_target(destination: &Value) -> io::Result<(String, &str)> {
     Ok((format!("{scope}/{name}"), head))
 }
 
-/// Extracts the normalized `scope/name` component identity from `row` when present.
+/// Extracts the normalized `scope/name` component identity from `row` when present for [`filter_tracked_results`].
 #[inline]
 fn row_identity(row: &Value) -> Option<String> {
     if let Some(raw) = row["identity"]
