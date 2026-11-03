@@ -77,7 +77,7 @@ impl Collector {
         Ok(())
     }
 
-    /// `Repository.getScopeMetaObject()`.
+    /// Construct and append `Repository.getScopeMetaObject()` for `name` using [`compress_json`].
     #[inline]
     fn push_scope_meta(&mut self, name: &str) -> io::Result<()> {
         let hash = sha1_hex(name);

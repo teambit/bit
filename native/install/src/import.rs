@@ -47,7 +47,7 @@ use resolver::Resolver;
 use serde_json::Value;
 use std::{fs, io, path::Path, time::Instant};
 
-/// `BEFORE_IMPORT_ACTION` in `import-components.ts`.
+/// `BEFORE_IMPORT_ACTION` in `import-components.ts` announced by [`import_current_objects`].
 const IMPORTING: &str = "importing components";
 
 /// What the import added to the workspace scope.

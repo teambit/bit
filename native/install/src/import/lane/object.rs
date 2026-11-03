@@ -1,7 +1,7 @@
 //! The Lane model (`scopes/scope/objects/models/lane.ts`): parsing, the
 //! mutations the import merge uses, and `toObject()` serialization.
 //!
-//! Preserve schema version ([`OLD_LANE_SCHEMA`]), readme components, log metadata, and `isDeleted` component flags in [`LaneComponent`].
+//! Preserves schema version ([`OLD_LANE_SCHEMA`]), readme components, log metadata, and `isDeleted` component flags in [`LaneComponent`] and [`LaneObject`].
 
 use crate::import::bitmap::Id;
 use serde_json::{Map, Value, json};

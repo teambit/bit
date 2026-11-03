@@ -29,7 +29,7 @@ impl ComponentModel {
         self.version.is_some()
     }
 
-    /// `packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`.
+    /// Return the [`FieldMaps`] of `packageDependencies`, `devPackageDependencies`, and `peerPackageDependencies`.
     #[inline]
     #[must_use]
     pub fn packages(&self) -> FieldMaps {

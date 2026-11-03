@@ -1,7 +1,7 @@
 //! `LaneHistory` (`scopes/scope/objects/models/lane-history.ts`): one entry per
 //! saved lane state, keyed by a UUID and merged into the existing object.
 //!
-//! Compute `LaneHistory` SHA-1 object hashes ([`history_hash`]) and record import log entries with [`Identity`].
+//! Computes `LaneHistory` SHA-1 object hashes ([`history_hash`]) and records import log entries with [`Identity`] and [`record`].
 
 use super::object::LaneObject;
 use crate::{

@@ -10,7 +10,7 @@ use std::{fs, io, path::Path};
 
 /// File extensions scanned as `JavaScript` or `TypeScript` modules by [`specifiers`].
 const SCRIPT: [&str; 8] = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
-/// File extensions scanned as CSS/Sass/Less style sheets.
+/// File extensions scanned as CSS/Sass/Less style sheets by [`specifiers`].
 const STYLE: [&str; 4] = ["scss", "sass", "less", "css"];
 /// Maximum file size in bytes (`1 MiB`) read by the dependency specifier scanner.
 const MAX_SOURCE: u64 = 1024 * 1024;

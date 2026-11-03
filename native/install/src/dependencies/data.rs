@@ -15,7 +15,7 @@ pub struct LegacyDependency {
     pub version_range: Option<String>,
 }
 
-/// One `MissingPackagesDependenciesOnFs` issue entry.
+/// One `MissingPackagesDependenciesOnFs` issue entry in [`Detected`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct MissingFile {
     pub file: String,

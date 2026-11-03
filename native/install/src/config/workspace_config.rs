@@ -16,7 +16,7 @@ use std::{
 
 /// Aspect ID for the `teambit.workspace/workspace` extension in `workspace.jsonc` ([`WorkspaceSettings`]).
 pub const WORKSPACE_ASPECT: &str = "teambit.workspace/workspace";
-/// Aspect ID for the `teambit.dependencies/dependency-resolver` extension in `workspace.jsonc`.
+/// Aspect ID for the `teambit.dependencies/dependency-resolver` extension in `workspace.jsonc` ([`DependencyResolverConfig`]).
 pub const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
 /// Aspect ID for the `teambit.workspace/variants` extension in `workspace.jsonc`.
 pub const VARIANTS_ASPECT: &str = "teambit.workspace/variants";

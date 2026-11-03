@@ -44,6 +44,7 @@ pub struct DependencyResolverConfig {
     pub proxy: Option<String>,
     /// Outbound HTTPS proxy URL configured in `dependency-resolver`.
     pub https_proxy: Option<String>,
+    /// Custom certificate authority PEM bundle configured in `dependency-resolver`.
     pub ca: Option<String>,
     pub cafile: Option<String>,
     /// A boolean or the string `"true"`/`"false"` [`Value`].

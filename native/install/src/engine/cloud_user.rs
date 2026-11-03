@@ -4,7 +4,7 @@
 //! not answer. `fetchFromSymphonyViaGQL` uses a plain `fetch`, so no proxy or
 //! TLS setting applies here either.
 //!
-//! Enforces a 5-second timeout ([`LOOKUP_TIMEOUT`]) on the `GraphQL` user lookup via [`cloud_username`].
+//! Enforces a 5-second timeout ([`LOOKUP_TIMEOUT`]) on the `GraphQL` user lookup via [`cloud_username`] and [`apply_cloud_username`].
 
 #[cfg(test)]
 mod tests;

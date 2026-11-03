@@ -11,7 +11,7 @@ use std::{
 };
 /// Root edge identifier (`"."`) in a serialized `DependenciesGraph`.
 const ROOT_EDGE_ID: &str = ".";
-/// Expected schema version (`"2.0"`) of a serialized `DependenciesGraph`.
+/// Expected schema version (`"2.0"`) of a serialized `DependenciesGraph` parsed by [`Graph`].
 const SCHEMA_VERSION: &str = "2.0";
 /// The graph's package fields a lockfile `packages` entry keeps.
 const PACKAGE_FIELDS: [&str; 12] = [

@@ -1,7 +1,7 @@
 //! Loose Bit objects: `objects/<2>/<38>` holding `deflate("<Type> <hash> <size>\0<content>")`
 //! (`BitObject.compress`), plus the scope `index.json` and remote refs files.
 //!
-//! Provide atomic loose-object writes, zlib inflation/deflation ([`Parsed`]), and `index.json` updates.
+//! Provides atomic loose-object writes, zlib inflation/deflation ([`Parsed`], [`parse`], [`compress`]), and `index.json` updates.
 
 use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
 use serde_json::{Value, json};

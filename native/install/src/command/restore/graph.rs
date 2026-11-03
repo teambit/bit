@@ -14,7 +14,7 @@ use std::collections::{HashMap, HashSet};
 /// Root edge identifier (`"."`, `DependenciesGraph.ROOT_EDGE_ID`) in a serialized dependency graph merged by [`merge`].
 pub const ROOT: &str = ".";
 
-/// `isEmpty()`.
+/// Return `true` (`isEmpty()`) when both `packages` and `edges` in `graph` ([`Value`]) are empty.
 #[inline]
 pub fn is_empty(graph: &Value) -> bool {
     packages(graph).is_empty() && edges(graph).is_empty()

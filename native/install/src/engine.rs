@@ -77,7 +77,7 @@ pub struct EngineSettings {
 }
 
 impl EngineSettings {
-    /// Supply the published build-script PATH to child processes without changing
+    /// Supply the published build-script `PATH` to child processes without changing
     /// the environment of already-running native workers.
     #[inline]
     pub(crate) fn set_build_scripts_path(&mut self, path: String) {

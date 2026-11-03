@@ -39,7 +39,7 @@ pub(super) fn dedupe(
     Ok(())
 }
 
-/// Collect non-overridden `dependencies` and `devDependencies` entries from the workspace `root` manifest.
+/// Collect non-overridden `dependencies` and `devDependencies` entries from the workspace `root` manifest for [`dedupe`].
 #[inline]
 fn root_dependencies(
     root: Option<&Map<String, Value>>,

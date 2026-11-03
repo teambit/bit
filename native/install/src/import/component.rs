@@ -8,7 +8,7 @@ use super::objects::invalid;
 use serde_json::{Map, Value, json};
 use std::io;
 
-/// Merge an incoming Component into the existing one. Returns the component to
+/// Merge an incoming Component [`Value`] into the existing one. Returns the component to
 /// store. `origin` is true when it came from the component's own scope.
 pub fn merge_component(
     existing: Option<&Value>,

@@ -54,7 +54,7 @@ impl RemoteLane {
             .collect()
     }
 
-    /// `toComponentIdsIncludeUpdateDependents()`.
+    /// Visible and `updateDependents` lane [`Id`] items (`toComponentIdsIncludeUpdateDependents()`).
     #[must_use]
     #[inline]
     pub fn ids_with_update_dependents(&self) -> Vec<Id> {

@@ -49,7 +49,7 @@ pub fn update(
     }
 }
 
-/// `resolveVersion`: the id of the first strategy that yields one. The `.bitmap`
+/// `resolveVersion`: the [`ComponentId`] of the first strategy that yields one. The `.bitmap`
 /// strategy yields the workspace id itself, even without a version (a new component).
 pub fn resolve(
     workspace: &Workspace<'_>,

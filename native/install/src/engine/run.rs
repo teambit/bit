@@ -2,7 +2,7 @@
 //! `--update` lockfile handling around [`engine_call`], which runs `pacquet`'s
 //! `Install` on a dedicated thread.
 //!
-//! Guards virtual-store layout transitions and serializes process-wide engine invocations via [`engine_call_lock`].
+//! Guards virtual-store layout transitions and serializes process-wide engine invocations via [`engine_call_lock`] and [`install`].
 
 mod engine_call;
 #[cfg(test)]

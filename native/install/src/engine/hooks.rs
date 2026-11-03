@@ -44,7 +44,7 @@ pub(super) struct BitHooks {
 }
 
 impl BitHooks {
-    /// The chain applied to one manifest. `workspace_dir` is set only for
+    /// Apply the hook chain to one [`Value`] manifest. `workspace_dir` is set only for
     /// workspace projects.
     pub(super) fn apply(&self, manifest: Value, workspace_dir: Option<&Path>) -> Value {
         let Value::Object(mut manifest) = manifest else { return manifest };

@@ -71,7 +71,7 @@ fn apply_store(settings: &mut EngineSettings, request: &Request<'_>) -> Option<(
         });
     Some(())
 }
-
+/// Populate default and scoped [`Registries`] on [`EngineSettings`] `settings` from [`Request`] `request`.
 fn apply_registry(settings: &mut EngineSettings, request: &Request<'_>) -> Option<()> {
     let default = request.network.registry_map
         .get("default")?

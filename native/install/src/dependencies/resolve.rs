@@ -27,7 +27,7 @@ const COMMONJS_EXTENSIONS: [&str; 15] = [
     "js", "json", "cjs", "mjs", "jsx", "ts", "tsx", "cts", "mts", "d.ts", "css", "scss", "sass",
     "styl", "less",
 ];
-/// What `ts.resolveModuleName` tries for a relative import.
+/// What `ts.resolveModuleName` tries for a relative import in [`Resolver`].
 const TYPESCRIPT_EXTENSIONS: [&str; 3] = ["ts", "tsx", "d.ts"];
 /// Origin file extensions `filing-cabinet` resolves through `TypeScript` module resolution.
 const TYPESCRIPT_ORIGINS: [&str; 6] = ["ts", "tsx", "cts", "mts", "md", "mdx"];

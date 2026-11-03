@@ -38,7 +38,7 @@ pub struct RestoreInput {
     pub fail_on_error: bool,
 }
 
-/// One package whose resolution has to come from the registry.
+/// One package whose resolution has to come from the registry during [`restore`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct PackageToResolve {
     pkg_id: String,

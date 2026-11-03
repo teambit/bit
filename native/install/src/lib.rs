@@ -20,7 +20,7 @@ pub mod workspace;
 
 /// Re-export comment-preserving `JSONC` parser and editor from `bit_object_import`.
 pub use bit_object_import::jsonc;
-/// Re-exported top-level `bit install` entry points, outcomes, and stored-graph helpers.
+/// Re-exported top-level `bit install` entry points ([`run`], [`run_with_options`]), outcomes ([`Outcome`], [`InstallSummary`]), and [`stored_graphs`].
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
 /// Re-exported `JavaScript` [`Host`] trait and process metadata types ([`HostInfo`], [`DetectRequest`], [`AfterInstall`], [`AfterInstallResult`]).
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};

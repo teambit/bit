@@ -9,7 +9,7 @@ use std::collections::HashSet;
 
 /// Importer dependency fields (`dependencies`, `devDependencies`, `optionalDependencies`) in `pnpm-lock.yaml` inspected by [`importer_roots`].
 const IMPORTER_DEP_TYPES: [&str; 3] = ["dependencies", "devDependencies", "optionalDependencies"];
-/// Snapshot dependency fields (`dependencies`, `optionalDependencies`) in `pnpm-lock.yaml`.
+/// Snapshot dependency fields (`dependencies`, `optionalDependencies`) in `pnpm-lock.yaml` traversed by [`reachable_snapshots`].
 const SNAPSHOT_DEP_TYPES: [&str; 2] = ["dependencies", "optionalDependencies"];
 
 /// Borrow the mutable JSON object under `key` in `lockfile`, if present.

@@ -62,7 +62,7 @@ impl EngineError {
 }
 
 /// `message`, then the hint after a blank line (`renderErrorMessage`). The
-/// engine reports no package stack, so that part of the TypeScript rendering
+/// engine reports no package stack, so that part of the `TypeScript` rendering
 /// never applies.
 impl fmt::Display for EngineError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {

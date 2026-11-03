@@ -49,7 +49,7 @@ pub(super) fn install_config(
     Ok(intern(config))
 }
 
-/// A query that resolves without installing.
+/// A query that resolves without installing via [`query_config`].
 pub(super) enum Query<'a> {
     /// `resolveDependency`: the cascade's own credentials stay, Bit's
     /// registries' credentials win.

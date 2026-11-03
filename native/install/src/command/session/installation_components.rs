@@ -17,7 +17,7 @@ pub(crate) async fn load(
     load_with_status(session, loaded, phase, true).await
 }
 
-/// Load and synchronize workspace components for the `"initial"` install phase.
+/// Load and synchronize [`WorkspaceComponent`] entries for the `"initial"` install phase on [`Session`].
 pub(crate) async fn initial(
     session: &Session<'_>,
     loaded: &Loaded,

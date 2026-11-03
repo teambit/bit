@@ -22,7 +22,7 @@ use std::{
     io,
 };
 
-/// Default `LaneHistory` log message (`"import (merge from remote)"`) recorded when merging a remote lane.
+/// Default `LaneHistory` log message (`"import (merge from remote)"`) recorded by [`merge_and_save`] when merging a remote lane.
 const HISTORY_MESSAGE: &str = "import (merge from remote)";
 
 /// Merge the [`RemoteLane`] `remote` into the local [`Repo`] and save it (plus its [`history`] entry) when it changed.

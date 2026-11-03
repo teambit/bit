@@ -76,7 +76,7 @@ fn key(component: &WorkspaceComponent) -> String {
     }
 }
 
-/// Whether the filesystem cache is disabled through `BIT_FEATURES`.
+/// Whether the filesystem cache is disabled through [`NO_FS_CACHE`] in `BIT_FEATURES`.
 #[inline]
 #[must_use]
 pub fn disabled() -> bool {

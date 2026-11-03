@@ -13,7 +13,7 @@ use pnpm_network::{AuthHeadersByScope, DEFAULT_REGISTRY_SCOPE, nerf_dart};
 
 /// Default public npm registry URL (`https://registry.npmjs.org/`) used by [`Registries`].
 pub const NPM_REGISTRY: &str = "https://registry.npmjs.org/";
-/// The cloud domain when `cloud_domain` is not configured.
+/// The cloud domain when `cloud_domain` is not configured in [`bit_cloud_registry`].
 const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";
 
 /// One registry and the `Authorization` header sent to it.

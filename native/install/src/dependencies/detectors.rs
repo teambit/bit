@@ -46,7 +46,7 @@ pub struct Detectors<'a> {
 }
 
 impl<'a> Detectors<'a> {
-    /// Construct a custom detector runner backed by `host` for the workspace's `core_aspects` and `workspace_aspects`.
+    /// Construct a custom detector runner backed by [`Host`] `host` for the workspace's [`CoreAspect`] `core_aspects` and `workspace_aspects`.
     #[inline]
     pub fn new(
         host: &'a dyn Host,

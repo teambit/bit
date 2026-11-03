@@ -29,7 +29,7 @@ pub struct CanonicalInstall {
 }
 
 impl CanonicalInstall {
-    /// Return `None` before build-script `PATH` preparation or engine effects (`Prepared` validation).
+    /// Return `None` before build-script `PATH` preparation or engine effects ([`Prepared`] validation).
     #[must_use]
     #[inline]
     pub fn prepare(payload: &Value, info: &HostInfo) -> Option<Self> {

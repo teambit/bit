@@ -1,6 +1,6 @@
 //! Filesystem primitives with the semantics of Bit's `TypeScript` helpers:
 //! `createLinkOrSymlink`, `symlink-dir`, and `hardLinkDirectory`.
-//! Handle cross-platform symlinks, junctions on Windows, and recursive hard-linked directory trees.
+//! Handles cross-platform symlinks, junctions on Windows, and recursive hard-linked directory trees via [`create_link_or_symlink`].
 
 #[cfg(test)]
 mod tests;

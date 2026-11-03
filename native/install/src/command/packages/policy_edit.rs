@@ -17,7 +17,7 @@ use std::io;
 /// Workspace policy section keys (`dependencies` and `peerDependencies`) in `workspace.jsonc` updated by [`update_document`].
 const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 
-/// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.
+/// One `WorkspacePolicyEntry` tuple: [`FIELDS`] index (0 runtime, 1 peer), package name, and JSON [`Value`].
 type Entry = (usize, String, Value);
 
 /// Return the top-level `teambit.dependencies/dependency-resolver` key (with optional `@version`) in `document`.

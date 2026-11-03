@@ -27,7 +27,7 @@ use std::{
 /// Canonical error message (`OutsideWorkspaceError`) when `bit install` runs outside a workspace in [`find_root`].
 const OUTSIDE_WORKSPACE: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
 
-/// Package manager aspect ID (`teambit.dependencies/yarn`) declined by the native installer.
+/// Package manager aspect ID (`teambit.dependencies/yarn`) declined by [`Loaded`] in the native installer.
 const YARN: &str = "teambit.dependencies/yarn";
 /// Core Bit aspect ID (`teambit.harmony/bit`) always included in [`Session::core_ids`].
 const BIT_ASPECT: &str = "teambit.harmony/bit";

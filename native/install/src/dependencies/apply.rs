@@ -14,7 +14,7 @@ use serde_json::Value;
 
 /// Index (`0`) of the `dependencies` runtime slot in [`FieldMaps`] used by [`early`].
 const RUNTIME: usize = 0;
-/// Index (`1`) of the `devDependencies` slot in [`FieldMaps`].
+/// Index (`1`) of the `devDependencies` slot in [`FieldMaps`] used by [`early`].
 const DEV: usize = 1;
 /// Index (`2`) of the `peerDependencies` slot in [`FieldMaps`].
 const PEER: usize = 2;

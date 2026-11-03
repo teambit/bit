@@ -1,6 +1,6 @@
 //! `FETCH_OPTIONS` and fetching from one or many remotes (`ObjectFetcher.fetchFromSingleRemote`).
 //!
-//! Dispatch bounded concurrent object fetches across HTTP and local `file://` remote scopes via [`Fetcher`].
+//! Dispatches bounded concurrent object fetches across HTTP and local `file://` remote scopes via [`Fetcher`].
 
 pub use bit_client_transfer::fetch::{FetchOptions, concurrency};
 

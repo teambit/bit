@@ -7,7 +7,7 @@ use serde_json::{Map, Value, json};
 
 /// Component dependency lifecycle keys (`dependencies`, `devDependencies`, `peerDependencies`) serialized by [`serialize`].
 const COMPONENT_FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
-/// Package dependency lifecycle keys (`packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`).
+/// Package dependency lifecycle keys (`packageDependencies`, `devPackageDependencies`, `peerPackageDependencies`) serialized by [`serialize`].
 const PACKAGE_FIELDS: [&str; 3] =
     ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"];
 

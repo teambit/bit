@@ -1,6 +1,6 @@
 //! The `node_modules/<pkg>/package.json` of a workspace component: `PackageJsonFile.createFromComponent`,
 //! the dependency-resolver and pkg transformers, and `NodeModuleLinker.createPackageJson`.
-//! Populate `main`, `types`, `bit`, `exports`, and dependency fields via [`PackageJsonContext`] for linked component packages.
+//! Populates `main`, `types`, `bit`, `exports`, and dependency fields via [`PackageJsonContext`], [`transformed`], and [`finish`] for linked component packages.
 
 #[cfg(test)]
 mod tests;

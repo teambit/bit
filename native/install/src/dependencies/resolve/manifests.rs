@@ -21,7 +21,7 @@ impl Resolver<'_> {
         Ok(from_manifest(&manifest, name))
     }
 
-    /// The `package.json` of `node_modules/<name>` closest to `from`.
+    /// The `package.json` [`Value`] of `node_modules/<name>` closest to [`Path`] `from`.
     pub fn find_manifest(&mut self, from: &Path, name: &str) -> io::Result<Option<Value>> {
         let name = name.trim();
         if name.is_empty() {

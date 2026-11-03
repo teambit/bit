@@ -1,6 +1,6 @@
 //! `parse` and `removeSuffix` of `@pnpm/deps.path` for lockfile snapshot keys.
 //!
-//! Split lockfile dependency paths into package name, version, patch hash, and peer suffix components in [`DependencyPath`].
+//! Splits lockfile dependency paths into package name, version, patch hash, and peer suffix components in [`DependencyPath`].
 
 use pnpm_deps_path::{DepPathSuffixIndex, index_of_dep_path_suffix};
 

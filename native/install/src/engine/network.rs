@@ -63,7 +63,7 @@ pub struct NetworkSettings {
     pub user_agent: Option<String>,
 }
 
-/// How long to wait for a request and how to retry it.
+/// How long to wait for a request and how to retry it in [`NetworkSettings`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct RetrySettings {
     pub fetch_retries: Option<u32>,

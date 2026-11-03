@@ -12,6 +12,7 @@ pub mod keys {
     pub const USER_TOKEN: &str = "user.token";
     /// Global config key (`user.name`) storing the user's display name.
     pub const USER_NAME: &str = "user.name";
+    /// Global config key (`user.email`) storing the user's email address.
     pub const USER_EMAIL: &str = "user.email";
     pub const ENABLE_GLOBAL_VIRTUAL_STORE: &str = "enable_global_virtual_store";
     pub const PACKAGE_MANAGER_CACHE: &str = "package-manager.cache";

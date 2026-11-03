@@ -1,6 +1,6 @@
 //! Preserve the parent operation's live `.bitmap` order across native install reloads.
 //!
-//! [`apply`] reorders loaded [`Workspace`] entries and components to match the host's in-memory component list.
+//! [`apply`] reorders loaded [`Workspace`] entries and components via [`normalize_order_identity`] to match the host's in-memory component list.
 use crate::workspace::Workspace;
 use std::{collections::HashMap, io};
 

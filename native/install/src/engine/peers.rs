@@ -52,7 +52,7 @@ pub async fn missing_peers(
         .unwrap_or_default())
 }
 
-/// The root importer's [`PeerDependencyIssues`]. No hooks and no reporter output, like
+/// The root importer's [`PeerDependencyIssues`] for [`missing_peers`]. No hooks and no reporter output, like
 /// `@pnpm/napi`'s query.
 fn peer_issues(
     projects: &[Project],

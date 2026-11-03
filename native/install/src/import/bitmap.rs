@@ -6,7 +6,7 @@ use super::objects::invalid;
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// Top-level `.bitmap` key (`_bit_lane`) storing the active lane metadata.
+/// Top-level `.bitmap` key (`_bit_lane`) storing the active [`LaneId`] metadata in [`Bitmap`].
 const LANE_KEY: &str = "_bit_lane";
 
 /// An exported component id with its `.bitmap` version.

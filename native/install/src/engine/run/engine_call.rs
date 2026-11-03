@@ -47,7 +47,7 @@ impl EngineCall {
         EngineCall { plan: plan.clone(), settings: settings.clone(), options: options.clone() }
     }
 
-    /// Run on the engine thread and await the result.
+    /// Run on the engine thread and await the [`Outcome`].
     pub(super) async fn spawn(self) -> io::Result<Outcome> {
         let (sender, receiver) = tokio::sync::oneshot::channel();
         std::thread::Builder::new()

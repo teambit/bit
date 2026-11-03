@@ -9,7 +9,7 @@ use std::{fs, io, path::Path};
 
 /// Filename (`merge-conflict`) of the workspace root config-merge conflict file loaded by [`MergeConfig`].
 const FILE_NAME: &str = "merge-conflict";
-/// Section header prefix (`[*]`) separating component entries in `merge-conflict`.
+/// Section header prefix (`[*]`) separating component entries in `merge-conflict` ([`FILE_NAME`]).
 const ID_PREFIX: &str = "[*]";
 /// Deprecated workspace-level section identifier (`WORKSPACE`) in `merge-conflict`.
 const WORKSPACE_ID: &str = "WORKSPACE";

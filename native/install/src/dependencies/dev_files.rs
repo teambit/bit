@@ -19,7 +19,7 @@ use std::{collections::HashMap, io};
 
 /// Aspect ID of the built-in tester aspect (`teambit.defender/tester`) in [`DevPatternConfig`].
 const TESTER: &str = "teambit.defender/tester";
-/// Aspect ID of the built-in docs aspect (`teambit.docs/docs`).
+/// Aspect ID of the built-in docs aspect (`teambit.docs/docs`) in [`DevPatternConfig`].
 const DOCS: &str = "teambit.docs/docs";
 /// Aspect ID of the built-in compositions aspect (`teambit.compositions/compositions`).
 const COMPOSITIONS: &str = "teambit.compositions/compositions";

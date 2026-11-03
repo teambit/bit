@@ -79,7 +79,7 @@ impl Session {
     }
 }
 
-/// The [`PackageManifest`] of the [`Project`] at `root`.
+/// The [`PackageManifest`] of the [`Project`] at [`Path`] `root` for [`Session::new`].
 #[inline]
 fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifest> {
     if projects.is_empty() {

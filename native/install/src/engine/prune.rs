@@ -10,7 +10,7 @@ use super::{VIRTUAL_STORE_DIR_MAX_LENGTH, error::diagnostic};
 use pnpm_lockfile::Lockfile;
 use std::{collections::HashSet, fs, io, path::Path};
 
-/// Prune the project-local virtual store of the workspace at `root`. `keep`
+/// Prune the project-local virtual store of the workspace at [`Path`] `root`. `keep`
 /// names virtual-store directories the running process has loaded modules
 /// from; those are never removed.
 pub fn prune_modules(root: &Path, keep: &HashSet<String>) -> io::Result<()> {

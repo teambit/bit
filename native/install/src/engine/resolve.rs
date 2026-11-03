@@ -70,7 +70,7 @@ fn resolve_blocking(
     }
 }
 
-/// `name` or `name@range` from the registry.
+/// Resolve `name` or `name@range` from the registry into a [`ResolvedVersion`].
 async fn resolve_package(
     name: String,
     version: String,

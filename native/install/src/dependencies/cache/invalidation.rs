@@ -3,7 +3,7 @@
 //! loader of the `TypeScript` CLI runs it before loading components
 //! (`ComponentLoader.invalidateDependenciesCache`); native status and install do too.
 //!
-//! Compares workspace control file modification times against `cacache` index timestamps.
+//! Compares workspace control file modification times ([`mtime_ms`]) against `cacache` index timestamps.
 //! Inspects `workspace.jsonc`, `.bitmap`, `package.json`, and lockfiles for newer mtimes.
 
 #[cfg(test)]

@@ -50,7 +50,7 @@ pub fn settings(
     settings_with_base(root, config, global, info, env, base)
 }
 
-/// Overlay workspace, global, and environment settings onto a resolved `base` pnpm [`Config`].
+/// Overlay workspace, global, and environment settings onto a resolved `base` pnpm [`Config`] to build [`EngineSettings`].
 pub(super) fn settings_with_base(
     root: &Path,
     config: &DependencyResolverConfig,

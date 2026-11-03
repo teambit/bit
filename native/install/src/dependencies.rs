@@ -41,8 +41,7 @@ use resolve::Resolver;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Envs whose components may implement `getDependencies()` without an `env.jsonc`
-/// (`getEnvDefinitionById` knows them once loaded as aspects).
+/// Envs whose components may implement `getDependencies()` without an `env.jsonc` (`getEnvDefinitionById`).
 const ASPECT_ENVS: [&str; 4] = [
     "teambit.envs/env",
     "teambit.harmony/aspect",
