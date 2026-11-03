@@ -91,8 +91,8 @@ pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
     let kind = value["kind"].as_str().map_or("", str::trim);
     if kind == "message" {
         let map = record(value, &["kind", "message"])?;
-        let message = text(map.get("message"))?.trim();
-        if message.is_empty() {
+        let message = text(map.get("message"))?;
+        if message.trim().is_empty() {
             return Err(decline("native command snap error message absent"));
         }
         return Ok(Some(SnapError { components: Vec::new(), message: Some(message.to_owned()) }));

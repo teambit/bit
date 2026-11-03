@@ -39,11 +39,7 @@ fn projection(mut parsed: Value) -> io::Result<Value> {
         .as_object_mut()
         .map(std::mem::take)
         .unwrap_or_default();
-    extensions.retain(|key, _| {
-        let trimmed = key.trim();
-        trimmed != REMOVE && !trimmed.starts_with("teambit.component/remove@")
-    });
-    extensions.insert(REMOVE.into(), serde_json::json!({"removed":false}));
+    extensions = replace_removal(extensions);
     let propagate = parsed["propagate"] == true;
     let component_id = parsed["componentId"].take();
     let mut value = serde_json::json!({
@@ -55,6 +51,26 @@ fn projection(mut parsed: Value) -> io::Result<Value> {
     }
     value["extensions"] = Value::Object(extensions);
     Ok(value)
+}
+
+/// Replace the removal aspect in place (keeping its key position) with `{"removed": false}`.
+fn replace_removal(extensions: serde_json::Map<String, Value>) -> serde_json::Map<String, Value> {
+    let is_removal = |key: &str| {
+        let trimmed = key.trim();
+        trimmed == REMOVE || trimmed.starts_with("teambit.component/remove@")
+    };
+    let mut replaced = serde_json::Map::new();
+    for (key, value) in extensions {
+        if !is_removal(&key) {
+            replaced.insert(key, value);
+        } else if !replaced.contains_key(REMOVE) {
+            replaced.insert(REMOVE.into(), serde_json::json!({"removed":false}));
+        }
+    }
+    if !replaced.contains_key(REMOVE) {
+        replaced.insert(REMOVE.into(), serde_json::json!({"removed":false}));
+    }
+    replaced
 }
 
 /// Return `true` when `parsed` `component.json` defines a scoped `componentId` or `defaultScope`.

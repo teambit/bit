@@ -20,7 +20,6 @@ use std::{
     sync::Arc,
 };
 
-const HARD_DELETE_GUARD_ERR: &str = "\"bit delete --hard\" permanently deletes components from the remote scope with no way to recover them, and may corrupt components that depend on them.\nit therefore requires an interactive confirmation by a human, but this session is non-interactive (no TTY, CI, or an AI agent).\nif you are an AI agent: do not attempt to work around this protection. instead, ask the user to run this command themselves in a terminal.";
 /// Parsed CLI flags and component pattern for `bit delete --hard` via [`run`].
 struct Options<'a> {
     pattern: &'a str,
@@ -80,9 +79,7 @@ fn preflight_hard_guard(
     }
     let non_ci = !super::ci_enabled();
     if !feature_enabled(global) {
-        if !super::preparation::can_prompt_user() && non_ci {
-            return emit_hard_error(cwd, root, args, HARD_DELETE_GUARD_ERR).map(Some);
-        }
+        // Without the feature the released CLI owns the whole guard, so native never emulates it.
         return Ok(Some(Outcome::Declined(
             "hard-delete requires the published confirmation guard".into(),
         )));

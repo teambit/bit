@@ -54,20 +54,22 @@ impl Drop for Fixture {
 fn one_child_handles_multiple_scopes_and_errors() {
     let fixture = Fixture::new();
     let mut bridge = FileBridge::spawn(Path::new("node"), &fixture.0).unwrap();
+    let scope_one = fixture.0.join("scope-one");
+    let scope_two = fixture.0.join("scope-two");
     let first = bridge
-        .call(Path::new("/scope-one"), "ExportValidate", &json!({"clientId":"one"}))
+        .call(&scope_one, "ExportValidate", &json!({"clientId":"one"}))
         .unwrap();
     assert_eq!(first["count"], 1);
-    assert_eq!(first["path"], "/scope-one");
+    assert_eq!(first["path"], scope_one.to_str().unwrap());
     assert_eq!(
         bridge
-            .call(Path::new("/scope-two"), "Fail", &json!({"clientId":"one"}))
+            .call(&scope_two, "Fail", &json!({"clientId":"one"}))
             .unwrap_err()
             .to_string(),
         "expected action failure",
     );
     let last = bridge
-        .call(Path::new("/scope-two"), "ExportPersist", &json!({"clientId":"one"}))
+        .call(&scope_two, "ExportPersist", &json!({"clientId":"one"}))
         .unwrap();
     assert_eq!(last["count"], 3);
     assert_eq!(last["pid"], first["pid"]);

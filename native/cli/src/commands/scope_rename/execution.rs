@@ -17,6 +17,20 @@ struct Entries {
     facts: Vec<Value>,
     batch: Batch,
 }
+/// Returns a history id that differs from `previous`, waiting for the clock when needed.
+///
+/// Config-history ids have one-second resolution, so a second `workspace.jsonc` backup in the same
+/// second would overwrite the pre-command snapshot retained by the default-scope backup.
+fn distinct_file_id(previous: &str) -> String {
+    loop {
+        let candidate = workspace_command::file_id();
+        if candidate != previous {
+            return candidate;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+}
+
 /// Executes a scope rename [`Options`] batch and returns the formatted [`Report`].
 pub(super) fn run(
     root: &Path,
@@ -35,7 +49,12 @@ pub(super) fn run(
     let mut entries = prepare(root, &selection, linker)?;
     phases::initial(root, &mut entries, linker, chalk, output, options)?;
     entries.batch.write(&file_id, "rename")?;
-    entries.batch.publish_configuration(&file_id)?;
+    let config_id = if selection.default_scope.is_some() {
+        distinct_file_id(&file_id)
+    } else {
+        file_id.clone()
+    };
+    entries.batch.publish_configuration(&config_id)?;
     linker.forget_loaded();
     let mut changed = phases::targets(root, &mut entries, linker)?;
     if options.refactor {
