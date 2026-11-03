@@ -79,7 +79,7 @@ fn validate_issue(issue: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-/// Validates a serialized `MissingPackagesDependenciesOnFs` JSON array `data`.
+/// Validates a serialized `MissingPackagesDependenciesOnFs` JSON array `data` via [`invalid_missing_package_row`].
 #[inline]
 fn validate_missing_packages(data: &str) -> io::Result<()> {
     let rows: Vec<Value> = serde_json::from_str(data).map_err(io::Error::other)?;

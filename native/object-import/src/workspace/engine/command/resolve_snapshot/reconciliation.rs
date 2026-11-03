@@ -27,7 +27,7 @@ pub(super) fn reconcile(
     Ok(())
 }
 
-/// Populates `version["unrelated"]` and rewrites `version["parents"]` for an unrelated merge resolution.
+/// Populates `version["unrelated"]` and rewrites `version["parents"]` for an unrelated merge resolution on `material` ([`Material`]).
 fn unrelated(
     version: &mut Value,
     material: &Material,

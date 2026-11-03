@@ -65,7 +65,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
-/// Validates component index bounds, package names, and component identities on `request.state`.
+/// Validates component index bounds, package names, and component identities on `request.state` ([`Request`]).
 fn validate_state(request: &Request) -> io::Result<()> {
     let state = &request.state;
     if state.entries.len() > 4096

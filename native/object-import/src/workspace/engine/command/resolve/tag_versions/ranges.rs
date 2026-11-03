@@ -61,7 +61,7 @@ fn update_dependencies(
     Ok(())
 }
 
-/// Extracts the configured `^` or `~` `componentRangePrefix` from `version`'s dependency-resolver aspect data.
+/// Extracts the configured `^` or `~` `componentRangePrefix` from `version`'s dependency-resolver aspect data for [`update`].
 #[inline]
 fn prefix(version: &Value) -> io::Result<Option<char>> {
     let Some(rows) = version["extensions"].as_array() else { return Ok(None) };

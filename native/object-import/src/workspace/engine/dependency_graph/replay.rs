@@ -31,7 +31,7 @@ struct Diagnostics {
     missing_packages: Map<String, Value>,
     errors: Map<String, Value>,
 }
-/// Replays scanned file `rows` ([`Row`]) in deterministic order under `budget` ([`Budget`]) to produce the final dependency graph payload.
+/// Replays scanned file `rows` ([`Row`]) in deterministic order under `budget` ([`Budget`]) to produce the final dependency graph payload for `request` ([`Request`]).
 pub(super) fn finish(
     request: &Request,
     rows: &HashMap<String, Row>,

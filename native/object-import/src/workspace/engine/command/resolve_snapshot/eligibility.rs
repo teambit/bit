@@ -75,7 +75,7 @@ fn validate_projection(material: &Material, ordinary_snapshot: bool) -> io::Resu
     if ordinary_snapshot { Ok(()) } else { snapshot::validate_application_files(&material.files) }
 }
 
-/// Validates that `material.version` carries either inline `flattenedEdges` or an existing `flattenedEdgesRef` object.
+/// Validates that `material.version` carries either inline `flattenedEdges` or an existing `flattenedEdgesRef` object under `root` ([`Path`]).
 #[inline]
 fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
     if material.version.get("flattenedEdges").is_some() {

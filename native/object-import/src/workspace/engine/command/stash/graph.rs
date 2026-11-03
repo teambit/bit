@@ -82,7 +82,7 @@ fn saved(
     Ok(saved)
 }
 
-/// Reads `flattenedEdges` or the `flattenedEdgesRef` `Source` object from the `previous` `Version` head.
+/// Reads `flattenedEdges` or the `flattenedEdgesRef` `Source` object from the `previous` `Version` head in `repository` ([`Repository`]).
 #[inline]
 fn previous_graph(previous: &str, repository: &mut Repository) -> io::Result<Value> {
     let version = repository.read(previous.trim(), "Version")?;

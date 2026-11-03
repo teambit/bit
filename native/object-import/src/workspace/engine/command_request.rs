@@ -64,7 +64,7 @@ fn import_token(token: Option<&str>) -> io::Result<Option<&str>> {
     Ok(Some(candidate))
 }
 
-/// Resolves the active inbound [`crate::command_import::Overlay`] on `state` for `token`, if any.
+/// Resolves the active inbound [`crate::command_import::Overlay`] on `state` ([`command::State`]) for `token` via [`import_token`], if any.
 #[inline]
 fn inbound_overlay<'a>(
     state: &'a command::State,

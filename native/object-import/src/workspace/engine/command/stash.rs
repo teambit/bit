@@ -71,7 +71,7 @@ struct Allocation {
 pub(in crate::workspace::engine) struct Persist {
     token: String,
 }
-/// Captured modified or new component metadata, source files, and `.bitmap` entry for a `stash save` batch.
+/// Captured modified or new component metadata, source files, and `.bitmap` entry for a `stash save` [`Retained`] batch.
 struct Component {
     identity: String,
     id: Value,

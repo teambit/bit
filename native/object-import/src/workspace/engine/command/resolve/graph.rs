@@ -17,7 +17,7 @@ pub(super) fn project(materials: &mut [Material], repository: &mut Repository) -
     project_with_saved(materials, repository, true)
 }
 
-/// Rebuilds flattened dependency graphs on `materials` without reusing saved prior edges.
+/// Rebuilds flattened dependency graphs on `materials` via [`project_with_saved`] without reusing saved prior edges.
 #[inline]
 pub(super) fn rebuild(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
     project_with_saved(materials, repository, false)

@@ -57,7 +57,7 @@ fn row_identity(row: &Value) -> Option<&str> {
         .filter(|base| !base.is_empty())
 }
 
-/// Returns the per-component editor or version log override for `identity` in `receipt`.
+/// Returns the per-component editor or version log override for `identity` in `receipt` via [`row_identity`].
 #[inline]
 fn editor<'a>(receipt: &'a Value, identity: &str) -> &'a Value {
     receipt["messages"]

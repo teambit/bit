@@ -90,7 +90,7 @@ pub(super) struct Snapshot {
 }
 
 impl Snapshot {
-    /// Updates retained read `proofs` and `repository` with newly published `files` and re-validates `self`.
+    /// Updates retained read `proofs` via [`proof::accept_published`] and `repository` with newly published `files` and re-validates `self`.
     pub(super) fn accept_published(
         &mut self,
         files: &HashMap<std::path::PathBuf, Vec<u8>>,

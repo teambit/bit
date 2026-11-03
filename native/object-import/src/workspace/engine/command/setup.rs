@@ -72,7 +72,7 @@ fn prepare_licenses(
     Ok(())
 }
 
-/// Collects selected checkout targets and appends `trackedTargets` when checking out `head`.
+/// Collects selected checkout targets via [`prepare::selected`] and appends `trackedTargets` when checking out `head`.
 #[inline]
 fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let mut targets = prepare::selected(request, context)?;

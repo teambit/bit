@@ -90,7 +90,7 @@ fn clean_resolver_dependency(dependency: &mut Value) {
     }
 }
 
-/// Removes a trailing `@` from a string `value` or removes an empty `"version": ""` field from an object `value`.
+/// Removes a trailing `@` from a string `value` or removes an empty `"version": ""` field from an object `value` ([`Value`]).
 #[inline]
 fn remove_empty_version(value: &mut Value) {
     if let Some(stripped) = value

@@ -52,7 +52,7 @@ pub(super) fn append(
     Ok(reports)
 }
 
-/// Loads and projects non-removed hidden lane `Version` objects absent from `visible` for [`append`].
+/// Loads and projects non-removed hidden lane `Version` objects absent from `visible` for [`append`] via [`harmony::project`].
 #[inline]
 fn candidates(
     retained: &mut Retained,

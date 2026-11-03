@@ -13,7 +13,7 @@ const ASPECT: &str = "teambit.workspace/workspace-root";
 /// Context field key storing the auto-added workspace-root component identity (`snapshotAutoAddedWorkspaceRoot`).
 const AUTO: &str = "snapshotAutoAddedWorkspaceRoot";
 
-/// Appends the workspace-root [`target`] component to the selected snap set when members change.
+/// Appends the workspace-root [`target`] component to the selected snap set via [`snap::eligible`] when members change.
 pub(super) fn include(
     retained: &mut Retained,
     captured: &[capture::Captured],

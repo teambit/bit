@@ -58,7 +58,7 @@ fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> 
     Ok(crate::command_import::Target { scope: Some(scope), name, version: version.into() })
 }
 
-/// Extracts `(scope, name)` from `target["identity"]`, `target["id"]`, or explicit `scope`/`name` fields.
+/// Extracts `(scope, name)` from `target["identity"]`, `target["id"]`, or explicit `scope`/`name` fields on `target` ([`Value`]).
 fn identity_parts(target: &Value) -> io::Result<(String, String)> {
     if let Some(identity) = target["identity"]
         .as_str()

@@ -35,7 +35,7 @@ impl Component {
             .filter(|entry| entry["versionFromConfig"] == true)
     }
 
-    /// Returns the set of bare `scope/name` component identities pinned via `versionFromConfig`.
+    /// Returns the set of bare `scope/name` component identities pinned via `versionFromConfig` from [`Self::config_pinned_entries`].
     #[inline]
     pub(in crate::workspace::engine::command) fn pinned_from_config(&self) -> HashSet<String> {
         self.config_pinned_entries()

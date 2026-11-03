@@ -28,7 +28,7 @@ pub(in crate::workspace::engine) struct Complete {
     owned_workspace_writes: Vec<Value>,
 }
 
-/// Prepares deferred post-install `.bitmap` and `scope.json` tracking for a `switch` operation.
+/// Prepares deferred post-install `.bitmap` ([`bitmap::Prepared`]) and `scope.json` tracking for a `switch` [`Operation`] on `record` ([`Record`]).
 pub(super) fn prepare(
     record: &mut Record,
     first: &mut bitmap::Prepared,

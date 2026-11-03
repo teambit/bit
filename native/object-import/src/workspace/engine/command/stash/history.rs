@@ -86,7 +86,7 @@ fn targets(context: &Value, selected: Option<&[String]>) -> io::Result<Vec<Value
         .collect())
 }
 
-/// Returns `true` when `target["identity"]` matches any trimmed entry in `ids`.
+/// Returns `true` when `target["identity"]` ([`Value`]) matches any trimmed entry in `ids`.
 #[inline]
 fn contains(ids: &[String], target: &Value) -> bool {
     target["identity"]

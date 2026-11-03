@@ -46,7 +46,7 @@ pub(in crate::workspace::engine) struct Prepare {
     #[serde(default)]
     dependency_grammar: Value,
 }
-/// Deserialized CLI options for a workspace `snap` or `tag` resolution operation.
+/// Deserialized CLI options and [`Policy`] for a workspace [`snap`] or [`tag`] resolution operation.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {

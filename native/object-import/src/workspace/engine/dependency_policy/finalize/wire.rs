@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 
-/// Map of dependency package names to version range JSON values.
+/// Map of dependency package names to version range JSON values ([`Value`]).
 type Packages = Map<String, Value>;
 /// Wire request for finalizing [`Environment`] and manual dependency policies from [`State`] and [`Resolved`] entries.
 #[derive(Deserialize)]

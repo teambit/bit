@@ -60,7 +60,7 @@ fn update(
     Ok(())
 }
 
-/// Computes the updated version range string for `version` using `selected`, `request.policy.prefix`, or `previous`.
+/// Computes the updated version range string for `version` using `selected`, `request.policy.prefix` ([`Request`]), or `previous`.
 #[inline]
 fn updated_range(
     request: &Request,

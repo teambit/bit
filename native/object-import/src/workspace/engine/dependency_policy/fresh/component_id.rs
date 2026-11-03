@@ -29,7 +29,7 @@ pub(super) fn serialize(raw: &Value, unscoped: bool) -> io::Result<Value> {
     Ok(Value::Object(id))
 }
 
-/// Parses `(scope, name, version)` parts from a string or object component ID `raw` for [`serialize`].
+/// Parses `(scope, name, version)` parts from a string or object component ID `raw` ([`Value`]) for [`serialize`].
 #[inline]
 fn parse_parts(raw: &Value) -> io::Result<(&str, &str, Option<&str>)> {
     if let Some(text) = raw.as_str().map(str::trim) {

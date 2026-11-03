@@ -9,7 +9,7 @@ use std::{
 /// Monotonic probe file counter used by [`validate`] when testing parent directory `SELinux` inheritance.
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
-/// Validates that `path` has no non-`SELinux` extended attributes ([`has_non_selinux_xattr`]) and matches parent directory inheritance ([`equivalent`]).
+/// Validates that `path` has no non-`SELinux` extended attributes ([`has_non_selinux_xattr`]) and matches parent directory inheritance ([`equivalent`], [`NEXT`]).
 #[inline]
 pub(super) fn validate(path: &Path) -> io::Result<()> {
     let meta = fs::symlink_metadata(path)?;

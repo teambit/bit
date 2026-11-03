@@ -46,7 +46,7 @@ fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {
     Ok(format!("{id}@{version}"))
 }
 
-/// Computes exact-version downgrade warning strings for `selected` components when tagging with `--ver`.
+/// Computes exact-version downgrade warning strings for `selected` components when tagging with `--ver` via [`latest_tag`].
 fn warnings(
     retained: &Retained,
     semver: &Value,

@@ -24,7 +24,7 @@ impl Prepared {
         self.staged = true;
         Ok(proofs)
     }
-    /// Writes or removes `unmerged.json` and `merge-conflict` if not already staged.
+    /// Writes or removes `unmerged.json` and `merge-conflict` on [`Prepared`] if not already staged.
     pub(super) fn commit(&self) -> io::Result<()> {
         if self.staged {
             return Ok(());

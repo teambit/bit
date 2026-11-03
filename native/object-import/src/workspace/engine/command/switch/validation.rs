@@ -76,7 +76,7 @@ pub(super) fn reject_removed_targets(
     Ok(())
 }
 
-/// Verifies that a single workspace `target` does not resolve to a soft-removed `Version` object.
+/// Verifies that a single workspace `target` ([`Value`]) does not resolve to a soft-removed `Version` object in `imported` ([`command_import::PreparedImport`]).
 fn reject_removed_target(
     scope: &Path,
     context: &Value,

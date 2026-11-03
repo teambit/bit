@@ -42,7 +42,7 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     Ok((retained.materials.len(), json!({"token":retained.record.token,"staged":true})))
 }
 
-/// Finalizes builder output on `snapshots.command.resolve` and rebuilds staged `Version` and artifact objects.
+/// Finalizes [`BuildFinalize`] output on `snapshots.command.resolve` and rebuilds staged `Version` and artifact objects via [`rebuild`].
 pub(in crate::workspace::engine::command::resolve) fn finalize(
     input: BuildFinalize,
     snapshots: &mut snapshots::State,

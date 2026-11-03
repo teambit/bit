@@ -3,7 +3,7 @@
 use super::{Value, invalid};
 use std::io;
 
-/// Validates and strips `__specific` from core aspect configuration `value` ([`Value`]) for `name`.
+/// Validates and strips `__specific` from core aspect configuration `value` ([`Value`]) for `name` via [`validate_single`] and [`validate_policy`].
 pub(super) fn plain(name: &str, value: &Value) -> io::Result<Value> {
     let source = value.as_object().ok_or_else(|| invalid("reset aspect config"))?;
     let mut config = source.clone();

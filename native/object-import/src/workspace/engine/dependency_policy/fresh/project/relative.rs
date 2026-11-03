@@ -85,7 +85,7 @@ impl State {
     }
 }
 
-/// Loads all tracked workspace component [`Owner`] records from `.bitmap` under `request.root`.
+/// Loads all tracked workspace component [`Owner`] records from `.bitmap` under `request.root` ([`Detect`]).
 fn owners(request: &Detect) -> io::Result<Vec<Owner>> {
     let text = match fs::read_to_string(request.root.join(".bitmap")) {
         Ok(text) => text,

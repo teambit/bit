@@ -44,7 +44,7 @@ pub(super) struct Options {
     pub versions_file: Option<Value>,
 }
 
-/// Selects component identities and load count into [`Selection`] for a `tag` operation according to `retained.tag`.
+/// Selects component identities and load count into [`Selection`] for a `tag` operation according to `retained.tag` ([`Options`]) via [`candidate_selection`].
 pub(super) fn select(
     retained: &mut Retained,
     captured: &[capture::Captured],

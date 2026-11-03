@@ -57,7 +57,7 @@ fn ignored(request: &Request, plan: &mut Plan) {
     deduplicate_dev(request, plan);
 }
 
-/// Removes dev packages and dev components from `plan` that are already present in runtime dependencies.
+/// Removes dev packages and dev components from `plan` ([`Plan`]) that are already present in runtime dependencies of `request` ([`Request`]).
 #[inline]
 fn deduplicate_dev(request: &Request, plan: &mut Plan) {
     let [regular_packages, dev_packages, _] = &mut plan.packages;

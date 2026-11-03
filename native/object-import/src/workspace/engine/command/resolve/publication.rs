@@ -11,7 +11,7 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::{fs, io};
 
-/// Lifecycle phase of a retained `snap` or `tag` resolution transaction.
+/// Lifecycle phase of a [`Retained`] `snap` or `tag` resolution transaction ([`Prepared`], [`bitmap::Prepared`]).
 pub(super) enum Phase {
     Pending(super::refresh::Callbacks),
     Noop,

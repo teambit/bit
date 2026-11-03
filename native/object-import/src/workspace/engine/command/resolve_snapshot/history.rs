@@ -26,7 +26,7 @@ pub(super) fn tag_histories(
     Ok(())
 }
 
-/// Populates the pre-tag `current_head` into the existing `VersionHistory` object for `material` ([`Material`]) in `repository` ([`Repository`]).
+/// Populates the pre-tag `current_head` into the existing `VersionHistory` object for `material` ([`Material`]) in `repository` ([`Repository`]) via [`status_history::identity`].
 #[inline]
 fn tag_history(
     root: &Path,

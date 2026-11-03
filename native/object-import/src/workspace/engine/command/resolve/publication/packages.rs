@@ -29,7 +29,7 @@ fn validate_package_token(retained: &super::Retained, token: &str) -> io::Result
     Ok(())
 }
 
-/// Finalizes `package.json` manifests on `state.resolve` after snapshot objects have been persisted.
+/// Finalizes [`PackageFinalize`] `package.json` manifests on `state.resolve` via [`validate_package_token`] after snapshot objects have been persisted.
 pub(in crate::workspace::engine::command::resolve) fn finalize(
     input: PackageFinalize,
     state: &mut State,

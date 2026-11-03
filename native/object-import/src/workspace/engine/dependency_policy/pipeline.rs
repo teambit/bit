@@ -75,7 +75,7 @@ fn apply_view(
     Ok((1, output))
 }
 
-/// Builds and validates the [`finalize::Request`] payload from `request.finish` and `initial`.
+/// Builds and validates the [`finalize::Request`] payload from `request.finish` ([`Request`]) and `initial` ([`Value`]).
 fn finish_request(request: &Request, initial: &Value) -> io::Result<Value> {
     let mut finish = request.finish.clone();
     let fields = finish.as_object().ok_or_else(|| invalid("dependency pipeline finalization"))?;

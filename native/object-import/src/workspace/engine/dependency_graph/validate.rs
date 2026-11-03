@@ -68,7 +68,7 @@ fn custom(request: &Request) -> io::Result<()> {
     Ok(())
 }
 
-/// Validates a single cached dependency graph entry (`file`, `cached`) from `request.visited`.
+/// Validates a single cached dependency graph [`PathMap`] entry (`file`, `cached`) from `request.visited`.
 #[inline]
 fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
     let file = file.trim();

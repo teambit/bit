@@ -66,7 +66,7 @@ impl Metadata {
 pub(in crate::workspace::engine) struct Request {
     read_set: Vec<Proof>,
 }
-/// Verifies `request.read_set` via [`verify`] and returns `{"fresh": true}`.
+/// Verifies `request.read_set` ([`Request`]) via [`verify`] and returns `{"fresh": true}`.
 pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
     verify(&request.read_set)?;
     Ok((request.read_set.len(), serde_json::json!({"fresh":true})))

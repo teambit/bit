@@ -34,7 +34,7 @@ struct LaneSelection {
     lane_only: HashSet<String>,
     chosen: Option<Vec<String>>,
 }
-/// Loads [`LaneSelection`], imports objects, and builds the switch command `context` and [`command_import::PreparedImport`].
+/// Loads [`LaneSelection`], imports objects, and builds the switch command `context` ([`Value`]) and [`command_import::PreparedImport`].
 pub(super) fn context(
     request: &Prepare,
     pool: &rayon::ThreadPool,

@@ -61,7 +61,7 @@ fn update(request: &Request, plan: &mut Plan, field: usize, name: &str, value: &
     }
     assign(plan, field, name, value, &existing);
 }
-/// Assigns `value` to `plan` as either a component peer range or a package dependency in `field`.
+/// Assigns `value` ([`Value`]) to `plan` ([`Plan`]) as either a component peer range or a package dependency in `field`.
 #[inline]
 fn assign(plan: &mut Plan, field: usize, name: &str, value: &Value, existing: &[Option<usize>; 3]) {
     let range = value

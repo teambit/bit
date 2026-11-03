@@ -78,7 +78,7 @@ fn ignored(finish: &Value) -> io::Result<Vec<Vec<String>>> {
         .collect()
 }
 
-/// Normalizes a cached component dependency `id` `value` into `scope/name` or `scope/name@version`.
+/// Normalizes a cached component dependency `id` `value` ([`Value`]) into `scope/name` or `scope/name@version`.
 fn identity(value: &Value) -> io::Result<String> {
     if let Some(raw) = value.as_str().map(str::trim) {
         let (bare, ver) = raw

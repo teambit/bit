@@ -11,7 +11,7 @@ use super::super::{invalid, resolve_snapshot::Material};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
-/// Computes planned semantic versions on `materials` via `snapshotFutureVersions`, [`components`], and [`ranges::update`].
+/// Computes planned semantic versions on `materials` via `snapshotFutureVersions`, [`components`], [`file::semver`], and [`ranges::update`].
 #[inline]
 pub(super) fn plan(
     materials: &mut [Material],

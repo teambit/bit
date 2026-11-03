@@ -87,7 +87,7 @@ pub(super) fn artifacts(
     Ok(())
 }
 
-/// Validates and returns the absolute `artifactRoot` directory [`PathBuf`] from `receipt`.
+/// Validates and returns the absolute `artifactRoot` directory [`PathBuf`] from `receipt` for [`artifacts`].
 #[inline]
 fn artifact_root(receipt: &Value) -> io::Result<PathBuf> {
     let root = receipt["artifactRoot"]

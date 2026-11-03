@@ -74,7 +74,7 @@ pub(in crate::workspace::engine) fn complete_overlay(
 ) -> io::Result<(usize, Value)> {
     complete_view(request, pool, Some(overlay))
 }
-/// Runs [`detected::initial`], [`pipeline`], and [`issues::apply`] for `request` with an optional [`SourceOverlay`].
+/// Runs [`detected::initial`], [`pipeline`], and [`issues::apply`] for `request` ([`Complete`]) with an optional [`SourceOverlay`].
 fn complete_view(
     request: &Complete,
     pool: &rayon::ThreadPool,

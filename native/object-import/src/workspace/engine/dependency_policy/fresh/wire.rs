@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::path::PathBuf;
 
-/// Three-bucket (`dependencies`, `devDependencies`, `peerDependencies`) package policy map array.
+/// Three-bucket (`dependencies`, `devDependencies`, `peerDependencies`) package policy [`Map`] array.
 pub(super) type Packages = [Map<String, Value>; 3];
 /// Wire request for detecting fresh source dependencies of a workspace component via [`Detection`].
 #[derive(Deserialize)]

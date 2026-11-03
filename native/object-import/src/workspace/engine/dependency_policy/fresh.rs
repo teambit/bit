@@ -37,7 +37,7 @@ pub(in crate::workspace::engine) fn detect_overlay(
 ) -> io::Result<(usize, Value)> {
     detect_view(request, pool, Some(overlay))
 }
-/// Detects fresh source dependencies for `request` using an optional [`SourceOverlay`].
+/// Detects fresh source dependencies for `request` ([`Detect`]) using an optional [`SourceOverlay`].
 fn detect_view(
     request: &Detect,
     pool: &rayon::ThreadPool,

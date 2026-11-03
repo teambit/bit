@@ -94,7 +94,7 @@ fn detected(
     Ok((ts, dependencies))
 }
 
-/// Reads `file` through `resolver` while charging its actual byte length against `budget`.
+/// Reads `file` ([`Path`]) through `resolver` ([`Budget`]) while charging its actual byte length against `budget` ([`AtomicUsize`]).
 #[inline]
 fn read(file: &Path, budget: &AtomicUsize, resolver: &Budget) -> io::Result<Vec<u8>> {
     // Account actual reads rather than trusting metadata across concurrent edits.

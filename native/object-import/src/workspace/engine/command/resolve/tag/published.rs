@@ -77,7 +77,7 @@ fn replace_ids(value: &mut Value, replacements: &HashMap<String, String>) {
     }
 }
 
-/// Returns `true` when `retained` is in a pending `tag` state that permits registry version overrides.
+/// Returns `true` when `retained` ([`Retained`]) is in a [`publication::Phase::Pending`] `tag` state that permits registry version overrides.
 #[inline]
 fn can_apply_overrides(retained: &Retained, token: &str) -> bool {
     let token = token.trim();
