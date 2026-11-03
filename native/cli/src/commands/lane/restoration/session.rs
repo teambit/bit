@@ -93,12 +93,7 @@ impl Session {
                     && phases.len() <= 2
                     && phases
                         .iter()
-                        .all(|phase| {
-                            phase["phase"]
-                                .as_str()
-                                .is_some_and(|name| !name.trim().is_empty())
-                                && phase["revert"].is_boolean()
-                        })
+                        .all(|phase| phase["phase"].is_u64() && phase["revert"].is_boolean())
             })
             .ok_or_else(|| io::Error::other("lane history phases"))?;
         Ok(phases.clone())
@@ -119,12 +114,11 @@ impl Session {
     #[inline]
     fn phase_request(&self, phase: &Value) -> Request<'static> {
         let token = self.selection["historyToken"].as_str().map_or("", str::trim);
-        let phase_name = phase["phase"].as_str().map_or("", str::trim);
         Request {
             operation: "checkout",
             to: None,
             verify_fresh: false,
-            options: json!({"laneHistory":{"token":token,"phase":phase_name},
+            options: json!({"laneHistory":{"token":token,"phase":phase["phase"]},
                 "to":null,"pattern":null,"all":false,"revert":phase["revert"],"skipDependencyInstallation":true}),
         }
     }

@@ -35,18 +35,55 @@ pub fn update(
     let lifecycles = [Lifecycle::Runtime, Lifecycle::Dev, Lifecycle::Peer];
     for (lifecycle, dependencies) in lifecycles.into_iter().zip(&mut detected.components) {
         for dependency in dependencies {
-            if let Some(id) = resolve(
-                workspace,
-                subject,
-                inputs,
-                &dependency.id,
-                lifecycle,
-                dependency.package_name.as_deref(),
-            ) {
-                dependency.id = id;
-            }
+            let package = dependency.package_name.as_deref();
+            let Some(id) = resolve(workspace, subject, inputs, &dependency.id, lifecycle, package)
+            else {
+                continue;
+            };
+            let forced = package.is_some_and(|name| {
+                from_overrides(workspace, inputs, &dependency.id, lifecycle, name).is_some()
+            });
+            dependency.id = if forced {
+                id
+            } else {
+                peer_version_in_range(workspace, lifecycle, dependency.version_range.as_deref(), id)
+            };
         }
     }
+}
+
+/// `peerVersionInRange`: a policy (e.g. an env) sets the range of a component peer. When the
+/// resolved version is out of this range, the version of the range replaces it. A workspace
+/// component keeps its version.
+fn peer_version_in_range(
+    workspace: &Workspace<'_>,
+    lifecycle: Lifecycle,
+    range: Option<&str>,
+    id: ComponentId,
+) -> ComponentId {
+    let Some((version, range)) = id.version.as_deref().zip(range) else { return id };
+    if lifecycle != Lifecycle::Peer || workspace.bitmap_id(&id).is_some() {
+        return id;
+    }
+    match version_in_range_if_out_of_it(version, range) {
+        Some(version) => ComponentId { version: Some(version), ..id },
+        None => id,
+    }
+}
+
+/// `getVersionInRangeIfOutOfIt`: `None` when `version` satisfies `range` (or `range` has no such
+/// version, e.g. `<2.0.0` is coerced to `2.0.0`), otherwise the version of the range. A snap
+/// is in no semver range.
+#[must_use]
+pub fn version_in_range_if_out_of_it(version: &str, range: &str) -> Option<String> {
+    let parsed = node_semver::Range::parse(range.trim()).ok()?;
+    let satisfies = |candidate: &str| {
+        node_semver::Version::parse(candidate).is_ok_and(|candidate| parsed.satisfies(&candidate))
+    };
+    if satisfies(version.trim()) {
+        return None;
+    }
+    valid_component_version(range).filter(|candidate| satisfies(candidate))
 }
 
 /// `resolveVersion`: the [`ComponentId`] of the first strategy that yields one. The `.bitmap`

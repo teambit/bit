@@ -997,3 +997,15 @@ fn the_bit_component_package_is_the_bit_core_aspect() {
         Resolved::CoreAspect("teambit.harmony/bit".into()),
     );
 }
+
+#[test]
+fn version_in_range_if_out_of_it_takes_the_version_of_the_range() {
+    use super::versions::version_in_range_if_out_of_it as in_range;
+    let snap = "a".repeat(40);
+    assert_eq!(in_range("1.2.3", "^1.0.0"), None);
+    assert_eq!(in_range("1.2.3", "^2.1.0"), Some("2.1.0".to_owned()));
+    assert_eq!(in_range(&snap, "^2.1.0"), Some("2.1.0".to_owned()));
+    assert_eq!(in_range("1.2.3", "<2.0.0"), None);
+    assert_eq!(in_range("3.0.0", "<2.0.0"), None);
+    assert_eq!(in_range("1.2.3", "not a range"), None);
+}

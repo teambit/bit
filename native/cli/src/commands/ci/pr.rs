@@ -226,12 +226,14 @@ fn resolve_lane_name(
             .trim();
         return Ok(sanitize_lane_name(name));
     }
-    let branch = std::env::var("GITHUB_HEAD_REF")
+    let head_ref = std::env::var("GITHUB_HEAD_REF")
         .ok()
         .map(|val| val.trim().to_owned())
-        .filter(|val| !val.is_empty())
-        .or_else(|| git_current_branch(root))
-        .unwrap_or_default();
+        .filter(|val| !val.is_empty());
+    if let Some(head_ref) = &head_ref {
+        return Ok(branch_lane_name(head_ref));
+    }
+    let branch = git_current_branch(root).unwrap_or_default();
     let branch = branch.trim();
     if branch.is_empty() || matches!(branch, "main" | "master" | "HEAD") {
         return current_lane.map(sanitize_lane_name).ok_or_else(|| {
@@ -240,7 +242,14 @@ fn resolve_lane_name(
             )
         });
     }
-    Ok(sanitize_lane_name(branch))
+    Ok(branch_lane_name(branch))
+}
+
+/// Lane name for a branch: sanitized, with a `-branch` suffix when the name is reserved for the
+/// default lane (`main`, `master`), e.g. a pull request opened from a fork's default branch.
+fn branch_lane_name(branch: &str) -> String {
+    let name = sanitize_lane_name(branch);
+    if matches!(name.as_str(), "main" | "master") { format!("{name}-branch") } else { name }
 }
 
 #[inline]
@@ -314,3 +323,6 @@ fn entry_has_failing_spec(path: &Path) -> bool {
         && fs::read_to_string(path)
             .is_ok_and(|content| content.contains("expect(true).toBe(false)"))
 }
+
+#[cfg(test)]
+mod branch_lane_name_tests;
