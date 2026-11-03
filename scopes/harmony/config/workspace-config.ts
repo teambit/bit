@@ -45,15 +45,8 @@ export type WorkspaceExtensionProps = {
   trackAllFiles?: boolean;
 };
 
-export type PackageManagerClients = 'npm' | 'yarn' | undefined;
-
 export interface DependencyResolverExtensionProps {
-  packageManager: PackageManagerClients;
-  strictPeerDependencies?: boolean;
-  extraArgs?: string[];
-  packageManagerProcessOptions?: any;
-  useWorkspaces?: boolean;
-  manageWorkspaces?: boolean;
+  packageManager?: string;
   externalPackageManager?: boolean;
 }
 
@@ -399,11 +392,8 @@ export class WorkspaceConfig implements HostConfig {
     return {
       lang: DEFAULT_LANGUAGE,
       defaultScope: this.extension('teambit.workspace/workspace', true)?.defaultScope,
-      _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
-      packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
       componentsDefaultDirectory,
-      _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       ignoredFiles: this.extension('teambit.workspace/workspace', true)?.ignoredFiles,
       trackAllFiles: this.extension('teambit.workspace/workspace', true)?.trackAllFiles,
       extensions: this.extensions.toConfigObject(),

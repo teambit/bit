@@ -248,7 +248,10 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // virtualized rows aligned.
 .unifiedRow {
   display: grid;
-  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(var(--diff-code-width, 60ch), 1fr);
+  grid-template-columns: var(--diff-gutter-width, 50px) var(--diff-gutter-width, 50px) 22px minmax(
+      var(--diff-code-width, 60ch),
+      1fr
+    );
 
   // Let unusually wide glyphs extend the shared `ch`-based estimate. The body owns horizontal
   // scrolling, so visible overflow remains reachable without widening the page.
@@ -371,6 +374,9 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 // intra-line (word-level) change emphasis
 .intra {
   background: color-mix(in srgb, $accent 16%, transparent);
+  // `<mark>` defaults to `color: MarkText` (black). Untokenized text (e.g. a Dockerfile) has no inline
+  // color, so without this the changed characters render black on the dark theme's tint.
+  color: inherit;
   border-radius: 2px;
   padding: 1px 0;
 }
