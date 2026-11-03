@@ -17,7 +17,7 @@ fn successful_move_retains_existing_consumer_temporary_files() {
     );
 }
 
-/// Verifies `bit deprecate` and `bit undeprecate` retain existing `.bitTmp` consumer temporary files.
+/// Verifies `bit deprecate` and `bit undeprecate` retain existing `.bitTmp` consumer temporary files via [`successful`].
 #[test]
 fn deprecation_changes_and_noops_retain_existing_consumer_temporary_files() {
     let helper = workspace(1, false);

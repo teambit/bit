@@ -22,7 +22,7 @@ use std::{
     thread,
     time::Duration,
 };
-/// Guard holding the child [`Child`] process of an ephemeral bare-scope `bit start` HTTP server in [`Helper`] tests.
+/// Guard holding the child [`Child`] process of an ephemeral bare-scope `bit start` HTTP server in [`Helper`] import tests.
 struct ScopeServer(Child);
 
 impl Drop for ScopeServer {

@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 
-/// Keep setup backups older than either real replay command without changing history.
+/// Keeps setup backups older than either real replay command via [`history::Histories::wait_past_setup`] without changing history.
 pub(super) fn wait_past_setup_history(root: &Path) {
     history::Histories::wait_past_setup(root);
 }

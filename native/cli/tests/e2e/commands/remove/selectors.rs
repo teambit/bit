@@ -5,7 +5,7 @@
 use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use std::fs;
 
-/// Verifies `bit remove $new` removes only untagged components while preserving tagged ones.
+/// Verifies `bit remove $new` removes only untagged components while preserving tagged ones in [`bitmap`].
 #[test]
 fn new_selector_preserves_tagged_components() {
     let helper = support::workspace(2, false);

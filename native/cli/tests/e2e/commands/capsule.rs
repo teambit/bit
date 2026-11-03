@@ -6,7 +6,7 @@ use crate::{
 };
 use serde_json::json;
 use std::{ffi::OsStr, fs, path::Path};
-/// Asserts that `command` produces identical output between native and `Node.js` with `globals` via [`Helper::cmd_in_with`] and [`parse`].
+/// Asserts that `command` produces identical stdout/JSON output between native and `Node.js` with `globals` via [`Helper::cmd_in_with`] and [`parse`].
 fn assert_matches_node(helper: &Helper, globals: &Path, command: &str, color: bool) {
     let mut node_env =
         vec![("BIT_GLOBALS_DIR", globals.as_os_str()), ("BIT_NATIVE", OsStr::new("off"))];

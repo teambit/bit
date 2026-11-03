@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 
-/// Verifies authored component paths and installation match `Node.js` after scope reinitialization.
+/// Verifies authored component paths and installation match `Node.js` after scope reinitialization via [`without_progress_timing`] and [`tree`].
 #[test]
 fn authored_paths_and_installation_match_released_node_after_reinitialization() {
     let helper = Helper::new();

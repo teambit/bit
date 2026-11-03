@@ -9,7 +9,7 @@ use crate::{
 use serde_json::json;
 use std::fs;
 
-/// Verifies [`successful`] patterned `bit remove` removes matching components once while preserving excluded ones.
+/// Verifies [`successful`] patterned `bit remove` removes matching components once while preserving excluded [`bitmap`] entries.
 #[test]
 fn patterned_new_batch_removes_once_and_preserves_excluded_components() {
     let helper = support::workspace(3, false);

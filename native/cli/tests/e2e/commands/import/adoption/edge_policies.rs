@@ -8,7 +8,7 @@ use crate::{
     helper::{Helper, config, remote},
 };
 use serde_json::json;
-/// Canonical aspect ID for `teambit.dependencies/dependency-resolver`.
+/// Canonical aspect ID (`teambit.dependencies/dependency-resolver`) for workspace dependency policy writes.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// Creates a workspace connected to a remote scope with two `empty-env` components and no `package.json`.
 fn empty_environment() -> Helper {

@@ -7,7 +7,7 @@ use super::{Histories, validate_id};
 use chrono::{Local, NaiveDate, NaiveDateTime, Timelike};
 use std::time::{Duration, Instant};
 
-/// Waits until all backup timestamps in `histories` are strictly in the past via [`date`] and [`past`].
+/// Waits until all backup timestamps in `histories` ([`Histories`]) are strictly in the past via [`date`] and [`past`].
 pub(super) fn wait(histories: &Histories) {
     let latest = histories.0
         .values()

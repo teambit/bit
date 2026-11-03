@@ -10,7 +10,7 @@ use crate::{
 use serde_json::{Value, json};
 /// Canonical aspect ID for `teambit.dependencies/dependency-resolver`.
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
-/// Creates a workspace with `comp2` imported and `comp1` published with a lower `adoption-package` range.
+/// Creates a [`Helper`] workspace with `comp2` imported and `comp1` published with a lower `adoption-package` range.
 fn fixture() -> Helper {
     let helper = support::workspace(2, false);
     helper.output_file(

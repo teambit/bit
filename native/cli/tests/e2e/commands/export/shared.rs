@@ -16,7 +16,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-/// Returns the current wall-clock timestamp in milliseconds since [`UNIX_EPOCH`].
+/// Returns the current wall-clock timestamp in milliseconds since [`UNIX_EPOCH`] via [`SystemTime::now`].
 fn clock() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

@@ -6,7 +6,7 @@ use crate::commands::move_paths::support::{self, bitmap, setup, successful};
 use serde_json::json;
 use std::fs;
 
-/// Verifies [`successful`] patterned `bit delete` marks all selected components in one `.bitmap` write.
+/// Verifies [`successful`] patterned `bit delete` marks all selected components in one [`bitmap`] write.
 #[test]
 fn patterned_delete_marks_all_selected_versions_in_one_bitmap_publication() {
     let helper = support::workspace(3, true);

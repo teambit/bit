@@ -3,7 +3,7 @@
 //! Verifies [`support`] replay comparisons for `--check`, `--changed`, and `--json` formatting runs.
 
 use super::move_paths::support;
-/// Verifies `bit format --check --json` runs natively via [`support::compare`] without starting the `JavaScript` host.
+/// Verifies `bit format --check --json` runs natively via [`support::compare`] and [`support::setup`] without starting the `JavaScript` host.
 #[test]
 fn standard_format_checks_match_json_and_component_loading_without_a_bit_host() {
     let helper = support::workspace(1, true);

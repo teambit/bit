@@ -11,7 +11,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-/// Verifies workspace `bit gc` retains older dependency versions referenced via legacy aliases.
+/// Verifies workspace `bit gc` retains older dependency versions referenced via [`alias_fixture`] legacy aliases.
 #[test]
 fn workspace_collection_keeps_older_dependency_versions_through_legacy_aliases() {
     for boxed in [false, true] {

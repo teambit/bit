@@ -12,7 +12,7 @@ use std::{
 /// Captured `(exit_code, stdout, stderr, scope_tree)` tuple for `bit gc --restore` comparison.
 type Snapshot = (Option<i32>, String, String, BTreeMap<String, Vec<u8>>);
 
-/// Verifies `bit gc --restore` reports failed backup cleanup and retains the recovery staging directory.
+/// Verifies `bit gc --restore` reports failed backup cleanup and retains the recovery staging directory via [`capture`].
 #[test]
 fn bare_restore_reports_failed_backup_cleanup_and_keeps_the_recovery_directory() {
     for (color, ci) in [(false, false), (true, false), (false, true), (true, true)] {

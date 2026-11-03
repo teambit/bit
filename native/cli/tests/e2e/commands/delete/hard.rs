@@ -13,7 +13,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// Compares `bit delete --hard` against the `Node.js` CLI on restored copies of a file remote scope.
+/// Compares `bit delete --hard` against the `Node.js` CLI on restored copies of a file remote scope via [`removal_order`] and [`tree`].
 fn compare_file_remote(helper: &Helper, command: &str) {
     let baseline = helper.clone_remote_scope();
     let node_root = helper.clone_workspace();

@@ -6,7 +6,7 @@ use super::support::{self, bitmap, setup, successful};
 use crate::helper::{Helper, config};
 use serde_json::json;
 use std::fs;
-/// Creates a workspace with the `env/identity` aspect provider configured and optionally `tagged`.
+/// Creates a [`Helper`] workspace with the `env/identity` aspect provider configured and optionally `tagged`.
 fn configured(tagged: bool) -> Helper {
     let helper = support::workspace(1, false);
     let source = include_str!("provider.cjs");

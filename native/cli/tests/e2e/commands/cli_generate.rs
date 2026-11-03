@@ -5,7 +5,7 @@
 use crate::{helper::Helper, known_failure::KnownResult};
 use std::ffi::OsStr;
 
-/// CLI commands exercised for `bit cli generate --docs` metadata and skill parity via [`cli_generate_docs_options_match_pinned_node`].
+/// CLI command strings exercised for `bit cli generate --docs` metadata and skill parity via [`cli_generate_docs_options_match_pinned_node`].
 const DOCS_COMMANDS: [&str; 4] = [
     "cli generate --docs --metadata",
     "cli generate --docs --metadata.id=cli",

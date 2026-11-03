@@ -4,7 +4,7 @@
 
 use super::{date, past};
 use chrono::Timelike;
-/// Verifies [`past`] rejects the same second and accepts the next second via [`date`].
+/// Verifies [`past`] rejects the same second and accepts the next second via [`date`] and [`Timelike::with_nanosecond`].
 #[test]
 fn the_same_second_is_not_past_but_the_next_second_is() {
     let latest = Some(date("2026-10-18-12-0-0"));

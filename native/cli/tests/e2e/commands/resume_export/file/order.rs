@@ -11,7 +11,7 @@ pub(super) fn normalize(output: &str, mixed_scope: Option<&str>) -> String {
     output.replace(&reverse, &canonical)
 }
 
-/// Verifies [`normalize`] reorders only the exact two-scope `pending objects to delete (2)` probe block.
+/// Verifies [`normalize`] reorders only the exact two-scope `pending objects to delete (2)` probe block and preserves altered strings.
 #[test]
 fn only_the_complete_two_scope_probe_permutation_is_normalized() {
     let first = "before\n  pending objects to delete (2)\n  (of the export-id \"fixture-export\")\n   › fixture.file\n   › fixture.http\nafter\n";

@@ -10,7 +10,7 @@ use super::remove::scope_objects;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
-/// Compares native and `Node.js` `bit recover` outputs, `.bitmap`, `.bit/index.json`, and [`scope_objects`].
+/// Compares native and `Node.js` `bit recover` outputs, `.bitmap`, `.bit/index.json`, and [`scope_objects`] via [`Helper`].
 fn compare_result(
     helper: &Helper,
     baseline: &std::path::Path,

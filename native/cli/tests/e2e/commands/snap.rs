@@ -9,7 +9,7 @@ mod unmerged;
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::{ffi::OsStr, fs, path::Path};
 
-/// Compares materialized `node_modules/<package_name>/package.json` and linked `file` between `root` and `node_root`.
+/// Compares materialized `node_modules/<package_name>/package.json` and linked `file` between `root` and `node_root` via [`parse`] and [`config::read_jsonc`].
 fn compare(root: &Path, node_root: &Path, package_name: &str, file: &str) -> (String, String) {
     let package = |root: &Path| {
         fs::read_to_string(

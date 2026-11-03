@@ -8,7 +8,7 @@ use std::{
     os::unix::fs::{MetadataExt, symlink},
 };
 
-/// Relative symlink target pointing from `objects/<bucket>/<leaf>` to `source-payload` at the scope root via [`symlink`].
+/// Relative symlink target (`../../source-payload`) pointing from `objects/<bucket>/<leaf>` to `source-payload` at the scope root via [`symlink`].
 const SYMLINK_PAYLOAD_TARGET: &str = "../../source-payload";
 
 /// Verifies bare-scope `bit gc` moves files and [`SYMLINK_PAYLOAD_TARGET`] links across `/dev/shm` (`EXDEV`) device boundaries via [`compare_with_snapshot`].

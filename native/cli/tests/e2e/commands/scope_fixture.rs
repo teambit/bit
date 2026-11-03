@@ -8,7 +8,7 @@ use crate::{
 };
 use std::{ffi::OsStr, path::Path};
 
-/// Creates a workspace with `comp1` tagged and exported across two versions into its remote scope.
+/// Creates a [`Helper`] workspace with `comp1` tagged and exported across two versions into its remote scope.
 pub(super) fn fixture() -> Helper {
     let helper = support::workspace(1, true);
     support::setup(&helper, "export");

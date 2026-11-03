@@ -5,7 +5,7 @@
 #[cfg(test)]
 mod tests;
 
-/// Stream and scope comparison configuration for replay assertions.
+/// Stream and scope comparison configuration for replay assertions and [`assert_errors`] checks.
 #[derive(Clone, Copy)]
 pub(super) struct Comparison<'a> {
     pub stdout: fn(&str) -> String,

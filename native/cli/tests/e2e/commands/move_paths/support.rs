@@ -9,7 +9,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::BTreeMap, fs, path::Path};
 
-/// Creates a workspace connected to a remote scope with `count` tracked and optionally `tagged` components.
+/// Creates a [`Helper`] workspace connected to a remote scope with `count` tracked and optionally `tagged` components.
 pub(crate) fn workspace(count: usize, tagged: bool) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

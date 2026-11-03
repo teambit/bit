@@ -4,7 +4,7 @@
 
 use serde_json::Value;
 use std::collections::BTreeMap;
-/// Validates and projects `node_modules/.modules.yaml` `prunedAt` timestamps within `started..=ended`.
+/// Validates and projects `node_modules/.modules.yaml` `prunedAt` timestamps within `started..=ended` via [`window`] and [`replace`].
 pub(super) fn project(
     files: &mut BTreeMap<String, Vec<u8>>,
     baseline: Option<&[u8]>,

@@ -5,7 +5,7 @@
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
-/// Relative directory name used for outside-workspace `bit show` help and argument error tests in [`show_help_and_argument_errors_match_released_node`].
+/// Relative directory name (`outside-show-help`) used for outside-workspace `bit show` help and argument error tests in [`show_help_and_argument_errors_match_released_node`].
 const OUTSIDE_DIR: &str = "outside-show-help";
 
 /// Verifies `bit show` help and missing-ID argument errors match `Node.js` across [`OUTSIDE_DIR`], bare scopes, and workspaces via [`Helper::cmd_in_with`].

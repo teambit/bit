@@ -9,7 +9,7 @@ use std::{collections::BTreeMap, ffi::OsStr, fs, path::Path, time::SystemTime};
 /// Captured `(exit_code, stdout, stderr, scope_tree)` tuple for `bit gc --restore` conflict tests.
 type Snapshot = (Option<i32>, String, String, BTreeMap<String, Vec<u8>>);
 
-/// Verifies directory conflicts during `bit gc --restore` retain the completed copy prefix and original backup.
+/// Verifies directory conflicts during `bit gc --restore` retain the completed copy prefix and original backup via [`compare_failure`].
 #[test]
 fn restore_directory_conflict_keeps_the_completed_copy_prefix_and_original_backup() {
     for overwrite in [false, true] {

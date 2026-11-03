@@ -8,7 +8,7 @@ use std::fs;
 /// Contents of the `.bitignore`-excluded file inside the relocated directory in [`nested_directory_moves_ignored_bytes_but_reports_only_tracked_files`].
 const IGNORED_TEXT: &str = "ignored bytes\n";
 
-/// Verifies `bit move` relocates [`IGNORED_TEXT`] physically while reporting only tracked files via [`compare`] and [`bitmap`].
+/// Verifies `bit move` relocates [`IGNORED_TEXT`] physically while reporting only tracked files via [`compare`], [`setup`], and [`bitmap`].
 #[test]
 fn nested_directory_moves_ignored_bytes_but_reports_only_tracked_files() {
     let helper = workspace(0, false);

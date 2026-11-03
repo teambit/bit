@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Verifies `bit resume-export --delete --force` on file remotes matches `Node.js` without a published runtime.
+/// Verifies `bit resume-export --delete --force` on file remotes matches `Node.js` via [`compare`] without a published runtime.
 #[test]
 fn file_pending_deletion_matches_without_a_published_runtime() {
     for bare in [false, true] {

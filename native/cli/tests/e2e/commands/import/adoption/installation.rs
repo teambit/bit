@@ -9,7 +9,7 @@ use crate::{
 };
 use serde_json::Value;
 use std::fs;
-/// Creates a workspace connected to a remote scope with `count` chained `empty-env` components.
+/// Creates a [`Helper`] workspace connected to a remote scope with `count` chained `empty-env` components.
 fn fixture(count: usize) -> Helper {
     let helper = support::workspace(count, false);
     for index in 1..=count {

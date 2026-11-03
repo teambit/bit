@@ -4,7 +4,7 @@
 
 use crate::commands::move_paths::support::{bitmap, setup, successful, workspace};
 use std::fs;
-/// Canonical aspect ID for `teambit.component/remove`.
+/// Canonical aspect ID (`teambit.component/remove`) cleared or updated during `bit recover` batches.
 const REMOVE: &str = "teambit.component/remove";
 
 /// Verifies wildcard `bit recover` restores all locally soft-deleted components in a single batch.

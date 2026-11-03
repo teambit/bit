@@ -11,7 +11,7 @@ use remote_fixture::publish_remote_fixture;
 use crate::helper::Helper;
 use std::ffi::OsStr;
 
-/// Creates a workspace with two tagged and subsequently modified components for `bit diff` tests.
+/// Creates a [`Helper`] workspace with two tagged and subsequently modified components for `bit diff` tests.
 fn workspace() -> Helper {
     let helper = Helper::new();
     helper.re_init_workspace();

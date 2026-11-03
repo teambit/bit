@@ -5,7 +5,7 @@
 use crate::helper::{Helper, config::read_jsonc};
 use std::{ffi::OsStr, fs};
 
-/// Verifies historical `bit checkout` refreshes advanced remote lane metadata identically to `Node.js`.
+/// Verifies historical `bit checkout` refreshes advanced remote lane metadata identically to `Node.js` via [`read_jsonc`].
 #[test]
 fn historical_checkout_refreshes_an_advanced_remote_lane() {
     let helper = Helper::new();

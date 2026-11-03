@@ -7,7 +7,7 @@ mod tests;
 
 use std::{collections::BTreeMap, fs, io, path::Path};
 
-/// Map of relative metadata paths to normalized [`History`] snapshots.
+/// Map of relative metadata paths to normalized [`History`] backup snapshots.
 pub(super) struct Histories(BTreeMap<String, History>);
 /// Single history store's backup file mapping and normalized metadata contents.
 struct History {

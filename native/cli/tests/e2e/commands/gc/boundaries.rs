@@ -6,7 +6,7 @@ use super::{fixture, objects, orphan, tree};
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
-/// Verifies malformed `Version` `files` metadata causes `bit gc` to decline before any collection effect.
+/// Verifies malformed `Version` `files` metadata in [`fixture`] causes `bit gc` to decline before any collection effect.
 #[test]
 fn malformed_version_files_decline_before_any_collection_effect() {
     let helper = fixture();

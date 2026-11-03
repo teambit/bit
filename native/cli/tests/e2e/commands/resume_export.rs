@@ -16,7 +16,7 @@ use std::{
     sync::{Arc, Barrier},
 };
 
-/// Verifies `bit resume-export` validates all remotes concurrently before persisting objects without `Node.js`.
+/// Verifies `bit resume-export` validates all remotes concurrently via [`validation_server`] before persisting objects without `Node.js`.
 #[test]
 fn export_recovery_validates_all_remotes_then_persists_without_node() {
     for bare in [false, true] {

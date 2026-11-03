@@ -29,7 +29,7 @@ fn a_tagged_component_is_listed() {
     assert!(output.contains("found 1 components"), "{output}");
 }
 
-/// Outdated-component (`bit list --outdated`) end-to-end parity tests.
+/// Outdated-component (`bit list --outdated` / [`outdated::OUTDATED`]) end-to-end parity tests.
 mod outdated {
     use super::{FOO_FIXTURE, Helper, parity};
     use crate::helper::{Run, parse};

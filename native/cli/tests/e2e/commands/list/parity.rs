@@ -15,7 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// Recursively captures file bytes under `root.join(relative)` into `files`.
+/// Recursively captures file bytes under `root.join(relative)` into `files` for [`inventory`].
 fn capture(root: &Path, relative: &Path, files: &mut BTreeMap<PathBuf, Vec<u8>>) {
     let path = root.join(relative);
     if path.is_file() {

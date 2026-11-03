@@ -12,7 +12,7 @@ use crate::helper::{Helper, remote};
 use std::fs;
 use support::{bitmap, compare, json, setup, successful};
 
-/// Creates a workspace with `bar/foo` tracking `foo1.js`, `foo2.js`, and `foo1.spec.js`.
+/// Creates a [`Helper`] workspace with `bar/foo` tracking `foo1.js`, `foo2.js`, and `foo1.spec.js`.
 fn workspace() -> Helper {
     let helper = support::workspace(0, false);
     for file in ["foo1.js", "foo2.js", "foo1.spec.js"] {
