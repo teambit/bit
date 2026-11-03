@@ -1084,7 +1084,15 @@ export async function updateVersions(
     const compMapObj = componentMap.toPlainObject();
     const config = componentMap.config;
     stagedConfig.addComponentConfig(compId, config, compMapObj);
+    const removeConfig = config?.[RemoveAspect.id];
     consumer.bitMap.removeConfig(id);
+    if (removeConfig && removeConfig !== '-' && removeConfig.removed) {
+      // a deleted component is removed from .bitmap at the end of the snap (see removeDeletedComponentsFromBitmap).
+      // until then, keep it marked as removed. otherwise, it's loaded as a workspace component, although its files are
+      // gone, and its dependents in this snap resolve it to the new (deleted) version.
+      componentMap.config = { [RemoveAspect.id]: removeConfig };
+      consumer.bitMap.markAsChanged();
+    }
     const hash = modelComponent.getRef(id.version as string);
     if (!hash) throw new Error(`updateComponentsVersions: unable to find a hash for ${id.toString()}`);
     workspace.scope.legacyScope.stagedSnaps.addSnap(hash?.toString());

@@ -92,16 +92,25 @@ describe('updateDependenciesVersions, a component peer with a range from a polic
 
 const envId = ComponentID.fromString('my-scope/my-env');
 const envPkg = '@my-scope/my-env';
+const laneVersion = 'abc1234567890abcdef1234567890abcdef12345';
 
 /**
- * a component on a lane. its last snap depends on the env (as a dependency and as an extension) in the lane version
- * "abc1234...". the env was deleted from the lane ("bit delete --lane"), so it's in .bitmap as removed, in this version.
- * the env is installed from main in version 2.0.7 and the component config sets the env with version 2.0.7.
+ * a component on a lane. its last snap depends on the env (as a dependency and as an extension) in the given version.
+ * when "removed", the env was deleted from the lane ("bit delete --lane"), so it's in .bitmap as removed.
+ * when "installed", the env is installed in version 2.0.7 (and the component config sets the env with this version).
  */
-async function resolveDeletedDep({ modelVersion }: { modelVersion: string }) {
-  const laneVersion = 'abc1234567890abcdef1234567890abcdef12345';
-  const dependency = new Dependency(envId.changeVersion('2.0.7'), [], envPkg);
-  const extension: any = { extensionId: envId.changeVersion('2.0.7') };
+async function resolveEnvVersion({
+  modelVersion,
+  removed,
+  installed,
+}: {
+  modelVersion: string;
+  removed: boolean;
+  installed: boolean;
+}) {
+  const installedId = installed ? envId.changeVersion('2.0.7') : envId;
+  const dependency = new Dependency(installedId, [], envPkg);
+  const extension: any = { extensionId: installedId };
   const component: any = {
     id: ComponentID.fromString('my-scope/card@0.0.1'),
     dependencies: new Dependencies([dependency]),
@@ -118,7 +127,7 @@ async function resolveDeletedDep({ modelVersion }: { modelVersion: string }) {
     getCurrentLaneObject: async () => undefined,
     consumer: {
       bitmapIdsFromCurrentLane: new ComponentIdList(),
-      bitMap: { getRemoved: () => ComponentIdList.fromArray([envId.changeVersion(laneVersion)]) },
+      bitMap: { getRemoved: () => ComponentIdList.fromArray(removed ? [envId.changeVersion(laneVersion)] : []) },
     },
   };
   const depsResolver = {
@@ -130,21 +139,24 @@ async function resolveDeletedDep({ modelVersion }: { modelVersion: string }) {
   return {
     dependencyVersion: component.dependencies.get()[0].id.version,
     extensionVersion: extension.extensionId.version,
-    laneVersion,
   };
 }
 
 describe('updateDependenciesVersions, a dependency that was deleted from the workspace', () => {
-  it('should not take the deleted version from the model', async () => {
-    const { dependencyVersion, extensionVersion } = await resolveDeletedDep({
-      modelVersion: 'abc1234567890abcdef1234567890abcdef12345',
-    });
-    expect(dependencyVersion).to.equal('2.0.7');
-    expect(extensionVersion).to.equal('2.0.7');
+  it('should prefer the installed or configured version over the version of the last snap', async () => {
+    const result = await resolveEnvVersion({ modelVersion: laneVersion, removed: true, installed: true });
+    expect(result).to.deep.equal({ dependencyVersion: '2.0.7', extensionVersion: '2.0.7' });
   });
-  it('should keep taking the version from the model when it is not the deleted version', async () => {
-    const { dependencyVersion, extensionVersion } = await resolveDeletedDep({ modelVersion: '2.0.5' });
-    expect(dependencyVersion).to.equal('2.0.5');
-    expect(extensionVersion).to.equal('2.0.5');
+  it('should do the same when the deleted component was snapped again, so its version is different', async () => {
+    const result = await resolveEnvVersion({ modelVersion: '2.0.5', removed: true, installed: true });
+    expect(result).to.deep.equal({ dependencyVersion: '2.0.7', extensionVersion: '2.0.7' });
+  });
+  it('should fall back to the version of the last snap when there is no other version', async () => {
+    const result = await resolveEnvVersion({ modelVersion: laneVersion, removed: true, installed: false });
+    expect(result).to.deep.equal({ dependencyVersion: laneVersion, extensionVersion: laneVersion });
+  });
+  it('should keep the version of the last snap when the dependency was not deleted', async () => {
+    const result = await resolveEnvVersion({ modelVersion: '2.0.5', removed: false, installed: true });
+    expect(result).to.deep.equal({ dependencyVersion: '2.0.5', extensionVersion: '2.0.5' });
   });
 });

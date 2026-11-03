@@ -81,14 +81,13 @@ export async function updateDependenciesVersions(
     const getFromDepPackageJsonDueToAutoDetectOverrides = () => (pkg && isPkgInAutoDetectOverrides(pkg) ? id : null);
     // If there is a version in the node_modules/package folder, but it's not in the ws policy,
     // prefer the version from the model over the version from the node_modules
-    const getFromModel = () => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const idFromModel = getIdFromModelDeps(component.componentFromModel!, id);
-      // the model can point to a version that was deleted from the workspace (e.g. "bit delete --lane"). this version
-      // is not available anymore, so skip it and let the next strategies resolve the installed or configured version.
-      if (idFromModel && getRemovedIds().has(idFromModel)) return null;
-      return idFromModel;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const getFromModelAlways = () => getIdFromModelDeps(component.componentFromModel!, id);
+    // when the dependency was deleted from the workspace (e.g. "bit delete --lane"), the version of the last snap is
+    // probably not available anymore (e.g. a lane snap). prefer the installed or the configured version in this case.
+    const getFromModel = () => (isRemovedFromWorkspace(id) ? null : getFromModelAlways());
+    // still better than no version at all.
+    const getFromModelOfRemoved = () => (isRemovedFromWorkspace(id) ? getFromModelAlways() : null);
 
     const strategies = [
       getFromComponentConfig,
@@ -100,6 +99,7 @@ export async function updateDependenciesVersions(
       getFromDepPackageJsonDueToAutoDetectOverrides,
       getFromModel,
       getFromDepPackageJson,
+      getFromModelOfRemoved,
     ];
 
     for (const strategy of strategies) {
@@ -191,9 +191,9 @@ export async function updateDependenciesVersions(
     return dependency;
   }
 
-  function getRemovedIds(): ComponentIdList {
+  function isRemovedFromWorkspace(componentId: ComponentID): boolean {
     if (!removedIds) removedIds = consumer.bitMap.getRemoved();
-    return removedIds;
+    return removedIds.hasWithoutVersion(componentId);
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
