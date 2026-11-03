@@ -10,7 +10,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::{fs, path::Path};
 
-/// Builds a test [`WorkspaceComponent`] fixture for `scope`/`name` with `env_id`.
+/// Builds a test [`WorkspaceComponent`] fixture for `scope`/`name` with `env_id` ([`ComponentId`], [`Path`]).
 fn component(root: &Path, scope: &str, name: &str, env_id: &str) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {

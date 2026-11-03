@@ -6,7 +6,7 @@ use crate::{links::link_tracking_components, model::WorkspaceComponent};
 use indexmap::IndexMap;
 use std::{fs, io, path::Path};
 
-/// Executes [`link_tracking_components`] synchronously on a single-threaded Tokio runtime with [`FakeHost`].
+/// Executes [`link_tracking_components`] synchronously on a single-threaded Tokio runtime with [`FakeHost`] ([`ComponentLinkOptions`], [`WorkspaceComponent`]).
 fn run(root: &Path, components: &[WorkspaceComponent], host: &FakeHost) -> io::Result<()> {
     let dependencies = IndexMap::new();
     let roots = root.join("node_modules/.bit_roots");

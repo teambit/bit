@@ -4,7 +4,7 @@ use super::{Helper, config, setup};
 use serde_json::Value;
 use std::{collections::HashSet, ffi::OsStr, path::Path, process::Command};
 
-/// Exports local workspace objects to the remote scope, using [`seed_after_node_export`] on Windows.
+/// Exports local workspace objects to the remote scope, using [`seed_after_node_export`] on Windows ([`Helper`]).
 pub(crate) fn publish(helper: &Helper) {
     if cfg!(windows) {
         seed_after_node_export(helper);

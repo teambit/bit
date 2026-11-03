@@ -38,7 +38,7 @@ fn failed_upload_is_not_replayed_even_when_fetch_retries_are_enabled() {
     assert_eq!(server.join().unwrap(), 1);
 }
 
-/// Spawns a test TCP server that accepts connections, reads initial bytes, and closes without replying.
+/// Spawns a test TCP server that accepts connections, reads initial bytes, and closes without replying ([`TcpListener`]).
 fn disconnecting_server(
     listener: TcpListener,
     stop: mpsc::Receiver<()>,

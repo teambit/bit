@@ -10,7 +10,7 @@ mod windows;
 use super::{LinkKind, create_link_or_symlink, linked_correctly, may_link_target, remove_path};
 use std::fs;
 
-/// Verifies that `HardLinkOrSymlink` links a file so writes to the source appear at the destination.
+/// Verifies that [`LinkKind::HardLinkOrSymlink`] links a file so writes to the source appear at the destination ([`create_link_or_symlink`]).
 #[test]
 fn hard_link_kind_links_a_file_that_shares_writes_with_its_source() {
     let dir = tempfile::tempdir().unwrap();

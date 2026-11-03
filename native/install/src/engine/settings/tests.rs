@@ -9,7 +9,7 @@ use crate::{config::DependencyResolverConfig, host::HostInfo, model::GlobalConfi
 use pretty_assertions::assert_eq;
 use serde_json::json;
 
-/// Converts string slices into owned `Vec<String>` hoist patterns.
+/// Converts string slices into owned `Vec<String>` hoist patterns ([`hoist_pattern`]).
 fn patterns(items: &[&str]) -> Vec<String> {
     items
         .iter()

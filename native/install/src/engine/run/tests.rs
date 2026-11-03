@@ -20,7 +20,7 @@ fn object(value: Value) -> Map<String, Value> {
     }
 }
 
-/// Configures isolated [`EngineSettings`] rooted at `root` with local `.store` and `.cache` directories.
+/// Configures isolated [`EngineSettings`] rooted at `root` with local `.store` and `.cache` directories ([`settings`], [`Path`]).
 fn workspace_settings(root: &Path) -> EngineSettings {
     let mut settings = settings(
         root,

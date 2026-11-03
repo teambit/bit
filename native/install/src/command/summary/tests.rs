@@ -10,7 +10,7 @@ fn output() -> Output {
     Output::new(false, false, true, Arc::new(|_: &str| {}))
 }
 
-/// Verifies that [`seconds`] formats durations in seconds without trailing zeros like `JavaScript` number formatting.
+/// Verifies that [`seconds`] formats durations in seconds without trailing zeros like `JavaScript` number formatting ([`Duration`]).
 #[test]
 fn prints_seconds_like_javascript() {
     assert_eq!(seconds(Duration::from_millis(437_197)), "437.197");

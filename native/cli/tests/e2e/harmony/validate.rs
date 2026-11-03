@@ -1,5 +1,5 @@
 //! End-to-end tests for `e2e/harmony/validate.e2e.ts` ([`validate_clean_type_errors_lint_errors_skip_tasks_unmodified_pattern_and_empty`]).
-//! Covers type checking, linting, testing, `--skip-tasks`, `--fail-fast`, and `--continue-on-error` validation runs ([`Helper`]).
+//! Covers type checking, linting, testing, `--skip-tasks`, `--fail-fast`, and `--continue-on-error` validation runs ([`Helper`], [`validate_clean_type_errors_lint_errors_skip_tasks_unmodified_pattern_and_empty`]).
 
 use crate::helper::Helper;
 

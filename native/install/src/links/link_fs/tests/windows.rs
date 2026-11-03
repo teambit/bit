@@ -6,7 +6,7 @@ use super::super::{
 };
 use std::{fs, path::Path};
 
-/// Returns `true` when `path` exists as a symlink or directory junction.
+/// Returns `true` when `path` exists as a symlink or directory junction ([`Path`]).
 fn is_link(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|meta| meta.file_type().is_symlink())
 }

@@ -10,7 +10,7 @@ use crate::import::{
 use serde_json::{Value, json};
 use tempfile::TempDir;
 
-/// Default remote scope name for lane merge tests.
+/// Default remote scope name for lane merge tests ([`component`], [`lane_object`]).
 const SCOPE: &str = "org";
 /// Default lane name for lane merge tests.
 const LANE: &str = "dev";

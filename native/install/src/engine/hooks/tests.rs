@@ -10,7 +10,7 @@ use std::{
     sync::Arc,
 };
 
-/// Creates default [`BitHooks`] rooted at `/ws` for unit tests.
+/// Creates default [`BitHooks`] rooted at `/ws` for unit tests ([`PathBuf`]).
 fn hooks() -> BitHooks {
     BitHooks { root: PathBuf::from("/ws"), ..BitHooks::default() }
 }

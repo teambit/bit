@@ -4,7 +4,7 @@
 use super::{HubReply, StatusCode, finish, line};
 use serde_json::{Value, json};
 
-/// Verifies that streamed hub JSON lines preserve wire message order and keep the last terminal [`HubReply`] result.
+/// Verifies that streamed hub JSON lines preserve wire message order and keep the last terminal [`HubReply`] result ([`line`], [`finish`], [`StatusCode`]).
 #[test]
 fn streamed_messages_keep_wire_order_and_last_terminal_result() {
     let mut end = Value::Null;

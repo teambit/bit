@@ -8,7 +8,7 @@ use pretty_assertions::assert_eq;
 use serde_json::json;
 use std::collections::HashMap;
 
-/// Builds a [`GlobalConfig`] map from string `(key, value)` pairs.
+/// Builds a [`GlobalConfig`] map from string `(key, value)` pairs ([`resolve`]).
 fn global(entries: &[(&str, &str)]) -> GlobalConfig {
     entries
         .iter()

@@ -15,7 +15,7 @@ fn archive(entries: &[(&str, &[u8])]) -> Vec<u8> {
     }
     archive.into_inner().unwrap()
 }
-/// Verifies that schema `1.0.0` tar streams require a non-null `.BIT.END` entry while older schemas do not.
+/// Verifies that schema `1.0.0` tar streams require a non-null `.BIT.END` entry while older schemas do not ([`read`], [`archive`]).
 #[test]
 fn current_schema_requires_a_truthy_end_but_old_streams_do_not() {
     let start = br#"{"schema":"1.0.0","scopeName":"remote.scope"}"#;

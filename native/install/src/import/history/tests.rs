@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 use std::{fs, path::Path};
 use tempfile::TempDir;
 
-/// Compresses and writes a typed Bit object (`kind`, `hash`, `value`) into `repo`.
+/// Compresses and writes a typed Bit object (`kind`, `hash`, `value`) into `repo` ([`Repo`], [`compress_json`], [`Value`]).
 fn write(repo: &Repo, kind: &str, hash: &str, value: &Value) {
     repo.write_raw(hash, &compress_json(kind, hash, value).unwrap())
         .unwrap();

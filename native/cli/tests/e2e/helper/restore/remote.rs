@@ -2,7 +2,7 @@
 //! working directory before test replay.
 use super::{Path, fs, io, remove};
 
-/// Keeps a server's current directory while removing every persisted child before replay.
+/// Keeps a server's current directory while removing every persisted child before replay ([`Path`], [`remove`], [`remove_file_or_link`]).
 pub(in crate::helper) fn contents(path: &Path) {
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,

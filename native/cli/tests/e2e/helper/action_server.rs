@@ -15,7 +15,7 @@ pub struct Request {
     pub body: Value,
 }
 
-/// Local TCP server that records a fixed number of HTTP `POST` action requests.
+/// Local TCP server that records a fixed number of HTTP `POST` action requests ([`Request`]).
 pub struct Server {
     pub url: String,
     worker: thread::JoinHandle<Vec<Request>>,

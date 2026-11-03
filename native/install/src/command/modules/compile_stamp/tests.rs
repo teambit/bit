@@ -10,7 +10,7 @@ use std::{
 };
 use tempfile::TempDir;
 
-/// Builds a test [`WorkspaceComponent`] fixture rooted under `comps/{name}`.
+/// Builds a test [`WorkspaceComponent`] fixture rooted under `comps/{name}` ([`ComponentId`], [`Path`]).
 fn component(root: &Path, name: &str) -> WorkspaceComponent {
     WorkspaceComponent {
         id: ComponentId {
