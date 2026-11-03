@@ -74,7 +74,7 @@ fn a_registrar_containing_the_configured_id_matches() {
     assert_eq!(component_slots(&subject, &[registration()]).len(), 3);
 }
 
-/// Verifies that component config policy overrides [`component_slots`], which in turn override the environment policy.
+/// Verifies that component config policy ([`DEPENDENCY_RESOLVER`]) overrides [`component_slots`], which in turn override the environment policy.
 #[test]
 fn config_policy_wins_over_slots_and_slots_over_the_env() {
     let mut subject = configured("my-scope/bar/foo", &["my-scope/extension-add-dependencies"]);

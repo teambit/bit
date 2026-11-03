@@ -24,7 +24,7 @@ fn refresh_overwrites_entries_in_place_and_keeps_existing_history_metadata() {
     );
     assert_eq!(merged["history"]["first"]["components"][0], "s/a@new");
 }
-/// Verifies that [`merge_history`] rejects an incoming `LaneHistory` payload whose `laneHash` differs from the expected lane.
+/// Verifies that [`merge_history`] rejects an incoming `LaneHistory` payload whose `laneHash` differs from the expected lane hash.
 #[test]
 fn incoming_history_for_another_stable_lane_is_rejected() {
     let incoming = json!({"laneHash":"b".repeat(40),"history":{}});

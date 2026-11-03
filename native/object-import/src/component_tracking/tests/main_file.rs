@@ -38,7 +38,7 @@ fn explicit_missing_does_not_guess() {
 fn one_file_is_main() {
     assert_eq!(find(&["sole.txt"], None, None).unwrap(), "sole.txt");
 }
-/// Verifies that [`find`] prefers `index.js` over `index.ts` according to Bit's main file extension precedence.
+/// Verifies that [`find`] (`choose`) prefers `index.js` over `index.ts` according to Bit's main file extension precedence.
 #[test]
 fn index_extension_precedence() {
     assert_eq!(find(&["index.ts", "index.js"], None, None).unwrap(), "index.js");

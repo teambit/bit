@@ -47,7 +47,7 @@ fn include_prerelease_admits_prereleases_of_other_tuples() {
     assert!(!satisfies_including_prerelease("not a version", "^2.0.0"));
 }
 
-/// Verifies [`coerce`] output against npm `semver` 7.7.1 [`golden`] cases.
+/// Verifies [`coerce`] output against npm `semver` 7.7.1 [`golden`] cases via [`text`].
 #[test]
 fn coerce_matches_semver_7() {
     for case in golden()["coerce"].as_array().unwrap() {

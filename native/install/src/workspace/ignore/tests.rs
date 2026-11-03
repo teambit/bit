@@ -19,7 +19,7 @@ fn regex_sources_match_node_ignore() {
     }
 }
 
-/// Verifies that [`Ignore::filter`] matches `node-ignore` 3.3.10 golden path filter results.
+/// Verifies that [`Ignore::filter`] matches `node-ignore` 3.3.10 [`golden`] path filter results.
 #[test]
 fn filters_match_node_ignore() {
     let paths: Vec<String> = golden::PATHS

@@ -52,7 +52,7 @@ fn no_optional_is_a_literal_flag() {
     assert!(!options(&["install", "--no-optional=false"]).no_optional);
 }
 
-/// Verifies that `--disallow-scripts` overrides `--allow-scripts` for matching package names on [`InstallOptions`].
+/// Verifies that `--disallow-scripts` overrides `--allow-scripts` for matching package names on [`InstallOptions`] via [`options`].
 #[test]
 fn disallow_scripts_wins() {
     let parsed = options(&["install", "--allow-scripts", "a, b,", "--disallow-scripts=b"]);

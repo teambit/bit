@@ -34,7 +34,7 @@ fn run(entries: Vec<(&str, IndexEntry)>) -> Deduped {
     hoist(&index, false).expect("hoist")
 }
 
-/// Runs [`hoist`] on a single [`DEP`] entry constructed from `ranges` and `field`.
+/// Runs [`hoist`] on a single [`DEP`] [`IndexEntry`] constructed from `ranges` and `field` via [`items`].
 fn single(ranges: &[&str], field: Field) -> Deduped {
     run(vec![(DEP, IndexEntry { items: items(ranges, field), preserved: None })])
 }

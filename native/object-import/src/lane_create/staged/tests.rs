@@ -14,7 +14,7 @@ const SECOND: &str = "2222222222222222222222222222222222222222";
 /// Synthetic 40-hex-character `Lane` object hash created by [`plan`].
 const LANE: &str = "dddddddddddddddddddddddddddddddddddddddd";
 
-/// Creates a temporary workspace fixture with `alpha` on `main` and an optional exported `Lane` object.
+/// Creates a temporary workspace fixture with `alpha` ([`MODEL`], [`FIRST`], [`SECOND`]) on `main` and an optional exported `Lane` object.
 fn fixture(exported: bool) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

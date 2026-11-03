@@ -43,7 +43,7 @@ fn mixed_parallel_preflight_does_not_share_authority_with_uncached_inputs() {
     assert_eq!(cached_response(&directory.0, &inputs, &mut state)["failed"], true);
     assert!(!target.exists());
 }
-/// Verifies that cache authority (`3`) still fails on a cache miss when the underlying disk object is corrupt.
+/// Verifies that cache authority (`3`) on [`State`] still fails on a cache miss when the underlying disk object is corrupt.
 #[test]
 fn cache_authority_never_hides_invalid_disk_bytes_on_a_cache_miss() {
     let directory = Directory::new();

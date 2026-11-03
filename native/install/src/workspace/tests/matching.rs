@@ -55,7 +55,7 @@ fn variants_sort_by_specificity_and_stop_propagation() {
     assert!((namespaced.max_specificity - 1.05).abs() < f64::EPSILON);
 }
 
-/// Verifies that directory variant patterns reject globs and match only whole path segments.
+/// Verifies that directory variant patterns ([`variants`]) reject globs and match only whole path segments via [`by_root_dir_and_name`].
 #[test]
 fn dir_variants_reject_globs_and_match_whole_segments() {
     let bad = variants(&json!({ "comps/*": {} }));

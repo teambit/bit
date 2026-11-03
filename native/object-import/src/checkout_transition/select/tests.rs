@@ -67,7 +67,7 @@ fn current_version_is_observed_after_resolution_and_drives_merge() {
     assert_eq!(output["directive"], json!({"kind":"target","version":"2.0.0","merge":true}));
 }
 
-/// Verifies that `--revert` replaces modified workspace files directly at the requested version without planning a merge.
+/// Verifies that `--revert` on [`State`] replaces modified workspace files directly at the requested version without planning a merge.
 #[test]
 fn revert_replaces_modified_files_without_planning_a_merge() {
     let mut state = State::default();

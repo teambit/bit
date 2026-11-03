@@ -38,7 +38,7 @@ fn normalizes_all_newline_styles_on_both_platforms_and_preserves_binary() {
     assert_eq!(normalize(bytes, true), b"a\r\nb\r\nc\r\nd");
     assert_eq!(normalize(b"\0\r\n".to_vec(), false), b"\0\r\n");
 }
-/// Verifies that [`normalize`] preserves invalid UTF-8 when no newline changes occur and replaces invalid sequences otherwise.
+/// Verifies that [`normalize`] preserves invalid UTF-8 when no newline changes occur and replaces invalid sequences otherwise ([`binary`]).
 #[test]
 fn retains_invalid_utf8_if_no_newline_changes_and_decodes_when_changes_exist() {
     let mut bytes = vec![b'a'; 100];

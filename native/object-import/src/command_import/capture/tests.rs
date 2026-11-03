@@ -58,7 +58,7 @@ fn file_and_virtual_sources_preserve_received_compressed_bytes() {
     store.write(&hash, &virtual_file.bytes).unwrap();
     assert_eq!(fs::read(object_path(&output, &hash)).unwrap(), compressed);
 }
-/// Verifies that [`Capture::sources`] rejects a `Source` object whose content hash does not match the requested reference.
+/// Verifies that [`Capture::sources`] rejects a `Source` object ([`source`]) whose content hash does not match the requested reference.
 #[test]
 fn mismatched_source_reference_declines_before_publication() {
     let root = tempfile::tempdir().unwrap();

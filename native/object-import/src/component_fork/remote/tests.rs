@@ -70,7 +70,7 @@ fn file_and_http_capture_preserve_identical_version_and_binary_source_without_pu
             .exists(),
     );
 }
-/// Verifies that [`objects::http`] rejects forged `Source` SHA-1 identities and duplicate logical `relativePath` entries.
+/// Verifies that [`objects::http`] rejects forged `Source` SHA-1 identities ([`object`]) and duplicate logical `relativePath` entries on [`fixture`].
 #[test]
 fn forged_http_source_identity_and_duplicate_logical_paths_are_rejected() {
     let (directory, mut items) = fixture();

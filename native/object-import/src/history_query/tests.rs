@@ -3,7 +3,7 @@
 
 use super::{lines, show};
 use serde_json::json;
-/// Verifies that [`show::toposort`] matches `ClearGraph` reverse depth-first topological ordering and rejects directed cycles.
+/// Verifies that [`show::toposort`] matches `ClearGraph` reverse depth-first topological ordering and rejects directed cycles in history queries.
 #[test]
 fn topological_order_matches_reverse_cleargraph_depth_first_walk() {
     let input = json!({"nodes":["a","b","c","d"],"edges":[{"source":"a","target":"b"},{"source":"a","target":"c"},{"source":"b","target":"d"},{"source":"c","target":"d"}]});

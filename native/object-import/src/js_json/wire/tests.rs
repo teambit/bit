@@ -67,7 +67,7 @@ fn compact_primitives_and_arrays_preserve_tagged_values_and_javascript_bytes() {
     );
 }
 
-/// Verifies that [`Value`] deserialization rejects bare numbers and untagged objects while accepting `null`, `false`, `""`, and `[]`.
+/// Verifies that [`Value`] deserialization rejects bare numbers and untagged objects while accepting `null`, `false`, `""`, and `[]` in `JavaScript` wire payloads.
 #[test]
 fn compact_values_reject_ambiguous_numbers_and_untagged_objects() {
     for value in [

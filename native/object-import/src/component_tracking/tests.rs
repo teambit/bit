@@ -13,7 +13,7 @@ use std::{
 };
 /// Monotonic counter for unique component tracking test directory names.
 static NEXT: AtomicU64 = AtomicU64::new(0);
-/// Creates an isolated temporary workspace directory with `.bit`, `workspace.jsonc`, and `.bitmap`.
+/// Creates an isolated temporary workspace directory (via [`NEXT`]) with `.bit`, `workspace.jsonc`, and `.bitmap`.
 pub(super) fn fixture() -> PathBuf {
     let root = std::env::temp_dir()
         .join(format!(

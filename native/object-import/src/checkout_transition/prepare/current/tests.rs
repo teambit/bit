@@ -57,7 +57,7 @@ fn stale_or_mismatched_observations_never_fall_back_to_a_new_disk_read() {
     assert!(load(&[file], &std::env::temp_dir(), &mut 0, &mut 0, Some(&snapshots)).is_err());
 }
 
-/// Verifies that [`load`] counts the original UTF-8 BOM bytes toward the whole-plan budget.
+/// Verifies that [`load`] counts the original UTF-8 BOM bytes on [`observed`] toward the whole-plan budget.
 #[test]
 fn retained_reads_count_the_original_bom_bytes_toward_the_whole_plan_budget() {
     let (file, snapshots) = observed(b"original");

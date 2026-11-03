@@ -68,7 +68,7 @@ fn track_keeps_bitmap_packages_and_configuration() {
     assert!(!root.join(".bit/bitmap-history-metadata.txt").exists());
     fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that [`LocalBatch::commit`] fails before deleting any source files when `package.json` changed after preparation.
+/// Verifies that [`LocalBatch::commit`] fails before deleting any source files in [`fixture`] when `package.json` changed after [`LocalBatch::prepare`].
 #[test]
 fn stale_configuration_fails_before_removing_any_source() {
     let root = fixture();

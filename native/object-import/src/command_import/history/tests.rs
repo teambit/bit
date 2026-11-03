@@ -32,7 +32,7 @@ fn large_history_merge_preserves_incoming_overrides_and_existing_only_order() {
     assert_eq!(merged["name"], old["name"]);
 }
 
-/// Verifies that [`merge`] preserves existing rows and `graphCompleteRefs` metadata when merging empty `VersionHistory` payloads.
+/// Verifies that [`merge`] preserves existing [`row`] entries and `graphCompleteRefs` metadata when merging empty [`history`] (`VersionHistory`) payloads.
 #[test]
 fn empty_history_merges_preserve_rows_and_existing_graph_metadata() {
     let mut old = history((0..3).map(row).collect());

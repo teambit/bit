@@ -81,7 +81,7 @@ fn prepare_retains_verified_source_and_random_version_identity() {
     assert_eq!(fs::read(spool).expect("spool bytes"), b"hello\n");
     assert!(output["targetFiles"][0].get("contents").is_none());
 }
-/// Verifies that a stale `current` workspace snapshot causes [`apply`] to decline before writing any private spool files.
+/// Verifies that a stale `current` workspace snapshot on [`Fixture`] causes [`apply`] to decline before writing any private spool files.
 #[test]
 fn stale_current_snapshot_declines_before_any_private_write() {
     let fixture = Fixture::new();

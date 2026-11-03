@@ -3,7 +3,7 @@
 
 use super::{Observed, project};
 use serde_json::json;
-/// Verifies that [`project::apply`] preserves Bit's textual prefix replacement behavior across `.bitmap` `rootDir` entries.
+/// Verifies that [`project::apply`] preserves Bit's textual prefix replacement behavior across `.bitmap` `rootDir` entries in [`Observed`].
 #[test]
 fn projected_roots_preserve_published_textual_prefix_matching() {
     let root = std::env::temp_dir().join("bit-move-unit");

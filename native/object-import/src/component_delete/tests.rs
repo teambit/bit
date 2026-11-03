@@ -96,7 +96,7 @@ fn changed_repository_prevents_every_package_and_bitmap_write() {
     assert_eq!(fs::read(root.join(".bitmap")).unwrap(), bitmap);
     fs::remove_dir_all(root).unwrap();
 }
-/// Verifies that `Scope::Range` and `Scope::UpdateMain` deletions preserve workspace `node_modules` packages and source files.
+/// Verifies that [`Scope::Range`] and [`Scope::UpdateMain`] deletions on [`Batch`] preserve workspace `node_modules` packages and source files.
 #[test]
 fn range_and_update_main_preserve_packages_and_source_files() {
     let root = fixture();

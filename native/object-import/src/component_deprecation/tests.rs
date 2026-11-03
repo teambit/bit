@@ -16,7 +16,7 @@ fn replacement_metadata_retains_scope_name_and_version() {
         json!({"deprecate":true,"newId":{"scope":"scope","name":"new/name","version":"2.0.0"}}),
     );
 }
-/// Verifies that [`set_config`] produces distinct `range` and `newId` shapes for range deprecation and undeprecation.
+/// Verifies that [`set_config`] produces distinct `range` and `newId` shapes under [`ASPECT`] for range deprecation and undeprecation.
 #[test]
 fn range_and_undeprecation_have_distinct_config_shapes() {
     let mut bitmap = bitmap();

@@ -81,7 +81,7 @@ fn public_alias_lookup_matches_the_authoritative_owner_and_retains_scope_preimag
     assert!(plan.validate().is_err());
 }
 
-/// Verifies that `lane_index_id` and [`resolve_local`] accept both structured `{ scope, name }` objects and versioned lane ID strings.
+/// Verifies that `lane_index_id` and [`resolve_local`] accept both structured `{ scope, name }` objects and versioned lane [`Id`] strings.
 #[test]
 fn lane_id_helpers_accept_object_and_versioned_string_ids() {
     let obj_row = json!({"id": {"scope": "my.scope", "name": "dev/lane"}});

@@ -38,7 +38,7 @@ fn paints_only_with_colors() {
     );
 }
 
-/// Verifies that [`Output`] formats status, console, success, warning, and failure lines like `ora` when not on a TTY.
+/// Verifies that [`Output`] formats status, console, success, warning, and failure lines like `ora` when not on a TTY ([`STATUS_TEST`]).
 #[test]
 fn writes_like_ora_without_a_tty() {
     let _status = STATUS_TEST.lock().unwrap();

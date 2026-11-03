@@ -57,7 +57,7 @@ fn deferred_alias_requires_its_exact_scope_preimage_before_publication() {
     assert_eq!(std::fs::read(&path).unwrap(), b"provider change");
 }
 
-/// Verifies that a deferred switch tracking alias is not written by `imported.commit()` until `tracking.commit()` runs.
+/// Verifies that a deferred switch tracking alias for [`Id`] is not written by `imported.commit()` until `tracking.commit()` runs.
 #[test]
 fn deferred_alias_is_not_written_by_the_earlier_object_import() {
     let directory = tempfile::tempdir().unwrap();

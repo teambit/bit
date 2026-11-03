@@ -64,7 +64,7 @@ fn track_all_files_keeps_generated_files_and_ignored_files_apply() {
     );
 }
 
-/// Verifies that root component file discovery excludes nested component directories and applies nested `.gitignore` files.
+/// Verifies that root component file discovery on [`FileRules`] excludes nested component directories and applies nested `.gitignore` files.
 #[test]
 fn workspace_root_component_leaves_nested_components_out_and_honors_nested_ignores() {
     let dir = tempdir().unwrap();

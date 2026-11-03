@@ -11,7 +11,7 @@ fn owner_selection_requires_the_owner_separator_and_preserves_scope_suffixes() {
     assert_eq!(selection::scope("older.team", &options), None);
     assert_eq!(selection::scope("old", &options), None);
 }
-/// Verifies that [`selection::entries_with_default`] preserves component namespaces and forces `preserve: true` for owner renames.
+/// Verifies that [`selection::entries_with_default`] preserves component namespaces and forces `preserve: true` on [`Options`] for owner renames.
 #[test]
 fn scope_selection_keeps_namespaces_and_forces_owner_preservation() {
     let bitmap = serde_json::json!({"ui/button":{"name":"ui/button","rootDir":"button","scope":"","defaultScope":"old.team","version":""}});

@@ -51,7 +51,7 @@ fn an_existing_symlink_ancestor_declines_before_source_capture() {
     fs::remove_dir_all(root).unwrap();
 }
 
-/// Verifies that [`Observed::validate`] fails if a directory ancestor is swapped for a symlink after [`Observed::ancestors`] runs.
+/// Verifies that [`Observed::validate`] fails if a directory ancestor in [`fixture`] is swapped for a symlink ([`link`]) after [`Observed::ancestors`] runs.
 #[cfg(any(unix, windows))]
 #[test]
 fn an_ancestor_swapped_for_a_symlink_cannot_reuse_identical_sources() {

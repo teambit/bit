@@ -81,7 +81,7 @@ fn parallel_plans_preserve_serial_proposals_and_source_proofs() {
     assert!(parallel[1].validate().is_err());
 }
 
-/// Verifies that [`Batch::prepare_plans`] reports the first failing [`Plan::prepare`] error in request order without mutating disk files.
+/// Verifies that [`Batch::prepare_plans`] reports the first failing [`Plan::prepare`] error on [`workspace`] in request order without mutating disk files.
 #[test]
 fn parallel_failures_report_the_first_requested_plan_without_publication() {
     let (directory, mut options, facts) = workspace();

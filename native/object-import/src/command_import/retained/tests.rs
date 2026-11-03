@@ -41,7 +41,7 @@ fn retaining_native_writes_rebases_only_owned_paths_and_preserves_other_read_pro
     assert!(capture.accept_published(&published).is_err());
 }
 
-/// Verifies that [`Capture::accept_published`] rejects disk bytes that do not match the expected native publication payload.
+/// Verifies that [`Capture::accept_published`] rejects disk bytes under [`Directory`] that do not match the expected native publication payload.
 #[test]
 fn retaining_a_write_rejects_bytes_that_differ_from_the_native_publication() {
     let directory = Directory::new();

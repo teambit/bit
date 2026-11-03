@@ -54,7 +54,7 @@ fn remote_fork_refactors_id_names_and_filename_while_preserve_only_keeps_names()
         b"module.exports = 'target new.scope/target';",
     );
 }
-/// Verifies that [`Plan::apply_files`] aborts without copying if source files change after [`Plan::prepare`].
+/// Verifies that [`Plan::apply_files`] aborts without copying if source files in [`fixture`] change after [`Plan::prepare`].
 #[test]
 fn changed_source_and_changed_workspace_prevent_any_copy() {
     let (directory, options, source) = fixture();

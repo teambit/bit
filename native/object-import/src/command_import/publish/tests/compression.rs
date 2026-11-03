@@ -22,7 +22,7 @@ fn component_matches_the_released_node_compressed_stream() {
     );
 }
 
-/// Verifies that `VersionHistory` serialization compresses to the exact Node.js `zlib.deflate` stream.
+/// Verifies that `VersionHistory` serialization compresses to the exact `Node.js` `zlib.deflate` stream via [`exact`].
 #[test]
 fn version_history_matches_the_released_node_compressed_stream() {
     exact(

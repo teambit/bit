@@ -15,7 +15,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-/// Returns a shared 4-thread Rayon pool for parallel checkout unit tests.
+/// Returns a shared 4-thread Rayon pool for parallel checkout unit tests ([`serve`]).
 fn pool() -> &'static rayon::ThreadPool {
     static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
         rayon::ThreadPoolBuilder::new()

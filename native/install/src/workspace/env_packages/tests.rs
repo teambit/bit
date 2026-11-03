@@ -69,7 +69,7 @@ fn an_external_env_is_named_by_its_stored_pkg_config() {
     );
 }
 
-/// Verifies that [`external_env_packages`] excludes environment [`component`] entries present in the workspace.
+/// Verifies that [`external_env_packages`] excludes environment [`component`] entries present in the workspace from [`ScopeObjects`].
 #[test]
 fn a_workspace_env_is_not_external() {
     let scope = tempfile::tempdir().unwrap();
