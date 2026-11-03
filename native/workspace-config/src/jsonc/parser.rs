@@ -15,7 +15,7 @@ pub(super) struct Parsed {
     pub(super) after_all: Vec<Comment>,
 }
 
-/// Stateful recursive-descent `JSONC` parser tracking comment hosts and property symbols.
+/// Stateful recursive-descent `JSONC` parser over [`Token`] items tracking [`Comments`] hosts and property symbols.
 #[derive(Debug, Clone, PartialEq)]
 struct Parser {
     tokens: Vec<Token>,

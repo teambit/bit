@@ -43,7 +43,7 @@ fn record(file: &Path, raw: Vec<u8>) -> Record {
     let (metadata, body) = read::canonical(file, raw);
     Record { metadata, offset: 0, bytes: body.len(), body, read_token: None }
 }
-/// Reads `files` in parallel, retains optional snapshot tokens, and frames the binary [`Output`].
+/// Reads `files` ([`PathBuf`]) in parallel via [`record`], retains optional snapshot tokens ([`retain`]), and frames the binary [`Output`].
 fn prepare(
     id: u32,
     files: &[PathBuf],

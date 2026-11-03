@@ -28,7 +28,7 @@ pub(super) struct Matcher {
     pub(super) changes: Vec<(String, bool)>,
 }
 impl Matcher {
-    /// Compiles and validates `policy` into a reusable [`Matcher`].
+    /// Compiles and validates `policy` ([`Policy`]) [`Rule`] entries into a reusable [`Matcher`].
     pub(super) fn new(policy: Policy) -> io::Result<Self> {
         if policy.rules.len() > 4096 || policy.cache.len() > 16384 {
             return Err(invalid("inventory ignore policy limit"));

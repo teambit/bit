@@ -9,7 +9,7 @@ pub fn global_config_dir() -> PathBuf {
     cache_root().join("config")
 }
 
-/// `CACHE_ROOT` honors `BIT_GLOBALS_DIR` before the published platform-specific defaults.
+/// `CACHE_ROOT` honors `BIT_GLOBALS_DIR` via [`non_empty_env`] before the published platform-specific [`home_dir`] defaults.
 #[must_use]
 #[inline]
 pub fn cache_root() -> PathBuf {

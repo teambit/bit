@@ -78,7 +78,7 @@ pub fn detect_indent(text: &str) -> String {
     }
 }
 
-/// `/^(?:( )+|\t+)/`: a run of spaces or a run of tabs, not both.
+/// `/^(?:( )+|\t+)/`: a run of spaces or a run of tabs classified by [`leading`], not both.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Leading {
     Spaces(usize),

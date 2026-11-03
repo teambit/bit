@@ -10,7 +10,7 @@ use std::io;
 type Choice = Option<(String, Option<String>)>;
 /// Selected `(version, range, from_config)` tuple for a dependency entry.
 type Selected = Option<(String, Option<String>, bool)>;
-/// Selects the highest-precedence `(version, range, from_config)` tuple for `identity`.
+/// Selects the highest-precedence [`Selected`] `(version, range, from_config)` tuple for `identity` via [`package_policy`] and [`default_version`].
 pub(super) fn select(
     index: &super::index::Index<'_>,
     identity: &str,

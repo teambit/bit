@@ -46,7 +46,7 @@ pub(in crate::workspace::engine) fn project(value: &Value) -> io::Result<Value> 
     Ok(output)
 }
 
-/// Validates and visits flattened dependency entries across `value`.
+/// Validates and visits flattened dependency entries across `value` ([`Value`]) for [`validate`] and [`project`].
 fn flattened(value: &Value, mut visit: impl FnMut(Value)) -> io::Result<()> {
     for field in ["flattenedDependencies", "flattenedDevDependencies"] {
         let Some(rows) = value

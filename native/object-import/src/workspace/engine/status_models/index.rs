@@ -7,7 +7,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, fs::File, io, path::Path};
 
-/// Single component entry parsed from a scope's `index.json` file.
+/// Single component entry ([`Id`]) parsed from a scope's `index.json` file via [`read_at`] and [`parse_items`].
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Item {

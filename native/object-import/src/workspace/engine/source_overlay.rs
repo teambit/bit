@@ -15,7 +15,7 @@ use std::{
     sync::Arc,
 };
 
-/// Cloneable handle to a sealed, command-owned filesystem overlay view.
+/// Cloneable handle to a sealed, command-owned filesystem overlay view backed by [`Data`].
 #[derive(Clone)]
 pub(super) struct SourceOverlay {
     data: Arc<Data>,

@@ -16,7 +16,7 @@ pub(in crate::workspace::engine) struct Request {
     version: String,
 }
 
-/// Reads the stored `Version` and `Source` file entries for `request` from the local scope.
+/// Reads the stored `Version` ([`reference`]) and `Source` [`files`] entries for `request` ([`Request`]) from the local scope.
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,

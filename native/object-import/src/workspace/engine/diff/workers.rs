@@ -8,7 +8,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-/// Executes `git diff` across `files` using a bounded worker pool and preserves input order.
+/// Executes `git diff` across `files` ([`Prepared`]) using [`worker_batch`] and preserves input order via [`assemble_ordered`].
 /// Caps parallel worker count at four and short-circuits remaining work on the first error.
 pub(super) fn execute(
     files: &[Prepared],

@@ -19,7 +19,7 @@ pub fn match_patterns(file: &str, patterns: &[String]) -> bool {
             .all(|pattern| !matches(pattern[1..].trim_start(), file))
 }
 
-/// Whether `path` (`/`-separated, relative) matches `pattern`.
+/// Whether `path` (`/`-separated, relative) matches `pattern` via [`match_parts`].
 #[must_use]
 pub fn matches(pattern: &str, path: &str) -> bool {
     let path = path.trim().trim_start_matches("./");

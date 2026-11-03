@@ -6,7 +6,7 @@ use std::fmt::Write as _;
 /// Two-space indentation unit used by `comment-json` `stringify(value, undefined, 2)`.
 const INDENT: &str = "  ";
 
-/// Whitespace as JavaScript's `String.prototype.trim` sees it.
+/// Whitespace as `JavaScript`'s `String.prototype.trim` sees it for [`trim_end`] and [`join`].
 #[inline]
 fn is_js_whitespace(character: char) -> bool {
     (character.is_whitespace() && character != '\u{0085}') || character == '\u{feff}'

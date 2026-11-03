@@ -8,7 +8,7 @@ use std::{
     fs, io,
     path::{Component, Path, PathBuf},
 };
-/// Validates that `target` source overlays reside inside an ordinary absolute temporary directory.
+/// Validates that `target` ([`Target`]) source overlays reside inside an ordinary absolute temporary directory for [`source_path`].
 /// Rejects overlay keys that are not declared in `target.files` or exceed 4,096 entries.
 #[inline]
 pub(super) fn validate(target: &Target) -> io::Result<()> {

@@ -52,7 +52,7 @@ struct BitmapState {
     locally_removed: bool,
 }
 
-/// Assembles the complete workspace status result JSON object for `request`.
+/// Assembles the complete workspace status result JSON object for `request` ([`Request`]) via [`current`], [`model::append`], and [`autotag::pending`].
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = empty(&request.current_lane_id);

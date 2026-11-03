@@ -24,7 +24,7 @@ pub(in crate::workspace::engine) struct Request {
     modified_only: bool,
 }
 
-/// Diffs workspace component files against stored local `Version` models without an import overlay.
+/// Diffs workspace component files against stored local `Version` models without an import overlay via [`read_overlay`].
 #[inline]
 pub(in crate::workspace::engine) fn read(
     request: &Request,

@@ -42,7 +42,7 @@ pub fn read_global_config_with(
     Ok(if parsed.is_null() { Value::Object(Map::new()) } else { parsed })
 }
 
-/// Install's supported scalar setting projection preserves empty strings and boolean/number text.
+/// Install's supported scalar setting projection from `value` ([`Value`]) preserves empty strings and boolean/number text.
 /// Non-scalar JSON values (`Null`, `Array`, and `Object`) return `None`.
 #[must_use]
 #[inline]

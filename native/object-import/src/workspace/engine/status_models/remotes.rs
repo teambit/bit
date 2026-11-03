@@ -33,7 +33,7 @@ pub(super) fn read(root: &Path, models: &[Value]) -> io::Result<HashMap<String, 
     }
     Ok(refs)
 }
-/// Reads the remote `main` ref entries for `scope` under `remotes_dir`.
+/// Reads the remote `main` ref entries ([`Value`]) for `scope` under `remotes_dir` ([`Path`]) within `budget` ([`Budget`]).
 #[inline]
 fn rows(remotes_dir: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
     if scope.is_empty()

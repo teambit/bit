@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Resolves a relative `TypeScript` 5.9 `Node10` module specifier from `parent` under `budget`.
+/// Resolves a relative `TypeScript` 5.9 `Node10` module specifier from `parent` ([`Path`]) via [`node_candidate`] under `budget` ([`Budget`]).
 /// Uses fixed `{ module: CommonJS }` semantics and falls back to `CommonJS` resolution when untyped.
 pub(super) fn lookup(
     dependency: &str,

@@ -27,7 +27,7 @@ pub(in crate::workspace::engine) struct Request {
     lane: Option<Value>,
 }
 
-/// Reads per-version file content and hash history for `request` across local scope objects.
+/// Reads per-version file content and hash history for `request` ([`Request`]) across local scope objects via [`rows`].
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,

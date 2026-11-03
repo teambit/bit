@@ -45,7 +45,7 @@ impl Document {
         Ok(Self { root: parsed.root, before_all: parsed.before_all, after_all: parsed.after_all })
     }
 
-    /// The whole document as plain JSON.
+    /// The whole [`Document`] as plain JSON ([`Value`]) via [`Node::to_value`].
     #[must_use]
     #[inline]
     pub fn value(&self) -> Value {

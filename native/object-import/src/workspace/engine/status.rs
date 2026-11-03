@@ -5,7 +5,7 @@ use std::{collections::HashMap, io};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-/// Relative path and SHA-1 hash pair for workspace status file comparisons.
+/// Relative path and SHA-1 hash pair for workspace status file comparisons via [`compare`].
 ///
 /// Both fields are trimmed and validated before hash comparison.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

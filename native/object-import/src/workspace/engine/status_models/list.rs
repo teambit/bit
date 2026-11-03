@@ -35,7 +35,7 @@ struct LaneId {
     scope: String,
     name: String,
 }
-/// Lists all indexed component rows and sorted lane component IDs for `request`.
+/// Lists all indexed component rows and sorted lane component IDs for `request` ([`Request`]) via [`lookup_lane_head`].
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,

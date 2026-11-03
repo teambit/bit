@@ -13,7 +13,7 @@ pub(super) struct File {
     pub(super) cost: usize,
 }
 
-/// Captures and normalizes all workspace source files across `request` targets in parallel.
+/// Captures and normalizes all workspace source [`File`] items across `request` ([`Request`]) targets in parallel via [`one`] and [`group_target_files`].
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Vec<File>>> {
     super::super::super::count(request.targets.len())?;
     let total_files: usize = request.targets

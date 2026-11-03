@@ -11,7 +11,7 @@ pub(super) fn hash(model: &Value) -> io::Result<String> {
     Ok(crate::snapshot_projection::semantic(&project(model)?)?.hash)
 }
 
-/// Projects `model` into the canonical [`Js`] value structure used for semantic hashing.
+/// Projects `model` ([`Value`]) via [`fields`] and [`extension`] into the canonical [`Js`] value structure used for semantic hashing.
 pub(super) fn project(model: &Value) -> io::Result<Js> {
     let mut fields = fields(model)?;
     for field in ["dependencies", "devDependencies"] {

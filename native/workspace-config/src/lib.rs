@@ -62,7 +62,7 @@ pub fn environment_value(key: &str) -> Option<String> {
         .filter(|value| !value.is_empty())
 }
 
-/// Materialize environment overrides for known consumers; listConfig itself excludes them.
+/// Materialize environment overrides via [`effective_with_environment`] for known consumers; `listConfig` itself excludes them.
 #[must_use]
 #[inline]
 pub fn effective(

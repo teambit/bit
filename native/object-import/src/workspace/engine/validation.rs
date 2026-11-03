@@ -9,7 +9,7 @@ use std::{io, path::Path};
 pub(super) fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
-/// Validates that the given path is a bounded, non-empty, absolute UTF-8 path without `..` segments or control characters.
+/// Validates that the given [`Path`] is a bounded, non-empty, absolute UTF-8 path without `..` segments or control characters.
 #[inline]
 pub(super) fn path(path: &Path) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("workspace non-UTF8 path"))?;

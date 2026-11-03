@@ -39,7 +39,7 @@ pub struct Object {
 }
 
 impl Object {
-    /// Keys in JavaScript `Object.keys` order: canonical array indexes
+    /// Keys in `JavaScript` `Object.keys` order: canonical [`array_index`] keys
     /// ascending, then the rest in insertion order.
     #[must_use]
     #[inline]

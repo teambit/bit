@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 /// Map of component or package identities to version strings.
 type Versions = HashMap<String, String>;
-/// Wire request for selecting resolved component and extension versions.
+/// Wire request for selecting resolved component ([`Entry`]) and extension versions from [`Sources`], [`Policy`], and [`Grammar`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Request {

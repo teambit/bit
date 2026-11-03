@@ -29,7 +29,7 @@ pub(super) struct Metadata {
     pub(super) raw_bytes: usize,
 }
 
-/// Reads `files` in parallel under `MAX_RAW` into [`FileRecord`] items.
+/// Reads `files` ([`PathBuf`]) in parallel under [`MAX_RAW`] into [`FileRecord`] items via [`read_with`].
 #[inline]
 pub(super) fn read(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>> {
     read_with(files, pool, record)

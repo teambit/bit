@@ -30,7 +30,7 @@ struct MatchedVariant<'a> {
 /// Sentinel [`ItemMatch`] returned when a variant pattern item does not match.
 const NO_MATCH: ItemMatch = ItemMatch { matched: false, specificity: -1.0, excluded: false };
 
-/// The variants matching a component, merged.
+/// The variants matching a component, merged into [`VariantConfig`] by [`by_root_dir_and_name`].
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct VariantConfig {
     /// Aspect configs of the matches, most specific first, until one stops propagation.

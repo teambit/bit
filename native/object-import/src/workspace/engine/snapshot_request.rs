@@ -4,7 +4,7 @@ use super::{super::snapshots, Request, command, owned_command};
 use serde_json::Value;
 use std::io;
 
-/// Dispatches stash and resolve snapshot callback `request` phases against `snapshots`.
+/// Dispatches stash and resolve snapshot callback `request` ([`Request`]) phases against `snapshots` ([`snapshots::State`]).
 ///
 /// Unhandled `request` variants fall through to [`dispatch_resolve`] and [`owned_command`].
 #[inline]

@@ -31,7 +31,7 @@ struct Target {
     version: String,
 }
 
-/// Lists pending updates from `main` or `forked_lane_id` for `request` against `overlay`.
+/// Lists pending updates from `main` or `forked_lane_id` ([`forked_updates`]) for `request` ([`Request`]) against `overlay` ([`Overlay`]).
 pub(in crate::workspace::engine) fn read(
     request: &Request,
     overlay: &Overlay,

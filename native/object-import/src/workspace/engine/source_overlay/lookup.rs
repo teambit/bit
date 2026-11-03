@@ -16,7 +16,7 @@ enum Found<'a> {
 }
 
 impl SourceOverlay {
-    /// Resolves `path` against spooled entries, removed markers, symlink aliases, and disk.
+    /// Resolves `path` ([`Path`]) into [`Found`] against spooled [`Entry`] items, removed markers, symlink aliases, and disk.
     fn lookup<'a>(
         &'a self,
         path: &Path,

@@ -11,7 +11,7 @@ pub(super) struct Control {
     deprecated: Option<Value>,
 }
 impl Control {
-    /// Extracts removal and deprecation [`Control`] rules from a head `version` object.
+    /// Extracts removal ([`Range`]) and deprecation [`Control`] rules from a head `version` ([`Value`]) object.
     pub(super) fn read(version: &Value) -> Self {
         let config = |name: &str| {
             version["extensions"]

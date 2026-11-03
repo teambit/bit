@@ -18,7 +18,7 @@ struct Scan<'a> {
     queued_bytes: usize,
 }
 
-/// Scans `root` for non-excluded files and returns UTF-16 sorted paths.
+/// Scans `root` ([`Path`]) for non-excluded files after [`validate`] and returns UTF-16 sorted paths.
 pub(super) fn scan(
     root: &Path,
     excluded: &[PathBuf],

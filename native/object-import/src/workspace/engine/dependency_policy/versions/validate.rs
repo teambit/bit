@@ -4,7 +4,7 @@ use super::{Request, invalid};
 use crate::workspace::engine::dependency_policy::wire::name;
 use std::io;
 
-/// Validates collection budgets and policy key spellings in `request`.
+/// Validates collection budgets and policy key spellings in `request` ([`Request`]) via [`identities`].
 /// Rejects payloads whose total entry count or per-list indices exceed native bounds.
 pub(super) fn validate(request: &Request) -> io::Result<()> {
     let sources = [&request.sources.bitmap, &request.sources.lane, &request.sources.model];

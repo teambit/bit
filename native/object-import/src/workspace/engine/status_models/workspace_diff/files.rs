@@ -12,7 +12,7 @@ use std::{
     io,
 };
 
-/// Diffs `current` workspace files against stored `model` sources under `budgets`.
+/// Diffs `current` workspace [`File`] items against stored `model` sources ([`model_sources`]) under `budgets` ([`Budgets`]).
 pub(super) fn read(
     request: &Request,
     current: Vec<File>,

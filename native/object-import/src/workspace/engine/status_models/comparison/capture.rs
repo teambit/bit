@@ -11,7 +11,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Reads and normalizes all workspace and overlay source files across `request.targets`.
+/// Reads and normalizes all workspace and overlay source files across `request.targets` ([`Target`]) via [`collect_sources`] and [`capture`].
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Value>> {
     let (paths, bitmaps) = collect_sources(request)?;
     let captured =
