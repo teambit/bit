@@ -19,7 +19,7 @@ mod tests;
 use serde_json::{Map, Value};
 use std::io;
 
-/// Preserve `JavaScript` object insertion order while later stores (`global`, `scope`, `workspace`) replace earlier values.
+/// Preserve `JavaScript` object insertion order while later stores (`global`, `scope`, `workspace` [`Value`]) replace earlier values in [`Map`].
 ///
 /// Non-object layers are ignored.
 #[must_use]

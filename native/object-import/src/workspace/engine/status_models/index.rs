@@ -65,7 +65,7 @@ fn parse_items(rows: &[Value]) -> io::Result<Vec<Item>> {
     }
     Ok(items)
 }
-/// Reads and SHA-1-identity-verifies the `Component` model object referenced by `item`.
+/// Reads and SHA-1-identity-verifies the `Component` model object ([`Value`]) referenced by `item` ([`Item`]) via `reader` ([`Reader`]).
 pub(super) fn model(reader: &Reader<'_>, item: &Item) -> io::Result<Value> {
     let hash = item.hash.trim();
     let name = item.id.name.trim();

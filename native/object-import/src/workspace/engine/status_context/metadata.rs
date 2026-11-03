@@ -27,7 +27,7 @@ pub(super) fn optional(path: &Path, budget: &Budget) -> io::Result<Value> {
     Ok(value)
 }
 
-/// Loads `component.json` and `package.json` metadata for `target` under `root`.
+/// Loads `component.json` and `package.json` metadata for `target` ([`Value`]) under `root` ([`Path`]) via [`optional`].
 /// Verifies that any present `component.json` identity matches `target["identity"]`.
 pub(super) fn component(
     root: &Path,

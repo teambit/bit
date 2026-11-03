@@ -2,7 +2,7 @@
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
-/// Read `<directory>/config.json` via [`read_global_config_with`], retaining ordinary JSON parsing diagnostics.
+/// Read `<directory>/config.json` ([`Path`]) via [`read_global_config_with`], retaining ordinary JSON parsing diagnostics.
 ///
 /// Missing or blank files resolve to an empty JSON object without writing to disk.
 #[inline]

@@ -81,7 +81,7 @@ fn array_index(key: &str) -> Option<u32> {
 }
 
 impl Node {
-    /// The plain JSON value, without comments.
+    /// The plain JSON [`Value`], without comments.
     #[must_use]
     pub fn to_value(&self) -> Value {
         match self {

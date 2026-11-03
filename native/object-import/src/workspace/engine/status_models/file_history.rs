@@ -55,7 +55,7 @@ struct Cache {
     packed: Budget,
 }
 
-/// Builds per-version file history rows for `file` across `logs` under `root`.
+/// Builds per-version file history rows for `file` across `logs` ([`Value`]) under `root` ([`Path`]) via [`row`].
 fn rows(root: &Path, file: &str, logs: &[Value]) -> io::Result<Vec<Value>> {
     let directory = crate::scope_path(root).join("objects");
     let mut reader = read_version::Reader::query(&directory)?;

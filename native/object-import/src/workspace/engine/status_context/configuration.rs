@@ -13,7 +13,7 @@ pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;
     effective_value(workspace, home)
 }
-/// Looks up an aspect configuration entry by exact or versioned `id` in `doc`.
+/// Looks up an aspect configuration entry by exact or versioned `id` in `doc` ([`Value`]) via [`find_versioned_aspect`].
 #[inline]
 fn aspect_value<'a>(doc: &'a Value, id: &str) -> Option<&'a Value> {
     let id = id.trim();

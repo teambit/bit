@@ -61,7 +61,7 @@ fn join(one: &str, two: &str, gap: &str) -> String {
     }
 }
 
-/// Prepends any `"before"` comments in `comments` to `inside` with `gap` indentation.
+/// Prepends any `"before"` [`Comment`] entries in `comments` ([`Comments`]) to `inside` with `gap` indentation via [`process`] and [`join`].
 #[inline]
 fn join_content(inside: &str, comments: &Comments, gap: &str) -> String {
     let deeper_gap = format!("{gap}{INDENT}");

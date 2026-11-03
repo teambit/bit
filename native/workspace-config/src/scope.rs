@@ -3,7 +3,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::io;
 
-/// Four-space indentation unit used when serializing `scope.json` via [`render_scope_json`].
+/// Four-space indentation unit used when serializing `scope.json` ([`Value`]) via [`render_scope_json`].
 const SCOPE_INDENT: &[u8] = b"    ";
 
 /// Serialize a prepared `scope` ([`Value`]) document with [`SCOPE_INDENT`] without changing its fields or insertion order.

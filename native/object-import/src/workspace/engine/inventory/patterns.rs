@@ -48,7 +48,7 @@ pub(super) fn nested(
         .filter(|row| !row.patterns.is_empty())
         .collect())
 }
-/// Collects non-ignored nested directories containing `.gitignore` or `.bitignore` files.
+/// Collects non-ignored nested directories containing `.gitignore` or `.bitignore` files via `policy` ([`Matcher`]).
 fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> {
     let mut selected: Vec<(String, String)> = Vec::new();
     let mut positions = HashMap::new();

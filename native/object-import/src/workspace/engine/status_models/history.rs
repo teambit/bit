@@ -39,7 +39,7 @@ pub(super) fn read(
         .collect::<io::Result<Vec<_>>>()?;
     Ok((histories, pending))
 }
-/// Computes status and merge version-history distances for a single `model`.
+/// Computes status and merge version-history distances for a single `model` ([`Value`]) via [`model_identity`] and [`compare_lane`].
 fn compare(
     reader: &Reader<'_>,
     model: &Value,

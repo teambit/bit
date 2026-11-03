@@ -37,7 +37,7 @@ struct Response<'a> {
     binary_bytes: usize,
     data: Data<'a>,
 }
-/// Constructs a [`Record`] with canonicalized metadata and byte length from `file` and `raw`.
+/// Constructs a [`Record`] with canonicalized [`read::Metadata`] and byte length from `file` ([`Path`]) and `raw`.
 #[inline]
 fn record(file: &Path, raw: Vec<u8>) -> Record {
     let (metadata, body) = read::canonical(file, raw);

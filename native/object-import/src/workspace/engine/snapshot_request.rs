@@ -29,7 +29,7 @@ pub(super) fn dispatch(
     }
 }
 
-/// Dispatches snapshot package, build, validation, and tag callback `request` phases.
+/// Dispatches snapshot package, build, validation, and tag callback `request` ([`Request`]) phases against `snapshots` ([`snapshots::State`]).
 /// Unhandled `request` variants delegate to [`owned_command`].
 #[inline]
 fn dispatch_resolve(

@@ -23,7 +23,7 @@ pub fn matches(pattern: &str, name: &str) -> bool {
         })
 }
 
-/// `{a,b}` alternatives, expanded innermost/left-to-right.
+/// `{a,b}` alternatives in `pattern`, expanded innermost/left-to-right via [`find_comma_brace_pair`].
 #[inline]
 fn expand_braces(pattern: &str) -> Vec<String> {
     let Some((open, close)) = find_comma_brace_pair(pattern) else {

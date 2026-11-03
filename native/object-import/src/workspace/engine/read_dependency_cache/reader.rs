@@ -45,7 +45,7 @@ pub(super) fn read(cache: &Path, key: &str) -> io::Result<Option<Value>> {
     }
     Ok(Some(json!({"timestamp":timestamp,"data":data})))
 }
-/// Reads and SHA-512 verifies the `content-v2` blob referenced by `integrity` under `cache`.
+/// Reads and SHA-512 verifies the `content-v2` blob referenced by `integrity` under `cache` ([`Path`]) via [`segmented`].
 fn content(cache: &Path, integrity: &str) -> io::Result<Option<String>> {
     let digest = integrity
         .strip_prefix("sha512-")

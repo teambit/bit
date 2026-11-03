@@ -65,7 +65,7 @@ pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize
     Ok((lanes.len(), json!({"lanes":lanes})))
 }
 
-/// Builds an authenticated HTTP [`Network`] client for querying lanes from `request`.
+/// Builds an authenticated HTTP [`Network`] client for querying lanes from `request` ([`Request`]) and `scope_config` ([`Value`]).
 fn lane_network(request: &Request, local: &str, scope_config: &Value) -> io::Result<Network> {
     let global: GlobalConfig = serde_json::from_value(bit_workspace_config::read_global_config(
         &request.global_config_dir,

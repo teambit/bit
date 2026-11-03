@@ -46,7 +46,7 @@ pub(super) fn scan(
     scan.paths.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     Ok(scan.paths)
 }
-/// Validates `root` and `excluded` paths and returns `Ok(false)` when a non-workspace `root` is absent.
+/// Validates `root` ([`Path`]) and `excluded` ([`PathBuf`]) paths and returns `Ok(false)` when a non-workspace `root` is absent.
 fn validate(root: &Path, excluded: &[PathBuf], workspace_root: bool) -> io::Result<bool> {
     path(root)?;
     count(excluded.len())?;

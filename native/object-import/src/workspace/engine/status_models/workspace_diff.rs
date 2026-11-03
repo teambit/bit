@@ -33,7 +33,7 @@ pub(in crate::workspace::engine) fn read(
     read_overlay(request, pool, None)
 }
 
-/// Diffs workspace component files against stored local `Version` models and an optional `overlay`.
+/// Diffs workspace component files for `request` ([`Request`]) against stored local `Version` models and an optional `overlay`.
 pub(in crate::workspace::engine) fn read_overlay(
     request: &Request,
     pool: &rayon::ThreadPool,

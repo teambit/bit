@@ -39,7 +39,7 @@ pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {
     prepare(request)?;
     Ok((request.plans.len(), json!({"fresh":true})))
 }
-/// Validates and persists all staged `VersionHistory` objects in `request` to the local scope store.
+/// Validates and persists all staged `VersionHistory` objects in `request` ([`Request`]) to the local scope [`Store`] via [`prepare`].
 pub(super) fn commit(request: &Request) -> io::Result<(usize, Value)> {
     let objects = prepare(request)?;
     let store = Store::new(crate::scope_path(&request.root).join("objects"), None)?;

@@ -70,7 +70,7 @@ pub(super) struct Snapshot {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pending_history: Vec<Value>,
 }
-/// Loads the status model [`Snapshot`] for `request` using `pool` and serializes it to JSON.
+/// Loads the status model [`Snapshot`] for `request` ([`Request`]) using `pool` via [`load`] and serializes it to JSON.
 #[inline]
 pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     let snapshot = load(request, pool, true)?;

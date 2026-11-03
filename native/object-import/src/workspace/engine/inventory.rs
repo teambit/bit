@@ -50,7 +50,7 @@ pub(super) struct Finish {
     own: Policy,
     ignored_root: Vec<String>,
 }
-/// Executes the first phase of a workspace or component inventory scan and retains its [`Plan`].
+/// Executes the first phase of a workspace or component inventory scan ([`Begin`]) and retains its [`Plan`] in `state` ([`State`]).
 pub(super) fn begin(
     input: Begin,
     state: &mut State,

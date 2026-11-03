@@ -54,7 +54,7 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
     }))
 }
 
-/// Loads remote lane head mappings for `scope/name` and merges fallback entries from [`forked_from`].
+/// Loads remote lane head mappings for `scope/name` under `root` ([`Path`]) and merges fallback entries from [`forked_from`].
 fn remote_with_parent(
     root: &Path,
     scope: &str,

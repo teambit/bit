@@ -51,7 +51,7 @@ impl SourceOverlay {
         }
         Ok(Found::Disk(path.to_path_buf()))
     }
-    /// Returns `true` when `path` has at least one non-removed descendant entry in the overlay.
+    /// Returns `true` when `path` ([`Path`]) has at least one non-removed descendant [`Entry`] in the overlay.
     #[inline]
     fn has_active_descendant(&self, path: &Path) -> bool {
         self.data.entries

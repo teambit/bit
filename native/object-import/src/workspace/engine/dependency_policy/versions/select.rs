@@ -55,7 +55,7 @@ pub(super) fn select(
     }
     Ok(default_version(index, identity, base))
 }
-/// Falls back to the model index or a concrete version embedded in `identity`.
+/// Falls back to the model index ([`super::index::Index`]) or a [`concrete_version`] embedded in `identity`.
 #[inline]
 fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) -> Selected {
     let ver = version(identity);

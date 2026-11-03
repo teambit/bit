@@ -4,7 +4,7 @@ use super::super::wire::Entry;
 use serde::Deserialize;
 use std::collections::HashMap;
 
-/// Map of component or package identities to version strings.
+/// Map of component or package identities to version strings ([`HashMap`]).
 type Versions = HashMap<String, String>;
 /// Wire request for selecting resolved component ([`Entry`]) and extension versions from [`Sources`], [`Policy`], and [`Grammar`].
 #[derive(Deserialize)]

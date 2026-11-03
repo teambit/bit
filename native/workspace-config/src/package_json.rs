@@ -6,8 +6,8 @@ use serde::Serialize;
 use serde_json::{Value, ser::PrettyFormatter};
 use std::io;
 
-/// `stringify-package`: `JSON.stringify` with `indent` (two spaces when
-/// none was detected) and a final `newline`, CRLF throughout for CRLF files.
+/// `stringify-package`: `JSON.stringify` of `value` ([`Value`]) with `indent` (two spaces when
+/// none was detected) and a final `newline`, CRLF throughout for CRLF files via [`PrettyFormatter`].
 #[inline]
 pub fn stringify_package(value: &Value, indent: &str, newline: Option<&str>) -> io::Result<String> {
     // `JSON.stringify` uses at most ten characters of a string indent.

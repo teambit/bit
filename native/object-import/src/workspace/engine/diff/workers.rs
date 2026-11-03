@@ -59,7 +59,7 @@ fn worker_batch(
     }
 }
 
-/// Reassembles worker `batches` into input-index order and verifies completeness.
+/// Reassembles worker `batches` into input-index order of [`FileDiff`] items and verifies completeness.
 #[inline]
 fn assemble_ordered(
     count: usize,

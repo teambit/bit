@@ -52,7 +52,7 @@ impl Document {
         self.root.to_value()
     }
 
-    /// The root node, with comments.
+    /// The root [`Node`], with comments.
     #[must_use]
     #[inline]
     pub const fn root(&self) -> &Node {

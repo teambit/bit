@@ -30,7 +30,7 @@ pub(super) fn path(path: &Path) -> io::Result<()> {
 pub(super) fn count(count: usize) -> io::Result<()> {
     if count > MAX_FILES { Err(invalid("workspace file count limit")) } else { Ok(()) }
 }
-/// Computes the lowercase hexadecimal SHA-1 digest of `bytes`.
+/// Computes the lowercase hexadecimal [`Sha1`] digest of `bytes`.
 #[inline]
 pub(super) fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))

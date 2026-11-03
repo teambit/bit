@@ -28,7 +28,7 @@ pub(super) fn stale(
             .try_reduce(|| false, |left, right| Ok(left || right))
     })
 }
-/// Returns `true` when `path` exists and its modification time exceeds `timestamp` in milliseconds.
+/// Returns `true` when `path` ([`Path`]) exists and its modification time exceeds `timestamp` in [`milliseconds`].
 #[inline]
 fn newer(path: &Path, timestamp: f64) -> io::Result<bool> {
     let metadata = match fs::metadata(path) {

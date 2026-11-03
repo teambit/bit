@@ -88,7 +88,7 @@ fn compare_all(
     Ok((comparisons.len(), json!({"comparisons":comparisons})))
 }
 
-/// Compares a single workspace `target` and its captured `files` against stored `model`.
+/// Compares a single workspace `target` ([`Target`]) and its captured `files` ([`Value`]) against stored `model`.
 /// Aligns log and dependency ordering before computing semantic and field-level differences.
 pub(in crate::workspace::engine) fn compare(
     target: &Target,

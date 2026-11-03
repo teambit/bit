@@ -48,7 +48,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     ))
 }
 
-/// Traverses external dependency edges reachable from `request.components` up to 4,096 nodes.
+/// Traverses external dependency edges reachable from `request.components` ([`Request`], [`Component`]) up to 4,096 nodes.
 fn collect_external_graph(
     request: &Request,
     graph: &mut Graph,

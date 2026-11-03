@@ -37,7 +37,7 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
     Ok(output)
 }
 
-/// Collects all source file paths and `.bitmap` paths across `request.targets`.
+/// Collects all source file paths and `.bitmap` paths across `request.targets` ([`Request`], [`Target`]) via [`append_target_sources`].
 fn collect_sources(request: &Request) -> io::Result<(Vec<PathBuf>, HashSet<PathBuf>)> {
     if request.targets.len() > 4096 {
         return Err(invalid("status comparison target count"));

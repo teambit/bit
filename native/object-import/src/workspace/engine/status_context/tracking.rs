@@ -51,7 +51,7 @@ pub(in crate::workspace::engine) fn read(
     Ok((output["targets"].as_array().map_or(0, Vec::len), output))
 }
 
-/// Observes component metadata, scope settings, and control read-set proofs for `targets`.
+/// Observes [`component`] metadata, scope settings, and control read-set proofs for `targets` ([`Value`]) on `request` ([`Request`]).
 fn observe(
     request: &Request,
     settings: &Value,

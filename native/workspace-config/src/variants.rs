@@ -41,8 +41,8 @@ pub struct VariantConfig {
     pub matched_rules: Vec<(String, f64)>,
 }
 
-/// `byRootDirAndName`: every pattern matching the component's root dir or
-/// name, sorted by specificity (ties: the later pattern first).
+/// `byRootDirAndName`: every pattern matching the component's `root_dir` or
+/// `name`, sorted by specificity (ties: the later pattern first) via [`sorted_matches`] and [`merge_matches`].
 #[inline]
 pub fn by_root_dir_and_name(
     variants: &[(String, Map<String, Value>)],

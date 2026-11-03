@@ -69,7 +69,7 @@ fn group_target_files(request: &Request, captured: Vec<File>) -> io::Result<Vec<
     Ok(grouped)
 }
 
-/// Normalizes `bytes` (stripping BOM and normalizing `.bitmap` when `bitmap` is set) into a [`File`].
+/// Normalizes `bytes` at `path` ([`Path`]) (stripping BOM and normalizing `.bitmap` when `bitmap` is set) into a [`File`].
 #[inline]
 fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<File> {
     let original = bytes.len();

@@ -29,7 +29,7 @@ pub(super) fn read(request: &Read) -> io::Result<(usize, Value)> {
     let cache = read_cache(&request.cache, &request.key)?;
     Ok((1, json!({"cache":cache})))
 }
-/// Checks whether any directory or file in `request` is newer than `request.timestamp`.
+/// Checks whether any directory or file in `request` ([`Freshness`]) is newer than `request.timestamp` via [`cache_stale`].
 #[inline]
 pub(super) fn freshness(
     request: &Freshness,

@@ -67,7 +67,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     output["autoTagPendingComponents"] = autotag::pending(request)?;
     Ok((request.targets.len(), output))
 }
-/// Appends `target` to the appropriate workspace status arrays in `output`.
+/// Appends `target` ([`Target`]) to the appropriate workspace status arrays in `output` ([`Value`]).
 fn current(output: &mut Value, target: &Target) {
     if let Some(error) = &target.invalid {
         if error["name"] == "ComponentsPendingImport" {

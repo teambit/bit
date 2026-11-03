@@ -56,7 +56,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     Ok((output["targets"].as_array().map_or(0, Vec::len), output))
 }
 
-/// Removes `inactive` target identities from `output["targets"]`.
+/// Removes `inactive` target identities from `output["targets"]` ([`Value`]).
 fn exclude_inactive(output: &mut Value, inactive: &[(String, bool)]) -> io::Result<()> {
     let inactive_ids = inactive
         .iter()

@@ -53,7 +53,7 @@ pub(super) fn project(model: &Value) -> io::Result<Js> {
     );
     convert(&Value::Object(fields))
 }
-/// Extracts the subset of `Version` fields included in semantic hash calculation.
+/// Extracts the subset of `Version` fields ([`Map`]) from `model` ([`Value`]) included in semantic hash calculation via [`falsy`].
 fn fields(model: &Value) -> io::Result<Map<String, Value>> {
     let object = model.as_object().ok_or_else(|| invalid("status Version object"))?;
     let mut fields = Map::with_capacity(11);

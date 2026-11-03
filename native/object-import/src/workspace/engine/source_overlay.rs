@@ -42,7 +42,7 @@ pub(super) struct Metadata {
     kind: u8,
 }
 impl Metadata {
-    /// summarizes filesystem metadata `value` into a compact [`Metadata`] value.
+    /// Summarizes filesystem metadata `value` ([`fs::Metadata`]) into a compact [`Metadata`] value.
     #[inline]
     pub(super) fn disk(value: &fs::Metadata) -> Self {
         Self {

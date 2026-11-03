@@ -34,7 +34,7 @@ pub(super) fn validate(target: &Target) -> io::Result<()> {
     Ok(())
 }
 
-/// Resolves `file` for `target` from either its validated source overlay spool or `root`.
+/// Resolves `file` for `target` ([`Target`]) from either its validated source overlay spool or `root` ([`Path`]).
 ///
 /// Overlay files must be regular files nested inside `target.source_overlay_root` (up to depth 64).
 pub(super) fn source_path(root: &Path, target: &Target, file: &str) -> io::Result<PathBuf> {
