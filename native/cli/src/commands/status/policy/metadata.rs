@@ -114,6 +114,8 @@ fn non_empty_truthy(val: &Value) -> bool {
 #[inline]
 fn identity_object(value: &str) -> io::Result<Value> {
     let value = value.trim();
+    // A never-tagged workspace component has no version; its linked manifest only says `0.0.1-new`.
+    let value = value.strip_suffix("@0.0.1-new").unwrap_or(value);
     let (name, version) = value
         .split_once('@')
         .map_or((value, None), |(name, ver)| {
