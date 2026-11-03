@@ -24,7 +24,7 @@ pub enum Scope {
     Snaps(Vec<String>),
 }
 
-/// Retained single-component deletion plan covering `.bitmap`, scope objects, files, and package links.
+/// Retained single-component deletion plan covering [`BitmapChange`], [`RepositorySnapshot`], files, and package links.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plan {
     root: PathBuf,

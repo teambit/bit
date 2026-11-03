@@ -45,7 +45,7 @@ pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Resul
     }
     Ok((version, files, version_id(&model, id, &hash), compressed))
 }
-/// Extract a trimmed non-empty string slice from `value`.
+/// Extract a trimmed non-empty string slice from a JSON `value` [`Value`].
 #[inline]
 fn trimmed_str(value: &Value) -> Option<&str> {
     value

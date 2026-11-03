@@ -3,7 +3,7 @@ use crate::workspace::engine::inventory;
 use serde_json::Value;
 use std::{io, path::Path};
 
-/// Whether the canonical pre-ignore component scan finds any files in `directory`.
+/// Whether the canonical pre-ignore component scan finds any files in `directory` outside [`is_removed_row`] entries.
 pub fn has_scanned_files(root: &Path, directory: &str, bitmap: &Value) -> io::Result<bool> {
     let normalized = normalize_dir(directory);
     let directory = normalized.trim_matches('/');

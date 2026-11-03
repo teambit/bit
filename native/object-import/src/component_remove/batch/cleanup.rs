@@ -44,7 +44,7 @@ impl Change {
     }
 }
 impl Cleanup {
-    /// Prepare manifest, `workspace.jsonc`, staged-config, and `unmerged.json` edits for `selected`.
+    /// Prepare manifest, `workspace.jsonc` [`Configuration`], staged-config, and `unmerged.json` [`Change`] edits for `selected`.
     pub(in crate::component_remove) fn prepare(
         root: &Path,
         bitmap: &Value,

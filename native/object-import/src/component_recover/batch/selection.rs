@@ -70,7 +70,7 @@ pub(super) fn bare(id: &str) -> &str {
     let id = id.trim();
     id.rsplit_once('@').map_or(id, |(bare, _)| bare.trim())
 }
-/// Select component identities from `.bitmap` and local scope index matching `pattern`.
+/// Select component [`identity`] strings from `.bitmap` and local scope index in [`Batch`] matching `pattern`.
 pub(super) fn select(batch: &mut Batch, pattern: &str) -> io::Result<Vec<String>> {
     if !pattern.contains(['*', '?']) {
         return single(batch, pattern);

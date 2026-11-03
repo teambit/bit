@@ -49,7 +49,7 @@ pub struct Identity {
     pub exported: bool,
 }
 impl Identity {
-    /// The resolved source identity used in published bitmap-history reasons.
+    /// The resolved source [`Identity`] string used in published bitmap-history reasons.
     #[must_use]
     #[inline]
     pub fn source_id(&self) -> String {

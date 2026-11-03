@@ -30,7 +30,7 @@ pub(super) fn commit(batch: &Batch, file_id: &str) -> io::Result<()> {
     }
     Ok(())
 }
-/// Write all recovered component source files and updated `component.json` files in `batch`.
+/// Write all recovered component source files and updated `component.json` files in [`Batch`].
 fn publish_files(batch: &Batch) -> io::Result<()> {
     for item in &batch.items {
         for file in &item.files {

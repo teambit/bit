@@ -3,7 +3,7 @@
 use super::{Candidate, Plan, error, rows};
 use serde_json::{Value, json};
 use std::io;
-/// Filters out candidate files already owned by other active components and records warnings.
+/// Filters out [`Candidate`] files already owned by other active components in [`Plan`] and records warnings.
 pub(super) fn filter(
     plan: &mut Plan,
     candidate: &mut Candidate,

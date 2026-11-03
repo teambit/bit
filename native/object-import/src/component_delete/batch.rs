@@ -11,7 +11,7 @@ pub struct Batch {
     after: Vec<u8>,
 }
 impl Batch {
-    /// Prepare individual deletion [`Plan`]s for `identities` and merge their `.bitmap` projections.
+    /// Prepare individual deletion [`Plan`]s for `identities` under [`Scope`] and merge their `.bitmap` projections.
     pub fn prepare(
         root: &Path,
         identities: &[String],

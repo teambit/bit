@@ -54,7 +54,7 @@ pub(super) fn prepare(
         exported,
     })
 }
-/// Resolve the source component scope from `.bitmap` `(key, source)` or `workspace.jsonc` `defaultScope`.
+/// Resolve the source component scope from `.bitmap` `(key, source)` [`Value`] or `workspace.jsonc` `defaultScope`.
 fn resolve_source_scope<'a>(
     key: &'a str,
     source: &'a Value,

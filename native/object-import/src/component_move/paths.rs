@@ -42,7 +42,7 @@ pub(super) fn locations(
     }
     Ok((source, destination, first))
 }
-/// Verify that exactly one of `source` or `destination` exists as a directory.
+/// Verify that exactly one of `source` or `destination` [`Path`]s exists as a directory.
 fn validate_existing(
     source: &Path,
     destination: &Path,

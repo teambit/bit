@@ -4,7 +4,7 @@ use super::{array, invalid, text, validate};
 use serde_json::{Value, json};
 use std::io;
 
-/// Plans the merged scope-level dependency policy across `merged` and `scope` input entries.
+/// Plans the merged scope-level dependency policy [`Value`] across `merged` and `scope` input entries.
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     validate::fields(input, &["merged", "scope"])?;
     let merged = array(input, "merged")?;

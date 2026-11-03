@@ -62,7 +62,7 @@ impl Plan {
     pub fn changes(&self) -> &[Value] {
         &self.changes
     }
-    /// Return the canonical identities of all components affected by this move plan.
+    /// Return the canonical identities of all components affected by this move [`Plan`].
     #[must_use]
     #[inline]
     pub fn identities(&self) -> Vec<String> {

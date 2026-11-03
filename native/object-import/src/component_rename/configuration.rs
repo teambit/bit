@@ -41,7 +41,7 @@ pub(super) fn prepare(plan: &mut Plan, facts: &Value) -> io::Result<()> {
     }
     Ok(())
 }
-/// Construct the target `.bitmap` row for a renamed component from `source` and `facts`.
+/// Construct the target `.bitmap` row [`Value`] for a renamed component in [`Plan`] from `source` and `facts`.
 fn target_row(plan: &Plan, source: &Value, facts: &Value) -> io::Result<Value> {
     let mut target = source.clone();
     target["name"] = json!(plan.identity.target_name);

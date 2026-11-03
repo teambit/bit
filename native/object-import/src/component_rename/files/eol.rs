@@ -6,7 +6,7 @@ mod tests;
 /// End-of-line normalization policy distinguishing `ComponentWriter` from `Workspace.write()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum Writer {
-    /// Normalize text files through `eol.auto()` like `ComponentWriter`.
+    /// Normalize text files through `eol.auto()` like `ComponentWriter` on [`Writer::Component`].
     Component,
     /// Preserve exact file bytes like `Workspace.write()`.
     Workspace,

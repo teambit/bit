@@ -42,7 +42,7 @@ fn bare_id(id: &str) -> &str {
     trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim())
 }
 
-/// Return the first removed component ID in `identities` that is referenced as an aspect in `extensions`.
+/// Return the first removed component ID in `identities` that is referenced as an aspect in `extensions` via [`extension_id`].
 fn used_removed_aspect<'a>(identities: &'a [String], extensions: &[Value]) -> Option<&'a str> {
     if identities.is_empty() || extensions.is_empty() {
         return None;

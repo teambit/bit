@@ -21,7 +21,7 @@ pub(crate) struct State<'a, 'b> {
     pub conflicted: Value,
 }
 impl<'a, 'b> State<'a, 'b> {
-    /// Construct a three-way dependency-resolver merge [`State`] from `engine` indices.
+    /// Construct a three-way dependency-resolver merge [`State`] from [`Engine`] indices.
     pub(super) fn new(
         engine: &'a mut Engine<'b>,
         current: usize,

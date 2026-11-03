@@ -25,7 +25,7 @@ pub(super) fn metadata(plan: &mut Plan, id: &str) -> io::Result<Value> {
     }
     model_metadata(plan, id)
 }
-/// Look up the `teambit.component/deprecation` aspect entry in a `.bitmap` row's `config` object.
+/// Look up the [`ASPECT`] (`teambit.component/deprecation`) entry in a `.bitmap` row's `config` object.
 #[inline]
 fn local_aspect(row: &Value) -> Option<&Value> {
     let cfg = row["config"].as_object()?;

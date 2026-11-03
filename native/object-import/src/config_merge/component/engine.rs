@@ -4,7 +4,7 @@ use super::super::{array, invalid, text};
 use serde_json::{Value, json};
 use std::io;
 
-/// Per-component `ConfigMerger` accumulator tracking merged rows, logs, envs, and conflicts.
+/// Per-component `ConfigMerger` accumulator tracking merged [`Value`] rows, logs, envs, and conflicts.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Engine<'a> {
     pub input: &'a Value,

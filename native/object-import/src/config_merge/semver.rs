@@ -4,7 +4,7 @@ use super::{array, invalid};
 use serde_json::Value;
 use std::{cmp::Ordering, io};
 
-/// Compares two parsed semver descriptor objects (`major`, `minor`, `patch`, `prerelease`).
+/// Compares two parsed semver descriptor [`Value`] objects (`major`, `minor`, `patch`, `prerelease`).
 pub(super) fn compare(left: &Value, right: &Value) -> io::Result<Ordering> {
     for field in ["major", "minor", "patch"] {
         let left_number = left[field].as_u64().ok_or_else(|| invalid("semver number"))?;

@@ -29,7 +29,7 @@ pub(super) fn choose(
     generated(root, directory, options)
 }
 
-/// Derive a generated component identity and optional namespace from `directory` and `options`.
+/// Derive a generated component identity and optional namespace from `directory` and [`Options`].
 fn generated(
     root: &Path,
     directory: &str,

@@ -13,7 +13,7 @@ pub(super) fn index(batch: &mut Batch) -> io::Result<Value> {
             |bytes| crate::parse_jsonc(&bytes),
         )
 }
-/// Read and validate a loose scope object of expected `kind` at `hash`, recording its preimage proof.
+/// Read and validate a loose scope object of expected `kind` at `hash`, recording its preimage proof in [`Batch`].
 pub(super) fn object(batch: &mut Batch, hash: &str, kind: &str) -> io::Result<Option<Value>> {
     crate::merge_history::hash(hash)?;
     let scope = crate::scope_path(&batch.root);

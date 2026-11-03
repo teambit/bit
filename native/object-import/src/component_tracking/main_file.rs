@@ -5,7 +5,7 @@ use std::{io, path::Path};
 /// Ordered file extensions checked when inferring a component's `mainFile`.
 const EXTENSIONS: &[&str] =
     &["js", "ts", "jsx", "tsx", "cjs", "mjs", "mts", "cts", "css", "scss", "less", "sass"];
-/// Selects or infers the component `mainFile` relative path from `files` and `explicit`/`existing`.
+/// Selects or infers the component `mainFile` relative path from `files` and `explicit`/`existing` via [`inferred`].
 pub(super) fn choose(
     id: &str,
     directory: &str,

@@ -7,7 +7,7 @@ use std::{fs, io, path::Path};
 pub(super) fn initial(plan: &mut Plan, file_id: &str, reason: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.initial, file_id, reason)
 }
-/// Publish the final `.bitmap` state after rename and dependent refactoring complete.
+/// Publish the final `.bitmap` state for [`Plan`] after rename and dependent refactoring complete.
 #[inline]
 pub(super) fn final_bitmap(plan: &mut Plan, file_id: &str) -> io::Result<()> {
     write(&plan.root, &mut plan.controls.expected, &plan.controls.bitmap, file_id, "rename")

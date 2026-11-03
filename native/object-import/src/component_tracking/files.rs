@@ -26,7 +26,7 @@ const ROOT_ONLY: &[&str] = &[
     "oxlint.config.js",
 ];
 
-/// Scans `directory`, applies ignore rules, and returns ordered relative file paths for `bit add`.
+/// Scans `directory`, applies ignore rules, and returns ordered relative file paths for [`Plan`].
 pub(super) fn read(
     plan: &mut Plan,
     directory: &str,

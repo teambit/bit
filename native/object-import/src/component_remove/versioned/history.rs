@@ -40,7 +40,7 @@ pub(super) fn ancestry(objects: &Path, head: &str) -> io::Result<Vec<Value>> {
     Ok(versions)
 }
 
-/// Prepare the `VersionHistory` verification or creation state for a lane snap removal.
+/// Prepare the `VersionHistory` [`HistoryState`] verification or creation state for a lane snap removal.
 pub(super) fn plan(root: &Path, scope: &str, name: &str, head: &str) -> io::Result<HistoryState> {
     let (scope, name) = (scope.trim(), name.trim());
     let digest = Sha1::new()

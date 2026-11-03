@@ -70,7 +70,7 @@ impl Plan {
         plan.project(selected, replacement.as_deref(), range, undo)?;
         Ok(plan)
     }
-    /// Return the slice of component IDs whose deprecation metadata changed in this plan.
+    /// Return the slice of component IDs whose [`ASPECT`] deprecation metadata changed in this [`Plan`].
     #[must_use]
     #[inline]
     pub fn changed(&self) -> &[String] {

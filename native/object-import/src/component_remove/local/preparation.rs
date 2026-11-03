@@ -46,7 +46,7 @@ pub(super) fn prepare(
         proofs,
     })
 }
-/// Resolve custom package-name overrides for `selected` rows and propagate them to `models`.
+/// Resolve custom package-name overrides for [`Selected`] rows and propagate them to [`VersionedPlan`] `models`.
 fn packages(
     root: &Path,
     selected: &mut [Selected],

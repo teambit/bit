@@ -1,7 +1,7 @@
 //! Published component-rename [`Options`] and flag normalization, independent of CLI parsing.
 //!
 //! Normalizes source/target identifiers, optional scope, and relative paths via [`Options::normalized`] before rename planning.
-/// Validated CLI options for `bit rename` component identity, path, and refactoring operations.
+/// Validated CLI [`Options`] for `bit rename` component identity, path, and refactoring operations.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Options {
     pub source: String,

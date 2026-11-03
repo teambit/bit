@@ -19,7 +19,7 @@ type PublishedFiles = HashMap<PathBuf, Vec<u8>>;
 type Publication = (PublishedFiles, Vec<Value>);
 
 impl PreparedImport {
-    /// Commits all planned import writes and returns published file contents with SHA-256 receipts.
+    /// Commits all planned [`PreparedImport`] writes and returns published file contents with SHA-256 [`Publication`] receipts.
     pub(crate) fn commit_with_receipts(&mut self) -> io::Result<Publication> {
         let files = self.publication_files()?;
         let mut receipts = Vec::with_capacity(files.len());

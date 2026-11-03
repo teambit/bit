@@ -15,7 +15,7 @@ struct Candidate {
     files: Vec<String>,
     scope: String,
 }
-/// Scan `directories`, resolve component identities and scopes, and project `.bitmap` rows into `plan`.
+/// Scan `directories`, resolve [`Candidate`] identities and scopes, and project `.bitmap` rows into [`Plan`].
 pub(super) fn prepare(
     plan: &mut Plan,
     directories: &[String],

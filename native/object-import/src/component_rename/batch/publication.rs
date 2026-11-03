@@ -23,7 +23,7 @@ pub(super) fn merge(target: &mut Value, before: &Value, after: &Value) -> io::Re
     }
     Ok(())
 }
-/// Merge a single changed control-JSON `(key, value)` entry into `target`, recursing on nested objects.
+/// Merge a single changed control-JSON `(key, value)` [`Value`] entry into `target`, recursing on nested objects.
 #[inline]
 fn merge_entry(
     target: &mut serde_json::Map<String, Value>,

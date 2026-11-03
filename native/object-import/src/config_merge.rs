@@ -15,7 +15,7 @@ mod workspace;
 use serde_json::Value;
 use std::io;
 
-/// Dispatches a `config-merge` operation (`kind`) on validated JSON `input`.
+/// Dispatches a `config-merge` operation (`kind`) on validated JSON `input` [`Value`].
 pub(crate) fn apply(kind: &str, input: &Value) -> io::Result<Value> {
     let kind = kind.trim();
     if kind == "configScopePolicy" {

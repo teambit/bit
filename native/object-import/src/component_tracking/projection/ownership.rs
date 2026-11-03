@@ -5,7 +5,7 @@
 use super::{Plan, error};
 use serde_json::Value;
 use std::io;
-/// Validates that tracking `directory` does not conflict with existing `.bitmap` component roots.
+/// Validates that tracking `directory` does not conflict with existing `.bitmap` component roots in [`Plan`].
 pub(super) fn validate(
     plan: &Plan,
     directory: &str,

@@ -65,7 +65,7 @@ fn normalize_root_dir(row: &Value) -> Option<String> {
     let clean = normalized.trim_matches('/');
     (!clean.is_empty()).then(|| clean.to_owned())
 }
-/// Project internal file moves within a component's `directory` and update `mainFile` in `row` if moved.
+/// Project internal file moves within a component's `directory` and update `mainFile` in `row` if moved, recording [`Observed`] reads.
 fn internal(
     root: &Path,
     directory: &str,

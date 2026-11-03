@@ -20,7 +20,7 @@ pub(crate) struct Observed {
     ancestors: BTreeMap<PathBuf, PathBuf>,
 }
 impl Observed {
-    /// Read a regular file at `path` under the 32 MiB budget and record its SHA-256 digest proof.
+    /// Read a regular file at `path` under the 32 MiB budget and record its [`Sha256`] digest proof.
     pub(crate) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
         let bytes = match fs::symlink_metadata(path) {
             Err(error) if error.kind() == io::ErrorKind::NotFound => None,

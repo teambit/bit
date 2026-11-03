@@ -17,7 +17,7 @@ impl fmt::Display for Failure {
     }
 }
 impl std::error::Error for Failure {}
-/// Annotate `error` with its originating `scope` when `error` is a zlib inflate failure.
+/// Annotate `error` with its originating `scope` as a [`Failure`] when `error` is a zlib inflate failure.
 #[inline]
 pub(super) fn mark(scope: Option<&str>, error: io::Error) -> io::Error {
     if let Some(scope) = scope

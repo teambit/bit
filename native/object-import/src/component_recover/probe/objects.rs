@@ -26,7 +26,7 @@ pub(super) fn file(scope: &Path, id: &str) -> io::Result<bool> {
     Ok(removed(&model, &version, &hash))
 }
 
-/// Read the `Component` model object for `bare` from a file-based remote `scope`.
+/// Read the `Component` model [`Value`] object for `bare` from a file-based remote `scope`.
 fn read_remote_model(scope: &Path, bare: &str, id: &str) -> io::Result<Value> {
     use sha1::{Digest, Sha1};
     let (target_scope, target_name) = bare

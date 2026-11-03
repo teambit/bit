@@ -19,7 +19,7 @@ pub(in crate::component_rename) fn packages_all(
     }
     Ok(changed)
 }
-/// Apply `pairs` package replacements across dependent component `rows` not in `targets`.
+/// Apply `pairs` package replacements across dependent component `rows` not in `targets` to produce [`Change`]s.
 pub(in crate::component_rename) fn batch_dependents(
     plan: &mut Plan,
     rows: &[Value],

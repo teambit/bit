@@ -4,7 +4,7 @@ use std::{
     fs, io,
     path::{Component, Path, PathBuf},
 };
-/// Resolves and validates the `node_modules/@<owner>/<pkg>` symlink/package path for a component.
+/// Resolves and validates the `node_modules/@<owner>/<pkg>` symlink/package [`PathBuf`] for a component.
 pub(super) fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBuf> {
     let (scope, name) = (scope.trim(), name.trim());
     if !super::valid_scope(scope) || !super::valid_name(name) {

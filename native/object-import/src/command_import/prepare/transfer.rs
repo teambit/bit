@@ -56,7 +56,7 @@ pub(super) fn receive_dependency(
     receive_from(plan, directory, target, incoming, hash, false, false)
 }
 
-/// Stage a component's `Version`, `Component` model, `Source` files, and optional `VersionHistory` into [`PreparedImport`].
+/// Stage a [`Target`] component's `Version`, `Component` model, `Source` files, and optional `VersionHistory` into [`PreparedImport`].
 fn receive_from(
     plan: &mut PreparedImport,
     directory: &Path,

@@ -14,7 +14,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Retained local scope and workspace removal plan for a versioned (tagged or imported) component.
+/// Retained local scope and workspace [`Plan`] removal plan for a versioned (tagged or imported) component.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VersionedPlan {
     workspace: Plan,
