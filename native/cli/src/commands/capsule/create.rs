@@ -117,6 +117,18 @@ fn format_create_report(capsules: &[CreatedCapsule], chalk: Chalk) -> String {
     lines.join("\n")
 }
 
+/// Writes the capsule root metadata, defaulting the origin to the workspace path when no base dir is given.
+fn write_origin_metadata(
+    capsules_root: &Path,
+    root: &ScopeRoot,
+    create_args: &CreateArgs,
+) -> io::Result<()> {
+    let origin = create_args.base_dir
+        .clone()
+        .unwrap_or_else(|| root.path.to_string_lossy().into_owned());
+    write_root_metadata(capsules_root, &origin)
+}
+
 fn build_capsules(
     cwd: &Path,
     root: &ScopeRoot,
@@ -141,8 +153,7 @@ fn build_capsules(
     else {
         return Err(BuildError::BeforeWrite);
     };
-    write_root_metadata(&ws_capsules_dir, create_args.base_dir.as_deref().unwrap_or(""))
-        .map_err(BuildError::AfterWrite)?;
+    write_origin_metadata(&ws_capsules_dir, root, create_args).map_err(BuildError::AfterWrite)?;
     selected
         .into_iter()
         .zip(envs)

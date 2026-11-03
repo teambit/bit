@@ -46,7 +46,6 @@ fn validate_patterns(root: &Path, component: &Component, request: &Value) -> io:
             .filter(|pat| !pat.is_empty())
             .ok_or_else(|| invalid("tester match pattern"))?
             .replace('\\', "/");
-        let pattern = pattern.strip_prefix('!').map_or(pattern.as_str(), str::trim);
         let relative = pattern
             .strip_prefix(prefix)
             .and_then(|value| value.strip_prefix('/'))

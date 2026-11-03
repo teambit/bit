@@ -29,7 +29,7 @@ fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
     }
     if input.options.from_original_scope
         || !valid_operation(input)
-        || has_local_unscoped_conflict(input)?
+        || (!input.options.objects_only && has_local_unscoped_conflict(input)?)
     {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }

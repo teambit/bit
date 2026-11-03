@@ -20,6 +20,8 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let cwd = env::current_dir()?;
     let mut plans = Vec::with_capacity(options.remotes.len());
     let mut names = Vec::with_capacity(options.remotes.len());
+    // `ResumeExportCmd` is scope-only: a bare scope uses its own `scope.json` remotes.
+    let load_workspace = crate::workspace::root(&cwd).is_some();
     for raw_name in &options.remotes {
         let name = raw_name.trim();
         if name.is_empty()
@@ -30,7 +32,7 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
             continue;
         }
         names.push(name.to_owned());
-        match remote_action::prepare(&cwd, name, true, options.delete) {
+        match remote_action::prepare(&cwd, name, load_workspace, options.delete) {
             Ok(Some(plan)) => plans.push(Arc::new(plan)),
             Ok(None) => {
                 return Ok(Outcome::Declined(

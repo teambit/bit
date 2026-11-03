@@ -46,20 +46,7 @@ fn parse_subcommand(args: &[&str]) -> Option<Subcommand> {
         .iter()
         .copied()
         .map(str::trim)
-        .filter(|arg| {
-            !arg.is_empty()
-                && !matches!(
-                    *arg,
-                    "--no-color"
-                        | "--no-color=true"
-                        | "--no-color=false"
-                        | "--color"
-                        | "--color=true"
-                        | "--color=false"
-                        | "--color=always"
-                        | "--color=never",
-                )
-        })
+        .filter(|arg| !arg.is_empty())
         .collect::<Vec<_>>();
     match filtered.as_slice() {
         ["show", rest @ ..] => parse_show(rest),

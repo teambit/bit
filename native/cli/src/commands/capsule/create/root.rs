@@ -198,9 +198,6 @@ fn validate_base_dir(value: &str) -> io::Result<PathBuf> {
             _ => None,
         })
         .collect::<PathBuf>();
-    if relative.as_os_str().is_empty() {
-        return Err(io::Error::other("unsupported capsule base dir"));
-    }
     Ok(relative)
 }
 

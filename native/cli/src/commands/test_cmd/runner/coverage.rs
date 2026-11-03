@@ -62,7 +62,11 @@ fn project(raw: &Value, directory: &Path, main: &str) -> Option<Value> {
             continue;
         }
         let normalized_path = super::paths::normalized(Path::new(path));
-        if !normalized_path.starts_with(&directory) {
+        // The released tester matches by plain string prefix, so `comp1-other` belongs to `comp1`.
+        if !normalized_path
+            .to_string_lossy()
+            .starts_with(directory.to_string_lossy().as_ref())
+        {
             continue;
         }
         let data = metrics_data(metrics)?;

@@ -87,7 +87,7 @@ fn format_execution(
     let mut report = execution.report;
     let empty_data = report.data.trim().is_empty();
     if options.json {
-        if execution.empty || empty_data {
+        if execution.empty || (empty_data && !execution.terminated) {
             "[]".clone_into(&mut report.data);
         }
     } else if execution.empty {

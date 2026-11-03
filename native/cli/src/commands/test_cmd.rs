@@ -133,6 +133,9 @@ pub(super) fn classify_workspace(
 }
 
 fn validate_test_pattern(root: &Path, options: &Options, chalk: Chalk) -> Option<String> {
+    if options.scope.is_some() {
+        return None;
+    }
     let pat = effective_pattern(options)?;
     let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc")).ok()?).ok()?;
     if !startup::service_supported(root, &ws_config).ok()?
@@ -254,9 +257,6 @@ pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
     let mut iter = args.iter().copied();
     while let Some(token) = iter.next() {
         if token == "--" {
-            for rest in iter {
-                options.user_pattern.push(take_test_val(rest)?);
-            }
             break;
         }
         apply_test_token(token, &mut iter, &mut options)?;
@@ -270,10 +270,7 @@ fn apply_test_token<'a>(
     options: &mut Options,
 ) -> Option<()> {
     match token {
-        "--no-color"
-        | "--no-color=true"
-        | "--no-color=false"
-        | "--watch"
+        "--watch"
         | "--watch=true"
         | "--watch=false"
         | "-w"

@@ -39,7 +39,10 @@ pub(super) fn capture(
             })
         })
         .collect::<io::Result<HashSet<_>>>()?;
-    let seeds = dependencies(components)?;
+    let seeds = dependencies(components)?
+        .into_iter()
+        .filter(|id| !is_version_being_tagged(id, &workspace))
+        .collect::<Vec<_>>();
     if seeds
         .iter()
         .all(|id| workspace.contains(id))
@@ -48,6 +51,14 @@ pub(super) fn capture(
     }
     let saved = graph::previous_graph(materials, repository)?;
     external(seeds, &workspace, &saved, repository)
+}
+
+/// Whether `identity` is a workspace component that has no model version yet (new, or reset to
+/// new) referenced at a stale version: the workspace's own identity wins, as in `resolveVersion`.
+fn is_version_being_tagged(identity: &str, workspace: &HashSet<String>) -> bool {
+    identity
+        .rsplit_once('@')
+        .is_some_and(|(base, _)| workspace.contains(base))
 }
 
 /// Collects direct component dependency seed IDs across all `components` via [`component_dependencies`].

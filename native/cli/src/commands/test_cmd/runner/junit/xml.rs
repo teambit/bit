@@ -11,7 +11,6 @@ pub(super) fn attribute(value: &str) -> String {
         match character {
             '&' => out.push_str("&amp;"),
             '<' => out.push_str("&lt;"),
-            '>' => out.push_str("&gt;"),
             '"' => out.push_str("&quot;"),
             '\t' => out.push_str("&#x9;"),
             '\n' => out.push_str("&#xA;"),

@@ -240,6 +240,7 @@ fn capture_environment(
         behavior,
     };
     switch::scan(scan, targets, &mut captured)?;
+    identities::align_new_workspace_dependencies(&mut captured.components);
     if snapshot {
         order::snapshot(root, &mut captured)?;
     }

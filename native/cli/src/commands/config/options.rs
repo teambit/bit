@@ -165,8 +165,7 @@ impl Options {
                 .first()
                 .is_some_and(|key| {
                     let trimmed = key.trim();
-                    trimmed.is_empty()
-                        || matches!(trimmed, "__proto__" | "constructor" | "prototype")
+                    trimmed.is_empty() || (self.command != "get" && trimmed == "__proto__")
                 })
         {
             return false;

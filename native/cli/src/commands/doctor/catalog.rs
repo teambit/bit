@@ -65,6 +65,7 @@ impl Diagnosis {
                 "name": self.name,
                 "description": self.description,
             },
+            "bareResult": null,
             "formattedSymptoms": if valid { "" } else { symptoms.trim() },
             "formattedManualTreat": if valid { "" } else { treatment.trim() },
         });

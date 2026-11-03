@@ -94,6 +94,25 @@ fn entry_identity_at(entries: &[Value], index: &Value) -> io::Result<String> {
         .to_string())
 }
 
+/// A dependency on a never-tagged workspace component carries the workspace's own (version-less)
+/// identity, whatever stale version its linked `package.json` still declares (for example after a reset).
+pub(super) fn align_new_workspace_dependencies(components: &mut [Component]) {
+    let new_ids: std::collections::HashSet<String> = components
+        .iter()
+        .filter(|component| !component.identity.contains('@'))
+        .map(|component| component.identity.clone())
+        .collect();
+    for dependency in
+        components.iter_mut().flat_map(|component| component.dependencies.iter_mut())
+    {
+        if let Some((base, _)) = dependency.rsplit_once('@')
+            && new_ids.contains(base)
+        {
+            *dependency = base.to_owned();
+        }
+    }
+}
+
 /// Returns `identity` stripped of any trailing `@version` suffix for dependency cache matching.
 #[must_use]
 #[inline]

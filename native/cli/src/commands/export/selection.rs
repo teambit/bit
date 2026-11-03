@@ -4,23 +4,11 @@ use crate::commands::engine::Engine;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Compiles a glob-style `*` pattern into an anchored regular expression for [`ids`].
+/// Compiles a `*` pattern into an anchored regular expression for [`ids`]: as `getRegex`
+/// does, only `*` becomes `.*` and everything else stays regular-expression syntax.
 #[inline]
 fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
-    let trimmed = pattern.trim();
-    let mut expr = String::with_capacity(trimmed.len() + 2);
-    expr.push('^');
-    for ch in trimmed.chars() {
-        if ch == '*' {
-            expr.push_str(".*");
-        } else if r".+?()[]{}^$|\".contains(ch) {
-            expr.push('\\');
-            expr.push(ch);
-        } else {
-            expr.push(ch);
-        }
-    }
-    expr.push('$');
+    let expr = format!("^{}$", pattern.trim().replace('*', ".*"));
     regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
 }
 
