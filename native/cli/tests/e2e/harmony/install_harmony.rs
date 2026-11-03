@@ -17,7 +17,7 @@ fn read_pkg_version(helper: &Helper, rel: &str) -> String {
         .to_owned()
 }
 
-/// Reads the dependency version range for `pkg` from `workspace.jsonc` policy.
+/// Reads the dependency version range for `pkg` from `workspace.jsonc` policy ([`Helper`]).
 fn read_ws_dep(helper: &Helper, pkg: &str) -> String {
     let ws = helper.read_workspace_jsonc();
     ws["teambit.dependencies/dependency-resolver"]["policy"]["dependencies"][pkg]

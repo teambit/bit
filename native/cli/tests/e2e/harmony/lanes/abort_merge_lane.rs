@@ -74,7 +74,7 @@ fn when_the_lane_was_merged_successfully_without_conflicts_or_diverged() {
     assert!(!comp1_content.contains("version2"), "{comp1_content}");
 }
 
-/// bit lane merge-abort command › when the merged lane introduced new components › should delete the newly introduced component root-dirs ([`populate`])
+/// bit lane merge-abort command › when the merged lane introduced new components › should delete the newly introduced component root-dirs ([`populate`], [`Helper`])
 #[test]
 fn when_the_merged_lane_introduced_new_components() {
     let helper = Helper::new();

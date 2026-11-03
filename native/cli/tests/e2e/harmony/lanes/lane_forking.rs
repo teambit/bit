@@ -55,7 +55,7 @@ fn fork_lane_then_original_lane_progresses_and_squashed_to_main() {
     helper.native("export --fork-lane-new-scope --all");
 }
 
-/// bit lane forking › exporting a component on a lane when the staged snaps exist already on the remote (from another lane) › bit export should not throw ([`Helper`])
+/// bit lane forking › exporting a component on a lane when the staged snaps exist already on the remote (from another lane) › bit export should not throw ([`fork_lane_and_export_to_another_scope_then_import`], [`Helper`])
 #[test]
 fn export_component_on_lane_when_staged_snaps_already_exist_on_remote() {
     let helper = Helper::new();

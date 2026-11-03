@@ -74,7 +74,7 @@ fn install_subscribers(ci: bool) {
     assert_manager_receipt(&helper);
 }
 
-/// Asserts that the wrapped package manager receipt records the expected `rebuild` `AsyncFunction` metadata.
+/// Asserts that the wrapped package manager receipt records the expected `rebuild` `AsyncFunction` metadata for [`install_subscribers`].
 fn assert_manager_receipt(helper: &crate::helper::Helper) {
     let text =
         fs::read_to_string(helper.scopes.local_path.join("lane-adoption-manager-receipts.jsonl"))

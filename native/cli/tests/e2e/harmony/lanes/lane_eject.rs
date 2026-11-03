@@ -8,7 +8,7 @@ use serde_json::json;
 /// Active lane name used in the `bit lane eject` end-to-end tests.
 const DEV_LANE: &str = "dev";
 
-/// Verifies `bit eject` on a lane for components with and without a `main` version ([`DEV_LANE`], [`Helper`]).
+/// Verifies `bit eject` on a lane for components with and without a `main` version ([`DEV_LANE`], [`Helper`], [`config`]).
 #[test]
 fn lane_eject_when_no_main_version() {
     let helper = Helper::new();

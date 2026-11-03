@@ -32,7 +32,7 @@ fn persist_core_extension_config_to_models() {
     );
 }
 
-/// Verifies third-party extension configuration persistence across `tag`, `export`, and `import` ([`Helper`], [`parse`]).
+/// Verifies third-party extension configuration persistence across `tag`, `export`, and `import` ([`Helper`], [`parse`], [`json`]).
 /// - `harmony extension config › persist extension config (provided by the user)to models › 3rd party extensions › extension is new component on the workspace › should not allow tagging the component without tagging the extensions`
 /// - `harmony extension config › persist extension config (provided by the user)to models › 3rd party extensions › extension is new component on the workspace › removing the extension with "-" › should have the extension defined on the component`
 /// - `harmony extension config › persist extension config (provided by the user)to models › 3rd party extensions › extension is new component on the workspace › removing the extension with "-" › should not have the extension defined on the component`

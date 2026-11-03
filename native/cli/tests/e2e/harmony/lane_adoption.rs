@@ -47,7 +47,7 @@ fn lane(helper: &Helper) -> String {
     format!("{}/dev", helper.scopes.remote)
 }
 
-/// Verifies `bit switch -n <alias>` preserves both the local alias and remote lane lookup ([`exported`], [`empty`], [`lane`]).
+/// Verifies `bit switch -n <alias>` preserves both the local alias and remote lane lookup ([`exported`], [`empty`], [`lane`], [`selection`]).
 #[test]
 fn remote_alias_preserves_both_local_alias_and_remote_name_lookup() {
     let helper = exported(1);

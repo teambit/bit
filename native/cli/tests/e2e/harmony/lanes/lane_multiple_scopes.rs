@@ -53,7 +53,7 @@ fn multiple_scopes_export_and_import_lane() {
     assert_eq!(len(&parse(&helper.native("status --json"))["stagedComponents"]), 0);
 }
 
-/// bit lane multiple scopes › multiple scopes when the components are new ([`parse`], [`len`])
+/// bit lane multiple scopes › multiple scopes when the components are new ([`Helper`], [`parse`], [`len`])
 #[test]
 fn multiple_scopes_when_components_are_new() {
     let helper = Helper::new();

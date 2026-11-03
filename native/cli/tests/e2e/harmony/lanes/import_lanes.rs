@@ -34,7 +34,7 @@ fn fetching_lanes_objects_without_writing_to_workspace() {
     helper.native("fetch --lanes");
 }
 
-/// import lanes › importing lanes › importing the lane and checking out by bit switch ([`parse`])
+/// import lanes › importing lanes › importing the lane and checking out by bit switch ([`Helper`], [`config`], [`parse`])
 /// import lanes › importing lanes › importing the lane and checking out with a different local lane-name
 #[test]
 fn importing_lane_and_checking_out_by_switch_and_with_alias() {

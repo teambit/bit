@@ -50,7 +50,7 @@ fn env_set_and_tag_with_variants() {
     assert!(comp_json["extensions"]["teambit.envs/envs"].get("__specific").is_none());
 }
 
-/// Verifies running `bit env set` twice replaces the previous env entry in `.bitmap` ([`Helper`]).
+/// Verifies running `bit env set` twice replaces the previous env entry in `.bitmap` ([`Helper`], [`create_bit_env_plugin_env`]).
 /// - `env command › bit env set › run bit env set X and then bit env set Y › should replace the env with the last one and remove the first one`
 #[test]
 fn env_set_replaces_previous_env() {

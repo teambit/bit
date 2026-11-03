@@ -12,6 +12,6 @@ mod fixture;
 mod hidden;
 /// Two-parent merge and diverged lane reset tests for `bit reset`.
 mod merged;
-/// Selected component pattern reset tests for `bit reset` on a lane.
+/// Selected component pattern reset tests for `bit reset` on a lane ([`selected_discovery`]).
 mod selected;
 mod selected_discovery;

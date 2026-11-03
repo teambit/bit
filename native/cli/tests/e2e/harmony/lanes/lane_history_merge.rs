@@ -4,7 +4,7 @@
 
 use crate::helper::{Helper, parse};
 
-/// Source lane merged via fast-forward into `lane-a`.
+/// Source lane merged via fast-forward into `lane-a` ([`lane_history_records_fast_forward_merge_entry`]).
 const MERGED_LANE: &str = "lane-b";
 
 /// Verifies that a fast-forward `bit lane merge` records a merge entry in `bit lane history --json` ([`MERGED_LANE`], [`Helper`], [`parse`]).

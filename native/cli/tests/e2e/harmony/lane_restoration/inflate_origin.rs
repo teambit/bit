@@ -34,7 +34,7 @@ pub(super) fn qualified_errors(helper: &Helper) -> [String; 2] {
     variants
 }
 
-/// Resolves the `Node.js` binary path from `BIT_NODE_BINARY` or the bundled `nodejs/22.22.0` runtime ([`PathBuf`], [`Command`]).
+/// Resolves the `Node.js` binary path from `BIT_NODE_BINARY` or the bundled `nodejs/22.22.0` runtime ([`qualified_errors`], [`PathBuf`], [`Command`]).
 fn node() -> PathBuf {
     if let Some(binary) = env::var_os("BIT_NODE_BINARY") {
         return binary.into();

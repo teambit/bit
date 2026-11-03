@@ -82,7 +82,7 @@ fn default_switch_installation_reuses_the_real_provider_session() {
     default_switch_installation(false);
 }
 
-/// Verifies CI `bit switch` installation reuses the configured provider session ([`default_switch_installation`]).
+/// Verifies CI `bit switch` installation reuses the configured provider session ([`default_switch_installation`], [`default_switch_installation_reuses_the_real_provider_session`]).
 #[test]
 fn ci_default_switch_installation_reuses_the_real_provider_session() {
     default_switch_installation(true);

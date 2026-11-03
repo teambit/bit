@@ -45,7 +45,7 @@ fn mixed_pattern_finishes_local_copies_before_remote_copies() {
     assert!(support::ids(&helper).contains(&"target.scope/comp1".into()));
     assert!(support::ids(&helper).contains(&"target.scope/comp2".into()));
 }
-/// Verifies duplicate workspace and remote matches during pattern `bit fork` retain the released partial failure ([`bitmap`]).
+/// Verifies duplicate workspace and remote matches during pattern `bit fork` retain the released partial failure ([`bitmap`], [`paired::compare`]).
 #[test]
 fn workspace_and_remote_duplicate_matches_retain_the_released_partial_failure() {
     let helper = support::exported(2);

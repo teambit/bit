@@ -58,7 +58,7 @@ fn create_command_options_and_validations() -> KnownResult<()> {
     Ok(())
 }
 
-/// Verifies `bit new` workspace generation, `bit test`, and `TypeScript` compilation across multiple envs ([`Helper`], [`KnownResult`]).
+/// Verifies `bit new` workspace generation, `bit test`, and `TypeScript` compilation across multiple envs ([`create_command_options_and_validations`], [`Helper`], [`KnownResult`]).
 #[test]
 fn new_and_test_and_typescript() -> KnownResult<()> {
     let helper = Helper::new();

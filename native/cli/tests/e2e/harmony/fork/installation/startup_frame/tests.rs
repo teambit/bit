@@ -44,7 +44,7 @@ fn a_later_duplicate_progress_transition_stays_byte_exact() {
     assert_eq!(project(&text), text);
 }
 
-/// Builds a sample two-package pnpm store banner derived from [`banner`].
+/// Builds a sample two-package pnpm store banner derived from [`banner`] for [`project`] tests.
 fn two_package_banner() -> String {
     banner()
         .replace("resolved 1", "resolved 2")

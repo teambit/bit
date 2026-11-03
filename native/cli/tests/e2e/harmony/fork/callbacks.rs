@@ -62,7 +62,7 @@ fn onadd_failure_retains_the_canonical_written_target_and_original_source() {
     assert_eq!(fs::read(helper.scopes.local_path.join("comp1/index.js")).unwrap(), original);
 }
 
-/// Asserts that `stdout` contains `fork source load`, tracker loading status, `fork target load`, and `fork target added` in order.
+/// Asserts that `stdout` contains `fork source load`, tracker loading status, `fork target load`, and `fork target added` in order for [`configured`].
 fn assert_load_order(stdout: &str) {
     let source = stdout.find("fork source load").expect("actual source onLoad");
     let target = stdout.find("fork target load").expect("actual target onLoad");

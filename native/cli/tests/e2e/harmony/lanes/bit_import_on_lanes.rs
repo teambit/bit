@@ -74,7 +74,7 @@ fn importing_non_lane_component_from_another_scope_when_on_a_lane() {
     );
 }
 
-/// bit lane command › bit-import with no params when checked out to a lane
+/// bit lane command › bit-import with no params when checked out to a lane ([`Helper`])
 #[test]
 fn bit_import_with_no_params_when_checked_out_to_lane() {
     let helper = Helper::new();

@@ -50,7 +50,7 @@ fn repeats_counters(frame: &str, counters: &str) -> bool {
             .strip_prefix(counters)
             .is_some_and(|rest| rest.starts_with("\u{1b}[0K\n") || rest.starts_with('\n'))
 }
-/// Returns `true` if `line` starts with `label` followed by a non-empty single-line path without ANSI escapes.
+/// Returns `true` if `line` starts with `label` followed by a non-empty single-line path without ANSI escapes for [`repeats_counters`].
 fn valid_path(line: &str, label: &str) -> bool {
     line.strip_prefix(label)
         .map(|path| path.strip_suffix("\u{1b}[0K").unwrap_or(path))

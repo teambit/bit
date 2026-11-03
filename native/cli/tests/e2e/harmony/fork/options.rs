@@ -92,7 +92,7 @@ fn unversioned_local_dependency_refactor_preserves_exact_generated_id_cache_byte
         format!("module.exports=require('@{}/copied-component');\n", helper.scopes.remote),
     );
 }
-/// Verifies remote `TypeScript` `bit fork` refactors exported class identifiers and file names ([`remote`]).
+/// Verifies remote `TypeScript` `bit fork` refactors exported class identifiers and file names ([`remote`], [`paired::workspace`]).
 #[test]
 fn remote_ast_fork_refactors_source_identifiers_and_filenames() {
     let helper = paired::workspace(0, false);

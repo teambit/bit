@@ -63,7 +63,7 @@ fn main_switch_reports_components_not_snapped_on_the_lane_as_skipped() {
     assert!(details.stdout.contains("comp2"), "{}", details.stdout);
 }
 
-/// Verifies `bit switch -p` on a non-empty workspace fails before mutating `.bitmap` ([`exported`], [`lane`]).
+/// Verifies `bit switch -p` on a non-empty workspace fails before mutating `.bitmap` ([`exported`], [`lane`], [`support`]).
 #[test]
 fn pattern_on_populated_workspace_preserves_the_full_error_prefix() {
     let helper = exported(2);

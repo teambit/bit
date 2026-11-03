@@ -93,7 +93,7 @@ fn compare_inventory(root: &Path, actual: &[(String, Vec<u8>)], expected: &[(Str
         );
     }
 }
-/// Reads all objects under `root/objects` and returns sorted `(hash, decompressed_bytes)` pairs.
+/// Reads all objects under `root/objects` and returns sorted `(hash, decompressed_bytes)` pairs for [`compare_inventory`].
 fn inventory(root: &Path) -> Vec<(String, Vec<u8>)> {
     let mut result = Vec::new();
     for prefix in fs::read_dir(root.join("objects")).unwrap().flatten() {

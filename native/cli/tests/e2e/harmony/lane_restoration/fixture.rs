@@ -69,7 +69,7 @@ pub(super) fn latest(helper: &Helper) -> String {
         .to_owned()
 }
 
-/// Returns the `.bitmap` `version` JSON value for component `name` ([`Helper`], [`Value`]).
+/// Returns the `.bitmap` `version` JSON value for component `name` ([`Fixture`], [`Helper`], [`Value`]).
 pub(super) fn version(helper: &Helper, name: &str) -> Value {
     support::bitmap(helper)
         .as_object()

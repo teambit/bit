@@ -10,7 +10,7 @@ mod bit_checkout_on_lanes;
 mod bit_import_on_lanes;
 /// End-to-end tests for `bit remove` and `bit delete` on lanes.
 mod bit_remove_on_lanes;
-/// End-to-end tests for diverged forked lanes.
+/// End-to-end tests for diverged forked lanes ([`diverged_from_remote_lane`]).
 mod diverged_from_forked;
 mod diverged_from_remote_lane;
 mod import_lanes;

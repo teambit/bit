@@ -52,7 +52,7 @@ fn diffing_the_current_lane_against_main() {
     expect_main_to_dev_diff(&diff.stdout);
 }
 
-/// Verifies `bit lane diff <to-lane>` against a non-default lane on the workspace ([`FOO_V2`], [`FOO_V3`], [`strip_ansi`]).
+/// Verifies `bit lane diff <to-lane>` against a non-default lane on the workspace ([`FOO_V2`], [`FOO_V3`], [`Helper`], [`strip_ansi`]).
 #[test]
 fn bit_lane_diff_to_lane_non_default_on_the_workspace() {
     let helper = Helper::new();

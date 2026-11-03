@@ -11,7 +11,7 @@ use serde_json::json;
 /// Aspect ID for dependency-resolver inspection in `env.jsonc` policy tests.
 const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
 
-/// Verifies peer, dev, and runtime dependency policies and `extends` inheritance from `env.jsonc` ([`DEPENDENCY_RESOLVER_ASPECT`], [`parse`], [`KnownResult`]).
+/// Verifies peer, dev, and runtime dependency policies and `extends` inheritance from `env.jsonc` ([`DEPENDENCY_RESOLVER_ASPECT`], [`parse`], [`KnownResult`], [`Helper`]).
 #[test]
 fn env_jsonc_policies_peers_devs_runtime_and_extends() -> KnownResult<()> {
     let helper = Helper::new();

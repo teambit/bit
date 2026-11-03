@@ -63,7 +63,7 @@ fn importing_from_main_file_when_dependency_not_compiled_yet() {
     );
 }
 
-/// Verifies that importing a non-main `.json` file does not raise an `ImportNonMainFiles` issue ([`parse`]).
+/// Verifies that importing a non-main `.json` file does not raise an `ImportNonMainFiles` issue ([`Helper`], [`parse`]).
 /// importing internal files flow › importing of a non-main json file › bit status should not show it as an invalid component
 #[test]
 fn importing_non_main_json_file_does_not_show_issue() {

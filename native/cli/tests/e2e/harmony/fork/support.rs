@@ -38,7 +38,7 @@ pub(super) fn target(helper: &Helper, name: &str) -> std::path::PathBuf {
         .unwrap();
     helper.scopes.local_path.join(row["rootDir"].as_str().unwrap())
 }
-/// Asserts the copy barrier completed and that each component in `names` records `forkedFrom` pointing to the remote scope ([`FORK`]).
+/// Asserts the copy barrier completed and that each component in `names` records `forkedFrom` pointing to the remote scope ([`FORK`], [`Helper`]).
 pub(in crate::harmony) fn assert_origins(helper: &Helper, names: &[&str]) {
     assert_copy_barrier(helper);
     for name in names {

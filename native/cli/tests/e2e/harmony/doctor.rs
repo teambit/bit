@@ -62,7 +62,7 @@ fn git_diagnosis_matches_node_success_failure_and_treatment() {
         );
     }
 }
-/// Verifies `bit doctor "validate scope objects"` matches `Node.js` on healthy scopes and when a head object is missing ([`compare`]).
+/// Verifies `bit doctor "validate scope objects"` matches `Node.js` on healthy scopes and when a head object is missing ([`compare`], [`Helper`]).
 #[test]
 fn scope_integrity_matches_node_healthy_and_missing_head() {
     let helper = Helper::new();
