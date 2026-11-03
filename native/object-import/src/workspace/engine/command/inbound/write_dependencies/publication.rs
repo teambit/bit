@@ -46,7 +46,7 @@ pub(super) fn write(
     crate::merge_state::write::commit(&path, &after)
 }
 
-/// Merges `dependencies` into a `package.json` document while preserving its indentation and newline style.
+/// Merges `dependencies` into a `package.json` document while preserving its indentation and newline style for [`write`].
 fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
     let mut value: Value = crate::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
     let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;

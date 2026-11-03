@@ -48,7 +48,7 @@ pub(super) fn recovery_connection(
     Ok((remotes, network))
 }
 
-/// Retain an HTTP lane and its component closure before the import owner
+/// Retain an HTTP lane (`id`: [`lane::Id`]) and its component closure into a [`VirtualRemote`] before the import owner
 /// publishes anything. File remotes continue through the deferred importer.
 pub(super) fn lane_objects(
     input: &Prepare,

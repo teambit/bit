@@ -62,7 +62,7 @@ fn capture_remotes(
     Ok((remotes.into_values().collect(), hash))
 }
 
-/// Filters `roots` to targets that do not appear in the lane's `entries`.
+/// Filters `roots` ([`Target`]) to targets that do not appear in the lane's `entries` ([`lane::Entry`]) via [`entry_key`] and [`target_key`].
 #[inline]
 fn unmatched_roots(roots: &[Target], entries: &[lane::Entry]) -> Vec<Target> {
     let entry_set: HashSet<_> = entries.iter().map(entry_key).collect();

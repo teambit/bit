@@ -59,7 +59,7 @@ impl Prepared {
         Ok(Some(report(logs, mapped, conflicts)))
     }
 
-    /// Revalidates that `self.path` remains an ordinary file matching `self.before`.
+    /// Revalidates via [`ordinary`] that `self.path` remains an ordinary file matching `self.before`.
     pub(super) fn validate(&self) -> io::Result<()> {
         ordinary(&self.path)?;
         if fs::read(&self.path)? != self.before {

@@ -68,7 +68,7 @@ pub(in crate::workspace::engine::command) fn failure(
     response::with_progress(error, progress)
 }
 
-/// Removes an incomplete `historyCheckoutImport` progress entry from `progress["imports"]` using `context["historyImportProgressStart"]`.
+/// Removes an incomplete `historyCheckoutImport` progress entry from `progress["imports"]` using `context["historyImportProgressStart"]` for [`failure`].
 #[inline]
 fn discard_incomplete(progress: &mut Value, context: &Value) {
     if context["historyCheckoutImport"]["completed"] != false {

@@ -81,7 +81,7 @@ pub(super) fn bare(
     Ok((remotes, network, global, local.to_owned()))
 }
 
-/// Reads and deserializes [`GlobalConfig`] from `transport.global_config_dir`.
+/// Reads and deserializes [`GlobalConfig`] from `transport.global_config_dir` ([`Transport`]).
 #[inline]
 pub(super) fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
     serde_json::from_value(bit_workspace_config::read_global_config(&transport.global_config_dir)?)

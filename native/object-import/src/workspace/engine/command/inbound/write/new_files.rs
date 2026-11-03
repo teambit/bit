@@ -17,7 +17,7 @@ pub(super) fn prepare(
     Ok(())
 }
 
-/// Validates and records a single new file addition or `override_existing` [`Replacement`] in `changes` ([`WorkspaceFiles`]).
+/// Validates and records a single new file addition or `override_existing` [`Replacement`] in `changes` ([`WorkspaceFiles`]) for [`prepare`].
 #[inline]
 fn prepare_one(
     context: &Planning<'_>,

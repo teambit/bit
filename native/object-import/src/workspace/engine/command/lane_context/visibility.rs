@@ -76,8 +76,8 @@ fn is_metadata_bitmap_key(key: &str) -> bool {
 }
 
 /// A lane switch also selects hidden bitmap entries when the destination
-/// carries them. Switching to main considers every tracked entry, then drops
-/// lane-only entries without a main head after the models have been loaded.
+/// carries them. Switching to `main` considers every tracked entry, then drops
+/// lane-only entries without a `main` head after the models have been loaded.
 pub(in crate::workspace::engine::command) fn switch_targets(
     bitmap: &Value,
     settings: &Value,

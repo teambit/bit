@@ -59,7 +59,7 @@ pub(super) fn filter(
     Ok(Filtered { indices, excluded })
 }
 
-/// Resolves the unique status indices in `statuses` corresponding to each identity in `ids`.
+/// Resolves the unique status indices in `statuses` corresponding to each identity in `ids` for [`filter`].
 fn indices_for_ids(statuses: &[Value], ids: &[String]) -> io::Result<Vec<usize>> {
     let mut seen = HashSet::with_capacity(ids.len());
     ids.iter()

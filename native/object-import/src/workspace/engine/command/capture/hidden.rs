@@ -11,7 +11,7 @@ use std::{collections::HashSet, io, path::Path};
 
 /// Hidden lane dependents are `ConsumerComponents` loaded from object storage.
 /// Paths are private token keys only; they must never enter workspace inventory
-/// or materialization. [`Repository`] object proofs bind all retained `Source` bytes.
+/// or materialization. [`Repository`] object proofs bind all retained `Source` bytes via [`retain_files`].
 pub(in crate::workspace::engine::command) fn from_model(
     private_root: &Path,
     identity: &str,

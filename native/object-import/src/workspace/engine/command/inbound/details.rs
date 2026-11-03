@@ -56,8 +56,8 @@ pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
         .map_or_else(|| head.to_owned(), |(tag, _)| tag.trim().to_owned()))
 }
 
-/// `_getImportDetails`: per target, the tags the import added, its status,
-/// the head when it is new, and whether the component is deprecated.
+/// `_getImportDetails`: per [`Target`], the tags the import added, its status,
+/// the head when it is new, and whether the component is deprecated via [`detail`].
 pub(super) fn details(
     root: &Path,
     targets: &[Target],

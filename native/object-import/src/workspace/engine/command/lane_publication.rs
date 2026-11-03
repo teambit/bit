@@ -56,7 +56,7 @@ impl Prepared {
             squashes: Vec::new(),
         }))
     }
-    /// Builds the lane publication receipt summarizing history availability, import history count, and squash hashes.
+    /// Builds the lane publication receipt summarizing history availability, import history count, and [`squash::Prepared::message_hash`] squash hashes.
     pub(super) fn receipt(&self) -> Value {
         json!({"history":!self.current.is_null(),"importHistoryCount":self.context["importHistoryPlans"].as_array().map_or(0, Vec::len),"squashMessageHashes":self.squashes.iter().filter_map(squash::Prepared::message_hash).collect::<Vec<_>>()})
     }

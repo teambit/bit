@@ -7,7 +7,7 @@ use super::super::{Target, invalid};
 use serde_json::{Map, Value};
 use std::{io, path::Path};
 
-/// Each target's directory: the template, then `fixDirsIfEqual` and
+/// Each [`Target`]'s directory: the [`directory`] template, then [`fix_dirs_if_equal`] and
 /// `fixDirsIfNested` against the bitmap's existing `rootDir`s.
 pub(super) fn assign(
     root: &Path,

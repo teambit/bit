@@ -78,7 +78,7 @@ fn selected(
     Ok(selected)
 }
 
-/// Strips any trailing `@<version>` suffix from `raw` and returns the trimmed bare identity.
+/// Strips any trailing `@<version>` suffix from `raw` and returns the trimmed bare identity for [`attach_missing`] and [`selected`].
 #[inline]
 fn bare_id(raw: &str) -> &str {
     let raw = raw.trim();

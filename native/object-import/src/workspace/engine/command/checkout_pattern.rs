@@ -55,7 +55,7 @@ pub(in crate::workspace::engine) fn select(
     Ok((record.targets.len(), json!({"token":record.token,"targets":record.targets})))
 }
 
-/// Extracts the bare `<scope>/<name>` identity from a checkout `target` JSON object (`identity` or `id`).
+/// Extracts the bare `<scope>/<name>` identity from a checkout `target` JSON object (`identity` or `id`) for [`select`].
 #[inline]
 fn target_identity(target: &Value) -> Option<&str> {
     target["identity"]

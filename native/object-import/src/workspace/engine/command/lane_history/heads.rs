@@ -72,7 +72,7 @@ pub(in crate::workspace::engine::command) fn local<'a>(
         })
 }
 
-/// Returns whether a lane or remote-ref component `id_value` matches `identity` (`<scope>/<name>`).
+/// Returns whether a lane or remote-ref component `id_value` matches `identity` (`<scope>/<name>`) for [`remote`] and [`local`].
 fn matches_row_identity(id_value: &Value, identity: &str) -> bool {
     let identity = identity.trim();
     let identity = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());

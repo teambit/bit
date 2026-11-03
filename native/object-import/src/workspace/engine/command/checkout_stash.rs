@@ -35,7 +35,7 @@ pub(super) fn version<'a>(options: &'a Options, identity: &str) -> Option<&'a st
         .map(|row| row.version.trim())
 }
 
-/// Validates stash checkout or reset options, version hashes, and entry counts on `request` ([`Prepare`]).
+/// Validates stash checkout or reset [`Options`], version hashes, and entry counts on `request` ([`Prepare`]).
 pub(super) fn validate(request: &Prepare) -> io::Result<()> {
     let Some(stash) = &request.options.stash else {
         return Ok(());

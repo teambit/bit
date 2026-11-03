@@ -63,7 +63,7 @@ pub(in crate::workspace::engine) fn finalize(
     Ok((count, json!({"synced":count})))
 }
 
-/// Validates that `git_head` is a non-empty, non-control revision string within 256 bytes.
+/// Validates that `git_head` is a non-empty, non-control revision string within 256 bytes for [`finalize`].
 fn validate_git_head(git_head: &str) -> io::Result<&str> {
     let git_head = git_head.trim();
     if git_head.is_empty() || git_head.len() > 256 || git_head.chars().any(char::is_control) {

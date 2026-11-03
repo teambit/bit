@@ -8,7 +8,7 @@ use crate::command_import::PreparedImport;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Assigns destination directories and validates non-overlapping paths for incoming lane additions in [`PreparedImport`].
+/// Assigns destination directories and validates non-overlapping paths for incoming lane additions in [`PreparedImport`] alongside [`prepare_switch`].
 pub(in crate::workspace::engine::command) fn prepare(
     imported: &mut PreparedImport,
     bitmap: &Value,

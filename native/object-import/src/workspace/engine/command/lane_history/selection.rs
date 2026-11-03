@@ -35,7 +35,7 @@ pub(super) fn phases(
     }
     Ok(phases)
 }
-/// Collects the set of `<scope>/<name>` component identities currently present in `.bitmap`.
+/// Collects the set of `<scope>/<name>` component identities currently present in `.bitmap` for [`phases`].
 fn membership(bitmap: &Value, settings: &Value) -> io::Result<HashSet<String>> {
     let projected = super::super::lane_context::visibility::identity_bitmap(bitmap, settings)?;
     Ok(projected

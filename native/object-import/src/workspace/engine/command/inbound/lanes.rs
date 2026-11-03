@@ -21,9 +21,9 @@ struct Selection {
     virtual_remotes: Vec<VirtualRemote>,
 }
 
-/// Public `fetch <scope>/<lane> --lanes` for configured scopes. The
+/// Public `fetch <scope>/<lane> --lanes` for configured scopes via [`select`]. The
 /// existing lane importer owns component closure and remote refs without
-/// publishing the Lane object into the local index.
+/// publishing the `Lane` object into the local index.
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
     if input.operation.trim() == "fetch"
         && (input.ids.is_empty()

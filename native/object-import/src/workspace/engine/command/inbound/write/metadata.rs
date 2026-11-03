@@ -7,7 +7,7 @@ use super::invalid;
 use serde_json::{Map, Value};
 use std::io;
 
-/// Extracts and validates `$schema-version` (`"17.0.0"`) and `_bit_lane` metadata from `.bitmap` `rows` (up to `4,096` entries).
+/// Extracts and validates `$schema-version` (`"17.0.0"`) and `_bit_lane` metadata from `.bitmap` `rows` (up to `4,096` entries) alongside [`component_order`].
 pub(super) fn bitmap_metadata(rows: &mut Map<String, Value>) -> io::Result<(Value, Option<Value>)> {
     let Some(schema) = rows.shift_remove("$schema-version") else {
         return Err(invalid("inbound workspace bitmap lifecycle"));

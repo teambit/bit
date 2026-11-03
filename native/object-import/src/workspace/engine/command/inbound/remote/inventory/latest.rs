@@ -69,7 +69,7 @@ fn jobs(input: &Request) -> io::Result<Vec<(String, Vec<String>)>> {
     Ok(grouped.into_iter().collect())
 }
 
-/// Queries and validates latest `<scope>/<name>@<version>` rows for `ids` in `scope` against `remote`.
+/// Queries and validates latest `<scope>/<name>@<version>` rows for `ids` in `scope` against `remote` ([`Remote`]) via [`file_latest`] or [`Network::latest_versions`].
 async fn group(
     scope: String,
     ids: Vec<String>,

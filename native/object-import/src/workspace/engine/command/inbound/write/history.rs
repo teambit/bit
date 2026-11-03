@@ -72,7 +72,7 @@ impl Attributes {
         };
         Ok(Self { source: Some(source), backup })
     }
-    /// Verifies that `.bitmap` and its optional backup file have unchanged permissions and modification times.
+    /// Verifies via [`validate_metadata`] that `.bitmap` and its optional backup file have unchanged permissions and modification times.
     pub(super) fn validate(&self, root: &Path, backup: &Path) -> io::Result<()> {
         if let Some(source) = &self.source {
             validate_metadata(source, &fs::symlink_metadata(root.join(".bitmap"))?)?;

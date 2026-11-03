@@ -45,7 +45,7 @@ pub(in crate::workspace::engine::command) fn prepare(
     prepare_with(root, inputs, root_components, skip_packages, false, false)
 }
 
-/// Prepares post-merge `staged-snaps`, `staged-config`, and `node_modules` updates, allowing missing package directories.
+/// Prepares post-merge `staged-snaps`, `staged-config`, and `node_modules` updates into [`Prepared`] via [`prepare_with`], allowing missing package directories.
 pub(in crate::workspace::engine::command) fn prepare_publication(
     root: &Path,
     inputs: &[Input<'_>],

@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::io;
 
-/// Deserialized completion payload for inbound `ConfigMerger` workspace policy updates consumed by [`complete`].
+/// Deserialized completion payload (`token`, `semver`) for inbound `ConfigMerger` workspace policy updates consumed by [`complete`].
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Complete {

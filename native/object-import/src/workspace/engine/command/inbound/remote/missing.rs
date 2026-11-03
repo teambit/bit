@@ -67,8 +67,8 @@ impl Objects<'_> {
         version["flattenedDependencies"].as_array().map(|rows| Cow::Borrowed(rows.as_slice()))
     }
 
-    /// `sources.getMany(flattenedDependencies, reFetchUnBuiltVersion)`: the dependency's
-    /// Version exists and is built.
+    /// `sources.getMany(flattenedDependencies, reFetchUnBuiltVersion)`: checks via [`Self::version`] that the dependency's
+    /// `Version` exists and is built.
     fn built(&self, dependency: &Value) -> bool {
         dependency_id(dependency)
             .and_then(|id| self.version(&id))

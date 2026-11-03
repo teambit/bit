@@ -17,7 +17,7 @@ pub(super) fn matches_target(key: &str, row: &Value, target: &Target) -> bool {
     row_name.trim() == target.name.trim() && row_effective_scope(row_scope, row) == target_scope
 }
 
-/// Resolves the effective scope of a `.bitmap` row from its explicit `scope` or `defaultScope`.
+/// Resolves the effective scope of a `.bitmap` row from its explicit `scope` or `defaultScope` for [`matches_target`] and [`bitmap_key`].
 #[inline]
 fn row_effective_scope<'a>(row_scope: Option<&'a str>, row: &'a Value) -> Option<&'a str> {
     row_scope

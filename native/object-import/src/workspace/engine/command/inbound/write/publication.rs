@@ -64,7 +64,7 @@ impl Prepared {
         self.publish_bitmap()
     }
 
-    /// Verifies that `root/.bitmap` still matches `self.bitmap_before` at `stage`.
+    /// Verifies that `root/.bitmap` still matches `self.bitmap_before` at `stage` during [`Self::commit`].
     #[inline]
     fn check_bitmap(&self, stage: &str) -> io::Result<()> {
         let path = self.root.join(".bitmap");

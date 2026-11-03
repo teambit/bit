@@ -53,7 +53,7 @@ pub(super) fn update(
     Ok(())
 }
 
-/// Splits a `<scope>/<name>[@<version>]` string into trimmed `(scope, name)` slices.
+/// Splits a `<scope>/<name>[@<version>]` string into trimmed `(scope, name)` slices for [`update`].
 #[inline]
 fn parse_scoped_identity<'a>(
     identity: &'a str,

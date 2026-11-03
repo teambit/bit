@@ -69,7 +69,7 @@ impl Retained {
     }
 }
 
-/// Returns `true` when `candidate` is nested inside or contains any existing tracked `rootDir` in `rows`.
+/// Returns `true` when `candidate` is nested inside or contains any existing tracked `rootDir` in `rows` for [`Retained::avoid_tracked`].
 fn has_nested_tracked(rows: &Map<String, Value>, candidate: &str) -> bool {
     rows.values()
         .filter_map(|row| trimmed_str(&row["rootDir"]))

@@ -73,7 +73,7 @@ pub(super) fn identity(entry: &Value) -> io::Result<String> {
 }
 
 impl Prepared {
-    /// `Consumer.updateNextVersionOnBitmap` records a soft tag without moving the current id.
+    /// `Consumer.updateNextVersionOnBitmap` records a soft tag via [`rows`] and [`identity`] without moving the current ID.
     pub(in crate::workspace::engine::command) fn soft_tag(
         &mut self,
         context: &Value,

@@ -17,7 +17,7 @@ pub(in crate::workspace::engine::command) fn history_remote(
     history_remote_at(root, home, transport, id, false, None)
 }
 
-/// Fetches remote `Lane` and `LaneHistory` objects for [`lane::Id`] via [`connection::bare`] or [`connection::with_home`] with optional `bare` scope and `remote_host` overrides.
+/// Fetches remote `Lane` and `LaneHistory` objects for [`lane::Id`] into a [`VirtualRemote`] via [`connection::bare`] or [`connection::with_home`] with optional `bare` scope and `remote_host` overrides.
 pub(in crate::workspace::engine::command) fn history_remote_at(
     root: &Path,
     home: &Path,

@@ -57,7 +57,7 @@ pub(super) fn prepare_workspace(
     write::prepare(&input.root, targets, import, file_id, options).map(Some)
 }
 
-/// Dispatches `diff`, `status`, or standard/graph inbound preparation for `targets` and `virtual_remotes`.
+/// Dispatches `diff`, `status`, or standard/graph inbound preparation for `targets` ([`Target`]) and `virtual_remotes`.
 fn prepare_import(
     input: &Prepare,
     targets: &[Target],

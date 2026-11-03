@@ -59,7 +59,7 @@ pub(super) fn nested_directories(root: &Path) -> io::Result<Vec<String>> {
     Ok(nested)
 }
 
-/// Filters `.bitmap` and `nested` component directories out of a workspace-root `Version` `manifest`.
+/// Filters `.bitmap` and [`nested_directories`] `nested` component directories out of a workspace-root `Version` `manifest`.
 #[inline]
 pub(super) fn filter(manifest: &mut Value, nested: &[String]) -> io::Result<()> {
     manifest["proofFiles"] = manifest["files"].clone();

@@ -69,7 +69,7 @@ impl Prepared {
     pub(super) fn message_hash(&self) -> Option<&str> {
         self.replacement.as_ref().map(|_| self.hash.as_str())
     }
-    /// Returns `(identity, hash, version)` for rebasing cached `VersionHistory` graphs after squashing.
+    /// Returns `(identity, hash, version)` from [`Prepared`] for rebasing cached `VersionHistory` graphs after squashing.
     #[inline]
     pub(super) fn history(&self) -> (String, String, Value) {
         (self.identity.clone(), self.hash.clone(), self.version.clone())

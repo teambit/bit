@@ -39,7 +39,7 @@ impl Prepared {
     pub(super) fn validate(&self, root: &Path) -> io::Result<()> {
         validate_destination(&self.path, root)
     }
-    /// Writes `self.contents` to `self.path`.
+    /// Writes `self.contents` to `self.path` for this [`Prepared`] `LICENSE` file.
     #[inline]
     pub(super) fn commit(&self) -> io::Result<()> {
         crate::merge_state::write::commit(&self.path, &self.contents)

@@ -68,7 +68,7 @@ pub(super) fn remote_lane(
     selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
 }
 
-/// Extracts [`lane::Entry`] items for `id` at `hash` from a [`VirtualRemote`] object list.
+/// Extracts [`lane::Entry`] items for `id` ([`lane::Id`]) at `hash` from a [`VirtualRemote`] object list via [`parse_lane_object`].
 pub(in crate::workspace::engine::command) fn lane_entries(
     remote: &VirtualRemote,
     hash: &str,

@@ -65,7 +65,7 @@ fn collect(path: &Path, scope: &str, pattern: &Regex, rows: &[Value]) -> io::Res
     Ok(listed)
 }
 
-/// Compiles a glob-style `namespaces` filter for `scope` into an anchored [`Regex`].
+/// Compiles a glob-style `namespaces` filter for `scope` into an anchored [`Regex`] for [`list`].
 pub(super) fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
     if namespaces.is_empty() || namespaces.len() > 4096 || namespaces.chars().any(char::is_control)
     {
