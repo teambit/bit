@@ -13,7 +13,7 @@ use super::{
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the `bit format` CLI command.
+/// Descriptor for the `bit format` ([`run`], [`Options`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "format", aliases: &[], run };
 
 /// Error message emitted when `bit format` is invoked outside both a workspace and a bare scope.

@@ -21,7 +21,7 @@ const FS_METADATA_FILES: &[&str] = &[".DS_Store", "Thumbs.db", "desktop.ini"];
 
 type RemoteRefsPair = (HashMap<String, Vec<String>>, HashSet<String>);
 
-/// Single decoded scope object record with hash, kind, byte size, modification time, and JSON value.
+/// Single decoded scope object record in [`ScopeInventory`] with hash, kind, byte size, modification time, and JSON [`Value`].
 #[derive(Debug, Clone)]
 pub(super) struct ObjectEntry {
     pub hash: String,

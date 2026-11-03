@@ -36,7 +36,7 @@ impl Id {
         Ok(Self { scope: scope.to_string(), name: name.to_string(), version })
     }
 
-    /// `ComponentID.fromObject({ scope, name, version })`.
+    /// Parses an [`Id`] via `ComponentID.fromObject({ scope, name, version })` from `id` ([`Value`]).
     pub fn from_object(id: &Value) -> io::Result<Self> {
         if let Some(raw) = id.as_str() {
             return Self::parse(raw);

@@ -38,7 +38,7 @@ pub(super) fn run(
     }
     Ok(())
 }
-/// Resolves the remote scope registry and HTTP transport for `root`.
+/// Resolves the remote scope registry and HTTP transport for `root` ([`Path`]) in [`run`].
 #[inline]
 fn connection(
     root: &Path,

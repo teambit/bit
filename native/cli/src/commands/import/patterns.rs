@@ -60,7 +60,7 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
     Ok(selection)
 }
 
-/// The ids `pattern`'s remote list holds, filtered by `include_deprecated` in `sortListScopeResults` order.
+/// The ids `pattern`'s remote list ([`Value`]) holds, filtered by `include_deprecated` in `sortListScopeResults` order.
 #[inline]
 fn listed(pattern: &str, list: &Value, include_deprecated: bool) -> io::Result<Vec<String>> {
     let pattern = pattern.trim();

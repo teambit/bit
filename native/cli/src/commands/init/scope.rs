@@ -32,7 +32,7 @@ pub(super) fn document(
     bit_workspace_config::render_scope_json(&scope)
 }
 
-/// Reads the existing `scope.json` at `path` when `fresh` is false and `objects/` exists.
+/// Reads the existing `scope.json` [`Value`] at `path` when `fresh` is false and `objects/` exists.
 #[inline]
 fn current(path: &Path, fresh: bool) -> io::Result<Value> {
     if fresh || !path.join("objects").is_dir() {

@@ -18,7 +18,7 @@ use crate::{
 use serde_json::Value;
 use std::{collections::HashMap, env, ffi::OsString, io, path::Path};
 
-/// Descriptor for the `bit blame` CLI command.
+/// Descriptor for the `bit blame` ([`run`], [`parse_args`]) CLI [`Command`].
 pub(super) const COMMAND: Command = Command { name: "blame", aliases: &[], run };
 
 /// Parses `args` into `(file_path, include_message)` via [`consume_trailing_path`] when they fit the native `bit blame` grammar.

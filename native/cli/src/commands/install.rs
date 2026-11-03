@@ -78,7 +78,7 @@ struct Prepared {
     root: PathBuf,
 }
 
-/// The checks that leave the command to the Node.js CLI; `Err` names the outcome.
+/// The checks that leave the command to the Node.js CLI; `Err` names the [`Outcome`] and `Ok` yields [`Prepared`].
 fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, Outcome>> {
     let Some(argv) = utf8(args) else {
         return Ok(Err(Outcome::Declined("arguments are not UTF-8".to_string())));

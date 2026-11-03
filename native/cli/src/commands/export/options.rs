@@ -7,7 +7,7 @@ pub(super) struct Options {
     pub lifecycle: LifecycleFlags,
 }
 
-/// Post-export lifecycle flags (`--eject`, `--open-browser`).
+/// Post-export lifecycle flags (`--eject`, `--open-browser`) in [`Options`].
 #[derive(Default)]
 pub(super) struct LifecycleFlags {
     pub eject: bool,

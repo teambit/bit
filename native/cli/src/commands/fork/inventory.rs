@@ -70,7 +70,7 @@ fn matches_source_row(row: &Value, bare: &str, explicit_ver: Option<&str>) -> bo
     });
     id_matches && ver_matches
 }
-/// Extracts the trimmed `defaultScope` string from `inventory["workspace"]`.
+/// Extracts the trimmed `defaultScope` string from `inventory["workspace"]` ([`Value`]).
 #[inline]
 pub(super) fn default_scope(inventory: &Value) -> io::Result<String> {
     crate::commands::update_cmd::aspect_entry(

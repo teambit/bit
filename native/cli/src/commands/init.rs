@@ -87,7 +87,7 @@ fn execute(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// Formats the human-readable `bit init` completion message for `options`, `created`, and optional `files`.
+/// Formats the human-readable `bit init` completion message for `options` ([`options::Options`]), `created`, and optional `files` via [`Formatter`].
 fn report(
     options: &options::Options,
     created: bool,

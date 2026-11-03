@@ -24,7 +24,7 @@ use std::{
     path::Path,
 };
 
-/// Descriptor for the `bit log-file` CLI command.
+/// Descriptor for the `bit log-file` ([`run`], [`parse_args`]) CLI [`Command`].
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
 /// Parses `args` into `(file_path, one_line)` via [`consume_trailing_path`] when they fit the native `bit log-file` grammar.

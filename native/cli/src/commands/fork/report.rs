@@ -5,7 +5,7 @@ use crate::commands::{
     color::Chalk,
     workspace_command::{format::Formatter, results::Report},
 };
-/// Builds the terminal [`Report`] summarizing single, pattern, or scope `bit fork` results via [`summary`].
+/// Builds the terminal [`Report`] summarizing single, pattern, or scope `bit fork` results ([`Options`]) via [`Formatter`] and [`summary`].
 #[inline]
 pub(super) fn render(options: &Options, ids: &[String], chalk: Chalk) -> Report {
     let formatter = Formatter::new(chalk);

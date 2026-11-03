@@ -62,7 +62,7 @@ fn parse_generator_envs(value: &str) -> Vec<&str> {
         .collect()
 }
 
-/// Reads and re-renders an existing `workspace.jsonc` at `path` if present.
+/// Reads and re-renders an existing `workspace.jsonc` [`Document`] at `path` via [`render`] if present.
 #[inline]
 pub(super) fn existing(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::read_to_string(path) {

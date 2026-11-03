@@ -8,7 +8,7 @@ use crate::commands::{add::ProjectedLinker, color::Chalk, workspace_command::res
 use bit_object_import::component_fork::RemoteCapture;
 use serde_json::{Value, json};
 use std::{io, path::Path};
-/// Accumulated forked component IDs, policy facts, old package names, and [`RemoteCapture`]s.
+/// Accumulated forked component IDs, policy facts ([`Value`]), old package names, and [`RemoteCapture`]s for [`run`].
 struct Results {
     ids: Vec<String>,
     facts: Vec<Value>,

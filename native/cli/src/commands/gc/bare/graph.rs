@@ -10,7 +10,7 @@ use std::{
     path::Path,
 };
 
-/// Reachability walker that marks retained [`Object`] hashes across a bare scope's components and lanes.
+/// Reachability walker that marks retained [`Object`] hashes across a bare scope's components and lanes ([`Self::plan`]).
 pub(super) struct Collector<'a> {
     scope: &'a Path,
     name: &'a str,

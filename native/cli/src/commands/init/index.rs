@@ -39,7 +39,7 @@ pub(super) fn prepare(plan: &mut Plan, scope: &Path, options: &Options) -> io::R
     Ok(())
 }
 
-/// Scans loose objects in `scope` to reconstruct the `components` and `lanes` arrays for `index.json`.
+/// Scans loose objects in `scope` via [`hashes`], [`component`], and [`lane`] to reconstruct the `components` and `lanes` arrays for `index.json`.
 #[inline]
 fn build(scope: &Path) -> io::Result<Value> {
     let mut components = Vec::new();

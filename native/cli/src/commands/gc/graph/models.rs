@@ -6,7 +6,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, fs, path::Path};
 
-/// Indexed `Component` and `Symlink` objects from a [`ScopeInventory`].
+/// Indexed `Component` and `Symlink` objects ([`Value`]) from a [`ScopeInventory`] ([`Models::new`]).
 pub(in crate::commands::gc) struct Models {
     identities: HashMap<String, Value>,
     hashes: HashMap<String, Value>,

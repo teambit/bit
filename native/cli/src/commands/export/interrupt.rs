@@ -26,7 +26,7 @@ const PLAIN: &str = "⚠ unable to cancel the export process at this point becau
 /// ANSI-colored Ctrl+C warning printed when remote export communication has already started.
 const COLORED: &str = "\u{1b}[33m⚠\u{1b}[39m \u{1b}[33munable to cancel the export process at this point because the communication with the remote already started\u{1b}[39m\n";
 
-/// RAII guard that blocks `SIGINT` / Ctrl+C cancellation while remote export communication is active.
+/// RAII guard that blocks `SIGINT` / Ctrl+C cancellation ([`ACTIVE`], [`message`]) while remote export communication is active.
 pub(super) struct Guard(platform::Previous);
 impl Guard {
     /// Installs the [`platform`] Ctrl+C handler and activates the export interrupt [`Guard`] ([`ACTIVE`], [`ENABLED`], [`COLOR`]).

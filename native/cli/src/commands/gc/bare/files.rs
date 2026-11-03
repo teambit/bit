@@ -4,7 +4,7 @@
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
-/// Verifies that every object in `hashes` can be moved to `deleted-objects` without directory conflicts.
+/// Verifies via [`check_target`] that every object in `hashes` under `scope` ([`Path`]) can be moved to `deleted-objects` without directory conflicts.
 pub(in crate::commands::gc) fn preflight_moves(scope: &Path, hashes: &[String]) -> io::Result<()> {
     for hash in hashes {
         let (source, target) = object_move_paths(scope, hash)?;

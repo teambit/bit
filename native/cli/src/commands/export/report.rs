@@ -15,7 +15,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// `commandOutboundPrepare`'s receipt.
+/// `commandOutboundPrepare`'s receipt ([`prepared`], [`ForkHistory`]).
 pub(super) struct Prepared {
     pub token: String,
     pub central_hub: bool,

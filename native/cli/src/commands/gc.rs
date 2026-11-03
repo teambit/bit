@@ -35,7 +35,7 @@ use std::{
     process::ExitCode,
 };
 
-/// Descriptor for the `bit gc` CLI command.
+/// Descriptor for the `bit gc` ([`run`], [`Options`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "gc", aliases: &[], run };
 
 /// Error message emitted when `bit gc` is invoked outside any workspace or bare scope.

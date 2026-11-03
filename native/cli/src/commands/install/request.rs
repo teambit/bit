@@ -82,7 +82,7 @@ pub(super) fn lane_installation() -> bool {
 }
 
 impl JsHost {
-    /// Creates a [`JsHost`] wrapper around `host` with optional `quiet` output suppression.
+    /// Creates a [`JsHost`] wrapper around `host` ([`Host`]) with optional `quiet` output suppression.
     #[inline]
     pub(in crate::commands) fn new(host: Arc<Host>, quiet: bool) -> Self {
         Self(host, quiet)

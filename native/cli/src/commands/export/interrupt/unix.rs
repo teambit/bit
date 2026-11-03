@@ -4,7 +4,7 @@ use std::{io, mem::MaybeUninit};
 /// Saved `libc::sigaction` disposition restored by [`restore`] when the export interrupt guard drops.
 pub(super) type Previous = libc::sigaction;
 
-/// Async-signal-safe `SIGINT` handler installed by [`install`] that writes the export cancellation warning to stdout.
+/// Async-signal-safe `SIGINT` handler installed by [`install`] (restored by [`restore`]) that writes the export cancellation warning to stdout.
 extern "C" fn interrupt(_signal: libc::c_int) {
     let bytes = super::message();
     if !bytes.is_empty() {

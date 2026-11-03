@@ -2,7 +2,7 @@
 
 mod blame;
 mod log_file;
-/// Descriptor for the `bit blame` CLI command.
+/// Descriptor for the `bit blame` CLI command ([`Target`], [`read`]).
 pub(super) const BLAME: super::Command = blame::COMMAND;
 /// Descriptor for the `bit log-file` CLI command.
 pub(super) const LOG_FILE: super::Command = log_file::COMMAND;

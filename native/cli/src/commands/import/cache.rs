@@ -10,7 +10,7 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// Staged pre-import tracking context, status [`Capture`], and doc snapshots.
+/// Staged pre-import tracking context, [`Engine`], status [`Capture`], and doc snapshots.
 pub(super) struct Prepared {
     engine: Engine,
     context: Value,

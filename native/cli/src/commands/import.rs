@@ -36,7 +36,7 @@ use std::{env, ffi::OsString, io, path::Path, time::Instant};
 pub const IMPORT: Command = Command { name: "import", aliases: &[], run };
 /// Descriptor for the `bit fetch` CLI command.
 pub const FETCH: Command = Command { name: "fetch", aliases: &[], run };
-/// Dispatches `bit lane fetch` through the shared [`execution::run`] import pipeline.
+/// Dispatches `bit lane fetch` through [`options::parse`] and the shared [`execution::run`] import pipeline.
 #[inline]
 pub(in crate::commands) fn lane_fetch(
     root: &Path,

@@ -5,7 +5,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::BTreeMap, fs, io, path::Path};
 
-/// Decoded bare-scope object with its `kind` header and parsed JSON `value`.
+/// Decoded bare-scope object ([`read`], [`read_one`]) with its `kind` header and parsed JSON [`Value`].
 pub(super) struct Object {
     pub kind: String,
     pub value: Value,

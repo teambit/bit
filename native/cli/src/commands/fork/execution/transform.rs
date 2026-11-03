@@ -84,7 +84,7 @@ pub(super) fn multiple(
     }
     Ok(())
 }
-/// Returns the trimmed string slice in `value` when non-empty.
+/// Returns the trimmed string slice in `value` ([`Value`]) when non-empty for [`source`] and [`local`].
 #[inline]
 fn non_empty_str(value: &Value) -> Option<&str> {
     value

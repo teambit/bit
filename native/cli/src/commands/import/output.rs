@@ -23,7 +23,7 @@ pub(super) fn execute(
     }
 }
 
-/// Formats the `--json` output payload for `bit import` from `prepared` and optional phase errors.
+/// Formats the `--json` output payload for `bit import` from `prepared` ([`Value`]) and optional phase errors.
 #[inline]
 pub(super) fn json_report(
     prepared: &Value,

@@ -8,7 +8,7 @@ mod selection;
 use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
 use crate::{native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
-/// Descriptor for the `bit fork` CLI command.
+/// Descriptor for the `bit fork` ([`run`], [`run_mode`]) CLI [`Command`].
 pub const COMMAND: Command = Command { name: "fork", aliases: &[], run };
 ///Entry point for `bit fork`.
 #[inline]

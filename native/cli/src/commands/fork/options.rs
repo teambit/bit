@@ -1,6 +1,6 @@
 //! CLI option parsing ([`Options`], [`Flags`], [`parse`]) for `bit fork` and `bit scope fork`.
 
-/// Boolean CLI flags controlling refactoring, installation, config preservation, and linking during `bit fork`.
+/// Boolean CLI flags controlling refactoring, installation, config preservation, and linking in [`Options`] during `bit fork`.
 #[derive(Default, Clone)]
 pub(super) struct Flags {
     pub refactor: bool,

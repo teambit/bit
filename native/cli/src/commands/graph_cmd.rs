@@ -27,7 +27,7 @@ const MISSING_REMOTE_OR_ID_ERR: &str = "please specify remote scope name or ente
 /// Error message emitted when `bit graph` cannot locate a workspace or scope host.
 const HOST_NOT_FOUND_ERR: &str = "Host was not found";
 
-/// Parsed CLI options for `bit graph`.
+/// Parsed CLI options for `bit graph` ([`COMMAND`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(super) struct Options {
     pub id: Option<String>,

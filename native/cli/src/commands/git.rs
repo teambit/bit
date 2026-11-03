@@ -38,7 +38,7 @@ enum Parsed {
     Unrecognized(String),
 }
 
-/// Entry point for `bit git <sub-command>` ([`COMMAND`]) dispatching [`Parsed`] variants into an [`Outcome`].
+/// Entry point for `bit git <sub-command>` ([`COMMAND`]) parsing [`Parsed`] via [`parse_args`] and dispatching into an [`Outcome`].
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(parsed) = parse_args(args) else {
         return Ok(Outcome::Declined("arguments outside the native `git` grammar".to_owned()));

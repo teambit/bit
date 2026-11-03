@@ -3,7 +3,7 @@
 //! Defines [`Options`], [`Defaults`], [`Flags`], and [`Resets`] and flag parsing ([`parse`], [`apply_arg`]) from [`OsString`] CLI arguments.
 use std::ffi::OsString;
 
-/// Parsed CLI options for `bit init`.
+/// Parsed CLI options ([`Defaults`], [`Resets`], [`Flags`]) for `bit init`.
 #[derive(Default)]
 pub(super) struct Options {
     pub path: Option<String>,

@@ -66,7 +66,7 @@ fn component(row: &Value, formatter: &Formatter, check: bool) -> io::Result<Stri
     Ok(lines.join("\n"))
 }
 
-/// Extracts the `(scope, name)` pair from a string or legacy object `componentId` value for [`component`].
+/// Extracts the `(scope, name)` pair from a string or legacy object `componentId` [`Value`] for [`component`].
 #[inline]
 fn component_scope_and_name(id: &Value) -> io::Result<(&str, &str)> {
     if let Some(raw) = id.as_str() {

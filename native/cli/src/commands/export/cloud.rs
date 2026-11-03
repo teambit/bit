@@ -2,7 +2,7 @@
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 
-/// Persists `rippleJobs` and [`exported_lane`] metadata from `receipt` and `metadata` ([`Value`]) after export.
+/// Persists `rippleJobs` and [`exported_lane`] metadata from `receipt` and `metadata` ([`Value`]) under `root` ([`Path`]) after export.
 #[inline]
 pub(super) fn remember(root: &Path, receipt: &Value, metadata: &Value) -> io::Result<()> {
     let jobs: Vec<Value> = receipt["rippleJobs"]

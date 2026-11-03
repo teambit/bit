@@ -54,7 +54,7 @@ pub(super) fn link(root: &Path, staged: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// Check all captured configuration and manifest inputs before communication starts.
+/// Check all captured configuration and manifest inputs ([`Value`]) via [`plans`] and [`cloud_domain`] before communication starts.
 #[inline]
 pub(super) fn validate(prepared: &Value) -> io::Result<()> {
     let cloud_domain = cloud_domain(prepared);

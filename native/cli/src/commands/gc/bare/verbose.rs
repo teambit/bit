@@ -35,7 +35,7 @@ pub(super) fn deleted(
         })
         .collect()
 }
-/// Formats a single `ref <hash> <constructor> <kind> <id>` verbose deletion line for [`Object`] `object`.
+/// Formats a single `ref <hash> <constructor> <kind> <id>` verbose deletion line for [`Object`] `object` in [`deleted`].
 #[inline]
 fn description(hash: &str, object: &Object) -> io::Result<String> {
     let hash = hash.trim();

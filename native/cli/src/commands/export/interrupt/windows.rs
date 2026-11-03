@@ -2,7 +2,7 @@
 
 use std::io::{self, Write};
 use windows_sys::Win32::System::Console::{CTRL_C_EVENT, SetConsoleCtrlHandler};
-/// Placeholder state token for the Windows console control handler registration.
+/// Placeholder state token for the Windows console control handler registration ([`install`], [`restore`]).
 pub(super) type Previous = ();
 
 /// Windows console control callback installed by [`install`] that intercepts [`CTRL_C_EVENT`] and prints the export warning.

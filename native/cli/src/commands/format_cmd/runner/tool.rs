@@ -5,7 +5,7 @@ use std::{
     io::{self, Write},
     process::{Command, Stdio},
 };
-/// Maximum JSON byte payload accepted on stdin or stdout when communicating with `tool.cjs` in [`format`].
+/// Maximum JSON byte payload accepted on stdin or stdout when communicating with `tool.cjs` in [`format`] and [`write_formatter_input`].
 const MAX_TOOL_BYTES: usize = 64 * 1024 * 1024;
 /// Formats `files` in a single batch by spawning `tool.cjs` against the bundled Prettier package (up to [`MAX_TOOL_BYTES`]).
 #[inline]

@@ -6,7 +6,7 @@ use super::{inventory, options::Options};
 use crate::commands::patterns;
 use serde_json::Value;
 use std::{io, path::Path};
-/// Partitioned local and remote component IDs paired with the resolved `target_scope`.
+/// Partitioned local and remote component IDs paired with the resolved `target_scope` for [`select`].
 pub(super) struct Selected {
     pub local: Vec<String>,
     pub remote: Vec<String>,

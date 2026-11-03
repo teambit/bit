@@ -36,7 +36,7 @@ impl Exported {
         }
     }
 
-    /// Replays buffered progress messages when streaming observation did not run and emits final local update status.
+    /// Replays buffered progress messages onto [`Output`] via [`Self::replay_direct`] when streaming observation did not run and emits final local update status.
     pub(super) fn progress(&mut self, output: &Output) {
         if !self.pending || self.output.failure_phase.as_deref() == Some("prepare") {
             return;

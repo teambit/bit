@@ -12,7 +12,7 @@ pub(super) fn render(value: &Value, original: Option<&[u8]>) -> io::Result<Vec<u
     Ok(stringify_package(value, &detect_indent(original), detect_newline(original))?.into_bytes())
 }
 
-/// Decodes optional UTF-8 `original` `package.json` bytes for [`render`], stripping any leading UTF-8 BOM.
+/// Decodes optional UTF-8 `original` `package.json` bytes for [`render`] ([`detect_indent`], [`detect_newline`]), stripping any leading UTF-8 BOM.
 #[inline]
 fn decode_original(original: Option<&[u8]>) -> io::Result<&str> {
     let Some(bytes) = original.filter(|bytes| !bytes.is_empty()) else {

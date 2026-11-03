@@ -21,7 +21,7 @@ use repository::{Object, identity, text, unsupported};
 use serde_json::{Value, json};
 use std::{collections::BTreeMap, ffi::OsString, fs, io, path::Path};
 
-/// Staged bare-scope garbage collection plan with verbose logs, deleted hashes, and optional [`index`] rebuild.
+/// Staged bare-scope garbage collection plan ([`prepare`]) with verbose logs, deleted hashes, and optional [`index`] rebuild.
 struct Plan {
     logs: Vec<String>,
     deleted: Vec<String>,

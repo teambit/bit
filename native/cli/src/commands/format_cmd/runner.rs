@@ -43,7 +43,7 @@ pub(super) fn run(root: &Path, args: &[OsString], options: &Options) -> io::Resu
         workspace_command::execute_then(root, args, "format", work)
     }
 }
-/// Wraps `message` into an [`io::Error`] after trimming leading/trailing whitespace.
+/// Wraps `message` into an [`io::Error`] after trimming leading/trailing whitespace for [`run`].
 #[inline]
 fn invalid(message: &str) -> io::Error {
     io::Error::other(message.trim())

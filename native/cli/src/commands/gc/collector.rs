@@ -20,7 +20,7 @@ use std::{
 const RECENT_WRITE_MARGIN_MS: u64 = 5 * 60 * 1000;
 /// List of `(component_key, version_hash)` head pairs used during [`GcGraph`] reachability seeding.
 type CompHeadList = Vec<(String, String)>;
-/// Staged workspace garbage collection plan ([`prepare_with_workspace_ids`]) containing [`GcResult`] statistics and object/file deletion lists.
+/// Staged workspace garbage collection plan ([`prepare_with_workspace_ids`]) containing [`GcResult`] statistics and [`PathBuf`] deletion lists.
 pub(super) struct Plan {
     pub result: GcResult,
     versions: Vec<String>,

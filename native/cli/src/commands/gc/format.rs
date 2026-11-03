@@ -6,7 +6,7 @@ use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-/// Serialized dry-run and backup flags included in `bit gc` reports.
+/// Serialized dry-run and backup flags included in `bit gc` reports ([`GcResult`]).
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct GcRunFlags {

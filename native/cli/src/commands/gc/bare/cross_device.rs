@@ -2,7 +2,7 @@
 use super::super::io_error::{failure, paired_failure};
 use std::{fs, io, path::Path};
 
-/// Copies `source` to `target` (preserving symlinks via [`copy_link`]) and unlinks `source` when `rename` crosses devices.
+/// Copies `source` ([`Path`]) to `target` (preserving symlinks via [`copy_link`]) and unlinks `source` when `rename` crosses devices.
 #[inline]
 pub(super) fn copy_remove(source: &Path, target: &Path) -> io::Result<()> {
     if source.as_os_str().is_empty() || target.as_os_str().is_empty() {

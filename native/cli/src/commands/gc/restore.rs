@@ -22,7 +22,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-/// Restoration failure distinguishing a missing backup directory from an underlying filesystem error.
+/// Restoration failure ([`run`]) distinguishing a missing backup directory from an underlying filesystem [`io::Error`].
 #[derive(Debug)]
 pub(super) enum Error {
     Missing(String),

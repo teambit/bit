@@ -24,7 +24,7 @@ impl Progress {
         }
         output.status(&format!("formatting components (total: {total})"));
     }
-    /// Emits the per-component `formatting components (i/total) <identity>` status line.
+    /// Emits the per-component `formatting components (i/total) <identity>` status line onto [`Output`].
     #[inline]
     pub fn component(&self, output: &Output, index: usize) {
         let Some(identity) = self.identities

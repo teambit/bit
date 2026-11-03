@@ -62,7 +62,7 @@ pub struct Inventory {
     ignored_root: &'static [&'static str],
 }
 
-/// Deserialized component scan payload from the workspace engine.
+/// Deserialized component scan payload (`token`, [`Nested`], `own`) from the workspace [`Engine`].
 #[derive(Deserialize)]
 struct Scan {
     token: u64,

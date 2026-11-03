@@ -76,7 +76,7 @@ pub fn normalize(path: &str) -> String {
     if absolute { format!("/{normalized}") } else { normalized }
 }
 
-/// One segment of `path.posix.normalize`: `.` and empty segments vanish,
+/// One segment of `path.posix.normalize` ([`normalize`]): `.` and empty segments vanish,
 /// `..` removes its parent, or stays when a relative path climbs above its start.
 #[inline]
 fn resolve<'path>(
