@@ -15,7 +15,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Prepared `last-merged` backup bytes, file mutations, and object restorations for recovery.
+/// Prepared `last-merged` backup bytes, [`Mutations`], and [`Objects`] restorations for recovery.
 pub(super) struct Prepared {
     pub(super) bitmap: Vec<u8>,
     pub(super) staged_snaps: Option<Vec<u8>>,

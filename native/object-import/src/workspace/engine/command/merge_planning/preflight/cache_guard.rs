@@ -12,7 +12,7 @@ use crate::workspace::engine::{
 use serde_json::Value;
 use std::{collections::BTreeSet, io};
 
-/// Verifies fast-forward metadata and [`merge_dependency_guard`] proofs for `target`.
+/// Verifies fast-forward [`metadata`] and [`merge_dependency_guard`] proofs for `target`.
 pub(super) fn verify(
     record: &Record,
     captured: &[Captured],

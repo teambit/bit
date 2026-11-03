@@ -37,7 +37,7 @@ pub(super) fn lane_versions(
     Ok(output)
 }
 
-/// Reads `Version` `hash` from `dir` and returns its parent hashes when `hash` belongs to the lane.
+/// Reads `Version` `hash` from `dir` and returns its parent hashes when `hash` belongs to the lane via [`origin_lane_flags`].
 #[inline]
 fn selected_parents(
     dir: &Path,

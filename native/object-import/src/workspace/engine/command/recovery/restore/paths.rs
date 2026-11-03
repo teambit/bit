@@ -6,7 +6,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-/// Resolves and validates component directories to remove when restoring `bitmap` over `current`.
+/// Resolves and validates component directories to remove via [`row_directory`] and [`validate`] when restoring `bitmap` over `current`.
 pub(super) fn removals(
     root: &Path,
     current: &Value,

@@ -8,7 +8,7 @@ use std::io;
 /// Alias for the prepared workspace checkout policy publication state.
 type Publication = super::super::checkout_policy::Prepared;
 
-/// Prepares workspace dependency resolver policy updates from merged component rows.
+/// Prepares workspace dependency resolver policy updates from merged component rows via [`remove_conflicts`] and [`report`].
 pub(super) fn prepare(
     prepared: &mut Prepared,
     record: &Record,

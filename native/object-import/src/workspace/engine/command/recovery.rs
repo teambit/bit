@@ -14,7 +14,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 
-/// Deserialized request to prepare a component-abort or lane-abort recovery operation.
+/// Deserialized request to prepare a [`Operation`] recovery transaction with [`Options`].
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Prepare {

@@ -4,7 +4,7 @@ use super::{config, invalid, projection};
 use serde_json::{Value, json};
 use std::io;
 
-/// Projects `Version` `extensions` into `ConfigMerger`-compatible aspect entries without workspace hooks.
+/// Projects `Version` `extensions` into `ConfigMerger`-compatible aspect entries via [`entry`] without workspace hooks.
 #[inline]
 pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
     projection::array(extensions)?

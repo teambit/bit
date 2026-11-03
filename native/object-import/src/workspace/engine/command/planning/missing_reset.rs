@@ -6,7 +6,7 @@ use super::{Planned, Record, input, invalid};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Appends restored missing directories or main files to the checkout reset report.
+/// Appends restored missing directories or main files to the checkout reset report via [`target_paths`] and [`report_one`].
 #[inline]
 pub(super) fn report_if_applicable(
     record: &Record,

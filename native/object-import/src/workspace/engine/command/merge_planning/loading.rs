@@ -4,7 +4,7 @@ use super::{Action, Record, Selected, capture, invalid, lane_filter, model, sele
 use serde_json::Value;
 use std::io;
 
-/// Loads the component model, local/remote heads, and `Version` objects for `captured`.
+/// Loads the [`Selected`] component model, local/remote [`heads`], and `Version` objects for `captured`.
 pub(super) fn load_selected(
     record: &mut Record,
     captured: &capture::Captured,

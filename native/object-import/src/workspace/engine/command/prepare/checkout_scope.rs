@@ -8,7 +8,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-/// A remote default-scope component candidate discovered for `checkout head`.
+/// A remote default-scope component candidate discovered by [`candidates`] for `checkout head`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Candidate {
     identity: String,

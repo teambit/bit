@@ -4,7 +4,7 @@ use super::{Input, invalid, removed};
 use serde_json::{Value, json};
 use std::io;
 
-/// Builds the unrelated-history resolution observation payload for `input`.
+/// Builds the unrelated-history resolution observation payload for `input` using [`removed`].
 pub(super) fn observation(input: &Input<'_>) -> io::Result<Value> {
     let mut facts = input.distance["unrelatedResolution"].clone();
     if !facts.is_object() {

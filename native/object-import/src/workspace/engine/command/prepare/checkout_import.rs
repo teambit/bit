@@ -24,7 +24,7 @@ pub(super) fn lane(
     Ok(Some(imported))
 }
 
-/// Returns `true` when `bitmap` contains a non-empty `_bit_lane` assignment for [`lane`].
+/// Returns `true` when `bitmap` contains a non-empty `_bit_lane` assignment for [`lane`] and [`Prepare`].
 #[inline]
 fn has_lane_assignment(bitmap: &Value) -> bool {
     bitmap

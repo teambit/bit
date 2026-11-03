@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, io, path::Path};
 
-/// Computes the `VersionHistory` object hash and compressed payload for `scope/name` at `head`.
+/// Computes the `VersionHistory` object hash and compressed [`HistoryBytes`] payload for `scope/name` at `head` via [`history`].
 #[inline]
 pub(super) fn prepare_history(
     dir: &Path,

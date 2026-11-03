@@ -60,7 +60,7 @@ pub(super) fn plan(input: &Prepare, pending: &[Pending]) -> io::Result<Option<Pl
     }))
 }
 
-/// Pushes staged outbound objects in `retained` to the central hub and formats scope context on failure.
+/// Pushes staged outbound objects in `retained` to the central hub via [`execute`] and formats scope context on failure.
 pub(super) fn push(retained: &mut Retained) -> io::Result<Vec<String>> {
     execute(retained)
         .map_err(|error| {

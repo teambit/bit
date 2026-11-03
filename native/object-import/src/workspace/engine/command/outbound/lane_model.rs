@@ -23,7 +23,7 @@ use std::{
 
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_OBJECTS: usize = 4096;
-/// Frozen current lane identity, hashes, component object closure, and optional fork history.
+/// Frozen current lane identity, [`LaneHashes`], [`SelectedComponents`] closure, and optional [`ForkHistory`].
 pub(super) struct LaneSelected {
     pub(super) scope: String,
     pub(super) name: String,

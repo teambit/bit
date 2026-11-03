@@ -35,7 +35,7 @@ pub(in crate::workspace::engine) struct Candidates {
     root: PathBuf,
     all: bool,
 }
-/// Lists exportable workspace component candidates for `input`.
+/// Lists exportable workspace component candidates for `input` via [`model::candidates`].
 #[inline]
 pub(in crate::workspace::engine) fn candidates(input: &Candidates) -> io::Result<Value> {
     model::candidates(&input.root, input.all)

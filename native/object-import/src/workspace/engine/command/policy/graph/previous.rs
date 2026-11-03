@@ -47,7 +47,7 @@ pub(super) fn validate(version: &Value, repository: &mut Repository) -> io::Resu
     Ok(())
 }
 
-/// Loads saved flattened dependency edges from `flattenedEdgesRef` or `flattenedEdges` on `version` for [`validate`].
+/// Loads saved flattened dependency edges from `flattenedEdgesRef` or `flattenedEdges` on `version` for [`validate`] via [`Repository`].
 #[inline]
 fn saved_edges(version: &Value, repository: &mut Repository) -> io::Result<Value> {
     if let Some(value) = version

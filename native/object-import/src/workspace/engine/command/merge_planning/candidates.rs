@@ -53,7 +53,7 @@ pub(in crate::workspace::engine::command) fn select_targets(
     Ok(selected)
 }
 
-/// Extracts the bare `scope/name` component identity from `target` without any `@version` suffix.
+/// Extracts the bare `scope/name` component identity from `target` without any `@version` suffix for [`select_targets`].
 #[inline]
 fn target_identity(target: &Value) -> Option<std::borrow::Cow<'_, str>> {
     if let Some(identity) = ["identity", "id"]

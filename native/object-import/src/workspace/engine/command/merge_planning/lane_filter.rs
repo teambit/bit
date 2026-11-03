@@ -64,7 +64,7 @@ pub(super) fn apply(
     update_failed(planned, selected, &filtered)?;
     reorder(planned, selected, filtered.indices)
 }
-/// Updates `planned.result["failedComponents"]` and marks excluded entries in `selected` as `Action::Unchanged`.
+/// Updates `planned.result["failedComponents"]` and marks excluded entries in `selected` as [`Action::Unchanged`].
 fn update_failed(
     planned: &mut planning::Planned,
     selected: &mut [Selected],

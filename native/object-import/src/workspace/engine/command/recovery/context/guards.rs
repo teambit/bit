@@ -1,7 +1,7 @@
 //! Extension identity uniqueness guards via [`extensions`], [`extension_identity`], and [`parse_extension_value`] for recovered `Version` objects.
 
 use super::{Value, invalid, io};
-/// Verifies that every recovered `Version` in `context["versions"]` has unique extension identities.
+/// Verifies that every recovered `Version` in `context["versions"]` has unique [`extension_identity`] entries.
 #[inline]
 pub(super) fn extensions(context: &Value) -> io::Result<()> {
     for version in context["versions"].as_array().ok_or_else(|| invalid("recovery versions"))? {

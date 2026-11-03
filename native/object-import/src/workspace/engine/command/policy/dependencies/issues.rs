@@ -45,7 +45,7 @@ pub(super) fn capture(
     Ok(())
 }
 
-/// Validates that `data` is a non-empty array or JSON-encoded array of non-empty package names.
+/// Validates that `data` is a non-empty array or JSON-encoded array of non-empty package names for [`capture`].
 #[inline]
 fn validate_issue_packages(data: &Value) -> io::Result<()> {
     if let Some(items) = data.as_array() {

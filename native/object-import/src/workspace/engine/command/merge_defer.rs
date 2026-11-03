@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io;
 
-/// Deserialized request to defer snapshot creation for a planned merge transaction.
+/// Deserialized request to defer snapshot creation for a planned [`Operation::Merge`] transaction.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {

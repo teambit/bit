@@ -4,7 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-/// Marks `_bit_lane.exported = true` and promotes unexported lane component scopes in `.bitmap`.
+/// Marks `_bit_lane.exported = true` and promotes [`unexported_lane_row`] component scopes in `.bitmap`.
 pub(super) fn export_bitmap(
     before: &[u8],
     scope: &str,

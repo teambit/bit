@@ -28,7 +28,7 @@ pub(super) fn read(bytes: &[u8]) -> io::Result<Vec<String>> {
     Ok(ids)
 }
 
-/// Extracts a normalized `scope/name` identity from a `staged-config.json` removal `row` for [`read`].
+/// Extracts a normalized `scope/name` identity from a `staged-config.json` removal `row` for [`read`] via [`invalid`].
 #[inline]
 fn parse_removed_id(row: &Value) -> io::Result<String> {
     if let Some(raw) = row["id"].as_str().map(str::trim) {

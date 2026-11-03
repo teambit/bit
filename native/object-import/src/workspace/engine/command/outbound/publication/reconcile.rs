@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use serde_json::Value;
 use std::{collections::HashSet, fs, io};
 
-/// Removes exported component entries from `staged-config.json` `bytes` for `selected`.
+/// Removes exported [`Selected`] component entries from `staged-config.json` `bytes` via [`prepare_staged_config_ids`].
 #[inline]
 pub(super) fn prepare_staged_config(
     bytes: &[u8],

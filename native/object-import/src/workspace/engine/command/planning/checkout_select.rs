@@ -8,7 +8,7 @@ use crate::{checkout_transition, workspace::engine::status_models::comparison};
 use serde_json::{Value, json};
 use std::io;
 
-/// Selects the target checkout transition for `captured` at `index` on `record`.
+/// Selects the target [`checkout_transition`] for `captured` at `index` on `record` via [`modification`].
 pub(super) fn select(
     record: &mut Record,
     index: usize,

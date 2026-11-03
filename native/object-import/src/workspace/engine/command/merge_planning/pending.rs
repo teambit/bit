@@ -6,7 +6,7 @@ mod tests;
 use super::merge;
 use serde_json::{Value, json};
 
-/// Builds an `unmerged.json` entry for a merged component from `model`, `remote`, and `material`.
+/// Builds an `unmerged.json` entry for a merged component from `model`, `remote`, and `material` via [`lane_id`].
 pub(super) fn entry(
     model: &Value,
     remote: &str,

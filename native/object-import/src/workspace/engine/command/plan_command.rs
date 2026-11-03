@@ -6,7 +6,7 @@ use super::{
 };
 use serde_json::{Value, json};
 use std::io;
-/// Validates read proofs, runs operation planning, and stages `.bitmap` and materialization plans.
+/// Validates [`proof`] read sets, runs [`plan_operation`], and stages `.bitmap` and [`materialization`] plans.
 pub(super) fn run(
     input: &Plan,
     snapshots: &mut crate::workspace::snapshots::State,

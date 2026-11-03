@@ -12,7 +12,7 @@ pub(super) struct Reported {
 }
 
 impl Reported {
-    /// Classifies selected lane components into updated and removed identity lists.
+    /// Classifies [`LaneSelected`] components into updated and removed identity lists via [`selected_update_ids`].
     pub(super) fn prepare(selected: &LaneSelected) -> io::Result<Self> {
         let selected_ids: HashSet<_> = selected.components.ids
             .iter()

@@ -14,7 +14,7 @@ use std::{
     io::{self, Write},
     path::{Path, PathBuf},
 };
-/// Per-component model and `VersionHistory` preimages/postimages for main-lane publication.
+/// Per-component model and `VersionHistory` preimages/postimages for [`Prepared`] main-lane publication.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Component {
     unchanged: bool,

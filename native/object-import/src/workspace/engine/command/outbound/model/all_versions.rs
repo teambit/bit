@@ -4,7 +4,7 @@ use super::{Staged, history::parents, invalid};
 use serde_json::Value;
 use std::{collections::HashSet, io, path::Path};
 
-/// Collects all reachable ancestor `Version` hashes and version tags from `model` into [`Staged`] via [`resolve_version_labels`].
+/// Collects all reachable ancestor `Version` hashes via [`parents`] and version tags from `model` into [`Staged`] via [`resolve_version_labels`].
 #[inline]
 pub(super) fn select(model: &Value, dir: &Path) -> io::Result<Staged> {
     let head = model["head"]

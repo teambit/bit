@@ -2,7 +2,7 @@
 
 use super::{lane_publication, publication};
 
-/// Local publication state for either a main-lane component export or a named-lane export.
+/// Local publication state for either a [`publication`] main-lane export or a [`lane_publication`] named-lane export.
 pub(super) enum Publication {
     Main(Box<publication::Prepared>),
     Lane { prepared: Box<lane_publication::Prepared>, name: String },

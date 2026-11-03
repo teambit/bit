@@ -34,7 +34,7 @@ pub(super) struct Prepared {
     pending: Vec<Pending>,
     finalized: Option<Finalized>,
 }
-/// Planned lane publication, fast-forward snapshot, and removed component directories for a merge.
+/// Planned lane publication, fast-forward snapshot, and [`Removed`] component directories for a merge.
 struct Publication {
     lane: Option<super::lane_publication::Prepared>,
     fast_forward: Option<merge::snapshot::Snapshot>,

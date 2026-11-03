@@ -31,7 +31,7 @@ pub(super) struct Prepared {
     staged: Staged,
     report: Reported,
 }
-/// Expected component acknowledgement set for a prepared lane publication.
+/// Expected component acknowledgement set for a [`Prepared`] lane publication.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Acknowledgement {
     expected: HashSet<String>,

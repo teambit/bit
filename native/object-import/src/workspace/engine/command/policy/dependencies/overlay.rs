@@ -5,7 +5,7 @@ use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde_json::Value;
 use std::io;
 
-/// Builds a sealed [`SourceOverlay`] of merged component files for post-merge dependency scanning.
+/// Builds a sealed [`SourceOverlay`] of merged component files via [`apply_row`] for post-merge dependency scanning.
 #[inline]
 pub(super) fn prepare(record: &Record, planned: &planning::Planned) -> io::Result<SourceOverlay> {
     let merge = planned.merge.as_ref().ok_or_else(|| invalid("command dependency merge"))?;

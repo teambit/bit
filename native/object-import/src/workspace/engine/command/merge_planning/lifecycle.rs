@@ -5,7 +5,7 @@ use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 impl Prepared {
-    /// Returns the slice of finalized `Version` objects produced by the merge snapshot, if any.
+    /// Returns the slice of finalized `Version` objects produced by the [`Finalized`] merge snapshot, if any.
     #[inline]
     pub(in crate::workspace::engine::command) fn snapshot_versions(&self) -> &[Value] {
         self.finalized
