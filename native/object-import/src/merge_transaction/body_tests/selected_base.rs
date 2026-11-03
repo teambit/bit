@@ -68,7 +68,7 @@ fn required_base_body_is_verified_and_failure_writes_no_snapshots() {
         assert_eq!(fs::read(fixture.0.join("index.ts")).unwrap(), b"current\n");
     }
 }
-/// Verifies that [`prepare`] still validates the complete `base` `Version` manifest on [`Fixture`] even when the `base` `Source` body is not read.
+/// Verifies that [`prepare`] still validates the complete `base` `Version` manifest on [`Fixture`] via [`request`] even when the `base` `Source` body is not read ([`modified_rows_keep_base_source_receipts`]).
 #[test]
 fn unused_base_still_requires_complete_manifest_verification() {
     let fixture = Fixture::new();

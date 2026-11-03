@@ -45,7 +45,7 @@ fn pending_state_removes_only_the_published_tag_label_and_preserves_other_entrie
     );
 }
 
-/// Verifies that [`remove_versions`] retains an empty `state.versions` object on [`selection`] when removing the final pending tag.
+/// Verifies that [`remove_versions`] retains an empty `state.versions` object on [`selection`] when removing the final pending tag ([`pending_state_removes_only_the_published_tag_label_and_preserves_other_entries`]).
 #[test]
 fn removing_the_last_pending_version_retains_the_existing_versions_container() {
     let mut model =

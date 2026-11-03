@@ -4,7 +4,7 @@
 use super::{State, serve};
 use serde_json::{Value, json};
 use std::io::Cursor;
-/// Executes an opcode-23 merge state request on a fresh [`State`] via [`state_request`], [`Cursor`], and [`serve`].
+/// Executes an opcode-23 merge state request on a fresh [`State`] via [`state_request`], [`Cursor`], and [`serve`] ([`nonempty_private_candidate_declines_without_mutation`]).
 fn request(input: impl serde::Serialize) -> Value {
     state_request(&mut State::default(), input)
 }

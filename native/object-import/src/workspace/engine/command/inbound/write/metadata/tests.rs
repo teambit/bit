@@ -43,7 +43,7 @@ fn live_order_resolves_authored_and_row_specific_default_scopes() {
     );
 }
 
-/// Verifies that `bitmap_metadata` accepts both string (`"scope/lane"`) and object (`{"scope","name"}`) `_bit_lane.id` representations.
+/// Verifies that `bitmap_metadata` accepts both string (`"scope/lane"`) and object (`{"scope","name"}`) `_bit_lane.id` representations ([`json`]).
 #[test]
 fn bitmap_metadata_accepts_both_string_and_object_lane_ids() {
     let mut string_lane = json!({

@@ -95,7 +95,7 @@ fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
     fs::write(path, bytes).expect("write object");
 }
 
-/// Verifies that [`Plan::prepare`] and [`Plan::commit`] reset `head` on `main` in [`Fixture`], rewrite `.bitmap`, and reject stale plans.
+/// Verifies that [`Plan::prepare`] and [`Plan::commit`] reset `head` on `main` in [`Fixture`], rewrite `.bitmap`, and reject stale plans ([`Batch`]).
 #[test]
 fn reset_head_rewrites_model_and_bitmap_and_refuses_a_stale_plan() {
     let fixture = Fixture::new(false);

@@ -41,7 +41,7 @@ fn remote_lane_listing_keeps_visible_heads_and_drops_hidden_updates() {
     assert!(remote_lane(&lane::Id { scope: "wrong".into(), name: "dev".into() }, &[]).is_err());
 }
 
-/// Verifies that [`http_lane`] wildcard listing requests `without-snap` lane objects over HTTP via [`Network`].
+/// Verifies that [`http_lane`] wildcard listing requests `without-snap` lane [`ObjectItem`] archives over HTTP via [`Network`] and [`GlobalConfig`].
 #[test]
 fn http_lane_wildcard_listing_fetches_only_lane_objects() {
     let id = lane::Id { scope: "remote.scope".into(), name: "dev".into() };

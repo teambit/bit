@@ -85,7 +85,7 @@ fn recovery_preserves_copy_permissions_and_rejects_stale_modes() {
     );
 }
 
-/// Verifies that [`Recovery::prepare`] and [`Recovery::commit`] back up the current lane's staged config and encode the `Lane` header using UTF-16 code-unit length.
+/// Verifies that [`Recovery::prepare`] and [`Recovery::commit`] in [`Workspace`] back up the current lane's staged config and encode the `Lane` header using UTF-16 code-unit length.
 #[test]
 fn lane_backup_uses_current_lane_and_javascript_utf16_header_length() {
     use std::io::Read;

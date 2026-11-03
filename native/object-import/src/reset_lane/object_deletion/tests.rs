@@ -43,7 +43,7 @@ fn deleting_an_object_keeps_its_shared_prefix_and_neighbor_bytes() {
     assert_eq!(fs::read(neighbor).expect("neighbor"), b"retained immutable object");
 }
 
-/// Verifies that [`write_objects`] leaves an existing empty prefix directory untouched when deleting an already-missing [`ObjectChange`].
+/// Verifies that [`write_objects`] leaves an existing empty prefix directory untouched when deleting an already-missing [`ObjectChange`] ([`object_path`]).
 #[test]
 fn an_already_missing_object_does_not_prune_its_existing_empty_prefix() {
     let fixture = tempfile::tempdir().expect("fixture");

@@ -5,7 +5,7 @@
 use super::aspect_config;
 use serde_json::json;
 
-/// Verifies that [`aspect_config`] accepts empty core aspect objects (`teambit.component/remove`, `teambit.envs/envs`, `teambit.component/issues`) and boolean `removeOnMain` flags on `.bitmap`.
+/// Verifies that [`aspect_config`] accepts empty core aspect objects (`teambit.component/remove`, `teambit.envs/envs`, `teambit.component/issues`) and boolean `removeOnMain` flags on `.bitmap` (`BitMap`).
 #[test]
 fn renamed_component_configs_allow_empty_core_entries_and_update_main_removal() {
     for name in ["teambit.component/remove", "teambit.envs/envs", "teambit.component/issues"] {

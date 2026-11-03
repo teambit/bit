@@ -85,7 +85,7 @@ fn merged_application_registration_files_decline_before_allocation() {
     assert!(metadata::no_application_files(&[json!({"relativePath":"index.js"})]).is_ok());
 }
 
-/// Verifies that [`metadata::model`] and `super::local_model` apply identical local `state.versions` updates for snapshots and fast-forwards.
+/// Verifies that [`metadata::model`] and `super::local_model` apply identical local `state.versions` updates ([`json`]) for snapshots and fast-forwards.
 #[test]
 fn snapshot_and_fast_forward_share_canonical_local_state_mutation() {
     let head = "c".repeat(40);

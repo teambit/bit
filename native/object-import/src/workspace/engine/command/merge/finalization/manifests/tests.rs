@@ -89,7 +89,7 @@ fn aspect_exports_insert_types_before_a_truthy_default_and_preserve_existing_typ
     assert_eq!(manifest["exports"]["."]["types"], "./index.d.ts");
 }
 
-/// Verifies that `normalize` prefixes short hex snap versions (`>= 3` hex characters) with `"0.0.0-"`.
+/// Verifies that `normalize` prefixes short hex snap versions (`>= 3` hex characters) with `"0.0.0-"` ([`json`]).
 #[test]
 fn short_callback_hash_versions_follow_the_published_version_parser() {
     let original = json!({"source":"index.js"});

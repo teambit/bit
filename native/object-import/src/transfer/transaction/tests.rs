@@ -65,7 +65,7 @@ fn persist_retries_exactly_three_times_then_preserves_pending_dirs() {
     }
     assert_eq!(next["directive"], json!({"kind":"failed","indices":[],"reason":"persist"}));
 }
-/// Verifies that reinitializing a transfer transaction via [`initialize`] invalidates older tokens and advances `persist` directives through `"done"`.
+/// Verifies that reinitializing a transfer transaction via [`initialize`] and [`receipt`] invalidates older tokens and advances `persist` directives through `"done"`.
 #[test]
 fn successful_persist_series_and_stale_reinitialization_never_repeat_acks() {
     let mut state = State::default();

@@ -3,7 +3,7 @@
 use super::{Fixture, State, apply};
 use serde_json::json;
 
-/// Verifies that `mergeApply` via [`apply`] with `knownBodies` returns only newly added bodies in [`State`] for [`Fixture`] (`prepare_packed`) and rejects stale prefixes.
+/// Verifies that `mergeApply` via [`apply`] with `knownBodies` returns only newly added bodies in [`State`] for [`Fixture`] (`prepare_packed`) and rejects stale prefixes (`targetFiles`).
 #[test]
 fn compact_apply_returns_only_new_bodies_and_rejects_stale_prefixes() {
     let fixture = Fixture::new();

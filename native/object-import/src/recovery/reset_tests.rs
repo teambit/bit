@@ -52,7 +52,7 @@ fn detached_selection_and_hash_labels_do_not_delete_tags() {
     assert_eq!(result["detachedRetained"], json!([1]));
     assert_eq!(result["clearDetachedCurrent"], true);
 }
-/// Verifies that [`plan`] checks `orphaned` tag precedence before `tags` on [`input`] and rejects missing tag references during preflight.
+/// Verifies that [`plan`] checks `orphaned` tag precedence before `tags` on [`input`] and rejects missing tag references during preflight ([`Fixture`]).
 #[test]
 fn orphaned_tag_precedence_and_missing_tags_are_preflighted() {
     let mut request = input();

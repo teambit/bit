@@ -11,7 +11,7 @@ use std::fs;
 fn hash(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }
-/// Verifies that [`read`] preserves BOM and binary bytes under `"linuxEol"` while stripping BOM under `"workspace"` normalization for [`wire::Object`] and [`hash`].
+/// Verifies that [`read`] preserves BOM and binary bytes under `"linuxEol"` while stripping BOM under `"workspace"` normalization for [`wire::Object`] and [`hash`] ([`Sha1`], [`Digest`]).
 #[test]
 fn artifact_sources_keep_bom_and_binary_while_workspace_sources_strip_bom() {
     let root = std::env::temp_dir().join(format!("bit-artifact-source-{}", std::process::id()));

@@ -69,7 +69,7 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.0).unwrap();
     }
 }
-/// Verifies that [`prepare`] preserves unexported empty `scope` fields on [`Fixture`] and writes a `.bitmap` history backup on commit.
+/// Verifies that [`prepare`] preserves unexported empty `scope` fields on [`Fixture`] via [`Update`] and writes a `.bitmap` history backup on commit.
 #[test]
 fn bitmap_update_preserves_unexported_scope_and_records_original_backup() {
     let fixture = Fixture::new();

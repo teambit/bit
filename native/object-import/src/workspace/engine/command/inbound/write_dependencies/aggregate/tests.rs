@@ -31,7 +31,7 @@ fn root_precedence_ranges_and_local_component_exclusion_preserve_order() {
     assert_eq!(result["other"], "^1.4.0");
 }
 
-/// Verifies that [`prepare`] orders integer-index package keys (`"7"`, `"42"`) before non-index keys like `Object.values`.
+/// Verifies that [`prepare`] orders integer-index package keys (`"7"`, `"42"`) before non-index keys like `Object.values` ([`json`]).
 #[test]
 fn object_values_lists_array_index_package_names_before_other_names() {
     let result = prepare(&json!({

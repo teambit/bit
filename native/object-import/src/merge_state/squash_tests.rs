@@ -56,7 +56,7 @@ fn divergence_requires_detach_and_source_only_or_equal_skips() {
     input["sourceOnly"] = json!([]);
     assert_eq!(request(input)["data"], json!({"action":"skip"}));
 }
-/// Verifies that `squashPolicy` ([`policy`]) checks early `sourceOnly` skips before requesting `requireVersion` when `currentParents` is omitted.
+/// Verifies that `squashPolicy` ([`policy`]) checks early `sourceOnly` skips before requesting `requireVersion` when `currentParents` is omitted ([`one_target_one_parent_common_skips_even_when_parent_differs`]).
 #[test]
 fn missing_version_check_follows_early_skip() {
     let mut input = policy();

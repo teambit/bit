@@ -93,7 +93,7 @@ fn deletion_precedes_validation_and_replayed_receipts_decline() {
     );
 }
 
-/// Verifies that starting a nested journal transaction does not overwrite the outer transaction's receipt state.
+/// Verifies that starting a nested journal transaction in [`State`] does not overwrite the outer transaction's [`receipt`] state.
 #[test]
 fn nested_journal_does_not_replace_outer_receipt_state() {
     let mut state = State::default();

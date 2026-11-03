@@ -27,7 +27,7 @@ fn message_replacement_keeps_author_and_ordered_modification_history() {
     }
 }
 
-/// Verifies that [`replace_message`] rejects missing, duplicate, or non-numeric squash receipt timestamps without mutating `version`.
+/// Verifies that [`replace_message`] rejects missing, duplicate, or non-numeric squash receipt timestamps ([`json`]) without mutating `version`.
 #[test]
 fn message_replacement_rejects_missing_duplicate_or_invalid_dates_before_mutation() {
     for receipts in [

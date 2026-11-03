@@ -3,7 +3,7 @@
 use super::Readset;
 use std::fs;
 
-/// Verifies that [`Readset::watch`] and [`Readset::validate`] reject post-watch file modifications and unexpected file creations on [`Readset`].
+/// Verifies that [`Readset::watch`] and [`Readset::validate`] reject post-watch file modifications and unexpected file creations on [`Readset`] ([`Readset::new`]).
 #[test]
 fn watched_source_rejects_later_mutation_and_missing_source_rejects_creation() {
     let root = tempfile::tempdir().unwrap();

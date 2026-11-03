@@ -42,7 +42,7 @@ fn parallel_compression_preserves_order_and_serial_bytes_in_shared_pools() {
     }
 }
 
-/// Verifies that [`encode`] computes UTF-16 code unit lengths matching Node's `Buffer.toString().length` via [`Command`] and [`ZlibDecoder`] for invalid UTF-8 byte sequences.
+/// Verifies that [`encode`] computes UTF-16 code unit lengths matching Node's `Buffer.toString().length` via [`Command`] and [`ZlibDecoder`] for invalid UTF-8 byte sequences ([`compress`]).
 #[test]
 fn seeded_invalid_utf8_source_headers_match_node_buffer_decoding() {
     let script = r"

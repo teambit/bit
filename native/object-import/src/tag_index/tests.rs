@@ -32,7 +32,7 @@ fn indexes_many_tagged_and_untagged_hashes() {
     }
 }
 
-/// Verifies that [`TagIndex::model`] rebuilds tag lookups after `ModelComponent` mutations without mutating the JSON value.
+/// Verifies that [`TagIndex::model`] rebuilds tag lookups after `ModelComponent` mutations without mutating the JSON value ([`TagIndex::get`]).
 #[test]
 fn rebuilding_after_model_changes_keeps_serialized_model_unchanged() {
     let mut model =

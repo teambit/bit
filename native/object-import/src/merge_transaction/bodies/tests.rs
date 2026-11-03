@@ -11,7 +11,7 @@ fn packed(kind: &str, hash: &str, body: &[u8]) -> Vec<u8> {
     encoder.write_all(body).unwrap();
     encoder.finish().unwrap()
 }
-/// Verifies that [`prepare_response`] retains merge source receipts from an import overlay using [`Sha1`] digests and [`packed`] streams without writing loose objects.
+/// Verifies that [`prepare_response`] retains merge source receipts from an import overlay using [`Sha1`] ([`Digest`]) digests and [`packed`] streams without writing loose objects.
 #[test]
 fn freshly_imported_added_file_retains_merge_source_receipt_without_publication() {
     let directory =

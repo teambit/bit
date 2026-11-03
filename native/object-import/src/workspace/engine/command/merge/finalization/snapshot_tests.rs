@@ -35,7 +35,7 @@ fn build_staging_persists_only_snap_ids_before_any_objects_or_other_metadata() {
     );
 }
 
-/// Verifies that `prepare_snapshot_publication` stages `.bitmap` config overrides into `.bit/staged-config/main.json` while `prepare_publication` declines.
+/// Verifies that `prepare_snapshot_publication` stages `.bitmap` (`BitMap`) config overrides from [`fixture`] into `.bit/staged-config/main.json` while `prepare_publication` declines.
 #[test]
 fn snapshot_stages_config_while_merge_keeps_its_configured_component_guard() {
     let (directory, version) = fixture();

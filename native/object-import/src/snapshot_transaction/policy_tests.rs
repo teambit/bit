@@ -48,7 +48,7 @@ process.stdout.write(JSON.stringify(rows));
     }
 }
 
-/// Verifies that [`future::autotag`] (`super::autotag::plan`) matches `Node.js` `getAutoTagInfo` preorder traversal and dependency ref provenance across 1,000 seeded graphs.
+/// Verifies that [`future::autotag`] (`super::autotag::plan`) matches `Node.js` `getAutoTagInfo` preorder traversal and dependency ref provenance via [`Command`] across 1,000 seeded graphs.
 #[test]
 fn seeded_autotag_graphs_match_actual_workspace_preorder_and_ref_provenance() {
     let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else {
