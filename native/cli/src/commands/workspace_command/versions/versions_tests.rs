@@ -18,7 +18,7 @@ fn nothing_to_snap() {
     assert_eq!(format(&json!(null), Chalk::new(false), &TAG).unwrap().data, "nothing to tag");
 }
 
-/// Verifies [`format`] for changed components without auto-snapped dependents.
+/// Verifies [`format`] for changed [`ONE`] components without auto-snapped dependents.
 #[test]
 fn changed_components_without_dependents() {
     let result = json!({ "snappedComponents": [ONE], "autoSnappedResults": [], "newComponents": [], "laneName": null, "totalComponentsCount": 1 });

@@ -1,6 +1,6 @@
 //! Unit tests ensuring installation directory receipts preserve identities while accepting platform separator spellings (POSIX and Windows).
 //!
-//! Verifies `installationDirectoryEquals` across drive letters, UNC shares, and relative segments.
+//! Verifies `installationDirectoryEquals` via [`check`] across drive letters, UNC shares, and relative segments.
 use std::{env, process::Command};
 
 /// Verifies Windows installation directory receipts accept separator variations while rejecting distinct identities via [`check`].

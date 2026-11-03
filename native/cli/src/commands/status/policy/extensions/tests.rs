@@ -1,6 +1,6 @@
 //! Unit tests for `teambit.component/remove` extension configuration validation via [`validate_removal_config`].
 //!
-//! Verifies valid `removed`, `range`, and `snaps` configurations and rejects unknown or malformed fields.
+//! Verifies valid `removed`, `range`, and `snaps` configurations and rejects unknown or malformed fields in [`validate_removal_config`].
 
 use super::validate_removal_config;
 use serde_json::json;

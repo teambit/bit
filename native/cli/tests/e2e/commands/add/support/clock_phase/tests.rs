@@ -26,7 +26,7 @@ fn only_explicit_fork_and_recovery_operations_use_the_launch_gate() {
 }
 /// Verifies that [`delay`] treats [`START`]..[`END`] as a half-open nanosecond interval within [`SECOND`].
 ///
-/// Ensures phases inside `[START, END)` return `0` and phases at or outside `END` wrap around [`SECOND`].
+/// Ensures phases inside `[START, END)` return `0` and phases at or outside [`END`] wrap around [`SECOND`].
 #[test]
 fn launch_window_is_inclusive_at_start_and_exclusive_at_end() {
     assert_eq!(delay(START), 0);

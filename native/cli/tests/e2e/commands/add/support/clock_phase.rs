@@ -1,6 +1,6 @@
 //! Align multi-write replay launch phases ([`align`]) within [`START`]..[`END`] without altering either process's clock, environment, or history.
 //!
-//! Ensures multi-write commands launch within the same [`SECOND`] sub-second window.
+//! Ensures [`multiple_bitmap_writes`] commands launch within the same [`SECOND`] sub-second window via [`delay`].
 
 #[cfg(test)]
 mod tests;

@@ -6,7 +6,7 @@
 pub(crate) mod add;
 /// End-to-end completion and fallback tests for `bit diff`.
 ///
-/// Covers workspace diffing, version-to-version diffing, and traced delegation fallbacks.
+/// Covers workspace diffing, version-to-version diffing, and traced delegation fallbacks in [`diff_completion`].
 pub(crate) mod diff_completion;
 /// End-to-end parity tests for path-moving commands (`move`, `rename`, `fork`, `remove`, `recover`).
 ///

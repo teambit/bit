@@ -62,7 +62,7 @@ fn lockfile() -> serde_json::Map<String, Value> {
     }
 }
 
-/// Verifies [`convert`] serializes the dependency graph for a component under an environment root importer.
+/// Verifies [`convert`] serializes the dependency graph for a [`lockfile`] component under an environment root importer with [`replacer`].
 #[test]
 fn a_component_under_an_environment_root() {
     let graph = convert(lockfile(), "comps/one", Some("roots"), "@s/one", &replacer()).unwrap();

@@ -1,6 +1,6 @@
 //! Unit tests for lane merge pattern filtering ([`pattern_ids`]), squash validation ([`validate`]), and receipt inspection ([`squash_hashes`], [`other_lane`]) against [`HASH`].
 //!
-//! Verifies lane target glob matching and rejection of `--no-snap` when squashing is required.
+//! Verifies lane target glob matching in [`pattern_ids`] and rejection of `--no-snap` when squashing is required in [`validate`].
 
 use super::{other_lane, pattern_ids, squash_hashes, validate};
 use serde_json::json;

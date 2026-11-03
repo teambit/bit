@@ -1,6 +1,6 @@
 //! Unit tests for workspace package pruning ([`remove_workspace_package`]), lockfile [`snapshot_order`] traversal, and environment importer path resolution.
 //!
-//! Verifies injected workspace dependency retention and deterministic lockfile snapshot ordering.
+//! Verifies injected workspace dependency retention in [`remove_workspace_package`] and deterministic lockfile snapshot ordering in [`snapshot_order`].
 
 use super::{remove_workspace_package, snapshot_order};
 use serde_json::json;

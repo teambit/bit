@@ -1,6 +1,6 @@
 //! Error property strings retain `Node.js` quote selection and control-character escaping (`util.inspect` parity).
 //!
-//! Verifies single, double, and backtick quote rules and control character formatting against `node`.
+//! Verifies single, double, and backtick quote rules and control character formatting against `node` via [`Command`].
 use std::process::Command;
 
 /// Verifies error property quoting matches `Node.js` `util.inspect` across quotes and control characters via [`Command`].

@@ -1,6 +1,6 @@
 //! Unit tests for per-component tag version [`selections`] glob patterns and [`entered_versions`] / [`planned_versions`] extraction.
 //!
-//! Verifies `@<version>` / `@<release-type>` pattern suffixes and rejection of invalid version specs.
+//! Verifies `@<version>` / `@<release-type>` pattern suffixes and rejection of invalid version specs in [`selections`].
 
 use super::{entered_versions, planned_versions, selections};
 use serde_json::json;

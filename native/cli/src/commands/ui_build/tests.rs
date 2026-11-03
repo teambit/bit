@@ -1,6 +1,6 @@
 //! Unit tests for `bit ui-build` [`Options`] CLI parsing ([`parse_options`]) and missing workspace/scope detection ([`is_outside_workspace_and_scope`]).
 //!
-//! Verifies optional UI root name parsing and rejection of extra positional or flag arguments.
+//! Verifies optional UI root name parsing into [`Options`] and rejection of extra positional or flag arguments in [`parse_options`].
 
 use super::{Options, is_outside_workspace_and_scope, parse_options};
 

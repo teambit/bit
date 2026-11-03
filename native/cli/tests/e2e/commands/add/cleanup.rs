@@ -19,7 +19,7 @@ fn successful_and_no_added_tracking_clean_workspace_temporary_files() {
 
 /// Verifies that failed package links leave `.bitTmp` intact prior to consumer destruction.
 ///
-/// Ensures a blocked `node_modules/@<scope>` file prevents `.bitTmp` deletion when `bit add` fails.
+/// Ensures a blocked `node_modules/@<scope>` file prevents `.bitTmp` deletion when [`compare`] fails in [`workspace`].
 #[test]
 fn failed_links_leave_temporary_files_before_consumer_destruction() {
     let helper = workspace();

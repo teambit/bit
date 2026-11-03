@@ -23,7 +23,7 @@ fn parses_target() {
     );
 }
 
-/// Verifies that [`parse_target`] rejects missing, `--help`, or multiple aspect arguments.
+/// Verifies that [`parse_target`] rejects missing, `--help`, or multiple aspect arguments in [`os_args`].
 #[test]
 fn rejects_invalid_args() {
     assert_eq!(parse_target(&os_args(&["unuse"])), None);

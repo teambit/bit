@@ -56,7 +56,7 @@ fn entry(target: Target) -> NodeCli {
     }
 }
 
-/// Verifies that `BIT_NODE_CLI` in [`Environment`] wins over other discovery sources and runs with `node` from `PATH`.
+/// Verifies that `BIT_NODE_CLI` in [`Environment`] wins over [`bvm`] discovery sources and runs [`entry`] with `node` from `PATH`.
 #[test]
 fn bit_node_cli_wins_and_runs_with_node_from_path() {
     let dir = TempDir::new().unwrap();

@@ -44,7 +44,7 @@ fn heads_are_proven_per_model() {
     assert!(!ordinary_heads(&context, &unproven));
 }
 
-/// Verifies that [`external_vertices`] requires the graph to cover all reachable external component dependencies.
+/// Verifies that [`external_vertices`] requires the graph to cover all reachable external [`component`] dependencies.
 #[test]
 fn external_vertices_must_cover_exactly_the_reachable_dependencies() {
     let components = [component("s/a@1.0.0", &["s/x@1.0.0"])];

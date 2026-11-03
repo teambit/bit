@@ -1,6 +1,6 @@
 //! Unit tests ensuring [`Host`] retains its private `.cjs` program ([`SCRIPT`]) through callbacks and removes it on session termination.
 //!
-//! Verifies [`NodeCli`] and [`Source`] session cleanup after both successful and rejected callbacks.
+//! Verifies [`NodeCli`] and [`Source`] session cleanup in [`Host`] after both successful and rejected callbacks.
 use super::{Host, SCRIPT};
 use crate::discovery::{NodeCli, Source};
 use serde_json::json;

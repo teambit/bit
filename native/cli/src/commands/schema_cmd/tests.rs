@@ -35,7 +35,7 @@ fn parses_schema_options_and_detects_missing_host() {
     assert!(!is_missing_host(temp.path(), &remote_opts));
 }
 
-/// Verifies [`extract_stored_schema`] and [`is_entry_modified_on_disk`] on a stored `APISchema` extension.
+/// Verifies [`extract_stored_schema`] and [`is_entry_modified_on_disk`] on a stored `APISchema` extension in [`Bitmap`].
 ///
 /// Confirms `teambit.semantics/schema` data is extracted and missing root directories report modified state.
 #[test]

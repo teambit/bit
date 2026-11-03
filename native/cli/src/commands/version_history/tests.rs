@@ -1,6 +1,6 @@
 //! Unit tests for `bit version-history` [`Subcommand`] and CLI flag parsing ([`parse_subcommand`]).
 //!
-//! Verifies `show`, `build`, `--from-snap`, `--from-all-lanes`, and `--short-hash` flags.
+//! Verifies `show`, `build`, `--from-snap`, `--from-all-lanes`, and `--short-hash` flags in [`Subcommand`] and [`parse_subcommand`].
 
 use super::{Subcommand, parse_subcommand};
 

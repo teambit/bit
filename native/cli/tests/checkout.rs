@@ -51,7 +51,7 @@ fn setup() -> TempDir {
     dir
 }
 
-/// Verifies that `bit checkout` arguments outside the native checkout grammar decline to the [`STUB`] CLI.
+/// Verifies that `bit checkout` arguments in [`setup`] outside the native checkout grammar are [`declined`] to the [`STUB`] CLI via [`bit`].
 #[test]
 fn input_outside_the_native_grammar_declines() {
     let dir = setup();

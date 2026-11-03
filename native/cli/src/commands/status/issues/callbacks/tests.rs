@@ -1,6 +1,6 @@
 //! Unit tests for merging ([`merge`]) plugin callback issue objects into native component status issues.
 //!
-//! Verifies replacement of existing issue types, custom plugin insertion order, and ignored issue filtering.
+//! Verifies replacement of existing issue types, custom plugin insertion order, and ignored issue filtering in [`merge`].
 
 use super::merge;
 use serde_json::json;

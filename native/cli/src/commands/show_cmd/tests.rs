@@ -80,7 +80,7 @@ fn write_fixture_workspace(root: &Path) {
     fs::write(root.join("comp1/index.js"), "import { a } from '@my-scope/comp1';\n").unwrap();
 }
 
-/// Verifies [`legacy_json`], [`harmony_json`], and [`text_report`] for a workspace component loaded via [`load_target_outcome`].
+/// Verifies [`legacy_json`], [`harmony_json`], and [`text_report`] for a [`write_fixture_workspace`] component loaded via [`load_target_outcome`].
 ///
 /// Ensures variant `packageJson` properties and optional dependency policies are projected into the output.
 #[test]

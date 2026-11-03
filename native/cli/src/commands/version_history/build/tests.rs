@@ -1,6 +1,6 @@
 //! Unit tests for `VersionHistory` graph completeness proofs ([`complete`]) and component ID row extraction.
 //!
-//! Verifies `graphCompleteRefs` short-circuiting, cycle safety, and duplicate hash rejection.
+//! Verifies `graphCompleteRefs` short-circuiting, cycle safety, and duplicate hash rejection in [`complete`].
 
 use super::complete;
 use serde_json::json;

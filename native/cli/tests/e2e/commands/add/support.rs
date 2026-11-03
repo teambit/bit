@@ -85,7 +85,7 @@ pub(crate) fn compare_stream_artifacts(
     compare_mode(helper, command, false, true, output, false, None)
 }
 
-/// Only a caller with independently qualified complete Node errors may use `variants` in [`compare_with_error_variants`].
+/// Only a caller with independently qualified complete `Node.js` errors may use `variants` in [`compare_with_error_variants`].
 pub(crate) fn compare_with_error_variants(
     helper: &Helper,
     command: &str,

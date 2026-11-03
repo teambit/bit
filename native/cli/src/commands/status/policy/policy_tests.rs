@@ -1,6 +1,6 @@
 //! Unit tests for component ID [`package_name`] conversion and pending extension configuration projection.
 //!
-//! Verifies default `@scope/name` and custom prefix formatting alongside origin-ordered extension projection.
+//! Verifies default `@scope/name` and custom prefix formatting in [`package_name`] alongside origin-ordered extension projection.
 
 use super::names::package_name;
 use serde_json::json;

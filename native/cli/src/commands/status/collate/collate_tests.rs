@@ -1,6 +1,6 @@
 //! Unit tests for root-locale component ID collation ([`compare`]) matching `JavaScript` `String.prototype.localeCompare`.
 //!
-//! Verifies punctuation, digit, and case ordering against Node 22 root-locale collation.
+//! Verifies punctuation, digit, and case ordering in [`compare`] against Node 22 root-locale collation.
 
 use super::compare;
 

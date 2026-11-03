@@ -12,7 +12,7 @@ fn target() -> Value {
     json!({"identity":"scope/ui/button","directory":"comps/ui/button","version":"1.0.0"})
 }
 
-/// Verifies that aspect configuration precedence for [`target`] matches `ConfigMerger` (`.bitmap` > `component.json` > variants > stored).
+/// Verifies that aspect configuration precedence for [`target`] and [`RESOLVER`] matches `ConfigMerger` (`.bitmap` > `component.json` > variants > stored).
 #[test]
 fn origin_precedence_matches_aspects_merger() {
     let mut target = target();

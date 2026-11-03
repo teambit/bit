@@ -1,6 +1,6 @@
 //! Unit tests for `bit snap` [`Options`] CLI parsing ([`parse`]) and selector grammar retention.
 //!
-//! Verifies `--message`, `--skip-auto-snap`, `--unmodified`, and `--unmerged` flag parsing.
+//! Verifies `--message`, `--skip-auto-snap`, `--unmodified`, and `--unmerged` flag parsing in [`Options`] and [`parse`].
 
 use super::{Options, parse};
 use serde_json::json;

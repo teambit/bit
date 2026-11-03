@@ -24,7 +24,7 @@ fn parses_unrecognized_ws_config_subcommand() {
     assert_eq!(parse_unrecognized(&[]), None);
 }
 
-/// Verifies [`parse_subcommand`] across `list`, `clean`, and `write` subcommands and flags.
+/// Verifies [`parse_subcommand`] into [`Subcommand`] across `list`, `clean`, and `write` subcommands and [`WriteOptions`] flags.
 #[test]
 fn parses_list_clean_and_write_subcommands() {
     assert_eq!(parse_subcommand(&["list"]), Some(Subcommand::List { json: false }));

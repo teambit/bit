@@ -1,6 +1,6 @@
 //! Unit tests for `bit resume-export` [`Options`] CLI parsing ([`parse_options`]).
 //!
-//! Verifies export ID, remote scope lists, and `--delete` / `--force` flag combinations.
+//! Verifies export ID, remote scope lists, and `--delete` / `--force` flag combinations in [`Options`] and [`parse_options`].
 
 use super::{Options, parse_options};
 

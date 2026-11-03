@@ -1,6 +1,6 @@
 //! Raw workspace-config and `.bitmap` history [`Snapshot`] reader and parser for replay oracle comparison.
 //!
-//! Validates backup timestamps, preimage bytes, and file permission modes across sequential writes.
+//! Validates backup timestamps, preimage bytes, and file permission modes across sequential writes via [`Snapshot::validate`].
 
 #[cfg(test)]
 mod tests;

@@ -1,6 +1,6 @@
 //! Unit tests for [`uuid_v4`] generation, snap SHA-1 hash allocation ([`new_snap_hash`]), `git` config parsing, and `PATH` lookup.
 //!
-//! Verifies RFC 4122 version-4 UUID variant bits and 40-character lowercase hexadecimal snap hashes.
+//! Verifies RFC 4122 version-4 UUID variant bits in [`uuid_v4`] and 40-character lowercase hexadecimal snap hashes in [`new_snap_hash`].
 
 use super::{new_snap_hash, uuid_v4};
 

@@ -37,7 +37,7 @@ fn fixture() -> Value {
     })
 }
 
-/// Verifies that [`filter`] retains cyclic dependencies, npm aliases, and snapshot-less optional packages while pruning unrelated importers.
+/// Verifies that [`filter`] on [`fixture`] retains cyclic dependencies, npm aliases, and snapshot-less optional packages while pruning unrelated importers.
 #[test]
 fn reachable_filter_preserves_cycles_aliases_and_packages_without_snapshots() {
     let source = fixture();

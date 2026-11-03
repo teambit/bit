@@ -15,7 +15,7 @@ fn policy(config: &Value) -> Policy {
     .unwrap()
 }
 
-/// Verifies that forced component dependency [`policy`] entries override environment defaults and retain `-` removals.
+/// Verifies that forced component dependency [`policy`] entries in [`Policy`] override environment defaults and retain `-` removals.
 ///
 /// Checks `dependencies`, `devDependencies`, and `peerDependencies` (`resolveFromEnv: true`) precedence.
 #[test]

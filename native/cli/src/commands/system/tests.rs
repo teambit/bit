@@ -22,7 +22,7 @@ fn parses_system_subcommands() {
     );
 }
 
-/// Verifies that [`format_unrecognized`] formats the standard unrecognized `bit system` subcommand message.
+/// Verifies that [`format_unrecognized`] with [`Chalk`] formats the standard unrecognized `bit system` subcommand message.
 ///
 /// Ensures the error string references `"bit system --help"`.
 #[test]

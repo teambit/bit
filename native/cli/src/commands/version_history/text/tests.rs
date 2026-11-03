@@ -5,7 +5,7 @@
 use super::{Chalk, render};
 use serde_json::json;
 
-/// Verifies [`render`] orders linear [`json`] history with heads first and preserves version pointers.
+/// Verifies [`render`] with [`Chalk`] orders linear [`json`] history with heads first and preserves version pointers.
 ///
 /// Confirms 9-character short hashes and `(main, 2.0.0)` / `(parent)` labels in rendered lines.
 #[test]

@@ -1,6 +1,6 @@
 //! Unit tests for raw workspace-config history [`Snapshot`] parsing ([`parse`]) and oracle mode comparison ([`oracle_mode`]).
 //!
-//! Verifies [`transitions`] and [`sample`] history snapshot validation across separate and same-second timestamps.
+//! Verifies [`transitions`], [`baseline`], [`interval`], and [`sample`] history snapshot validation across separate and same-second timestamps.
 
 use super::{Snapshot, oracle_mode, parse};
 use chrono::TimeZone;

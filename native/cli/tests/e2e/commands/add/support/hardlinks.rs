@@ -1,6 +1,6 @@
 //! Replay original regular-file hardlink alias topology ([`Snapshot`], [`Identity`]) before running the second implementation.
 //!
-//! Captures and restores multi-path inode groups across workspace replay runs.
+//! Captures and restores multi-path inode groups across workspace replay runs via [`visit`] and [`identity`].
 
 use std::{
     collections::BTreeMap,

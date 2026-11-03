@@ -23,7 +23,7 @@ fn parses_script_options() {
     assert_eq!(parse_options(&[]), Some(Options { script_name: None, list: false }));
 }
 
-/// Verifies [`fast_workspace_message`] for workspaces with unconfigured script envs or zero tracked components.
+/// Verifies [`fast_workspace_message`] with [`Chalk`] for workspaces with unconfigured script envs or zero tracked components.
 #[test]
 fn detects_unconfigured_envs_and_empty_workspace() {
     let temp = tempfile::tempdir().unwrap();

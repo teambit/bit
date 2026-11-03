@@ -1,6 +1,6 @@
 //! Unit tests for `JUnit` XML test report [`render`]ing and Windows directory write error diagnostics.
 //!
-//! Verifies XML attribute escaping, `<failure>` / `<skipped>` nodes, and `EISDIR` translation.
+//! Verifies XML attribute escaping, `<failure>` / `<skipped>` nodes, and `EISDIR` translation in [`render`].
 
 use super::render;
 use serde_json::json;

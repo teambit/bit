@@ -17,7 +17,7 @@ fn replacer() -> Replacer {
     .unwrap()
 }
 
-/// Verifies that [`Replacer::replace`] rewrites `@scope/pkg@file:...` specifiers to component versions and preserves registry packages.
+/// Verifies that [`Replacer::replace`] on [`replacer`] rewrites `@scope/pkg@file:...` specifiers to component versions and preserves registry packages.
 ///
 /// Also checks [`Replacer::component`] lookup for known workspace package names.
 #[test]

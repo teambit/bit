@@ -1,6 +1,6 @@
 //! Unit tests for workspace `ignoreIssues` filtering during [`Component`] status issue [`collect`]ion.
 //!
-//! Verifies root-level and component-level `ignoreIssues` suppression of `MissingManuallyConfiguredPackages`.
+//! Verifies root-level and component-level `ignoreIssues` suppression of `MissingManuallyConfiguredPackages` in [`collect`].
 
 use super::{Component, collect};
 use serde_json::{Value, json};
