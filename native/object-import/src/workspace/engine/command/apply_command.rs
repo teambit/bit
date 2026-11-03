@@ -59,7 +59,7 @@ fn publish(
     }
     Ok(result)
 }
-/// Revalidates proofs, repository preimages, `.bitmap`, sources, materializations, merges, and checkout policy before publishing.
+/// Revalidates proofs, repository preimages, `.bitmap`, sources, materializations, merges, and checkout policy for `record` ([`Record`]) and `prepared` ([`PreparedPlan`]) before publishing.
 fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;
     record.repository.validate()?;

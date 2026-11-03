@@ -28,7 +28,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    /// Prepares a `bit reset --soft` plan filtered by optional `pattern` at `root`.
+    /// Prepares a `bit reset --soft` [`Plan`] filtered by optional `pattern` at `root` ([`Path`]).
     #[inline]
     pub fn prepare(root: &Path, pattern: Option<&str>) -> io::Result<Self> {
         Self::prepare_with(

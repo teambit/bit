@@ -80,7 +80,7 @@ pub(crate) fn prepare(
     })
 }
 
-/// Collects, deduplicates, and encodes 512-byte `USTAR` headers and compressed bodies for `items`.
+/// Collects, deduplicates, and encodes 512-byte `USTAR` headers and compressed bodies for `items` within [`MAX_OBJECTS`] and [`MAX_BYTES`].
 fn collect(directory: &Path, items: Vec<Descriptor>) -> io::Result<Vec<([u8; 512], Vec<u8>)>> {
     if items.len() > MAX_OBJECTS {
         return Err(invalid("transfer object count exceeds bounds"));

@@ -58,7 +58,7 @@ pub(super) fn prepare(root: &Path) -> io::Result<Discovery> {
     Ok(result)
 }
 
-/// Loads the staged [`Repository`] state for `identity` (`<scope>/<name>`) using `bitmap`.
+/// Loads the staged [`Repository`] state for `identity` (`<scope>/<name>`) at `root` ([`Path`]) using `bitmap` ([`BitmapState`]).
 fn staged_repository(
     root: &Path,
     bitmap: &mut BitmapState,

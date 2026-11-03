@@ -3,7 +3,7 @@ use super::{Repository, Selection, diagnostics, invalid, outbound};
 use serde_json::Value;
 use std::io;
 
-/// Selects the local lane versions to remove and the replacement head for a reset.
+/// Selects the local lane versions to remove and the replacement head for a reset of `repository` ([`Repository`]).
 pub(super) fn select(repository: &Repository, head_only: bool) -> io::Result<Selection> {
     let distance = distance(repository, &repository.heads.current)?;
     let mut local = hashes(&distance)?;

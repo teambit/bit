@@ -76,7 +76,7 @@ struct Written {
     compressed_size: usize,
 }
 
-/// Validates, compresses, and atomically writes `objects` into `directory` via [`Store`].
+/// Validates, compresses, and atomically writes `objects` ([`Object`]) into `directory` ([`Path`]) via [`Store`].
 pub(super) fn commit(
     id: u32,
     directory: &Path,

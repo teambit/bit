@@ -13,7 +13,7 @@ const OPEN_REPARSE_POINT: u32 = 0x0020_0000;
 /// Windows file-attribute flag bit (`FILE_ATTRIBUTE_REPARSE_POINT`) for symlinks and junctions.
 const REPARSE_POINT: u64 = 0x0400;
 
-/// Returns whether `path` is a single-link regular file without reparse-point or device attributes.
+/// Returns whether `path` ([`Path`]) is a single-link regular file without [`REPARSE_POINT`] or [`DEVICE`] attributes.
 #[inline]
 pub(super) fn single(path: &Path) -> io::Result<bool> {
     let file = OpenOptions::new()

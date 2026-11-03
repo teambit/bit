@@ -40,7 +40,7 @@ pub(crate) fn prepare(root: &Path, identities: &[String]) -> io::Result<Vec<Cont
     Ok(vec![Control { path, before, after }])
 }
 
-/// Returns `true` when `unmerged.json` `row` matches any bare component identity in `identities`.
+/// Returns `true` when `unmerged.json` `row` ([`Value`]) matches any bare component identity in `identities`.
 fn matches_identity(row: &Value, identities: &[String]) -> bool {
     let (row_scope, row_name) = super::row_id_parts(&row["id"]);
     if row_name.is_empty() {

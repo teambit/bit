@@ -71,7 +71,7 @@ pub(super) fn collect(state: &mut State, input: &Value) -> io::Result<Value> {
     Ok(output)
 }
 
-/// Builds transfer [`Descriptor`]s for an `"objects"`, `"export"`, or `"fetch"` collection `request`.
+/// Builds transfer [`Descriptor`]s for an `"objects"`, `"export"`, or `"fetch"` collection `request` ([`wire::Collect`]) within [`MAX_OBJECTS`].
 fn selection(request: &wire::Collect) -> io::Result<Vec<Descriptor>> {
     if request.mode == "objects" {
         if request.refs.len() > MAX_OBJECTS

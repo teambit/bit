@@ -7,7 +7,7 @@ use super::{
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
-/// Prepares a bare-scope lane deletion [`Plan`] moving selected `Lane` objects to trash.
+/// Prepares a bare-scope lane deletion [`Plan`] at `scope` ([`Path`]) moving selected `Lane` objects to trash.
 #[inline]
 pub(super) fn prepare(scope: &Path, ids: &[String], force: bool) -> io::Result<Plan> {
     let guard = ScopeGuard::prepare(scope)?;

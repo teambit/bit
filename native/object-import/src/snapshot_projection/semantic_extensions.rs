@@ -5,7 +5,7 @@ use std::io;
 use super::{component_id, get, invalid, object, text};
 use crate::js_json::Value;
 
-/// Sorts and filters extension configurations in `value` for semantic `Version` hashing.
+/// Sorts and filters extension configurations in `value` for semantic `Version` hashing via [`sorted_config`] and [`without_internal`].
 pub(super) fn configs(value: &Value) -> io::Result<(Value, Vec<(usize, Value)>)> {
     let Value::Array(entries) = value else {
         return Err(invalid("extensions required"));

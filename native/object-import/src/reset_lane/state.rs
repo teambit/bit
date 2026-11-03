@@ -4,7 +4,7 @@ use super::{BitmapState, bitmap, bitmap_key, invalid};
 use serde_json::Value;
 use std::{fs, io, path::Path};
 
-/// Extracts `(lane_scope, lane_name, exported)` from the `_bit_lane` header in `.bitmap`.
+/// Extracts `(lane_scope, lane_name, exported)` from the `_bit_lane` header in `.bitmap` `rows` ([`Value`] map).
 fn parse_lane_header(rows: &serde_json::Map<String, Value>) -> io::Result<(String, String, bool)> {
     let lane = &rows["_bit_lane"];
     let (scope_opt, name_str) =

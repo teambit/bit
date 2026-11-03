@@ -85,7 +85,7 @@ struct PreparedPlan {
     checkout_policy: Option<checkout_policy::Prepared>,
     switch_completion: Option<switch_completion::Retained>,
 }
-/// Prepares a workspace command transaction in `state` from `request`.
+/// Prepares a workspace command transaction in `state` ([`State`]) from `request` ([`Prepare`]) via [`setup::run`].
 #[inline]
 pub(super) fn prepare(
     request: Prepare,

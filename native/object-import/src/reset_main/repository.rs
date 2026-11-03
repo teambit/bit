@@ -60,7 +60,7 @@ impl Repository {
         })
     }
 
-    /// Returns the component row slice from `self.index`.
+    /// Returns the component row [`Value`] slice from `self.index`.
     pub(super) fn components(&self) -> io::Result<&[Value]> {
         self.index["components"]
             .as_array()

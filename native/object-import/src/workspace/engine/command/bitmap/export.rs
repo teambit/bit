@@ -69,7 +69,7 @@ fn export_row_matches(key: &str, row: &Value, scope: &str, name: &str) -> bool {
     row_name.trim() == name && row_scope.map(str::trim) == Some(scope)
 }
 
-/// Validates and promotes `.bitmap` `row` to `scope` for `name`, returning whether the row changed.
+/// Validates and promotes `.bitmap` `row` to `scope` for `name` via [`can_promote_default_scope`], returning whether the row changed.
 fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bool> {
     if row["name"]
         .as_str()

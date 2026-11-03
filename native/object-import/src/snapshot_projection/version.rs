@@ -48,7 +48,7 @@ pub(super) fn project(fields: &Value) -> io::Result<Value> {
     Ok(Value::Object(output))
 }
 
-/// Projects a single top-level `Version` property `name` from raw `fields`.
+/// Projects a single top-level `Version` property `name` from raw `fields` via [`rows`] and [`choose`].
 fn field(fields: &Value, name: &str) -> io::Result<Value> {
     let value = get(fields, name);
     match name {

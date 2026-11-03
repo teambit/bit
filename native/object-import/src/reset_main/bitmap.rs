@@ -14,7 +14,7 @@ pub(super) struct Bitmap {
 }
 
 impl Bitmap {
-    /// Loads and validates `.bitmap` on `main` for `(scope, name)` and any staged config.
+    /// Loads and validates `.bitmap` ([`Bitmap`]) at `root` ([`Path`]) on `main` for `(scope, name)` and any staged config.
     pub(super) fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
         if before.len() > 4 * 1024 * 1024 {

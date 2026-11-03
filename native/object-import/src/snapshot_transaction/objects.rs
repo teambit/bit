@@ -54,7 +54,7 @@ pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Ve
     compress(inputs, total)
 }
 
-/// Zlib-compresses `(kind, hash, body)` `inputs` serially or in parallel within [`MAX_RAW`].
+/// Zlib-compresses `(kind, hash, body)` `inputs` serially or in parallel into [`Prepared`] records within [`MAX_RAW`].
 fn compress(inputs: Vec<(String, String, Vec<u8>)>, bytes: usize) -> io::Result<Vec<Prepared>> {
     // Validate and bound all source reads before scheduling CPU work. Indexed collection
     // preserves manifest order; persistence still acknowledges only an ordered prefix.

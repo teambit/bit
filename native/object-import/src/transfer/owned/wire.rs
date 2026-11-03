@@ -82,7 +82,7 @@ pub(super) struct Version {
     expected: Option<References>,
 }
 
-/// Expected outgoing `Source`, artifact, `edges`, and `graph` hash strings for a `Version` entry.
+/// Expected outgoing `Source`, artifact, `edges`, and `graph` hash strings for a [`Version`] entry.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct References {

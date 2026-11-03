@@ -82,7 +82,7 @@ impl Transaction {
         })
     }
 
-    /// Validates `input` against `self.token` and `self.revision`, advancing `self.phase`.
+    /// Validates `input` ([`Receipt`]) against `self.token` and `self.revision`, advancing `self.phase` ([`Phase`]).
     pub(super) fn receipt(&mut self, input: &Receipt) -> io::Result<Value> {
         if input.token.trim() != self.token
             || input.revision != self.revision

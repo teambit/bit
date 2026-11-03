@@ -31,7 +31,7 @@ impl Repository {
         Self::load_inner(root, bitmap, scope, name, true)
     }
 
-    /// Loads `Component` and `Lane` objects for `(scope, name)` without requiring a `.bitmap` entry.
+    /// Loads `Component` and `Lane` objects for `(scope, name)` at `root` ([`Path`]) with `bitmap` ([`BitmapState`]) without requiring a `.bitmap` entry.
     #[inline]
     pub(super) fn staged(
         root: &Path,

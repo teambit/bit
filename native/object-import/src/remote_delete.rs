@@ -42,7 +42,7 @@ pub struct ScopeGuard {
     legacy: Vec<u8>,
 }
 impl ScopeGuard {
-    /// Reads and validates bare-scope `scope.json` before preparing a remote deletion [`Plan`].
+    /// Reads and validates bare-scope `scope.json` at `scope` ([`Path`]) before preparing a remote deletion [`Plan`].
     pub fn prepare(scope: &Path) -> io::Result<Self> {
         let legacy = fs::read(scope.join("scope.json"))?;
         if legacy.len() > 1024 * 1024 {

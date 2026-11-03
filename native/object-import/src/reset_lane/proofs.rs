@@ -77,7 +77,7 @@ pub(super) fn object(
     Ok(value)
 }
 
-/// Revalidates that every file in `proofs` still matches its recorded preimage bytes.
+/// Revalidates that every file in `proofs` ([`ReadSet`]) still matches its recorded preimage bytes via [`regular`].
 pub(super) fn verify(proofs: &ReadSet) -> io::Result<()> {
     for (path, expected) in proofs {
         if regular(path)? != *expected {

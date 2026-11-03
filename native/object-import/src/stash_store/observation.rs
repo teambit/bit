@@ -21,7 +21,7 @@ impl Observation {
         let files = read_files(&directory)?;
         Ok(Self { directory, files })
     }
-    /// Verifies that the `.bit/stash` directory contents still match the captured `self.files` map.
+    /// Verifies via [`read_files`] that the `.bit/stash` directory contents still match the captured `self.files` map.
     pub(super) fn validate(&self) -> io::Result<()> {
         if read_files(&self.directory)? != self.files {
             return Err(invalid("stash metadata changed before publication"));

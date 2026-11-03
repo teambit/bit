@@ -47,7 +47,7 @@ fn prepare(value: &Value, artifacts: bool) -> io::Result<()> {
     crate::merge_history::metadata::validate(&clean)
 }
 
-/// Validates `dependencies` and `devDependencies` arrays on `value` and clears them on `clean`.
+/// Validates `dependencies` and `devDependencies` arrays on `value` via [`array`] and [`identity`] and clears them on `clean`.
 fn dependencies(value: &Value, clean: &mut Value) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {
         if let Some(items) = array(value, field)? {

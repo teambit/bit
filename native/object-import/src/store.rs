@@ -82,7 +82,7 @@ impl Store {
         Ok(())
     }
 
-    /// Clears the per-batch deduplication map of written loose object hashes.
+    /// Clears the per-batch deduplication map of written loose object hashes on this [`Store`].
     pub(crate) fn finish_batch(&self) -> io::Result<()> {
         self.written
             .lock()

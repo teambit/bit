@@ -17,7 +17,7 @@ pub struct Semantic {
     pub config_assignments: Vec<(usize, Value)>,
 }
 
-/// Compute the canonical semantic JSON payload and SHA-1 hash for a `Version`.
+/// Compute the canonical semantic JSON payload and SHA-1 hash for a `Version` via [`files`], [`dependencies`], and [`retain`].
 pub fn semantic(fields: &Value) -> io::Result<Semantic> {
     object(fields)?;
     let (configs, assignments) = extensions::configs(get(fields, "extensions"))?;

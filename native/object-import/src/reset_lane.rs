@@ -48,7 +48,7 @@ struct ObjectChange {
     before: Vec<u8>,
     after: Option<Vec<u8>>,
 }
-/// Preimage and postimage byte pair for `index.json` updates during a lane reset.
+/// Preimage and postimage byte pair for `index.json` updates during a lane reset [`Plan`].
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct BytesChange {
     before: Vec<u8>,

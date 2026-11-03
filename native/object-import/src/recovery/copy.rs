@@ -15,7 +15,7 @@ pub(crate) fn file(source: &Path, destination: &Path) -> io::Result<()> {
     fs::copy(source, destination)?;
     Ok(())
 }
-/// Validates regular-file, symlink, hard-link, and ancestor-directory invariants before copying `source` to `destination`.
+/// Validates regular-file ([`regular`]), symlink, hard-link, and ancestor-directory ([`ancestors`]) invariants before copying `source` to `destination`.
 pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
     super::path(source)?;
     super::path(destination)?;

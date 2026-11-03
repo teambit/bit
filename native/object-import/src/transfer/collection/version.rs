@@ -47,7 +47,7 @@ pub(super) fn load(directory: &Path, versions: &[Version]) -> io::Result<Vec<Loa
     Ok(result)
 }
 
-/// Extracts `Source`, artifact, `flattenedEdgesRef`, and `dependenciesGraphRef` [`References`] from a `Version` JSON object.
+/// Extracts `Source`, artifact (via [`artifacts`]), `flattenedEdgesRef`, and `dependenciesGraphRef` [`References`] from a `Version` JSON object.
 fn extract(value: &Value) -> io::Result<References> {
     let artifacts = artifacts(value)?;
     super::shape::eligible(value)?;

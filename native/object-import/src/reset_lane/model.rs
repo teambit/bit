@@ -36,7 +36,7 @@ pub(super) fn project(
         .map(Some)
 }
 
-/// Updates or removes the `"head"` field on a `Component` JSON `model`.
+/// Updates or removes the `"head"` field on a `Component` JSON `model` ([`Value`]).
 fn set_head(model: &mut Value, head: Option<&str>) -> io::Result<()> {
     let fields = model.as_object_mut().ok_or_else(|| invalid("lane reset Component"))?;
     if let Some(head) = head

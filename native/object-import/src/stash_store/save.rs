@@ -11,7 +11,7 @@ pub struct PreparedSave {
     bytes: Vec<u8>,
 }
 impl PreparedSave {
-    /// Retains the metadata inventory and serialized payload via [`Observation::read`] before any detached objects are published.
+    /// Retains the metadata inventory and serialized payload via [`Observation::read`] and [`next_index`] before any detached objects are published.
     pub fn prepare(scope: &Path, data: &Value) -> io::Result<Self> {
         if !data.is_object() {
             return Err(invalid("stash metadata must be a JSON object"));

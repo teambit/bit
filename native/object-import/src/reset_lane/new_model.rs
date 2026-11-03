@@ -1,4 +1,4 @@
-//! Scope `index.json` and `Component` deletion ([`remove_new_model`], [`ObjectChange`], [`BytesChange`], [`unique_position`], [`object_path`]) for a lane-only component reset on `bit reset`.
+//! Scope `index.json` and `Component` deletion ([`remove_new_model`], [`ObjectChange`], [`BytesChange`], [`unique_position`], [`object_path`]) for a lane-only component reset on `bit reset` ([`Value`]).
 
 use super::{BytesChange, ObjectChange, invalid, object_path, unique_position};
 use serde_json::Value;

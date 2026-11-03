@@ -4,7 +4,7 @@ use super::{get, invalid, object};
 use crate::js_json::Value;
 use std::io;
 
-/// Converts `teambit.pipelines/builder` artifact entries in a snapshot extension `data` object.
+/// Converts `teambit.pipelines/builder` artifact entries in a snapshot extension `data` ([`Value`]) object via [`artifact`].
 pub(super) fn convert(data: &Value) -> io::Result<Value> {
     let artifacts = get(data, "artifacts");
     if !artifacts.truthy()? {

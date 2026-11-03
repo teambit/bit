@@ -84,7 +84,7 @@ fn resolve_label_hash<'a>(
         .trim()
 }
 
-/// Walks the linear `main` parent chain starting from `head` and collects removable `local` hashes.
+/// Walks the linear `main` parent chain starting from `head` in `objects` ([`Path`]) and collects removable `local` hashes.
 fn walk(
     objects: &Path,
     head: &str,

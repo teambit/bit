@@ -7,7 +7,7 @@ use std::{
     path::Path,
 };
 
-/// Revalidates `plan` against disk and publishes its `Component`, `index.json`, and `.bitmap`.
+/// Revalidates `plan` ([`Plan`]) against disk and publishes its `Component`, `index.json`, and `.bitmap`.
 pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
     validate_file_id(file_id)?;
     let fresh = Plan::prepare(

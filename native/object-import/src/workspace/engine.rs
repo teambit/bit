@@ -48,7 +48,7 @@ const MAX_INPUT: usize = 4 * 1024 * 1024;
 const MAX_OUTPUT: usize = 32 * 1024 * 1024;
 const MAX_RAW: usize = 8 * 1024 * 1024;
 const MAX_FILES: usize = 4096;
-/// Tagged workspace engine RPC request dispatched by [`serve`] into [`Output`] responses.
+/// Tagged workspace engine RPC request dispatched by [`serve`] into [`Output`] responses within [`MAX_INPUT`] and [`MAX_OUTPUT`].
 #[derive(Deserialize)]
 #[serde(
     tag = "kind",

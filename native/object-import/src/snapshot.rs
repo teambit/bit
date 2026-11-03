@@ -57,7 +57,7 @@ struct Response {
     data: Option<Value>,
 }
 impl Response {
-    /// Constructs a successful `BSS1` [`Response`] with `completed` count and `data`.
+    /// Constructs a successful `BSS1` [`Response`] with `completed` count and `data` ([`Value`]).
     #[inline]
     #[must_use]
     const fn success(id: u32, completed: usize, data: Value) -> Self {

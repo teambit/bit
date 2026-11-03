@@ -28,7 +28,7 @@ const FIELDS: &[&str] = &[
     "detachedCurrent",
 ];
 
-/// Computes `Component` head, lane-head, tag, and detached-head reset mutations for `input`.
+/// Computes `Component` head, lane-head, tag, and detached-head reset mutations for `input` ([`Value`]).
 pub(super) fn plan(input: &Value) -> io::Result<Value> {
     validate(input)?;
     let change_head = deleted(input, optional(input, "head")?);

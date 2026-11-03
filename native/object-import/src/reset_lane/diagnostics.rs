@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Reset error carrying any cold `VersionHistory` population writes and read proofs.
+/// Reset error carrying any cold `VersionHistory` population [`Write`]s and read proofs.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct CanonicalError {
     message: String,

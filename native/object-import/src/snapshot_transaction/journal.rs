@@ -77,7 +77,7 @@ pub(super) struct Receipt {
     next_count: Option<usize>,
 }
 impl State {
-    /// Registers a new transaction or repository persistence [`Journal`] under `token` from a [`Begin`] request.
+    /// Registers a new transaction or repository persistence [`Journal`] under `token` from a [`Begin`] request over [`FULL`], [`SOFT`], or [`REPOSITORY`].
     pub(super) fn begin(
         &mut self,
         input: Value,

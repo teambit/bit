@@ -4,7 +4,7 @@ mod tests;
 use super::invalid;
 use std::{fs, io, path::Path};
 
-/// Deletes loose object `path` and prunes its two-hex-character parent directory when empty via [`prune_empty_parent`].
+/// Deletes loose object `path` ([`Path`]) and prunes its two-hex-character parent directory when empty via [`prune_empty_parent`].
 ///
 /// Rejects relative paths or symlinks on `path` and its parent directory before unlinking.
 pub(super) fn remove(path: &Path) -> io::Result<()> {

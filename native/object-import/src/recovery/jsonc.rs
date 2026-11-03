@@ -1,4 +1,4 @@
-//! Shared comment-preserving `.bitmap` `JSONC` parser re-export ([`parse`], [`bit_workspace_config::parse_jsonc`]) for byte-oriented recovery reads.
+//! Shared comment-preserving `.bitmap` `JSONC` parser re-export ([`parse`], [`bit_workspace_config::parse_jsonc`]) for byte-oriented recovery and inspection reads.
 
 /// Parses `JSONC` bytes (allowing comments and trailing commas) into a [`serde_json::Value`] tree (via [`bit_workspace_config::parse_jsonc`]).
 ///

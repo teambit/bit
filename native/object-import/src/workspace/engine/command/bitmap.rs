@@ -59,7 +59,7 @@ impl Prepared {
         stash::append(self, context)
     }
     /// `switch` changes the active lane even when every component was skipped.
-    /// Re-render the post-checkout bytes for `Consumer.onDestroy` after installation.
+    /// Re-render the post-checkout bytes for `Consumer.onDestroy` after installation via [`lane::switch_visibility`].
     pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
         let id = &context["lane"]["switchId"];
         let (scope, name) = match id.as_str().map(str::trim) {

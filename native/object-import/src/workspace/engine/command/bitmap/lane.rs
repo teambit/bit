@@ -30,8 +30,8 @@ pub(super) fn tracked_checkout(context: &Value, component: &str) -> bool {
             })
 }
 
-/// Switching to main clears lane-only visibility when the component has a
-/// main head. Other lanes preserve the tracked lane-only designation.
+/// Switching to `main` clears lane-only visibility when the component has a
+/// `main` head. Other lanes preserve the tracked lane-only designation via [`switch_flags`].
 pub(super) fn switch_visibility(
     entries: &mut [Value],
     context: &Value,

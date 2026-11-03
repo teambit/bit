@@ -68,7 +68,7 @@ pub(super) fn plan(input: Value) -> io::Result<Value> {
     }
     Ok(json!({"versions":versions}))
 }
-/// Selects the version-bump [`Choice`] for `component` given `params` and `semver`.
+/// Selects the version-bump [`Choice`] for `component` ([`Component`]) given `params` ([`Params`]) and `semver`.
 fn choice<'a>(
     component: &'a Component,
     params: &'a Params,

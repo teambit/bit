@@ -78,7 +78,7 @@ pub(super) fn prepare(input: Prepare, state: &mut State) -> io::Result<(usize, V
     });
     Ok((count, output))
 }
-/// Begins an inventory scan for the next component [`Target`] in `state.plan`.
+/// Begins an inventory scan for the next component [`Target`] in `state.plan` ([`Plan`]) from `input` ([`Scan`]).
 pub(super) fn scan(
     input: &Scan,
     state: &mut State,

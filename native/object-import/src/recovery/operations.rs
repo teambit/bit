@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{fs, io, path::PathBuf};
 
-/// Single filesystem recovery step (`Copy`, `Remove`, or `EnsureDir`).
+/// Single filesystem recovery step (`Copy` via [`copy::file`], `Remove`, or `EnsureDir`).
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) enum Operation {

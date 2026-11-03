@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-/// Rollback guard that removes partially written [`Entry`] spool files if [`write`] fails before completion.
+/// Rollback guard that removes partially written [`Entry`] spool files on drop if [`write`] fails before completion.
 #[derive(Debug, Default)]
 struct Pending(Vec<PathBuf>);
 impl Drop for Pending {

@@ -3,7 +3,7 @@
 use serde_json::{Map, Value};
 use std::{fs, io, path::Path};
 
-/// Reads the staged aspect configuration entry for `scope`/`name` saved during a snap or tag.
+/// Reads the staged aspect configuration [`Value`] entry for `scope`/`name` at `root` ([`Path`]) saved during a snap or tag.
 pub(crate) fn read(
     root: &Path,
     lane: Option<(&str, &str)>,

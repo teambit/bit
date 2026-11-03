@@ -3,7 +3,7 @@ use super::{Selection, invalid};
 use serde_json::Value;
 use std::io;
 
-/// Extracts the hidden `updateDependents` hash for `identity` from `lane` when present.
+/// Extracts the hidden `updateDependents` hash for `identity` from `lane` ([`Value`]) when present.
 pub(super) fn hidden_head(lane: &Value, identity: &str) -> io::Result<Option<String>> {
     let Some(rows) = lane.get("updateDependents").and_then(Value::as_array) else {
         return Ok(None);

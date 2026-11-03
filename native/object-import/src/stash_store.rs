@@ -57,7 +57,7 @@ impl PreparedLoad {
     pub fn filename(&self) -> &str {
         &self.filename
     }
-    /// Revalidate the selected metadata and the stash filename inventory.
+    /// Revalidate the selected metadata and the stash filename inventory via [`Observation::validate`].
     pub fn validate(&self) -> io::Result<()> {
         self.observation.validate()
     }

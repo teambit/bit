@@ -63,7 +63,7 @@ pub(in crate::workspace::engine) fn configuration_for_command(
     let config = document(&root.join("workspace.jsonc"))?;
     configuration_value(root, &config, lane)
 }
-/// Validates a parsed `workspace.jsonc` `config` value and `scope.json` state for `root`.
+/// Validates a parsed `workspace.jsonc` `config` value (including [`PREVIEW`] and [`ISSUES`]) and `scope.json` state for `root`.
 pub(in crate::workspace::engine) fn configuration_value(
     root: &Path,
     config: &Value,

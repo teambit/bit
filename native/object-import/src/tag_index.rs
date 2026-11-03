@@ -44,7 +44,7 @@ impl TagIndex {
             }
         }
     }
-    /// Looks up `(tag_label, is_normal_version)` for `hash` (case-insensitively).
+    /// Looks up `(tag_label, is_normal_version)` for `hash` (case-insensitively) in [`TagIndex`].
     pub(crate) fn get(&self, hash: &str) -> Option<(&str, bool)> {
         let hash = hash.trim();
         self.0
