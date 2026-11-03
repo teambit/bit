@@ -1,6 +1,6 @@
 //! Unit tests for `bit pattern` [`Options`] CLI argument parsing ([`parse_options`]) and stateful selector rejection.
 //!
-//! Verifies `--remote`, `--json`, and rejection of `$`-prefixed state selectors with `--remote`.
+//! Verifies `--remote`, `--json`, and rejection of `$`-prefixed state selectors without `--remote` in [`parse_options`].
 
 use super::{Options, parse_options};
 use std::ffi::OsString;

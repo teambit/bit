@@ -1,6 +1,6 @@
 //! Unit tests for advancing `.bitmap` readset and control receipts in [`Retained`].
 //!
-//! Verifies non-conflicting `.bitmap` receipt advancement and conflict rejection across [`Retained`] state.
+//! Verifies non-conflicting `.bitmap` receipt advancement and conflict rejection across [`Retained`] readset and control state.
 
 use super::Retained;
 use serde_json::json;

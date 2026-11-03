@@ -1,6 +1,6 @@
 //! Unit tests for `bit compile` [`parse_options`] and [`validate_compile_selectors`] validation.
 //!
-//! Verifies [`Options`] flag parsing and selector validation against `.bitmap` and `workspace.jsonc`.
+//! Verifies [`Options`] flag parsing and selector validation against `.bitmap` and `workspace.jsonc` default scopes.
 
 use super::{Options, parse_options, validate_compile_selectors};
 use std::fs;

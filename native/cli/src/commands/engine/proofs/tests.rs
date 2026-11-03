@@ -1,6 +1,6 @@
 //! Unit tests for read-set proof validation and [`MAX_PROOFS`] frame batching in [`Engine`] requests.
 //!
-//! Verifies stale-receipt detection across multi-frame [`MAX_PROOFS`] batches and per-observation ordering in [`Engine`].
+//! Verifies stale-receipt detection across multi-frame [`MAX_PROOFS`] batches and per-observation ordering across [`Engine`].
 
 use super::{Engine, MAX_PROOFS};
 use serde_json::json;

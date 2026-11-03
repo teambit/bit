@@ -1,6 +1,6 @@
 //! Unit tests for `bit mini-status` ([`report`]) and `bit status --quick` ([`quick_report`]) [`Summary`] terminal formatting.
 //!
-//! Verifies modified/new component lists, issue counts, and [`expected_success_symbols`] with [`Chalk`].
+//! Verifies modified/new component lists, issue counts, and [`expected_success_symbols`] with [`Chalk`] across [`report`] and [`quick_report`].
 
 use super::{Summary, quick_report, report};
 use crate::commands::{color::Chalk, test_support::expected_success_symbols};

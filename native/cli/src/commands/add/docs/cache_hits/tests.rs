@@ -1,6 +1,6 @@
 //! Unit tests for component documentation cache [`hit`], [`prepare`], timestamps, and fallback.
 //!
-//! Verifies [`observe`]d source timestamps, [`seed`]ed cached metadata lookup, and stale-entry fallback.
+//! Verifies [`observe`]d source timestamps, [`seed`]ed cached metadata lookup, and stale-entry fallback behavior.
 
 use super::{hit, prepare};
 use crate::commands::add::docs::sources::observe;

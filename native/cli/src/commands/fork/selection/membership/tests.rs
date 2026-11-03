@@ -1,6 +1,6 @@
 //! Unit tests for `bit fork` local and remote component membership classification via [`classify`].
 //!
-//! Verifies local-before-remote ordering and reversed remote candidate preservation in [`classify`].
+//! Verifies local-before-remote ordering and reversed remote candidate preservation across [`classify`].
 
 use super::classify;
 use serde_json::json;

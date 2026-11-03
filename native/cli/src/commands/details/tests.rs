@@ -1,6 +1,6 @@
 //! Unit tests for `bit details` [`valid_args`] validation and persisted command [`render_details`].
 //!
-//! Verifies `--no-color` flag acceptance and [`Chalk`] rendering of `.bit/command-details.json`.
+//! Verifies `--no-color` flag acceptance and [`Chalk`] rendering of `.bit/command-details.json` in [`render_details`].
 
 use super::{Chalk, render_details, valid_args};
 use std::{ffi::OsString, fs};

@@ -1,6 +1,6 @@
 //! Unit tests for formatting `checkout` and `revert` terminal output reports via [`format`].
 //!
-//! Verifies [`Chalk`] styling, [`expected_success_symbols`] rendering, and [`parse`] / [`parse_revert`] summary lines.
+//! Verifies [`Chalk`] styling, [`expected_success_symbols`] rendering, and [`parse`] / [`parse_revert`] summary lines in [`format`].
 
 use super::format;
 use crate::commands::{

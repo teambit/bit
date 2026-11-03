@@ -1,6 +1,6 @@
 //! Unit tests for `bit internalize` [`Options`] CLI parsing ([`parse_options`]) and `component.json` inspection ([`is_entry_internal`]).
 //!
-//! Verifies `--revert`, `--list`, and `--json` flags and [`Bitmap`] internal entry detection.
+//! Verifies `--revert`, `--list`, and `--json` flags and [`Bitmap`] internal entry detection in [`is_entry_internal`].
 
 use super::{Options, is_entry_internal, parse_options};
 use bit_install::workspace::Bitmap;

@@ -1,6 +1,6 @@
 //! Unit tests for `bit local-only` [`Subcommand`] CLI parsing ([`parse_subcommand`]).
 //!
-//! Verifies `set`, `unset`, `list`, and unrecognized subcommand argument parsing.
+//! Verifies `set`, `unset`, `list`, and unrecognized [`Subcommand`] argument parsing in [`parse_subcommand`].
 
 use super::{Subcommand, parse_subcommand};
 use std::ffi::OsString;

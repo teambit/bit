@@ -1,6 +1,6 @@
 //! Unit tests for `bit remote` [`Action`] and [`Options`] CLI subcommand parsing and URL validation.
 //!
-//! Verifies `list`, `add`, and `del` subcommands and `--global` flag handling.
+//! Verifies `list`, `add`, and `del` subcommands and `--global` flag handling in [`Options::parse`].
 
 use super::options::{Action, Options};
 use std::ffi::OsString;

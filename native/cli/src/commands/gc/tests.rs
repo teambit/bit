@@ -1,6 +1,6 @@
 //! Unit tests for scope garbage collection [`Options`] CLI parsing ([`parse_options`]), reachability analysis ([`prepare_with_workspace_ids`]), and backup [`restore`].
 //!
-//! Verifies [`parse_keep_versions`], [`CompIdSpec`], [`GcResult`], [`format_bytes`], [`format_gc_report`], and [`format_empty_gc_report`].
+//! Verifies [`parse_keep_versions`], [`CompIdSpec`], [`GcResult`], [`format_bytes`], [`format_gc_report`], and [`format_empty_gc_report`] behavior.
 
 use super::{
     Options,

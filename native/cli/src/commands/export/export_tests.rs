@@ -1,6 +1,6 @@
 //! Unit tests for `bit export` CLI option parsing ([`parse`]) and outbound failure diagnostics ([`persist_failure`], [`validation_failure`]).
 //!
-//! Verifies `--origin-directly`, `--all`, `--all-versions`, `--head-only`, and `--resume` flags in [`parse`].
+//! Verifies `--origin-directly`, `--all`, `--all-versions`, `--head-only`, and `--resume` flags across [`parse`].
 
 use super::{parse, persist_failure, validation_failure};
 

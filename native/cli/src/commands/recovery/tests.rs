@@ -1,6 +1,6 @@
 //! Unit tests for `bit merge --abort` ([`parse_component`]) and `bit lane merge-abort` ([`parse_lane`]) CLI option parsing and report formatting ([`format_component`]).
 //!
-//! Verifies [`Kind::Lane`] / component abort flags and [`Chalk`] report formatting.
+//! Verifies [`Kind::Lane`] / component abort flags and [`Chalk`] report formatting in [`format_component`].
 
 use super::{Kind, parse_component, parse_lane, report::format_component};
 use crate::commands::color::Chalk;

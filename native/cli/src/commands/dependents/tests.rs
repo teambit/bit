@@ -1,6 +1,6 @@
 //! Unit tests for `bit dependents` [`parse_options`], [`is_unscoped_bitmap_row`], and [`render_dependents_report`].
 //!
-//! Verifies [`Options`], [`DepGraph`], [`DependentInfo`], and [`Chalk`]-formatted report rendering.
+//! Verifies [`Options`], [`DepGraph`], [`DependentInfo`], and [`Chalk`]-formatted report rendering across [`render_dependents_report`].
 
 use super::{
     Options, is_unscoped_bitmap_row, parse_options,

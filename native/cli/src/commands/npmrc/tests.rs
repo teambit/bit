@@ -1,6 +1,6 @@
 //! Unit tests for `bit npmrc` CLI subcommand parsing ([`parse_subcommand`]).
 //!
-//! Verifies positional subcommand extraction and rejection of missing or flag arguments.
+//! Verifies positional subcommand extraction and rejection of missing or flag arguments in [`parse_subcommand`].
 
 use super::parse_subcommand;
 use std::ffi::OsString;

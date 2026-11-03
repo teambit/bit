@@ -1,6 +1,6 @@
 //! Unit tests for `bit envs` [`Subcommand`] CLI parsing ([`parse_subcommand`]), inspection, and [`prepare`] config updates.
 //!
-//! Verifies [`format_envs_list`], [`render_env_get`], and [`remove_env_from_map`] with [`Chalk`] formatting.
+//! Verifies [`format_envs_list`], [`render_env_get`], and [`remove_env_from_map`] with [`Chalk`] report formatting.
 
 use super::{
     Subcommand,

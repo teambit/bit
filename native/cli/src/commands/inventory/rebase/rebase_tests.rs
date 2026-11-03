@@ -1,6 +1,6 @@
 //! Unit tests for POSIX path joining ([`join_linux`]) and ignore-pattern rebasing ([`pattern`]) in inventory scans.
 //!
-//! Verifies `pathJoinLinux` ([`join_linux`]) and `rebaseIgnorePattern` ([`pattern`]) parity across directory prefixes and globs.
+//! Verifies `pathJoinLinux` ([`join_linux`]) and `rebaseIgnorePattern` ([`pattern`]) parity across directory prefixes and glob patterns.
 
 use super::{join_linux, pattern};
 

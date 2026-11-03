@@ -1,6 +1,6 @@
 //! Unit tests for `bit graph` [`Options`] CLI parsing ([`parse_options`]), [`fast_graph_error`], and [`CompGraph`] dependency cycle filtering.
 //!
-//! Verifies `--cycles`, `--layout`, and [`GraphEdge`] cycle subgraphs.
+//! Verifies `--cycles`, `--layout`, and [`GraphEdge`] cycle subgraphs in [`CompGraph`].
 
 use super::{
     Options, fast_graph_error,

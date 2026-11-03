@@ -1,6 +1,6 @@
 //! Unit tests for `bit cat-object` ([`parse_object_options`]), `bit cat-component` ([`parse_id_json_options`]), and `bit cat-lane` lookup diagnostics.
 //!
-//! Verifies [`ObjectOptions`], [`IdJsonOptions`], [`parse_single_id`], [`diagnose_component_lookup_error`], and [`diagnose_lane_lookup_error`].
+//! Verifies [`ObjectOptions`], [`IdJsonOptions`], [`parse_single_id`], [`diagnose_component_lookup_error`], and [`diagnose_lane_lookup_error`] behavior.
 
 use super::{
     IdJsonOptions, ObjectOptions,

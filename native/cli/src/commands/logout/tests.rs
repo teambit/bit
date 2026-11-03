@@ -1,6 +1,6 @@
 //! Unit tests for `bit logout` CLI argument validation ([`valid_args`]) and global credential cleanup ([`clear_auth_config`]).
 //!
-//! Verifies `--no-color` flag acceptance and removal of authentication keys from global config.
+//! Verifies `--no-color` flag acceptance and removal of authentication keys from global config in [`clear_auth_config`].
 
 use super::{clear_auth_config, valid_args};
 use serde_json::json;

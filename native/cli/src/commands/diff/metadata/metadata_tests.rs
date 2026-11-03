@@ -1,6 +1,6 @@
 //! Unit tests for `bit diff` field-name prettification ([`prettify`]) and component [`Id`] equality.
 //!
-//! Verifies camelCase-to-title labeling in [`prettify`] and versioned versus `latest` [`Id`] comparison.
+//! Verifies camelCase-to-title labeling in [`prettify`] and versioned versus `latest` [`Id`] comparison semantics.
 
 use super::prettify;
 use crate::commands::ids::Id;

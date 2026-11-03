@@ -1,6 +1,6 @@
 //! Unit tests for `app` command [`parse_options`] and [`discover_workspace_apps`] discovery.
 //!
-//! Verifies [`Options`] flag parsing, [`is_empty_app_workspace`] detection, and [`extract_app_name`] extraction.
+//! Verifies [`Options`] flag parsing, [`is_empty_app_workspace`] detection, and [`extract_app_name`] name extraction.
 
 use super::{
     Options, discover_workspace_apps, extract_app_name, is_empty_app_workspace, parse_options,

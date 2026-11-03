@@ -1,6 +1,6 @@
 //! Unit tests for `bit link` [`Options`] CLI parsing ([`parse_options`]), package-name rewiring ([`replace_package_name`]), and [`LinkSummary`] formatting ([`render_report`], [`render_json`]).
 //!
-//! Verifies [`BoundLink`], [`ComponentLinkItem`], [`CodemodResult`], [`LinkDetail`], and [`LinkToDirResult`] rendering.
+//! Verifies [`BoundLink`], [`ComponentLinkItem`], [`CodemodResult`], [`LinkDetail`], and [`LinkToDirResult`] rendering with [`Formatter`] and [`Chalk`].
 
 use super::{
     Options,

@@ -1,6 +1,6 @@
 //! Unit tests for `bit deps` [`parse_subcommand`], [`parse_why`], and [`prepare`] dependency policy mutations.
 //!
-//! Verifies [`Subcommand`], [`WriteTarget`], and [`DEP_RESOLVER_ID`] updates across `workspace.jsonc` and `.bitmap` with [`Chalk`] and [`Value`].
+//! Verifies [`Subcommand`], [`WriteTarget`], and [`DEP_RESOLVER_ID`] updates across `workspace.jsonc` and `.bitmap` using [`Chalk`] and [`Value`].
 
 use super::{Subcommand, parse_subcommand, parse_why, prepare, write::WriteTarget};
 use crate::commands::{color::Chalk, set_peer::DEP_RESOLVER_ID};

@@ -1,6 +1,6 @@
 //! Unit tests for `bit eject-conf` [`Options`] CLI parsing ([`parse_options`]) and `component.json` [`prepare`] generation.
 //!
-//! Verifies scope object reading, [`sha1_hex`] hashing, and [`Chalk`]-styled `eject-conf` output.
+//! Verifies scope object reading, [`sha1_hex`] hashing, and [`Chalk`]-styled `eject-conf` output in [`prepare`].
 
 use super::{Chalk, Options, parse_options, prepare};
 use bit_install::workspace::sha1_hex;

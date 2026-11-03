@@ -1,6 +1,6 @@
 //! Unit tests for `bit component-issues` [`parse`], [`issues_json`], and [`report`] output.
 //!
-//! Verifies `--json` flag parsing, issue ordering, and [`Chalk`]-formatted table rendering.
+//! Verifies `--json` flag parsing, issue ordering, and [`Chalk`]-formatted table rendering across [`parse`], [`issues_json`], and [`report`].
 
 use super::{Chalk, issues_json, parse, report};
 

@@ -1,6 +1,6 @@
 //! Unit tests for `bit clear-cache` [`parse_args`], [`clear_caches`], and [`format_report`].
 //!
-//! Verifies local and `--remote` ([`format_remote_report`]) cache clearing and [`Chalk`] report output.
+//! Verifies local and `--remote` ([`format_remote_report`]) cache clearing and [`Chalk`] report formatting.
 
 use super::{clear_caches, format_remote_report, format_report, parse_args};
 use crate::commands::color::Chalk;

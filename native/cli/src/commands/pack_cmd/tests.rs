@@ -1,6 +1,6 @@
 //! Unit tests for `bit pack` [`Options`] CLI parsing ([`parse_options`]), missing scope checks ([`is_missing_scope`]), and `.tgz` tarball generation ([`build_tgz_bytes`]).
 //!
-//! Verifies `--out-dir`, `--override`, `--keep`, and `--prefix` flags and gzipped tar entries.
+//! Verifies `--out-dir`, `--override`, `--keep`, and `--prefix` flags and gzipped tar entries in [`build_tgz_bytes`].
 
 use super::{Options, is_missing_scope, packer::build_tgz_bytes, parse_options};
 use flate2::read::GzDecoder;

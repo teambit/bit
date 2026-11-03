@@ -1,6 +1,6 @@
 //! Unit tests for `bit format` [`Options`] CLI parsing ([`parse_options`]), missing host detection ([`is_missing_host`]), and pattern validation ([`validate_lint_pattern`]).
 //!
-//! Verifies `--changed`, `--check`, and `--json` flags and [`Chalk`] pattern diagnostic messages.
+//! Verifies `--changed`, `--check`, and `--json` flags and [`Chalk`] pattern diagnostic messages in [`validate_lint_pattern`].
 
 use super::{Options, is_missing_host, parse_options, validate_lint_pattern};
 use crate::commands::color::Chalk;

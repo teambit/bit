@@ -1,6 +1,6 @@
 //! Unit tests for `bit clone` [`parse_options`], [`parse_component_name`], and [`validate_outside_workspace`].
 //!
-//! Verifies [`Options`] positional and flag parsing and target directory preflight checks.
+//! Verifies [`Options`] positional and flag parsing and target directory preflight validation.
 
 use super::{Options, parse_component_name, parse_options, validate_outside_workspace};
 use std::fs;

@@ -1,6 +1,6 @@
 //! Unit tests for `bit export` transfer preparation ([`prepared`]), receipt validation ([`published`]), and summary formatting ([`format_with`]).
 //!
-//! Verifies [`receipt`] extraction, exported lane reporting, and [`Chalk`] terminal formatting.
+//! Verifies [`receipt`] extraction, exported lane reporting, and [`Chalk`] terminal formatting in [`format_with`].
 
 use super::{format_with, prepared, published};
 use crate::commands::color::Chalk;

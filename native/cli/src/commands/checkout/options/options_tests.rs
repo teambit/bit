@@ -1,6 +1,6 @@
 //! Unit tests for `checkout` ([`parse`]) and `revert` ([`parse_revert`]) CLI option parsing and validation.
 //!
-//! Verifies positional target order, flag combinations, and unsupported argument rejection in [`parse`] and [`parse_revert`].
+//! Verifies positional target order, flag combinations, and unsupported argument rejection across [`parse`] and [`parse_revert`].
 
 use super::{parse, parse_revert};
 

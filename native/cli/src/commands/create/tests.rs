@@ -1,6 +1,6 @@
 //! Unit tests for `bit create` [`parse_options`] and [`validate_options`] scope/template validation.
 //!
-//! Verifies [`Options`] flag parsing and workspace scope and template name validation.
+//! Verifies [`Options`] flag parsing and workspace scope and template name validation in [`validate_options`].
 
 use super::{Options, parse_options, validate_options};
 use std::fs;

@@ -1,6 +1,6 @@
 //! Unit tests for `bit import` and `bit fetch` CLI option parsing ([`parse`]) and semantic flag validation.
 //!
-//! Verifies `--objects`, `--lanes`, `--from-original-scopes`, and `--skip-dependency-installation` flags in [`parse`].
+//! Verifies `--objects`, `--lanes`, `--from-original-scopes`, and `--skip-dependency-installation` flags across [`parse`].
 
 use super::parse;
 

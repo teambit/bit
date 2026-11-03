@@ -1,6 +1,6 @@
 //! Unit tests for `build` command [`parse_options`] and capsule [`flag_error`] validation.
 //!
-//! Verifies [`Options`] pipeline flags and [`is_empty_build_workspace`] workspace detection.
+//! Verifies [`Options`] pipeline flags and [`is_empty_build_workspace`] empty-workspace detection.
 
 use super::{Options, flag_error, is_empty_build_workspace, parse_options};
 use std::fs;
