@@ -29,7 +29,7 @@ pub(super) fn visible(entries: Vec<lane::Entry>) -> io::Result<Vec<Listed>> {
         .collect()
 }
 
-/// Extracts the remote `Lane` hash and `<scope>/<name>@<head>` target strings from [`ObjectItem`] `items`.
+/// Extracts the remote `Lane` hash and `<scope>/<name>@<head>` target strings from [`ObjectItem`] `items` via [`remote_lane`].
 pub(super) fn lane_targets(
     id: &lane::Id,
     items: &[ObjectItem],

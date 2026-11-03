@@ -5,7 +5,7 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-/// Populates `stashAdditions` and `stashAddedTargets` in `context` for stashed new components from [`Prepare`].
+/// Populates `stashAdditions` and `stashAddedTargets` in `context` for stashed new components from [`Prepare`] via [`identities`].
 pub(in crate::workspace::engine::command) fn context(
     request: &Prepare,
     context: &mut Value,

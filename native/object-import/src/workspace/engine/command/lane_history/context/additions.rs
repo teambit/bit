@@ -8,7 +8,7 @@ use crate::workspace::engine::command::{
 };
 use serde_json::{Value, json};
 use std::io;
-/// Attaches historical [`Phase`] components missing from `.bitmap` into `context["scopeAdditions"]` and `context["scopeAddedTargets"]`.
+/// Attaches historical [`Phase`] components missing from `.bitmap` into `context["scopeAdditions"]` and `context["scopeAddedTargets"]` via [`selected`].
 pub(super) fn attach_missing(
     request: &Prepare,
     bitmap: &Value,

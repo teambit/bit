@@ -47,7 +47,7 @@ pub(in crate::workspace::engine::command) fn identity_bitmap(
     Ok(projected)
 }
 
-/// Extracts visible component targets from `.bitmap` for the current workspace lane.
+/// Extracts visible component targets from `.bitmap` for the current workspace lane via [`is_metadata_bitmap_key`].
 pub(in crate::workspace::engine::command) fn targets(
     bitmap: &Value,
     settings: &Value,

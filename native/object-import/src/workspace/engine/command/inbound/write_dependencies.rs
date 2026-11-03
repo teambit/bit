@@ -17,7 +17,7 @@ pub(in crate::workspace::engine) struct Request {
     read_set: Vec<super::super::proof::Proof>,
 }
 
-/// Completes `--write-deps` publication and refreshes workspace policy state on [`State`] after `.bitmap` commit.
+/// Completes `--write-deps` publication ([`publication::write`]) and refreshes workspace policy state on [`State`] after `.bitmap` commit.
 pub(in crate::workspace::engine) fn complete(
     request: &Request,
     state: &mut State,

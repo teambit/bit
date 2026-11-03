@@ -13,7 +13,7 @@ use std::{
     fs, io,
     path::Path,
 };
-/// Borrowed workspace context, [`PreparedImport`], and [`Resolution`] policy for materializing an existing imported [`Target`].
+/// Borrowed workspace context, [`PreparedImport`], and [`Resolution`] policy for materializing an existing imported [`Target`] via [`prepare`].
 pub(super) struct Input<'a> {
     pub(super) root: &'a Path,
     pub(super) directory: &'a str,

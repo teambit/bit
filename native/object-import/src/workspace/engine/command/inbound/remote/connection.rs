@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Resolves [`Remotes`], HTTP [`Network`] client, [`GlobalConfig`], and local scope name using `HOME`/`USERPROFILE`.
+/// Resolves [`Remotes`], HTTP [`Network`] client, [`GlobalConfig`], and local scope name using `HOME`/`USERPROFILE` via [`with_home`].
 #[inline]
 pub(super) fn connect(
     root: &Path,

@@ -20,7 +20,7 @@ pub(in crate::workspace::engine) struct Request {
     ids: Vec<String>,
 }
 
-/// Reconciles `.bitmap` component versions with scope `HEAD` after git pull and writes `last-pull-sync` for [`Request`].
+/// Reconciles `.bitmap` component versions with scope `HEAD` after git pull via [`bitmap::auto_sync`] and writes `last-pull-sync` for [`Request`].
 pub(in crate::workspace::engine) fn finalize(
     input: &Request,
     state: &State,

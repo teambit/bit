@@ -30,7 +30,7 @@ impl Prepared {
     fn package_manifests(&mut self, manifests: &[Value]) -> io::Result<()> {
         self.package_manifests_with_aspects(manifests, &HashSet::new())
     }
-    /// Replaces queued `package.json` writes with normalized `manifests`, adding aspect exports where applicable.
+    /// Replaces queued `package.json` writes with normalized `manifests`, adding aspect exports where applicable via [`Self::manifest_index`].
     pub(in crate::workspace::engine::command) fn package_manifests_with_aspects(
         &mut self,
         manifests: &[Value],

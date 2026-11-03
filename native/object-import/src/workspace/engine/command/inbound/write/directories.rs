@@ -84,7 +84,7 @@ fn relocate(
     }
 }
 
-/// The directories that more than one target has, each once.
+/// The directories that more than one [`Target`] has, each once, consumed by [`fix_dirs_if_equal`].
 fn duplicates(directories: &[String]) -> Vec<String> {
     let mut duplicates: Vec<String> = Vec::new();
     for (index, directory) in directories.iter().enumerate() {

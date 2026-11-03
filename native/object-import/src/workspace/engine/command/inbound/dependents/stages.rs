@@ -35,7 +35,7 @@ struct Graph {
     read_set: Vec<proof::Proof>,
 }
 
-/// Returns whether [`Prepare`] requires dependent graph traversal (`--dependents` or `--dependents-via`).
+/// Returns whether [`Prepare`] requires dependent graph traversal (`--dependents` or `--dependents-via`) via [`begin`] and [`complete`].
 #[inline]
 pub(in super::super) fn needed(input: &Prepare) -> bool {
     let options = &input.options.dependencies.dependents;

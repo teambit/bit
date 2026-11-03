@@ -21,7 +21,7 @@ pub(super) struct Recovery {
     permissions: Vec<(PathBuf, String, fs::Permissions)>,
 }
 impl Recovery {
-    /// Captures `.bitmap`, `workspace.jsonc`, `staged-snaps`, `staged-config`, and `lane` preimages for `last-merged`.
+    /// Captures `.bitmap`, `workspace.jsonc`, `staged-snaps`, [`Self::staged_config`], and `lane` preimages for `last-merged`.
     pub(super) fn prepare(root: &Path, lane: &Value) -> io::Result<Self> {
         let scope = crate::scope_path(root);
         let directory = scope.join("last-merged");

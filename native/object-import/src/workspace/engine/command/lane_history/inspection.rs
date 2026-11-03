@@ -39,7 +39,7 @@ pub(in crate::workspace::engine::command) struct Retained {
     import: command_import::PreparedImport,
 }
 
-/// Prepares a remote or local [`lane_history`] inspection refresh and retains its pending [`Retained`] state on [`State`].
+/// Prepares a remote ([`refresh`]) or local [`lane_history`] inspection refresh and retains its pending [`Retained`] state on [`State`].
 pub(in crate::workspace::engine) fn prepare(
     request: &Prepare,
     state: &mut State,

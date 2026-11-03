@@ -4,7 +4,7 @@ use super::super::{invalid, merge::snapshot};
 use serde_json::{Value, json};
 use std::io;
 
-/// Updates `components` or `updateDependents` head references on `lane` for `identity`.
+/// Updates `components` or `updateDependents` head references on `lane` for `identity` via [`parse_scoped_identity`].
 pub(super) fn update(
     lane: &mut Value,
     identity: &str,

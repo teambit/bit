@@ -4,7 +4,7 @@ use super::invalid;
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-/// Coalesces sequential file write receipts by path (up to `16,384` entries), verifying intermediate preimage continuity.
+/// Coalesces sequential file write receipts by path (up to `16,384` entries) via [`normalize_receipt`], verifying intermediate preimage continuity.
 pub(super) fn combine(receipts: Vec<Value>) -> io::Result<Vec<Value>> {
     if receipts.len() > 16384 {
         return Err(invalid("inbound owned publication count"));

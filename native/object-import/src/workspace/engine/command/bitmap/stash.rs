@@ -5,7 +5,7 @@ use super::{Prepared, identity, invalid, lane, render_rows, rows};
 use serde_json::Value;
 use std::io;
 
-/// Appends stashed new-component `.bitmap` entries from `context` into `prepared` (up to `4,096` items) without assigning snapshot hashes.
+/// Appends stashed new-component `.bitmap` entries from `context` into `prepared` ([`Prepared`], up to `4,096` items) without assigning snapshot hashes.
 pub(super) fn append(prepared: &mut Prepared, context: &Value) -> io::Result<()> {
     let bitmap = crate::parse_jsonc(&prepared.output)?;
     let mut rows = rows(&bitmap)?;

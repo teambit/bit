@@ -4,7 +4,7 @@ use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Value, json as value};
 use std::{io, path::Path};
 
-/// Prepares `staged-snaps`, `staged-config`, and `index.json` updates in [`Prepared`] for finalized [`Input`] entries.
+/// Prepares `staged-snaps`, `staged-config` ([`config`]), and `index.json` updates in [`Prepared`] for finalized [`Input`] entries.
 pub(super) fn prepare(
     root: &Path,
     inputs: &[Input<'_>],

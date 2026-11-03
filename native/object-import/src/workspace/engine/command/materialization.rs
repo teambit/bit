@@ -35,7 +35,7 @@ pub(super) struct Input<'a> {
     pub(super) base: Option<(&'a str, &'a Value)>,
     pub(super) options: &'a Options,
 }
-/// Prepares component file transitions and optional `LICENSE` materialization for `input`.
+/// Prepares component file transitions and optional `LICENSE` materialization for `input` ([`Input`]) into [`Prepared`] via [`finish_with_license`].
 pub(super) fn prepare(
     input: &Input<'_>,
     repository: &Repository,

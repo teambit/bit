@@ -43,7 +43,7 @@ pub(super) fn receipt(
 }
 
 impl super::Prepared {
-    /// Returns the pending checkout policy preparation input when workspace policy updates are needed.
+    /// Returns the pending checkout policy preparation input (`self.policy_input`) when workspace policy updates are needed.
     #[inline]
     pub(in super::super) fn policy_input(&self) -> Option<&Value> {
         self.policy_input.as_ref()

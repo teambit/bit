@@ -7,7 +7,7 @@ use std::{
     io,
 };
 
-/// Prepares an objects-only lane import retaining both lane heads and distinct tracked versions for [`lane::Id`].
+/// Prepares an objects-only lane import retaining both lane heads and distinct tracked versions for [`lane::Id`] via [`capture_remotes`].
 pub(super) fn prepare(
     input: &Prepare,
     roots: &[Target],

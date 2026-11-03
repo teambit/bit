@@ -24,7 +24,7 @@ const PACKAGE_FIELDS: &[&str] = &[
     "_bit_local",
     "source",
 ];
-/// Prepares `node_modules/<package>` manifest writes, source links, and root copies for [`Input`] into [`Prepared`].
+/// Prepares `node_modules/<package>` manifest writes, source links, and root copies for [`Input`] into [`Prepared`] via [`package_name`].
 pub(super) fn prepare(
     root: &Path,
     input: &Input<'_>,

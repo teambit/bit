@@ -7,7 +7,7 @@ use crate::workspace::engine::{
 };
 use serde_json::Value;
 use std::{collections::HashMap, io};
-/// Reads [`status_context`] metadata for workspace targets participating in [`Phase`] under [`Prepare`].
+/// Reads [`status_context`] metadata for workspace targets participating in [`Phase`] under [`Prepare`] via [`all_targets`].
 pub(super) fn read(
     request: &Prepare,
     pool: &rayon::ThreadPool,

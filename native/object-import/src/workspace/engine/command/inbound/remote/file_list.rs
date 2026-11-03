@@ -7,7 +7,7 @@ use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{collections::HashSet, fs::File, io, path::Path};
 
-/// Lists [`Listed`] components matching `namespaces` in a bare file scope at `path`.
+/// Lists [`Listed`] components matching `namespaces` in a bare file scope at `path` via [`matcher`], [`index`], and [`collect`].
 pub(super) fn list(path: &Path, scope: &str, namespaces: &str) -> io::Result<Vec<Listed>> {
     let (scope, namespaces) = (scope.trim(), namespaces.trim());
     let config: Value =

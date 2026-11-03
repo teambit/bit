@@ -23,7 +23,7 @@ struct Lanes {
     other: Option<Record>,
     should_squash: bool,
 }
-/// Prepares lane context, target visibility, and incoming additions for a native merge or switch command.
+/// Prepares lane context ([`load_lanes`]), target visibility ([`visibility`]), and incoming [`additions`] for a native merge or switch command.
 pub(super) fn prepare(
     request: &Prepare,
     pool: &rayon::ThreadPool,

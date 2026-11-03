@@ -30,7 +30,7 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
-/// Reuses inbound configuration and authentication via [`remote::recovery_connection`] without persisting recovery probes.
+/// Reuses inbound configuration and authentication via [`remote::recovery_connection`] and [`Transport`] without persisting recovery probes.
 pub fn recovery_remote_connection(
     root: &Path,
     home: &Path,

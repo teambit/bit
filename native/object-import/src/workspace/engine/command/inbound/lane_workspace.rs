@@ -6,7 +6,7 @@ use super::{Prepare, Target, config, identity, invalid, lanes, remote};
 use crate::command_import::{self, PreparedImport, Progress, VirtualRemote, lane};
 use std::{collections::HashMap, io};
 
-/// Prepares an inbound import of current-lane workspace components and `main`-only selections for [`lane::Id`].
+/// Prepares an inbound import of current-lane workspace components and `main`-only selections for [`lane::Id`] via [`prepare_http`] or [`prepare_file`].
 pub(super) fn prepare(
     input: &Prepare,
     roots: &[Target],

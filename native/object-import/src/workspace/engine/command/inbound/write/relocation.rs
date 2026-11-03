@@ -13,7 +13,7 @@ pub(super) struct Retained {
     warnings: Vec<String>,
 }
 impl Retained {
-    /// Verifies that all observed filesystem entries checked during relocation remain unchanged.
+    /// Verifies that all observed filesystem entries checked during relocation ([`Self::avoid_tracked`]) remain unchanged.
     pub(super) fn validate(&self) -> io::Result<()> {
         self.observed.validate()
     }

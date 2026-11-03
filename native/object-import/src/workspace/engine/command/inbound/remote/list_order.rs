@@ -7,7 +7,7 @@ use bit_client_transfer::{
 };
 use std::io;
 
-/// Lists main-scope [`Listed`] components from [`Remote`], applying sorted model order for file remotes when `fork_order` is set.
+/// Lists main-scope [`Listed`] components from [`Remote`], applying sorted model order ([`file_order`]) for file remotes when `fork_order` is set.
 pub(super) async fn main(
     remote: &Remote,
     scope: &str,

@@ -16,7 +16,7 @@ pub(super) struct Prepared {
     version: Value,
     replacement: Option<String>,
 }
-/// Prepares a squashed `Version` parent rewrite ([`Prepared`]) when `squash_policy` requires rewriting `version`.
+/// Prepares a squashed `Version` parent rewrite ([`Prepared`]) when `squash_policy` requires rewriting `version` on [`Repository`].
 pub(super) fn prepare(
     hash: &str,
     version: &Value,

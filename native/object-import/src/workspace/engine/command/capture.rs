@@ -21,7 +21,7 @@ pub(super) struct Captured {
     pub(super) metadata: Value,
     pub(super) files: Value,
 }
-/// Captures component files and metadata for `inputs` without allowing workspace-root (`.`) directories.
+/// Captures component files and metadata for `inputs` via [`all_with`] without allowing workspace-root (`.`) directories.
 #[inline]
 pub(super) fn all(
     root: &Path,

@@ -9,7 +9,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
-/// Validates and prepares a phased lane-history checkout or revert operation for [`Prepare`] on [`State`].
+/// Validates and prepares a phased lane-history checkout or revert operation for [`Prepare`] on [`State`] via [`refresh`] and [`select`].
 pub(in crate::workspace::engine) fn run(
     input: Prepare,
     state: &mut State,

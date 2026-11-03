@@ -36,7 +36,7 @@ pub(super) fn requests(items: &[ObjectItem], ids: &[String], root: &Path) -> Vec
 }
 
 impl Objects<'_> {
-    /// Returns `true` when `id` lacks a built `Version`, edge list, or complete flattened dependency closure.
+    /// Returns `true` when `id` lacks a built `Version` ([`Self::version`]), edge list, or complete [`Self::flattened_dependencies`] closure.
     fn misses_dependencies(&self, id: &str) -> bool {
         let Some(version) = self.version(id) else { return true };
         if self.has_edges(&version) {

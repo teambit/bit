@@ -18,7 +18,7 @@ pub(super) struct State {
     changed: HashSet<String>,
 }
 impl State {
-    /// Computes the `VersionHistory` graph distance between `heads` for `identity`, populating missing history nodes on demand.
+    /// Computes the `VersionHistory` graph distance between `heads` for `identity`, loading via [`Self::load`] and populating missing history nodes on demand.
     pub(super) fn distance(
         &mut self,
         root: &Path,
