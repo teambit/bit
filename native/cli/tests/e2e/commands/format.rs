@@ -14,7 +14,7 @@ fn standard_format_checks_match_json_and_component_loading_without_a_bit_host() 
     support::setup(&helper, "export");
     support::compare(&helper, "format --check --json");
 }
-/// Verifies `bit format --check --json` on clean, new, and glob-selected components matches `Node.js`.
+/// Verifies `bit format --check --json` on clean, new, and glob-selected components matches `Node.js` via [`support`].
 #[test]
 fn standard_format_checks_clean_and_new_components_and_selection_match_node() {
     let helper = support::workspace(2, false);

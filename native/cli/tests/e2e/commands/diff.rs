@@ -23,7 +23,7 @@ const IS_TYPE: &str = "module.exports = function isType() { return 'got is-type'
 /// `fixtures.isString`.
 const IS_STRING: &str = "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 
-/// `command.diff(args)`: `bit diff <args>` when it runs natively, without colors.
+/// `command.diff(args)`: `bit diff <args>` when it runs natively on [`Helper`], without ANSI colors ([`strip_ansi`]).
 fn diff(helper: &Helper, args: &str) -> KnownResult<String> {
     helper
         .native_output_or_known(&format!("diff {args}"))

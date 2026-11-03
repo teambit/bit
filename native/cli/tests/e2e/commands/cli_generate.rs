@@ -13,7 +13,7 @@ const DOCS_COMMANDS: [&str; 4] = [
     "cli generate --docs --skill=reference",
 ];
 
-/// Verifies [`DOCS_COMMANDS`] (`bit cli generate --docs`) metadata and skill options match the pinned `Node.js` CLI via [`Helper`] and [`KnownResult`].
+/// Verifies [`DOCS_COMMANDS`] (`bit cli generate --docs`) metadata and skill options match the pinned `Node.js` CLI via [`Helper::cmd_in_with`] and [`KnownResult`].
 #[test]
 fn cli_generate_docs_options_match_pinned_node() -> KnownResult<()> {
     let helper = Helper::new();

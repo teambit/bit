@@ -4,7 +4,7 @@
 
 use super::{Helper, remote_parity_with, remote_versions};
 
-/// Publishes or seeds (`seed_remote_fixture`) the workspace's tagged objects into the remote scope fixture.
+/// Publishes or seeds ([`seed_remote_fixture`]) the workspace's tagged objects into `helper`'s remote scope fixture.
 pub(super) fn publish_remote_fixture(helper: &Helper) {
     if cfg!(windows) {
         // The pinned server's Repository.listRefs uses a Windows glob pattern that finds

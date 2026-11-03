@@ -69,7 +69,7 @@ fn early_move_error(directory: bool) {
     assert!(objects::path(scope, "objects", &movable).is_file());
 }
 
-/// Verifies missing legacy `Symlink` alias target models delegate to `Node.js` before deleting any objects.
+/// Verifies missing legacy `Symlink` alias target models in [`fixture`] delegate to `Node.js` before deleting any [`objects`].
 #[test]
 fn missing_legacy_alias_target_delegates_the_error_before_deleting_objects() {
     let helper = fixture();

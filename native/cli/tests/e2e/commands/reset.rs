@@ -19,7 +19,7 @@ fn list_local_scope(helper: &Helper) -> String {
     helper.native("list --local-scope")
 }
 
-/// `bitMap.read()`: `.bitmap` without its leading comment.
+/// `bitMap.read()`: `.bitmap` without its leading comment parsed via [`parse`].
 fn read_bitmap(helper: &Helper) -> Value {
     let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
     parse(&text[text.find('{').unwrap()..])

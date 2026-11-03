@@ -7,7 +7,7 @@ mod selectors;
 use super::remove::scope_objects;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
-/// Compares native and `Node.js` `bit delete` output, `.bitmap` history, `.bit/index.json`, and [`scope_objects`] via [`Helper`].
+/// Compares native and `Node.js` `bit delete` output, `.bitmap` history, `.bit/index.json`, and [`scope_objects`] on `baseline` via [`Helper`].
 fn compare_result(helper: &Helper, baseline: &std::path::Path, command: &str, files: &str) {
     helper.get_cloned_workspace(baseline);
     let root = &helper.scopes.local_path;

@@ -57,7 +57,7 @@ fn compare(root: &Path, node_root: &Path, package_name: &str, file: &str) -> (St
     (native_hash, node_hash)
 }
 
-/// Verifies `bit snap` on a new unlinked component recreates its `node_modules` package and source links via [`compare`].
+/// Verifies `bit snap` on a new unlinked [`FOO_FIXTURE`] component recreates its `node_modules` package and source links via [`compare`].
 #[test]
 fn snap_new_unlinked_component_matches_node() {
     let helper = Helper::new();

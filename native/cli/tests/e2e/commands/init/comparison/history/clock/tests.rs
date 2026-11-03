@@ -21,7 +21,7 @@ fn numeric_dates_preserve_month_and_year_carry() {
     let latest = [date("2026-9-30-23-59-59"), date("2026-10-1-0-0-0")].into_iter().max();
     assert!(!past(latest, date("2026-10-1-0-0-0")));
 }
-/// Verifies that [`past`] returns `true` when `latest` is `None` or two seconds earlier than `now`.
+/// Verifies that [`past`] returns `true` when `latest` is `None` or two seconds earlier than `now` ([`date`]).
 #[test]
 fn no_history_requires_no_wait() {
     assert!(past(None, date("2026-10-18-12-0-0")));

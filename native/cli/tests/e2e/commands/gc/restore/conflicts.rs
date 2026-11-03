@@ -29,7 +29,7 @@ fn restore_directory_conflict_keeps_the_completed_copy_prefix_and_original_backu
     }
 }
 
-/// Verifies `bit gc --restore` rejects hardlinked identical files before skipping or overwriting them.
+/// Verifies `bit gc --restore` rejects hardlinked identical files before skipping or overwriting them via [`compare_failure`].
 #[test]
 fn restore_rejects_identical_files_before_skipping_or_overwriting_them() {
     for overwrite in [false, true] {

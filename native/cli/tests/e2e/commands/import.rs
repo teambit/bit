@@ -52,7 +52,7 @@ fn read_bitmap(helper: &Helper) -> Value {
     parse(body)
 }
 
-/// `bitMap.expectToHaveId(name, version)`, or `expectNotToHaveId(name)` without a version.
+/// `bitMap.expectToHaveId(name, version)`, or `expectNotToHaveId(name)` without a version via [`read_bitmap`].
 fn expect_id(helper: &Helper, name: &str, version: Option<&str>) {
     let bitmap = read_bitmap(helper);
     match version {

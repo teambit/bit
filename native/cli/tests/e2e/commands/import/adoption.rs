@@ -46,7 +46,7 @@ fn file(helper: &Helper, entry: &Value, name: &str) -> std::path::PathBuf {
         .join(entry["rootDir"].as_str().unwrap())
         .join(name)
 }
-/// Verifies `bit import --track-only` restores `.bitmap` entries via [`untrack`] without overwriting existing or extra source files.
+/// Verifies `bit import --track-only` restores `.bitmap` entries via [`untrack`] and [`file`] without overwriting existing or extra source files.
 #[test]
 fn track_only_restores_entries_without_overwriting_existing_or_extra_source_files() {
     let helper = exported(2);

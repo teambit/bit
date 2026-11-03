@@ -8,7 +8,7 @@ use std::ffi::OsStr;
 /// Tag message (`--message dependencies`) used when publishing the two-component dependency fixture for [`fetch_deps_materializes_only_the_selected_component`].
 const TAG_MESSAGE: &str = "--message dependencies";
 
-/// Verifies `bit import --fetch-deps` after [`TAG_MESSAGE`] materializes only the selected component in `.bitmap` via [`read_jsonc`].
+/// Verifies `bit import --fetch-deps` after [`TAG_MESSAGE`] materializes only the selected component in `.bitmap` via [`read_jsonc`] and [`Helper`].
 #[test]
 fn fetch_deps_materializes_only_the_selected_component() {
     let helper = Helper::new();

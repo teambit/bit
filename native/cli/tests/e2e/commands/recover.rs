@@ -60,7 +60,7 @@ fn compare_result(
     }
 }
 
-/// Verifies `bit recover` on a locally soft-deleted tagged component matches `Node.js`.
+/// Verifies `bit recover` on a locally soft-deleted tagged component matches `Node.js` via [`compare_result`].
 #[test]
 fn tagged_component_recovery_matches_node() {
     let helper = Helper::new();

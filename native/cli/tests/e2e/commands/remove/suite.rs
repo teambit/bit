@@ -23,7 +23,7 @@ fn with_tagged_components_and_track_false() {
     assert!(!status.contains("bar/foo"));
 }
 
-/// Verifies `bit remove -t --keep-files` retains `.bitmap` tracking while removing local scope versions.
+/// Verifies `bit remove -t --keep-files` retains `.bitmap` tracking while removing local scope versions via [`Helper::native`].
 #[test]
 fn with_tagged_components_and_track_true() {
     let helper = Helper::new();

@@ -44,7 +44,7 @@ fn run_action_dispatches_http_actions_in_workspaces_and_bare_scopes_without_node
     }
 }
 
-/// Verifies `bit run-action` executes `PendingDirStatus` and `RemovePendingDir` on file remotes and declines `ExportPersist` via [`Helper::cmd_in_with`].
+/// Verifies `bit run-action` executes `PendingDirStatus` and `RemovePendingDir` on file remotes and declines `ExportPersist` via [`Helper::cmd_in_with`] and [`Helper::restore_remote_scope`].
 #[test]
 fn run_action_executes_file_pending_directory_actions_and_declines_other_file_actions() {
     for action in ["PendingDirStatus", "RemovePendingDir"] {

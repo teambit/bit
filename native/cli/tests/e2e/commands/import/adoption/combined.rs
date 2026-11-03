@@ -9,7 +9,7 @@ use crate::{
 };
 /// Updated source file contents written to `comp4` in [`stale_target`] before tagging its newer remote version.
 const UPDATED: &str = "module.exports='new remote target version';\n";
-/// Creates a workspace where `comp4` is checked out at `0.0.1` while `0.0.2` exists on the remote.
+/// Creates a [`Helper`] workspace where `comp4` is checked out at `0.0.1` while `0.0.2` ([`UPDATED`]) exists on the remote.
 fn stale_target() -> Helper {
     let helper = dependents::graph();
     support::setup(&helper, &command(&helper, "comp4@0.0.1", ""));

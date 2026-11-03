@@ -14,7 +14,7 @@ const THIRD: &str = "2026-10-18-12-0-2";
 /// Fourth backup timestamp fixture (`2026-10-18-12-0-3`).
 const FOURTH: &str = "2026-10-18-12-0-3";
 
-/// Writes `.bitmap` and workspace-config backup history files under `root` in `creation` order for [`inventory`] tests.
+/// Writes `.bitmap` and workspace-config backup history files under `root` in `creation` order for [`inventory`] tests across [`FIRST`]..[`FOURTH`].
 fn fixture(root: &Path, ids: &[&str], bodies: &[&str], creation: &[usize]) {
     for (directory, metadata, prefix) in [
         (".bit/bitmap-history", ".bit/bitmap-history-metadata.txt", ".bitmap-"),

@@ -41,7 +41,7 @@ fn glob_diff_selects_multiple_components() {
     parity(&workspace(), "diff ** --json");
 }
 
-/// Verifies `bit diff **,!**/baz/** --name-only` comma and negated glob selection via [`parity`] and [`workspace`].
+/// Verifies `bit diff **,!**/baz/** --name-only` comma and negated glob selection via [`parity`] and [`workspace`] fixtures.
 #[test]
 fn comma_and_negated_globs_select_diff_components() {
     parity(&workspace(), "diff **,!**/baz/** --name-only");

@@ -21,7 +21,7 @@ pub(super) fn fixture() -> Helper {
 pub(super) fn compare(helper: &Helper, command: &str, color: bool) -> Run {
     compare_with_cleanup(helper, command, color, |_| {}, |_| {})
 }
-/// Compares `command` in `helper`'s bare remote scope with custom `prepare` and `cleanup` hooks.
+/// Compares `command` in `helper`'s bare remote scope with custom `prepare` and `cleanup` hooks via [`compare_with_snapshot`] and [`tree`].
 fn compare_with_cleanup(
     helper: &Helper,
     command: &str,

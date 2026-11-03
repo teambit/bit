@@ -49,7 +49,7 @@ fn validation_server(scope: &'static str, barrier: Arc<Barrier>) -> Server {
     })
 }
 
-/// Verifies `bit resume-export` retries `ExportPersist` up to three times and retains pending state on failure.
+/// Verifies `bit resume-export` retries `ExportPersist` up to three times on [`Server`] and retains pending state on failure.
 #[test]
 fn export_recovery_retries_persistence_only_and_retains_pending_on_failure() {
     for failures in [2, 3] {

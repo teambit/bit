@@ -15,7 +15,7 @@ use std::{
     thread,
     time::Duration,
 };
-/// Guard holding the child [`Child`] process of an ephemeral remote `bit start` HTTP scope server in [`Helper`] lane tests.
+/// Guard holding the child [`Child`] process of an ephemeral remote `bit start` HTTP scope server in [`Helper`] and [`staged`] lane tests.
 struct RemoteScopeServer(Child);
 
 impl Drop for RemoteScopeServer {

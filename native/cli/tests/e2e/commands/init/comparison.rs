@@ -28,7 +28,7 @@ pub(super) fn tree(actual: &Path, expected: &Path, command: &str, rebuilt_index:
         );
     }
 }
-/// Collects all files, symlinks, permissions, and normalized backup histories under `root`.
+/// Collects all files, symlinks, permissions, and normalized backup [`history::Histories`] under `root` via [`visit`].
 fn inventory(root: &Path, rebuilt_index: bool) -> BTreeMap<String, Vec<u8>> {
     let mut result = BTreeMap::new();
     let histories = history::Histories::read(root);

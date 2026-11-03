@@ -25,7 +25,7 @@ fn completion(line: &str) -> String {
     let start = body.len() - duration.len() - 1;
     format!("{}<duration>){}", &body[..start], &line[body.len()..])
 }
-/// Returns `true` if `duration` is a valid numeric value followed by `ns`, `μs`, `µs`, `ms`, `s`, `m`, or `h`.
+/// Returns `true` if `duration` is a valid numeric value followed by `ns`, `μs`, `µs`, `ms`, `s`, `m`, or `h` for [`completion`].
 fn valid_duration(duration: &str) -> bool {
     let count = duration
         .bytes()

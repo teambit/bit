@@ -21,7 +21,7 @@ fn add_remote(workspace: &Path, name: &str, path: &Path) {
     });
 }
 
-/// Creates `(dependent, original)` workspaces where `dependent`'s remote lacks `original`'s cached `Component` model.
+/// Creates `(dependent, original)` [`Helper`] workspaces where `dependent`'s remote lacks `original`'s cached `Component` model.
 fn fixture() -> (Helper, Helper) {
     let original = Helper::new();
     original.set_workspace_with_remote_scope();

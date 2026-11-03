@@ -21,7 +21,7 @@ fn run_config(helper: &Helper, command: &str) -> Run {
     out
 }
 
-/// Lists configuration entries for `origin` (`workspace` or `scope`) as parsed JSON.
+/// Lists configuration entries for `origin` (`workspace` or `scope`) as a parsed JSON [`Value`] via [`run_config`].
 fn list_config_locally(helper: &Helper, origin: &str) -> Value {
     let out = run_config(helper, &format!("config list --origin {origin} --json"));
     serde_json::from_str(&out.stdout).unwrap()

@@ -24,7 +24,7 @@ fn should_find_a_component_by_matching_keyword() {
     assert!(output.contains("bar/foo"), "{output}");
 }
 
-/// Verifies `bit search nonexistent --local-only` reports `no matches in workspace`.
+/// Verifies `bit search nonexistent --local-only` reports `no matches in workspace` in [`setup_workspace`].
 /// bit search command › local search with components in workspace › should not find components that do not match
 #[test]
 fn should_not_find_components_that_do_not_match() {

@@ -1,4 +1,4 @@
-//! End-to-end native `bit lint` orchestration tests ([`standard_lint_clean_results_and_config_cache_match_without_bit_runtime`], [`standard_lint_multiple_components_share_config_and_preserve_reports`]) comparing released `ESLint` diagnostics ([`duration`], [`text_duration`]) and complete [`support`] workspace/cache state.
+//! End-to-end native `bit lint` orchestration tests ([`standard_lint_clean_results_and_config_cache_match_without_bit_runtime`], [`standard_lint_multiple_components_share_config_and_preserve_reports`], [`standard_lint_multiple_new_typescript_components`]) comparing released `ESLint` diagnostics ([`duration`], [`text_duration`]) and complete [`support`] workspace/cache state.
 
 use super::move_paths::support;
 /// Normalizes `duration.elapsed` in `bit lint --json` output to `0` after validating pretty JSON formatting in [`support`] lint tests.

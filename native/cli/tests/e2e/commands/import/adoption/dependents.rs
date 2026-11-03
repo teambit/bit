@@ -39,7 +39,7 @@ pub(super) fn graph() -> Helper {
     support::setup(&helper, &command(&helper, "comp1", ""));
     helper
 }
-/// Verifies `bit import --dependents --silent` imports all dependent paths without unrelated branches.
+/// Verifies `bit import --dependents --silent` on [`graph`] imports all dependent paths without unrelated branches via [`assert_components`].
 #[test]
 fn silent_dependents_imports_all_paths_to_the_workspace_without_unrelated_branches() {
     let helper = graph();

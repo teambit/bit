@@ -5,7 +5,7 @@
 use crate::helper::{FOO_FIXTURE, Helper, parse};
 use serde_json::json;
 
-/// Populates `helper`'s workspace with three tracked components (`comp1`..`comp3`) via [`Helper::native`].
+/// Populates `helper`'s workspace with three tracked components (`comp1`..`comp3`) via [`Helper::native`] and [`Helper::output_file`].
 fn populate_three_components(helper: &Helper) {
     for index in 1..=3 {
         helper.output_file(

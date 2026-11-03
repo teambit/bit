@@ -24,7 +24,7 @@ fn clock() -> u128 {
         .as_millis()
 }
 
-/// Decompresses and validates a `zlib`-compressed scope object at `path`, returning `(kind, json_body)`.
+/// Decompresses and validates a `zlib`-compressed scope object at `path` via [`Sha1`], returning `(kind, json_body)`.
 fn decoded(path: &Path, compressed: &[u8]) -> (String, Value) {
     let mut raw = Vec::new();
     flate2::read::ZlibDecoder::new(compressed).read_to_end(&mut raw).unwrap();

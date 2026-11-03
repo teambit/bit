@@ -10,7 +10,7 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
-/// Runs `command` against both `Node.js` and native [`Helper`] CLIs and asserts identical outputs and [`rekey_docs_cache`] / [`compare_docs_cache`] caches.
+/// Runs `command` against both `Node.js` and native [`Helper`] CLIs and asserts identical outputs and [`rekey_docs_cache`] / [`compare_docs_cache`] docs caches.
 fn compared(helper: &Helper, command: &str, native_expected: bool) -> String {
     let node_root = helper.clone_workspace();
     rekey_docs_cache(&helper.scopes.local_path, &node_root);

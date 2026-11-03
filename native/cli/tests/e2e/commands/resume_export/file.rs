@@ -33,7 +33,7 @@ fn file_pending_deletion_matches_without_a_published_runtime() {
     }
 }
 
-/// Verifies invalid export IDs are rejected without removing any pending object directories.
+/// Verifies invalid export IDs are rejected via [`compare`] without removing any pending object directories.
 #[test]
 fn invalid_file_export_ids_preserve_every_pending_directory() {
     for id in [

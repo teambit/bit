@@ -14,7 +14,7 @@ fn new_selector_preserves_tagged_components() {
     assert!(bitmap(&helper).get("comp1").is_some());
     assert!(bitmap(&helper).get("comp2").is_none());
 }
-/// Verifies `$modified` and `$codeModified` selectors remove only the modified component.
+/// Verifies `$modified` and `$codeModified` selectors remove only the modified component via [`successful`] and [`bitmap`].
 #[test]
 fn modified_and_file_only_selectors_remove_only_the_changed_member() {
     for state in ["$modified", "$codeModified"] {

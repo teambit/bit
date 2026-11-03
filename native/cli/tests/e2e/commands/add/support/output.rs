@@ -17,7 +17,7 @@ pub(super) struct Comparison<'a> {
 }
 
 impl Comparison<'_> {
-    /// Constructs a [`Comparison`] requiring exact stderr and artifact parity with `stdout` projection.
+    /// Constructs a [`Comparison`] requiring exact stderr and [`super::ArtifactProjection`] parity with `stdout` projection.
     pub fn exact(stdout: fn(&str) -> String) -> Self {
         Self {
             stdout,

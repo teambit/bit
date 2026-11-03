@@ -7,7 +7,7 @@ use std::fs;
 /// Canonical aspect ID (`teambit.component/remove`) cleared or updated during `bit recover` batches.
 const REMOVE: &str = "teambit.component/remove";
 
-/// Verifies wildcard `bit recover` restores all locally soft-deleted components in a single batch.
+/// Verifies wildcard `bit recover` restores all locally soft-deleted components in a single batch in [`workspace`].
 #[test]
 fn wildcard_restores_all_locally_deleted_sources_in_one_batch() {
     let helper = workspace(2, true);

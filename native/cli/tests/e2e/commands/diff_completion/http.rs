@@ -62,7 +62,7 @@ pub(crate) fn start(helper: &Helper) -> Server {
     server
 }
 
-/// Builds a `Node.js` [`Command`] configured with `helper`'s remote scope environment variables.
+/// Builds a `Node.js` [`Command`] configured with `helper`'s remote scope environment variables via [`node_binary`].
 // Spawn Node itself so Child::kill terminates the server on Windows as well as Unix.
 fn node_command(helper: &Helper) -> Command {
     let shared = setup::shared();

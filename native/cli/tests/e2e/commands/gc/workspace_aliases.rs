@@ -28,7 +28,7 @@ fn workspace_collection_keeps_older_dependency_versions_through_legacy_aliases()
     }
 }
 
-/// Verifies workspace `bit gc` does not resolve a missing scope by another component model's name.
+/// Verifies workspace `bit gc` does not resolve a missing scope by another component model's name in [`alias_fixture`].
 #[test]
 fn workspace_collection_does_not_resolve_a_missing_scope_by_another_models_name() {
     let helper = alias_fixture(false, "fixture.missing");

@@ -16,7 +16,7 @@ fn patterned_delete_marks_all_selected_versions_in_one_bitmap_publication() {
     assert_eq!(map["comp2"]["config"]["teambit.component/remove"]["removed"], true);
     assert!(helper.scopes.local_path.join("comp3/index.js").is_file());
 }
-/// Verifies `bit delete` preserves unrelated configured aspect entries in `.bitmap`.
+/// Verifies `bit delete` via [`successful`] preserves unrelated configured aspect entries in [`bitmap`].
 #[test]
 fn deletion_preserves_unrelated_configured_aspects() {
     let helper = support::workspace(1, true);

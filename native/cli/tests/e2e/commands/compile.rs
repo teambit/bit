@@ -3,7 +3,7 @@
 //! Verifies [`support`] replay comparisons and [`duration`] projections for built-in compiler outputs and `--json` / `--verbose` reports.
 
 use super::move_paths::support;
-/// Replaces the validated `Finished. (<elapsed>)` timing token in `bit compile` stdout with `Finished. (<elapsed>)`.
+/// Replaces the validated `Finished. (<elapsed>)` timing token in `bit compile` `output` with `Finished. (<elapsed>)`.
 fn duration(output: &str) -> String {
     let marker = "Finished. (";
     let (before, after) = output.rsplit_once(marker).expect("compiler timing line");
