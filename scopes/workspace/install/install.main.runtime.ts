@@ -1753,7 +1753,7 @@ export class InstallMain {
 
     // Display a colorful and informative message
     this.logger.console(chalk.cyan('\n📦 External Package Manager Mode Detected'));
-    this.logger.console(chalk.gray('Your workspace is configured to use external package managers (npm, yarn, pnpm).'));
+    this.logger.console(chalk.gray('Your workspace delegates dependency installation to external npm or pnpm.'));
     this.logger.console(chalk.gray('Running "bit install" is not available in this mode.\n'));
 
     const question = chalk.bold(
@@ -1763,7 +1763,7 @@ export class InstallMain {
 
     if (!shouldSwitchToBitPM) {
       throw new Error(
-        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+        'External package manager mode is enabled. Please use npm or pnpm to install dependencies instead of "bit install".'
       );
     }
 

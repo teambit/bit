@@ -1307,7 +1307,11 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
 
-  it('should keep workspace-component pkgs that already have a valid resolution', async () => {
+  // pnpm links a dependency on the version the workspace holds to the
+  // workspace component, so the registry resolution the graph carries for it
+  // would only be resolved again. The restored lockfile records the component
+  // the way pnpm does, as a `file:` directory package.
+  it('should link workspace-component pkgs at the version the workspace holds, whatever resolution they carry', async () => {
     const componentPkgId = '@my-org/my-scope.comp2@1.0.0';
     const packages: PackagesMap = new Map([
       [
@@ -1349,21 +1353,23 @@ describe('convertGraphToLockfile on invalid graph', () => {
       },
     });
     expect(lockfile.importers!['comps/comp1'].dependencies!['@my-org/my-scope.comp2']).to.eql({
-      version: '1.0.0',
+      version: 'file:comps/comp2',
       specifier: '1.0.0',
     });
-    expect(lockfile.packages![componentPkgId]).to.eql({ resolution: { integrity: 'sha512-comp2' } });
-    expect(lockfile.snapshots![componentPkgId]).to.eql({});
+    expect(Object.keys(lockfile.packages!)).to.eql(['@my-org/my-scope.comp2@file:comps/comp2']);
+    expect(lockfile.packages!['@my-org/my-scope.comp2@file:comps/comp2']).to.eql({
+      resolution: { directory: 'comps/comp2', type: 'directory' },
+    });
+    expect(Object.keys(lockfile.snapshots!)).to.eql(['@my-org/my-scope.comp2@file:comps/comp2']);
+    expect(lockfile.snapshots!['@my-org/my-scope.comp2@file:comps/comp2']).to.eql({});
   });
 
-  // A workspace-component snap reaches lockfile validation with no resolution
-  // even though resolve() never threw NO_MATCHING_VERSION, because
-  // getPkgsToResolve skips any pkgId whose name+version matches a manifest in
-  // the sign/capsule set. The snap is a seeder being signed, so it is in the
-  // manifests, never sent to the resolver, and would surface as
-  // `packages['...button-base@0.0.0-<snap>'] entry doesn't have a "resolution"
-  // field`. It must be scrubbed so pnpm links it from the manifest instead.
-  it('should drop workspace-component snaps skipped by the resolver (seeder in manifests)', async () => {
+  // A workspace-component snap whose name+version matches a manifest in the
+  // sign/capsule set is a seeder being signed. Its snap version was never
+  // published, so it is never sent to the resolver; pnpm links it from the
+  // manifest, transitive dependencies on it included, so the restored lockfile
+  // records it as a `file:` directory package and points the dependency at it.
+  it('should link workspace-component snaps that are seeders in the manifests', async () => {
     const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079b55eabc19ad484478b769d929986c124';
     const packages: PackagesMap = new Map([
       [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
@@ -1398,9 +1404,15 @@ describe('convertGraphToLockfile on invalid graph', () => {
       },
     });
     expect(resolverCalled).to.equal(false);
-    expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
-    expect(Object.keys(lockfile.snapshots!).sort()).to.eql(['foo@1.0.0']);
-    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+    const linkedPkgId = '@my-org/my-scope.components.button-base@file:comps/button-base';
+    expect(Object.keys(lockfile.packages!).sort()).to.eql([linkedPkgId, 'foo@1.0.0']);
+    expect(lockfile.packages![linkedPkgId]).to.eql({
+      resolution: { directory: 'comps/button-base', type: 'directory' },
+    });
+    expect(Object.keys(lockfile.snapshots!).sort()).to.eql([linkedPkgId, 'foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({
+      dependencies: { '@my-org/my-scope.components.button-base': 'file:comps/button-base' },
+    });
   });
 
   // Sibling of the above: even when the resolver IS called for a

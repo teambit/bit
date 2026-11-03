@@ -101,8 +101,6 @@ export const SUPPORTED_EXTENSIONS = [
 
 export const NO_PLUGIN_TYPE = 'none';
 
-export const DEFAULT_PACKAGE_MANAGER = 'npm';
-
 export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.dependencies/pnpm';
 
 export const DEFAULT_EXTENSIONS = {};
@@ -364,8 +362,6 @@ export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
 export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
 export const CFG_FEATURE_TOGGLE = 'features';
-
-export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_CAPSULES_ROOT_BASE_DIR = 'capsules_root_base_dir';
 

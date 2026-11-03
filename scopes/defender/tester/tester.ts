@@ -1,34 +1,10 @@
-import type { Component, ComponentID, ComponentMap } from '@teambit/component';
+import type { Component, ComponentMap } from '@teambit/component';
 import type { ExecutionContext } from '@teambit/envs';
 import type { AbstractVinyl } from '@teambit/component.sources';
-import type { TestsResult } from '@teambit/tests-results';
+import type { Tests } from '@teambit/envs.contracts';
 
-export class Tests {
-  constructor(public components: ComponentsResults[]) {}
-  get errors(): Error[] {
-    return this.components.map((comp) => comp.errors || []).flat();
-  }
-}
-
-export type ComponentsResults = {
-  /**
-   * component id.
-   */
-  componentId: ComponentID;
-  /**
-   * test results for the component.
-   */
-  results?: TestsResult;
-  /**
-   * aggregated errors from all files
-   */
-  errors?: Error[];
-
-  /**
-   * loading.
-   */
-  loading?: boolean;
-};
+export { Tests } from '@teambit/envs.contracts';
+export type { ComponentsResults } from '@teambit/envs.contracts';
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 
