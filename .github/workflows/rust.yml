@@ -195,6 +195,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.0
+      # Native delegation otherwise selects the newest Node downloaded by BVM.
+      - name: Pin the native CLI's Node.js runtime
+        run: echo "BIT_NODE_BINARY=$(node -p 'process.execPath')" >> "$GITHUB_ENV"
       - name: Install the Node.js CLI
         if: steps.bvm-cache.outputs.cache-hit != 'true'
         # Outside native/, whose package.json pins pnpm as the package manager.
