@@ -7131,6 +7131,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -8205,6 +8211,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -9261,6 +9273,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -10326,6 +10344,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -11370,6 +11394,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -12414,6 +12444,12 @@ importers:
       '@teambit/harmony.modules.send-server-sent-events':
         specifier: workspace:*
         version: file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/harmony.modules.worker-expose':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/worker-expose
+      '@teambit/harmony.modules.workspace-config-template':
+        specifier: workspace:*
+        version: file:scopes/harmony/modules/workspace-config-template
       '@teambit/harmony.testing.load-aspect':
         specifier: workspace:*
         version: file:scopes/harmony/testing/load-aspect(supports-color@9.4.0)
@@ -19962,6 +19998,68 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    devDependencies:
+      '@teambit/node.envs.node-babel-mocha':
+        specifier: 2.1.3
+        version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+
+  scopes/harmony/modules/worker-expose:
+    dependencies:
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      comlink:
+        specifier: 4.3.0
+        version: 4.3.0
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    devDependencies:
+      '@teambit/node.envs.node-babel-mocha':
+        specifier: 2.1.3
+        version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/mocha':
+        specifier: 9.1.0
+        version: 9.1.0
+
+  scopes/harmony/modules/workspace-config-template:
+    dependencies:
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      comment-json:
+        specifier: 4.2.5
+        version: 4.2.5
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -32585,6 +32683,12 @@ packages:
 
   '@teambit/harmony.modules.send-server-sent-events@file:scopes/harmony/modules/send-server-sent-events':
     resolution: {directory: scopes/harmony/modules/send-server-sent-events, type: directory}
+
+  '@teambit/harmony.modules.worker-expose@file:scopes/harmony/modules/worker-expose':
+    resolution: {directory: scopes/harmony/modules/worker-expose, type: directory}
+
+  '@teambit/harmony.modules.workspace-config-template@file:scopes/harmony/modules/workspace-config-template':
+    resolution: {directory: scopes/harmony/modules/workspace-config-template, type: directory}
 
   '@teambit/harmony.testing.load-aspect@file:scopes/harmony/testing/load-aspect':
     resolution: {directory: scopes/harmony/testing/load-aspect, type: directory}
@@ -60737,6 +60841,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.workspace-config-template': file:scopes/harmony/modules/workspace-config-template
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
       '@teambit/legacy.consumer-config': file:components/legacy/consumer-config
@@ -67832,6 +67937,7 @@ snapshots:
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.workspace-config-template': file:scopes/harmony/modules/workspace-config-template
       '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.consumer-config': file:components/legacy/consumer-config
@@ -67867,6 +67973,7 @@ snapshots:
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.workspace-config-template': file:scopes/harmony/modules/workspace-config-template
       '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.constants': file:components/legacy/constants
       '@teambit/legacy.consumer-config': file:components/legacy/consumer-config
@@ -68665,6 +68772,26 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+
+  '@teambit/harmony.modules.worker-expose@file:scopes/harmony/modules/worker-expose':
+    dependencies:
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      comlink: 4.3.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+
+  '@teambit/harmony.modules.workspace-config-template@file:scopes/harmony/modules/workspace-config-template':
+    dependencies:
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      comment-json: 4.2.5
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -84909,6 +85036,7 @@ snapshots:
     dependencies:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.worker-expose': file:scopes/harmony/modules/worker-expose
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
@@ -84922,6 +85050,7 @@ snapshots:
     dependencies:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.worker-expose': file:scopes/harmony/modules/worker-expose
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
       '@types/react': 19.2.18

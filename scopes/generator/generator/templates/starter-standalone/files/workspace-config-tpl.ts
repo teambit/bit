@@ -1,6 +1,6 @@
 export function workspaceConfigTemplate() {
   return `import { WorkspaceContext } from '@teambit/generator';
-import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
+import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/harmony.modules.workspace-config-template';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();

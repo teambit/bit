@@ -25,6 +25,8 @@ import type { PubsubMain } from '@teambit/pubsub';
 import type { Workspace } from '@teambit/workspace';
 import type { DocsRootProps } from '@teambit/docs';
 import type { TypescriptMain } from '@teambit/typescript';
+import type { DevFilesMain } from '@teambit/dev-files';
+import type { HarmonyWorker } from '@teambit/worker';
 import type * as Contract from './index';
 
 /**
@@ -62,6 +64,8 @@ export type BitToEnv = [
   Assert<IsAssignable<Workspace, Contract.Workspace>>,
   Assert<IsAssignable<PubsubMain, Contract.PubsubMain>>,
   Assert<IsAssignable<TypescriptMain, Contract.TypescriptSchemaProvider>>,
+  Assert<IsAssignable<DevFilesMain, Contract.DevFilesMain>>,
+  Assert<IsAssignable<HarmonyWorker<unknown>, Contract.EnvWorker<unknown>>>,
 ];
 
 // envs return these to Bit.
@@ -107,6 +111,7 @@ describe('envs contracts', () => {
     expect(contract.Pipeline.from([]).tasks).to.deep.equal([]);
     expect(contract.COMPONENT_PREVIEW_STRATEGY_NAME).to.equal('component');
     expect(contract.WORKSPACE_ASPECT_ID).to.equal('teambit.workspace/workspace');
+    expect(contract.ComponentID.fromString('my-org.my-scope/button@1.0.0').version).to.equal('1.0.0');
   });
 
   it('should create the TypeScript schema extractor through the typescript aspect', async () => {
