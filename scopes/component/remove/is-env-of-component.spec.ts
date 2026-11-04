@@ -1,10 +1,11 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
-import { isEnvOfComponent } from './remove.main.runtime';
+import { Extensions } from '@teambit/legacy.constants';
+import { isEnvOfComponent } from './is-env-of-component';
 
 function componentWithEnv(envId?: string): any {
   const envsData = envId ? { data: { id: envId } } : undefined;
-  return { state: { aspects: { get: (id: string) => (id === 'teambit.envs/envs' ? envsData : undefined) } } };
+  return { state: { aspects: { get: (id: string) => (id === Extensions.envs ? envsData : undefined) } } };
 }
 
 describe('isEnvOfComponent', () => {
@@ -15,7 +16,7 @@ describe('isEnvOfComponent', () => {
   it('should return false when the component has a different env (the id is a regular dependency)', () => {
     expect(isEnvOfComponent(componentWithEnv('my-org.envs/other-env@1.0.0'), myEnv)).to.be.false;
   });
-  it('should return true when the env data is missing', () => {
-    expect(isEnvOfComponent(componentWithEnv(), myEnv)).to.be.true;
+  it('should return undefined when the env data is missing', () => {
+    expect(isEnvOfComponent(componentWithEnv(), myEnv)).to.be.undefined;
   });
 });
