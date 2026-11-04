@@ -580,8 +580,12 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
           return;
         }
 
-        const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
-        if (isEnv) {
+        // a deleted env is a "RemovedEnv" issue only when it's the env of this component. otherwise, it's a regular
+        // dependency (e.g. a component that imports a config from another env).
+        const isOwnEnv =
+          isEnvOfComponent(component, dep.componentId) &&
+          (await this.isEnvByIdWithoutLoadingComponent(dep.componentId));
+        if (isOwnEnv) {
           removedEnv = dep.componentId;
         } else {
           removedDependencies.push(dep.componentId);
@@ -697,3 +701,13 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
 RemoveAspect.addRuntime(RemoveMain);
 
 export default RemoveMain;
+
+/**
+ * whether the given id is the env of the component, according to the data the envs aspect calculated on load.
+ * when this data is missing, assume it is, so a deleted env is still reported.
+ */
+export function isEnvOfComponent(component: Component, id: ComponentID): boolean {
+  const envId: string | undefined = component.state.aspects.get('teambit.envs/envs')?.data?.id;
+  if (!envId) return true;
+  return ComponentID.fromString(envId).toStringWithoutVersion() === id.toStringWithoutVersion();
+}
