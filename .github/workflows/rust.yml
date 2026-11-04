@@ -34,6 +34,10 @@ concurrency:
 jobs:
   lint:
     name: pnpm Rust formatting and lints
+    # Stable and nightly lint builds share the hosted runner disk.
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     defaults:
@@ -57,14 +61,15 @@ jobs:
             ~/.dylint_drivers
             ~/.cache/pnpm/rustfmt
             native/target/debug
-          key: rust-lint-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
+          key: rust-lint-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
           # Keeps the installed Dylint binaries and registry when only the lockfile changes.
-          restore-keys: rust-lint-${{ runner.os }}-
+          restore-keys: rust-lint-v2-${{ runner.os }}-
       - name: Cache pinned perfectionist library
         uses: actions/cache@v4
         with:
-          path: native/target/dylint
-          key: rust-perfectionist-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
+          # Retain the lint plugin, not its separate workspace compilation tree.
+          path: native/target/dylint/libraries
+          key: rust-perfectionist-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
       - name: Install pinned Rust and Clippy
         run: |
           rustup show
@@ -89,6 +94,8 @@ jobs:
           chmod +x "$RUNNER_TEMP/dylint-git/git"
           export PATH="$RUNNER_TEMP/dylint-git:$PATH"
           cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e
+      - name: Remove temporary perfectionist build artifacts
+        run: rm -rf target/dylint/target
       - name: Check Rust documentation
         env:
           RUSTDOCFLAGS: '-D warnings'

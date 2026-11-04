@@ -1,6 +1,11 @@
-//! Only validated duration tokens ([`durations`], [`completion`], [`completion_duration`]) on named released completion lines vary.
+//! Validated pnpm startup redraws ([`installation`]) and duration tokens ([`durations`], [`completion`], [`completion_duration`]) on named released completion lines vary.
 //!
 //! Provides duration token normalization for `bit switch` and `bit lane import` comparisons.
+
+/// Projects the clock-controlled startup redraw and validated durations for installation parity.
+pub(super) fn installation(text: &str) -> String {
+    durations(&crate::harmony::fork::installation::project_startup_frame(text))
+}
 
 /// Replaces validated completion duration tokens in `text` with `<duration>)`.
 pub(crate) fn durations(text: &str) -> String {

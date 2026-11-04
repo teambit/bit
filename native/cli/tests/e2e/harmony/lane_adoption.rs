@@ -93,7 +93,7 @@ fn remote_pattern_performs_real_default_installation() {
     let output = crate::commands::add::support::history_oracle::compare(
         &helper,
         &command,
-        output::durations,
+        output::installation,
         ["checkout", "lane-switch"],
         true,
     );
