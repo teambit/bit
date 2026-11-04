@@ -22,6 +22,20 @@ const createWorkspace = async (prefix: string, files: Record<string, string>): P
 
 describe('getFilesByDir', function () {
   this.timeout(0);
+  it('should return the files sorted by path, also when a sub-dir file comes before a root file', async () => {
+    const workspacePath = await createWorkspace('bit-files-order-', {
+      'comp/index.ts': '',
+      'comp/a/a.spec.ts': '',
+      'comp/z.spec.ts': '',
+    });
+    try {
+      const gitIgnore = await getGitIgnoreHarmony(workspacePath);
+      const files = await getFilesByDir('comp', workspacePath, gitIgnore);
+      expect(files.map((file) => file.relativePath)).to.deep.equal(['a/a.spec.ts', 'index.ts', 'z.spec.ts']);
+    } finally {
+      await fs.remove(workspacePath);
+    }
+  });
   describe('trackAllFiles', () => {
     let workspacePath: string;
     before(async () => {
