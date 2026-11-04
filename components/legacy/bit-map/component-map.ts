@@ -594,7 +594,9 @@ export async function getFilesByDir(
     : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
   const filteredByBitIgnore = await filterByOwnIgnoreFile(dir, consumerPath, filteredByIgnoredFromRoot);
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
-  return filteredByBitIgnore.map((relativePath) => ({
+  // globby returns the files in the order it reads them (e.g. the files of a dir before the files of its sub-dirs). sort
+  // them, so the files, and the data calculated from them (e.g. dev-files), are in the same order a scope records them.
+  return filteredByBitIgnore.sort().map((relativePath) => ({
     relativePath,
     test: false,
     name: path.basename(relativePath),
