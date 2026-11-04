@@ -1882,9 +1882,6 @@ importers:
       punycode:
         specifier: ^2.3.1
         version: 2.3.1
-      query-string:
-        specifier: 7.0.0
-        version: 7.0.0
       querystring-es3:
         specifier: 0.2.1
         version: 0.2.1
@@ -5354,9 +5351,6 @@ importers:
       lodash:
         specifier: 4.18.1
         version: 4.18.1
-      query-string:
-        specifier: 7.0.0
-        version: 7.0.0
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -14665,9 +14659,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
-      query-string:
-        specifier: 7.0.0
-        version: 7.0.0
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16362,9 +16353,6 @@ importers:
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
-      query-string:
-        specifier: 7.0.0
-        version: 7.0.0
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -22286,9 +22274,6 @@ importers:
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
-      query-string:
-        specifier: 7.0.0
-        version: 7.0.0
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -57929,7 +57914,6 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      query-string: 7.0.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -57941,7 +57925,6 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      query-string: 7.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -60433,7 +60416,6 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       lodash: 4.18.1
-      query-string: 7.0.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       semver: 7.7.1
@@ -60462,7 +60444,6 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       lodash: 4.18.1
-      query-string: 7.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       semver: 7.7.1
@@ -60583,7 +60564,6 @@ snapshots:
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
       lodash.head: 4.0.1
-      query-string: 7.0.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
@@ -60652,7 +60632,6 @@ snapshots:
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.18.1
       lodash.head: 4.0.1
-      query-string: 7.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -76450,7 +76429,6 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      query-string: 7.0.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -76464,7 +76442,6 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      query-string: 7.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
