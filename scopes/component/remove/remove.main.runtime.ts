@@ -216,24 +216,35 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
    * only a tagged (published) main version is used. a component with no tag on main (only snaps, or it only ever
    * existed on the lane) is skipped - pinning a snap version would re-introduce the "No matching version" failure
    * this feature is meant to prevent, since snaps aren't fetchable as a regular registry package.
-   * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
-   * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
-   * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
+   * an env that is the env of one of its dependents is excluded on purpose: it surfaces as a "RemovedEnv" issue so the
+   * user can replace it explicitly (bit env replace), and we don't want to silently pin it to its main version and
+   * suppress that signal. an env that is only a regular dependency of its dependents is pinned like any other one.
    */
   private async getDeletedDepsToPinToMain(deletedIds: ComponentID[]): Promise<WorkspacePolicyEntry[]> {
     const graph = await this.workspace.getGraphIds(undefined, false);
     const deletedIdList = ComponentIdList.fromArray(deletedIds);
-    const idsWithDependents = deletedIds.filter((id) => {
-      const dependents = graph.predecessors(id.toString(), {
-        nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
-      });
-      return dependents.length > 0;
-    });
+    const dependentsPerId = deletedIds.map((id) => ({
+      id,
+      dependents: graph
+        .predecessors(id.toString(), {
+          nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
+        })
+        .map((node) => node.attr),
+    }));
+    const idsWithDependents = dependentsPerId.filter(({ dependents }) => dependents.length > 0);
     if (!idsWithDependents.length) return [];
-    const isEnvFlags = await Promise.all(idsWithDependents.map((id) => this.isEnvByIdWithoutLoadingComponent(id)));
-    const nonEnvIds = idsWithDependents.filter((_id, index) => !isEnvFlags[index]);
-    if (!nonEnvIds.length) return [];
-    const comps = await this.workspace.getMany(nonEnvIds);
+    const isEnvOfDependentFlags = await Promise.all(
+      idsWithDependents.map(async ({ id, dependents }) => {
+        const isEnv = await this.isEnvByIdWithoutLoadingComponent(id);
+        if (!isEnv) return false;
+        // an env that is only a regular dependency of its dependents (e.g. they import a config from it) is pinned.
+        const dependentComps = await this.workspace.getMany(dependents);
+        return dependentComps.some((dependent) => isEnvOfComponent(dependent, id));
+      })
+    );
+    const idsToPin = idsWithDependents.filter((_item, index) => !isEnvOfDependentFlags[index]).map(({ id }) => id);
+    if (!idsToPin.length) return [];
+    const comps = await this.workspace.getMany(idsToPin);
     const entries = await Promise.all(
       comps.map(async (comp): Promise<WorkspacePolicyEntry | undefined> => {
         const modelComponent = await this.workspace.scope.getBitObjectModelComponent(comp.id.changeVersion(undefined));
