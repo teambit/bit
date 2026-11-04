@@ -166,7 +166,6 @@ fn builtin_test_explicit_environment_and_junit_follow_released_selection() {
     for command in [
         "test comp1 --json --env teambit.harmony/node",
         "test comp1 --json -e teambit.harmony/node --summary",
-        "test comp1 --json --env=teambit.harmony/node --junit report.xml",
     ] {
         if command.contains("--summary") {
             support::compare(&helper, command);
@@ -174,6 +173,20 @@ fn builtin_test_explicit_environment_and_junit_follow_released_selection() {
             support::compare_with_stdout(&helper, command, timings);
         }
         assert!(!helper.scopes.local_path.join("report.xml").exists());
+    }
+    let result = super::add::support::compare_with_artifacts(
+        &helper,
+        "test comp1 --json --env=teambit.harmony/node --junit reports/test.xml",
+        timings,
+        &super::tester_junit::project,
+    );
+    assert!(result.status.success());
+    let path = helper.scopes.local_path.join("reports/test.xml");
+    let supported = super::tester_junit::environment_junit_supported();
+    assert_eq!(path.exists(), supported);
+    if supported {
+        let xml = std::fs::read_to_string(path).unwrap();
+        assert!(xml.contains("<testsuites") && xml.contains("/comp1"));
     }
     support::compare_declined(&helper, "test comp1 --json --env unknown", str::to_owned);
 }

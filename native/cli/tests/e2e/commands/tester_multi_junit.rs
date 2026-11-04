@@ -195,13 +195,19 @@ fn multi_junit_combines_coverage_and_explicit_environment_selection() {
     for name in ["comp1", "comp2"] {
         helper.output_file(&format!("{name}/index.spec.js"), &format!("const example=require('./index');it('{name}',()=>expect(example()).toBe('{name}'));\n"));
     }
-    let result = move_paths::support::compare_with_stdout(
+    let result = compare(
         &helper,
         "test --unmodified --json --env teambit.harmony/node --junit reports/test.xml",
-        detail_order,
+        false,
     );
     assert!(result.status.success());
-    assert!(!helper.scopes.local_path.join("reports/test.xml").exists());
+    let path = helper.scopes.local_path.join("reports/test.xml");
+    let supported = super::tester_junit::environment_junit_supported();
+    assert_eq!(path.exists(), supported);
+    if supported {
+        let xml = std::fs::read_to_string(path).unwrap();
+        assert!(xml.contains("/comp1") && xml.contains("/comp2"));
+    }
 }
 
 #[test]

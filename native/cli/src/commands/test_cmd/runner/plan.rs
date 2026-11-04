@@ -32,11 +32,21 @@ pub(super) struct Plan {
     settings: Settings,
     /// Number of components with runnable test files.
     runnable: usize,
+    /// Bit 2.3.12 writes `JUnit` reports for explicit environment selections.
+    environment_junit: bool,
 }
 impl Plan {
     /// Parses [`Settings`], loads [`Component`] state, and prepares the Jest worker [`Session`] and [`Coverage`] targets for `root` ([`Path`]).
     pub(super) fn prepare(root: &Path, args: &[OsString], options: &Options) -> io::Result<Self> {
         let settings = Settings::parse(root, args, options)?;
+        let environment_junit =
+            if settings.environment.is_some() && settings.junit.is_some() {
+                let cli = crate::commands::workspace_command::NodeCli::find()?;
+                let version = node_semver::Version::parse(cli.version).map_err(io::Error::other)?;
+                (version.major, version.minor, version.patch) >= (2, 3, 12)
+            } else {
+                false
+            };
         let loaded = Loaded::prepare(root, &settings.selection)?;
         let components = loaded.components()?;
         validate_environment(&components, &settings, &loaded.progress.environment)?;
@@ -66,7 +76,7 @@ impl Plan {
             .transpose()?;
         validate_sources(&loaded.files)?;
         let coverage = prepare_coverage(root, &components, tool.is_some())?;
-        Ok(Self { loaded, tool, coverage, settings, runnable })
+        Ok(Self { loaded, tool, coverage, settings, runnable, environment_junit })
     }
     /// Commits [`Loaded`] caches, runs the Jest worker [`Session`], collects [`Coverage`], and formats the [`Execution`] and [`Report`].
     pub(super) fn run(
@@ -196,7 +206,7 @@ impl Plan {
         report: &Report,
         terminated: bool,
     ) -> io::Result<()> {
-        if terminated || self.settings.environment.is_some() {
+        if terminated || (self.settings.environment.is_some() && !self.environment_junit) {
             return Ok(());
         }
         let Some(path) = &self.settings.junit else {

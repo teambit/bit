@@ -5,6 +5,8 @@ pub(in crate::workspace::engine) use wire::Request;
 mod index;
 mod select;
 mod validate;
+#[cfg(test)]
+mod versions_tests;
 mod wire;
 
 use super::{invalid, io};

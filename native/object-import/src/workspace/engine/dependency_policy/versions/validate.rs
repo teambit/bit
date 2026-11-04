@@ -7,7 +7,12 @@ use std::io;
 /// Validates collection budgets and policy key spellings in `request` ([`Request`]) via [`identities`].
 /// Rejects payloads whose total entry count or per-list indices exceed native bounds.
 pub(super) fn validate(request: &Request) -> io::Result<()> {
-    let sources = [&request.sources.bitmap, &request.sources.lane, &request.sources.model];
+    let sources = [
+        &request.sources.bitmap,
+        &request.sources.lane,
+        &request.sources.model,
+        &request.sources.removed,
+    ];
     let maps = request.policy.manual
         .iter()
         .chain(&request.policy.automatic)
@@ -46,7 +51,7 @@ pub(super) fn validate(request: &Request) -> io::Result<()> {
 /// Validates component [`identity`] strings and package [`name`] keys across `request` ([`Request`]) and `sources`.
 /// Returns an `InvalidInput` error when any identity or package name violates syntax bounds.
 #[inline]
-fn identities(request: &Request, sources: &[&Vec<String>; 3]) -> io::Result<()> {
+fn identities(request: &Request, sources: &[&Vec<String>; 4]) -> io::Result<()> {
     if sources
         .iter()
         .copied()

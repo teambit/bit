@@ -312,7 +312,8 @@ impl Sources<'_> {
             .collect::<Vec<_>>();
         Ok(json!({
             "sources": {
-                "bitmap": bitmap_identities(self.context)?,
+                "bitmap": bitmap_identities(self.context, false)?,
+                "removed": bitmap_identities(self.context, true)?,
                 "lane": [],
                 "model": model_dependencies(self.version)?,
                 "componentConfig": {},
@@ -360,9 +361,10 @@ fn model_dependencies(version: Option<&Value>) -> io::Result<Vec<String>> {
 }
 
 #[inline]
-fn bitmap_identities(context: &Value) -> io::Result<Vec<String>> {
+fn bitmap_identities(context: &Value, removed: bool) -> io::Result<Vec<String>> {
     array(context.get("targets"), "targets")?
         .iter()
+        .filter(|target| (target["locallyRemoved"] == true) == removed)
         .map(full_identity)
         .collect()
 }

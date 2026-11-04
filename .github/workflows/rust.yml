@@ -149,6 +149,10 @@ jobs:
     # The e2e cases ported to the native CLI (native/plans/TEST_PORTING.md), with the
     # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
     name: Ported e2e cases (${{ matrix.shard }}/4)
+    env:
+      CARGO_INCREMENTAL: '0'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -160,6 +164,11 @@ jobs:
       run:
         working-directory: native
     steps:
+      - name: Free disk for Rust builds and E2E installations
+        working-directory: /tmp
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          df -h /
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -173,8 +182,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             native/target/debug
-          key: rust-e2e-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
-          restore-keys: rust-e2e-${{ runner.os }}-${{ runner.arch }}-
+          key: rust-e2e-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-e2e-v2-${{ runner.os }}-${{ runner.arch }}-
       - name: Cache the Node.js CLI
         id: bvm-cache
         uses: actions/cache@v4
@@ -209,9 +218,33 @@ jobs:
           )
           echo "Running ${#shard_tests[@]} e2e tests in shard $SHARD/$SHARDS"
           cargo test --locked -p bit-cli --features e2e --test e2e -- --exact "${shard_tests[@]}"
+      - name: Cache the current upstream oracle
+        if: matrix.shard == 1
+        id: current-bvm-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bvm/versions/2.3.13
+          key: bvm-bit-${{ runner.os }}-${{ runner.arch }}-2.3.13
+      - name: Install the current upstream oracle
+        if: matrix.shard == 1 && steps.current-bvm-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}
+        run: npx -y @teambit/bvm@3.1.4 install 2.3.13 --skip-update-path
+      - name: Check current upstream environment JUnit reports
+        if: matrix.shard == 1
+        run: |
+          export BIT_E2E_NODE_CLI="$HOME/.bvm/versions/2.3.13/bit-2.3.13/node_modules/@teambit/bit/bin/bit"
+          cargo test --locked -p bit-cli --features e2e --test e2e -- --exact \
+            commands::tester_modes::builtin_test_explicit_environment_and_junit_follow_released_selection \
+            commands::tester_multi_junit::multi_junit_combines_coverage_and_explicit_environment_selection
       - name: Check lane imports with the Windows main-stack budget
         if: matrix.shard == 1
         run: python3 ../scripts/rust/check-native-stack.py
+
+      - name: Report disk usage
+        if: always()
+        run: |
+          df -h /
+          du -sh target "$HOME/.cargo" /tmp/bit-native-e2e 2>/dev/null || true
 
   status-diff-windows:
     name: Workspace VCS parity (Windows, ${{ matrix.group }})

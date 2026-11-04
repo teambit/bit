@@ -13,6 +13,7 @@ pub(super) struct Index<'a> {
     pub(super) bitmap: HashMap<&'a str, Option<&'a str>>,
     pub(super) lane: HashMap<&'a str, &'a str>,
     pub(super) model: HashMap<&'a str, &'a str>,
+    pub(super) removed: HashSet<&'a str>,
     pub(super) env: HashSet<&'a str>,
 }
 impl<'a> Index<'a> {
@@ -36,6 +37,10 @@ impl<'a> Index<'a> {
             bitmap,
             lane: first(&request.sources.lane),
             model: first(&request.sources.model),
+            removed: request.sources.removed
+                .iter()
+                .map(|id| unversioned(id))
+                .collect(),
             env: request.policy.env_own
                 .iter()
                 .map(String::as_str)

@@ -42,3 +42,13 @@ fn pending_component_configuration_is_projected_by_origin() {
 fn package_name_replaces_slashes_in_nested_namespaces_with_dots() {
     assert_eq!(package_name("scope/a/b/c", None), "@scope/a.b.c");
 }
+
+#[test]
+fn removed_bitmap_components_are_separate_version_sources() {
+    let context = json!({"targets":[
+        {"identity":"sample.scope/live", "version":"1.0.0"},
+        {"identity":"sample.scope/deleted", "version":"2.0.0", "locallyRemoved":true},
+    ]});
+    assert_eq!(super::bitmap_identities(&context, false).unwrap(), ["sample.scope/live@1.0.0"]);
+    assert_eq!(super::bitmap_identities(&context, true).unwrap(), ["sample.scope/deleted@2.0.0"]);
+}

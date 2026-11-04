@@ -6,6 +6,20 @@ use super::{add::support, move_paths, tester::timings};
 use crate::helper::{Helper, Run};
 use std::collections::BTreeMap;
 
+/// Whether the installed oracle includes environment-scoped `JUnit` reports (Bit 2.3.12).
+pub(super) fn environment_junit_supported() -> bool {
+    let package = crate::helper::setup::shared().node_cli
+        .parent()
+        .unwrap()
+        .parent()
+        .unwrap()
+        .join("package.json");
+    let metadata: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(package).unwrap()).unwrap();
+    let version = node_semver::Version::parse(metadata["version"].as_str().unwrap()).unwrap();
+    (version.major, version.minor, version.patch) >= (2, 3, 12)
+}
+
 /// Compares `command` against `Node.js` while validating `reports/test.xml` `JUnit` output via [`project`] and [`timings`].
 fn compare(helper: &Helper, command: &str) -> Run {
     let remote = move_paths::support::tree(&helper.scopes.remote_path);

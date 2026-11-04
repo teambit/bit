@@ -55,15 +55,15 @@ pub(super) fn select(
     }
     Ok(default_version(index, identity, base))
 }
-/// Falls back to the model index ([`super::index::Index`]) or a [`concrete_version`] embedded in `identity`.
+/// Prefers the installed [`concrete_version`] for removed components, retaining the model fallback.
 #[inline]
 fn default_version(index: &super::index::Index<'_>, identity: &str, base: &str) -> Selected {
     let ver = version(identity);
-    index.model
-        .get(base)
-        .copied()
-        .or_else(|| concrete_version(ver).then_some(ver))
-        .map(|value| (value.to_owned(), None, false))
+    let model = index.model.get(base).copied();
+    let installed = concrete_version(ver).then_some(ver);
+    if index.removed.contains(base) { installed.or(model) } else { model.or(installed) }.map(
+        |value| (value.to_owned(), None, false),
+    )
 }
 /// Selects a package policy [`Choice`] `(version, range)` from workspace, merge, or automatic rules on `request` ([`Request`]).
 fn package_policy(request: &Request, identity: &str, name: &str) -> io::Result<Choice> {

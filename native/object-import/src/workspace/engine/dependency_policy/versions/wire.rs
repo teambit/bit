@@ -24,6 +24,8 @@ pub(super) struct Sources {
     pub(super) bitmap: Vec<String>,
     pub(super) lane: Vec<String>,
     pub(super) model: Vec<String>,
+    #[serde(default)]
+    pub(super) removed: Vec<String>,
     pub(super) component_config: Versions,
 }
 /// Manual, env-own, workspace, automatic, and merge version policies with optional range prefix.
