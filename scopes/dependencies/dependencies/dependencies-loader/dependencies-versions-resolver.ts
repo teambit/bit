@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -32,6 +33,8 @@ export async function updateDependenciesVersions(
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
   const dependenciesWithVersionFromConfig: string[] = [];
   component.dependenciesWithVersionFromConfig = dependenciesWithVersionFromConfig;
+  // components deleted from the workspace (e.g. "bit delete"). calculated lazily, only when needed.
+  let removedIds: ComponentIdList | undefined;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -79,7 +82,12 @@ export async function updateDependenciesVersions(
     // If there is a version in the node_modules/package folder, but it's not in the ws policy,
     // prefer the version from the model over the version from the node_modules
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const getFromModel = () => getIdFromModelDeps(component.componentFromModel!, id);
+    const getFromModelAlways = () => getIdFromModelDeps(component.componentFromModel!, id);
+    // when the dependency was deleted from the workspace (e.g. "bit delete --lane"), the version of the last snap is
+    // probably not available anymore (e.g. a lane snap). prefer the installed or the configured version in this case.
+    const getFromModel = () => (isRemovedFromWorkspace(id) ? null : getFromModelAlways());
+    // still better than no version at all.
+    const getFromModelOfRemoved = () => (isRemovedFromWorkspace(id) ? getFromModelAlways() : null);
 
     const strategies = [
       getFromComponentConfig,
@@ -91,6 +99,7 @@ export async function updateDependenciesVersions(
       getFromDepPackageJsonDueToAutoDetectOverrides,
       getFromModel,
       getFromDepPackageJson,
+      getFromModelOfRemoved,
     ];
 
     for (const strategy of strategies) {
@@ -180,6 +189,11 @@ export async function updateDependenciesVersions(
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
     return dependency;
+  }
+
+  function isRemovedFromWorkspace(componentId: ComponentID): boolean {
+    if (!removedIds) removedIds = consumer.bitMap.getRemoved();
+    return removedIds.hasWithoutVersion(componentId);
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
