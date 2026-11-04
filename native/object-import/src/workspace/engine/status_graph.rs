@@ -9,6 +9,10 @@ use std::{
     path::PathBuf,
 };
 
+// Saved graphs include transitive dependencies and multiple versions of each component.
+const MAX_GRAPH_NODES: usize = 65_536;
+const MAX_GRAPH_EDGES: usize = 1_048_576;
+
 /// Wire request for building the status dependency graph from saved `versions` and `components`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -48,7 +52,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     ))
 }
 
-/// Traverses external dependency edges reachable from `request.components` ([`Request`], [`Component`]) up to 4,096 nodes.
+/// Traverses external dependency edges reachable from `request.components` ([`Request`], [`Component`]) up to [`MAX_GRAPH_NODES`] nodes.
 fn collect_external_graph(
     request: &Request,
     graph: &mut Graph,
@@ -75,7 +79,7 @@ fn collect_external_graph(
         {
             continue;
         }
-        if seen.len() > 4096 {
+        if seen.len() > MAX_GRAPH_NODES {
             return Err(invalid("status issue graph node budget"));
         }
         let dependencies = match graph.get(&identity) {
@@ -206,7 +210,7 @@ fn append_version(
             .unwrap_or_else(|| json!([])),
     };
     let edges = edges.as_array().ok_or_else(|| invalid("status saved edges"))?;
-    if edges.len() > 16384 {
+    if edges.len() > MAX_GRAPH_EDGES {
         return Err(invalid("status saved edge budget"));
     }
     for edge in edges {
@@ -218,12 +222,12 @@ fn append_version(
             outgoing.push(target);
         }
     }
-    if graph.len() > 4096
+    if graph.len() > MAX_GRAPH_NODES
         || graph
             .values()
             .map(Vec::len)
             .sum::<usize>()
-            > 16384
+            > MAX_GRAPH_EDGES
     {
         return Err(invalid("status saved graph budget"));
     }

@@ -4,7 +4,7 @@
 
 use serde_json::json;
 
-use super::response;
+use super::{Directory, response, source};
 
 /// Verifies that `fileStatus` [`response`] preserves target ordering and matches first-seen current file hashes.
 #[test]
@@ -39,4 +39,55 @@ fn file_status_marks_target_unchanged_only_when_path_and_hash_match() {
     let result = response(&json!({"kind":"fileStatus","target":[item],"current":[item]}));
     assert_eq!(result["failed"], false);
     assert_eq!(result["data"]["unchanged"], json!([true]));
+}
+
+/// Saved transitive graphs may exceed both 4,096 nodes and 16,384 edges.
+#[test]
+fn status_graph_reads_large_inline_and_referenced_saved_graphs() {
+    let directory = Directory::new();
+    let edges = (0..5000)
+        .flat_map(|node| {
+            (1..=6).map(move |offset| {
+                json!({
+                    "source": format!("sample.scope/item-{node}@1.0.0"),
+                    "target": format!("sample.scope/item-{}@1.0.0", (node + offset) % 5000),
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let stored = source(&directory, &serde_json::to_vec(&edges).unwrap());
+    let hash = stored["hash"].as_str().unwrap();
+    let object_path = format!("{}/{}", &hash[..2], &hash[2..]);
+    directory.write(
+        &format!(".bit/objects/{object_path}"),
+        &std::fs::read(directory.0.join(&object_path)).unwrap(),
+    );
+    for version in [json!({"flattenedEdges":edges}), json!({"flattenedEdgesRef":stored["hash"]})] {
+        let result = response(&json!({
+            "kind":"statusGraph", "root":directory.0,
+            "versions":[["a".repeat(40),version]],
+            "components":[{"identity":"sample.scope/app@1.0.0", "dependencies":["sample.scope/item-0@1.0.0"]}],
+        }));
+        assert_eq!(result["failed"], false, "{result}");
+        let external = result["data"]["external"].as_array().unwrap();
+        assert_eq!(external.len(), 5000);
+        assert_eq!(
+            external
+                .iter()
+                .map(|row| row["dependencies"]
+                    .as_array()
+                    .unwrap()
+                    .len())
+                .sum::<usize>(),
+            30_000,
+        );
+        assert_eq!(
+            external[0]["dependencies"],
+            json!(
+                (1..=6)
+                    .map(|node| format!("sample.scope/item-{node}@1.0.0"))
+                    .collect::<Vec<_>>()
+            ),
+        );
+    }
 }
