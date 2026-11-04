@@ -256,16 +256,18 @@ fn standard_lint_multiple_multi_source_components_with_one_fix_each_uses_existin
         helper.output_file(&format!("comp{index}/extra.js"), "module.exports = () => 42;\n");
         support::setup(&helper, &format!("show comp{index}"));
     }
+    let deps_cache =
+        bit_install::dependencies::cache::invalidation::deps_dir(&helper.scopes.local_path);
+    // A cold dependency cache makes the released loader preserve component order
+    // when warming the ESLint config, just as it will for the comparison below.
+    std::fs::remove_dir_all(&deps_cache).unwrap();
     assert_eq!(
         super::add::support::node(&helper.scopes.local_path, "lint --json")
             .status
             .code(),
         Some(1),
     );
-    std::fs::remove_dir_all(bit_install::dependencies::cache::invalidation::deps_dir(
-        &helper.scopes.local_path,
-    ))
-    .unwrap();
+    std::fs::remove_dir_all(&deps_cache).unwrap();
     let result = support::compare_with_stdout(&helper, "lint --fix --json", duration);
     assert!(result.status.success());
     for name in ["comp1", "comp2"] {
