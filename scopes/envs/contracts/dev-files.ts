@@ -13,11 +13,6 @@ export interface DevFiles {
    * list all dev files.
    */
   list(): string[];
-
-  /**
-   * determine whether a file is included in the dev files.
-   */
-  includes(filePath: string): boolean;
 }
 
 /**

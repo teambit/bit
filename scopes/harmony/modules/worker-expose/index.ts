@@ -1,2 +1,2 @@
-export { expose, setFunctionHandlers } from './expose';
+export { expose } from './expose';
 export { default as nodeEndpoint } from './node-endpoint';
