@@ -15,7 +15,6 @@ import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import queryString from 'query-string';
 import { CompositionDropdown } from './composition-dropdown';
 import { CompositionCompareContext } from './composition-compare.context';
 import { uniqBy } from 'lodash';
@@ -231,7 +230,10 @@ function buildChannelKey(prefix: string, idStr: string | undefined, compId: stri
 
 function buildQueryParams(channelKey: string | undefined) {
   const params = { livecontrols: true, ...(channelKey ? { lcchannel: channelKey } : {}) };
-  return { params, queryString: queryString.stringify(params) };
+  const queryString = new URLSearchParams(
+    Object.entries(params).map(([key, value]) => [key, String(value)])
+  ).toString();
+  return { params, queryString };
 }
 
 function buildUpdatedUrlFromQuery(

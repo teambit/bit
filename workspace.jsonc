@@ -43,13 +43,13 @@
         "@bitdev/symphony.generators.symphony-templates": "^5.0.4",
         "@dagrejs/dagre": "^1.1.2",
         "@graphql-modules/core": "0.7.17",
-        "@graphql-tools/schema": "^10.0.0",
+        "@graphql-tools/schema": "^10.1.5",
         "@jest/test-result": "29.3.1",
         "@lydell/node-pty": "^1.0.0",
         "@mdx-js/loader": "^3.1.1",
         "@mdx-js/mdx": "^3.1.1",
         "@mdx-js/react": "^3.1.1",
-        "@modelcontextprotocol/sdk": "^1.22.0",
+        "@modelcontextprotocol/sdk": "^1.32.2",
         "@parcel/watcher": "^2.5.1",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
         "@pnpm/colorize-semver-diff": "1.0.1",
@@ -59,10 +59,10 @@
         "@pnpm/lockfile.types": "1100.0.19",
         "@pnpm/napi": "12.16.0",
         "@pnpm/network.ca-file": "3.0.3",
-        "@pnpm/network.fetch": "1100.1.11",
+        "@pnpm/network.fetch": "1100.1.24",
         "@pnpm/node-fetch": "^1.0.0",
         "@pnpm/plugin-trusted-deps": "0.2.2",
-        "@pnpm/registry-mock": "3.48.0",
+        "@pnpm/registry-mock": "3.50.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/types": "1101.9.0",
         "@react-hook/latest": "1.0.3",
@@ -141,7 +141,7 @@
         "@teambit/bit-error": "~0.0.404",
         "@teambit/bit.content.what-is-bit": "1.96.13",
         "@teambit/bvm.config": "^1.0.2",
-        "@teambit/bvm.list": "1.1.1",
+        "@teambit/bvm.list": "1.1.4",
         "@teambit/bvm.path": "^1.0.0",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare-section": "0.0.8",
@@ -152,7 +152,7 @@
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
         "@teambit/community.starters.hello-world": "^0.1.2",
         "@teambit/compilation.babel-compiler": "^1.1.18",
-        "@teambit/compilation.content.compiler-overview": "1.96.22",
+        "@teambit/compilation.content.compiler-overview": "1.96.24",
         "@teambit/component-id": "^1.2.5",
         "@teambit/component-version": "^1.0.4",
         "@teambit/component.content.component-overview": "^1.96.10",
@@ -454,7 +454,7 @@
         "comlink": "4.3.0",
         "command-exists": "1.2.9",
         "comment-json": "4.2.5",
-        "compression-webpack-plugin": "11.0.0",
+        "compression-webpack-plugin": "12.0.0",
         "copy-to-clipboard": "3.3.1",
         "core-js": "3.9.0",
         "cors": "2.8.5",
@@ -585,7 +585,6 @@
         "process": "0.11.10",
         "prop-types": "^15.8.1",
         "punycode": "^2.3.1",
-        "query-string": "7.0.0",
         "react-animate-height": "3.2.3",
         "react-dev-utils": "12.0.1",
         "react-docgen": "5.3.1",
@@ -658,7 +657,7 @@
         "yargs": "17.0.1",
         "yesno": "0.4.0",
         "yn": "2.0.0",
-        "zod": "^3.24.4"
+        "zod": "^4.6.7"
       },
       "peerDependencies": {
         "@apollo/client": "^3.12.0",
@@ -699,6 +698,21 @@
       "body-parser@2": "^2.4.0",
       "follow-redirects@1": "^1.16.2",
       "postcss@>=8 <8.5.23": "8.5.25",
+      "svgo@3": "^3.3.5",
+      "form-data@2": "^2.5.6",
+      "handlebars@4": "^4.7.10",
+      "semver@>=7 <7.5.2": "^7.7.1",
+      // older published webpack-bundler versions use compression-webpack-plugin 11 (serialize-javascript 6)
+      "serialize-javascript@6": "^7.0.3",
+      // types only; @types/react-dev-utils pulls the v3 types, which depend on http-proxy-middleware 1
+      "@types/webpack-dev-server@3": "-",
+      // types only, not needed (postcss-normalize is only resolved by path); they depend on postcss 7
+      "@types/postcss-normalize": "-",
+      // verdaccio (through @pnpm/registry-mock, e2e only) pins these to exact vulnerable versions
+      "compression@1": "^1.8.2",
+      "js-yaml@4": "^4.3.2",
+      "validator@13": "^13.15.22",
+      "path-to-regexp@0.1": "^0.1.13",
       "@teambit/harmony": "0.4.12",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
@@ -718,7 +732,6 @@
       // (TS2345 "separate declarations of a private property 'extensionName'") and the build fails.
       "react@17": "19.1.0",
       "react-dom@17": "19.1.0",
-      "minio@7.0": "7.1.3",
       // See more info here -
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
