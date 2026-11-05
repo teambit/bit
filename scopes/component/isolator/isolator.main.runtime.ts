@@ -926,7 +926,6 @@ export class IsolatorMain {
           // runs before the capsules so they can resolve the core aspects it links while they
           // install, and so nothing races it over the root's node_modules.
           await this.installInCapsules(capsulesDir, CapsuleList.fromArray([]), installOptions, {
-            cachePackagesOnCapsulesRoot,
             linkedDependencies: { [capsulesDir]: rootLinks },
             packageManager: opts.packageManager,
             nodeLinker: opts.nodeLinker,
