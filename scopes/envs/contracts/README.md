@@ -4,15 +4,16 @@ The types and the few runtime values that envs and their services (compilers, te
 
 ## Migrating an env
 
-The env must run on a Bit version that includes this contract (`typescriptSchemaExtractor()` throws a clear error on older versions). An env that extends a base env (e.g. `ReactEnv`) can migrate only after its base env did.
+The contract is a regular package, so it works with any recent Bit version. An env that extends a base env (e.g. `ReactEnv`) can migrate only after its base env did.
 
-1. Import from `@teambit/envs.contracts` instead of the core aspects (`@teambit/envs`, `@teambit/builder`, `@teambit/compiler`, `@teambit/tester`, `@teambit/generator`, `@teambit/pkg`, `@teambit/bundler`, `@teambit/application`, `@teambit/component`, `@teambit/logger`, ...). Most names are the same: `EnvHandler`, `Pipeline`, `BuildContext`, `Compiler`, `TemplateList`, `Bundler`, `AppTypeList`, `Component`, `ComponentMap`, `Logger`, ... These change:
+1. Import from `@teambit/envs.contracts` instead of the core aspects (`@teambit/envs`, `@teambit/builder`, `@teambit/compiler`, `@teambit/tester`, `@teambit/generator`, `@teambit/pkg`, `@teambit/bundler`, `@teambit/application`, `@teambit/component`, `@teambit/logger`, ...). Most names are the same: `EnvHandler`, `Pipeline`, `BuildContext`, `Compiler`, `TemplateList`, `Bundler`, `AppTypeList`, `Component`, `ComponentID`, `ComponentMap`, `DevFilesMain`, `Logger`, ... These change:
 
    | Before                                                      | After                                          |
    | ----------------------------------------------------------- | ---------------------------------------------- |
    | `DocsRootProps` (`@teambit/docs`)                           | `DocsRootProps<React.ComponentType>`           |
    | `TypeScriptExtractor.from(options)` (`@teambit/typescript`) | `typescriptSchemaExtractor(options)`           |
    | `WorkspaceAspect.id`, `PubsubAspect.id`, ...                | `WORKSPACE_ASPECT_ID`, `PUBSUB_ASPECT_ID`, ... |
+   | `HarmonyWorker<T>` (`@teambit/worker`)                      | `EnvWorker<T>`                                 |
 
 2. Remove the core aspects from the env's dependencies.
 3. Type-check the env. When a name is missing, see below.
@@ -22,6 +23,7 @@ To use an aspect at runtime, get it from the env context, typed with the contrac
 ```ts
 const workspace = context.getAspect<Workspace>(WORKSPACE_ASPECT_ID); // undefined in a scope
 const pubsub = context.getAspect<PubsubMain>(PUBSUB_ASPECT_ID);
+const devFiles = context.getAspect<DevFilesMain>(DEV_FILES_ASPECT_ID);
 ```
 
 ## When something is missing
@@ -36,4 +38,7 @@ const pubsub = context.getAspect<PubsubMain>(PUBSUB_ASPECT_ID);
 Not in the contract:
 
 - The webpack helpers. `WebpackConfigMutator` and `WebpackBitReporterPlugin` have their own small packages (`@teambit/webpack.modules.config-mutator`, `@teambit/webpack.plugins.webpack-bit-reporter-plugin`); import them from there, not from `@teambit/webpack`. The rest (`fallbacks`, ...) is used by the Angular envs only.
-- Aspect-level APIs such as `DevFilesMain`, `ScopeMain` or the worker helpers. Code that needs them keeps importing the aspect.
+- The node-only helpers, because the contract is also bundled for the browser. They have their own small packages:
+  - `expose` (in a worker file): `@teambit/harmony.modules.worker-expose`, not `@teambit/worker`.
+  - `getWorkspaceConfigTemplateParsed` and `stringifyWorkspaceConfig` (in a workspace starter): `@teambit/harmony.modules.workspace-config-template`, not `@teambit/config`.
+- Aspect-level APIs such as `ScopeMain`. Code that needs them keeps importing the aspect.

@@ -217,7 +217,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
   this.timeout(0);
 
   describe('pnpm isolated linker', function () {
-    before(() => prepare('pnpm'));
+    before(prepare);
     after(() => {
       helper.scopeHelper.destroy();
     });
@@ -249,10 +249,10 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     helper.command.link();
   }
 
-  function prepare(pm: 'yarn' | 'pnpm') {
+  function prepare() {
     helper = new Helper();
     helper.scopeHelper.setWorkspaceWithRemoteScope();
-    helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     createPeerEnv('custom-react/env1', { name: 'react', supportedRange: '^16.8.0', version: '16.14.0' });
     createPeerEnv('custom-react/env2', { name: 'react', supportedRange: '^18.0.0', version: '18.0.0' });
 

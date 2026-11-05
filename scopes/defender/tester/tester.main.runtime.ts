@@ -162,10 +162,9 @@ export class TesterMain {
   async test(components: Component[], opts?: TesterOptions): Promise<TestResults> {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
-    if (opts?.env) {
-      return envsRuntime.runEnv(opts.env, this.service, options);
-    }
-    const results = await envsRuntime.run(this.service, options);
+    const results = opts?.env
+      ? await envsRuntime.runEnv(opts.env, this.service, options)
+      : await envsRuntime.run(this.service, options);
     if (opts?.junit) {
       await this.generateJUnit(opts?.junit, results);
     }

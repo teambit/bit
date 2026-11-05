@@ -157,11 +157,11 @@ export class CLIParser {
   }
 
   private parseCommandWithSubCommands(command: Command) {
-    const yarnCommand = this.getYargsCommand(command);
+    const yargsCommand = this.getYargsCommand(command);
     // registering the sub-commands has to happen from a builder, which replaces the adapter's own
     // builder. that one registers this command's flags, positionals and examples, so without
     // delegating to it, running the parent with any of its own flags fails as an unknown argument.
-    const registerOwnOptions = yarnCommand.builder as (yargsInstance: typeof yargs) => typeof yargs;
+    const registerOwnOptions = yargsCommand.builder as (yargsInstance: typeof yargs) => typeof yargs;
     const builderFunc = (yargsInstance: typeof yargs) => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
@@ -169,8 +169,8 @@ export class CLIParser {
       });
       return registerOwnOptions(yargsInstance);
     };
-    yarnCommand.builder = builderFunc;
-    this.addYargsCommand(yarnCommand);
+    yargsCommand.builder = builderFunc;
+    this.addYargsCommand(yargsCommand);
   }
 
   private getYargsCommand(command: Command): YargsAdapter {
@@ -219,7 +219,7 @@ export class CLIParser {
   }
 
   /**
-   * manipulate the command help output. there is no API from Yarn to do any of this, so it needs to be done manually.
+   * manipulate the command help output. there is no API from Yargs to do any of this, so it needs to be done manually.
    * see https://github.com/yargs/yargs/issues/1956
    *
    * the original order of the output:

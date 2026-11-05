@@ -1,9 +1,10 @@
 export type { ServiceHandler, EnvContext, EnvHandler, AsyncEnvHandler, Logger, EnvWorker } from './env-handler';
+export { ComponentID } from '@teambit/component-id';
 export type { Component, ComponentSourceFile, ComponentDependencyEntry, ComponentDependencyList } from './component';
 export { ComponentMap } from './component-map';
 export type { Capsule, CapsuleList, Network } from './capsule';
 export type { ExecutionContext, EnvRuntime } from './execution-context';
-export { CAPSULE_ARTIFACTS_DIR } from './build';
+export { BUNDLE_UI_DIR, CAPSULE_ARTIFACTS_DIR } from './build';
 export type {
   TaskLocation,
   PipeName,
@@ -110,6 +111,7 @@ export type {
 export { BitBaseEvent } from './pubsub';
 export type { PubsubMain } from './pubsub';
 export type { Workspace } from './workspace';
+export type { DevFiles, DevFilesMain } from './dev-files';
 export * from './aspect-ids';
 export { PackageGenerator } from './package-generator';
 export type {

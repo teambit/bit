@@ -7,11 +7,11 @@ import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
-import type { CommentObject } from 'comment-json';
 import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { omit } from 'lodash';
+import { getWorkspaceConfigTemplateParsed } from '@teambit/harmony.modules.workspace-config-template';
 import type { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -45,15 +45,8 @@ export type WorkspaceExtensionProps = {
   trackAllFiles?: boolean;
 };
 
-export type PackageManagerClients = 'npm' | 'yarn' | undefined;
-
 export interface DependencyResolverExtensionProps {
-  packageManager: PackageManagerClients;
-  strictPeerDependencies?: boolean;
-  extraArgs?: string[];
-  packageManagerProcessOptions?: any;
-  useWorkspaces?: boolean;
-  manageWorkspaces?: boolean;
+  packageManager?: string;
   externalPackageManager?: boolean;
 }
 
@@ -399,11 +392,8 @@ export class WorkspaceConfig implements HostConfig {
     return {
       lang: DEFAULT_LANGUAGE,
       defaultScope: this.extension('teambit.workspace/workspace', true)?.defaultScope,
-      _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
       dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
-      packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
       componentsDefaultDirectory,
-      _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       ignoredFiles: this.extension('teambit.workspace/workspace', true)?.ignoredFiles,
       trackAllFiles: this.extension('teambit.workspace/workspace', true)?.trackAllFiles,
       extensions: this.extensions.toConfigObject(),
@@ -437,20 +427,4 @@ export class WorkspaceConfig implements HostConfig {
       );
     }
   }
-}
-
-export async function getWorkspaceConfigTemplateParsed(): Promise<Record<string, any>> {
-  let fileContent: Buffer;
-  try {
-    fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') throw err;
-    // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-    fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
-  }
-  return parse(fileContent.toString()) as CommentObject;
-}
-
-export function stringifyWorkspaceConfig(workspaceConfig: Record<string, any>): string {
-  return stringify(workspaceConfig, undefined, 2);
 }

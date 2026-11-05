@@ -1350,7 +1350,7 @@ export class CliMcpServerMain {
       command: z.string().describe('The Bit command to execute (e.g., "status", "show", "list")'),
       args: z.array(z.string()).optional().describe('Arguments to pass to the command'),
       flags: z
-        .record(z.union([z.string(), z.boolean()]))
+        .record(z.string(), z.union([z.string(), z.boolean()]))
         .optional()
         .describe('Flags to pass to the command as key-value pairs'),
     };
@@ -1410,7 +1410,7 @@ export class CliMcpServerMain {
       command: z.string().describe('The Bit command to execute (e.g., "import", "tag", "export", "remove")'),
       args: z.array(z.string()).optional().describe('Arguments to pass to the command'),
       flags: z
-        .record(z.union([z.string(), z.boolean()]))
+        .record(z.string(), z.union([z.string(), z.boolean()]))
         .optional()
         .describe('Flags to pass to the command as key-value pairs'),
     };
