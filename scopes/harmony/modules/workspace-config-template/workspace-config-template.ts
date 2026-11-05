@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises';
+import { promises as fs } from 'fs';
 import { join } from 'path';
 import type { CommentObject } from 'comment-json';
 import { parse, stringify } from 'comment-json';
@@ -9,11 +9,11 @@ import { parse, stringify } from 'comment-json';
 export async function getWorkspaceConfigTemplateParsed(): Promise<Record<string, any>> {
   let fileContent: Buffer;
   try {
-    fileContent = await readFile(join(__dirname, 'workspace-template.jsonc'));
+    fileContent = await fs.readFile(join(__dirname, 'workspace-template.jsonc'));
   } catch (err: any) {
     if (err.code !== 'ENOENT') throw err;
     // when the component is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
-    fileContent = await readFile(join(__dirname, '..', 'workspace-template.jsonc'));
+    fileContent = await fs.readFile(join(__dirname, '..', 'workspace-template.jsonc'));
   }
   return parse(fileContent.toString()) as CommentObject;
 }
