@@ -112,6 +112,7 @@ export { BitBaseEvent } from './pubsub';
 export type { PubsubMain } from './pubsub';
 export type { Workspace } from './workspace';
 export type { DevFiles, DevFilesMain } from './dev-files';
+export type { DependencyResolverMain } from './dependency-resolver';
 export * from './aspect-ids';
 export { PackageGenerator } from './package-generator';
 export type {
