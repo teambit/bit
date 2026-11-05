@@ -20068,9 +20068,15 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   scopes/harmony/node:
     dependencies:
@@ -30662,6 +30668,12 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       '@types/react': ^19.0.0
+      react: 19.2.7
+
+  '@teambit/component.modules.component-url@0.0.207':
+    resolution: {integrity: sha512-+ZV5ZmM752oESxWFwesC77ltV+GF7l+EjYIlUXz0c5n/4uXh7JCVYyAgjPRGusJ37gpE2dc+Aa+bL3dalKYeTA==}
+    engines: {node: '>=16.0.0'}
+    peerDependencies:
       react: 19.2.7
 
   '@teambit/component.modules.component-url@file:scopes/component/component-url':
@@ -57940,6 +57952,20 @@ snapshots:
       query-string: 7.0.0
       react: 19.2.7
 
+  '@teambit/component.modules.component-url@0.0.207(react@18.3.1)':
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': 1.0.1
+      '@teambit/component-id': 1.2.5
+      query-string: 7.0.0
+      react: 18.3.1
+
+  '@teambit/component.modules.component-url@0.0.207(react@19.2.7)':
+    dependencies:
+      '@teambit/base-ui.utils.string.affix': 1.0.1
+      '@teambit/component-id': 1.2.5
+      query-string: 7.0.0
+      react: 19.2.7
+
   '@teambit/component.modules.component-url@file:scopes/component/component-url(react@18.3.1)':
     dependencies:
       '@teambit/base-ui.utils.string.affix': 1.0.1
@@ -76023,7 +76049,7 @@ snapshots:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
       '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@18.3.1)
+      '@teambit/component.modules.component-url': 0.0.207(react@18.3.1)
       '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@18.3.1)
       '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
@@ -76044,7 +76070,7 @@ snapshots:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
       '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
+      '@teambit/component.modules.component-url': 0.0.207(react@19.2.7)
       '@teambit/react.modules.dom-to-react': 0.2.1(react@19.2.7)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
       '@teambit/react.ui.hover-selector': 0.2.1(react@19.2.7)
