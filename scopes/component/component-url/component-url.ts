@@ -1,4 +1,3 @@
-import queryString from 'query-string';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 import type { ComponentID } from '@teambit/component-id';
 import { baseUrl } from './constants';
@@ -25,7 +24,8 @@ function toQuery(id: ComponentID, { includeVersion = true }: ToQueryOptions = {}
 }
 
 function toUrl(id: ComponentID, options: ToUrlOptions = {}) {
-  const query = queryString.stringify(toQuery(id, options));
+  const { version } = toQuery(id, options);
+  const query = version ? new URLSearchParams({ version }).toString() : '';
   const { useLocationOrigin } = options;
   const domain = useLocationOrigin ? window.location.origin : baseUrl;
 

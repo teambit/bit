@@ -3,7 +3,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 import classnames from 'classnames';
 import type { HighlightClasses } from '@teambit/react.ui.component-highlighter';
 import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
-import queryString from 'query-string';
 import styles from './highlighter-provider.module.scss';
 
 export const PARAM_NAME = 'highlighter';
@@ -33,8 +32,7 @@ export const HighlighterProvider: FC<{ children: React.ReactNode }> = ({ childre
 
   const isActive = useMemo(() => {
     const hashQuery = hash.split('?')[1];
-    const query = queryString.parse(hashQuery);
-    return query[PARAM_NAME] === 'true';
+    return new URLSearchParams(hashQuery).get(PARAM_NAME) === 'true';
   }, [hash]);
 
   return (
