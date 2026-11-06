@@ -474,14 +474,15 @@ export class WorkspaceCompiler {
 
         this.componentsBeingProcessedInOnAspectLoadFail.add(idStr);
         try {
-          const { graph, successors } = await this.getEnvDepsGraph(id);
-          // const deps = this.dependencyResolver.getDependencies(component);
-          // const depsIds = deps.getComponentDependencies().map((dep) => {
-          //   return dep.id.toString();
-          // });
+          // the failed aspect can be of another version than the workspace component, e.g. an env as saved in the
+          // config of its components, after a lane switch. it's loaded from the package dir of the workspace
+          // component anyway, so compile the workspace version and its dependencies. the dependencies of the other
+          // version and the other version itself are not in the workspace, so they would be skipped.
+          const workspaceId = this.workspace.listIds().searchWithoutVersion(id) || id;
+          const { graph, successors } = await this.getEnvDepsGraph(workspaceId);
           const depsIds = successors.map((s) => s.id);
           await this.compileComponents(
-            [id.toString(), ...depsIds],
+            [workspaceId.toString(), ...depsIds],
             { initiator: CompilationInitiator.AspectLoadFail },
             true,
             { loadExtensions: true, executeLoadSlot: true },

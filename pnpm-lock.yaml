@@ -13907,6 +13907,9 @@ importers:
       '@teambit/compilation.content.compiler-overview':
         specifier: 1.96.24
         version: 1.96.24(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/graph.cleargraph':
+        specifier: 0.0.11
+        version: 0.0.11
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
