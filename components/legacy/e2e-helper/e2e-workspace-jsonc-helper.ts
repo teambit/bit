@@ -134,6 +134,15 @@ export default class WorkspaceJsoncHelper {
   disablePreview() {
     this.addKeyVal('teambit.preview/preview', { disabled: true });
   }
+  /**
+   * ws ships optional native accelerators that arrive with the legacy env packages several suites
+   * install. Nothing in the e2e suite uses them, and building them inside an env root fails with
+   * `node-gyp-build` exited with status 127 (the same packages install fine where no env root is
+   * involved), so an unrelated native addon decides whether a test can scaffold its fixture.
+   */
+  neverBuildNativeAccelerators() {
+    this.addKeyValToDependencyResolver('neverBuiltDependencies', ['utf-8-validate', 'bufferutil']);
+  }
   setupDefault() {
     this.disablePreview();
     this.addDefaultScope();

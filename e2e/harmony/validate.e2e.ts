@@ -60,8 +60,12 @@ describe('validate command', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
-      // Create a real linting error (undefined variable)
-      helper.fs.outputFile('comp1/comp1.js', 'console.log(undefinedVariable);');
+      // the lint-error-env fixture reports correctness lint offenses as errors. the stock envs
+      // report lint offenses only as warnings, which never fail the validation.
+      helper.env.setCustomNewEnv('lint-error-env', ['@teambit/oxc.linter.oxlint-linter@2.0.5'], { policy: {} });
+      helper.command.setEnv('comp1', `${helper.scopes.remote}/lint-error-env`);
+      // Create a real linting error (debugger statement - valid TS, correctness lint offense)
+      helper.fs.outputFile('comp1/comp1.ts', 'export function foo() { debugger; }\n');
     });
     it('should continue to run all checks by default and show the lint error details', () => {
       const output = helper.general.runWithTryCatch('bit validate');
