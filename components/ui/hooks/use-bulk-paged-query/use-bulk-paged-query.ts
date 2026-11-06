@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DocumentNode } from 'graphql';
-import { useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client';
 
 /** a transient page-fetch error is retried this many times before the remaining pairs read as failed */
 const MAX_PAGE_RETRIES = 2;
 
 /** shared empty results ref so the derived memos aren't invalidated by a fresh `[]` every loading render */
 const EMPTY_RESULTS: never[] = [];
+
+/** how many single-pair requests the compatibility path keeps in flight at once */
+const FALLBACK_CONCURRENCY = 8;
+
+/**
+ * Hosts (keyed by `host|resultField`) whose schema has no bulk field, remembered for the page's
+ * lifetime so later mounts skip straight to the per-pair path instead of each paying for a rejected
+ * bulk request first. Not persisted: a host that gains the field only has to be re-detected on reload.
+ */
+const bulkUnsupportedHosts = new Set<string>();
 
 export type BulkQueryPair = {
   baseId: string;
@@ -30,6 +40,20 @@ export type UseBulkPagedQueryOptions = {
   host?: string;
   /** when true, no query fires (e.g. a mounted-but-hidden pane). */
   skip?: boolean;
+  /**
+   * A single-pair query of the shape
+   * `query(...) { getHost(id: $host) { id, <fallbackResultField>(baseId, compareId) { ... } } }`,
+   * used when the host's schema has no bulk field.
+   *
+   * bit.cloud implements the bulk resolvers but serves them through a bit version whose schema
+   * predates the bulk fields, so the field is unreachable there while the singular one works. Without
+   * this the whole compare surface renders empty against that host. It costs one request per pair —
+   * exactly what the bulk field exists to avoid — so it is strictly a compatibility path, taken only
+   * after the host has rejected the bulk field, and it retires itself the moment the host catches up.
+   */
+  fallbackQuery?: DocumentNode;
+  /** name of the single-pair field on `getHost`, e.g. `compareComponent`. */
+  fallbackResultField?: string;
 };
 
 export type UseBulkPagedQueryResult<TItem> = {
@@ -48,7 +72,7 @@ export type UseBulkPagedQueryResult<TItem> = {
   /**
    * true when the server's GraphQL schema does not have this query or one of its fields, e.g. an older
    * backend: the first page was rejected and no data loaded. Paging stops at once and every pair reads as
-   * `null`; retrying cannot help.
+   * `null`; retrying cannot help. Never true when a `fallbackQuery` is given: the hook switches to it instead.
    */
   unsupported: boolean;
 };
@@ -96,6 +120,8 @@ export function useBulkPagedQuery<TItem>({
   pageSize,
   host,
   skip: skipProp,
+  fallbackQuery,
+  fallbackResultField,
 }: UseBulkPagedQueryOptions): UseBulkPagedQueryResult<TItem> {
   // stabilize by content: a new array reference with the same pairs must not restart the query.
   // memoized on the reference so the O(n) stringify doesn't re-run on every provider re-render
@@ -111,11 +137,20 @@ export function useBulkPagedQuery<TItem>({
   // clean session rather than inherit the previous session's termination state.
   const sessionKey = `${host ?? ''}|${resultField}|${pageSize}|${pairsKey}`;
 
+  const capabilityKey = `${host ?? ''}|${resultField}`;
+  const canFallback = Boolean(fallbackQuery && fallbackResultField);
+  const [bulkUnsupported, setBulkUnsupported] = useState(() => bulkUnsupportedHosts.has(capabilityKey));
+  useEffect(() => setBulkUnsupported(bulkUnsupportedHosts.has(capabilityKey)), [capabilityKey]);
+
+  const onFallback = canFallback && bulkUnsupported;
+  // once the host has rejected the bulk field there is nothing to retry — stop issuing it entirely
+  const skipBulk = skip || onFallback;
+
   // raw `useQuery` (not the app's `useDataQuery` wrapper) on purpose: the wrapper pops an error toast on
   // failure, which would fire on every transient page error this hook is designed to silently retry.
   const { data, loading, fetchMore, error } = useQuery(query, {
     variables: { pairs: stablePairs, offset: 0, limit: pageSize, host },
-    skip,
+    skip: skipBulk,
     notifyOnNetworkStatusChange: true,
     // the workspace UI's Apollo client defaults watchQuery to `network-only` (live workspace data must
     // not go stale), which would replay page 1 AND the whole fetchMore chain on every remount of the
@@ -125,6 +160,19 @@ export function useBulkPagedQuery<TItem>({
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first',
   });
+
+  // the server's schema rejected the query. A schema mismatch rejects the very first page, so only a
+  // failed first page with no data counts: a later page's failure is retried as before, and results that
+  // already loaded are never discarded.
+  const bulkRejected = !skipBulk && !data && isUnsupportedQueryError(error);
+  // with a single-pair fallback the rejection is recoverable, so it is not reported as unsupported
+  const unsupported = bulkRejected && !canFallback;
+
+  useEffect(() => {
+    if (!canFallback || !bulkRejected) return;
+    bulkUnsupportedHosts.add(capabilityKey);
+    setBulkUnsupported(true);
+  }, [bulkRejected, canFallback, capabilityKey]);
 
   const results: Array<TItem | null> = data?.getHost?.[resultField] ?? EMPTY_RESULTS;
   const allLoaded = skip || results.length >= stablePairs.length;
@@ -139,11 +187,6 @@ export function useBulkPagedQuery<TItem>({
     setStoppedShort(false);
     setErrorRetries(0);
   }, [sessionKey, skip]);
-  // the server's schema rejected the query. A schema mismatch rejects the very first page, so only a
-  // failed first page with no data counts: a later page's failure is retried as before, and results that
-  // already loaded are never discarded.
-  const unsupported = !skip && !data && isUnsupportedQueryError(error);
-
   // the session this hook is currently paging — a fetchMore started for an earlier session can still
   // resolve/reject after the inputs changed, so its callbacks check this before terminating the new
   // loop. updated synchronously during render (not in an effect): passive effects flush after paint,
@@ -153,14 +196,63 @@ export function useBulkPagedQuery<TItem>({
   const sessionKeyRef = useRef(sessionKey);
   sessionKeyRef.current = sessionKey;
 
+  // Compatibility path: one request per pair, a few at a time, accumulated as they land so the surface
+  // fills in progressively rather than waiting for the slowest pair.
+  const client = useApolloClient();
+  const [fallbackData, setFallbackData] = useState<Map<string, TItem | null>>(() => new Map());
+  const [fallbackDone, setFallbackDone] = useState(false);
+
+  useEffect(() => {
+    if (!onFallback || skip) return undefined;
+    let cancelled = false;
+    setFallbackData(new Map());
+    setFallbackDone(false);
+
+    const remaining = [...stablePairs];
+    const collected = new Map<string, TItem | null>();
+
+    const worker = async () => {
+      for (;;) {
+        const pair = remaining.shift();
+        if (!pair || cancelled) return;
+        let item: TItem | null = null;
+        try {
+          const response = await client.query({
+            query: fallbackQuery as DocumentNode,
+            variables: { baseId: pair.baseId, compareId: pair.compareId, host },
+            fetchPolicy: 'cache-first',
+          });
+          item = (response?.data as any)?.getHost?.[fallbackResultField as string] ?? null;
+        } catch {
+          // a pair that cannot be compared is reported as failed, exactly as the bulk path reports it
+          item = null;
+        }
+        if (cancelled) return;
+        collected.set(pair.compareId, item);
+        setFallbackData(new Map(collected));
+      }
+    };
+
+    void Promise.all(Array.from({ length: Math.min(FALLBACK_CONCURRENCY, remaining.length) }, worker)).then(() => {
+      if (!cancelled) setFallbackDone(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onFallback, skip, sessionKey, client, fallbackQuery, fallbackResultField, host]);
+
   // every page loaded, paging stopped at a short page, or transient retries exhausted: no more requests.
   // NB: a transient error alone does NOT make us `done` — the loop retries it (up to MAX_PAGE_RETRIES),
   // and until then un-fetched pairs stay `undefined` (pending) rather than being reported as failed.
-  const done = allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES || unsupported;
+  const done = onFallback
+    ? fallbackDone
+    : allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES || unsupported;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
-    if (skip || loading || done) return;
+    if (skipBulk || loading || done) return;
     // guard the async terminations below to this session: an in-flight fetchMore from a previous
     // session must not terminate the paging loop of a newer one (rapid target switches).
     const activeKey = sessionKey;
@@ -216,6 +308,7 @@ export function useBulkPagedQuery<TItem>({
   ]);
 
   const dataByCompareId = useMemo(() => {
+    if (onFallback) return fallbackData;
     // results are returned aligned to the requested slice and concatenated in order, so position `i`
     // corresponds to `stablePairs[i]`. key by the requested pair's compareId — the alignment guarantee
     // makes positional keying correct without the hook needing to know each item's shape.
@@ -225,7 +318,7 @@ export function useBulkPagedQuery<TItem>({
       if (key) map.set(key, res ?? null);
     });
     return map;
-  }, [results, stablePairs]);
+  }, [results, stablePairs, onFallback, fallbackData]);
 
   // every compareId this hook was asked to fetch — lets lookupByCompareId tell "requested but unresolved"
   // (paging stopped/exhausted) apart from "not in this list" once paging is done.
@@ -244,9 +337,9 @@ export function useBulkPagedQuery<TItem>({
         return undefined;
       },
       loading: !done,
-      loadedCount: results.length,
+      loadedCount: onFallback ? fallbackData.size : results.length,
       unsupported,
     }),
-    [dataByCompareId, done, requestedCompareIds, results.length, unsupported]
+    [dataByCompareId, done, requestedCompareIds, results.length, onFallback, fallbackData, unsupported]
   );
 }
