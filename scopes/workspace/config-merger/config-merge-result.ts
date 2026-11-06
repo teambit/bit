@@ -16,6 +16,21 @@ export class ConfigMergeResult {
   hasConflicts(): boolean {
     return this.results.some((result) => result.conflict);
   }
+  getConflictedAspectIds(): string[] {
+    return this.results.filter((result) => result.conflict).map((result) => result.id);
+  }
+  /**
+   * a new result with only the aspects that match the predicate.
+   * e.g. checkout cares only about the aspects that were set locally in .bitmap.
+   */
+  filterByAspects(predicate: (aspectId: string) => boolean): ConfigMergeResult {
+    return new ConfigMergeResult(
+      this.compIdStr,
+      this.currentLabel,
+      this.otherLabel,
+      this.results.filter((result) => predicate(result.id))
+    );
+  }
   generateMergeConflictFile(): string | null {
     const resultsWithConflict = this.results.filter((result) => result.conflict);
     if (!resultsWithConflict.length) return null;
