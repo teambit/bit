@@ -4,12 +4,13 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import type { Capsule, Network } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { BUNDLE_UI_DIR } from '@teambit/envs.contracts';
 import { UIAspect } from './ui.aspect';
 import type { UiMain } from './ui.main.runtime';
 import { resolveUiVendorDllPackages, buildUiVendorDll, resolvePackageDirFromNodeModules } from './ui-vendor-dll';
 
+export { BUNDLE_UI_DIR };
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
-export const BUNDLE_UI_DIR = 'ui-bundle';
 export const UIROOT_ASPECT_IDS = {
   SCOPE: 'teambit.scope/scope',
   WORKSPACE: 'teambit.workspace/workspace',

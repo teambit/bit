@@ -69,11 +69,7 @@ chai.use(chaiFs);
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitWorkspace({
-      yarnRCConfig: {
-        unsafeHttpWhitelist: ['localhost'],
-      },
-    });
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.workspaceJsonc.setupDefault();
   });

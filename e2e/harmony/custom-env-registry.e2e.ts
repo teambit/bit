@@ -276,6 +276,41 @@ describe('custom env (registry)', function () {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
       });
     });
+    describe('deleting an env on the lane when a component uses it as a regular dependency only', () => {
+      let envPkgName: string;
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.workspaceJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        envPkgName = helper.general.getPackageNameByCompName(envName);
+        helper.fs.outputFile('comp1/index.js', `require('${envPkgName}');`);
+        helper.command.createLane('env-as-dependency');
+        helper.command.importComponent(envName);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+
+        helper.command.softRemoveOnLane(envId);
+      });
+      it('bit status should not show the RemovedEnv issue, the env is not the env of the component', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
+      });
+      it('should pin the deleted env to its main version in the workspace policy', () => {
+        const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+        expect(policy.dependencies[envPkgName]).to.have.string('0.0.2');
+      });
+      describe('installing and then snapping the component together with the deleted env', () => {
+        before(() => {
+          helper.command.install();
+          helper.command.snapComponentWithoutBuild(`"comp1, ${envId}"`, '--unmodified');
+        });
+        it('should save the main version of the deleted env as the dependency, not the deleted snap', () => {
+          const comp1 = helper.command.catComponent('comp1@latest');
+          const envDep = comp1.dependencies.find((dep) => dep.id.name === envName);
+          expect(envDep.id.version).to.equal('0.0.2');
+        });
+      });
+    });
     describe('missing modules in the env capsule', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();

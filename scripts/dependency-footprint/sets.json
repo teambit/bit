@@ -1,0 +1,22 @@
+{
+  "builder": ["@teambit/builder"],
+  "env-facing": [
+    "@teambit/builder",
+    "@teambit/envs",
+    "@teambit/component",
+    "@teambit/compiler",
+    "@teambit/tester",
+    "@teambit/linter",
+    "@teambit/formatter",
+    "@teambit/pkg",
+    "@teambit/generator",
+    "@teambit/preview",
+    "@teambit/application",
+    "@teambit/workspace-config-files",
+    "@teambit/typescript",
+    "@teambit/dev-files",
+    "@teambit/dependency-resolver",
+    "@teambit/isolator",
+    "@teambit/logger"
+  ]
+}

@@ -22,8 +22,13 @@ import { resolvePackageDir } from './resolve-package-dir';
 const ASSETS: Array<{ pkg: string; from: string; to: string; flatten?: boolean }> = [
   // the typescript aspect hands lib files to the compiler by path
   { pkg: 'typescript', from: 'lib/*.d.ts', to: '.', flatten: true },
-  // `WorkspaceConfig.getTemplate` - the workspace.jsonc scaffold written by `bit init`
-  { pkg: '@teambit/config', from: 'dist/workspace-template.jsonc', to: '.', flatten: true },
+  // `getWorkspaceConfigTemplateParsed` - the workspace.jsonc scaffold written by `bit init`
+  {
+    pkg: '@teambit/harmony.modules.workspace-config-template',
+    from: 'dist/workspace-template.jsonc',
+    to: '.',
+    flatten: true,
+  },
   // `HostInitializerMain.loadAgentsTemplate`
   { pkg: '@teambit/host-initializer', from: 'dist/agents-template*.md', to: '.', flatten: true },
   // `renderAgentsSection` - the AGENTS.md section `bit ci sync --init` writes

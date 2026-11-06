@@ -262,7 +262,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private computeComponentMetadata(
     context: BundlerContext,
     result: BundlerResult,
-    component: Component
+    component: BundlerResult['components'][number]
   ): ComponentPreviewMetaData {
     const componentEntryId = this.getComponentChunkId(component.id, 'component');
 

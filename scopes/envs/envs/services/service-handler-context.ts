@@ -2,8 +2,9 @@ import type { ComponentID } from '@teambit/component';
 import type { Harmony } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import type { WorkerMain } from '@teambit/worker';
+import type { EnvContext } from '@teambit/envs.contracts';
 
-export class ServiceHandlerContext {
+export class ServiceHandlerContext implements EnvContext {
   constructor(
     /**
      * id of the environment defined in the context.

@@ -2,7 +2,7 @@
 import { Worker } from 'worker_threads';
 import type { Remote } from 'comlink';
 import { wrap } from 'comlink';
-import nodeEndpoint from './node-endpoint';
+import { nodeEndpoint } from '@teambit/harmony.modules.worker-expose';
 
 export type InitOptions = {
   /**

@@ -2,24 +2,19 @@ import type { Component } from '@teambit/component';
 import type { LaneId } from '@teambit/lane-id';
 import type { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
-import type { ComponentResult } from './types';
+import type { BuiltTaskResult as ContractBuiltTaskResult, TaskLocation } from '@teambit/envs.contracts';
+
+export { CAPSULE_ARTIFACTS_DIR } from '@teambit/envs.contracts';
+export type { TaskLocation } from '@teambit/envs.contracts';
 import type { ArtifactDefinition } from './artifact';
 import type { TaskResultsList } from './task-results-list';
 import type { TaskResults } from './build-pipe';
 import type { PipeName } from './builder.service';
 
-export type TaskLocation = 'start' | 'end';
-
 /**
  * delimiter between task.aspectId and task.name
  */
 export const TaskIdDelimiter = ':';
-
-/**
- * A folder to write artifacts generated during a build task
- * This folder is used in the core envs and excluded by default from the package tar file (the core envs is writing this into the npmignore file)
- */
-export const CAPSULE_ARTIFACTS_DIR = 'artifacts';
 
 export interface BuildContext extends ExecutionContext {
   /**
@@ -115,20 +110,23 @@ export interface BuildTask {
    * "aspectId:name", e.g. "teambit.compilation/compiler:TypescriptCompiler".
    */
   dependencies?: string[];
+
+  /**
+   * whether the task needs the packages to be installed in the capsules in order to run.
+   * currently, it's checked only when tagging from a scope with the artifacts of the last build, where the
+   * installation is skipped if none of the running tasks needs it (behind the "skip-tag-capsule-install" feature).
+   * when not implemented, the task is considered as requiring the installation.
+   */
+  requiresCapsuleInstallation?(components: Component[]): boolean;
 }
 
 // TODO: rename to BuildTaskResults
-export interface BuiltTaskResult {
-  /**
-   * build results for each of the components in the build context.
-   */
-  componentsResults: ComponentResult[];
-
+export type BuiltTaskResult = Omit<ContractBuiltTaskResult, 'artifacts'> & {
   /**
    * array of artifact definitions to generate after a successful build.
    */
   artifacts?: ArtifactDefinition[];
-}
+};
 
 export class BuildTaskHelper {
   static serializeId({ aspectId, name }: { aspectId: string; name: string }): string {
