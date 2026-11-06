@@ -36,8 +36,6 @@ import { ComponentConfigMerger } from '@teambit/config-merger';
 import type { ConfigMergeResult } from '@teambit/config-merger';
 import { getLocalConfigKeysToRemove, isAspectInLocalConfig } from './local-config-merge';
 
-type LocalConfigConflict = { id: ComponentID; result: ConfigMergeResult };
-
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
@@ -134,12 +132,14 @@ export class CheckoutMain {
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
     );
-    const configConflicts = await this.getLocalConfigConflicts(allComponentsStatus, checkoutProps);
-    const conflictedIdStr = componentWithConflict?.id.toStringWithoutVersion() || configConflicts[0]?.result.compIdStr;
-    if (conflictedIdStr) {
+    const componentWithConfigConflict = allComponentsStatus.find((component) =>
+      component.configMergeResult?.hasConflicts()
+    );
+    const conflictedComponent = componentWithConflict || componentWithConfigConflict;
+    if (conflictedComponent) {
       if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
         throw new BitError(
-          `automatic merge has failed for component ${conflictedIdStr}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
+          `automatic merge has failed for component ${conflictedComponent.id.toStringWithoutVersion()}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
         );
       }
       if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
@@ -199,13 +199,14 @@ export class CheckoutMain {
       }
     }
 
-    const configMergeConflicts = await this.applyLocalConfigConflicts(configConflicts, checkoutProps.mergeStrategy);
-    const leftUnresolvedConflicts = Boolean(conflictedIdStr) && checkoutProps.mergeStrategy === 'manual';
+    const configMergeConflicts = await this.applyLocalConfigConflicts(allComponentsStatus, checkoutProps.mergeStrategy);
+    const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
     let componentWriterResults;
     if (componentsLegacy.length) {
       const manyComponentsWriterOpts = {
         components: componentsLegacy,
-        skipDependencyInstallation: checkoutProps.skipNpmInstall || leftUnresolvedConflicts,
+        skipDependencyInstallation:
+          checkoutProps.skipNpmInstall || leftUnresolvedConflicts || Boolean(configMergeConflicts?.length),
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
@@ -249,40 +250,32 @@ export class CheckoutMain {
    * checked out version. when the checked out version changed the same aspect differently, it's a conflict, same as
    * a conflict in a file. only the aspects that are set locally are checked. the other aspects get their config from
    * the checked out version anyway.
+   * the merge runs with "manual" to find the conflicts. the strategy of the user is applied by applyLocalConfigConflicts.
    */
-  private async getLocalConfigConflicts(
-    componentsStatus: ComponentStatus[],
-    checkoutProps: CheckoutProps
-  ): Promise<LocalConfigConflict[]> {
-    const { reset, revert, loadStash, skipUpdatingBitmap, forceOurs, forceTheirs } = checkoutProps;
-    if (reset || revert || loadStash || skipUpdatingBitmap || forceOurs || forceTheirs) return [];
-    const scope = this.workspace.consumer.scope;
-    const workspaceIds = this.workspace.listIds();
-    const results = await mapSeries(componentsStatus, async (componentStatus) => {
-      const { id, currentComponent, componentFromModel, unchangedMessage } = componentStatus;
-      if (unchangedMessage || !currentComponent || !componentFromModel) return undefined;
-      const bitMapEntry = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
-      const localConfig = bitMapEntry?.config;
-      const currentVersion = bitMapEntry?.id.version;
-      if (!localConfig || !currentVersion || currentVersion === id.version) return undefined;
-      const modelComponent = await scope.getModelComponent(id);
-      const baseVersion = await modelComponent.loadVersion(currentVersion, scope.objects);
-      const configMerger = new ComponentConfigMerger(
-        id.toStringWithoutVersion(),
-        workspaceIds,
-        undefined,
-        currentComponent.extensions,
-        baseVersion.extensions,
-        componentFromModel.extensions,
-        `${currentVersion} modified`,
-        id.version as string,
-        this.logger,
-        'manual' // to find the conflicts. the strategy of the user is applied later by applyLocalConfigConflicts.
-      );
-      const result = configMerger.merge().filterByAspects((aspectId) => isAspectInLocalConfig(aspectId, localConfig));
-      return result.hasConflicts() ? { id: bitMapEntry.id, result } : undefined;
-    });
-    return compact(results);
+  private getLocalConfigMergeResult(
+    id: ComponentID,
+    currentComponent: ConsumerComponent,
+    baseComponent: Version,
+    otherComponent: Version,
+    currentLabel: string
+  ): ConfigMergeResult | undefined {
+    const localConfig = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true })?.config;
+    if (!localConfig) return undefined;
+    const result = new ComponentConfigMerger(
+      id.toStringWithoutVersion(),
+      this.workspace.listIds(),
+      undefined,
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions,
+      currentLabel,
+      id.version as string,
+      this.logger,
+      'manual'
+    )
+      .merge()
+      .filterByAspects((aspectId) => isAspectInLocalConfig(aspectId, localConfig));
+    return result.hasConflicts() ? result : undefined;
   }
 
   /**
@@ -292,25 +285,26 @@ export class CheckoutMain {
    * returns the component ids that were left with config conflicts.
    */
   private async applyLocalConfigConflicts(
-    configConflicts: LocalConfigConflict[],
+    componentsStatus: ComponentStatus[],
     mergeStrategy?: MergeStrategy
   ): Promise<string[] | undefined> {
-    if (!configConflicts.length || !mergeStrategy || mergeStrategy === 'ours') return undefined;
+    const withConflicts = componentsStatus.filter((c) => c.configMergeResult?.hasConflicts());
+    if (!withConflicts.length || mergeStrategy === 'ours') return undefined;
     const conflictFile = this.workspace.getConflictMergeFile();
-    for (const { id, result: configConflict } of configConflicts) {
+    for (const { id, configMergeResult } of withConflicts) {
+      if (!configMergeResult) continue;
       const localConfig = this.workspace.bitMap.getBitmapEntry(id, { ignoreVersion: true }).config || {};
-      getLocalConfigKeysToRemove(localConfig, configConflict.getConflictedAspectIds()).forEach((key) =>
-        this.workspace.bitMap.removeComponentConfig(id, key, false)
-      );
+      for (const key of getLocalConfigKeysToRemove(localConfig, configMergeResult.getConflictedAspectIds())) {
+        await this.workspace.removeSpecificComponentConfig(id, key);
+      }
       this.workspace.clearComponentCache(id);
       if (mergeStrategy === 'manual') {
-        const conflict = configConflict.generateMergeConflictFile();
-        if (conflict) conflictFile.addConflict(configConflict.compIdStr, conflict);
+        const conflict = configMergeResult.generateMergeConflictFile();
+        if (conflict) conflictFile.addConflict(configMergeResult.compIdStr, conflict);
       }
     }
-    await conflictFile.write();
-    await this.workspace.bitMap.write('checkout (config merge)');
-    return mergeStrategy === 'manual' ? configConflicts.map((c) => c.result.compIdStr) : undefined;
+    await conflictFile.write(); // no-op when there are no conflicts
+    return mergeStrategy === 'manual' ? withConflicts.map((c) => c.id.toStringWithoutVersion()) : undefined;
   }
 
   /**
@@ -713,16 +707,22 @@ export class CheckoutMain {
       baseComponent = await componentModel.loadVersion(baseVersion, repo);
     }
 
+    const currentLabel = `${currentlyUsedVersion} modified`;
     const mergeResults = await threeWayMerge({
       scope: consumer.scope,
       otherComponent,
       otherLabel: loadStash ? 'stash' : newVersion,
       currentComponent: componentFromFS,
-      currentLabel: `${currentlyUsedVersion} modified`,
+      currentLabel,
       baseComponent,
     });
+    // a stash doesn't update the .bitmap, so there is no local config to merge
+    const configMergeResult =
+      loadStash || checkoutProps.skipUpdatingBitmap
+        ? undefined
+        : this.getLocalConfigMergeResult(id, componentFromFS, baseComponent, otherComponent, currentLabel);
 
-    return { currentComponent: componentFromFS, componentFromModel, id, mergeResults };
+    return { currentComponent: componentFromFS, componentFromModel, id, mergeResults, configMergeResult };
   }
 
   static slots = [];

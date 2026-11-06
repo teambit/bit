@@ -804,7 +804,7 @@ describe('bit checkout command', function () {
         output = helper.command.checkoutHead('comp1', '-x --auto-merge-resolve manual');
       });
       it('should list the component with config conflicts', () => {
-        expect(output).to.have.string('components with config conflicts');
+        expect(output).to.have.string('components with config-merge conflicts');
       });
       it('should write the env conflict into the config-merge file', () => {
         const conflictFile = helper.fs.readFile(MergeConfigFilename);

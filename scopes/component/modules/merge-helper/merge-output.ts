@@ -3,9 +3,22 @@ import type { ApplyVersionResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpda
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import isBinaryPath from 'is-binary-path';
-import { errorSymbol, formatTitle, joinSections } from '@teambit/cli';
+import { errorSymbol, formatHint, formatTitle, joinSections, warnSymbol } from '@teambit/cli';
 import { FileStatus } from './merge-version';
-import { FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
+import { FILE_CHANGES_CHECKOUT_MSG, MergeConfigFilename } from '@teambit/legacy.constants';
+
+/**
+ * components whose config conflicts were written to the config-merge file.
+ * @param afterFixHint what to do once the conflicts are fixed, e.g. "snap/tag the components to complete the merge".
+ */
+export function getConfigMergeConflictsOutput(compIds: string[], afterFixHint: string): string {
+  if (!compIds.length) return '';
+  const title = formatTitle(`${warnSymbol} components with config-merge conflicts`);
+  const suggestion = formatHint(
+    `conflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.\nonce ready, ${afterFixHint}.`
+  );
+  return `${title}\n${compIds.join('\n')}\n${suggestion}`;
+}
 
 export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult): string {
   if (!workspaceConfigUpdateResult) return '';
