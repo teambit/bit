@@ -1,0 +1,123 @@
+//! Unit tests for `bit mcp-server` [`Subcommand`] CLI parsing ([`parse_subcommand`]) and editor configuration file generation ([`execute_setup`], [`execute_rules`]).
+//!
+//! Verifies [`SetupOptions`], [`RulesOptions`], and [`Chalk`]-formatted editor configuration output in [`execute_setup`] and [`execute_rules`].
+
+use super::{
+    SetupOptions, Subcommand, execute_setup, parse_subcommand,
+    rules::{RulesOptions, execute_rules},
+};
+use crate::commands::color::Chalk;
+use std::fs;
+use tempfile::tempdir;
+
+/// Verifies [`parse_subcommand`] into [`Subcommand`] for `bit mcp-server` across `setup` and `write-rules` (`rules`).
+///
+/// Also checks that `start` and empty argument slices return `None` while unknown subcommands return [`Subcommand::Unrecognized`].
+#[test]
+fn parses_setup_and_rules_subcommands() {
+    assert_eq!(
+        parse_subcommand(&["setup"]),
+        Some(Subcommand::Setup(SetupOptions {
+            editor: "vscode".into(),
+            consumer_project: false,
+            include_additional: None,
+            is_global: false,
+        })),
+    );
+    assert_eq!(
+        parse_subcommand(&[
+            "setup",
+            "cursor",
+            "-g",
+            "--consumer-project",
+            "--include-additional",
+            "tag,snap"
+        ]),
+        Some(Subcommand::Setup(SetupOptions {
+            editor: "cursor".into(),
+            consumer_project: true,
+            include_additional: Some("tag,snap".into()),
+            is_global: true,
+        })),
+    );
+    assert_eq!(
+        parse_subcommand(&["rules", "claude-code", "-p", "--force-standard"]),
+        Some(Subcommand::Rules(RulesOptions {
+            editor: "claude-code".into(),
+            is_global: false,
+            should_print: true,
+            consumer_project: false,
+            force_standard: true,
+        })),
+    );
+    assert_eq!(parse_subcommand(&["start"]), None);
+    assert_eq!(parse_subcommand(&["unknown"]), Some(Subcommand::Unrecognized("unknown".into())));
+    assert_eq!(parse_subcommand(&[]), None);
+}
+
+/// Verifies that [`execute_setup`] writes `.cursor/mcp.json` and [`execute_rules`] writes `.cursor/rules/bit.rules.mdc`.
+///
+/// Ensures both Cursor configuration files include the expected `--consumer-project` and frontmatter headers.
+#[test]
+fn writes_workspace_setup_and_rules_files() {
+    let dir = tempdir().expect("tempdir");
+    let setup_out = execute_setup(
+        dir.path(),
+        &SetupOptions {
+            editor: "cursor".into(),
+            consumer_project: true,
+            include_additional: None,
+            is_global: false,
+        },
+        Chalk::new(false),
+    );
+    assert!(setup_out.contains("configured Cursor MCP integration (workspace)"));
+    let mcp_json = fs::read_to_string(
+        dir.path()
+            .join(".cursor")
+            .join("mcp.json"),
+    )
+    .expect("read mcp.json");
+    assert!(mcp_json.contains("--consumer-project"));
+
+    let rules_out = execute_rules(
+        dir.path(),
+        &RulesOptions {
+            editor: "cursor".into(),
+            is_global: false,
+            should_print: false,
+            consumer_project: true,
+            force_standard: false,
+        },
+        Chalk::new(false),
+    );
+    assert!(rules_out.contains("Successfully wrote Cursor Bit MCP rules file (workspace)"));
+    let rules_mdc = fs::read_to_string(
+        dir.path()
+            .join(".cursor")
+            .join("rules")
+            .join("bit.rules.mdc"),
+    )
+    .expect("read bit.rules.mdc");
+    assert!(rules_mdc.starts_with(
+        "---\ndescription: Bit MCP Agent Instructions\nalwaysApply: true\n---"
+    ));
+}
+
+#[test]
+fn rules_print_mode_outputs_instructions_without_writing_file() {
+    let dir = tempdir().expect("tempdir");
+    let rules_out = execute_rules(
+        dir.path(),
+        &RulesOptions {
+            editor: "cursor".into(),
+            is_global: false,
+            should_print: true,
+            consumer_project: false,
+            force_standard: false,
+        },
+        Chalk::new(false),
+    );
+    assert!(rules_out.contains("Bit MCP"));
+    assert!(!dir.path().join(".cursor").exists());
+}

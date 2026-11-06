@@ -1,0 +1,83 @@
+//! `formatOutput` and `getAnotherInstallRequiredOutput` of `install.cmd.tsx`.
+//!
+//! [`format`] renders the final completion line and any legacy environment policy warnings with [`Output`] and [`Style`].
+//! Formats elapsed [`Duration`] and deduplicates non-loaded environment IDs.
+
+#[cfg(test)]
+mod tests;
+
+use crate::output::{Output, Style};
+use std::time::Duration;
+
+/// Documentation link appended by [`another_install_required`] when a legacy environment requires a second `bit install` pass.
+const DOCS: &str = "Read more about how to fix this issue in: https://bit.dev/blog/using-a-static-dependency-policy-in-a-legacy-env-lihfbt9b";
+
+/// Format the final `bit install` summary line and any legacy-environment warning banner using [`Output`].
+pub fn format(
+    output: &Output,
+    components: usize,
+    elapsed: Duration,
+    recurring: bool,
+    non_loaded: &[String],
+) -> String {
+    let summary = output.paint(
+        Style::Green,
+        &format!(
+            "Successfully installed dependencies and compiled {} component(s) in {} seconds",
+            output.paint(Style::Cyan, &components.to_string()),
+            output.paint(Style::Cyan, &seconds(elapsed)),
+        ),
+    );
+    match another_install_required(output, recurring, non_loaded) {
+        Some(warning) => format!("\n{warning}\n\n{summary}"),
+        None => format!("\n{summary}"),
+    }
+}
+
+/// Format the warning block when non-loaded legacy environments require another `bit install` pass.
+fn another_install_required(
+    output: &Output,
+    recurring: bool,
+    non_loaded: &[String],
+) -> Option<String> {
+    let mut envs_list: Vec<&str> = Vec::with_capacity(non_loaded.len());
+    for env in non_loaded
+        .iter()
+        .map(|env| env.trim().trim_matches('/'))
+        .filter(|env| !env.is_empty())
+    {
+        if !envs_list.contains(&env) {
+            envs_list.push(env);
+        }
+    }
+    if envs_list.is_empty() {
+        return None;
+    }
+    let command = output.paint(Style::Cyan, "bit install");
+    let first =
+        format!(r#"Bit was not able to install all dependencies. Please run "{command}" again "#);
+    let flag = output.paint(Style::Cyan, "--recurring-install");
+    let suggestion = if recurring {
+        String::new()
+    } else {
+        format!(r#"(or use the "{flag}" option next time)."#)
+    };
+    let envs = format!(
+        r#"The following environments need to add support for "dependency policy" to fix the warning: {}"#,
+        output.paint(Style::Cyan, &envs_list.join(", ")),
+    );
+    Some(output.paint(Style::Yellow, &format!("{first}{suggestion}\n{envs}\n{DOCS}")))
+}
+
+/// Format `elapsed` [`Duration`] in seconds (`(end - start) / 1000`) as a `JavaScript` number string.
+#[inline]
+fn seconds(elapsed: Duration) -> String {
+    let millis = elapsed.as_millis();
+    let fraction = millis % 1000;
+    if fraction == 0 {
+        return (millis / 1000).to_string();
+    }
+    let mut formatted = format!("{}.{fraction:03}", millis / 1000);
+    formatted.truncate(formatted.trim_end_matches('0').len());
+    formatted
+}

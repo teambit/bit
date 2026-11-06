@@ -1,0 +1,109 @@
+//! `DeleteCmd`'s local soft-deletion [`Options`] and [`Scope`] selection grammar.
+//!
+//! Parses `--silent`, `--lane`, `--update-main`, and `--range` flags via [`parse`].
+use bit_object_import::component_delete::Scope;
+/// Parsed CLI flags and target pattern for a local `bit delete` invocation.
+pub(super) struct Options<'a> {
+    pub pattern: &'a str,
+    pub silent: bool,
+    pub lane: bool,
+    pub update_main: bool,
+    pub scope: Scope,
+}
+/// Parses `args` into local [`Options`] via [`scope`] when they fit the native `bit delete` grammar.
+pub(super) fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
+    let mut pattern = None;
+    let mut silent = false;
+    let mut lane = false;
+    let mut update_main = false;
+    let mut modifier = None;
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                consume_trailing_delete_pattern(iter, &mut pattern)?;
+                break;
+            }
+            "--no-color" | "--no-colors" | "--no-color=true" | "--no-color=false" | "--color"
+            | "--colors" | "--color=true" | "--color=false" | "--color=always"
+            | "--color=never" | "--hard=false" | "--force=false" | "-f" | "--force"
+            | "--force=true" => {}
+            "-s" | "--silent" | "--silent=true" | "-sf" | "-fs" => silent = true,
+            "--silent=false" => silent = false,
+            "--lane" | "--lane=true" => lane = true,
+            "--lane=false" => lane = false,
+            "--update-main" | "--update-main=true" => update_main = true,
+            "--update-main=false" => update_main = false,
+            "--range" | "--snaps" if modifier.is_none_or(|(flag, _)| flag == arg) => {
+                let val = iter.next()?.trim();
+                (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+                modifier = Some((arg, val));
+            }
+            _ => apply_inline_or_pattern(arg, &mut modifier, &mut pattern)?,
+        }
+    }
+    Some(Options {
+        pattern: pattern
+            .map(str::trim)
+            .filter(|pat| !pat.is_empty())?,
+        silent,
+        lane,
+        update_main,
+        scope: scope(modifier),
+    })
+}
+/// Consumes positional pattern tokens following `--`, rejecting multiple or flag-like values for [`parse`].
+#[inline]
+pub(in crate::commands) fn consume_trailing_delete_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<&'a str>,
+) -> Option<()> {
+    for val in iter {
+        let val = val.trim();
+        (!val.is_empty() && !val.starts_with('-') && pattern.replace(val).is_none()).then_some(())?;
+    }
+    Some(())
+}
+/// Applies an inline `--range=<val>` / `--snaps=<val>` flag or records the positional `pattern` for [`parse`].
+#[inline]
+fn apply_inline_or_pattern<'a>(
+    arg: &'a str,
+    modifier: &mut Option<(&'a str, &'a str)>,
+    pattern: &mut Option<&'a str>,
+) -> Option<()> {
+    if let Some((flag @ ("--range" | "--snaps"), raw)) = arg.split_once('=') {
+        let val = raw.trim();
+        (!val.is_empty() && !val.starts_with('-') && modifier.is_none_or(|(prev, _)| prev == flag))
+            .then_some(())?;
+        *modifier = Some((flag, val));
+    } else if !arg.starts_with('-') && !arg.trim().is_empty() && pattern.is_none() {
+        *pattern = Some(arg.trim());
+    } else {
+        return None;
+    }
+    Some(())
+}
+/// Converts an optional `--range` or `--snaps` flag pair into the corresponding [`Scope`] selector for [`parse`].
+#[inline]
+fn scope(modifier: Option<(&str, &str)>) -> Scope {
+    match modifier {
+        Some(("--range", value)) if !value.trim().is_empty() => Scope::Range(value.trim().into()),
+        Some(("--snaps", value)) => {
+            let mut snaps = Vec::new();
+            for snap in value
+                .split(',')
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+            {
+                if !snaps
+                    .iter()
+                    .any(|existing| existing == snap)
+                {
+                    snaps.push(snap.to_owned());
+                }
+            }
+            Scope::Snaps(snaps)
+        }
+        _ => Scope::Entire,
+    }
+}

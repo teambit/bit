@@ -1,0 +1,165 @@
+//! Retain permitted callback state and output alongside the native capture.
+//!
+//! [`Callbacks`] and [`issue_callbacks`] store retained host sessions, temporary directories, and [`CacheWrites`] (`retain_snapshot_data`) for [`Capture`].
+
+use super::{CacheWrites, Capture};
+use serde_json::Value;
+use std::io;
+
+/// Retained host session, temporary callback directories, and buffered stdout for [`Capture`].
+#[derive(Default)]
+pub(super) struct Callbacks {
+    pub(super) host: Option<crate::host::Host>,
+    directories: Vec<tempfile::TempDir>,
+    pub(super) snapshot_data: std::collections::HashMap<String, Value>,
+    pub(super) load_stdout: std::sync::Mutex<String>,
+    pub(super) issue_stdout: std::sync::Mutex<String>,
+    pub(super) startup_stdout: std::sync::Mutex<String>,
+}
+
+impl CacheWrites {
+    /// Records snapshot callback data for `identity` inside `self.callbacks`.
+    #[inline]
+    pub(in crate::commands::status) fn retain_snapshot_data(
+        &mut self,
+        identity: &str,
+        data: Value,
+    ) {
+        self.callbacks.snapshot_data.insert(identity.trim().to_owned(), data);
+    }
+
+    /// Retains `directory` for the lifetime of this [`CacheWrites`] so callback temp dirs are not deleted prematurely.
+    #[inline]
+    pub(in crate::commands::status) fn retain_callback_directory(
+        &mut self,
+        directory: tempfile::TempDir,
+    ) {
+        self.callbacks.directories.push(directory);
+    }
+
+    /// Retains the active [`crate::host::Host`] session inside `self.callbacks`.
+    #[inline]
+    pub(in crate::commands::status) fn retain_callback_host(
+        &mut self,
+        host: Option<crate::host::Host>,
+    ) {
+        self.callbacks.host = host;
+    }
+
+    /// Appends unique read proofs from `proofs` onto `self.environment_reads` ([`Value`]) for [`Capture`].
+    #[inline]
+    pub(in crate::commands::status) fn retain_callback_proofs(&mut self, proofs: &[Value]) {
+        self.environment_reads.reserve(proofs.len());
+        for proof in proofs {
+            if !self.environment_reads.contains(proof) {
+                self.environment_reads.push(proof.clone());
+            }
+        }
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn retain_callback_stdout(&self, output: &str) {
+        if !output.is_empty() {
+            self.callbacks.load_stdout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push_str(output);
+        }
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn retain_callback_startup(&self, output: &str) {
+        if !output.is_empty() {
+            self.callbacks.startup_stdout
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .push_str(output);
+        }
+    }
+}
+
+/// Custom issue slots consume the complete Rust issue facts on hydrated classes.
+pub fn issue_callbacks(
+    context: &Value,
+    capture: &Capture,
+    rows: &[Value],
+) -> io::Result<Vec<Value>> {
+    match &capture.cache.callbacks.host {
+        Some(host) => {
+            let (rows, stdout) =
+                super::super::environments::callbacks::issue_callbacks(host, rows, context)?;
+            if !stdout.is_empty() {
+                capture.cache.callbacks.issue_stdout
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .push_str(&stdout);
+            }
+            Ok(rows)
+        }
+        None => Ok(rows.to_vec()),
+    }
+}
+
+/// Workspace loading failures retained by the published provider host.
+pub fn workspace_issues(capture: &Capture) -> io::Result<Vec<String>> {
+    let Some(host) = &capture.cache.callbacks.host else {
+        return Ok(Vec::new());
+    };
+    let result = host.call("statusWorkspaceIssues", &serde_json::json!({}));
+    capture.cache.retain_callback_stdout(&host.take_stdout());
+    let raw: Vec<String> = serde_json::from_value(result?).map_err(io::Error::other)?;
+    let mut issues = Vec::with_capacity(raw.len());
+    for issue in raw {
+        let trimmed = issue.trim();
+        if !trimmed.is_empty()
+            && !issues
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            let owned = if trimmed.len() == issue.len() { issue } else { trimmed.to_owned() };
+            issues.push(owned);
+        }
+    }
+    Ok(issues)
+}
+
+/// Output produced by permitted Harmony callbacks, buffered until command preflight completes.
+#[must_use]
+#[inline]
+pub fn callback_load_stdout(capture: &Capture) -> String {
+    capture.cache.callbacks.load_stdout
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+}
+
+#[must_use]
+#[inline]
+pub fn callback_issue_stdout(capture: &Capture) -> String {
+    capture.cache.callbacks.issue_stdout
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+}
+
+#[must_use]
+#[inline]
+pub fn callback_startup_stdout(capture: &Capture) -> String {
+    capture.cache.callbacks.startup_stdout
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+}
+
+/// Transfer the retained provider session to a later native operation in the same command.
+#[inline]
+pub(in crate::commands) fn take_callback_environment(
+    capture: &mut Capture,
+) -> Option<super::super::environments::Environments> {
+    capture.cache.callbacks.host.take().map(super::super::environments::Environments::from_host)
+}
+
+#[inline]
+pub(in crate::commands) fn restore_callback_host(capture: &mut Capture, host: crate::host::Host) {
+    capture.cache.callbacks.host = Some(host);
+}

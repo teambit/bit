@@ -1,0 +1,65 @@
+//! Unit tests for `bit version-history` [`Subcommand`] and CLI flag parsing ([`parse_subcommand`]).
+//!
+//! Verifies `show`, `build`, `--from-snap`, `--from-all-lanes`, and `--short-hash` flags across [`Subcommand`] and [`parse_subcommand`].
+
+use super::{Subcommand, parse_subcommand};
+
+/// Verifies `bit version-history` [`Subcommand`] CLI parsing via [`parse_subcommand`].
+///
+/// Covers `show --json`, `show -s`, `build --from-snap`, `build --delete-existing`, and unrecognized subcommands.
+#[test]
+fn parses_show_json_and_unrecognized_subcommands() {
+    assert_eq!(
+        parse_subcommand(&["show", "comp1", "--json"]),
+        Some(Subcommand::ShowJson("comp1".into())),
+    );
+    assert_eq!(
+        parse_subcommand(&["show", "-j", "-s", "scope/comp1"]),
+        Some(Subcommand::ShowJson("scope/comp1".into())),
+    );
+    assert_eq!(
+        parse_subcommand(&["show", "comp1"]),
+        Some(Subcommand::ShowText("comp1".into(), false)),
+    );
+    assert_eq!(parse_subcommand(&["bogus"]), Some(Subcommand::Unrecognized("bogus".into())));
+    assert_eq!(
+        parse_subcommand(&["build", "comp1"]),
+        Some(Subcommand::Build("comp1".into(), None, None)),
+    );
+    assert_eq!(
+        parse_subcommand(&["build", "--from-snap", "abc", "comp1", "--from-all-lanes"]),
+        Some(Subcommand::Build("comp1".into(), Some("abc".into()), None)),
+    );
+    assert_eq!(
+        parse_subcommand(&["build", "comp1", "--delete-existing"]),
+        Some(Subcommand::Build("comp1".into(), None, None)),
+    );
+    assert_eq!(
+        parse_subcommand(&[
+            "build",
+            "comp1",
+            "--from-snap=abc",
+            "--remote=my-scope",
+            "--from-all-lanes=true",
+        ]),
+        Some(Subcommand::Build("comp1".into(), Some("abc".into()), Some("my-scope".into()))),
+    );
+    // The released CLI rejects the color flags here, so they are not recognized natively.
+    assert_eq!(parse_subcommand(&["build", "comp1", "--from-snap=abc", "--no-color"]), None);
+    assert_eq!(
+        parse_subcommand(&["show", "comp1", "-js"]),
+        Some(Subcommand::ShowJson("comp1".into())),
+    );
+    assert_eq!(parse_subcommand(&[]), None);
+}
+
+/// Verifies that [`parse_subcommand`] parses `show` with `-s` (`--short-hash`) into [`Subcommand::ShowText`].
+///
+/// Ensures `-s` without `-j` enables 9-character short hashes in text mode.
+#[test]
+fn parses_show_text_with_short_hash_flag() {
+    assert_eq!(
+        parse_subcommand(&["show", "comp1", "-s"]),
+        Some(Subcommand::ShowText("comp1".into(), true)),
+    );
+}

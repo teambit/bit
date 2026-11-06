@@ -1,0 +1,17 @@
+//! Expected output for platform-specific CLI report tests.
+//!
+//! [`expected_success_symbols`] normalizes `\r\n` line endings, trailing NUL bytes, and Windows checkmarks (`\u{2713}`) in test expectations.
+
+/// Normalizes CRLF (`\r\n`) line endings, trailing NUL bytes, and converts heavy checkmarks (`✔`) to Windows checkmarks (`✓`) when `cfg!(windows)` is active on `expected`.
+#[must_use]
+#[inline]
+pub fn expected_success_symbols(expected: &str) -> String {
+    let trimmed = expected.trim_end_matches('\0');
+    let normalized =
+        if trimmed.contains("\r\n") { trimmed.replace("\r\n", "\n") } else { trimmed.to_owned() };
+    if cfg!(windows) && normalized.contains('\u{2714}') {
+        normalized.replace('\u{2714}', "\u{2713}")
+    } else {
+        normalized
+    }
+}

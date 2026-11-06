@@ -1,0 +1,67 @@
+//! Bounded compressed object freezing ([`freeze`], [`Frozen`], [`entry`]) and optional missing-object skipping for transfers.
+
+use std::{collections::HashSet, io, path::Path};
+
+use super::{Descriptor, Entry, MAX_BYTES, invalid, object};
+
+/// Frozen transfer object [`Entry`] list and set of missing object hashes produced by [`freeze`] when `skip_missing` is enabled.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Frozen {
+    pub(super) entries: Vec<Entry>,
+    pub(super) missing: HashSet<[u8; 20]>,
+}
+
+/// Reads and freezes `descriptors` ([`Descriptor`]) from `directory` into a [`Frozen`] result via [`entry`] within compressed and raw byte budgets.
+pub(super) fn freeze(
+    directory: &Path,
+    descriptors: Vec<Descriptor>,
+    skip_missing: bool,
+) -> io::Result<Frozen> {
+    if descriptors.len() > super::super::MAX_OBJECTS {
+        return Err(invalid("collection raw byte budget"));
+    }
+    let mut frozen =
+        Frozen { entries: Vec::with_capacity(descriptors.len()), missing: HashSet::new() };
+    let mut compressed = 0_usize;
+    let mut raw = 0_usize;
+    for descriptor in descriptors {
+        let entry = match entry(directory, descriptor, MAX_BYTES.saturating_sub(compressed)) {
+            Ok(entry) => entry,
+            Err((hash, error)) if skip_missing && error.kind() == io::ErrorKind::NotFound => {
+                frozen.missing.insert(hash);
+                continue;
+            }
+            Err((_, error)) => return Err(error),
+        };
+        compressed = compressed.saturating_add(entry.compressed.len());
+        raw = raw.saturating_add(entry.raw);
+        if compressed > MAX_BYTES
+            || raw > MAX_BYTES
+            || frozen.entries.len() >= super::super::MAX_OBJECTS
+        {
+            return Err(invalid("collection raw byte budget"));
+        }
+        frozen.entries.push(entry);
+    }
+    Ok(frozen)
+}
+
+/// Reads a single [`Descriptor`] from `directory` into a frozen [`Entry`] within `remaining` compressed bytes via [`object::read`].
+#[inline]
+fn entry(
+    directory: &Path,
+    descriptor: Descriptor,
+    remaining: usize,
+) -> Result<Entry, ([u8; 20], io::Error)> {
+    object::name(&descriptor).map_err(|error| (descriptor.hash, error))?;
+    let (bytes, raw, kind) =
+        object::read(directory, &descriptor, remaining).map_err(|error| (descriptor.hash, error))?;
+    Ok(Entry {
+        hash: descriptor.hash,
+        scope: descriptor.scope,
+        kind,
+        compressed: bytes.into(),
+        raw,
+        path: None,
+    })
+}

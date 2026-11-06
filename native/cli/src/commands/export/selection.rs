@@ -1,0 +1,83 @@
+//! Published export wildcard selection ([`ids`], [`Options`], [`Engine`]) filters pending IDs before transferring objects.
+use super::{Options, options};
+use crate::commands::engine::Engine;
+use serde_json::{Value, json};
+use std::{io, path::Path};
+
+/// Compiles a `*` pattern into an anchored regular expression for [`ids`]: as `getRegex`
+/// does, only `*` becomes `.*` and everything else stays regular-expression syntax.
+#[inline]
+fn compile_pattern(pattern: &str) -> io::Result<regress::Regex> {
+    let expr = format!("^{}$", pattern.trim().replace('*', ".*"));
+    regress::Regex::new(&expr).map_err(|error| io::Error::other(error.to_string()))
+}
+
+/// Resolves wildcard patterns in `options.ids` ([`Options`]) against `commandOutboundCandidates` via [`compile_pattern`] when on `main`.
+pub(super) fn ids(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<Vec<String>> {
+    if !options.ids.iter().any(|id| options::is_pattern(id)) {
+        return Ok(options.ids.clone());
+    }
+    let bitmap =
+        bit_install::jsonc::Document::parse(&std::fs::read_to_string(root.join(".bitmap"))?)?;
+    if is_non_main_lane(bitmap.get(&["_bit_lane"]).as_ref()) {
+        return Ok(options.ids.clone());
+    }
+    let candidates: Value = engine.request(&json!({
+        "kind":"commandOutboundCandidates", "root":root,
+        "all":options.all || options.all_versions,
+    }))?;
+    let ids = candidate_ids(&candidates)?;
+    let patterns = options.ids
+        .iter()
+        .map(|pattern| compile_pattern(pattern))
+        .collect::<io::Result<Vec<_>>>()?;
+    Ok(ids
+        .into_iter()
+        .filter(|id| {
+            let bare = id
+                .split('@')
+                .next()
+                .unwrap_or(id)
+                .trim();
+            patterns
+                .iter()
+                .any(|pattern| {
+                    pattern.find(id).is_some() || (bare != id && pattern.find(bare).is_some())
+                })
+        })
+        .collect())
+}
+
+/// Returns `true` when `.bitmap`'s `_bit_lane` [`Value`] entry names a non-`main` lane for [`ids`].
+#[inline]
+fn is_non_main_lane(lane: Option<&Value>) -> bool {
+    let Some(lane) = lane else { return false };
+    let name = lane
+        .as_str()
+        .or_else(|| lane["name"].as_str())
+        .or_else(|| lane["id"].as_str())
+        .or_else(|| lane["id"]["name"].as_str())
+        .unwrap_or_default()
+        .trim();
+    !name.is_empty() && name.rsplit('/').next().map(str::trim) != Some("main")
+}
+
+/// Extracts non-empty candidate component ID strings from a `commandOutboundCandidates` response for [`ids`].
+#[inline]
+fn candidate_ids(candidates: &Value) -> io::Result<Vec<String>> {
+    let rows = candidates["ids"]
+        .as_array()
+        .or_else(|| candidates["components"].as_array())
+        .ok_or_else(|| io::Error::other("outbound candidate IDs"))?;
+    rows.iter()
+        .map(|row| {
+            row.as_str()
+                .or_else(|| row["id"].as_str())
+                .or_else(|| row["identity"].as_str())
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_owned)
+                .ok_or_else(|| io::Error::other("outbound candidate ID"))
+        })
+        .collect()
+}

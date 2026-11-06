@@ -1,0 +1,182 @@
+//! Read the bare collector's live and trashed objects before publishing any effects.
+//!
+//! [`read`] decodes [`Object`] entries via [`object_name`] and [`read_one`] into a [`BTreeMap`] and hashes payloads with [`Sha1`].
+use serde_json::Value;
+use sha1::{Digest, Sha1};
+use std::{collections::BTreeMap, fs, io, path::Path};
+
+/// Decoded bare-scope object ([`read`], [`read_one`]) with its `kind` header and parsed JSON [`Value`].
+pub(super) struct Object {
+    pub kind: String,
+    pub value: Value,
+}
+
+/// Reads all content-addressed objects under `directory` into a hash-sorted [`BTreeMap`].
+pub(super) fn read(directory: &Path) -> io::Result<BTreeMap<String, Object>> {
+    let mut objects = BTreeMap::new();
+    for bucket in entries(directory)? {
+        let name = bucket.file_name();
+        let Some(name) = name
+            .to_str()
+            .filter(|name| !name.starts_with('.'))
+        else {
+            continue;
+        };
+        let bucket_path = bucket.path();
+        if !bucket_path.is_dir() {
+            continue;
+        }
+        for entry in entries(&bucket_path)? {
+            let Some(identity) = object_name(name, &entry)? else { continue };
+            if objects.len() >= 100_000 {
+                return Err(unsupported("object inventory budget"));
+            }
+            objects.insert(identity.clone(), read_one(directory, &identity)?);
+        }
+    }
+    Ok(objects)
+}
+/// Validates a `<bucket>/<leaf>` loose object entry and returns its 40-char hex hash when valid for [`read`].
+fn object_name(bucket: &str, entry: &fs::DirEntry) -> io::Result<Option<String>> {
+    let leaf = entry.file_name();
+    let Some(leaf) = leaf
+        .to_str()
+        .filter(|leaf| !leaf.starts_with('.'))
+    else {
+        return Ok(None);
+    };
+    if bucket.len() + leaf.len() != 40 {
+        return Ok(None);
+    }
+    let identity = format!("{bucket}{leaf}");
+    if !hash(&identity) {
+        return Ok(None);
+    }
+    if bucket.len() != 2 || leaf.len() != 38 {
+        return Err(unsupported("object layout"));
+    }
+    if !entry.path().is_file() {
+        return Err(unsupported("non-file object"));
+    }
+    Ok(Some(identity))
+}
+/// Reads, decompresses, and validates a single bare-scope [`Object`] `identity` from `directory`.
+fn read_one(directory: &Path, identity: &str) -> io::Result<Object> {
+    let (kind, mut value) = bit_object_import::read_object_directory(directory, identity)?
+        .ok_or_else(|| unsupported("object disappeared during inventory"))?;
+    if !matches!(
+        kind.as_str(),
+        "Component"
+            | "Version"
+            | "Source"
+            | "ScopeMeta"
+            | "Lane"
+            | "VersionHistory"
+            | "LaneHistory"
+            | "Symlink",
+    ) {
+        return Err(unsupported("object type"));
+    }
+    normalize_name(&kind, &mut value)?;
+    if kind == "Version" && (!value["files"].is_array() || !value["log"].is_object()) {
+        return Err(unsupported("version files or log metadata"));
+    }
+    Ok(Object { kind, value })
+}
+/// Prepends `value.box` to `value.name` for legacy boxed `Component` and `Symlink` objects.
+fn normalize_name(kind: &str, value: &mut Value) -> io::Result<()> {
+    if !matches!(kind, "Component" | "Symlink")
+        || !crate::commands::status::js::truthy(value.get("box"))
+    {
+        return Ok(());
+    }
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
+    value["name"] = Value::String(format!("{}/{name}", text(&value["box"])?));
+    Ok(())
+}
+
+/// `Sources._findComponent` resolves one legacy alias to its actual model.
+pub(super) fn model<'objects>(
+    objects: &'objects BTreeMap<String, Object>,
+    id: &str,
+) -> io::Result<Option<&'objects Object>> {
+    let trimmed = id.trim();
+    let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
+    let Some(object) = objects.get(&digest(bare)) else { return Ok(None) };
+    if object.kind == "Symlink" {
+        let name = text(&object.value["name"]).or_else(|_| text(&object.value["id"]["name"]))?;
+        let id = format!("{}/{name}", text(&object.value["realScope"])?);
+        let target = objects
+            .get(&digest(&id))
+            .ok_or_else(|| unsupported("legacy alias target model is missing"))?;
+        return component(Some(target));
+    }
+    component(Some(object))
+}
+#[inline]
+fn component(object: Option<&Object>) -> io::Result<Option<&Object>> {
+    if object.is_some_and(|object| object.kind != "Component") {
+        return Err(unsupported("component reference has a non-component object"));
+    }
+    Ok(object)
+}
+#[inline]
+fn entries(directory: &Path) -> io::Result<Vec<fs::DirEntry>> {
+    match fs::read_dir(directory) {
+        Ok(entries) => entries.collect(),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(Vec::new()),
+        Err(error) => Err(error),
+    }
+}
+#[inline]
+pub(super) fn hash(value: &str) -> bool {
+    let value = value.trim();
+    value.len() == 40
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+#[inline]
+pub(super) fn digest(value: &str) -> String {
+    format!("{:x}", Sha1::digest(value.as_bytes()))
+}
+pub(super) fn identity(value: &Value) -> io::Result<String> {
+    if let Some(raw) = value.as_str() {
+        let trimmed = raw.trim();
+        let (scope, name) = trimmed
+            .rsplit_once('@')
+            .map_or(trimmed, |(bare, _)| bare.trim())
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| unsupported("metadata string"))?;
+        return Ok(format!("{scope}/{name}"));
+    }
+    let scope = text(&value["scope"]).or_else(|_| text(&value["id"]["scope"]))?;
+    let name = text(&value["name"]).or_else(|_| text(&value["id"]["name"]))?;
+    Ok(format!("{scope}/{name}"))
+}
+#[inline]
+pub(super) fn text(value: &Value) -> io::Result<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| unsupported("metadata string"))
+}
+#[inline]
+pub(super) fn strings(value: &Value) -> io::Result<Vec<String>> {
+    if value.is_null() {
+        return Ok(Vec::new());
+    }
+    value
+        .as_array()
+        .ok_or_else(|| unsupported("metadata array"))?
+        .iter()
+        .map(|value| text(value).map(str::to_owned))
+        .collect()
+}
+#[inline]
+pub(super) fn unsupported(message: &str) -> io::Error {
+    io::Error::other(format!("bare scope collection preflight: {message}"))
+}

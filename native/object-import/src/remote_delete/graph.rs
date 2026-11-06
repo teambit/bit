@@ -1,0 +1,227 @@
+//! All-version reverse dependency graph ([`dependents`], [`build_reverse`], [`Reverse`], [`Readset`]) used by `Scope.getDependentsBitIds`.
+
+use super::{hash, invalid, readset::Readset};
+use indexmap::{IndexMap, IndexSet};
+use serde_json::{Value, json};
+use std::{collections::VecDeque, io};
+
+/// Ordered map from `<scope>/<name>@<version>` dependency IDs to the set of dependent `<scope>/<name>@<version>` IDs.
+type Reverse = IndexMap<String, IndexSet<String>>;
+
+/// Computes transitive reverse dependents across all indexed versions in `index` ([`Value`]) for `found` components via [`build_reverse`].
+pub(super) fn dependents(
+    readset: &mut Readset,
+    index: &Value,
+    found: &[(String, Value, String)],
+) -> io::Result<Value> {
+    let reverse = build_reverse(readset, index)?;
+    let mut result = serde_json::Map::new();
+    for (identity, _, _) in found {
+        let related = collect(&reverse, identity);
+        if !related.is_empty() {
+            result.insert(identity.clone(), json!(related));
+        }
+    }
+    Ok(Value::Object(result))
+}
+
+/// Builds the [`Reverse`] dependency index across all non-symlink `components` in `index` using [`Readset`].
+fn build_reverse(readset: &mut Readset, index: &Value) -> io::Result<Reverse> {
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("component index"))?;
+    let mut reverse = Reverse::with_capacity(rows.len());
+    for row in rows {
+        if row["isSymlink"] == true {
+            continue;
+        }
+        let model = readset.read(hash(&row["hash"])?, "Component")?;
+        let Some(identity) = row_identity(row, &model) else {
+            return Err(invalid("component index identity"));
+        };
+        add_component(readset, &identity, &model, &mut reverse)?;
+    }
+    Ok(reverse)
+}
+
+/// Traverses `model`'s reachable `Version` graph and records reverse dependency edges in `reverse`.
+fn add_component(
+    readset: &mut Readset,
+    identity: &str,
+    model: &Value,
+    reverse: &mut Reverse,
+) -> io::Result<()> {
+    let Some(head) = model["laneHeadLocal"]
+        .as_str()
+        .or_else(|| model["head"].as_str())
+        .map(str::trim)
+        .filter(|head| !head.is_empty())
+    else {
+        return Ok(());
+    };
+    let mut queue = VecDeque::from([head.to_owned()]);
+    let mut seen = IndexSet::new();
+    let tags = crate::tag_index::TagIndex::model(model);
+    while let Some(version_hash) = queue.pop_front() {
+        if seen.contains(version_hash.as_str()) {
+            continue;
+        }
+        if seen.len() >= 4096 {
+            return Err(invalid("component version graph budget"));
+        }
+        seen.insert(version_hash.clone());
+        let version = match readset.read(&version_hash, "Version") {
+            Ok(value) => value,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error),
+        };
+        let label = tags.get(&version_hash).map_or(version_hash.as_str(), |(label, _)| label);
+        let node = format!("{identity}@{label}");
+        record_dependencies(reverse, &node, &version);
+        enqueue_parents(&mut queue, &version)?;
+    }
+    Ok(())
+}
+
+/// Records reverse dependency edges from `version`'s dependencies to `node` in `reverse`.
+fn record_dependencies(reverse: &mut Reverse, node: &str, version: &Value) {
+    reverse.entry(node.to_owned()).or_default();
+    for dependency in dependencies(version) {
+        reverse
+            .entry(dependency)
+            .or_default()
+            .insert(node.to_owned());
+    }
+}
+
+/// Enqueues validated parent and unrelated `Version` hashes from `version` onto `queue`.
+fn enqueue_parents(queue: &mut VecDeque<String>, version: &Value) -> io::Result<()> {
+    for parent in version["parents"]
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        queue.push_back(hash(parent)?.to_owned());
+    }
+    Ok(())
+}
+
+fn collect(reverse: &Reverse, identity: &str) -> Vec<String> {
+    let mut pending = reverse
+        .keys()
+        .map(String::as_str)
+        .filter(|node| {
+            node.split_once('@')
+                .is_some_and(|(name, _)| name == identity)
+        })
+        .collect::<VecDeque<_>>();
+    let mut visited = IndexSet::new();
+    let mut dependents = IndexSet::new();
+    while let Some(node) = pending.pop_front() {
+        if !visited.insert(node) {
+            continue;
+        }
+        let Some(next) = reverse.get(node) else { continue };
+        extend_dependents(next, node, &mut pending, &mut dependents);
+    }
+    dependents.into_iter().collect()
+}
+
+fn extend_dependents<'a>(
+    next: &'a IndexSet<String>,
+    node: &str,
+    pending: &mut VecDeque<&'a str>,
+    dependents: &mut IndexSet<String>,
+) {
+    for parent in next {
+        if parent != node {
+            let name = parent.split_once('@').map_or(parent.as_str(), |(name, _)| name);
+            dependents.insert(name.to_owned());
+        }
+        pending.push_back(parent.as_str());
+    }
+}
+
+fn row_identity(row: &Value, model: &Value) -> Option<String> {
+    let (row_scope, row_name) = super::row_id_parts(&row["id"]);
+    let scope = (!row_scope.is_empty())
+        .then_some(row_scope)
+        .or_else(|| {
+            model["scope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+        })?;
+    let name = (!row_name.is_empty())
+        .then_some(row_name)
+        .or_else(|| {
+            model["name"]
+                .as_str()
+                .map(str::trim)
+                .filter(|val| !val.is_empty())
+        })?;
+    Some(format!("{scope}/{name}"))
+}
+
+fn dependencies(version: &Value) -> Vec<String> {
+    let mut result = Vec::new();
+    for group in ["dependencies", "devDependencies", "peerDependencies", "extensionDependencies"] {
+        result.extend(
+            version[group]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(id),
+        );
+    }
+    result.extend(
+        version["extensions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|row| id(&row["extensionId"]).or_else(|| id(row))),
+    );
+    result
+}
+
+fn id(value: &Value) -> Option<String> {
+    if let Some(text) = non_empty(value).or_else(|| non_empty(&value["id"])) {
+        if let Some((bare, "latest" | "head")) = text.rsplit_once('@') {
+            return Some(bare.trim().to_owned());
+        }
+        return Some(text.to_owned());
+    }
+    let id_obj = value
+        .get("id")
+        .filter(|sub| sub.is_object())
+        .unwrap_or(value);
+    let scope = non_empty(&id_obj["scope"]).or_else(|| non_empty(&value["scope"]))?;
+    let raw_name = non_empty(&id_obj["name"]).or_else(|| non_empty(&value["name"]))?;
+    let (name, inline_ver) = raw_name
+        .rsplit_once('@')
+        .map_or((raw_name, None), |(bare, ver)| {
+            (
+                bare.trim(),
+                Some(ver.trim())
+                    .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head")),
+            )
+        });
+    let version = non_empty(&id_obj["version"])
+        .or_else(|| non_empty(&value["version"]))
+        .or_else(|| non_empty(&value["head"]))
+        .filter(|version| !matches!(*version, "latest" | "head"))
+        .or(inline_ver);
+    Some(version.map_or_else(
+        || format!("{scope}/{name}"),
+        |version| format!("{scope}/{name}@{version}"),
+    ))
+}
+
+#[inline]
+fn non_empty(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}

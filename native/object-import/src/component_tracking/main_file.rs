@@ -1,0 +1,200 @@
+//! Main-file selection and inference ([`choose`], [`EXTENSIONS`]) for newly tracked or re-tracked workspace components.
+
+use super::{error, paths, unsupported};
+use std::{io, path::Path};
+///Ordered file extensions checked by [`inferred`] when inferring a component's `mainFile`.
+const EXTENSIONS: &[&str] =
+    &["js", "ts", "jsx", "tsx", "cjs", "mjs", "mts", "cts", "css", "scss", "less", "sass"];
+/// Selects or infers the component `mainFile` relative path from `files` and `explicit`/`existing` via [`inferred`].
+pub(super) fn choose(
+    id: &str,
+    directory: &str,
+    files: &[String],
+    explicit: Option<&str>,
+    existing: Option<&str>,
+) -> io::Result<String> {
+    let explicit = explicit
+        .map(str::trim)
+        .filter(|path| !path.is_empty());
+    let existing = existing
+        .map(str::trim)
+        .filter(|path| !path.is_empty());
+    if explicit.is_none()
+        && let Some(existing) = existing
+    {
+        return Ok(existing.into());
+    }
+    if let Some(explicit) = explicit {
+        if let Some(found) = find(explicit, directory, files) {
+            return Ok(found);
+        }
+        return Err(missing(id));
+    }
+    if directory == "."
+        && files
+            .iter()
+            .any(|file| file == "workspace.jsonc")
+    {
+        return Ok("workspace.jsonc".into());
+    }
+    if files.len() == 1 {
+        return Ok(files[0].clone());
+    }
+    inferred(directory, files).ok_or_else(|| missing(id))
+}
+
+/// Infer a component main file (`index.*`, `<leaf>.*`, or `public-api.ts`) using [`EXTENSIONS`] from `files` in `directory`.
+fn inferred(directory: &str, files: &[String]) -> Option<String> {
+    let clean_dir = directory
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    let leaf = clean_dir
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or_default();
+    ["index", leaf]
+        .into_iter()
+        .filter(|name| !name.is_empty())
+        .flat_map(|name| {
+            EXTENSIONS
+                .iter()
+                .map(move |extension| format!("{name}.{extension}"))
+        })
+        .find_map(|candidate| find(&candidate, clean_dir, files))
+        .or_else(|| {
+            ["public-api.ts", "public_api.ts"]
+                .into_iter()
+                .find_map(|name| find(name, clean_dir, files))
+        })
+}
+/// Locate `name` in `files` by exact match, `directory`-relative match, or case-insensitive fallback on Windows.
+fn find(name: &str, directory: &str, files: &[String]) -> Option<String> {
+    let trimmed = name.trim();
+    let normalized = if trimmed.contains('\\') {
+        std::borrow::Cow::Owned(trimmed.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(trimmed)
+    };
+    let name = normalized.trim_start_matches("./");
+    if name.is_empty() {
+        return None;
+    }
+    let clean_dir = directory
+        .trim()
+        .trim_end_matches(['/', '\\']);
+    if let Some(found) = files
+        .iter()
+        .find(|file| file.as_str() == name)
+    {
+        return Some(found.clone());
+    }
+    if let Some(stripped) = name
+        .strip_prefix(clean_dir)
+        .and_then(|rest| rest.strip_prefix('/'))
+        && let Some(found) = files
+            .iter()
+            .find(|file| file.as_str() == stripped)
+    {
+        return Some(found.clone());
+    }
+    files
+        .iter()
+        .filter(|file| Path::new(file).file_name().and_then(|part| part.to_str()) == Some(name))
+        .min_by_key(|file| file.matches('/').count())
+        .cloned()
+}
+/// Resolve an explicit `--main` path or DSL pattern relative to `cwd` against `files`.
+pub(super) fn resolve(
+    root: &Path,
+    cwd: &Path,
+    main: Option<&str>,
+    files: &[String],
+) -> io::Result<Option<String>> {
+    let Some(main) = main
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    else {
+        return Ok(None);
+    };
+    let main = resolve_dsl(main, files)?;
+    let absolute = paths::normalize(&cwd.join(&main));
+    if let Ok(metadata) = std::fs::symlink_metadata(&absolute) {
+        if metadata.file_type().is_symlink() {
+            return Err(unsupported("tracking symlink main path"));
+        }
+        if metadata.is_dir() {
+            return Err(error(format!(
+                "error: the specified main path {} is a directory, please specify a file or a pattern DSL",
+                absolute.display(),
+            )));
+        }
+        if metadata.is_file() {
+            let relative = paths::relative(root, &absolute)?;
+            return Ok(Some(find_case_insensitive(files, &relative).cloned().unwrap_or(relative)));
+        }
+    }
+    Ok(Some(main))
+}
+#[inline]
+fn find_case_insensitive<'a>(files: &'a [String], relative: &str) -> Option<&'a String> {
+    if relative.is_ascii() {
+        files
+            .iter()
+            .find(|file| file.eq_ignore_ascii_case(relative))
+    } else {
+        let folded = relative.to_lowercase();
+        files
+            .iter()
+            .find(|file| file.to_lowercase() == folded)
+    }
+}
+fn resolve_dsl(main: &str, files: &[String]) -> io::Result<String> {
+    let mut main = main.to_owned();
+    if main.contains('{') {
+        for file in files {
+            let generated = format_dsl(&main, file);
+            if let Some(found) = files
+                .iter()
+                .find(|file| file.eq_ignore_ascii_case(&generated))
+            {
+                main.clone_from(found);
+                break;
+            }
+        }
+        if main.contains('{') {
+            return Err(unsupported("tracking unresolved main DSL"));
+        }
+    }
+    Ok(main)
+}
+
+fn format_dsl(main: &str, file: &str) -> String {
+    let path = Path::new(file);
+    main.replace(
+        "{FILE_NAME}",
+        path.file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default(),
+    )
+    .replace(
+        "{PARENT}",
+        path.parent()
+            .and_then(Path::file_name)
+            .and_then(|name| name.to_str())
+            .unwrap_or_default(),
+    )
+    .replace(
+        "{EXT}",
+        path.extension()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default(),
+    )
+}
+
+#[inline]
+fn missing(id: &str) -> io::Error {
+    let id = id.trim();
+    error(format!(
+        "error: the component {id} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://bit.dev/components/component-main-file",
+    ))
+}

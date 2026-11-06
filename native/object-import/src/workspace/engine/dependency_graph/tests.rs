@@ -1,0 +1,328 @@
+//! Unit tests for workspace file dependency graph [`Request`] scanning and [`apply`] proof capture.
+//!
+//! Exercises `JavaScript`, `TypeScript`, and `CSS` import specifier extraction in [`Fixture`] ([`NEXT`], [`traverses_cycles_and_opaque_files_with_deterministic_order`], [`separate_root_caches_preserve_distinct_path_map_objects`]) and readset proof binding.
+
+use super::{Request, apply};
+use serde_json::{Value, json};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    sync::atomic::{AtomicU64, Ordering},
+};
+/// Monotonic counter used by [`Fixture`] to allocate isolated temporary dependency graph directories.
+static NEXT: AtomicU64 = AtomicU64::new(0);
+/// Temporary workspace directory fixture for dependency graph [`apply`] tests.
+#[derive(Debug)]
+struct Fixture(PathBuf);
+impl Fixture {
+    fn new() -> Self {
+        let root = std::env::temp_dir()
+            .join(format!(
+                "bit-dependency-graph-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::Relaxed),
+            ));
+        fs::create_dir_all(&root).unwrap();
+        Self(root)
+    }
+    fn write(&self, name: &str, source: &str) {
+        let file = self.0.join(name);
+        fs::create_dir_all(file.parent().unwrap()).unwrap();
+        fs::write(file, source).unwrap();
+    }
+    fn run(&self, files: &[&str], visited: Option<Value>) -> io::Result<Value> {
+        let mut request = json!({"root":self.0,"files":files.iter().map(|file| self.0.join(file)).collect::<Vec<_>>(),"builtins":["fs","node:fs"],"detectorExtensions":[".js",".jsx",".cjs",".mjs",".ts",".tsx",".cts",".mts",".css",".md"],"typescript":true,"includeNpm":true});
+        if let Some(visited) = visited {
+            request["visited"] = visited;
+        }
+        let request: Request = serde_json::from_value(request).unwrap();
+        apply(
+            &request,
+            &rayon::ThreadPoolBuilder::new()
+                .num_threads(4)
+                .build()
+                .unwrap(),
+        )
+        .map(|(_, value)| value)
+    }
+}
+impl Drop for Fixture {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0);
+    }
+}
+/// Verifies that [`apply`] traverses cyclic imports and opaque files in deterministic depth-first order.
+#[test]
+fn traverses_cycles_and_opaque_files_with_deterministic_order() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "import './b.js'; import './c.js'; import 'node:fs';");
+    fixture.write("b.js", "import './a.js';");
+    fixture.write("c.js", "import './data.unknown';");
+    fixture.write("data.unknown", "not javascript");
+    let output = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    let names: Vec<_> = output["pathMap"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            Path::new(row["file"].as_str().unwrap())
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+        })
+        .collect();
+    assert_eq!(names, ["a.js", "c.js", "data.unknown", "b.js", "a.js"]);
+    assert_eq!(output["pathMapOrigins"], json!([0, 1, 2, 3, 0]));
+    assert_eq!(
+        output["scannedPaths"],
+        json!([
+            fixture.0.join("a.js"),
+            fixture.0.join("c.js"),
+            fixture.0.join("data.unknown"),
+            fixture.0.join("b.js"),
+        ]),
+    );
+}
+/// Verifies that [`Fixture::run`] via [`apply`] keeps separate per-root `pathMap` entries when `visited` is omitted and deduplicates them when `visited` is shared.
+#[test]
+fn separate_root_caches_preserve_distinct_path_map_objects() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "import './shared.js';");
+    fixture.write("b.js", "import './shared.js';");
+    fixture.write("shared.js", "export const x = 1;");
+    let separate = fixture
+        .run(&["a.js", "b.js"], None)
+        .unwrap();
+    assert_eq!(separate["pathMapOrigins"], json!([0, 1, 2, 3]));
+    let shared = fixture
+        .run(&["a.js", "b.js"], Some(json!({})))
+        .unwrap();
+    assert_eq!(shared["pathMapOrigins"], json!([0, 1, 2, 1]));
+}
+/// Verifies that [`Fixture::run`] records missing relative files and packages and preserves them when replaying from `visited` cache.
+#[test]
+fn captures_missing_files_and_packages_without_losing_replay_metadata() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "require('./absent'); require('not-installed');");
+    let first = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    let file = fixture.0
+        .join("a.js")
+        .to_string_lossy()
+        .into_owned();
+    assert_eq!(first["missing"][&file], json!(["./absent"]));
+    assert_eq!(first["missingPackages"][&file], json!(["not-installed"]));
+    let cached = first["visited"][&file].clone();
+    let mut visited = serde_json::Map::new();
+    visited.insert(file.clone(), cached);
+    let replayed = fixture
+        .run(&["a.js"], Some(Value::Object(visited)))
+        .unwrap();
+    assert_eq!(replayed["missing"][&file], first["missing"][&file]);
+    assert_eq!(replayed["missingPackages"][&file], first["missingPackages"][&file]);
+}
+/// Verifies that [`Fixture::run`] resolves an unbuilt `_bit_local` component package to its `source` file and rejects `source` paths escaping the package directory.
+#[test]
+fn resolves_unbuilt_local_component_package_from_its_source() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "require('@my-scope/comp2');");
+    fixture.write("node_modules/@my-scope/comp2/comp2.ts", "export const n = 1;");
+    fixture.write("node_modules/@my-scope/comp2/package.json", r#"{"name":"@my-scope/comp2","main":"dist/comp2.js","_bit_local":true,"componentId":{"scope":"my-scope","name":"comp2"},"source":"comp2.ts"}"#);
+    let output = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    assert_eq!(
+        output["tree"][fixture.0.join("a.js").to_str().unwrap()][0],
+        json!(
+            fixture.0
+                .join("node_modules")
+                .join("@my-scope")
+                .join("comp2")
+                .join("comp2.ts")
+        ),
+    );
+    fixture.write("node_modules/@my-scope/comp2/package.json", r#"{"name":"@my-scope/comp2","_bit_local":true,"componentId":{"scope":"my-scope","name":"comp2"},"source":"../outside.ts"}"#);
+    assert!(
+        fixture
+            .run(&["a.js"], Some(json!({})))
+            .is_err(),
+    );
+}
+/// Verifies that [`Fixture::run`] declines syntax errors in `TypeScript` sources and unsupported CSS detectives.
+#[test]
+fn declines_parse_errors_and_unsupported_detectives() {
+    let fixture = Fixture::new();
+    for (name, source) in [("invalid.ts", "export = ;"), ("style.css", "body{}")] {
+        fixture.write(name, source);
+        assert!(
+            fixture
+                .run(&[name], Some(json!({})))
+                .is_err(),
+        );
+    }
+}
+/// Verifies that [`Fixture::run`] includes `node_modules` package entry points in `tree` without traversing into them.
+#[test]
+fn includes_npm_without_traversal_and_preserves_cached_replay_duplicates() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "import 'pkg'; import './b.js';");
+    fixture.write("b.js", "import './a.js';");
+    fixture.write("node_modules/pkg/index.js", "!invalid-but-not-traversed");
+    let output = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    assert!(
+        !output["tree"]
+            .as_object()
+            .unwrap()
+            .contains_key(
+                fixture.0
+                    .join("node_modules/pkg/index.js")
+                    .to_str()
+                    .unwrap()
+            ),
+    );
+    let dependencies = &output["tree"][fixture.0.join("a.js").to_str().unwrap()];
+    assert_eq!(dependencies.as_array().unwrap().len(), 3);
+}
+/// Verifies that [`Fixture::run`] reuses cached `visited` `pathMap` and `missing` entries without rescanning the file on disk.
+#[test]
+fn cached_missing_and_specifier_metadata_survive_without_rescanning() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "unparseable! but previously cached");
+    fixture.write("b.js", "import './a.js';");
+    let file = fixture.0
+        .join("a.js")
+        .to_string_lossy()
+        .into_owned();
+    let dep = fixture.0
+        .join("outside.js")
+        .to_string_lossy()
+        .into_owned();
+    let cached = json!({"pathMap":{"file":file,"dependencies":[{"importSource":"./outside","resolvedDep":dep,"importSpecifiers":[{"name":"x","isDefault":false}]}]},"missing":["unknown"]});
+    let mut visited = serde_json::Map::new();
+    visited.insert(file.clone(), cached.clone());
+    let output = fixture
+        .run(&["b.js"], Some(Value::Object(visited)))
+        .unwrap();
+    assert_eq!(output["missing"][&file], json!(["unknown"]));
+    assert_eq!(output["pathMap"][1], cached["pathMap"]);
+    assert_eq!(
+        output["visited"]
+            .as_object()
+            .unwrap()
+            .len(),
+        1,
+    );
+}
+/// Verifies that [`Fixture::run`] resolves `.js` relative imports in `TypeScript` files to `.ts` sources on disk.
+#[test]
+fn typescript_relative_resolution_keeps_javascript_sideeffect_distinction() {
+    let fixture = Fixture::new();
+    fixture.write("a.ts", "import {value} from './b.js'; import 'pkg';");
+    fixture.write("b.ts", "export const value = 1;");
+    fixture.write("node_modules/pkg/index.js", "export const value = 1;");
+    let output = fixture
+        .run(&["a.ts"], Some(json!({})))
+        .unwrap();
+    assert_eq!(
+        output["pathMap"][0]["dependencies"][0]["resolvedDep"],
+        json!(fixture.0.join("b.ts")),
+    );
+    assert_eq!(output["registeredPaths"], json!([fixture.0.join("a.ts")]));
+}
+
+/// Verifies that [`Fixture::run`] excludes `@bit-no-check` files from `scannedPaths` and skips their imports.
+#[test]
+fn detector_receipts_exclude_no_check_early_returns() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "export const x = 1;");
+    fixture.write("ignored.js", "// @bit-no-check\nimport './missing.js';");
+    fixture.write("ignored.txt", "/* @bit-no-check */\nopaque");
+    let output = fixture
+        .run(&["a.js", "ignored.js", "ignored.txt"], Some(json!({})))
+        .unwrap();
+    assert_eq!(output["scannedPaths"], json!([fixture.0.join("a.js")]));
+}
+
+/// Verifies that [`apply`] uses `custom` detector results when `sourceHash` matches and rejects stale custom detector sources.
+#[test]
+fn custom_detectors_override_builtin_scanning_with_source_receipts() {
+    use sha1::{Digest, Sha1};
+    let fixture = Fixture::new();
+    fixture.write("widget.vue", "opaque custom format");
+    fixture.write("helper.js", "module.exports = 1;");
+    let file = fixture.0.join("widget.vue");
+    let request: Request = serde_json::from_value(json!({
+        "root":fixture.0,"files":[file],"builtins":[],"detectorExtensions":[".js"],"typescript":true,"includeNpm":true,
+        "custom":{file.to_str().unwrap():{"dependencies":["./helper.js"],"typescript":false,"sourceHash":format!("{:x}",Sha1::digest(b"opaque custom format"))},},
+    })).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let (_, output) = apply(&request, &pool).unwrap();
+    assert!(
+        output["pathMap"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["file"] == file.to_string_lossy().as_ref()
+                && row["dependencies"][0]["resolvedDep"]
+                    == fixture.0
+                        .join("helper.js")
+                        .to_string_lossy()
+                        .as_ref()),
+    );
+    fixture.write("widget.vue", "changed after detector callback");
+    assert!(
+        apply(&request, &pool)
+            .unwrap_err()
+            .to_string()
+            .contains("custom detector source changed"),
+    );
+}
+
+/// Verifies that [`Fixture::run`] retains both `./`-prefixed and normalized path keys in `tree` across cyclic imports.
+#[test]
+fn path_aliases_retain_every_string_key_required_by_cycle_replay() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "require('./b.js');");
+    fixture.write("b.js", "require('./a.js');");
+    let output = fixture
+        .run(&["./a.js", "b.js"], Some(json!({})))
+        .unwrap();
+    let alias = fixture.0
+        .join("./a.js")
+        .to_string_lossy()
+        .into_owned();
+    let normalized = fixture.0
+        .join("a.js")
+        .to_string_lossy()
+        .into_owned();
+    assert!(output["tree"].get(&alias).is_some());
+    assert!(output["tree"].get(&normalized).is_some());
+    assert_eq!(
+        output["scannedPaths"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3,
+    );
+}
+
+/// Verifies that [`Fixture::run`] returns empty `pathMap`, `tree`, and `scannedPaths` structures when `files` is empty.
+#[test]
+fn empty_file_list_returns_empty_graph_and_tree_structures() {
+    let fixture = Fixture::new();
+    let output = fixture
+        .run(&[], Some(json!({})))
+        .unwrap();
+    assert_eq!(output["pathMap"], json!([]));
+    assert_eq!(output["tree"], json!({}));
+    assert_eq!(output["scannedPaths"], json!([]));
+}

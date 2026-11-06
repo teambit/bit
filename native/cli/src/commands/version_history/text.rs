@@ -1,0 +1,147 @@
+//! Render the bounded linear history without loading the `JavaScript` runtime.
+//!
+//! [`run`] coordinates [`graph`] and [`refs`] over [`ScopeRoot`] via [`prepare`] and [`render`] to format version-history output into [`Outcome`].
+mod graph;
+mod refs;
+#[cfg(test)]
+mod tests;
+
+use super::{
+    Chalk, Outcome, ScopeRoot, Value, diagnose_component_lookup_error, emit_failure, emit_text,
+    resolve_component_entry, scope_dir_for, sha1_hex,
+};
+use std::{ffi::OsString, io};
+
+/// Renders the human-readable `version-history show` graph output for `id` in `root` ([`ScopeRoot`]) into [`Outcome`].
+pub(super) fn run(
+    root: &ScopeRoot,
+    args: &[OsString],
+    id: &str,
+    short: bool,
+) -> io::Result<Outcome> {
+    let id = id.trim();
+    let chalk = Chalk::detect(args);
+    let Some(report) = prepare(root, id, short, chalk) else {
+        let scope_dir = scope_dir_for(root);
+        let bare = id.rsplit_once('@').map_or(id, |(name, _)| name.trim());
+        let is_ci = crate::commands::scope_rename::ci_active();
+        if bare.contains('/')
+            && resolve_component_entry(&scope_dir, bare).is_none()
+            && !is_ci
+            && let Some(err) = diagnose_component_lookup_error(&scope_dir, id, bare, chalk)
+        {
+            return emit_failure(root, args, "show", true, false, err);
+        }
+        return Ok(Outcome::Declined(
+            "version-history text requires a qualified local graph".into(),
+        ));
+    };
+    emit_text(root, args, "show", true, report)
+}
+
+/// Loads the component model and `VersionHistory` object from `root` ([`ScopeRoot`]) and renders the text graph via [`render`].
+fn prepare(root: &ScopeRoot, id: &str, short: bool, chalk: Chalk) -> Option<String> {
+    let id = id.trim();
+    let scope_dir = scope_dir_for(root);
+    let bare = id.rsplit_once('@').map_or(id, |(name, _)| name.trim());
+    let (scope, name, model_hash) = resolve_component_entry(&scope_dir, bare)?;
+    let scope = scope?;
+    let lanes = refs::lanes(&scope_dir, &scope, &name)?;
+    let (kind, model) = bit_object_import::read_scope_object(&scope_dir, &model_hash).ok()??;
+    if kind != "Component" {
+        return None;
+    }
+    let history_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
+    let history = match bit_object_import::read_scope_object(&scope_dir, &history_hash).ok()? {
+        Some((kind, value)) if kind == "VersionHistory" => value,
+        None => return Some(String::new()),
+        _ => return None,
+    };
+    render(&history, &model, short, chalk, &lanes)
+}
+
+/// Builds the topological [`graph::Graph`] from `history` ([`Value`]) and formats each node row via [`format_row`] with `model` and `lanes` pointers.
+#[inline]
+fn render(
+    history: &Value,
+    model: &Value,
+    short: bool,
+    chalk: Chalk,
+    lanes: &[(String, String)],
+) -> Option<String> {
+    let graph = graph::Graph::build(history, short)?;
+    let order = graph.order()?;
+    let mut output = Vec::with_capacity(order.len());
+    for index in order {
+        let node = &graph.nodes[index];
+        output.push(format_row(model, &graph, node, short, chalk, lanes));
+    }
+    Some(output.join("\n"))
+}
+
+/// Formats a single [`graph::Node`] line with its parent hashes, tags, and lane/head pointers.
+fn format_row(
+    model: &Value,
+    graph: &graph::Graph,
+    node: &graph::Node,
+    short: bool,
+    chalk: Chalk,
+    lanes: &[(String, String)],
+) -> String {
+    let hash = node.hash.as_str();
+    let mut pointers = Vec::new();
+    pointers.extend(
+        lanes
+            .iter()
+            .filter(|(_, head)| head.trim() == hash)
+            .map(|(name, _)| name.trim()),
+    );
+    if model["head"].as_str().map(str::trim) == Some(hash) {
+        pointers.push("main");
+    }
+    if let Some(tag) = tags(model, hash) {
+        pointers.push(tag);
+    }
+    let pointer = pointer_text(&pointers, chalk);
+    let label = if short { &hash[..9] } else { hash };
+    let edge = node.edges
+        .iter()
+        .map(|(target, kind)| {
+            let hash = &graph.nodes[*target].hash;
+            format!("{} ({kind})", if short { &hash[..9] } else { hash })
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("{}{pointer} {edge}", chalk.bold(label))
+}
+
+#[inline]
+fn pointer_text(pointers: &[&str], chalk: Chalk) -> String {
+    if pointers.is_empty() {
+        String::new()
+    } else {
+        format!(" ({})", chalk.cyan(&pointers.join(", ")))
+    }
+}
+
+#[must_use]
+#[inline]
+pub(in crate::commands) fn tags<'a>(model: &'a Value, hash: &str) -> Option<&'a str> {
+    let hash = hash.trim();
+    for key in ["versions", "orphanedVersions"] {
+        let Some(map) = model.get(key).and_then(Value::as_object) else {
+            continue;
+        };
+        if let Some((tag, _)) = map
+            .iter()
+            .rev()
+            .find(|(_, value)| value.as_str().map(str::trim) == Some(hash))
+        {
+            let trimmed = tag.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed);
+            }
+        }
+    }
+    None
+}

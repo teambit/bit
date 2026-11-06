@@ -1,0 +1,49 @@
+//! Unit tests for `bit details` [`valid_args`] validation and persisted command [`render_details`].
+//!
+//! Verifies `--no-color` flag acceptance and [`Chalk`] rendering of `.bit/command-details.json` in [`render_details`].
+
+use super::{Chalk, render_details, valid_args};
+use std::{ffi::OsString, fs};
+
+/// Verifies that [`valid_args`] accepts empty and `--no-color` [`OsString`] invocations of `bit details`.
+#[test]
+fn validates_empty_details_arguments() {
+    assert!(valid_args(&[OsString::from("details")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color=true")]));
+    assert!(valid_args(&[OsString::from("details"), OsString::from("--no-color=false")]));
+    assert!(!valid_args(&[OsString::from("details"), OsString::from("--help")]));
+    assert!(!valid_args(&[OsString::from("details"), OsString::from("extra")]));
+}
+
+/// Verifies [`render_details`] output with [`Chalk`] when command details are absent or persisted on disk.
+#[test]
+fn renders_missing_and_persisted_command_details() {
+    let temp = tempfile::tempdir().unwrap();
+    let chalk = Chalk::new(false);
+    let missing = render_details(temp.path(), chalk).unwrap();
+    assert_eq!(
+        missing,
+        r#"no details available. run a command like "bit tag" or "bit snap" first."#,
+    );
+
+    fs::write(temp.path().join("content"), "comp1@0.0.1\ncomp2@0.0.1").unwrap();
+    fs::write(
+        temp.path().join("meta.json"),
+        "// persisted meta\n{\"command\":\"tag\",\"timestamp\":\"2026-10-20T12:00:00.000Z\",}",
+    )
+    .unwrap();
+    let rendered = render_details(temp.path(), chalk).unwrap();
+    assert_eq!(
+        rendered,
+        "details from \"bit tag\"  2026-10-20T12:00:00.000Z\n\ncomp1@0.0.1\ncomp2@0.0.1\n\n(these are details from the last command that provided them)",
+    );
+}
+
+/// Verifies that [`valid_args`] rejects an empty argument slice lacking the command name.
+///
+/// Confirms at least the `"details"` argv[0] token is required.
+#[test]
+fn empty_args_slice_is_rejected_by_valid_args() {
+    assert!(!valid_args(&[]));
+}

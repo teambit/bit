@@ -1,0 +1,54 @@
+//! Unit tests for `bit globals` CLI flag parsing ([`parse_json_flag`]) and text/JSON directory reporting ([`known_global_dirs`], [`render_report`], [`render_json`]).
+//!
+//! Verifies `-j` / `--json` flag handling and [`Chalk`]-formatted global directory output in [`render_report`] and [`render_json`].
+
+use super::{Chalk, known_global_dirs, parse_json_flag, render_json, render_report};
+use std::{ffi::OsString, path::Path};
+
+/// Verifies [`parse_json_flag`] for `bit globals` `-j` and `--json` flags and rejection of unknown arguments.
+#[test]
+fn parses_globals_json_flags() {
+    assert_eq!(parse_json_flag(&[OsString::from("globals")]), Some(false));
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("-j")]), Some(true));
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--json")]), Some(true));
+    assert_eq!(
+        parse_json_flag(&[OsString::from("globals"), OsString::from("--json=false")]),
+        Some(false),
+    );
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--no-json")]), None);
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("--help")]), None);
+    assert_eq!(parse_json_flag(&[OsString::from("globals"), OsString::from("extra")]), None);
+}
+
+/// Verifies [`known_global_dirs`], [`render_report`] with [`Chalk`], and [`render_json`] output formatting.
+#[test]
+fn renders_globals_text_and_json_formats() {
+    let dirs = known_global_dirs(
+        Path::new("/tmp/bit-globals"),
+        Path::new("/tmp/bit-globals/config"),
+        "/tmp/bit-globals/capsules",
+    );
+    let report = render_report(&dirs, Chalk::new(false));
+    assert!(report.starts_with(
+        r#"the following global directories are used by Bit. to change the global root directory, set the "BIT_GLOBALS_DIR" environment variable"#,
+    ));
+    let expected_scope = Path::new("/tmp/bit-globals").join("scope");
+    assert!(report.contains("Global Dir        /tmp/bit-globals"));
+    assert!(report.contains(&format!("Global Scope Dir  {}", expected_scope.display())));
+    assert!(report.contains("Config Dir        /tmp/bit-globals/config"));
+    assert!(report.contains("Capsules Dir      /tmp/bit-globals/capsules"));
+
+    let json = render_json(&dirs).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed["Global Dir"], "/tmp/bit-globals");
+    assert_eq!(parsed["Config Dir"], "/tmp/bit-globals/config");
+    assert_eq!(parsed["Capsules Dir"], "/tmp/bit-globals/capsules");
+}
+
+/// Verifies that [`parse_json_flag`] defaults to `Some(false)` on an empty argument slice.
+///
+/// Ensures invocations without `-j` or `--json` render plain text output.
+#[test]
+fn empty_args_slice_defaults_to_non_json_for_globals() {
+    assert_eq!(parse_json_flag(&[]), Some(false));
+}

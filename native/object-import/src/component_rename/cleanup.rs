@@ -1,0 +1,108 @@
+//! `Mover` default `RemovePath` recursive removal ([`Tree`], [`prepare`]) of the old component root before writing new files.
+use super::{Observed, Plan, unsupported};
+use std::{
+    collections::BTreeMap,
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+/// Observed directory tree under the old component root scheduled for removal during rename.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Tree {
+    directories: BTreeMap<PathBuf, Vec<String>>,
+    observed: crate::component_tracking::observe::Observed,
+}
+/// Capture [`Tree`] preimages of all directories and files under the old component root in [`Plan`] (`plan`) when moving directories.
+pub(super) fn prepare(plan: &mut Plan) -> io::Result<()> {
+    let source_dir = plan.identity.source_directory.trim().trim_matches('/');
+    let target_dir = plan.identity.target_directory.trim().trim_matches('/');
+    if plan.identity.exported
+        || source_dir.is_empty()
+        || source_dir == "."
+        || source_dir == target_dir
+    {
+        return Ok(());
+    }
+    let mut tree = Tree { directories: BTreeMap::new(), observed: Observed::default() };
+    let root = plan.root.join(source_dir);
+    if !root.starts_with(&plan.root) || root == plan.root {
+        return Err(unsupported("rename cleanup root path"));
+    }
+    let mut pending = vec![root];
+    while let Some(directory) = pending.pop() {
+        if tree.directories.len() >= 65536 {
+            return Err(unsupported("rename cleanup directory limit"));
+        }
+        tree.observed.ancestors(&plan.root, &directory)?;
+        let names = entries(&directory)?;
+        for name in &names {
+            observe(&mut tree, directory.join(name), &mut pending)?;
+        }
+        tree.directories.insert(directory, names);
+    }
+    plan.cleanup = Some(tree);
+    Ok(())
+}
+/// Record a file preimage or enqueue a subdirectory under `tree` while rejecting symlinks/reparse points.
+fn observe(tree: &mut Tree, path: PathBuf, pending: &mut Vec<PathBuf>) -> io::Result<()> {
+    let metadata = fs::symlink_metadata(&path)?;
+    if metadata.file_type().is_symlink() || reparse(&metadata) {
+        return Err(unsupported("rename cleanup requires regular paths"));
+    }
+    if metadata.is_dir() {
+        pending.push(path);
+    } else {
+        tree.observed.read(&path)?;
+    }
+    Ok(())
+}
+/// Read and lexicographically sort UTF-8 entry names in `path`, enforcing the 65,536 entry budget.
+fn entries(path: &Path) -> io::Result<Vec<String>> {
+    let mut names = fs::read_dir(path)?
+        .map(|entry| {
+            entry.and_then(|entry| {
+                entry
+                    .file_name()
+                    .into_string()
+                    .map_err(|_| unsupported("rename cleanup UTF-8 paths"))
+            })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    if names.len() > 65536 {
+        return Err(unsupported("rename cleanup entry limit"));
+    }
+    names.sort();
+    Ok(names)
+}
+/// Verify that all [`Observed`] files and directory entry lists in `plan.cleanup` match their captured preimages.
+pub(super) fn validate(plan: &Plan) -> io::Result<()> {
+    let Some(tree) = &plan.cleanup else { return Ok(()) };
+    tree.observed.validate()?;
+    for (directory, names) in &tree.directories {
+        if entries(directory)? != *names {
+            return Err(unsupported("rename cleanup tree changed before publication"));
+        }
+    }
+    Ok(())
+}
+#[inline]
+pub(super) fn apply(plan: &Plan) -> io::Result<()> {
+    if plan.cleanup.is_none() {
+        return Ok(());
+    }
+    validate(plan)?;
+    crate::component_remove::remove_path(&plan.root.join(plan.identity.source_directory.trim()))
+}
+#[inline]
+fn reparse(metadata: &fs::Metadata) -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        metadata.file_attributes() & 0x0400 != 0
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = metadata;
+        false
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "bit-native",
+  "private": true,
+  "description": "The Rust `bit` CLI. `pnpm install` installs the Rust toolchain rust-toolchain.toml names and the crates; see ../docs/rust-cli.md.",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.13.0",
+      "onFail": "download"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "22.22.0",
+      "onFail": "download"
+    }
+  },
+  "scripts": {
+    "build": "cargo build --locked --release -p bit-cli",
+    "build:dist": "cargo build --locked --profile dist -p bit-cli",
+    "build:debug": "cargo build --locked -p bit-cli",
+    "test": "cargo test --locked --workspace",
+    "test:e2e": "cargo test --locked -p bit-cli --features e2e --test e2e",
+    "lint": "cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings",
+    "doc": "cargo doc --locked --workspace --no-deps",
+    "fmt": "node ../scripts/rust/rustfmt.mjs --all",
+    "fmt:check": "node ../scripts/rust/rustfmt.mjs --all -- --check"
+  }
+}

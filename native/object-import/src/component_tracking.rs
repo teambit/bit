@@ -1,0 +1,164 @@
+//! Retained component tracking plans ([`Plan`], [`Options`], `identity`, `observe`) publishing `.bitmap` only after linking succeeds.
+//!
+//! Captures directory listings and file SHA-256 preimages ([`Plan::prepare`], [`Plan::validate`]) before computing projected `.bitmap` entries ([`Plan::commit`]).
+pub(crate) mod identity;
+pub(crate) mod observe;
+
+pub use options::Options;
+
+mod files;
+mod main_file;
+mod options;
+mod paths;
+mod projection;
+mod rows;
+#[cfg(test)]
+mod tests;
+
+use observe::Observed;
+use serde_json::{Value, json};
+use std::{fs, io, path::Path};
+
+/// In-memory `.bitmap`, warning, and component inventory plan consumed by the native linker.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Plan {
+    root: std::path::PathBuf,
+    cwd: std::path::PathBuf,
+    before: Option<Vec<u8>>,
+    bitmap: Value,
+    components: Vec<Value>,
+    warnings: Value,
+    observed: Observed,
+    dirty: bool,
+}
+impl Plan {
+    /// Resolve selectors from [`Options`] at [`Path`] `root` and retain all `Observed` filesystem preimages without writing.
+    pub fn prepare(root: &Path, cwd: &Path, options: &Options, facts: &Value) -> io::Result<Self> {
+        let mut observed = Observed::default();
+        observed.ancestors(root, root)?;
+        let before = observed.read(&root.join(".bitmap"))?;
+        let bitmap = before
+            .as_deref()
+            .map(crate::parse_jsonc)
+            .transpose()?
+            .unwrap_or_else(|| json!({"$schema-version":"17.0.0"}));
+        observed.read(&root.join("workspace.jsonc"))?;
+        let directories = paths::select(root, cwd, &options.paths, &mut observed)?;
+        options.validate(&directories, &bitmap)?;
+        for directory in &directories {
+            observed.ancestors(root, &root.join(directory))?;
+        }
+        let mut plan = Self {
+            root: root.to_owned(),
+            cwd: cwd.to_owned(),
+            before,
+            bitmap,
+            components: Vec::with_capacity(directories.len()),
+            warnings: json!({"alreadyUsed":{},"emptyDirectory":[],"existInScope":[]}),
+            observed,
+            dirty: false,
+        };
+        projection::prepare(&mut plan, &directories, options, facts)?;
+        plan.validate()?;
+        Ok(plan)
+    }
+    /// Projected bitmap; this must remain in memory until linking has succeeded.
+    #[must_use]
+    #[inline]
+    pub const fn bitmap(&self) -> &Value {
+        &self.bitmap
+    }
+    /// Added component rows, including component-relative ordered source paths.
+    #[must_use]
+    #[inline]
+    pub fn components(&self) -> &[Value] {
+        &self.components
+    }
+    /// Published already-used, empty-directory and out-of-sync warnings.
+    #[must_use]
+    #[inline]
+    pub const fn warnings(&self) -> &Value {
+        &self.warnings
+    }
+    /// Reject changes to retained `Observed` files and directory entries before publication.
+    #[inline]
+    pub fn validate(&self) -> io::Result<()> {
+        self.observed.validate()
+    }
+    /// Persist exactly one bitmap history entry after the caller completes linking.
+    pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        self.validate()?;
+        let trimmed_id = file_id.trim();
+        if crate::component_remove::validate_file_id(trimmed_id).is_err()
+            || trimmed_id.chars().any(char::is_control)
+        {
+            return Err(unsupported("tracking bitmap history identifier"));
+        }
+        if !self.dirty {
+            return Ok(());
+        }
+        let after = crate::inspection::render_workspace_bitmap(&self.bitmap)?;
+        if self.before.is_some() {
+            // Consumer.backupBitMap logs backup failures and still publishes the bitmap.
+            let _ = crate::component_remove::backup_bitmap(&self.root, trimmed_id, "add");
+        }
+        fs::write(self.root.join(".bitmap"), after)
+    }
+}
+fn error(message: impl Into<String>) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message.into())
+}
+fn unsupported(message: impl Into<String>) -> io::Error {
+    io::Error::new(io::ErrorKind::Unsupported, message.into())
+}
+
+fn active(row: &Value) -> bool {
+    if row["isAvailableOnCurrentLane"] == false {
+        return false;
+    }
+    !row["config"]
+        .as_object()
+        .and_then(|cfg| {
+            cfg.get("teambit.component/remove")
+                .or_else(|| {
+                    cfg.iter()
+                        .find_map(|(key, val)| {
+                            let trimmed = key.trim();
+                            (trimmed == "teambit.component/remove"
+                                || trimmed.starts_with("teambit.component/remove@"))
+                            .then_some(val)
+                        })
+                })
+        })
+        .is_some_and(|cfg| bit_workspace_config::truthy(&cfg["removed"]))
+}
+
+/// Reuse tracked-file policy when an identity mutation reads an existing component.
+pub(crate) fn source_inventory(
+    root: &Path,
+    directory: &str,
+    bitmap: &Value,
+    observed: &mut Observed,
+) -> io::Result<Vec<String>> {
+    let home = std::path::PathBuf::from(
+        std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
+    );
+    observed.read(&root.join("workspace.jsonc"))?;
+    if !home.as_os_str().is_empty() && home.is_absolute() {
+        observed.read(&home.join(".bitrc.jsonc"))?;
+    }
+    let workspace = crate::effective_workspace_configuration(root, &home)?;
+    let mut plan = Plan {
+        root: root.into(),
+        cwd: root.into(),
+        before: None,
+        bitmap: bitmap.clone(),
+        components: vec![],
+        warnings: json!({}),
+        observed: std::mem::take(observed),
+        dirty: false,
+    };
+    let result = files::read(&mut plan, directory, &[], &json!({"workspace":workspace}));
+    *observed = plan.observed;
+    result
+}

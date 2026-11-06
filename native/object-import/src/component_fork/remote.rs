@@ -1,0 +1,226 @@
+//! `Scope.getRemoteComponent` immutable object fetching ([`RemoteCapture`]) without publishing a local scope import.
+//!
+//! Supports both single-component ([`RemoteCapture::fetch`]) and per-scope batched ([`RemoteCapture::fetch_many`]) remote captures via [`objects`].
+mod objects;
+#[cfg(test)]
+mod tests;
+use super::{required, unsupported};
+use crate::component_tracking::observe::Observed;
+use bit_client_transfer::{
+    fetch::FetchOptions,
+    http::Network,
+    remotes::{Remote, Remotes},
+};
+use serde_json::Value;
+use std::io;
+
+/// In-memory and temporary-directory capture of remote component sources and raw objects for `bit fork`.
+#[derive(Debug)]
+pub struct RemoteCapture {
+    sources: Vec<Value>,
+    objects: Vec<Value>,
+    directories: Vec<tempfile::TempDir>,
+    observed: Observed,
+}
+impl RemoteCapture {
+    /// Fetch [`Remote`] component metadata and source files for `ids` via [`Remotes`] and [`Network`] into memory and temporary directories.
+    pub fn fetch(ids: &[String], remotes: &Remotes, network: &Network) -> io::Result<Self> {
+        if ids.len() > 4096 {
+            return Err(unsupported("fork remote component budget"));
+        }
+        let mut capture = Self::empty();
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(async {
+                for id in ids {
+                    let scope = remote_scope(id)?;
+                    let (version, files, identity, objects) =
+                        match remotes.resolve(scope, network).await? {
+                            Remote::File(path) => objects::file(&path, id, &mut capture.observed)
+                                .map_err(|error| single_error(error, id))?,
+                            Remote::Http(url) => {
+                                let items = network
+                                    .fetch_bounded(
+                                        &url,
+                                        &[id.trim().to_owned()],
+                                        &FetchOptions::without_dependencies(None),
+                                        128 * 1024 * 1024,
+                                    )
+                                    .await
+                                    .map_err(|error| single_error(error, id))?;
+                                objects::http(&items, id).map_err(|error| single_error(error, id))?
+                            }
+                        };
+                    capture.push(id, &identity, &version, &files, objects)?;
+                }
+                capture.observed.validate()
+            })?;
+        Ok(capture)
+    }
+    /// Scope forks use one immutable [`Remote`] fetch per remote scope, before copying any component.
+    pub fn fetch_many(ids: &[String], remotes: &Remotes, network: &Network) -> io::Result<Self> {
+        if ids.len() > 4096 {
+            return Err(unsupported("fork remote component budget"));
+        }
+        let mut capture = Self::empty();
+        let groups = groups(ids)?;
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(async {
+                for (scope, ids) in groups {
+                    match remotes.resolve(&scope, network).await? {
+                        Remote::File(path) => {
+                            for id in ids {
+                                let (version, files, identity, objects) =
+                                    objects::file(&path, &id, &mut capture.observed)?;
+                                capture.push(&id, &identity, &version, &files, objects)?;
+                            }
+                        }
+                        Remote::Http(url) => {
+                            let items = network.fetch_bounded(
+                                &url,
+                                &ids,
+                                &FetchOptions::without_dependencies(None),
+                                128 * 1024 * 1024,
+                            )
+                            .await?;
+                            for id in ids {
+                                let (version, files, identity, objects) =
+                                    objects::http(&items, &id)?;
+                                capture.push(&id, &identity, &version, &files, objects)?;
+                            }
+                        }
+                    }
+                }
+                capture.validate()
+            })?;
+        Ok(capture)
+    }
+    #[must_use]
+    #[inline]
+    pub fn sources(&self) -> &[Value] {
+        &self.sources
+    }
+    #[must_use]
+    #[inline]
+    pub fn objects(&self) -> &[Value] {
+        &self.objects
+    }
+    #[inline]
+    pub fn validate(&self) -> io::Result<()> {
+        self.observed.validate()
+    }
+    #[inline]
+    fn empty() -> Self {
+        Self {
+            sources: Vec::new(),
+            objects: Vec::new(),
+            directories: Vec::new(),
+            observed: Observed::default(),
+        }
+    }
+    fn write_objects(&mut self, objects: Vec<(String, Vec<u8>)>) -> io::Result<()> {
+        if objects.is_empty() {
+            return Ok(());
+        }
+        let object_directory =
+            tempfile::Builder::new().prefix("bit-native-fork-objects-").tempdir()?;
+        for (hash, bytes) in objects {
+            let hash = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+            if self.objects
+                .iter()
+                .any(|row| row["hash"] == hash)
+            {
+                continue;
+            }
+            let path = object_directory.path().join(&hash);
+            if path.exists() {
+                continue;
+            }
+            std::fs::write(&path, bytes)?;
+            required(&mut self.observed, &path)?;
+            self.objects.push(serde_json::json!({"hash":hash,"path":path}));
+        }
+        self.directories.push(object_directory);
+        Ok(())
+    }
+    fn push(
+        &mut self,
+        id: &str,
+        version_id: &str,
+        version: &Value,
+        files: &[(String, Vec<u8>)],
+        objects: Vec<(String, Vec<u8>)>,
+    ) -> io::Result<()> {
+        let directory = tempfile::Builder::new().prefix("bit-native-fork-").tempdir()?;
+        for (relative, bytes) in files {
+            let path = directory.path().join(relative);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(&path, bytes)?;
+            self.observed.ancestors(
+                directory.path(),
+                path.parent().ok_or_else(|| unsupported("fork private source parent"))?,
+            )?;
+            required(&mut self.observed, &path)?;
+        }
+        self.write_objects(objects)?;
+        let configs = objects::configs(version)?;
+        let bare_id = id
+            .trim()
+            .rsplit_once('@')
+            .map_or_else(|| id.trim(), |(prefix, _)| prefix.trim());
+        let main_file = version["mainFile"]
+            .as_str()
+            .map_or_else(|| version["mainFile"].clone(), |main| Value::String(main.trim().into()));
+        let relative_files: Vec<_> = files
+            .iter()
+            .map(|(path, _)| serde_json::json!({"relativePath":path}))
+            .collect();
+        self.sources.push(serde_json::json!({"identity":bare_id,"version":version_id,"sourceDirectory":directory.path(),"mainFile":main_file,"files":relative_files,"versionData":version,"sourceConfigs":configs}));
+        self.directories.push(directory);
+        Ok(())
+    }
+}
+
+fn remote_scope(id: &str) -> io::Result<&str> {
+    id.trim()
+        .split_once('/')
+        .map(|(scope, rest)| (scope.trim(), rest.trim().trim_start_matches('@')))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .map(|(scope, _)| scope)
+        .ok_or_else(|| unsupported("fork remote scoped identity"))
+}
+
+fn groups(ids: &[String]) -> io::Result<Vec<(String, Vec<String>)>> {
+    let mut groups: Vec<(String, Vec<String>)> = Vec::new();
+    for id in ids {
+        let id_trimmed = id.trim();
+        let scope = remote_scope(id_trimmed)?;
+        if let Some((_, rows)) = groups
+            .iter_mut()
+            .find(|(name, _)| name == scope)
+        {
+            rows.push(id_trimmed.to_owned());
+        } else {
+            groups.push((scope.into(), vec![id_trimmed.to_owned()]));
+        }
+    }
+    Ok(groups)
+}
+
+fn single_error(error: io::Error, id: &str) -> io::Error {
+    let id = id.trim();
+    if error.kind() == io::ErrorKind::NotFound
+        || error.to_string() == "checkout invalid compressed object"
+    {
+        return io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(r#"error: component "{id}" was not found"#),
+        );
+    }
+    error
+}

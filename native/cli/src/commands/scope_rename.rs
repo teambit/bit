@@ -1,0 +1,204 @@
+//! Scope identity mutation keeps one native batch and one retained provider/tooling session.
+//!
+//! Coordinates [`COMMAND`], [`run`], [`options`], [`Selection`], [`execution`], and [`report`] for `bit scope rename` and `bit scope fork`.
+mod execution;
+mod options;
+mod report;
+use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
+use crate::{native::Outcome, workspace};
+use bit_object_import::component_scope_rename::Selection;
+use std::{env, ffi::OsString, io};
+/// Descriptor for the native `bit scope` command family (`rename`, `rename-owner`, `fork`, `set`, `trust`).
+pub const COMMAND: Command = Command { name: "scope", aliases: &[], run };
+/// Entry point for `bit scope` that dispatches `fork`, `set`, `trust`, `rename`, and `rename-owner`.
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let first = first_subcommand(args);
+    if first.as_deref() == Some("fork") {
+        return super::fork::run_scope(args);
+    }
+    if first.as_deref() == Some("set") {
+        let outcome = super::scope_set::run(args)?;
+        if !matches!(outcome, Outcome::Declined(_)) {
+            return Ok(outcome);
+        }
+    }
+    if first.as_deref() == Some("trust") {
+        let outcome = super::scope_trust::run(args)?;
+        if !matches!(outcome, Outcome::Declined(_)) {
+            return Ok(outcome);
+        }
+    }
+    let in_ws = env::current_dir()
+        .ok()
+        .is_some_and(|cwd| workspace::root(&cwd).is_some());
+    if let Some(sub) = unrecognized_subcommand(args, in_ws) {
+        return handle_unrecognized_subcommand(args, &sub);
+    }
+    run_rename(args)
+}
+
+/// Returns the first non-color argument token following `bit scope`.
+#[inline]
+fn first_subcommand(args: &[OsString]) -> Option<String> {
+    args.iter()
+        .skip(1)
+        .filter_map(|arg| arg.to_str())
+        .map(str::trim)
+        .find(|token| {
+            !token.is_empty()
+                && !matches!(
+                    *token,
+                    "--no-color"
+                        | "--no-color=true"
+                        | "--no-color=false"
+                        | "--color"
+                        | "--color=true"
+                        | "--color=false"
+                        | "--color=always"
+                        | "--color=never",
+                )
+        })
+        .map(str::to_owned)
+}
+
+/// Emits the red unrecognized-subcommand report for `bit scope <subcommand>` with [`Chalk`] for [`run`].
+fn handle_unrecognized_subcommand(args: &[OsString], sub: &str) -> io::Result<Outcome> {
+    if ci_active() {
+        return Ok(Outcome::Declined("CI scope unrecognized subcommand".into()));
+    }
+    let cwd = env::current_dir()?;
+    let chalk = Chalk::detect(args);
+    let data = chalk.red(&format!(
+        r#""{sub}" is not a subcommand of "scope", please run "bit scope --help" to list the subcommands"#,
+    ));
+    let report = workspace_command::results::Report { data, code: 0, details: None };
+    if let Some(root) = workspace::root(&cwd) {
+        workspace_command::execute_then(&root, args, "scope", move |_output| Ok(report))
+    } else {
+        workspace_command::execute_with_scope(&cwd, args, "scope", &report)
+    }
+}
+
+/// Returns `Some(subcommand)` when `args` specifies an unknown `bit scope` subcommand.
+pub(super) fn unrecognized_subcommand(args: &[OsString], in_ws: bool) -> Option<String> {
+    let filtered = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str().map(str::trim))
+        .filter(|token| {
+            !token.is_some_and(|val| {
+                val.is_empty()
+                    || matches!(
+                        val,
+                        "--no-color"
+                            | "--no-color=true"
+                            | "--no-color=false"
+                            | "--color"
+                            | "--color=true"
+                            | "--color=false"
+                            | "--color=always"
+                            | "--color=never",
+                    )
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    match filtered.as_slice() {
+        [sub] => {
+            let is_known = matches!(*sub, "fork" | "rename" | "rename-owner")
+                || (in_ws && matches!(*sub, "set" | "trust"));
+            (!sub.starts_with('-') && !is_known).then(|| (*sub).to_owned())
+        }
+        [sub @ ("set" | "trust"), rest @ ..]
+            if !in_ws && !rest.contains(&"--help") && !rest.contains(&"-h") =>
+        {
+            Some((*sub).to_owned())
+        }
+        _ => None,
+    }
+}
+fn run_rename(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("scope rename arguments are not UTF-8".into()));
+    };
+    let Some(options) = options::parse(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native scope rename grammar".into()));
+    };
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return handle_outside_workspace(&cwd, args, options.owner);
+    };
+    if let Err(error) = Selection::prepare(&root, &options)
+        && decline_preflight(&error)
+    {
+        return Ok(Outcome::Declined(format!("scope rename: {error}")));
+    }
+    let mut linker = prepare_rename_linker(&root, args, options.owner || options.skip_install)?;
+    if options.owner {
+        workspace_command::execute_without_loader(&root, args, "rename-owner", |output| {
+            execution::run(&root, &options, &mut linker, Chalk::detect(args), output)
+        })
+    } else {
+        workspace_command::execute_then(&root, args, "rename", |output| {
+            execution::run(&root, &options, &mut linker, Chalk::detect(args), output)
+        })
+    }
+}
+
+fn prepare_rename_linker(
+    root: &std::path::Path,
+    args: &[OsString],
+    skip_install: bool,
+) -> io::Result<ProjectedLinker> {
+    let mut linker = if skip_install {
+        ProjectedLinker::prepare(root)?
+    } else {
+        ProjectedLinker::prepare_with_installation(root, args)?
+    };
+    let stdout = linker.take_stdout();
+    if !stdout.is_empty() {
+        print!("{stdout}");
+    }
+    Ok(linker)
+}
+
+#[inline]
+pub(super) fn ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text
+                .trim()
+                .trim_matches(['"', '\''])
+                .trim();
+            !trimmed.is_empty()
+                && !["0", "false", "no", "off"]
+                    .iter()
+                    .any(|falsy| trimmed.eq_ignore_ascii_case(falsy))
+        })
+}
+
+#[inline]
+fn handle_outside_workspace(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    owner: bool,
+) -> io::Result<Outcome> {
+    if ci_active() {
+        return Ok(Outcome::Declined("scope rename requires a workspace".into()));
+    }
+    let err = io::Error::other(super::log::OUTSIDE_WORKSPACE_ERR);
+    if owner {
+        workspace_command::execute_without_loader_scope(cwd, args, "rename-owner", move |_| {
+            Err(err)
+        })
+    } else {
+        workspace_command::execute_failure_scope(cwd, args, "rename", false, "", err)
+    }
+}
+
+#[inline]
+fn decline_preflight(error: &io::Error) -> bool {
+    error.kind() != io::ErrorKind::InvalidInput
+        || error.to_string().trim().is_empty()
+        || ci_active()
+}

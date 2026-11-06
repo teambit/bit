@@ -1,0 +1,71 @@
+//! `UTF-16` code-unit ([`single`]) and surrogate-pair ([`unicode`]) JSON string escaping ([`write`]) into [`Writer`] for `js_json` serialization.
+
+use super::writer::Writer;
+use std::io;
+
+/// Writes a JSON-escaped string literal from `UTF-16` code `units` into [`Writer`] `writer`.
+pub(super) fn write(writer: &mut Writer, units: &[u16]) -> io::Result<()> {
+    if units.is_empty() {
+        return writer.bytes(b"\"\"");
+    }
+    if units.len() > 32 * 1024 * 1024 {
+        return Err(super::invalid("JSON output limit"));
+    }
+    writer.bytes(b"\"")?;
+    let mut units = units.iter().copied().peekable();
+    while let Some(unit) = units.next() {
+        if (0xd800..=0xdbff).contains(&unit)
+            && let Some(low) = units.next_if(|next| (0xdc00..=0xdfff).contains(next))
+        {
+            let scalar = 0x10000 + ((u32::from(unit) - 0xd800) << 10) + u32::from(low) - 0xdc00;
+            unicode(writer, scalar)?;
+        } else {
+            single(writer, unit)?;
+        }
+    }
+    writer.bytes(b"\"")
+}
+
+/// Writes a single `UTF-16` code `unit` (escaping control characters, quotes, and lone surrogates) into [`Writer`] `writer`.
+fn single(writer: &mut Writer, unit: u16) -> io::Result<()> {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    if (0x20..0x80).contains(&unit) && unit != 34 && unit != 92 {
+        return writer.bytes(&[unit as u8]);
+    }
+    let escaped = match unit {
+        8 => Some(b"\\b".as_slice()),
+        9 => Some(b"\\t".as_slice()),
+        10 => Some(b"\\n".as_slice()),
+        12 => Some(b"\\f".as_slice()),
+        13 => Some(b"\\r".as_slice()),
+        34 => Some(b"\\\"".as_slice()),
+        92 => Some(b"\\\\".as_slice()),
+        _ => None,
+    };
+    if let Some(escaped) = escaped {
+        return writer.bytes(escaped);
+    }
+    if unit < 32 || (0xd800..=0xdfff).contains(&unit) {
+        let hex = [
+            b'\\',
+            b'u',
+            HEX[usize::from((unit >> 12) & 0x0f)],
+            HEX[usize::from((unit >> 8) & 0x0f)],
+            HEX[usize::from((unit >> 4) & 0x0f)],
+            HEX[usize::from(unit & 0x0f)],
+        ];
+        return writer.bytes(&hex);
+    }
+    if unit < 0x80 {
+        return writer.bytes(&[unit as u8]);
+    }
+    unicode(writer, u32::from(unit))
+}
+
+/// Encodes a validated Unicode `scalar` value as `UTF-8` bytes into [`Writer`] `writer`.
+#[inline]
+fn unicode(writer: &mut Writer, scalar: u32) -> io::Result<()> {
+    let mut buffer = [0; 4];
+    let character = char::from_u32(scalar).ok_or_else(|| super::invalid("invalid Unicode scalar"))?;
+    writer.bytes(character.encode_utf8(&mut buffer).as_bytes())
+}

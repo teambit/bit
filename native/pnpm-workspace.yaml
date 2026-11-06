@@ -1,0 +1,5 @@
+# `pnpm install` installs the crates of the Cargo workspace, and the Rust
+# toolchain rust-toolchain.toml names, linked into .pnpm/rust. `pnpm run`
+# puts that toolchain first on PATH, so no rustup is needed.
+cargo:
+  enabled: true

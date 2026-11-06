@@ -1,0 +1,55 @@
+//! Unit tests for `bit snap` [`Options`] CLI parsing ([`parse`]) and selector grammar retention.
+//!
+//! Verifies `--message`, `--skip-auto-snap`, `--unmodified`, and `--unmerged` flag parsing across [`Options`] and [`parse`].
+
+use super::{Options, parse};
+use serde_json::json;
+
+/// Verifies ordinary `bit snap` [`Options`] flag, pattern, and [`json`] request parsing via [`parse`].
+#[test]
+fn ordinary_snaps() {
+    assert_eq!(parse(&[]), Some(Options::default()));
+    let options = parse(&["remote/one", "-m", "fix", "--skip-auto-snap"]).unwrap();
+    assert_eq!(options.pattern.as_deref(), Some("remote/one"));
+    assert_eq!(
+        options.request(),
+        json!({ "pattern": "remote/one", "message": "fix", "skipAutoSnap": true }),
+    );
+    assert!(
+        parse(&["-u", "--unmerged"]).is_some_and(|options| options.unmodified && options.unmerged),
+    );
+    assert!(
+        parse(&["--message=inline", "--unmodified=true", "--no-color", "--no-color=false"])
+            .is_some_and(|options| {
+                options.message.as_deref() == Some("inline") && options.unmodified
+            }),
+    );
+}
+
+/// Verifies that unsupported `bit snap` flags or duplicate arguments return `None`.
+#[test]
+fn everything_else_is_left_to_node() {
+    assert!(parse(&["--build"]).is_none());
+    assert!(parse(&["-m"]).is_none());
+    assert!(parse(&["-m", "--unmodified"]).is_none());
+    assert!(parse(&["a", "b"]).is_none());
+    assert!(parse(&["-u", "--unmodified"]).is_none());
+}
+
+/// Verifies that [`parse`] retains `$modified`, boolean, brace, and extglob selector patterns in [`Options`].
+#[test]
+fn component_selector_grammar_is_retained_for_native_selection() {
+    for pattern in ["$modified", "a* AND !b*", "{foo,bar}/*", "@(foo|bar)/*"] {
+        let options = parse(&[pattern]).unwrap();
+        assert_eq!(options.pattern.as_deref(), Some(pattern));
+    }
+}
+
+/// Verifies that [`parse`] accepts a single positional snap pattern following `--`.
+///
+/// Ensures `--` terminates flag parsing while still recording the trailing component pattern.
+#[test]
+fn double_dash_accepts_single_snap_pattern() {
+    let options = parse(&["-m", "msg", "--", "remote/one"]).unwrap();
+    assert_eq!(options.pattern.as_deref(), Some("remote/one"));
+}

@@ -1,0 +1,61 @@
+//! Retained inspection snapshot capacity accounting ([`remaining`], [`validate_mode`], [`State`], [`wire`]) within [`MAX_FILES`] and [`MAX_BYTES`].
+
+use super::{MAX_BYTES, MAX_FILES, State, invalid, wire};
+use std::io;
+
+impl State {
+    /// Enables in-memory snapshot retention instead of spooling temporary files to disk.
+    #[inline]
+    pub(crate) fn enable_memory_snapshots(&mut self) {
+        self.memory_snapshots = true;
+    }
+}
+/// Computes the remaining snapshot byte budget in `state` ([`State`]) after accounting for `incoming` files.
+pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize> {
+    if incoming > MAX_FILES {
+        return Err(invalid("inspection retained file/byte limit"));
+    }
+    state.retained.retain(|files| files.strong_count() != 0);
+    if state.retained.len() >= MAX_FILES {
+        return Err(invalid("inspection retained file/byte limit"));
+    }
+    let mut count = incoming;
+    let mut bytes = 0_usize;
+    for files in state.retained.iter().filter_map(std::sync::Weak::upgrade) {
+        count = count.saturating_add(files.len());
+        let file_bytes = files
+            .iter()
+            .map(|file| file.contents.len())
+            .fold(0_usize, usize::saturating_add);
+        bytes = bytes.saturating_add(file_bytes);
+    }
+    if count > MAX_FILES || bytes > MAX_BYTES {
+        return Err(invalid("inspection retained file/byte limit"));
+    }
+    Ok(MAX_BYTES.saturating_sub(bytes))
+}
+
+/// Validates `ownedMemory` and `memoryOnly` flags on `request` ([`wire::Begin`]) against session `state` ([`State`]).
+pub(super) fn validate_mode(request: &wire::Begin, state: &State) -> io::Result<()> {
+    if request.owned_memory && !state.memory_snapshots {
+        return Err(invalid("inspection memory ownership requires an embedded session"));
+    }
+    if request.memory_only && request.owned_memory {
+        return Err(invalid("inspection memory-only capture conflicts with owned memory"));
+    }
+    if request.memory_only
+        && request.files
+            .iter()
+            .any(|file| {
+                file.raw_hash
+                    .as_deref()
+                    .is_none_or(|hash| hash.trim().is_empty())
+                    || file.snapshot_hash
+                        .as_deref()
+                        .is_none_or(|hash| hash.trim().is_empty())
+            })
+    {
+        return Err(invalid("inspection memory-only capture requires caller hashes"));
+    }
+    Ok(())
+}

@@ -1,0 +1,83 @@
+//! Generated package `JsonVinyl` [`replace`] uses atomic replacement, breaking hardlink aliases.
+
+#[cfg(test)]
+mod tests;
+use std::{
+    fs::{self, File, OpenOptions},
+    io::{self, Write},
+    path::{Path, PathBuf},
+    sync::atomic::{AtomicU64, Ordering},
+};
+
+/// Monotonically increasing sequence counter for unique `.bit-package-<pid>-<seq>` temporary filenames.
+static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+
+/// Atomically replaces an ordinary file at `path` with `bytes` (up to 16 MiB) via [`allocate`] and [`preserve_owner`], preserving permissions and ownership.
+pub(super) fn replace(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    if path.as_os_str().is_empty() || bytes.len() > 16 * 1024 * 1024 {
+        return Err(io::Error::other("generated package metadata budget"));
+    }
+    let metadata = fs::symlink_metadata(path)?;
+    if !metadata.is_file() || metadata.is_symlink() {
+        return Err(io::Error::other("generated package destination must be an ordinary file"));
+    }
+    let (temporary, mut file) = allocate(path)?;
+    (|| {
+        file.write_all(bytes)?;
+        preserve_owner(&temporary.0, &metadata)?;
+        file.set_permissions(metadata.permissions())?;
+        file.sync_all()?;
+        drop(file);
+        let current = fs::symlink_metadata(path)?;
+        if !current.is_file() || current.is_symlink() {
+            return Err(io::Error::other("generated package destination must be an ordinary file"));
+        }
+        fs::rename(&temporary.0, path)
+    })()
+}
+
+/// Allocates a unique `.bit-package-<pid>-<seq>` [`Temporary`] file via [`SEQUENCE`] in the parent directory of `path`.
+fn allocate(path: &Path) -> io::Result<(Temporary, File)> {
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .ok_or_else(|| io::Error::other("package parent absent"))?;
+    let pid = std::process::id();
+    for _ in 0..64 {
+        let path = parent.join(format!(
+            ".bit-package-{pid}-{}",
+            SEQUENCE.fetch_add(1, Ordering::Relaxed),
+        ));
+        match OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&path)
+        {
+            Ok(file) => return Ok((Temporary(path), file)),
+            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Err(io::Error::other("package temporary allocation limit"))
+}
+
+/// Copies `uid` and `gid` from `metadata` onto `path` on Unix platforms for [`replace`].
+#[inline]
+fn preserve_owner(path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{MetadataExt, chown};
+        chown(path, Some(metadata.uid()), Some(metadata.gid()))?;
+    }
+    #[cfg(not(unix))]
+    let _ = (path, metadata);
+    Ok(())
+}
+
+#[derive(Debug)]
+struct Temporary(PathBuf);
+impl Drop for Temporary {
+    fn drop(&mut self) {
+        let _cleanup = fs::remove_file(&self.0);
+    }
+}

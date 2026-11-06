@@ -1,0 +1,74 @@
+//! Published `bit add` [`Options`] and workspace-root tracking validation ([`Options::validate`], [`existing_root`]).
+//!
+//! Enforces mutual exclusion between `--id` and `--namespace` and validates `--root` directory targets.
+
+use super::error;
+use serde_json::Value;
+use std::io;
+
+/// Published `bit add` CLI inputs; environment resolution supplies `config` metadata.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Options {
+    pub paths: Vec<String>,
+    pub id: Option<String>,
+    pub main: Option<String>,
+    pub namespace: Option<String>,
+    pub scope: Option<String>,
+    pub override_files: bool,
+    pub workspace_root: bool,
+    pub config: Value,
+}
+impl Options {
+    /// Validates `bit add` [`Options`] flag combinations and workspace-root tracking constraints against `bitmap` [`Value`].
+    pub(super) fn validate(&self, directories: &[String], bitmap: &Value) -> io::Result<()> {
+        let trimmed_id = self.id
+            .as_deref()
+            .map(str::trim)
+            .filter(|id| !id.is_empty());
+        let has_ns = self.namespace
+            .as_deref()
+            .is_some_and(|ns| !ns.trim().is_empty());
+        if trimmed_id.is_some() && has_ns {
+            return Err(error(
+                "please use either [id] or [namespace] to add a particular component - they cannot be used together",
+            ));
+        }
+        let tracks_root = directories
+            .iter()
+            .any(|directory| directory == ".");
+        if tracks_root {
+            if !self.workspace_root && !existing_root(bitmap) {
+                return Err(error(
+                    "unable to track the workspace root without the --root flag.\nit makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.\nif that is what you want, run \"bit add . --root\". to track a component, pass its directory, e.g. \"bit add my-component\"",
+                ));
+            }
+        } else if self.workspace_root {
+            return Err(error(
+                "the --root flag tracks the workspace root, but none of the given paths is the workspace root.\nrun \"bit add . --root\" from the workspace root, or drop the flag to track the given paths as ordinary components",
+            ));
+        }
+        if directories.len() > 1
+            && let Some(id) = trimmed_id
+        {
+            return Err(error(format!(
+                "the --id flag ({id}) is used for a single component only, however, got {} paths",
+                directories.len().max(self.paths.len()),
+            )));
+        }
+        Ok(())
+    }
+}
+/// Return `true` when `bitmap` [`Value`] already contains an active component rooted at `"."`.
+#[inline]
+fn existing_root(bitmap: &Value) -> bool {
+    bitmap
+        .as_object()
+        .is_some_and(|rows| {
+            rows.values()
+                .any(|row| {
+                    (row["rootDir"].as_str().map(str::trim) == Some(".")
+                        || row["directory"].as_str().map(str::trim) == Some("."))
+                        && super::active(row)
+                })
+        })
+}

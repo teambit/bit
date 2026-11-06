@@ -1,0 +1,110 @@
+//! Keep the external `ESLint` process alive across native cache publication.
+//!
+//! [`Session`] ([`Session::prepare`], [`Session::run`], [`LIMIT`]) spawns and communicates with the Node.js `ESLint` worker [`Child`] process over stdio.
+use super::{Value, invalid};
+use crate::discovery::{self, Target};
+use std::{
+    fs::File,
+    io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write},
+    process::{Child, ChildStdin, ChildStdout, Command, Stdio},
+};
+
+/// Maximum serialized JSON payload byte length accepted over stdio with the external `ESLint` process.
+const LIMIT: u64 = 16 * 1024 * 1024;
+
+/// Active Node.js `ESLint` worker [`Child`] process session communicating over line-delimited JSON stdio.
+pub(super) struct Session {
+    child: Child,
+    input: ChildStdin,
+    output: BufReader<ChildStdout>,
+    errors: File,
+}
+
+impl Session {
+    /// Spawns the `ESLint` worker process ([`Session::spawn`]) and sends `request` ([`Value`]) within [`LIMIT`] over stdin, awaiting readiness.
+    pub(super) fn prepare(request: &Value, colors: bool) -> io::Result<Self> {
+        let mut bytes = serde_json::to_vec(request)?;
+        if bytes.len() as u64 >= LIMIT {
+            return Err(invalid("linter tool request limit"));
+        }
+        bytes.push(b'\n');
+        let mut session = Self::spawn(colors)?;
+        session.input.write_all(&bytes)?;
+        session.input.flush()?;
+        if session.read()?["ready"].as_bool() != Some(true) || session.has_stderr()? {
+            return Err(invalid("linter external tool preparation"));
+        }
+        Ok(session)
+    }
+
+    /// Spawns a Node.js child process running the embedded `tool.cjs` `ESLint` harness.
+    fn spawn(colors: bool) -> io::Result<Self> {
+        let Target::Entry(cli) = discovery::find()? else {
+            return Err(invalid("linter tool installation"));
+        };
+        let package =
+            cli.bit_dir.ok_or_else(|| invalid("linter package root"))?.join("package.json");
+        if !package.is_file() {
+            return Err(invalid("linter package root"));
+        }
+        let errors = tempfile::tempfile()?;
+        let mut child = Command::new(cli.node)
+            .arg("-e")
+            .arg(include_str!("tool.cjs"))
+            .arg(package)
+            .env("FORCE_COLOR", if colors { "1" } else { "0" })
+            .env_remove("NO_COLOR")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(errors.try_clone()?)
+            .spawn()?;
+        let input = child.stdin.take().ok_or_else(|| invalid("linter tool stdin"))?;
+        let output =
+            BufReader::new(child.stdout.take().ok_or_else(|| invalid("linter tool stdout"))?);
+        Ok(Self { child, input, output, errors })
+    }
+
+    /// Triggers linting on the prepared `ESLint` worker and returns its JSON diagnostic response ([`Value`]) via [`Self::read`].
+    #[inline]
+    pub(super) fn run(&mut self) -> io::Result<Value> {
+        self.input.write_all(b"true\n")?;
+        self.input.flush()?;
+        let value = self.read()?;
+        if !self.child.wait()?.success() || self.has_stderr()? {
+            return Err(invalid("linter external tool failed"));
+        }
+        Ok(value)
+    }
+
+    /// Reads and parses a single newline-delimited JSON response line from the `ESLint` worker stdout.
+    #[inline]
+    fn read(&mut self) -> io::Result<Value> {
+        let mut bytes = Vec::new();
+        self.output
+            .by_ref()
+            .take(LIMIT)
+            .read_until(b'\n', &mut bytes)?;
+        if bytes.last() != Some(&b'\n') {
+            return Err(invalid("linter tool response limit"));
+        }
+        serde_json::from_slice(&bytes).map_err(|_| invalid("linter tool response json"))
+    }
+
+    #[inline]
+    fn has_stderr(&mut self) -> io::Result<bool> {
+        if self.errors.seek(SeekFrom::End(0))? == 0 {
+            return Ok(false);
+        }
+        self.errors.seek(SeekFrom::Start(0))?;
+        let mut bytes = Vec::new();
+        Read::by_ref(&mut self.errors).take(LIMIT).read_to_end(&mut bytes)?;
+        Ok(!bytes.iter().all(u8::is_ascii_whitespace))
+    }
+}
+
+impl Drop for Session {
+    fn drop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+    }
+}

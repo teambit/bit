@@ -1,0 +1,168 @@
+//! Scope [`settings`] validation and `file://` / virtual remote directory resolution for [`PreparedImport`].
+
+use super::{PreparedImport, invalid, object_hash};
+use serde_json::{Value, json};
+use std::{io, path::PathBuf};
+/// Validate a `scope.json` [`Value`] via [`settings_for_lane`] assuming the scope is on `main`.
+#[inline]
+pub(super) fn settings(value: &Value) -> io::Result<()> {
+    settings_for_lane(value, false)
+}
+/// Validate a `scope.json` [`Value`], rejecting non-`main` active lanes unless `allow_lane` is `true`.
+#[inline]
+pub(in crate::command_import) fn settings_for_lane(
+    value: &Value,
+    allow_lane: bool,
+) -> io::Result<()> {
+    let fields = value.as_object().ok_or_else(|| invalid("import scope settings"))?;
+    if fields
+        .keys()
+        .any(|key| {
+            !matches!(
+                key.as_str(),
+                "name" | "remotes" | "version" | "lanes" | "groupName" | "config",
+            )
+        })
+        || value
+            .get("config")
+            .is_some_and(|config| !config.is_object())
+        || (!allow_lane && is_non_main_lane(&value["lanes"]["current"]))
+    {
+        return Err(invalid("import scope needs canonical configuration"));
+    }
+    Ok(())
+}
+
+/// Return `true` when `current` specifies an active lane name other than `"main"`.
+#[inline]
+fn is_non_main_lane(current: &Value) -> bool {
+    if current.is_null() {
+        return false;
+    }
+    let lane = [current, &current["name"], &current["id"], &current["id"]["name"]]
+        .into_iter()
+        .find_map(|value| {
+            value
+                .as_str()
+                .map(str::trim)
+                .filter(|lane| !lane.is_empty())
+        });
+    lane.is_some_and(|name| {
+        let short = name
+            .rsplit('/')
+            .next()
+            .unwrap_or(name)
+            .trim();
+        !short.is_empty() && short != "main"
+    })
+}
+/// Resolve the remote scope directory ([`PathBuf`]) for `name` via [`raw_remote`] and stage its `ScopeMeta` object into `plan.overlay`.
+pub(super) fn remote(
+    plan: &mut PreparedImport,
+    remotes: &Value,
+    name: &str,
+) -> io::Result<PathBuf> {
+    let name = name.trim();
+    let directory = raw_remote(plan, remotes, name)?;
+    // The published importer persists ScopeMeta for both file and HTTP
+    // transfers, including when the remote has no matching component model.
+    let hash = object_hash(name);
+    if !plan.overlay.objects.contains_key(&hash) {
+        let incoming = plan.capture.object(&directory, &hash, "ScopeMeta")?;
+        if incoming
+            .as_ref()
+            .is_some_and(|record| {
+                record.value
+                    .as_ref()
+                    .is_none_or(|value| value["name"].as_str().map(str::trim) != Some(name))
+            })
+        {
+            return Err(invalid("import remote ScopeMeta identity"));
+        }
+        let record = match incoming {
+            Some(record) => record,
+            None => super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
+        };
+        plan.overlay.objects.insert(hash, record);
+    }
+    Ok(directory)
+}
+/// Resolve and validate the local `objects` directory [`PathBuf`] for remote `name` on [`PreparedImport`] from `remote_overrides` or `remotes` [`Value`].
+pub(super) fn raw_remote(
+    plan: &mut PreparedImport,
+    remotes: &Value,
+    name: &str,
+) -> io::Result<PathBuf> {
+    let name = name.trim();
+    if name.is_empty()
+        || name
+            .bytes()
+            .any(|byte| !byte.is_ascii_alphanumeric() && !b"._-".contains(&byte))
+    {
+        return Err(invalid("import scope identity"));
+    }
+    if let Some(path) = plan.environment.missing_global_remotes.take() {
+        plan.environment.global_remotes = Some(path);
+    }
+    if let Some(directory) = plan.environment.remote_overrides.get(name).cloned() {
+        validate_virtual(plan, &directory, name)?;
+        return Ok(directory.join("objects"));
+    }
+    let host = remotes[name]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("import unmapped remote requires canonical resolver"))?;
+    let path = host
+        .strip_prefix("file://")
+        .map(str::trim)
+        .ok_or_else(|| invalid("import remote protocol requires canonical transport"))?;
+    let directory = PathBuf::from(path);
+    if !directory.is_absolute() {
+        return Err(invalid("import relative file remote"));
+    }
+    let scope = plan.capture
+        .json(&directory.join("scope.json"))?
+        .ok_or_else(|| invalid("import remote scope absent"))?;
+    settings(&scope)?;
+    if scope["name"].as_str().map(str::trim) != Some(name) {
+        return Err(invalid("import remote scope mismatch"));
+    }
+    validate_config(plan, &directory)?;
+    Ok(directory.join("objects"))
+}
+
+#[inline]
+fn validate_virtual(
+    plan: &mut PreparedImport,
+    directory: &std::path::Path,
+    name: &str,
+) -> io::Result<()> {
+    let scope = plan.capture
+        .json(&directory.join("scope.json"))?
+        .ok_or_else(|| invalid("virtual remote scope absent"))?;
+    if scope["name"].as_str().map(str::trim) != Some(name.trim()) {
+        return Err(invalid("virtual remote scope mismatch"));
+    }
+    Ok(())
+}
+
+#[inline]
+fn validate_config(plan: &mut PreparedImport, directory: &std::path::Path) -> io::Result<()> {
+    // A remote aspect runtime could alter fetch behavior; only plain scopes are owned.
+    let config = plan.capture.json(&directory.join("scope.jsonc"))?;
+    if config
+        .as_ref()
+        .is_some_and(|value| {
+            value
+                .as_object()
+                .is_none_or(|fields| {
+                    fields
+                        .keys()
+                        .any(|key| key != "$schema")
+                })
+        })
+    {
+        return Err(invalid("import remote custom aspects"));
+    }
+    Ok(())
+}
