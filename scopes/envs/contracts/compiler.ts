@@ -24,7 +24,10 @@ export type TranspileComponentParams = {
   component: Component;
   componentDir: string; // absolute path of the component's root directory
   outputDir: string; // absolute path of the component's output directory
-  initiator: CompilationInitiator; // origin of the compilation's request
+  // origin of the compilation's request. optional because during an install's dist-rewrite window
+  // reading the lazily-bound CompilationInitiator export is unsafe, so bit passes nothing rather
+  // than falling back to an enum member. see `@teambit/compiler`'s TranspileComponentParams.
+  initiator?: CompilationInitiator;
 };
 
 export type TypeGeneratorCompParams = { component: Component; packageDir: string };

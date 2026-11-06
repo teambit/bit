@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
