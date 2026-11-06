@@ -3,7 +3,14 @@
 
 import type { CLIMain, Command } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
-import { CLIAspect, getArgsData, getCommandName, getFlagsData } from '@teambit/cli';
+import {
+  CLIAspect,
+  getArgsData,
+  getCommandName,
+  getFlagsData,
+  isReadOnlyCommand,
+  READ_ONLY_COMMANDS,
+} from '@teambit/cli';
 import childProcess from 'child_process';
 import stripAnsi from 'strip-ansi';
 import fs from 'fs-extra';
@@ -55,39 +62,6 @@ export class CliMcpServerMain {
   // second `writeServerToken` overwrites the first, and the earlier caller's
   // cached token no longer matches its server (401 "requires authentication").
   private serverInitPromise?: Promise<void>;
-
-  // Whitelist of commands that are considered read-only/query operations
-  private readonly readOnlyCommands = new Set([
-    'status',
-    'list',
-    'info',
-    'show',
-    'schema',
-    'artifacts',
-    'diff',
-    'log',
-    'graph',
-    'deps get',
-    'deps blame',
-    'why',
-    'config get',
-    'envs list',
-    'envs get',
-    'remote list',
-    'templates',
-    'cat-component',
-    'cat-lane',
-    'cat-object',
-    'cat-scope',
-    'lane show',
-    'lane list',
-    'lane diff',
-    'lane history',
-    'lane history-diff',
-    'test',
-    'help',
-    'version',
-  ]);
 
   constructor(
     private cli: CLIMain,
@@ -1361,11 +1335,10 @@ export class CliMcpServerMain {
 
         // Check if command is in the read-only whitelist
         // Support both single commands and subcommands (e.g., "lane show")
-        const fullCommand = args.length > 0 ? `${command} ${args[0]}` : command;
-        const isAllowed = this.readOnlyCommands.has(command) || this.readOnlyCommands.has(fullCommand);
+        const isAllowed = isReadOnlyCommand(command, args[0]);
 
         if (!isAllowed) {
-          const allowedCommands = Array.from(this.readOnlyCommands).sort().join(', ');
+          const allowedCommands = Array.from(READ_ONLY_COMMANDS).sort().join(', ');
           return this.formatAsCallToolResult(
             `Error: Command "${command}" is not allowed in query mode. Allowed read-only commands: ${allowedCommands}`
           );
