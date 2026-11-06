@@ -32,6 +32,11 @@ import { RevertCmd } from './revert-cmd';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ComponentConfigMerger } from '@teambit/config-merger';
+import type { ConfigMergeResult } from '@teambit/config-merger';
+import { getLocalConfigKeysToRemove, isAspectInLocalConfig } from './local-config-merge';
+
+type LocalConfigConflict = { id: ComponentID; result: ConfigMergeResult };
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -129,10 +134,12 @@ export class CheckoutMain {
     const componentWithConflict = allComponentsStatus.find(
       (component) => component.mergeResults && component.mergeResults.hasConflicts
     );
-    if (componentWithConflict) {
+    const configConflicts = await this.getLocalConfigConflicts(allComponentsStatus, checkoutProps);
+    const conflictedIdStr = componentWithConflict?.id.toStringWithoutVersion() || configConflicts[0]?.result.compIdStr;
+    if (conflictedIdStr) {
       if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
         throw new BitError(
-          `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
+          `automatic merge has failed for component ${conflictedIdStr}.\nplease use "--auto-merge-resolve" with 'manual', 'ours' or 'theirs' to resolve the conflict/s`
         );
       }
       if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
@@ -192,7 +199,8 @@ export class CheckoutMain {
       }
     }
 
-    const leftUnresolvedConflicts = componentWithConflict && checkoutProps.mergeStrategy === 'manual';
+    const configMergeConflicts = await this.applyLocalConfigConflicts(configConflicts, checkoutProps.mergeStrategy);
+    const leftUnresolvedConflicts = Boolean(conflictedIdStr) && checkoutProps.mergeStrategy === 'manual';
     let componentWriterResults;
     if (componentsLegacy.length) {
       const manyComponentsWriterOpts = {
@@ -226,6 +234,7 @@ export class CheckoutMain {
       version,
       failedComponents,
       leftUnresolvedConflicts,
+      configMergeConflicts,
       newFromLane: newFromLane?.map((n) => n.toString()),
       newFromLaneAdded,
       newFromScope: newFromScope?.map((n) => n.toString()),
@@ -233,6 +242,75 @@ export class CheckoutMain {
       installationError: componentWriterResults?.installationError,
       compilationError: componentWriterResults?.compilationError,
     };
+  }
+
+  /**
+   * checkout keeps the local config of a component (the .bitmap "config", e.g. from "bit env set") on top of the
+   * checked out version. when the checked out version changed the same aspect differently, it's a conflict, same as
+   * a conflict in a file. only the aspects that are set locally are checked. the other aspects get their config from
+   * the checked out version anyway.
+   */
+  private async getLocalConfigConflicts(
+    componentsStatus: ComponentStatus[],
+    checkoutProps: CheckoutProps
+  ): Promise<LocalConfigConflict[]> {
+    const { reset, revert, loadStash, skipUpdatingBitmap, forceOurs, forceTheirs } = checkoutProps;
+    if (reset || revert || loadStash || skipUpdatingBitmap || forceOurs || forceTheirs) return [];
+    const scope = this.workspace.consumer.scope;
+    const workspaceIds = this.workspace.listIds();
+    const results = await mapSeries(componentsStatus, async (componentStatus) => {
+      const { id, currentComponent, componentFromModel, unchangedMessage } = componentStatus;
+      if (unchangedMessage || !currentComponent || !componentFromModel) return undefined;
+      const bitMapEntry = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+      const localConfig = bitMapEntry?.config;
+      const currentVersion = bitMapEntry?.id.version;
+      if (!localConfig || !currentVersion || currentVersion === id.version) return undefined;
+      const modelComponent = await scope.getModelComponent(id);
+      const baseVersion = await modelComponent.loadVersion(currentVersion, scope.objects);
+      const configMerger = new ComponentConfigMerger(
+        id.toStringWithoutVersion(),
+        workspaceIds,
+        undefined,
+        currentComponent.extensions,
+        baseVersion.extensions,
+        componentFromModel.extensions,
+        `${currentVersion} modified`,
+        id.version as string,
+        this.logger,
+        'manual' // to find the conflicts. the strategy of the user is applied later by applyLocalConfigConflicts.
+      );
+      const result = configMerger.merge().filterByAspects((aspectId) => isAspectInLocalConfig(aspectId, localConfig));
+      return result.hasConflicts() ? { id: bitMapEntry.id, result } : undefined;
+    });
+    return compact(results);
+  }
+
+  /**
+   * "ours" keeps the local config. "theirs" removes the conflicted aspects from the local config, so the checked out
+   * version wins. "manual" removes them as well and writes the conflicts into the config-merge file for the user to
+   * resolve, same as "bit merge" does.
+   * returns the component ids that were left with config conflicts.
+   */
+  private async applyLocalConfigConflicts(
+    configConflicts: LocalConfigConflict[],
+    mergeStrategy?: MergeStrategy
+  ): Promise<string[] | undefined> {
+    if (!configConflicts.length || !mergeStrategy || mergeStrategy === 'ours') return undefined;
+    const conflictFile = this.workspace.getConflictMergeFile();
+    for (const { id, result: configConflict } of configConflicts) {
+      const localConfig = this.workspace.bitMap.getBitmapEntry(id, { ignoreVersion: true }).config || {};
+      getLocalConfigKeysToRemove(localConfig, configConflict.getConflictedAspectIds()).forEach((key) =>
+        this.workspace.bitMap.removeComponentConfig(id, key, false)
+      );
+      this.workspace.clearComponentCache(id);
+      if (mergeStrategy === 'manual') {
+        const conflict = configConflict.generateMergeConflictFile();
+        if (conflict) conflictFile.addConflict(configConflict.compIdStr, conflict);
+      }
+    }
+    await conflictFile.write();
+    await this.workspace.bitMap.write('checkout (config merge)');
+    return mergeStrategy === 'manual' ? configConflicts.map((c) => c.result.compIdStr) : undefined;
   }
 
   /**

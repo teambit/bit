@@ -20,7 +20,7 @@ import {
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
 } from '@teambit/component.modules.merge-helper';
-import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
+import { COMPONENT_PATTERN_HELP, HEAD, LATEST, MergeConfigFilename } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
@@ -177,6 +177,7 @@ export function checkoutOutput(
     removedComponents,
     addedComponents,
     leftUnresolvedConflicts,
+    configMergeConflicts,
     workspaceConfigUpdateResult,
     newFromLane,
     newFromLaneAdded,
@@ -225,10 +226,20 @@ export function checkoutOutput(
     if (!components || !components.length || !leftUnresolvedConflicts) return '';
     const title = formatTitle(`${warnSymbol} files with conflicts summary`);
     const conflictSummary = conflictSummaryReport(components);
+    if (!conflictSummary.conflictedFiles) return '';
     const suggestion = formatHint(
       `fix the conflicts above manually and then run "bit install".\nonce ready, snap/tag the components to persist the changes`
     );
     return `${title}\n${conflictSummary.conflictStr}\n\n${suggestion}`;
+  };
+  const getConfigConflictSummary = () => {
+    if (!configMergeConflicts?.length) return '';
+    const items = configMergeConflicts.map((id) => formatItem(id));
+    return formatSection(
+      `${warnSymbol} components with config conflicts`,
+      `fix them manually by editing the ${MergeConfigFilename} file in the workspace root.\nonce ready, snap/tag the components to persist the changes`,
+      items
+    );
   };
   const getSuccessfulOutput = () => {
     if (!components || !components.length) return '';
@@ -302,6 +313,7 @@ export function checkoutOutput(
       getNewFromScopeOutput(),
       getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
       getConflictSummary(),
+      getConfigConflictSummary(),
       getSummary(),
       installationErrorOutput(installationError),
       compilationErrorOutput(compilationError),
