@@ -450,6 +450,9 @@ importers:
       '@teambit/code.ui.hooks.use-code-params':
         specifier: 0.0.497
         version: 0.0.497(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/code.ui.inline-diff-viewer':
+        specifier: ~0.0.15
+        version: 0.0.15(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/code.ui.object-formatter':
         specifier: 0.0.1
         version: 0.0.1(react@19.2.7)
@@ -5616,6 +5619,9 @@ importers:
 
   components/ui/inline-code-compare:
     dependencies:
+      '@teambit/code.ui.inline-diff-viewer':
+        specifier: ~0.0.15
+        version: 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -5647,6 +5653,9 @@ importers:
       '@apollo/client':
         specifier: ^3.12.0
         version: 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
+      '@teambit/code.ui.inline-diff-viewer':
+        specifier: ~0.0.15
+        version: 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -5675,6 +5684,9 @@ importers:
 
   components/ui/inline-deps-compare:
     dependencies:
+      '@teambit/code.ui.inline-diff-viewer':
+        specifier: ~0.0.15
+        version: 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/component-id':
         specifier: 1.2.5
         version: 1.2.5
@@ -5700,40 +5712,6 @@ importers:
       '@teambit/harmony.envs.core-react-env':
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
-
-  components/ui/inline-diff-viewer:
-    dependencies:
-      '@testing-library/react':
-        specifier: ^16.0.0
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@types/node':
-        specifier: 22.10.5
-        version: 22.10.5
-      '@types/react':
-        specifier: ^19.0.0
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: ^19.0.0
-        version: 19.2.4(@types/react@19.2.18)
-      diff:
-        specifier: ^7.0.0
-        version: 7.0.0
-      react:
-        specifier: 19.2.7
-        version: 19.2.7
-      react-dom:
-        specifier: 19.2.7
-        version: 19.2.7(react@19.2.7)
-    devDependencies:
-      '@teambit/harmony.envs.core-react-env':
-        specifier: 1.0.2
-        version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
-      '@types/diff':
-        specifier: ^5.2.3
-        version: 5.2.3
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
@@ -5768,6 +5746,9 @@ importers:
 
   components/ui/inline-tests-compare:
     dependencies:
+      '@teambit/code.ui.inline-diff-viewer':
+        specifier: ~0.0.15
+        version: 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -6811,9 +6792,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -7891,9 +7869,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -8953,9 +8928,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@18.3.1)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
@@ -10027,9 +9999,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -11077,9 +11046,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -12127,9 +12093,6 @@ importers:
       '@teambit/code.ui.inline-deps-compare':
         specifier: workspace:*
         version: file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
-      '@teambit/code.ui.inline-diff-viewer':
-        specifier: workspace:*
-        version: file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@19.2.7)
       '@teambit/code.ui.inline-tests-compare':
         specifier: workspace:*
         version: file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -30316,11 +30279,11 @@ packages:
     peerDependencies:
       react: 19.2.7
 
-  '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer':
-    resolution: {directory: components/ui/inline-diff-viewer, type: directory}
+  '@teambit/code.ui.inline-diff-viewer@0.0.15':
+    resolution: {integrity: sha512-dn67chIMbpHStbItY3TkoZrN9Nz4bVohp3Is83LJucegURRsGVNzVIiajDgBjC8l0gIXO7VEJyDNu8JGj3KS/A==}
     peerDependencies:
-      '@testing-library/react': ^16.0.0
-      react: 19.2.7
+      '@testing-library/react': ^12.0.0
+      react: 19.1.0
 
   '@teambit/code.ui.inline-tests-compare@file:components/ui/inline-tests-compare':
     resolution: {directory: components/ui/inline-tests-compare, type: directory}
@@ -56528,7 +56491,7 @@ snapshots:
   '@teambit/code.ui.inline-code-compare@file:components/ui/inline-code-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/code.ui.diff-viewer': file:components/ui/diff-viewer(@testing-library/dom@10.4.1)(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@18.3.1)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@18.3.1)
       '@teambit/code.ui.queries.get-file-content': file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
@@ -56549,7 +56512,7 @@ snapshots:
   '@teambit/code.ui.inline-code-compare@file:components/ui/inline-code-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/code.ui.diff-viewer': file:components/ui/diff-viewer(@testing-library/dom@10.4.1)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/code.ui.queries.get-file-content': file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
@@ -56571,7 +56534,7 @@ snapshots:
     dependencies:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@18.3.1)(react@18.3.1)(subscriptions-transport-ws@0.9.19)
       '@teambit/code.ui.diff-viewer': file:components/ui/diff-viewer(@testing-library/dom@10.4.1)(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@18.3.1)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@18.3.1)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -56592,7 +56555,7 @@ snapshots:
     dependencies:
       '@apollo/client': 3.12.11(@types/react@19.2.18)(graphql@15.8.0)(react-dom@19.2.7)(react@19.2.7)(subscriptions-transport-ws@0.9.19)
       '@teambit/code.ui.diff-viewer': file:components/ui/diff-viewer(@testing-library/dom@10.4.1)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -56611,7 +56574,7 @@ snapshots:
 
   '@teambit/code.ui.inline-deps-compare@file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@18.3.1)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@18.3.1)
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@18.3.1)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
@@ -56633,7 +56596,7 @@ snapshots:
 
   '@teambit/code.ui.inline-deps-compare@file:components/ui/inline-deps-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/component-id': 1.2.5
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -56653,49 +56616,27 @@ snapshots:
       - react-router-dom
       - supports-color
 
-  '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@18.3.1)':
-    dependencies:
-      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
-      '@types/node': 22.10.5
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      diff: 7.0.0
-      react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
-
-  '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer(@testing-library/react@14.3.1)(react@19.2.7)':
+  '@teambit/code.ui.inline-diff-viewer@0.0.15(@testing-library/react@14.3.1)(react@19.2.7)':
     dependencies:
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@types/node': 22.10.5
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.4(@types/react@19.2.18)
       diff: 7.0.0
       react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
 
-  '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@18.3.1)':
+  '@teambit/code.ui.inline-diff-viewer@0.0.15(@testing-library/react@16.3.2)(react@18.3.1)':
     dependencies:
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
-      '@types/node': 22.10.5
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.4(@types/react@19.2.18)
       diff: 7.0.0
       react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
 
-  '@teambit/code.ui.inline-diff-viewer@file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)':
+  '@teambit/code.ui.inline-diff-viewer@0.0.15(@testing-library/react@16.3.2)(react@19.2.7)':
     dependencies:
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@types/node': 22.10.5
-      '@types/react': 19.2.18
-      '@types/react-dom': 19.2.4(@types/react@19.2.18)
       diff: 7.0.0
       react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
 
   '@teambit/code.ui.inline-tests-compare@file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@18.3.1)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@18.3.1)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
@@ -56714,7 +56655,7 @@ snapshots:
 
   '@teambit/code.ui.inline-tests-compare@file:components/ui/inline-tests-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@teambit/code.ui.inline-diff-viewer': file:components/ui/inline-diff-viewer(@testing-library/react@16.3.2)(react@19.2.7)
+      '@teambit/code.ui.inline-diff-viewer': 0.0.15(@testing-library/react@16.3.2)(react@19.2.7)
       '@teambit/component.ui.component-compare.component-compare': file:components/ui/component-compare/component-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component.ui.component-compare.context': file:components/ui/component-compare/context(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
