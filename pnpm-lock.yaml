@@ -6702,7 +6702,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@5.2.1)(react@19.2.7)
@@ -7782,7 +7782,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
@@ -8844,7 +8844,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@4.3.0)(react@18.3.1)
@@ -9918,7 +9918,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
@@ -10968,7 +10968,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
@@ -12018,7 +12018,7 @@ importers:
         version: file:scopes/api-reference/api-reference(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(@testing-library/react-hooks@8.0.1)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/api-server':
         specifier: workspace:*
-        version: file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+        version: file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/application':
         specifier: workspace:*
         version: file:scopes/harmony/application(chai@4.3.0)(react@19.2.7)
@@ -18462,6 +18462,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -29485,6 +29488,8 @@ packages:
 
   '@teambit/api-server@file:scopes/harmony/api-server':
     resolution: {directory: scopes/harmony/api-server, type: directory}
+    peerDependencies:
+      chai: 5.2.1
 
   '@teambit/application@file:scopes/harmony/application':
     resolution: {directory: scopes/harmony/application, type: directory}
@@ -52239,7 +52244,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/api-server@file:scopes/harmony/api-server(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+  '@teambit/api-server@file:scopes/harmony/api-server(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
     dependencies:
       '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
       '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(supports-color@9.4.0)
@@ -52261,6 +52266,48 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      chalk: 4.1.2
+      cors: 2.8.5
+      express: 4.22.2(supports-color@9.4.0)
+      filenamify: 4.2.0
+      fs-extra: 10.0.0
+      http-proxy-middleware: 3.0.7(supports-color@9.4.0)
+      lodash: 4.18.1
+      node-fetch: 2.6.7
+      p-map: 4.0.0
+      pretty-time: 1.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - domexception
+      - graphql
+      - supports-color
+
+  '@teambit/api-server@file:scopes/harmony/api-server(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
+      '@teambit/component.modules.merge-helper': file:scopes/component/modules/merge-helper(supports-color@9.4.0)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/harmony.modules.send-server-sent-events': file:scopes/harmony/modules/send-server-sent-events
+      '@teambit/lane-id': 0.0.312
+      '@teambit/lanes.modules.diff': file:scopes/lanes/diff(supports-color@9.4.0)
+      '@teambit/legacy.constants': file:components/legacy/constants
+      '@teambit/legacy.consumer': file:components/legacy/consumer(supports-color@9.4.0)
+      '@teambit/legacy.loader': file:components/legacy/loader
+      '@teambit/legacy.logger': file:components/legacy/logger
+      '@teambit/legacy.scope': file:components/legacy/scope(supports-color@9.4.0)
+      '@teambit/legacy.utils': file:components/legacy/utils
+      '@teambit/scope.network': file:scopes/scope/network(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/toolbox.network.get-port': file:scopes/toolbox/network/get-port
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       cors: 2.8.5
       express: 4.22.2(supports-color@9.4.0)
