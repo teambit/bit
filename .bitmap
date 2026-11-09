@@ -2060,13 +2060,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/inline-deps-compare"
     },
-    "ui/inline-diff-viewer": {
-        "name": "ui/inline-diff-viewer",
-        "scope": "teambit.code",
-        "version": "0.0.14",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/inline-diff-viewer"
-    },
     "ui/inline-preview-compare": {
         "name": "ui/inline-preview-compare",
         "scope": "teambit.preview",

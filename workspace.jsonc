@@ -147,6 +147,7 @@
         "@teambit/code.ui.code-compare-section": "0.0.8",
         "@teambit/code.ui.code-tab-tree": "~0.0.620",
         "@teambit/code.ui.hooks.use-code-params": "0.0.497",
+        "@teambit/code.ui.inline-diff-viewer": "~0.0.15",
         "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/code.ui.queries.get-component-code": "~0.0.503",
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
