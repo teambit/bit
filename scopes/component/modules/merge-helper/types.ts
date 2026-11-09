@@ -30,6 +30,7 @@ export type ApplyVersionResults = {
   mergeSnapResults?: MergeSnapResults;
   mergeSnapError?: Error;
   leftUnresolvedConflicts?: boolean;
+  configMergeConflicts?: string[]; // relevant for checkout. components with config conflicts left in the config-merge file
   verbose?: boolean;
   newFromLane?: string[];
   newFromLaneAdded?: boolean;

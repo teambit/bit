@@ -25,6 +25,7 @@ import {
   conflictSummaryReport,
   getRemovedOutput,
   getWorkspaceConfigUpdateOutput,
+  getConfigMergeConflictsOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { MergingMain } from './merging.main.runtime';
 import { compHasBeenRemovedMsg } from './merge-status-provider';
@@ -190,15 +191,11 @@ export function mergeReport({
   };
 
   const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
-  const getConfigMergeConflictSummary = () => {
-    if (!configMergeWithConflicts.length) return '';
-    const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
-    const title = formatTitle(`${warnSymbol} components with config-merge conflicts`);
-    const suggestion = formatHint(
-      `conflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.\nonce ready, snap/tag the components to complete the merge.`
+  const getConfigMergeConflictSummary = () =>
+    getConfigMergeConflictsOutput(
+      configMergeWithConflicts.map((c) => c.compIdStr),
+      'snap/tag the components to complete the merge'
     );
-    return `${title}\n${comps}\n${suggestion}`;
-  };
 
   const getSnapsOutput = () => {
     if (mergeSnapError) {
