@@ -7,6 +7,7 @@ import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
 
@@ -204,6 +205,19 @@ export class PackageJsonFile {
       ...this.packageJsonObject.peerDependencies,
       ...peerDependencies,
     };
+  }
+
+  /**
+   * sort the dependencies fields by package name. these fields are populated from several sources (the component
+   * dependencies, transformers, overrides, the package.json of the last build), so their order depends on the order in
+   * which the entries were added, which changes between builds of the same component and makes them hard to diff.
+   */
+  sortDependencies() {
+    [...DEPENDENCIES_FIELDS, 'optionalDependencies', 'peerDependenciesMeta'].forEach((field) => {
+      const deps = this.packageJsonObject[field];
+      if (!deps || typeof deps !== 'object') return;
+      this.packageJsonObject[field] = sortObjectByKeys(deps);
+    });
   }
 
   removeDependency(dependency: string) {

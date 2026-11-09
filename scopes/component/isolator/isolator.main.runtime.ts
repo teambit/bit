@@ -1640,6 +1640,7 @@ export class IsolatorMain {
     };
     addDependencies(packageJson);
     packageJson.addOrUpdateProperty('version', currentVersion);
+    packageJson.sortDependencies();
     return packageJson;
   }
 
@@ -1680,6 +1681,7 @@ export class IsolatorMain {
       packageJson.packageJsonObject,
       this.dependencyResolver.getHiddenPeerDependencies(component)
     );
+    packageJson.sortDependencies();
     dataToPersist.addFile(packageJson.toVinylFile());
     const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
