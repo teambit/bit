@@ -12,6 +12,10 @@ export class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
+  /**
+   * set by addBasePath. when a removed path leaves empty parent dirs, they're removed up to (not including) this dir.
+   */
+  basePath?: string;
   constructor() {
     this.files = [];
     this.symlinks = [];
@@ -118,6 +122,7 @@ export class DataToPersist {
     }
   }
   addBasePath(basePath: string) {
+    this.basePath = basePath;
     this.files.forEach((file) => {
       this._assertRelative(file.base);
       file.updatePaths({ newBase: path.join(basePath, file.base) });
@@ -159,7 +164,7 @@ export class DataToPersist {
     const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter((p) => p.removeItsDirIfEmpty).map((p) => p.path);
     const restPaths = this.remove.filter((p) => !p.removeItsDirIfEmpty);
     if (pathWithRemoveItsDirIfEmptyEnabled.length) {
-      await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+      await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled, this.basePath);
     }
     const concurrency = concurrentIOLimit();
     return pMapPool(restPaths, (removePath) => removePath.persistToFS(), { concurrency });
