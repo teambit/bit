@@ -37,4 +37,11 @@ describe('removeFilesAndEmptyDirsRecursively', () => {
     await removeFilesAndEmptyDirsRecursively([componentDir(), siblingDir], workspacePath);
     expect(await fs.pathExists(path.join(workspacePath, 'ui'))).to.be.false;
   });
+  it('should treat a dir whose name starts with two dots as inside the stop dir', async () => {
+    const componentInTwoDotsDir = path.join(workspacePath, '..cache/ui/button');
+    await fs.outputFile(path.join(componentInTwoDotsDir, 'index.ts'), '');
+    await removeFilesAndEmptyDirsRecursively([componentInTwoDotsDir], workspacePath);
+    expect(await fs.pathExists(path.join(workspacePath, '..cache'))).to.be.false;
+    expect(await fs.pathExists(workspacePath)).to.be.true;
+  });
 });
