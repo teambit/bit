@@ -1414,16 +1414,19 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 
   /**
    * the snaps in the ancestry of `head` (excluding `head` itself) that were made on a lane, older first.
-   * walks the parents and stops at snaps made on main (those live on the component's home scope) and at
-   * versions missing locally.
+   * walks the parents and stops at snaps made on main (those live on the component's home scope).
    * a lane forked to a new scope needs them: they live only on the original lane's scope, so without a
    * copy, the new scope's history is broken once the original lane is deleted.
+   * `missing` are the parents the walk could not load locally and that are not known as main versions (a tag or
+   * the main head). they are probably lane snaps too, so the caller can fetch them and walk again.
    */
-  async getLaneOriginAncestors(repo: Repository, head: Ref): Promise<Ref[]> {
-    const headVersion = (await head.load(repo)) as Version | undefined;
-    if (!headVersion) return [];
-    const visited = new Set<string>([head.toString()]);
+  async getLaneOriginAncestors(repo: Repository, head: Ref): Promise<{ ancestors: Ref[]; missing: Ref[] }> {
     const ancestors: Ref[] = [];
+    const missing: Ref[] = [];
+    const headVersion = (await head.load(repo)) as Version | undefined;
+    if (!headVersion) return { ancestors, missing };
+    const isKnownMainVersion = (ref: Ref) => Boolean(this.getTagOfRefIfExists(ref) || this.head?.isEqual(ref));
+    const visited = new Set<string>([head.toString()]);
     let currentLevel = headVersion.parents;
     while (currentLevel.length) {
       const toVisit: Ref[] = [];
@@ -1435,13 +1438,18 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       const versions = await Promise.all(toVisit.map((ref) => ref.load(repo) as Promise<Version | undefined>));
       const nextLevel: Ref[] = [];
       versions.forEach((version, index) => {
-        if (!version?.originLaneId) return;
-        ancestors.push(toVisit[index]);
+        const ref = toVisit[index];
+        if (!version) {
+          if (!isKnownMainVersion(ref)) missing.push(ref);
+          return;
+        }
+        if (!version.originLaneId) return;
+        ancestors.push(ref);
         nextLevel.push(...version.parents);
       });
       currentLevel = nextLevel;
     }
-    return ancestors.reverse();
+    return { ancestors: ancestors.reverse(), missing };
   }
 
   private async filterLeanLaneRefs(repo: Repository, lane: Lane, refs: Ref[]): Promise<Ref[]> {

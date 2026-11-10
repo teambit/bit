@@ -226,8 +226,9 @@ describe('ModelComponent', () => {
         versionObject(3, [2], true),
         versionObject(4, [3], true),
       ]);
-      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      const { ancestors, missing } = await component().getLaneOriginAncestors(repo, ref(4));
       expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(2), hash(3)]);
+      expect(missing).to.have.length(0);
     });
 
     it('follows both parents of a merge snap and stops at main snaps on each side', async () => {
@@ -239,19 +240,30 @@ describe('ModelComponent', () => {
         versionObject(3, [2, 1], true),
         versionObject(4, [3], true),
       ]);
-      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      const { ancestors } = await component().getLaneOriginAncestors(repo, ref(4));
       expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(2), hash(3)]);
     });
 
-    it('stops at a version missing locally', async () => {
+    it('stops at a version missing locally and reports it as missing', async () => {
       const repo = fakeRepo([versionObject(3, [2], true), versionObject(4, [3], true)]);
-      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      const { ancestors, missing } = await component().getLaneOriginAncestors(repo, ref(4));
       expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(3)]);
+      expect(missing.map((r) => r.toString())).to.deep.equal([hash(2)]);
+    });
+
+    it('does not report a missing version that is a known main tag', async () => {
+      const fixture = getModelComponentFixture();
+      const tagHash = fixture.versions['0.0.1'];
+      const repo = fakeRepo([versionObject(4, [], true)]);
+      repo.load = async (r: Ref) => (r.toString() === hash(4) ? { parents: [new Ref(tagHash)] } : undefined);
+      const { missing } = await getModelComponent(fixture).getLaneOriginAncestors(repo, ref(4));
+      expect(missing).to.have.length(0);
     });
 
     it('returns nothing when the head is missing locally', async () => {
-      const ancestors = await component().getLaneOriginAncestors(fakeRepo([]), ref(4));
+      const { ancestors, missing } = await component().getLaneOriginAncestors(fakeRepo([]), ref(4));
       expect(ancestors).to.have.length(0);
+      expect(missing).to.have.length(0);
     });
   });
 });

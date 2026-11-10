@@ -428,8 +428,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         // lane are not selected. see `getLaneOriginAncestors` for why the new scope needs them. the ones the
         // remote already has are filtered out by `filterOutExistingVersions`.
         if (laneHead && laneObject.isNewForkToAnotherScope()) {
-          const laneOriginAncestors = await modelComponent.getLaneOriginAncestors(scope.objects, laneHead);
-          const missingAncestors = laneOriginAncestors.filter((ref) => !localTagsOrHashes.find((r) => r.isEqual(ref)));
+          const { ancestors } = await modelComponent.getLaneOriginAncestors(scope.objects, laneHead);
+          const missingAncestors = ancestors.filter((ref) => !localTagsOrHashes.find((r) => r.isEqual(ref)));
           localTagsOrHashes.unshift(...missingAncestors);
         }
       }
@@ -529,6 +529,9 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const allObjectItems: ObjectItem[] = [];
       const objectListPerName: ObjectListPerName = {};
 
+      if (laneObject?.isNewForkToAnotherScope()) {
+        await this.importMissingLaneOriginAncestors(scope, laneObject, bitIds);
+      }
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
       // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
       scope.objects.clearObjectsFromCache();
@@ -914,6 +917,43 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     if (modelComponent.scope) return;
     const idWithFutureScope = ids.searchWithoutScopeAndVersion(modelComponent.toComponentId());
     modelComponent.scope = idWithFutureScope?.scope || remoteScope;
+  }
+
+  /**
+   * the first export of a lane forked to another scope pushes the snaps made on the original lane as well (see
+   * `getLaneOriginAncestors`). some of them may be missing locally, e.g. when the original lane was imported with its
+   * heads only. fetch them, with their parents, from the original lane's scope.
+   * best effort: if they can't be fetched (e.g. the original lane was deleted), the export continues without them.
+   */
+  private async importMissingLaneOriginAncestors(
+    scope: Scope,
+    lane: Lane & { forkedFrom: LaneId },
+    ids: ComponentIdList
+  ): Promise<void> {
+    const idsToFetch = await mapSeries(ids, async (id) => {
+      const laneHead = lane.getCompHeadIncludeUpdateDependents(id);
+      if (!laneHead) return [];
+      const modelComponent = await scope.getModelComponent(id);
+      const { missing } = await modelComponent.getLaneOriginAncestors(scope.objects, laneHead);
+      return missing.map((ref) => id.changeVersion(ref.toString()));
+    });
+    const flattenedIds = idsToFetch.flat();
+    if (!flattenedIds.length) return;
+    try {
+      const forkedFromLane =
+        (await scope.loadLane(lane.forkedFrom)) || (await scope.scopeImporter.importLanes([lane.forkedFrom]))[0];
+      if (!forkedFromLane) throw new Error(`the lane was not found`);
+      await scope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(flattenedIds), {
+        cache: false,
+        collectParents: true,
+        lane: forkedFromLane,
+        reason: `for the snaps of the forked-from lane ${lane.forkedFrom.toString()}`,
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `unable to fetch the missing snaps of the forked-from lane ${lane.forkedFrom.toString()}, the export continues without them. error: ${err.message}`
+      );
+    }
   }
 
   private async getComponentsToExport(
