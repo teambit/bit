@@ -1000,8 +1000,8 @@ importers:
         specifier: ~0.0.502
         version: 0.0.502
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ~0.0.10
-        version: 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+        specifier: ~0.0.12
+        version: 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ~0.0.2
         version: 0.0.2
@@ -17197,8 +17197,8 @@ importers:
         specifier: ~0.0.4
         version: 0.0.4
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ~0.0.10
-        version: 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+        specifier: ~0.0.12
+        version: 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ~0.0.2
         version: 0.0.2
@@ -34129,8 +34129,8 @@ packages:
       '@teambit/mdx.ui.mdx-layout': ^1.0.14
       react: 19.1.0
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10':
-    resolution: {integrity: sha512-RPHrkHxnXWl8C++ns92PxYVKWLmNMGXWsYTeVa6EtDkW49z9aP4VkLPci5c4GUHLEPxepWxmAKBhrkVquBihmA==}
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12':
+    resolution: {integrity: sha512-wYHADGXNnWYGERG4WnnzH59JC8CM7OzPYLTPDCySpWEEJsoAVdXj6mwJYkRFn9xo9wXUpWOyzaVh/gIwsQgjfg==}
     peerDependencies:
       typescript: 5.5.3
 
@@ -61378,7 +61378,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.26.9)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61494,7 +61494,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61610,7 +61610,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@6.0.3)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@6.0.3)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61726,7 +61726,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@5.2.1)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -81644,7 +81644,7 @@ snapshots:
       react-dom: 18.3.1(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@19.2.7)
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10(supports-color@9.4.0)(typescript@5.9.2)':
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12(supports-color@9.4.0)(typescript@5.9.2)':
     dependencies:
       '@teambit/node.deps-detectors.parser-helper': 0.0.6
       '@typescript-eslint/typescript-estree': 8.39.0(supports-color@9.4.0)(typescript@5.9.2)
@@ -81653,7 +81653,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10(supports-color@9.4.0)(typescript@6.0.3)':
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12(supports-color@9.4.0)(typescript@6.0.3)':
     dependencies:
       '@teambit/node.deps-detectors.parser-helper': 0.0.6
       '@typescript-eslint/typescript-estree': 8.39.0(supports-color@9.4.0)(typescript@6.0.3)
