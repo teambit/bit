@@ -32,8 +32,8 @@ describe('removeFilesAndEmptyDirsRecursively', () => {
     expect(await fs.pathExists(path.join(workspacePath, 'ui/other.ts'))).to.be.true;
   });
   it('should remove the shared empty parent dirs when removing sibling dirs', async () => {
-    await fs.outputFile(path.join(workspacePath, 'ui/buttons/icon-button/index.ts'), '');
     const siblingDir = path.join(workspacePath, 'ui/buttons/icon-button');
+    await fs.outputFile(path.join(siblingDir, 'index.ts'), '');
     await removeFilesAndEmptyDirsRecursively([componentDir(), siblingDir], workspacePath);
     expect(await fs.pathExists(path.join(workspacePath, 'ui'))).to.be.false;
   });

@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import pMap from 'p-map';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
+import { uniq } from 'lodash';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { logger } from '@teambit/legacy.logger';
@@ -12,7 +13,7 @@ import { logger } from '@teambit/legacy.logger';
  * when `stopAtDir` is given, it continues up and removes the empty parent dirs as well, up to (not including) `stopAtDir`.
  */
 export async function removeFilesAndEmptyDirsRecursively(filesPaths: string[], stopAtDir?: string): Promise<boolean> {
-  const dirs = filesPaths.map((filePath) => path.dirname(filePath));
+  const dirs = uniq(filesPaths.map((filePath) => path.dirname(filePath)));
   logger.info(`remove-files-and-empty-dirs-recursively deleting the following paths: ${filesPaths.join(', ')}`);
   const concurrency = concurrentIOLimit();
   await pMap(filesPaths, (filePath) => fs.remove(filePath), { concurrency });
@@ -33,5 +34,6 @@ export async function removeFilesAndEmptyDirsRecursively(filesPaths: string[], s
 
 function isInsideDir(dir: string, parentDir: string): boolean {
   const relativePath = path.relative(parentDir, dir);
-  return Boolean(relativePath) && !relativePath.startsWith('..') && !path.isAbsolute(relativePath);
+  const isOutside = relativePath === '..' || relativePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativePath);
+  return Boolean(relativePath) && !isOutside;
 }

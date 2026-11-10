@@ -1,6 +1,8 @@
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { groupBy } from 'lodash';
+import mapSeries from 'p-map-series';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import type { Symlink } from './symlink';
 import { logger } from '@teambit/legacy.logger';
@@ -12,10 +14,6 @@ export class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
-  /**
-   * set by addBasePath. when a removed path leaves empty parent dirs, they're removed up to (not including) this dir.
-   */
-  basePath?: string;
   constructor() {
     this.files = [];
     this.symlinks = [];
@@ -122,7 +120,6 @@ export class DataToPersist {
     }
   }
   addBasePath(basePath: string) {
-    this.basePath = basePath;
     this.files.forEach((file) => {
       this._assertRelative(file.base);
       file.updatePaths({ newBase: path.join(basePath, file.base) });
@@ -136,6 +133,7 @@ export class DataToPersist {
     this.remove.forEach((removePath) => {
       this._assertRelative(removePath.path);
       removePath.path = path.join(basePath, removePath.path);
+      removePath.stopAtDir = basePath;
     });
   }
   /**
@@ -161,11 +159,16 @@ export class DataToPersist {
     this.symlinks.forEach((symlink) => symlink.write());
   }
   async _deletePathsFromFS() {
-    const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter((p) => p.removeItsDirIfEmpty).map((p) => p.path);
+    const pathsWithRemoveItsDirIfEmpty = this.remove.filter((p) => p.removeItsDirIfEmpty);
     const restPaths = this.remove.filter((p) => !p.removeItsDirIfEmpty);
-    if (pathWithRemoveItsDirIfEmptyEnabled.length) {
-      await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled, this.basePath);
-    }
+    // paths with the same stop-dir are removed together, so their shared parent dirs are removed in the right order
+    const pathsPerStopAtDir = groupBy(pathsWithRemoveItsDirIfEmpty, (p) => p.stopAtDir || '');
+    await mapSeries(Object.entries(pathsPerStopAtDir), ([stopAtDir, removePaths]) =>
+      removeFilesAndEmptyDirsRecursively(
+        removePaths.map((p) => p.path),
+        stopAtDir || undefined
+      )
+    );
     const concurrency = concurrentIOLimit();
     return pMapPool(restPaths, (removePath) => removePath.persistToFS(), { concurrency });
   }
