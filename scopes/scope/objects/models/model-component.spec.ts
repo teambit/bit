@@ -200,4 +200,58 @@ describe('ModelComponent', () => {
       expect(Date.now() - start).to.be.lessThan(2000);
     });
   });
+
+  describe('getLaneOriginAncestors', () => {
+    const hash = (i: number) => i.toString(16).padStart(40, '0');
+    const ref = (i: number) => new Ref(hash(i));
+    const laneId = { name: 'dev', scope: 'lane-scope' };
+    /** a version object as the walk reads it: its parents and, for a lane snap, its origin lane. */
+    const versionObject = (i: number, parents: number[], onLane: boolean): any => ({
+      hash: () => ref(i),
+      parents: parents.map(ref),
+      originLaneId: onLane ? laneId : undefined,
+    });
+    const fakeRepo = (versions: any[]) => {
+      const byHash = new Map(versions.map((v) => [v.hash().toString(), v]));
+      return { load: async (r: Ref) => byHash.get(r.toString()) } as any;
+    };
+    const component = () => getModelComponent(getModelComponentFixture());
+
+    it('returns the lane snaps under the head, older first, and stops at the main snap', async () => {
+      // main: 0 <- 1, lane: 1 <- 2 <- 3 <- 4 (head)
+      const repo = fakeRepo([
+        versionObject(0, [], false),
+        versionObject(1, [0], false),
+        versionObject(2, [1], true),
+        versionObject(3, [2], true),
+        versionObject(4, [3], true),
+      ]);
+      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(2), hash(3)]);
+    });
+
+    it('follows both parents of a merge snap and stops at main snaps on each side', async () => {
+      // main: 0 <- 1, lane: 0 <- 2, merge-snap 3 with parents [2, 1]
+      const repo = fakeRepo([
+        versionObject(0, [], false),
+        versionObject(1, [0], false),
+        versionObject(2, [0], true),
+        versionObject(3, [2, 1], true),
+        versionObject(4, [3], true),
+      ]);
+      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(2), hash(3)]);
+    });
+
+    it('stops at a version missing locally', async () => {
+      const repo = fakeRepo([versionObject(3, [2], true), versionObject(4, [3], true)]);
+      const ancestors = await component().getLaneOriginAncestors(repo, ref(4));
+      expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(3)]);
+    });
+
+    it('returns nothing when the head is missing locally', async () => {
+      const ancestors = await component().getLaneOriginAncestors(fakeRepo([]), ref(4));
+      expect(ancestors).to.have.length(0);
+    });
+  });
 });

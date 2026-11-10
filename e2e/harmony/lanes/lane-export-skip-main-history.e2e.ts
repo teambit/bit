@@ -297,10 +297,8 @@ describe('lane export skips main history objects', function () {
           log = helper.command.logParsed('comp1');
         }).to.not.throw();
         const hashes = log.map((l: any) => l.hash);
-        // Lean fork: scope-F holds only the lane head. Deeper ancestry (mergeSnapOnL, laneSnapOnL)
-        // lives on scope-L and the client-side `collectLogs` fallback only retries against the
-        // component home scope, so it can't reach them here. Surfacing those would require the
-        // consumer to also fetch from the original lane scope — separate from this PR's lean fix.
+        // the fork export pushes the lane head along with the snaps made on the original lane
+        // (mergeSnapOnL, laneSnapOnL), so scope-F doesn't depend on scope-L for the lane history.
         expect(hashes).to.include(snapOnFork);
       });
 
@@ -853,6 +851,7 @@ describe('lane export skips main history objects', function () {
     let scopeLPath: string;
     let scopeM: string;
     let scopeMPath: string;
+    let laneAFirstSnap: string;
 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -880,6 +879,8 @@ describe('lane export skips main history objects', function () {
       // lane-A on scope-L, exported
       helper.command.createLane('lane-a', `--scope ${scopeL}`);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneAFirstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
       // lane-B forked to scope-M, exported (lane-B.forkedFrom = scope-L/lane-a)
@@ -904,6 +905,12 @@ describe('lane export skips main history objects', function () {
       // home-scope fetch covers the main-snap and closure is satisfied.
       helper.command.switchLocalLane('lane-b');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+
+    // the export-validate fetch from the forked-from lane brings only the lane-A heads (and the VersionHistory),
+    // so a non-head lane-A snap reaches scope-M only if the fork export pushes it.
+    it('scope-M should hold the non-head lane-A snap, so lane-B history survives the deletion of lane-A', () => {
+      expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
     });
 
     it('exporting lane-B should not fail even though the forked-from lane was deleted upstream', () => {

@@ -1412,6 +1412,38 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     return filtered.reverse(); // reverse to get the older first
   }
 
+  /**
+   * the snaps in the ancestry of `head` (excluding `head` itself) that were made on a lane, older first.
+   * walks the parents and stops at snaps made on main (those live on the component's home scope) and at
+   * versions missing locally.
+   * a lane forked to a new scope needs them: they live only on the original lane's scope, so without a
+   * copy, the new scope's history is broken once the original lane is deleted.
+   */
+  async getLaneOriginAncestors(repo: Repository, head: Ref): Promise<Ref[]> {
+    const headVersion = (await head.load(repo)) as Version | undefined;
+    if (!headVersion) return [];
+    const visited = new Set<string>([head.toString()]);
+    const ancestors: Ref[] = [];
+    let currentLevel = headVersion.parents;
+    while (currentLevel.length) {
+      const toVisit: Ref[] = [];
+      currentLevel.forEach((ref) => {
+        if (visited.has(ref.toString())) return;
+        visited.add(ref.toString());
+        toVisit.push(ref);
+      });
+      const versions = await Promise.all(toVisit.map((ref) => ref.load(repo) as Promise<Version | undefined>));
+      const nextLevel: Ref[] = [];
+      versions.forEach((version, index) => {
+        if (!version?.originLaneId) return;
+        ancestors.push(toVisit[index]);
+        nextLevel.push(...version.parents);
+      });
+      currentLevel = nextLevel;
+    }
+    return ancestors.reverse();
+  }
+
   private async filterLeanLaneRefs(repo: Repository, lane: Lane, refs: Ref[]): Promise<Ref[]> {
     const laneHead = lane.getCompHeadIncludeUpdateDependents(this.toComponentId());
     const keptRefs = await pMapPool(
