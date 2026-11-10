@@ -219,12 +219,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       _throwForUnsnappedLaneReadme(laneObject);
     }
 
-    if (
-      !params.forkLaneNewScope &&
-      laneObject?.forkedFrom &&
-      laneObject.isNew &&
-      laneObject.forkedFrom.scope !== laneObject.scope
-    ) {
+    if (!params.forkLaneNewScope && laneObject?.isNewForkToAnotherScope()) {
       throw new BitError(`error: the current lane ${laneObject
         .id()
         .toString()} was forked from ${laneObject.forkedFrom.toString()}
@@ -429,14 +424,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         if (laneHead && !localTagsOrHashes.find((r) => r.isEqual(laneHead))) {
           localTagsOrHashes.push(laneHead);
         }
-        // on the first export of a lane forked to a new scope, the divergence baseline is the forked-from
-        // head, so the snaps made on the original lane are not selected. they live only on the original
-        // lane's scope - once that lane is deleted, the new scope can't resolve the history of its head.
-        // push them too, so the new scope is self-contained. existing ones are filtered out later by
-        // `filterOutExistingVersions`.
-        const isNewCrossScopeFork =
-          laneObject.isNew && laneObject.forkedFrom && laneObject.forkedFrom.scope !== laneObject.scope;
-        if (laneHead && isNewCrossScopeFork) {
+        // the divergence baseline of a new fork is the forked-from head, so the snaps made on the original
+        // lane are not selected. see `getLaneOriginAncestors` for why the new scope needs them. the ones the
+        // remote already has are filtered out by `filterOutExistingVersions`.
+        if (laneHead && laneObject.isNewForkToAnotherScope()) {
           const laneOriginAncestors = await modelComponent.getLaneOriginAncestors(scope.objects, laneHead);
           const missingAncestors = laneOriginAncestors.filter((ref) => !localTagsOrHashes.find((r) => r.isEqual(ref)));
           localTagsOrHashes.unshift(...missingAncestors);
