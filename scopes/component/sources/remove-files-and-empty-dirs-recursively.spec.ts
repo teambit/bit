@@ -4,7 +4,9 @@ import os from 'os';
 import * as path from 'path';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 
-describe('removeFilesAndEmptyDirsRecursively', () => {
+describe('removeFilesAndEmptyDirsRecursively', function () {
+  // the first call is slow on CI (cold fs/logger init), exceeding mocha's default 2s
+  this.timeout(10000);
   let workspacePath: string;
   beforeEach(async () => {
     workspacePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-remove-empty-dirs-'));
