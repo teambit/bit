@@ -167,7 +167,8 @@ export function mergeReport({
   verbose,
   configMergeResults,
   workspaceConfigUpdateResult,
-}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string | Report {
+  abortCommand = 'bit merge --abort',
+}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[]; abortCommand?: string }): string | Report {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
     const title = formatTitle(
@@ -185,7 +186,7 @@ export function mergeReport({
     const conflictSummary = conflictSummaryReport(components);
     componentsWithConflicts = conflictSummary.conflictedComponents;
     const suggestion = formatHint(
-      `merge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".\nonce ready, snap/tag the components to complete the merge.`
+      `merge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".\nonce ready, snap/tag the components to complete the merge.\nto cancel the merge, run "${abortCommand}".`
     );
     return `${title}\n${conflictSummary.conflictStr}\n\n${suggestion}`;
   };
