@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
@@ -211,8 +212,9 @@ export class ExportMain {
       };
     }
     if (!idsToExport.length && laneObject && params.forkLaneNewScope) {
-      throw new BitError(`the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+      throw new BitError(
+        `the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag${fetchFullHistoryHint(laneObject)}`
+      );
     }
 
     // validate lane readme component and ensure it has been snapped
@@ -231,8 +233,7 @@ on large lanes with long history graph, it results in exporting lots of objects 
 if you can use the same scope as the original name, change it now by running "bit lane change-scope ${
         laneObject.name
       } ${laneObject.forkedFrom.scope}".
-otherwise, re-run the export with "--fork-lane-new-scope" flag.
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+otherwise, re-run the export with "--fork-lane-new-scope" flag.${fetchFullHistoryHint(laneObject)}`);
     }
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
@@ -1186,6 +1187,15 @@ function addScopesInvolvedToError(err: any, scopeNames: string[]): any {
   err.message = `${err.message}
 the following scopes were used for this export: ${scopeNames.join(', ')}`;
   return err;
+}
+
+/**
+ * a forked lane is not on the remote yet, so its history is fetched from the lane it was forked from.
+ * returns the hint as a new line, or an empty string when the lane was not forked.
+ */
+function fetchFullHistoryHint(lane: Lane): string {
+  if (!lane.forkedFrom) return '';
+  return `\nif the export fails with missing objects/versions/components, run "bit fetch --lanes ${chalk.bold(lane.forkedFrom.toString())} --all-history", to make sure you have the full history locally`;
 }
 
 export default ExportMain;
