@@ -6,7 +6,6 @@ import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import { compact } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import type { BitObjectList, Lane, ModelComponent, Ref } from '@teambit/objects';
 import { getAllVersionHashes, indexVersionObjects } from '@teambit/component.snap-distance';
@@ -16,6 +15,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 type Options = { clientId: string; isResumingExport: boolean };
+type MissingPerComp = { modelComponent: ModelComponent; missing: Ref[] };
 const NUM_OF_RETRIES = 60;
 const WAIT_BEFORE_RETRY_IN_MS = 1000;
 
@@ -126,14 +126,13 @@ export class ExportValidate implements Action<Options> {
       externalComponents,
       async (modelComponent) => {
         const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-        if (!laneHead) return undefined;
+        if (!laneHead) return { modelComponent, missing: [] };
         const { missing } = await modelComponent.getLaneOriginAncestors(this.scope.objects, laneHead, versionObjects);
-        const notOnMain = await this.filterOutMainSnaps(modelComponent, missing, modelComponent.head);
-        return notOnMain.length ? { modelComponent, missing: notOnMain } : undefined;
+        return { modelComponent, missing };
       },
       { concurrency: concurrentComponentsLimit() }
     );
-    const suspected = compact(missingPerComp);
+    const suspected = await this.keepMissingNotOnMain(missingPerComp, async (modelComponent) => modelComponent.head);
     if (!suspected.length) return;
     // the main head known here might be behind, which makes a newer main snap look like a lane snap. re-check against
     // the main head of the home scope before failing the export.
@@ -147,20 +146,34 @@ export class ExportValidate implements Action<Options> {
     } catch (err: any) {
       logger.warn(`export-validate: failed fetching the main heads from the home scopes. error: ${err.message}`);
     }
-    const missingAfterRecheck = await pMapPool(
+    const stillMissing = await this.keepMissingNotOnMain(
       suspected,
-      async ({ modelComponent, missing }) => {
-        const homeComp = await this.scope.getModelComponentIfExist(modelComponent.toComponentId());
-        const notOnMain = await this.filterOutMainSnaps(modelComponent, missing, homeComp?.head);
-        return notOnMain.length ? `${modelComponent.id()}: ${notOnMain.map((ref) => ref.toString()).join(', ')}` : '';
-      },
-      { concurrency: concurrentComponentsLimit() }
+      async (modelComponent) => (await this.scope.getModelComponentIfExist(modelComponent.toComponentId()))?.head
     );
-    const errors = compact(missingAfterRecheck);
-    if (!errors.length) return;
+    if (!stillMissing.length) return;
+    const errors = stillMissing.map(({ modelComponent, missing }) => `${modelComponent.id()}: ${missing.join(', ')}`);
     throw new BitError(`unable to export the lane "${lane.toLaneId().toString()}" to "${this.scope.name}". the lane is forked from "${lane.forkedFrom?.toString()}" and the following snaps of the original lane were not exported with it:
 ${errors.join('\n')}
 please upgrade bit and export again`);
+  }
+
+  /**
+   * drop the missing snaps that are in the history of the main head (they live on the component's home scope), and
+   * the components left with no missing snaps.
+   */
+  private async keepMissingNotOnMain(
+    missingPerComp: MissingPerComp[],
+    getMainHead: (modelComponent: ModelComponent) => Promise<Ref | undefined>
+  ): Promise<MissingPerComp[]> {
+    const results = await pMapPool(
+      missingPerComp,
+      async ({ modelComponent, missing }) => ({
+        modelComponent,
+        missing: await this.filterOutMainSnaps(modelComponent, missing, await getMainHead(modelComponent)),
+      }),
+      { concurrency: concurrentComponentsLimit() }
+    );
+    return results.filter(({ missing }) => missing.length);
   }
 
   private async filterOutMainSnaps(modelComponent: ModelComponent, refs: Ref[], mainHead?: Ref): Promise<Ref[]> {

@@ -842,7 +842,6 @@ describe('lane export skips main history objects', function () {
     });
   });
 
-  // the export-validate fetch from the forked-from lane brings only its heads (and the VersionHistory), so the
   /**
    * comp1 on scope-C, lane-A on scope-L with two snaps (exported), then a new workspace that imports lane-A with its
    * heads only. returns the scopes and the non-head lane-A snap.
@@ -850,9 +849,8 @@ describe('lane export skips main history objects', function () {
   const setupLaneAImportedWithHeadsOnly = () => {
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     const scopeCPath = helper.scopes.remotePath;
-    const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
-    const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
-    const [scopeL, scopeLPath, scopeM, scopeMPath] = [lNew.scopeName, lNew.scopePath, mNew.scopeName, mNew.scopePath];
+    const { scopeName: scopeL, scopePath: scopeLPath } = helper.scopeHelper.getNewBareScope('-lane-l');
+    const { scopeName: scopeM, scopePath: scopeMPath } = helper.scopeHelper.getNewBareScope('-lane-m');
     [scopeLPath, scopeMPath].forEach((p) => {
       helper.scopeHelper.addRemoteScope(p);
       helper.scopeHelper.addRemoteScope(p, scopeCPath);
@@ -877,6 +875,7 @@ describe('lane export skips main history objects', function () {
     return { scopeL, scopeLPath, scopeM, scopeMPath, laneAFirstSnap };
   };
 
+  // the export-validate fetch from the forked-from lane brings only its heads (and the VersionHistory), so the
   // non-head snaps of the original lane reach the new scope only if the fork export pushes them. here they are not
   // even local, because the forking workspace imported the original lane with its heads only.
   describe('fork a lane imported with its heads only to another scope, then delete the original lane', () => {
