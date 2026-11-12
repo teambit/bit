@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
@@ -211,7 +212,7 @@ export class ExportMain {
     }
     if (!idsToExport.length && laneObject && params.forkLaneNewScope) {
       throw new BitError(`the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+${fetchFullHistoryHint(laneObject)}`);
     }
 
     // validate lane readme component and ensure it has been snapped
@@ -231,7 +232,7 @@ if you can use the same scope as the original name, change it now by running "bi
         laneObject.name
       } ${laneObject.forkedFrom.scope}".
 otherwise, re-run the export with "--fork-lane-new-scope" flag.
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+${fetchFullHistoryHint(laneObject)}`);
     }
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
@@ -1142,3 +1143,11 @@ the following scopes were used for this export: ${scopeNames.join(', ')}`;
 }
 
 export default ExportMain;
+
+/**
+ * a forked lane is not on the remote yet, so its history is fetched from the lane it was forked from.
+ */
+function fetchFullHistoryHint(lane: Lane): string {
+  const laneIdToFetch = (lane.forkedFrom || lane.toLaneId()).toString();
+  return `if the export fails with missing objects/versions/components, run "bit fetch --lanes ${chalk.bold(laneIdToFetch)} --all-history", to make sure you have the full history locally`;
+}
