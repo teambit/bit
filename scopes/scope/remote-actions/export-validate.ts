@@ -144,7 +144,12 @@ export class ExportValidate implements Action<Options> {
         reason: 'to check whether snaps missing from a new forked lane are main snaps',
       });
     } catch (err: any) {
-      logger.warn(`export-validate: failed fetching the main heads from the home scopes. error: ${err.message}`);
+      // without the main heads of the home scopes, a missing snap can't be told apart from a newer main snap. don't
+      // block the export based on a main head that might be behind.
+      logger.warn(
+        `export-validate: failed fetching the main heads from the home scopes, skipping the check of the snaps of the original lane. error: ${err.message}`
+      );
+      return;
     }
     const stillMissing = await this.keepMissingNotOnMain(
       suspected,
