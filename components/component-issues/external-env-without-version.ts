@@ -11,7 +11,7 @@ export class ExternalEnvWithoutVersion extends ComponentIssue {
   solution = '';
   isTagBlocker = true;
   formatSolution(): string {
-    return `(run "bit env set ${this.data.componentId} ${this.data.envId}")`;
+    return `(run "bit envs update ${this.data.envId}" to set its latest version for all components using it)`;
   }
   dataToString() {
     return ISSUE_FORMAT_SPACE + this.data.envId;
