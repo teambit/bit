@@ -1419,11 +1419,18 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    * copy, the new scope's history is broken once the original lane is deleted.
    * `missing` are the parents the walk could not load locally and that are not known as main versions (a tag or
    * the main head). they are probably lane snaps too, so the caller can fetch them and walk again.
+   * `versionObjects` are looked up before the repo, e.g. the objects of an export that are not persisted yet.
    */
-  async getLaneOriginAncestors(repo: Repository, head: Ref): Promise<{ ancestors: Ref[]; missing: Ref[] }> {
+  async getLaneOriginAncestors(
+    repo: Repository,
+    head: Ref,
+    versionObjects?: Map<string, Version>
+  ): Promise<{ ancestors: Ref[]; missing: Ref[] }> {
     const ancestors: Ref[] = [];
     const missing: Ref[] = [];
-    const headVersion = (await head.load(repo)) as Version | undefined;
+    const load = async (ref: Ref): Promise<Version | undefined> =>
+      versionObjects?.get(ref.toString()) || ((await ref.load(repo)) as Version | undefined);
+    const headVersion = await load(head);
     if (!headVersion) return { ancestors, missing };
     const isKnownMainVersion = (ref: Ref) => Boolean(this.getTagOfRefIfExists(ref) || this.head?.isEqual(ref));
     const visited = new Set<string>([head.toString()]);
@@ -1435,7 +1442,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         visited.add(ref.toString());
         toVisit.push(ref);
       });
-      const versions = await Promise.all(toVisit.map((ref) => ref.load(repo) as Promise<Version | undefined>));
+      const versions = await Promise.all(toVisit.map(load));
       const nextLevel: Ref[] = [];
       versions.forEach((version, index) => {
         const ref = toVisit[index];

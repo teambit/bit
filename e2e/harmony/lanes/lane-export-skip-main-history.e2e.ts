@@ -1,4 +1,6 @@
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
+import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 
@@ -841,45 +843,50 @@ describe('lane export skips main history objects', function () {
   });
 
   // the export-validate fetch from the forked-from lane brings only its heads (and the VersionHistory), so the
+  /**
+   * comp1 on scope-C, lane-A on scope-L with two snaps (exported), then a new workspace that imports lane-A with its
+   * heads only. returns the scopes and the non-head lane-A snap.
+   */
+  const setupLaneAImportedWithHeadsOnly = () => {
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    const scopeCPath = helper.scopes.remotePath;
+    const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
+    const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
+    const [scopeL, scopeLPath, scopeM, scopeMPath] = [lNew.scopeName, lNew.scopePath, mNew.scopeName, mNew.scopePath];
+    [scopeLPath, scopeMPath].forEach((p) => {
+      helper.scopeHelper.addRemoteScope(p);
+      helper.scopeHelper.addRemoteScope(p, scopeCPath);
+      helper.scopeHelper.addRemoteScope(scopeCPath, p);
+    });
+    helper.scopeHelper.addRemoteScope(scopeLPath, scopeMPath);
+    helper.scopeHelper.addRemoteScope(scopeMPath, scopeLPath);
+    helper.fixtures.populateComponents(1);
+    helper.command.tagAllWithoutBuild();
+    helper.command.export();
+    helper.command.createLane('lane-a', `--scope ${scopeL}`);
+    helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    const laneAFirstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+    helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    helper.command.export();
+
+    helper.scopeHelper.reInitWorkspace();
+    helper.scopeHelper.addRemoteScope(scopeCPath);
+    helper.scopeHelper.addRemoteScope(scopeLPath);
+    helper.scopeHelper.addRemoteScope(scopeMPath);
+    helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
+    return { scopeL, scopeLPath, scopeM, scopeMPath, laneAFirstSnap };
+  };
+
   // non-head snaps of the original lane reach the new scope only if the fork export pushes them. here they are not
   // even local, because the forking workspace imported the original lane with its heads only.
   describe('fork a lane imported with its heads only to another scope, then delete the original lane', () => {
-    let scopeLPath: string;
     let scopeL: string;
     let scopeM: string;
     let scopeMPath: string;
     let laneAFirstSnap: string;
     let firstSnapLocalAfterImport: boolean;
     before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const scopeCPath = helper.scopes.remotePath;
-      const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
-      scopeL = lNew.scopeName;
-      scopeLPath = lNew.scopePath;
-      const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
-      scopeM = mNew.scopeName;
-      scopeMPath = mNew.scopePath;
-      [scopeLPath, scopeMPath].forEach((p) => {
-        helper.scopeHelper.addRemoteScope(p);
-        helper.scopeHelper.addRemoteScope(p, scopeCPath);
-        helper.scopeHelper.addRemoteScope(scopeCPath, p);
-      });
-      helper.scopeHelper.addRemoteScope(scopeLPath, scopeMPath);
-      helper.scopeHelper.addRemoteScope(scopeMPath, scopeLPath);
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('lane-a', `--scope ${scopeL}`);
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      laneAFirstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope(scopeCPath);
-      helper.scopeHelper.addRemoteScope(scopeLPath);
-      helper.scopeHelper.addRemoteScope(scopeMPath);
-      helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
+      ({ scopeL, scopeM, scopeMPath, laneAFirstSnap } = setupLaneAImportedWithHeadsOnly());
       try {
         helper.command.catObject(laneAFirstSnap);
         firstSnapLocalAfterImport = true;
@@ -896,6 +903,33 @@ describe('lane export skips main history objects', function () {
     });
     it('scope-M should hold the non-head lane-A snap, so lane-B history survives the deletion of lane-A', () => {
       expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
+    });
+  });
+
+  // the client fetches a missing original-lane snap before the export, but that's best effort (and older clients
+  // don't send these snaps at all). the remote must not accept the new forked lane without them.
+  describe('fork a lane to another scope when a non-head snap of the original lane cannot be sent', () => {
+    let scopeM: string;
+    before(() => {
+      const setup = setupLaneAImportedWithHeadsOnly();
+      scopeM = setup.scopeM;
+      // make the snap unavailable, so the client can't fetch it and send it
+      const laneAFirstSnapPath = path.join(
+        setup.scopeLPath,
+        'objects',
+        helper.general.getHashPathOfObject(setup.laneAFirstSnap)
+      );
+      expect(fs.existsSync(laneAFirstSnapPath)).to.be.true;
+      fs.removeSync(laneAFirstSnapPath);
+      helper.command.createLane('lane-b', `--scope ${scopeM} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+    });
+    it('the remote should reject the export of the forked lane', () => {
+      expect(() => helper.command.export('--fork-lane-new-scope')).to.throw('were not exported with it');
+    });
+    it('the forked lane should not be created on the remote', () => {
+      const remoteLanes = JSON.parse(helper.command.runCmd(`bit lane list --remote ${scopeM} --json`));
+      expect(remoteLanes.lanes).to.have.lengthOf(0);
     });
   });
 
