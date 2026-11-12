@@ -1142,14 +1142,13 @@ the following scopes were used for this export: ${scopeNames.join(', ')}`;
   return err;
 }
 
-export default ExportMain;
-
 /**
  * a forked lane is not on the remote yet, so its history is fetched from the lane it was forked from.
- * a lane that was not forked has no such lane, so no hint is returned.
+ * returns the hint as a new line, or an empty string when the lane was not forked.
  */
 function fetchFullHistoryHint(lane: Lane): string {
   if (!lane.forkedFrom) return '';
-  const laneIdToFetch = lane.forkedFrom.toString();
-  return `\nif the export fails with missing objects/versions/components, run "bit fetch --lanes ${chalk.bold(laneIdToFetch)} --all-history", to make sure you have the full history locally`;
+  return `\nif the export fails with missing objects/versions/components, run "bit fetch --lanes ${chalk.bold(lane.forkedFrom.toString())} --all-history", to make sure you have the full history locally`;
 }
+
+export default ExportMain;
