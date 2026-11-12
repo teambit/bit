@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
@@ -194,7 +195,8 @@ export class ExportMain {
     // push in `getVersionsToExport` then supplies their refs (divergence is empty for them).
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly || params.forkLaneNewScope
+      includeNonStaged || headOnly || params.forkLaneNewScope,
+      includeNonStaged
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -210,8 +212,9 @@ export class ExportMain {
       };
     }
     if (!idsToExport.length && laneObject && params.forkLaneNewScope) {
-      throw new BitError(`the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+      throw new BitError(
+        `the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag${fetchFullHistoryHint(laneObject)}`
+      );
     }
 
     // validate lane readme component and ensure it has been snapped
@@ -230,8 +233,7 @@ on large lanes with long history graph, it results in exporting lots of objects 
 if you can use the same scope as the original name, change it now by running "bit lane change-scope ${
         laneObject.name
       } ${laneObject.forkedFrom.scope}".
-otherwise, re-run the export with "--fork-lane-new-scope" flag.
-if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
+otherwise, re-run the export with "--fork-lane-new-scope" flag.${fetchFullHistoryHint(laneObject)}`);
     }
     const isOnMain = consumer.isOnMain();
     const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
@@ -958,7 +960,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
   private async getComponentsToExport(
     ids: string[] = [],
-    includeNonStaged?: boolean
+    includeNonStaged?: boolean,
+    allowLaneIds?: boolean // only with --all/--all-versions. (includeNonStaged is also set by other flags)
   ): Promise<{
     idsToExport: ComponentIdList;
     missingScope: ComponentID[];
@@ -980,10 +983,21 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       return { idsToExport: ComponentIdList.fromArray(bitIds), missingScope: [] };
     };
     if (isUserTryingToExportLanes(consumer)) {
-      if (ids.length) {
-        throw new BitError(`when checked out to a lane, all its components are exported. please omit the ids`);
+      // ids are allowed only with --all/--all-versions, to re-send specific lane components whose objects are
+      // corrupted or missing on the remote. a regular lane export always exports all its staged components.
+      if (ids.length && !allowLaneIds) {
+        throw new BitError(
+          `when checked out to a lane, all its components are exported. please omit the ids (or use them with --all or --all-versions)`
+        );
       }
-      const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
+      const { componentsToExport: laneComponents, laneObject } = await this.getLaneCompIdsToExport(
+        consumer,
+        includeNonStaged
+      );
+      const componentsToExport = ids.length
+        ? await this.filterLaneComponentsByIds(consumer, laneComponents, ids)
+        : laneComponents;
+      if (ids.length) await this.throwForStagedLaneCompsNotSelected(consumer, componentsToExport);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       this.logger.setStatusLine(loaderMsg);
       const filtered = await throwForLocalOnlyIfNeeded(componentsToExport);
@@ -1014,6 +1028,40 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
+  }
+
+  private async filterLaneComponentsByIds(
+    consumer: Consumer,
+    laneComponents: ComponentIdList,
+    ids: string[]
+  ): Promise<ComponentIdList> {
+    const laneIds = await Promise.all(
+      ids.map(async (id) => {
+        if (hasWildcard(id)) {
+          const matches = ComponentsList.filterComponentsByWildcard(laneComponents, id);
+          if (!matches.length) throw new BitError(`"${id}" does not match any component of the current lane`);
+          return matches;
+        }
+        const parsedId = await getParsedId(consumer, id);
+        const laneId = laneComponents.searchWithoutVersion(parsedId);
+        if (!laneId) throw new BitError(`"${parsedId.toString()}" is not part of the current lane`);
+        return [laneId];
+      })
+    );
+    return ComponentIdList.uniqFromArray(laneIds.flat());
+  }
+
+  /**
+   * the lane object is exported with the heads of all its components. when only some of them are exported, a staged
+   * snap of another component would get to the remote lane without its Version object.
+   */
+  private async throwForStagedLaneCompsNotSelected(consumer: Consumer, selectedIds: ComponentIdList) {
+    const { componentsToExport: stagedIds } = await this.getLaneCompIdsToExport(consumer, false);
+    const notSelected = stagedIds.filter((id) => !selectedIds.hasWithoutVersion(id));
+    if (!notSelected.length) return;
+    throw new BitError(`unable to export only some of the lane components while the following have staged snaps:
+${notSelected.map((id) => id.toString()).join('\n')}
+please export the lane without ids first`);
   }
 
   private async getLaneCompIdsToExport(
@@ -1139,6 +1187,15 @@ function addScopesInvolvedToError(err: any, scopeNames: string[]): any {
   err.message = `${err.message}
 the following scopes were used for this export: ${scopeNames.join(', ')}`;
   return err;
+}
+
+/**
+ * a forked lane is not on the remote yet, so its history is fetched from the lane it was forked from.
+ * returns the hint as a new line, or an empty string when the lane was not forked.
+ */
+function fetchFullHistoryHint(lane: Lane): string {
+  if (!lane.forkedFrom) return '';
+  return `\nif the export fails with missing objects/versions/components, run "bit fetch --lanes ${chalk.bold(lane.forkedFrom.toString())} --all-history", to make sure you have the full history locally`;
 }
 
 export default ExportMain;
