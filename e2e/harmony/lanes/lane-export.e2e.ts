@@ -67,8 +67,10 @@ describe('bit lane export operations', function () {
       comp1Head = helper.command.getHeadOfLane('dev', 'comp1');
       comp2Head = helper.command.getHeadOfLane('dev', 'comp2');
       // simulate Version objects that got lost on the remote
-      helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(comp1Head));
-      helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(comp2Head));
+      [comp1Head, comp2Head].forEach((hash) => {
+        expect(() => helper.command.catObject(hash, false, helper.scopes.remotePath)).to.not.throw();
+        helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(hash));
+      });
     });
     it('should throw when ids are used without --all or --all-versions', () => {
       expect(() => helper.command.exportIds('comp1')).to.throw('please omit the ids');
@@ -78,6 +80,11 @@ describe('bit lane export operations', function () {
         'is not part of the current lane'
       );
     });
+    it('should throw when a pattern matches no lane component', () => {
+      expect(() => helper.command.exportIds('"**/non-exist*"', '--all-versions')).to.throw(
+        'does not match any component of the current lane'
+      );
+    });
     describe('exporting one component with --all-versions', () => {
       before(() => {
         helper.command.exportIds('comp1', '--all-versions');
@@ -85,6 +92,10 @@ describe('bit lane export operations', function () {
       it('should re-send the Version object of the given component only', () => {
         expect(() => helper.command.catObject(comp1Head, false, helper.scopes.remotePath)).to.not.throw();
         expect(() => helper.command.catObject(comp2Head, false, helper.scopes.remotePath)).to.throw();
+      });
+      it('should throw when another lane component has a staged snap', () => {
+        helper.command.snapComponentWithoutBuild('comp2', '--unmodified');
+        expect(() => helper.command.exportIds('comp1', '--all-versions')).to.throw('have staged snaps');
       });
     });
   });

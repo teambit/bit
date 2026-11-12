@@ -194,7 +194,8 @@ export class ExportMain {
     // push in `getVersionsToExport` then supplies their refs (divergence is empty for them).
     const { idsToExport, missingScope, laneObject } = await this.getComponentsToExport(
       ids,
-      includeNonStaged || headOnly || params.forkLaneNewScope
+      includeNonStaged || headOnly || params.forkLaneNewScope,
+      includeNonStaged
     );
 
     if (!idsToExport.length && !laneObject) {
@@ -958,7 +959,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
   private async getComponentsToExport(
     ids: string[] = [],
-    includeNonStaged?: boolean
+    includeNonStaged?: boolean,
+    allowLaneIds?: boolean // only with --all/--all-versions. (includeNonStaged is also set by other flags)
   ): Promise<{
     idsToExport: ComponentIdList;
     missingScope: ComponentID[];
@@ -982,7 +984,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     if (isUserTryingToExportLanes(consumer)) {
       // ids are allowed only with --all/--all-versions, to re-send specific lane components whose objects are
       // corrupted or missing on the remote. a regular lane export always exports all its staged components.
-      if (ids.length && !includeNonStaged) {
+      if (ids.length && !allowLaneIds) {
         throw new BitError(
           `when checked out to a lane, all its components are exported. please omit the ids (or use them with --all or --all-versions)`
         );
@@ -994,6 +996,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       const componentsToExport = ids.length
         ? await this.filterLaneComponentsByIds(consumer, laneComponents, ids)
         : laneComponents;
+      if (ids.length) await this.throwForStagedLaneCompsNotSelected(consumer, componentsToExport);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       this.logger.setStatusLine(loaderMsg);
       const filtered = await throwForLocalOnlyIfNeeded(componentsToExport);
@@ -1031,14 +1034,33 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     laneComponents: ComponentIdList,
     ids: string[]
   ): Promise<ComponentIdList> {
-    if (hasWildcard(ids)) return ComponentsList.filterComponentsByWildcard(laneComponents, ids);
-    const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
-    const laneIds = parsedIds.map((parsedId) => {
-      const laneId = laneComponents.searchWithoutVersion(parsedId);
-      if (!laneId) throw new BitError(`"${parsedId.toString()}" is not part of the current lane`);
-      return laneId;
-    });
-    return ComponentIdList.fromArray(laneIds);
+    const laneIds = await Promise.all(
+      ids.map(async (id) => {
+        if (hasWildcard(id)) {
+          const matches = ComponentsList.filterComponentsByWildcard(laneComponents, id);
+          if (!matches.length) throw new BitError(`"${id}" does not match any component of the current lane`);
+          return matches;
+        }
+        const parsedId = await getParsedId(consumer, id);
+        const laneId = laneComponents.searchWithoutVersion(parsedId);
+        if (!laneId) throw new BitError(`"${parsedId.toString()}" is not part of the current lane`);
+        return [laneId];
+      })
+    );
+    return ComponentIdList.uniqFromArray(laneIds.flat());
+  }
+
+  /**
+   * the lane object is exported with the heads of all its components. when only some of them are exported, a staged
+   * snap of another component would get to the remote lane without its Version object.
+   */
+  private async throwForStagedLaneCompsNotSelected(consumer: Consumer, selectedIds: ComponentIdList) {
+    const { componentsToExport: stagedIds } = await this.getLaneCompIdsToExport(consumer, false);
+    const notSelected = stagedIds.filter((id) => !selectedIds.hasWithoutVersion(id));
+    if (!notSelected.length) return;
+    throw new BitError(`unable to export only some of the lane components while the following have staged snaps:
+${notSelected.map((id) => id.toString()).join('\n')}
+please export the lane without ids first`);
   }
 
   private async getLaneCompIdsToExport(
