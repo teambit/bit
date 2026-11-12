@@ -980,10 +980,20 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       return { idsToExport: ComponentIdList.fromArray(bitIds), missingScope: [] };
     };
     if (isUserTryingToExportLanes(consumer)) {
-      if (ids.length) {
-        throw new BitError(`when checked out to a lane, all its components are exported. please omit the ids`);
+      // ids are allowed only with --all/--all-versions, to re-send specific lane components whose objects are
+      // corrupted or missing on the remote. a regular lane export always exports all its staged components.
+      if (ids.length && !includeNonStaged) {
+        throw new BitError(
+          `when checked out to a lane, all its components are exported. please omit the ids (or use them with --all or --all-versions)`
+        );
       }
-      const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
+      const { componentsToExport: laneComponents, laneObject } = await this.getLaneCompIdsToExport(
+        consumer,
+        includeNonStaged
+      );
+      const componentsToExport = ids.length
+        ? await this.filterLaneComponentsByIds(consumer, laneComponents, ids, idsHaveWildcard)
+        : laneComponents;
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       this.logger.setStatusLine(loaderMsg);
       const filtered = await throwForLocalOnlyIfNeeded(componentsToExport);
@@ -1014,6 +1024,22 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     await this.workspace.getMany(parsedIds);
 
     return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
+  }
+
+  private async filterLaneComponentsByIds(
+    consumer: Consumer,
+    laneComponents: ComponentIdList,
+    ids: string[],
+    idsHaveWildcard: boolean
+  ): Promise<ComponentIdList> {
+    if (idsHaveWildcard) return ComponentsList.filterComponentsByWildcard(laneComponents, ids);
+    const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
+    const laneIds = parsedIds.map((parsedId) => {
+      const laneId = laneComponents.searchWithoutVersion(parsedId);
+      if (!laneId) throw new BitError(`"${parsedId.toString()}" is not part of the current lane`);
+      return laneId;
+    });
+    return ComponentIdList.fromArray(laneIds);
   }
 
   private async getLaneCompIdsToExport(

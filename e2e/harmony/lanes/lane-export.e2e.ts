@@ -54,6 +54,40 @@ describe('bit lane export operations', function () {
     });
   });
 
+  describe('re-exporting specific lane components with --all-versions', () => {
+    let comp1Head: string;
+    let comp2Head: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(2, false);
+      helper.fs.outputFile('comp1/index.js', `module.exports = () => 'comp1';`); // no dependency on comp2
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.exportLane();
+      comp1Head = helper.command.getHeadOfLane('dev', 'comp1');
+      comp2Head = helper.command.getHeadOfLane('dev', 'comp2');
+      // simulate Version objects that got lost on the remote
+      helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(comp1Head));
+      helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(comp2Head));
+    });
+    it('should throw when ids are used without --all or --all-versions', () => {
+      expect(() => helper.command.exportIds('comp1')).to.throw('please omit the ids');
+    });
+    it('should throw when the id is not part of the lane', () => {
+      expect(() => helper.command.exportIds(`${helper.scopes.remote}/non-exist`, '--all-versions')).to.throw(
+        'is not part of the current lane'
+      );
+    });
+    describe('exporting one component with --all-versions', () => {
+      before(() => {
+        helper.command.exportIds('comp1', '--all-versions');
+      });
+      it('should re-send the Version object of the given component only', () => {
+        expect(() => helper.command.catObject(comp1Head, false, helper.scopes.remotePath)).to.not.throw();
+        expect(() => helper.command.catObject(comp2Head, false, helper.scopes.remotePath)).to.throw();
+      });
+    });
+  });
   describe('exporting a lane to a different scope than the component scope', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
