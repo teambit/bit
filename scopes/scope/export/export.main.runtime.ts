@@ -992,7 +992,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
         includeNonStaged
       );
       const componentsToExport = ids.length
-        ? await this.filterLaneComponentsByIds(consumer, laneComponents, ids, idsHaveWildcard)
+        ? await this.filterLaneComponentsByIds(consumer, laneComponents, ids)
         : laneComponents;
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       this.logger.setStatusLine(loaderMsg);
@@ -1029,10 +1029,9 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
   private async filterLaneComponentsByIds(
     consumer: Consumer,
     laneComponents: ComponentIdList,
-    ids: string[],
-    idsHaveWildcard: boolean
+    ids: string[]
   ): Promise<ComponentIdList> {
-    if (idsHaveWildcard) return ComponentsList.filterComponentsByWildcard(laneComponents, ids);
+    if (hasWildcard(ids)) return ComponentsList.filterComponentsByWildcard(laneComponents, ids);
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     const laneIds = parsedIds.map((parsedId) => {
       const laneId = laneComponents.searchWithoutVersion(parsedId);
