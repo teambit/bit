@@ -7,10 +7,12 @@ import { mergeObjects } from '@teambit/export';
 import type { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
 import { BitError } from '@teambit/bit-error';
-import type { BitObjectList, Lane, ModelComponent, Ref } from '@teambit/objects';
+import type { BitObjectList, Lane, ModelComponent, Version } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { getAllVersionHashes, indexVersionObjects } from '@teambit/component.snap-distance';
 import { ComponentIdList } from '@teambit/component-id';
 import type { LaneId } from '@teambit/lane-id';
+import { compact, uniq } from 'lodash';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
@@ -44,6 +46,7 @@ export class ExportValidate implements Action<Options> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
     const bitObjectList = await objectList.toBitObjects();
     await this.importAndThrowForMissingHistoryOnLane(bitObjectList);
+    await this.importMissingSnapsOfForkedLane(bitObjectList);
     await this.waitIfNeeded();
     try {
       logger.profile('export-validate.mergeObjects');
@@ -103,37 +106,27 @@ export class ExportValidate implements Action<Options> {
       (modelComponent) => getAllVersionHashes({ modelComponent, repo: this.scope.objects, throws: true }),
       { concurrency: concurrentComponentsLimit() }
     );
-    if (forkedFromIsRemote) {
-      await this.throwForMissingLaneOriginSnapsOnNewFork(bitObjectList, externalComponents, incomingLane);
-    }
   }
 
   /**
-   * the first export of a lane forked from another scope must bring the snaps made on the original lane (see
+   * a lane forked from a lane of another scope needs the snaps made on the original lane (see
    * `ModelComponent.getLaneOriginAncestors`). this scope has no other copy of them, so without them, the history of the
-   * forked lane breaks once the original lane is deleted. older clients didn't send them.
-   * the VersionHistory check above doesn't catch it, because the VersionHistory fetched from the forked-from lane
-   * lists these snaps. here, a snap that is missing is fine only when it's a main snap (it lives on its home scope).
+   * forked lane breaks once the original lane is deleted. clients older than 2.3.23 don't send them, and newer clients
+   * fetch them best effort. the VersionHistory check above doesn't catch it, because the VersionHistory fetched from the
+   * forked-from lane lists these snaps.
+   * the missing snaps are fetched from the scope of the original lane. on the first export of the lane, when some are
+   * still missing, the export fails. on a later export, it only repairs a lane that was exported without them, and it
+   * never fails.
    */
-  private async throwForMissingLaneOriginSnapsOnNewFork(
-    bitObjectList: BitObjectList,
-    externalComponents: ModelComponent[],
-    lane: Lane
-  ) {
-    if (await this.scope.loadLane(lane.toLaneId())) return; // not the first export of this lane to this scope
+  private async importMissingSnapsOfForkedLane(bitObjectList: BitObjectList) {
+    const lane = bitObjectList.getLanes()[0];
+    if (!lane?.forkedFrom || lane.forkedFrom.scope === this.scope.name) return;
+    const forkedFrom = lane.forkedFrom;
+    const isFirstExport = !(await this.scope.loadLane(lane.toLaneId()));
     const versionObjects = indexVersionObjects(bitObjectList.getVersions());
-    const missingPerComp = await pMapPool(
-      externalComponents,
-      async (modelComponent) => {
-        const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
-        if (!laneHead) return { modelComponent, missing: [] };
-        const { missing } = await modelComponent.getLaneOriginAncestors(this.scope.objects, laneHead, versionObjects);
-        return { modelComponent, missing };
-      },
-      { concurrency: concurrentComponentsLimit() }
-    );
-    const suspected = await this.keepMissingNotOnMain(missingPerComp, async (modelComponent) => modelComponent.head);
-    if (!suspected.length) return;
+    const findMissing = () => this.findMissingLaneOriginSnaps(lane, bitObjectList.getComponents(), versionObjects);
+    const suspected = await this.importMissingSnapsFromScope(forkedFrom.scope, findMissing);
+    if (!suspected.length || !isFirstExport) return;
     // the main head known here might be behind, which makes a newer main snap look like a lane snap. re-check against
     // the main head of the home scope before failing the export.
     const ids = ComponentIdList.fromArray(suspected.map(({ modelComponent }) => modelComponent.toComponentId()));
@@ -157,9 +150,71 @@ export class ExportValidate implements Action<Options> {
     );
     if (!stillMissing.length) return;
     const errors = stillMissing.map(({ modelComponent, missing }) => `${modelComponent.id()}: ${missing.join(', ')}`);
-    throw new BitError(`unable to export the lane "${lane.toLaneId().toString()}" to "${this.scope.name}". the lane is forked from "${lane.forkedFrom?.toString()}" and the following snaps of the original lane were not exported with it:
+    throw new BitError(`unable to export the lane "${lane.toLaneId().toString()}" to "${this.scope.name}". the lane is forked from "${forkedFrom.toString()}". the following snaps of the original lane were not exported with it, and they could not be fetched from "${forkedFrom.toString()}":
 ${errors.join('\n')}
-please upgrade bit and export again`);
+to get these snaps locally, run "bit fetch --lanes ${forkedFrom.toString()} --all-history". then, export again with bit 2.3.23 or newer, which exports them.`);
+  }
+
+  /**
+   * fetch the missing snaps from the scope of the original lane, as objects, with the objects they reference (files,
+   * dependencies data). a component import is not used, because it merges the component object of the original lane
+   * into this scope, which is wrong for a component whose home is this scope.
+   * each round fetches the snaps that `findMissing` reports, which makes their parents known for the next round. it
+   * stops when nothing is missing, or nothing new can be fetched. returns what is still missing.
+   */
+  private async importMissingSnapsFromScope(
+    remoteScope: string,
+    findMissing: () => Promise<MissingPerComp[]>
+  ): Promise<MissingPerComp[]> {
+    const triedHashes = new Set<string>();
+    const importObjects = async (hashes: string[]) => {
+      try {
+        await this.scope.scopeImporter.importManyObjects({ [remoteScope]: hashes });
+      } catch (err: any) {
+        // the objects that were found are saved. keep going with them.
+        logger.warn(
+          `export-validate: failed fetching snaps of a forked lane from "${remoteScope}". error: ${err.message}`
+        );
+      }
+    };
+    let missingPerComp = await findMissing();
+    while (missingPerComp.length) {
+      const hashes = uniq(missingPerComp.flatMap(({ missing }) => missing.map((ref) => ref.toString()))).filter(
+        (hash) => !triedHashes.has(hash)
+      );
+      if (!hashes.length) break;
+      hashes.forEach((hash) => triedHashes.add(hash));
+      await importObjects(hashes);
+      const versions = await Promise.all(
+        hashes.map((hash) => Ref.from(hash).load(this.scope.objects) as Promise<Version | undefined>)
+      );
+      const subRefs = compact(versions).flatMap((version) => version.refsWithOptions(false, false));
+      if (subRefs.length) await importObjects(subRefs.map((ref) => ref.toString()));
+      missingPerComp = await findMissing();
+    }
+    return missingPerComp;
+  }
+
+  /**
+   * per component of the lane, the snaps of the original lane that are missing in this scope and in the incoming
+   * objects. the snaps in the history of the main head known here are not included (they live on the home scope).
+   */
+  private async findMissingLaneOriginSnaps(
+    lane: Lane,
+    modelComponents: ModelComponent[],
+    versionObjects: Map<string, Version>
+  ): Promise<MissingPerComp[]> {
+    const missingPerComp = await pMapPool(
+      modelComponents,
+      async (modelComponent) => {
+        const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+        if (!laneHead) return { modelComponent, missing: [] };
+        const { missing } = await modelComponent.getLaneOriginAncestors(this.scope.objects, laneHead, versionObjects);
+        return { modelComponent, missing };
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    return this.keepMissingNotOnMain(missingPerComp, async (modelComponent) => modelComponent.head);
   }
 
   /**

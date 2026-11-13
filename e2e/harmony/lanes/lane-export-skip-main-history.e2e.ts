@@ -846,7 +846,7 @@ describe('lane export skips main history objects', function () {
    * comp1 on scope-C, lane-A on scope-L with two snaps (exported), then a new workspace that imports lane-A with its
    * heads only. returns the scopes and the non-head lane-A snap.
    */
-  const setupLaneAImportedWithHeadsOnly = () => {
+  const setupLaneAImportedWithHeadsOnly = ({ comp2OnScopeM = false } = {}) => {
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     const scopeCPath = helper.scopes.remotePath;
     const { scopeName: scopeL, scopePath: scopeLPath } = helper.scopeHelper.getNewBareScope('-lane-l');
@@ -859,11 +859,17 @@ describe('lane export skips main history objects', function () {
     helper.scopeHelper.addRemoteScope(scopeLPath, scopeMPath);
     helper.scopeHelper.addRemoteScope(scopeMPath, scopeLPath);
     helper.fixtures.populateComponents(1);
+    if (comp2OnScopeM) {
+      helper.fs.outputFile('comp2/index.js', 'console.log("comp2");');
+      helper.command.addComponent('comp2');
+      helper.command.setScope(scopeM, 'comp2');
+    }
     helper.command.tagAllWithoutBuild();
     helper.command.export();
     helper.command.createLane('lane-a', `--scope ${scopeL}`);
     helper.command.snapAllComponentsWithoutBuild('--unmodified');
     const laneAFirstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+    const comp2LaneAFirstSnap = comp2OnScopeM ? helper.command.getHeadOfLane('lane-a', 'comp2') : '';
     helper.command.snapAllComponentsWithoutBuild('--unmodified');
     helper.command.export();
 
@@ -872,7 +878,7 @@ describe('lane export skips main history objects', function () {
     helper.scopeHelper.addRemoteScope(scopeLPath);
     helper.scopeHelper.addRemoteScope(scopeMPath);
     helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
-    return { scopeL, scopeLPath, scopeM, scopeMPath, laneAFirstSnap };
+    return { scopeL, scopeLPath, scopeM, scopeMPath, laneAFirstSnap, comp2LaneAFirstSnap };
   };
 
   // the export-validate fetch from the forked-from lane brings only its heads (and the VersionHistory), so the
@@ -929,6 +935,38 @@ describe('lane export skips main history objects', function () {
     it('the forked lane should not be created on the remote', () => {
       const remoteLanes = JSON.parse(helper.command.runCmd(`bit lane list --remote ${scopeM} --json`));
       expect(remoteLanes.lanes).to.have.lengthOf(0);
+    });
+  });
+
+  // the remote fetches the snaps of the original lane that the client didn't send (older clients never send them).
+  // comp2's home is the scope of the new lane, so it's not an external component there, and it needs them as well.
+  describe('fork a lane to another scope when the client cannot fetch the snaps of the original lane', () => {
+    let scopeMPath: string;
+    let laneAFirstSnap: string;
+    let comp2LaneAFirstSnap: string;
+    before(() => {
+      const setup = setupLaneAImportedWithHeadsOnly({ comp2OnScopeM: true });
+      ({ scopeMPath, laneAFirstSnap, comp2LaneAFirstSnap } = setup);
+      // the client has no access to the scope of the original lane, so it can't fetch the snaps and send them
+      helper.scopeHelper.removeRemoteScope(setup.scopeL);
+      helper.command.createLane('lane-b', `--scope ${setup.scopeM} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export('--fork-lane-new-scope');
+    });
+    it('scope-M should hold the non-head lane-A snaps of both components', () => {
+      expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
+      expect(() => helper.command.catObject(comp2LaneAFirstSnap, false, scopeMPath)).to.not.throw();
+    });
+    // e.g. the lane was exported by an older client, which didn't send the snaps and the remote didn't fetch them
+    describe('when a later export finds the snap missing on scope-M', () => {
+      before(() => {
+        fs.removeSync(path.join(scopeMPath, 'objects', helper.general.getHashPathOfObject(laneAFirstSnap)));
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+      });
+      it('the remote should fetch the snap again', () => {
+        expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
+      });
     });
   });
 
