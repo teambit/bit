@@ -26,9 +26,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -44,9 +42,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -62,9 +58,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -227,9 +221,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -245,9 +237,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -268,8 +258,7 @@
                     },
                     "devDependencies": {
                         "@babel/core": "7.19.6",
-                        "@babel/types": "7.22.3",
-                        "@types/mocha": "10.0.10"
+                        "@babel/types": "7.22.3"
                     },
                     "peerDependencies": {}
                 }
@@ -300,9 +289,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -318,9 +305,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -336,9 +321,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -354,9 +337,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -372,9 +353,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -390,9 +369,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -415,9 +392,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -433,9 +408,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -479,9 +452,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -497,9 +468,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -515,9 +484,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -533,9 +500,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -551,9 +516,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -569,9 +532,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -587,9 +548,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -605,9 +564,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -630,9 +587,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -655,9 +610,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -680,9 +633,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -698,9 +649,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -716,9 +665,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -734,9 +681,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -752,9 +697,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -770,9 +713,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -851,9 +792,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -876,9 +815,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -894,9 +831,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -919,9 +854,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -937,9 +870,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -962,9 +893,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -994,9 +923,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1047,9 +974,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1086,9 +1011,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1104,9 +1027,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1129,9 +1050,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1147,9 +1066,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1214,9 +1131,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1239,9 +1154,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1257,9 +1170,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1275,9 +1186,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1298,7 +1207,6 @@
                         "utf-8-validate": "5.0.5"
                     },
                     "devDependencies": {
-                        "@types/mocha": "10.0.10",
                         "@teambit/legacy": "-"
                     },
                     "peerDependencies": {}
@@ -1316,9 +1224,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1397,9 +1303,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1415,9 +1319,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1433,9 +1335,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1458,9 +1358,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1476,9 +1374,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1494,9 +1390,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1526,9 +1420,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1551,9 +1443,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1569,9 +1459,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1608,9 +1496,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1626,9 +1512,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1644,9 +1528,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1963,9 +1845,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1981,9 +1861,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -1999,9 +1877,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2031,9 +1907,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2056,9 +1930,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2081,9 +1953,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2134,9 +2004,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2166,9 +2034,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2184,9 +2050,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2209,9 +2073,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2234,9 +2096,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2276,7 +2136,6 @@
                     "devDependencies": {
                         "react": "-",
                         "react-dom": "-",
-                        "@types/mocha": "10.0.10",
                         "@types/node": "12.20.4",
                         "@types/react": "^17.0.8",
                         "@types/react-dom": "^17.0.5"
@@ -2299,9 +2158,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2317,9 +2174,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2335,9 +2190,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2367,9 +2220,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2385,9 +2236,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2410,9 +2259,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2442,9 +2289,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2467,9 +2312,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2492,9 +2335,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2510,9 +2351,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2577,9 +2416,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2609,9 +2446,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2627,9 +2462,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2673,9 +2506,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2705,9 +2536,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -2731,7 +2560,6 @@
                         "@babel/runtime": "7.23.2"
                     },
                     "devDependencies": {
-                        "@types/mocha": "10.0.10",
                         "@types/node": "12.20.4",
                         "@teambit/legacy": "-",
                         "@types/webpack-dev-server": "-"
@@ -2810,7 +2638,6 @@
                         "@teambit/legacy": "-"
                     },
                     "devDependencies": {
-                        "@types/mocha": "10.0.10",
                         "@teambit/legacy": "-"
                     },
                     "peerDependencies": {}
@@ -3020,7 +2847,6 @@
                         "@teambit/legacy": "-"
                     },
                     "devDependencies": {
-                        "@types/mocha": "10.0.10",
                         "@teambit/legacy": "-",
                         "@types/react": "-",
                         "@types/react-dom": "-"
@@ -3316,9 +3142,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -3348,9 +3172,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -3380,9 +3202,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -3405,9 +3225,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -3423,9 +3241,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }
@@ -3441,9 +3257,7 @@
             "teambit.dependencies/dependency-resolver": {
                 "policy": {
                     "dependencies": {},
-                    "devDependencies": {
-                        "@types/mocha": "10.0.10"
-                    },
+                    "devDependencies": {},
                     "peerDependencies": {}
                 }
             }

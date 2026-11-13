@@ -2244,9 +2244,6 @@ importers:
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -4463,9 +4460,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   components/ui/compare/lane-compare-hooks/use-lane-diff-status:
     dependencies:
@@ -13144,9 +13138,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/cloud/cloud:
     dependencies:
@@ -13220,9 +13211,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -13603,9 +13591,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compilation/aspect-docs/babel:
     dependencies:
@@ -13754,9 +13739,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compilation/bundler:
     dependencies:
@@ -13809,9 +13791,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compilation/compiler:
     dependencies:
@@ -13888,9 +13867,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -13965,9 +13941,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/aspect-docs/component:
     dependencies:
@@ -14060,9 +14033,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/checkout:
     dependencies:
@@ -14121,9 +14091,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -14170,9 +14137,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component:
     dependencies:
@@ -14336,9 +14300,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -14424,9 +14385,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component-descriptor:
     dependencies:
@@ -14464,9 +14422,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component-log:
     dependencies:
@@ -14534,9 +14489,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component-package-version:
     dependencies:
@@ -14611,9 +14563,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component-tree:
     dependencies:
@@ -14645,9 +14594,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/component-url:
     dependencies:
@@ -14746,9 +14692,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/deprecation:
     dependencies:
@@ -14804,9 +14747,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -14856,9 +14796,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/forking:
     dependencies:
@@ -14917,9 +14854,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15032,9 +14966,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15175,9 +15106,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
@@ -15227,9 +15155,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/lister:
     dependencies:
@@ -15285,9 +15210,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15346,9 +15268,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/modules/merge-helper:
     dependencies:
@@ -15456,9 +15375,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/new-component-helper:
     dependencies:
@@ -15508,9 +15424,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/refactoring:
     dependencies:
@@ -15560,9 +15473,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/remove:
     dependencies:
@@ -15633,9 +15543,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15703,9 +15610,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/snap-distance:
     dependencies:
@@ -15852,9 +15756,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15986,9 +15887,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/status:
     dependencies:
@@ -16044,9 +15942,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/component/testing/mock-components:
     dependencies:
@@ -16160,9 +16055,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compositions/aspect-docs/compositions:
     dependencies:
@@ -16240,9 +16132,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compositions/compositions:
     dependencies:
@@ -16382,9 +16271,6 @@ importers:
       '@types/lodash.head':
         specifier: 4.0.6
         version: 4.0.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/compositions/model/composition-id:
     dependencies:
@@ -16649,9 +16535,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/defender/jest:
     dependencies:
@@ -16780,9 +16663,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/defender/mocha:
     dependencies:
@@ -16823,9 +16703,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/defender/multi-tester:
     dependencies:
@@ -16872,9 +16749,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/defender/prettier:
     dependencies:
@@ -16912,9 +16786,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/prettier':
         specifier: 2.7.3
         version: 2.7.3
@@ -17055,9 +16926,6 @@ importers:
       '@types/lodash.compact':
         specifier: 3.0.6
         version: 3.0.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/defender/validator:
     dependencies:
@@ -17308,9 +17176,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -17435,9 +17300,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -17566,9 +17428,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -17645,9 +17504,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/docs/ui/queries/get-docs:
     dependencies:
@@ -17881,9 +17737,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       sinon:
         specifier: 17.0.1
         version: 17.0.1
@@ -17988,9 +17841,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/mousetrap':
         specifier: 1.6.5
         version: 1.6.5
@@ -18046,9 +17896,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -18159,9 +18006,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/generator/workspace-starter:
     dependencies:
@@ -18339,9 +18183,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/git/modules/git-executable:
     dependencies:
@@ -18489,9 +18330,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/node-fetch':
         specifier: 2.5.12
         version: 2.5.12
@@ -18559,9 +18397,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/aspect:
     dependencies:
@@ -18827,9 +18662,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       reflect-metadata:
         specifier: 0.1.13
         version: 0.1.13
@@ -19009,9 +18841,6 @@ importers:
       '@types/cacache':
         specifier: 19.0.0
         version: 19.0.0
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -19085,9 +18914,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/yargs':
         specifier: 17.0.0
         version: 17.0.0
@@ -19177,9 +19003,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/diagnostic:
     dependencies:
@@ -19214,9 +19037,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/doctor:
     dependencies:
@@ -19373,9 +19193,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/global-config:
     dependencies:
@@ -19434,9 +19251,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/graphql:
     dependencies:
@@ -19552,9 +19366,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/node-fetch':
         specifier: 2.5.12
         version: 2.5.12
@@ -19656,9 +19467,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/logger:
     dependencies:
@@ -19699,9 +19507,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -20171,9 +19976,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/harmony/testing/load-aspect:
     dependencies:
@@ -20291,9 +20093,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/html/aspect-docs/html:
     dependencies:
@@ -20585,9 +20384,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/lanes/merge-lanes:
     dependencies:
@@ -20658,9 +20454,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/lanes/modules/create-lane:
     dependencies:
@@ -20946,9 +20739,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/pipelines/aspect-docs/builder:
     dependencies:
@@ -21083,9 +20873,6 @@ importers:
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -21117,9 +20904,6 @@ importers:
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -21328,9 +21112,6 @@ importers:
       '@types/mime':
         specifier: 2.0.3
         version: 2.0.3
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/ssri':
         specifier: ^7.1.5
         version: 7.1.5
@@ -21523,9 +21304,6 @@ importers:
       '@types/mime':
         specifier: 2.0.3
         version: 2.0.3
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -21710,9 +21488,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/react/eslint-config-bit-react:
     dependencies:
@@ -22045,9 +21820,6 @@ importers:
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
         version: 2.2.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.25)(uglify-js@3.19.3)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/react-dev-utils':
         specifier: 9.0.15
         version: 9.0.15
@@ -22242,9 +22014,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/react/ui/docs/properties-table:
     dependencies:
@@ -22469,9 +22238,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/scope/importer:
     dependencies:
@@ -22536,9 +22302,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/scope/models/scope-model:
     dependencies:
@@ -22937,9 +22700,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -23050,9 +22810,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -24127,9 +23884,6 @@ importers:
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/ui-foundation/harmony-ui-app/harmony-ui-app:
     dependencies:
@@ -24161,9 +23915,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/ui-foundation/notifications/aspect:
     dependencies:
@@ -24207,9 +23958,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -24253,9 +24001,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/react-tabs':
         specifier: 2.3.2
         version: 2.3.2
@@ -24299,9 +24044,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/ui-foundation/sidebar:
     dependencies:
@@ -24351,9 +24093,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/ui-foundation/ui:
     dependencies:
@@ -24526,9 +24265,6 @@ importers:
       '@types/http-proxy':
         specifier: ^1.17.16
         version: 1.17.17
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/react-dev-utils':
         specifier: 9.0.15
         version: 9.0.15
@@ -24569,9 +24305,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/ua-parser-js':
         specifier: 0.7.35
         version: 0.7.35
@@ -25086,9 +24819,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/workspace/config-merger:
     dependencies:
@@ -25190,9 +24920,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/workspace/install:
     dependencies:
@@ -25290,9 +25017,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
@@ -25609,9 +25333,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/workspace/watcher:
     dependencies:
@@ -25679,9 +25400,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
 
   scopes/workspace/workspace:
     dependencies:
@@ -25866,9 +25584,6 @@ importers:
       '@types/lodash.compact':
         specifier: 3.0.6
         version: 3.0.6
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/pluralize':
         specifier: 0.0.29
         version: 0.0.29
@@ -25942,9 +25657,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 10.0.10
-        version: 10.0.10
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
