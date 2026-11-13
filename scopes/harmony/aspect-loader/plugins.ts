@@ -79,6 +79,9 @@ export class Plugins {
     try {
       setExitOnUnhandledRejection(false);
       const isModule = isEsmModule(plugin.path);
+      this.logger.debug(
+        `loading plugin "${plugin.path}" (${isModule ? 'esm' : 'cjs'}) of component ${this.component.id.toString()}`
+      );
       const module = isModule ? await this.loadModule(plugin.path) : undefined;
       if (isModule && !module) {
         this.logger.consoleFailure(
@@ -90,7 +93,7 @@ export class Plugins {
       setExitOnUnhandledRejection(true);
     } catch (firstErr: any) {
       this.logger.warn(
-        `failed loading plugin with pattern "${
+        `failed loading plugin "${plugin.path}" with pattern "${
           plugin.def.pattern
         }", in component ${this.component.id.toString()}, will try to fix and reload`,
         firstErr
@@ -110,7 +113,7 @@ export class Plugins {
         } catch (err: any) {
           setExitOnUnhandledRejection(true);
           this.logger.warn(
-            `re-load of the plugin with pattern "${
+            `re-load of the plugin "${plugin.path}" with pattern "${
               plugin.def.pattern
             }", in component ${this.component.id.toString()} failed as well`,
             err
