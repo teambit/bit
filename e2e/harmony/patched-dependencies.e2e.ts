@@ -22,7 +22,10 @@ describe('patched dependencies', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       // the capsule only installs what the component depends on
-      helper.fs.outputFile('comp1/index.js', `const isPositive = require('is-positive');\nmodule.exports = isPositive;\n`);
+      helper.fs.outputFile(
+        'comp1/index.js',
+        `const isPositive = require('is-positive');\nmodule.exports = isPositive;\n`
+      );
       helper.command.install('is-positive@1.0.0');
       // a patch's context lines are byte-exact, so build it from what was actually installed
       const indexPath = path.join(helper.scopes.localPath, 'node_modules/is-positive/index.js');

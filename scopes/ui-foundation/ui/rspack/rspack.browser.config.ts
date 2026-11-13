@@ -95,6 +95,34 @@ export default function createRspackBrowserConfig(
       fallback: resolveFallback,
     },
 
+    // `@teambit/ui`'s barrel re-exports `BundleUiTask` as a real value, which client code (e.g.
+    // `@teambit/react-router`'s or `@teambit/yarn`'s `.ui.runtime.js`) reaches through the bare
+    // package specifier - making `./ui-vendor-dll`'s real dependencies (only ever invoked from the
+    // Node-side `BundleUiTask.execute()`, never from client-rendered UI) require()-reachable edges
+    // from this very compilation:
+    // - `@rspack/core` needs `node:vm`/`node:worker_threads`/`node:zlib` internally, no browser
+    //   equivalent.
+    // - `@teambit/aspect-loader` (for `getCoreAspectPackageName`) pulls in `@teambit/bvm.config`
+    //   via its own barrel, which needs `os`/`crypto`/`constants` (nconf, graceful-fs, etc.).
+    // - `@teambit/webpack`, `postcss-loader`, `postcss-preset-env`, `resolve-url-loader`,
+    //   `sass-loader`, `rspack-manifest-plugin` (for the vendor DLL's own rspack config, built from
+    //   the same `rspack.common`/`postcss.config` this file uses) are rspack *loader/plugin*
+    //   packages: consumed only to build a config object handed to rspack at Node-side compile time,
+    //   never executed as part of the bundle output they help produce, in any bundler.
+    // Externalizing all of these leaves dead `require(...)` calls in the shipped client bundle -
+    // never executed there, since nothing client-rendered calls into `BundleUiTask.execute()`.
+    externals: {
+      '@rspack/core': 'commonjs @rspack/core',
+      '@teambit/aspect-loader': 'commonjs @teambit/aspect-loader',
+      '@teambit/webpack': 'commonjs @teambit/webpack',
+      'postcss-loader': 'commonjs postcss-loader',
+      'postcss-preset-env': 'commonjs postcss-preset-env',
+      'resolve-url-loader': 'commonjs resolve-url-loader',
+      'sass-loader': 'commonjs sass-loader',
+      'rspack-manifest-plugin': 'commonjs rspack-manifest-plugin',
+      'postcss-normalize': 'commonjs postcss-normalize',
+    },
+
     module: {
       parser: cssParser,
       rules: [

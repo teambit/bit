@@ -769,6 +769,9 @@ describe('bit checkout command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', 'teambit.harmony/node');
+      // none of these envs is a core aspect anymore, so their packages must be installed for them
+      // to load. without it the first tag fails on a "failed loading env" issue.
+      helper.env.installLegacyCoreEnvs('teambit.harmony/node', 'teambit.harmony/aspect', 'teambit.envs/env');
       helper.command.tagAllWithoutBuild(); // 0.0.1 - node
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
       helper.command.tagAllWithoutBuild(); // 0.0.2 - aspect

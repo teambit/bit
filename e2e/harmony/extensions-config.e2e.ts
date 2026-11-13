@@ -63,6 +63,7 @@ describe('harmony extension config', function () {
         helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
         helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.link();
+        helper.env.installAspectEnv();
         helper.command.compile();
         localBeforeTag = helper.scopeHelper.cloneWorkspace();
       });

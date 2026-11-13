@@ -54,6 +54,29 @@ export default function createRspackSsrConfig(
       main: entryFiles,
     },
 
+    // same rationale as the browser config: `@teambit/ui`'s barrel re-exports `BundleUiTask`
+    // (a real value, not `export type`), which pulls in `ui-vendor-dll.ts` and its `@rspack/core`
+    // import. Every aspect requires `@teambit/ui` via CJS just to get its aspect id, and rspack
+    // can't prove that CJS require's `BundleUiTask`/vendor-dll exports go unused, so without this it
+    // bundles the whole chain in - including `@rspack/core`'s ~40 MB native binding - even though
+    // nothing on the actual render path ever calls those build-only helpers. Externalizing it here
+    // (this target is `node`, so a plain `require` would resolve from the installed externals if it
+    // ever ran) removes it from the bundle; verified with `--ui-bundling` off (so `@rspack/core`
+    // isn't even installed) that the `require` is never reached at runtime - `bit-bundle3`'s own
+    // `ui-ssr.e2e.ts`/`ui-start.e2e.ts` pass clean against that build. Without this the ssr bundle
+    // balloons by ~50 MB for zero runtime benefit (bundle-plan.md §14, 2026-09-07).
+    externals: {
+      '@rspack/core': 'commonjs @rspack/core',
+      '@teambit/aspect-loader': 'commonjs @teambit/aspect-loader',
+      '@teambit/webpack': 'commonjs @teambit/webpack',
+      'postcss-loader': 'commonjs postcss-loader',
+      'postcss-preset-env': 'commonjs postcss-preset-env',
+      'resolve-url-loader': 'commonjs resolve-url-loader',
+      'sass-loader': 'commonjs sass-loader',
+      'rspack-manifest-plugin': 'commonjs rspack-manifest-plugin',
+      'postcss-normalize': 'commonjs postcss-normalize',
+    },
+
     output: {
       path: path.resolve(workspaceDir, publicDir, 'ssr'),
       publicPath: '/public/ssr/',

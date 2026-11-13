@@ -61,6 +61,12 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      "files": ["scopes/workspace/install/install.main.runtime.ts"],
+      "rules": {
+        "max-lines": ["error", 2100]
+      }
     }
   ],
   "ignorePatterns": [
@@ -73,7 +79,7 @@
     "components/legacy/e2e-helper/excluded-fixtures/**",
     "components/semantics/doc-parser/fixtures/**",
     "scopes/dependencies/dependencies/files-dependency-builder/fixtures/**",
-    "scopes/semantics/schema/mock/**",
+    "scopes/typescript/typescript/mock/**",
     "scripts/**"
   ]
 }
