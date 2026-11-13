@@ -15,6 +15,9 @@ import { readModulesManifest } from '../modules-manifest';
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+      // the node-env-1 fixture is a minimal old-style env, deliberately not based on any
+      // non-core env (see the fixture) - basing it on a real env would pull the entire env chain
+      // into the scope-aspects capsules, which is heavy enough to have OOM-killed this suite.
       new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
       envName1 = helper.env.setCustomEnv('node-env-1');
       envId1 = `${helper.scopes.remote}/${envName1}`;

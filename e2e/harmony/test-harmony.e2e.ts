@@ -14,6 +14,7 @@ describe('test command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      helper.env.setNodeEnv();
       helper.fs.outputFile('comp1/comp1.spec.js');
     });
     it('--junit should show the error', () => {
@@ -27,6 +28,8 @@ describe('test command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
+      // no env needed: these tests assert path-validation errors thrown before any tester runs,
+      // and spec-file recognition falls back to the tester's default patterns
       helper.fs.outputFile(
         'comp1/comp1.spec.ts',
         `it('should pass', () => { expect(true).toBeTruthy(); });
