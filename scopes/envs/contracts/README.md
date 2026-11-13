@@ -24,6 +24,7 @@ To use an aspect at runtime, get it from the env context, typed with the contrac
 const workspace = context.getAspect<Workspace>(WORKSPACE_ASPECT_ID); // undefined in a scope
 const pubsub = context.getAspect<PubsubMain>(PUBSUB_ASPECT_ID);
 const devFiles = context.getAspect<DevFilesMain>(DEV_FILES_ASPECT_ID);
+const dependencyResolver = context.getAspect<DependencyResolverMain>(DEPENDENCY_RESOLVER_ASPECT_ID);
 ```
 
 ## When something is missing
