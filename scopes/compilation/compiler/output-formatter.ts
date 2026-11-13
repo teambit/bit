@@ -1,4 +1,5 @@
-import { errorSymbol, warnSymbol, formatItem } from '@teambit/cli';
+import chalk from 'chalk';
+import { errorSymbol, successSymbol, warnSymbol, formatItem } from '@teambit/cli';
 import type { BuildResult } from './workspace-compiler';
 
 export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) => {
@@ -23,4 +24,19 @@ export const formatCompileResults = (compileResults: BuildResult[], verbose: boo
       return line;
     });
   return lines.join(verbose ? '\n\n' : '\n');
+};
+
+/**
+ * the output of the watcher when a component is changed. the buildResults array always has only one item.
+ */
+export const formatWatchCompileResults = (buildResults: BuildResult[], verbose?: boolean) => {
+  const buildResult = buildResults.find((result) => !result.skipped);
+  if (!buildResult) return '';
+  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
+  const failed = buildResult.errors.length > 0;
+  const status = failed ? `${errorSymbol} FAILURE` : `${successSymbol()} SUCCESS`;
+  const files = verbose ? `${buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n')}\n` : '';
+  return `${title}
+  ${status}\t${buildResult.component}\n
+  ${files}`;
 };
