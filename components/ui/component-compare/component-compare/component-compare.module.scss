@@ -202,6 +202,16 @@ $inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
   flex-shrink: 0;
 }
 
+// Host-contributed controls. Deliberately unstyled beyond layout: what belongs here is the host's
+// (a checkbox, a discussion button), and imposing type or colour on it here would fight whatever
+// design system the host is already using.
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .envIcon {
   width: 20px;
   height: 20px;
