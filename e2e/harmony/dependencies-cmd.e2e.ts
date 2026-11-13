@@ -270,6 +270,21 @@ describe('bit dependencies command', function () {
         });
       });
     });
+    describe('a new component with a dep that was set via variants', () => {
+      before(() => {
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        helper.fixtures.populateComponents(1);
+        helper.workspaceJsonc.setVariant(undefined, 'comp1', {
+          'teambit.dependencies/dependency-resolver': { policy: { dependencies: { ramda: '0.20.0' } } },
+        });
+        helper.command.dependenciesUnset('comp1', 'ramda');
+      });
+      it('should remove the dependency without the need to tag first', () => {
+        const deps = helper.command.showComponentParsedHarmonyByTitle('comp1', 'dependencies');
+        const ids = deps.map((d) => d.id);
+        expect(ids).to.not.include('ramda');
+      });
+    });
   });
   describe('bit deps usage', () => {
     describe('finding a dependnecy', () => {

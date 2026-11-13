@@ -247,6 +247,14 @@ export class DependenciesMain {
       const currentDepResolverConfig = await getCurrentConfig();
       const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
       const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
+      // a new component has no config in the scope yet, so a dependency set via variants is found only in the merged config
+      const isSetByVariants = async (depName: string) => {
+        const { extensions } = await this.workspace.componentExtensions(compId, undefined, undefined, {
+          loadExtensions: false,
+        });
+        const variantsValue = extensions.toConfigObject()[DependencyResolverAspect.id]?.policy?.[depField]?.[depName];
+        return Boolean(variantsValue) && variantsValue !== '-';
+      };
       const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
         const [name, version] = this.splitPkgToNameAndVer(pkg);
         const dependency = depList.findByPkgNameOrCompId(name, version, getLifeCycle());
@@ -263,7 +271,7 @@ export class DependenciesMain {
           if (existsInSpecificConfig === '-') return null;
           delete newDepResolverConfig.policy[depField][depName];
         } else {
-          if (removeOnlyIfExists) return null;
+          if (removeOnlyIfExists && !(await isSetByVariants(depName))) return null;
           set(newDepResolverConfig, ['policy', depField, depName], '-');
         }
         return `${depName}@${dependency.version}`;
