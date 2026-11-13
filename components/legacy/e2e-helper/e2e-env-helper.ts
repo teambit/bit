@@ -56,6 +56,18 @@ const LEGACY_CORE_ENV_POLICY: Record<string, string> = {
 };
 
 /**
+ * the package of each legacy core env, by the aspect-id a test sets on a component. the aspect env
+ * also needs the node env, which it depends on at runtime.
+ * see `installLegacyCoreEnvs`.
+ */
+const LEGACY_CORE_ENV_PACKAGES_BY_ID: Record<string, string[]> = {
+  'teambit.envs/env': ['@teambit/env'],
+  'teambit.harmony/node': ['@teambit/node'],
+  'teambit.react/react': ['@teambit/react'],
+  'teambit.harmony/aspect': ['@teambit/aspect', '@teambit/node'],
+};
+
+/**
  * peers required by the published legacy env packages (via @teambit/cloud UI hooks and
  * graphql-request) that yarn's hoisted linker doesn't auto-install (pnpm auto-installs peers).
  * without them the env fails to load under yarn with "Cannot find module '@apollo/client'" (or
@@ -327,6 +339,21 @@ export default new EmptyEnv();
    */
   installAspectEnv() {
     this.command.install(ASPECT_ENV_PACKAGES.join(' '));
+  }
+
+  /**
+   * install the packages of the legacy core envs a test configures on its components by aspect-id
+   * (e.g. `bit env set comp1 teambit.harmony/node`). they used to be core aspects, so they loaded
+   * without an install; now the env fails to load - and any tag on the component fails with it -
+   * until its package is installed. pass every env the test sets, so a single install covers them.
+   */
+  installLegacyCoreEnvs(...envIds: string[]) {
+    const packages = envIds.flatMap((envId) => {
+      const envPackages = LEGACY_CORE_ENV_PACKAGES_BY_ID[envId];
+      if (!envPackages) throw new Error(`installLegacyCoreEnvs: no package is mapped to the env "${envId}"`);
+      return envPackages.map((pkg) => `${pkg}@${LEGACY_CORE_ENV_POLICY[pkg]}`);
+    });
+    this.command.install([...new Set(packages)].join(' '));
   }
 
   /**
