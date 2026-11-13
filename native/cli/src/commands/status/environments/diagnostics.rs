@@ -1,0 +1,126 @@
+//! Environment issue facts after native dependency detection.
+//!
+//! [`issues`], [`load_failures`], and [`removed`] merge environment diagnostic [`Value`] records with [`full_identity`] resolution.
+
+use crate::commands::status::js::{array, decline, full_identity, text};
+use serde_json::{Value, json};
+use std::io;
+
+/// Appends environment diagnostic issues (`MultipleEnvs`, `RemovedEnv`, `NonLoadedEnv`, `ExternalEnvWithoutVersion`) onto `dependencies` ([`Value`]).
+pub(in crate::commands::status) fn issues(
+    context: &Value,
+    target: &Value,
+    dependencies: &mut Value,
+) -> io::Result<()> {
+    let identity = validated_identity(target)?;
+    let facts = &context["environmentFacts"][identity];
+    load_failures(context, facts, identity, dependencies)?;
+    if facts["multiple"]
+        .as_array()
+        .is_some_and(|ids| ids.len() > 1)
+    {
+        append_issue(dependencies, "MultipleEnvs", &facts["multiple"])?;
+    }
+    removed(context, facts, dependencies)?;
+    if facts["nonLoaded"] != true {
+        return Ok(());
+    }
+    let env = text(facts.get("envId"))?.trim();
+    let bare_env = bit_install::policy::split_version(env).0;
+    let workspace_env = array(context.get("targets"), "env diagnostic targets")?
+        .iter()
+        .any(|target| target["identity"].as_str().map(str::trim) == Some(bare_env));
+    let (kind, data) = if !env.contains('@') && !workspace_env {
+        ("ExternalEnvWithoutVersion", json!({"envId":env,"componentId":full_identity(target)?}))
+    } else {
+        ("NonLoadedEnv", json!(env))
+    };
+    append_issue(dependencies, kind, &data)
+}
+
+/// Appends a `LoadFailures` issue onto `dependencies` ([`Value`]) when `identity` has matching aspect load failures in [`issues`].
+fn load_failures(
+    context: &Value,
+    facts: &Value,
+    identity: &str,
+    dependencies: &mut Value,
+) -> io::Result<()> {
+    let Some(failures) = context["environmentFacts"]["loadFailures"]
+        .as_array()
+        .filter(|arr| !arr.is_empty())
+        .or_else(|| facts["loadFailures"].as_array())
+    else {
+        return Ok(());
+    };
+    let already_has = dependencies["issues"]
+        .as_array()
+        .is_some_and(|issues| {
+            issues
+                .iter()
+                .any(|issue| issue["type"] == "LoadFailures")
+        });
+    if already_has {
+        return Ok(());
+    }
+    let matching = failures
+        .iter()
+        .filter(|entry| {
+            entry["failedId"]
+                .as_str()
+                .is_some_and(|failed| {
+                    bit_install::policy::split_version(failed.trim()).0 == identity
+                })
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if !matching.is_empty() {
+        append_issue(dependencies, "LoadFailures", &Value::Array(matching))?;
+    }
+    Ok(())
+}
+
+/// Appends a `RemovedEnv` issue onto `dependencies` when `facts["envId"]` is locally removed in `context` ([`full_identity`]).
+fn removed(context: &Value, facts: &Value, dependencies: &mut Value) -> io::Result<()> {
+    if let Some(env) = facts["envId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|env| !env.is_empty())
+    {
+        let bare_env = bit_install::policy::split_version(env).0;
+        for target in array(context.get("targets"), "removed environment targets")? {
+            if target["locallyRemoved"] == true
+                && target["identity"].as_str().map(str::trim) == Some(bare_env)
+            {
+                append_issue(dependencies, "RemovedEnv", &json!(full_identity(target)?))?;
+            }
+        }
+    }
+    Ok(())
+}
+
+#[inline]
+fn append_issue(dependencies: &mut Value, kind: &str, data: &Value) -> io::Result<()> {
+    if dependencies["issues"].is_null() {
+        dependencies["issues"] = json!([]);
+    }
+    dependencies["issues"]
+        .as_array_mut()
+        .ok_or_else(|| decline("environment issues"))?
+        .push(json!({"type":kind,"data":data.to_string()}));
+    Ok(())
+}
+
+#[inline]
+fn validated_identity(target: &Value) -> io::Result<&str> {
+    let identity = text(
+        target
+            .get("identity")
+            .filter(|val| !val.is_null())
+            .or_else(|| target.get("id")),
+    )?
+    .trim();
+    if identity.is_empty() {
+        return Err(decline("environment target identity is empty"));
+    }
+    Ok(identity)
+}

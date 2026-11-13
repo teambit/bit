@@ -1,0 +1,113 @@
+//! Deserialized request and option payloads ([`Prepare`], [`Operation`], [`Options`]) for workspace command preparation.
+
+use serde::Deserialize;
+use std::path::PathBuf;
+
+/// Deserialized preparation request for a native workspace [`Operation`] (`checkout`, `merge`, or `switch`) with [`Options`].
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct Prepare {
+    pub(super) root: PathBuf,
+    pub(super) home: PathBuf,
+    pub(super) global_remotes_file: PathBuf,
+    pub(super) operation: Operation,
+    #[serde(default)]
+    pub(super) internal_snapshot_preview: bool,
+    pub(super) options: Options,
+    #[serde(default)]
+    pub(super) dependency_grammar: serde_json::Value,
+    #[serde(default)]
+    pub(super) defer_checkout_pattern: bool,
+}
+/// Supported native workspace command kind (`checkout`, `merge`, or `switch`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) enum Operation {
+    Checkout,
+    Merge,
+    Switch,
+}
+/// Command-specific target, pattern, strategy, [`LaneOptions`], [`ScopeOptions`], [`StashOptions`], and [`Flags`] options for [`Prepare`].
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Options {
+    pub(super) to: Option<String>,
+    pub(super) pattern: Option<String>,
+    pub(super) strategy: Option<String>,
+    pub(super) message: Option<String>,
+    pub(super) lane: Option<LaneOptions>,
+    #[serde(flatten)]
+    pub(super) scope: ScopeOptions,
+    pub(super) stash: Option<StashOptions>,
+    #[serde(flatten)]
+    flags: Flags,
+}
+/// Scope and lane-history options for [`Options`].
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub(super) struct ScopeOptions {
+    pub(super) include_new_from_scope: bool,
+    pub(super) scope_candidates: Vec<String>,
+    pub(super) lane_history: Option<super::lane_history::Options>,
+}
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct StashOptions {
+    pub(super) versions: Vec<StashVersion>,
+    pub(super) bitmap_entries: Vec<serde_json::Value>,
+    pub(super) reset_ids: Option<Vec<String>>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct StashVersion {
+    pub(super) identity: String,
+    pub(super) version: String,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneOptions {
+    pub(super) name: String,
+    pub(super) alias: Option<String>,
+    pub(super) pattern: Option<String>,
+    #[serde(flatten)]
+    pub(super) flags: LaneFlags,
+}
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneFlags {
+    pub(super) resolve_unrelated: Option<String>,
+    pub(super) no_auto_snap: bool,
+    pub(super) no_squash: bool,
+    pub(super) squash: bool,
+    pub(super) skip_fetch: bool,
+    pub(super) include_deps: bool,
+    pub(super) workspace_only: bool,
+    pub(super) exclude_non_lane_comps: bool,
+}
+impl std::ops::Deref for LaneOptions {
+    type Target = LaneFlags;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.flags
+    }
+}
+#[derive(Default, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub(super) struct Flags {
+    pub(super) all: bool,
+    pub(super) force_ours: bool,
+    pub(super) force_theirs: bool,
+    pub(super) no_snap: bool,
+    pub(super) revert: bool,
+    pub(super) workspace_only: bool,
+    #[serde(rename = "verbose")]
+    _verbose: bool,
+    pub(super) skip_dependency_installation: bool,
+}
+impl std::ops::Deref for Options {
+    type Target = Flags;
+    #[inline]
+    fn deref(&self) -> &Flags {
+        &self.flags
+    }
+}

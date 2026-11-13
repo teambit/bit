@@ -1,0 +1,89 @@
+//! Source-code and semantic `Version` comparison planning ([`plan`], `sourceCode` and `modified` modes).
+
+mod fields;
+mod sort;
+#[cfg(test)]
+mod tests;
+
+use super::invalid;
+use crate::js_json::{Value as Js, stringify};
+use serde::Deserialize;
+use serde_json::{Value, json};
+use std::io;
+
+/// Deserialized `inspectionCompare` request payload (`left`, `right`, `workspaceRoot`, `mode`).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Request {
+    left: Js,
+    right: Js,
+    workspace_root: bool,
+    mode: String,
+}
+/// Dispatches an `inspectionCompare` [`Request`] in `sourceCode` or semantic [`modified`] mode.
+pub(super) fn plan(input: Value) -> io::Result<Value> {
+    let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
+    match request.mode.trim() {
+        "sourceCode" => source_code(request.left, request.right),
+        "modified" => modified(request.left, request.right, request.workspace_root),
+        _ => Err(invalid("unknown inspection compare mode")),
+    }
+}
+
+/// Compares `left` and `right` `Version` objects semantically and returns hashes and mutations.
+pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io::Result<Value> {
+    let mut alignment = fields::align(&left, &mut right)?;
+    let mut left_mutations = sort::all(&mut left)?;
+    let mut right_mutations = sort::all(&mut right)?;
+    if !workspace_root {
+        fields::filter_bitmap(&mut left)?;
+    }
+    let left_semantic = crate::snapshot_projection::semantic(&left)?;
+    let right_semantic = crate::snapshot_projection::semantic(&right)?;
+    left_mutations["configAssignments"] =
+        assignments(left_semantic.config_assignments, &left_mutations)?;
+    right_mutations["configAssignments"] =
+        assignments(right_semantic.config_assignments, &right_mutations)?;
+    right_mutations["dependencyVersions"] = alignment["dependencyVersions"].take();
+    right_mutations["fileMetadata"] = alignment["fileMetadata"].take();
+    Ok(
+        json!({"modified":left_semantic.hash!=right_semantic.hash,"leftHash":left_semantic.hash,"rightHash":right_semantic.hash,"mutations":{"left":left_mutations,"right":right_mutations}}),
+    )
+}
+/// Compares sorted `files` arrays of `left` and `right` [`Js`] `Version` objects in `sourceCode` mode and returns [`Value`].
+fn source_code(mut left: Js, mut right: Js) -> io::Result<Value> {
+    let left_order =
+        sort::rows(&mut left, "files", |row| fields::text(fields::get(row, "relativePath")))?;
+    let right_order =
+        sort::rows(&mut right, "files", |row| fields::text(fields::get(row, "relativePath")))?;
+    let modified = stringify(fields::get(&left, "files"), false)?
+        != stringify(fields::get(&right, "files"), false)?;
+    Ok(
+        json!({"modified":modified,"mutations":{"left":{"fileOrder":left_order},"right":{"fileOrder":right_order}}}),
+    )
+}
+
+/// Remaps semantic extension `config_assignments` [`Js`] indices back to their original pre-sort positions using `mutations`.
+fn assignments(rows: Vec<(usize, Js)>, mutations: &Value) -> io::Result<Value> {
+    let order = mutations["extensionOrder"]
+        .as_array()
+        .ok_or_else(|| invalid("inspection extension permutation"))?;
+    if rows.is_empty() {
+        return Ok(Value::Array(Vec::new()));
+    }
+    if rows.len() > order.len() {
+        return Err(invalid("inspection extension permutation"));
+    }
+    let output = rows
+        .into_iter()
+        .map(|(index, config)| {
+            let original = order
+                .get(index)
+                .and_then(Value::as_u64)
+                .filter(|&orig| (orig as usize) < order.len())
+                .ok_or_else(|| invalid("inspection extension permutation"))?;
+            Ok((original, config))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    serde_json::to_value(output).map_err(io::Error::other)
+}

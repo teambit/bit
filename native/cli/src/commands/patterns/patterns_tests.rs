@@ -1,0 +1,57 @@
+//! Unit tests for component glob [`matching`], comma-separated pattern lists ([`split`]), and negated patterns.
+//!
+//! Verifies [`matched`] results across [`IDS`] for `*`, `**`, `?`, version suffixes, and `!` negations in [`matching`].
+
+use super::{matching, split};
+
+/// Sample component ID list used across [`matching`] glob and negation unit tests.
+const IDS: [&str; 5] =
+    ["org.scope/ui/button", "org.scope/ui/card", "org.scope/utils", "other/utils", "other/.hidden"];
+
+/// Splits `pattern` via [`split`] and returns the [`matching`] subset of [`IDS`].
+fn matched(pattern: &str) -> Vec<&'static str> {
+    matching(&IDS, &split(pattern)).unwrap()
+}
+
+/// Verifies that [`matched`] matches `*`, `**`, `?`, and version-suffixed patterns like `minimatch`.
+#[test]
+fn globs_match_like_minimatch() {
+    assert_eq!(matched("org.scope/ui/*"), ["org.scope/ui/button", "org.scope/ui/card"]);
+    assert_eq!(matched("org.scope/*"), ["org.scope/utils"]);
+    assert_eq!(
+        matched("org.scope/**"),
+        ["org.scope/ui/button", "org.scope/ui/card", "org.scope/utils"],
+    );
+    assert_eq!(matched("**/utils"), ["org.scope/utils", "other/utils"]);
+    assert_eq!(matched("other/*"), ["other/utils"], "no dot segments");
+    assert_eq!(matched("*/ui/c?rd"), ["org.scope/ui/card"]);
+    assert_eq!(matched("org.scope/ui/button@1.0.0"), ["org.scope/ui/button"]);
+    assert!(matched("button").is_empty(), "no basename matching");
+}
+
+/// Verifies comma-separated union lists and `!`-prefixed negative patterns in [`matched`].
+#[test]
+fn lists_and_negations() {
+    assert_eq!(matched("other/utils, org.scope/utils"), ["org.scope/utils", "other/utils"]);
+    assert_eq!(matched("**, !org.scope/ui/**"), ["org.scope/utils", "other/utils"]);
+    assert_eq!(
+        matched("!other/**"),
+        ["org.scope/ui/button", "org.scope/ui/card", "org.scope/utils"],
+    );
+    assert_eq!(matched("!org.scope/**, org.scope/utils"), ["org.scope/utils"]);
+}
+
+/// Verifies that character classes, braces, extglobs, comments, and backslash escapes decline in [`matching`].
+#[test]
+fn other_globs_are_left_to_node() {
+    for pattern in
+        ["org.scope/[ab]*", "org.scope/{ui,utils}", "org.scope/+(ui)", "#comment", r"a\*"]
+    {
+        assert!(matching(&IDS, &split(pattern)).is_err(), "{pattern}");
+    }
+}
+
+#[test]
+fn empty_patterns_return_empty_matches() {
+    assert!(matching(&IDS, &[]).unwrap().is_empty());
+}

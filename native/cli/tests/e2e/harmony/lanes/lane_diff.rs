@@ -1,0 +1,79 @@
+//! Port of `e2e/harmony/lanes/lane-diff.e2e.ts` for `bit lane diff` parity ([`expect_main_to_dev_diff`], [`diffing_the_current_lane_against_main`]).
+//!
+//! Validates diffing the active lane against `main` or another lane in workspaces and bare scopes.
+
+use crate::helper::{Helper, strip_ansi};
+
+/// Fixture source for `bar/foo.js` version 2 on a lane.
+const FOO_V2: &str = "module.exports = function foo() { return 'got foo v2'; }";
+/// Fixture source for `bar/foo.js` version 3 on a lane.
+const FOO_V3: &str = "module.exports = function foo() { return 'got foo v3'; }";
+
+/// Asserts that `diff` contains the unified diff headers and hunks from `main` to `dev` for `foo.js`.
+fn expect_main_to_dev_diff(diff: &str) {
+    let diff = strip_ansi(diff);
+    assert!(diff.contains("--- foo.js (main)"), "{diff}");
+    assert!(diff.contains("+++ foo.js (dev)"), "{diff}");
+    assert!(diff.contains("-module.exports = function foo() { return 'got foo'; }"), "{diff}");
+    assert!(diff.contains("+module.exports = function foo() { return 'got foo v2'; }"), "{diff}");
+}
+
+/// Verifies `bit lane diff` against `main` on the workspace and bare scope ([`FOO_V2`]).
+#[test]
+fn diffing_the_current_lane_against_main() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("");
+    helper.add_component_bar_foo();
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
+    helper.create_component_bar_foo(FOO_V2);
+    helper.native("snap --skip-tests");
+
+    // with no args
+    let diff = helper.run_cmd("lane diff");
+    expect_main_to_dev_diff(&diff);
+    assert!(!diff.contains("--- Id"));
+    assert!(!diff.contains("+++ Id"));
+
+    // with {toLane} being the default lane
+    let diff = helper.run_cmd("lane diff main");
+    expect_main_to_dev_diff(&diff);
+
+    // with {fromLane} {toLane}
+    let diff = helper.run_cmd("lane diff main dev");
+    expect_main_to_dev_diff(&diff);
+
+    // on the scope, after exporting the lane
+    helper.native("export");
+    let diff = Helper::cmd_in(&helper.scopes.remote_path, "lane diff dev");
+    assert!(diff.status.success(), "{diff:?}");
+    expect_main_to_dev_diff(&diff.stdout);
+}
+
+/// Verifies `bit lane diff <to-lane>` against a non-default lane on the workspace ([`FOO_V2`], [`FOO_V3`], [`Helper`], [`strip_ansi`], [`expect_main_to_dev_diff`], [`diffing_the_current_lane_against_main`]).
+#[test]
+fn bit_lane_diff_to_lane_non_default_on_the_workspace() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("");
+    helper.add_component_bar_foo();
+    helper.native("snap --skip-tests");
+    helper.native("export");
+    helper.native("lane create dev");
+    helper.create_component_bar_foo(FOO_V2);
+    helper.native("snap --skip-tests");
+    helper.native("switch main");
+    helper.native("lane create stage");
+    helper.create_component_bar_foo(FOO_V3);
+    helper.native("snap --skip-tests");
+
+    let diff = strip_ansi(&helper.run_cmd("lane diff dev"));
+    assert!(diff.contains("--- foo.js (dev)"), "{diff}");
+    assert!(diff.contains("+++ foo.js (stage)"), "{diff}");
+    assert!(diff.contains("-module.exports = function foo() { return 'got foo v2'; }"), "{diff}");
+    assert!(diff.contains("+module.exports = function foo() { return 'got foo v3'; }"), "{diff}");
+    assert!(!diff.contains("--- Id"));
+    assert!(!diff.contains("+++ Id"));
+}

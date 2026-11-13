@@ -1,0 +1,126 @@
+//! Write dependencies ([`write`], [`RESOLVER`]) with the published `package.json` and `JSONC` serializers.
+
+#[cfg(test)]
+mod tests;
+use super::invalid;
+use bit_workspace_config::{jsonc::Document, package_json};
+use serde_json::{Map, Value, json};
+use std::{fs, io, path::Path};
+
+const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+
+/// Writes deduplicated `dependencies` into `package.json` ([`package`]) or `workspace.jsonc` ([`workspace`]) at `root` after verifying [`read`] preimages.
+pub(super) fn write(
+    root: &Path,
+    target: &str,
+    dependencies: &Map<String, Value>,
+    file_id: &str,
+) -> io::Result<()> {
+    let target = match target.trim() {
+        "package.json" => "package.json",
+        "workspace.jsonc" => "workspace.jsonc",
+        _ => return Err(invalid("inbound dependency configuration target")),
+    };
+    let path = root.join(target);
+    let before = read(&path)?;
+    if before.is_none() && target != "package.json" {
+        return Err(io::Error::new(io::ErrorKind::NotFound, "workspace configuration absent"));
+    }
+    let text = before
+        .as_deref()
+        .map(std::str::from_utf8)
+        .transpose()
+        .map_err(io::Error::other)?
+        .unwrap_or("{}");
+    let after = if target == "package.json" {
+        package(text, dependencies)?
+    } else {
+        workspace(text, dependencies)?
+    };
+    if read(&path)? != before {
+        return Err(invalid("inbound dependency configuration changed"));
+    }
+    if target != "package.json" {
+        let _ = backup(root, &path, before.as_deref().unwrap_or_default(), file_id);
+    }
+    crate::merge_state::write::commit(&path, &after)
+}
+
+/// Merges `dependencies` into a `package.json` document while preserving its indentation and newline style for [`write`].
+fn package(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
+    let mut value: Value = crate::parse_jsonc(text.as_bytes()).map_err(io::Error::other)?;
+    let object = value.as_object_mut().ok_or_else(|| invalid("inbound package object"))?;
+    let entry = object
+        .entry("dependencies")
+        .or_insert_with(|| Value::Object(Map::with_capacity(dependencies.len())));
+    if entry.is_null() {
+        *entry = Value::Object(Map::with_capacity(dependencies.len()));
+    }
+    let policy = entry.as_object_mut().ok_or_else(|| invalid("inbound package dependencies"))?;
+    for (name, range) in dependencies {
+        policy.insert(name.trim().to_owned(), range.clone());
+    }
+    package_json::stringify_package(
+        &value,
+        &package_json::detect_indent(text),
+        package_json::detect_newline(text),
+    )
+}
+
+/// Updates `workspace.jsonc` dependency policy entries on [`RESOLVER`] and sets `linkCoreAspects` when absent for [`write`].
+fn workspace(text: &str, dependencies: &Map<String, Value>) -> io::Result<String> {
+    let mut document = Document::parse(text)?;
+    let mut entries = dependencies
+        .iter()
+        .map(|(name, value)| (name.clone(), value.clone()))
+        .collect::<Vec<_>>();
+    entries.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
+    document.replace_entries(&[RESOLVER, "policy", "dependencies"], &entries.into_iter().collect());
+    document.replace_entries(&[RESOLVER, "policy", "peerDependencies"], &indexmap::IndexMap::new());
+    if document
+        .get(&[RESOLVER, "linkCoreAspects"])
+        .is_none()
+    {
+        document.set(&[RESOLVER, "linkCoreAspects"], &json!(true));
+    }
+    String::from_utf8(crate::checkout::eol::normalize(
+        format!("{document}\n").into_bytes(),
+        cfg!(windows),
+    ))
+    .map_err(io::Error::other)
+}
+
+/// Reads an existing ordinary file at `path` within the 32 MiB budget, returning `Ok(None)` if not found.
+fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {
+            crate::merge_state::write::validate_existing(path)?;
+            crate::read_budget::Budget::new(32 * 1024 * 1024)
+                .read(fs::File::open(path)?)
+                .map(Some)
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+        Ok(_) => Err(invalid("inbound dependency configuration must be a regular file")),
+    }
+}
+
+fn backup(root: &Path, path: &Path, before: &[u8], file_id: &str) -> io::Result<()> {
+    use std::io::Write;
+    let file_id = file_id.trim();
+    crate::workspace::engine::command::bitmap::validate_history_file_id(file_id)?;
+    let directory = crate::scope_path(root).join("workspace-config-history");
+    let files_dir = directory.join("files");
+    fs::create_dir_all(&files_dir)?;
+    let snapshot = files_dir.join(file_id);
+    fs::copy(path, &snapshot)?;
+    if read(&snapshot)?.as_deref() != Some(before) {
+        return Err(invalid("inbound workspace configuration backup changed"));
+    }
+    let mut metadata = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(directory.join("metadata.txt"))?;
+    writeln!(metadata, "{file_id} Write dependencies")?;
+    metadata.sync_all()
+}

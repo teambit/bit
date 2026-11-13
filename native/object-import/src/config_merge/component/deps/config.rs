@@ -1,0 +1,156 @@
+//! Dependency-resolver policy configuration merge ([`merge`]) on [`State`] across `current`, `other`, and `base`.
+//!
+//! Resolves added, removed, and version-conflicted dependency policy entries per lifecycle.
+
+use super::{State, append, field};
+use serde_json::json;
+use std::io;
+
+/// Merges explicit dependency-resolver policy configurations across `current`, `other`, and `base` in [`State`] via [`one`].
+pub(super) fn merge(state: &mut State<'_, '_>) -> io::Result<()> {
+    if state.same(0, 1) || state.same(2, 1) {
+        return Ok(());
+    }
+    if state.configs[..2]
+        .iter()
+        .any(|entry| {
+            entry
+                .as_ref()
+                .is_some_and(|entry| entry["config"] == "-")
+        })
+    {
+        return Err(super::super::super::invalid("removed dependency config"));
+    }
+    if state.same(2, 0) {
+        return other_changed(state);
+    }
+    let mut names = Vec::with_capacity(state.policies[0].len() + state.policies[1].len());
+    for dep in state.policies[0]
+        .iter()
+        .chain(state.policies[1].iter())
+    {
+        let name = dep["dependencyId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| super::super::super::invalid("policy name"))?;
+        if !names
+            .iter()
+            .any(|existing| existing == name)
+        {
+            names.push(name.to_owned());
+        }
+    }
+    for name in names {
+        one(state, &name)?;
+    }
+    Ok(())
+}
+/// Apply `other` policy additions and `base`-to-`other` removals when `current` equals `base`.
+fn other_changed(state: &mut State<'_, '_>) -> io::Result<()> {
+    for index in 0..state.policies[1].len() {
+        let dep = state.policies[1][index].clone();
+        state.add_policy(&dep)?;
+    }
+    for dep in &state.policies[0] {
+        let Some(name) = dep["dependencyId"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+        else {
+            continue;
+        };
+        if state.policies[2]
+            .iter()
+            .any(|base| base["dependencyId"].as_str().map(str::trim) == Some(name))
+            && !state.policies[1]
+                .iter()
+                .any(|other| other["dependencyId"].as_str().map(str::trim) == Some(name))
+        {
+            let lifecycle = dep["lifecycleType"]
+                .as_str()
+                .ok_or_else(|| super::super::super::invalid("policy lifecycle"))?;
+            append(&mut state.merged, field(lifecycle)?, json!({"name":name,"version":"-"}));
+        }
+    }
+    Ok(())
+}
+/// Merge a single dependency policy entry `name` across `current`, `other`, and `base` in [`State`].
+fn one(state: &mut State<'_, '_>, name: &str) -> io::Result<()> {
+    let Some(other) = state.policies[1]
+        .iter()
+        .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name))
+    else {
+        return Ok(());
+    };
+    let Some(current) = state.policies[0]
+        .iter()
+        .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name))
+    else {
+        return state.add_policy(&other.clone());
+    };
+    let current_version = &current["value"]["version"];
+    let other_version = &other["value"]["version"];
+    let base = state.policies[2]
+        .iter()
+        .find(|dep| dep["dependencyId"].as_str().map(str::trim) == Some(name));
+    let base_version = base.map(|dep| &dep["value"]["version"]);
+    if current_version == other_version || base_version == Some(other_version) {
+        return Ok(());
+    }
+    if base_version == Some(current_version) {
+        return state.add_policy(&other.clone());
+    }
+    if local(state, name, other_version.as_str())? {
+        return Ok(());
+    }
+    resolve(state, name, &current.clone(), &other.clone())
+}
+/// Apply the configured merge strategy (`"theirs"`, `"ours"`, or `"manual"` conflict) to a diverged policy `name`.
+fn resolve(
+    state: &mut State<'_, '_>,
+    name: &str,
+    current: &serde_json::Value,
+    other: &serde_json::Value,
+) -> io::Result<()> {
+    let current_version = current["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| super::super::super::invalid("policy version"))?;
+    let other_version = other["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| super::super::super::invalid("policy version"))?;
+    match state.engine.strategy() {
+        "theirs" => state.add_policy(other)?,
+        "ours" => {}
+        _ => {
+            let lifecycle = current["lifecycleType"]
+                .as_str()
+                .ok_or_else(|| super::super::super::invalid("policy lifecycle"))?;
+            append(
+                &mut state.conflicted,
+                field(lifecycle)?,
+                json!({"name":name,"version":format!("CONFLICT::{current_version}::{other_version}::"),"force":current["force"]}),
+            );
+        }
+    }
+    Ok(())
+}
+#[inline]
+fn local(state: &State<'_, '_>, name: &str, version: Option<&str>) -> io::Result<bool> {
+    let component = state.component_for_package(name);
+    if let Some(component) = component {
+        let id = component["id"]
+            .as_str()
+            .or_else(|| component["componentId"].as_str())
+            .or_else(|| component["componentId"]["base"].as_str())
+            .map(str::trim)
+            .filter(|val| !val.is_empty())
+            .ok_or_else(|| super::super::super::invalid("component id"))?;
+        return state.engine.local(id, version.map(str::trim));
+    }
+    Ok(false)
+}

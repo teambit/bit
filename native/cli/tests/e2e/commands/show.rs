@@ -1,0 +1,56 @@
+//! End-to-end `ShowCmd` (`bit show`) argument handling tests before component loading ([`show_help_and_argument_errors_match_released_node`]).
+//!
+//! Verifies missing-ID argument errors and help output across workspaces, bare scopes, and [`OUTSIDE_DIR`] directories via [`Helper`].
+
+use crate::helper::Helper;
+use std::{ffi::OsStr, fs};
+
+/// Relative directory name (`outside-show-help`) used for outside-workspace `bit show` help and argument error tests in [`show_help_and_argument_errors_match_released_node`].
+const OUTSIDE_DIR: &str = "outside-show-help";
+
+/// Verifies `bit show` help and missing-ID argument errors match `Node.js` across [`OUTSIDE_DIR`], bare scopes, and [`Helper`] workspaces via [`Helper::cmd_in_with`].
+#[test]
+fn show_help_and_argument_errors_match_released_node() {
+    let helper = Helper::new();
+    let outside = helper.scopes.e2e_dir.join(OUTSIDE_DIR);
+    fs::create_dir_all(&outside).unwrap();
+    let (_, bare_scope) = helper.new_bare_scope();
+    helper.re_init_workspace();
+    let ci_env = [("CI", OsStr::new("1"))];
+    let color_env = [("FORCE_COLOR", OsStr::new("1"))];
+    for directory in [&outside, &bare_scope, &helper.scopes.local_path] {
+        for command in [
+            "show",
+            "show -j",
+            "show --legacy",
+            "show --remote",
+            "show --browser",
+            "show --compare",
+            "show --json --remote",
+            "show -j -l -r -b -c",
+            "show --no-color",
+            "show sample --no-color",
+            "show --help",
+            "show -h",
+            "show sample --help",
+            "show sample -h",
+            "show --json --help",
+            "show sample -j --help",
+            "show --legacy --remote -h",
+            "show sample --legacy --remote -h",
+            "show --no-color --help",
+            "show sample --no-color --help",
+        ] {
+            for native_env in [&[][..], &ci_env[..], &color_env[..]] {
+                let mut node_env = vec![("BIT_NATIVE", OsStr::new("off"))];
+                node_env.extend_from_slice(native_env);
+                let node = Helper::cmd_in_with(directory, command, &node_env);
+                let native = Helper::cmd_in_with(directory, command, native_env);
+                assert!(native.native, "{command}: node={node:?}; native={native:?}");
+                assert_eq!(native.status.code(), node.status.code(), "{command}");
+                assert_eq!(native.stdout, node.stdout, "{command}");
+                assert_eq!(native.stderr, node.stderr, "{command}");
+            }
+        }
+    }
+}

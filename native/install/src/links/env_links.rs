@@ -1,0 +1,142 @@
+//! `linkDepsResolvedFromEnv` (`dependency-linker.ts`): a dependency that a component
+//! policy marks `resolveFromEnv` is linked at the root from where its env resolves it.
+//!
+//! Resolves `resolveFromEnv` package directories from core, workspace, or installed environment packages via [`resolved_from_env_links`] into [`EnvLinks`].
+
+#[cfg(test)]
+mod tests;
+
+use super::root::{bvm_or, link_value};
+use crate::{
+    dependencies::default_package_name,
+    host::HostInfo,
+    model::{ComponentDependencies, ComponentId, DependencyMap, WorkspaceComponent},
+    policy::split_version,
+};
+use indexmap::IndexMap;
+use std::{
+    ffi::OsStr,
+    fs,
+    path::{Path, PathBuf},
+};
+
+/// Root `link:` [`DependencyMap`] entries resolved from environments alongside unresolved diagnostic messages.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct EnvLinks {
+    /// Package name → `link:<abs_dir>` entries for `resolveFromEnv` policy dependencies.
+    pub links: DependencyMap,
+    /// Diagnostic messages for packages that could not be resolved from their environment directory.
+    pub messages: Vec<String>,
+}
+
+/// The links of every component whose merged policy has `resolveFromEnv` entries,
+/// keyed by package name in component and policy order. Callers add them only when
+/// root components are off (`linkDepsResolvedFromEnv`). `env_packages` names the
+/// packages of envs that are neither core nor workspace components, by env id
+/// without version.
+#[must_use]
+pub fn resolved_from_env_links(
+    root: &Path,
+    info: &HostInfo,
+    components: &[WorkspaceComponent],
+    dependencies: &IndexMap<String, ComponentDependencies>,
+    env_packages: &IndexMap<String, String>,
+) -> EnvLinks {
+    let mut result = EnvLinks::default();
+    for component in components {
+        let Some(data) = dependencies
+            .get(&component.id.to_string_without_version())
+            .filter(|data| data.policy.iter().any(|entry| entry.resolve_from_env))
+        else {
+            continue;
+        };
+        let env_dir = env_dir(root, info, components, env_packages, &component.env_id);
+        for name in data.policy
+            .iter()
+            .filter(|entry| entry.resolve_from_env)
+            .map(|entry| entry.name.trim())
+            .filter(|name| !name.is_empty())
+        {
+            match resolve_module_dir(&env_dir, name) {
+                Some(from) => {
+                    result.links.insert(name.to_owned(), link_value(&from));
+                }
+                None => result.messages.push(format!(
+                    "could not resolve {name} from env directory {}",
+                    env_dir.display(),
+                )),
+            }
+        }
+    }
+    result
+}
+
+/// Resolve the environment package directory (`aspectPath`) into a [`PathBuf`] for `env_id` from [`HostInfo`] core aspects, [`WorkspaceComponent`] items, or `node_modules`.
+fn env_dir(
+    root: &Path,
+    info: &HostInfo,
+    components: &[WorkspaceComponent],
+    env_packages: &IndexMap<String, String>,
+    env_id: &str,
+) -> PathBuf {
+    let bare = split_version(env_id.trim()).0.trim();
+    if let Some(aspect) = info.core_aspects
+        .iter()
+        .find(|aspect| split_version(aspect.id.trim()).0.trim() == bare)
+    {
+        return bvm_or(info, aspect);
+    }
+    let package = components
+        .iter()
+        .find(|component| component.id.to_string_without_version() == bare)
+        .map(|component| component.package_name.as_str())
+        .or_else(|| {
+            env_packages
+                .get(bare)
+                .or_else(|| {
+                    env_packages
+                        .iter()
+                        .find_map(|(key, pkg)| {
+                            (split_version(key.trim()).0.trim() == bare).then_some(pkg)
+                        })
+                })
+                .map(String::as_str)
+        })
+        .map(str::trim)
+        .filter(|pkg| !pkg.is_empty())
+        .map_or_else(|| default_package_name(&component_id(bare)), str::to_owned);
+    root.join("node_modules").join(package)
+}
+
+#[inline]
+fn component_id(id: &str) -> ComponentId {
+    let trimmed = id.trim();
+    let (scope, name) = trimmed
+        .split_once('/')
+        .map_or(("", trimmed), |(scope, name)| (scope.trim(), name.trim()));
+    ComponentId {
+        scope: (!scope.is_empty()).then(|| scope.to_owned()),
+        default_scope: None,
+        name: name.to_owned(),
+        version: None,
+    }
+}
+
+/// `resolveModuleDirFromFile(resolveFrom.silent(fromDir, name), name)`: Node's
+/// `node_modules` lookup from the real path of `from_dir`, returning the real
+/// package directory.
+#[inline]
+fn resolve_module_dir(from_dir: &Path, name: &str) -> Option<PathBuf> {
+    let real = fs::canonicalize(from_dir).ok()?;
+    real.ancestors()
+        .filter(|dir| dir.file_name() != Some(OsStr::new("node_modules")))
+        .map(|dir| dir.join("node_modules").join(name))
+        .find(|candidate| is_resolvable(candidate))
+        .map(|candidate| fs::canonicalize(&candidate).unwrap_or(candidate))
+}
+
+/// A package directory Node resolves: a `package.json` or an `index.js`.
+#[inline]
+fn is_resolvable(dir: &Path) -> bool {
+    dir.join("package.json").is_file() || dir.join("index.js").is_file()
+}

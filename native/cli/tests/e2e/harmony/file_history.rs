@@ -1,0 +1,45 @@
+//! Published file-history readers retain the tagged source after deprecation is staged ([`log_file_loads_multiple_versions_with_exact_published_cache`]).
+//!
+//! Verifies `bit log-file` across multi-version histories and staged deprecation states.
+
+use crate::commands::move_paths::support::{self, bitmap, compare};
+
+/// Verifies that `bit log-file` displays multi-version file history matching the `Node.js` CLI via [`compare`] and [`support::workspace`].
+#[test]
+fn log_file_loads_multiple_versions_with_exact_published_cache() {
+    let helper = support::workspace(1, true);
+    helper.append_file("comp1/index.js", "\n// second tagged version\n");
+    support::tag(&helper);
+    let result = compare(&helper, "log-file comp1/index.js");
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+    assert!(result.stdout.contains("tag 0.0.1"));
+    assert!(result.stdout.contains("tag 0.0.2"));
+}
+
+/// Verifies `bit log-file` displays a single tagged version's file history matching `Node.js`.
+#[test]
+fn log_file_loads_tagged_history_with_exact_published_cache() {
+    let helper = support::workspace(1, true);
+    let result = compare(&helper, "log-file comp1/index.js");
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+}
+
+/// Verifies `bit log-file` reads file history when deprecation is staged in `.bitmap`.
+#[test]
+fn log_file_reads_staged_deprecation_with_exact_published_state() {
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "deprecate comp1");
+    assert!(bitmap(&helper)["comp1"]["config"]["teambit.component/deprecation"].is_object());
+    let result = compare(&helper, "log-file comp1/index.js");
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+}
+
+/// Verifies `bit blame` reads file history when deprecation is staged in `.bitmap` ([`bitmap`], [`compare`], [`support::workspace`], [`support::setup`]).
+#[test]
+fn blame_reads_staged_deprecation_with_exact_published_state() {
+    let helper = support::workspace(1, true);
+    support::setup(&helper, "deprecate comp1");
+    assert!(bitmap(&helper)["comp1"]["config"]["teambit.component/deprecation"].is_object());
+    let result = compare(&helper, "blame comp1/index.js");
+    assert!(result.status.success(), "{} {}", result.stdout, result.stderr);
+}

@@ -1,0 +1,199 @@
+//! Remote file-scope ([`file`]) and HTTP-tar object extraction for component fork source capture.
+
+use super::super::{required, unsupported};
+use crate::{component_recover::probe::objects as shared, component_tracking::observe::Observed};
+use bit_client_transfer::tar::ObjectItem;
+use serde_json::{Value, json};
+use std::{
+    io,
+    path::{Component, Path},
+};
+/// Tuple of `(version_json, source_files, versioned_id, raw_compressed_objects)` for a captured remote component.
+type Captured = (Value, Vec<(String, Vec<u8>)>, String, Vec<(String, Vec<u8>)>);
+
+/// Reads a remote file-scope's `Component`, head `Version`, and `Source` blobs at [`Path`] `scope` for `id` into [`Captured`].
+pub(super) fn file(scope: &Path, id: &str, observed: &mut Observed) -> io::Result<Captured> {
+    let index: Value = crate::parse_jsonc(&required(observed, &scope.join("index.json"))?)?;
+    let hash = trimmed_str(&model_row(&index, id)?["hash"])
+        .ok_or_else(|| unsupported("fork remote model hash"))?;
+    let mut compressed = vec![(hash.to_owned(), retain(scope, hash, observed)?)];
+    let (kind, model) = crate::read_scope_object(scope, hash)?.ok_or_else(|| missing(id))?;
+    if kind != "Component" {
+        return Err(unsupported("fork remote model type"));
+    }
+    let hash = shared::version_hash(&model, id)?;
+    compressed.push((hash.clone(), retain(scope, &hash, observed)?));
+    let (kind, version) = crate::read_scope_object(scope, &hash)?.ok_or_else(|| missing(id))?;
+    if kind != "Version" {
+        return Err(unsupported("fork remote version type"));
+    }
+    let mut total = 0usize;
+    let rows = source_rows(&version)?;
+    compressed.reserve(rows.len());
+    let mut files = Vec::with_capacity(rows.len());
+    for row in rows {
+        let (path, hash) = source(row)?;
+        compressed.push((hash.into(), retain(scope, hash, observed)?));
+        let bytes = crate::checkout::repository::source(
+            &scope.join("objects"),
+            crate::merge_history::hash(hash)?,
+            (32 * 1024 * 1024usize).saturating_sub(total),
+            &mut 0,
+        )?;
+        total += bytes.len();
+        files.push((path.into(), bytes));
+    }
+    Ok((version, files, version_id(&model, id, &hash), compressed))
+}
+/// Extract a trimmed non-empty string slice from a JSON `value` [`Value`].
+#[inline]
+fn trimmed_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+/// Return `true` when `index.json` component `row` matches `target_scope` and `target_name` and is not a symlink.
+#[inline]
+fn row_matches_target(row: &Value, target_scope: &str, target_name: &str) -> bool {
+    let (row_scope, row_name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .map_or(("", ""), |(sc, nm)| (sc.unwrap_or_default().trim(), nm.trim()));
+    row["isSymlink"] != true
+        && row_name == target_name
+        && (row_scope == target_scope || row_scope.is_empty())
+}
+/// Locate the non-symlink `index.json` component row [`Value`] matching `id`.
+fn model_row<'a>(index: &'a Value, id: &str) -> io::Result<&'a Value> {
+    let trimmed = id.trim();
+    let bare = trimmed.rsplit_once('@').map_or(trimmed, |(prefix, _)| prefix.trim());
+    let (target_scope, target_name) = bare
+        .split_once('/')
+        .map_or(("", bare), |(scope, name)| (scope.trim(), name.trim()));
+    index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .and_then(|rows| rows.iter().find(|row| row_matches_target(row, target_scope, target_name)))
+        .ok_or_else(|| missing(id))
+}
+pub(super) fn http(items: &[ObjectItem], id: &str) -> io::Result<Captured> {
+    let (objects, model) = shared::decode(items, id)?;
+    validate_sources(&objects)?;
+    let model = model.ok_or_else(|| missing(id))?;
+    let hash = shared::version_hash(&model, id)?;
+    let (kind, bytes) = objects.get(&hash).ok_or_else(|| missing(id))?;
+    if kind != "Version" {
+        return Err(unsupported("fork remote version type"));
+    }
+    let version: Value = crate::parse_jsonc(bytes)?;
+    let rows = source_rows(&version)?;
+    let mut files = Vec::with_capacity(rows.len());
+    for row in rows {
+        let (path, hash) = source(row)?;
+        let (kind, bytes) = objects.get(hash).ok_or_else(|| missing(id))?;
+        if kind != "Source" {
+            return Err(unsupported("fork remote source type"));
+        }
+        files.push((path.into(), bytes.clone()));
+    }
+    Ok((
+        version,
+        files,
+        version_id(&model, id, &hash),
+        items
+            .iter()
+            .map(|item| (item.hash.clone(), item.compressed.clone()))
+            .collect(),
+    ))
+}
+fn source_rows(version: &Value) -> io::Result<&[Value]> {
+    let files =
+        version["files"].as_array().ok_or_else(|| unsupported("fork remote source files"))?;
+    if files.len() > 16384 {
+        return Err(unsupported("fork remote source count"));
+    }
+    let mut paths = std::collections::HashSet::new();
+    for row in files {
+        let (path, _) = source(row)?;
+        if !paths.insert(path) {
+            return Err(unsupported("fork duplicate remote source path"));
+        }
+    }
+    Ok(files)
+}
+fn source(row: &Value) -> io::Result<(&str, &str)> {
+    let path = trimmed_str(&row["relativePath"])
+        .or_else(|| trimmed_str(&row["path"]))
+        .ok_or_else(|| unsupported("fork remote source path"))?;
+    if path.is_empty()
+        || path.contains('\\')
+        || Path::new(path)
+            .components()
+            .any(|part| !matches!(part, Component::Normal(_)))
+    {
+        return Err(unsupported("fork unsafe remote source path"));
+    }
+    let file_hash = trimmed_str(&row["file"])
+        .or_else(|| trimmed_str(&row["hash"]))
+        .ok_or_else(|| unsupported("fork remote source hash"))?;
+    Ok((path, file_hash))
+}
+fn retain(scope: &Path, hash: &str, observed: &mut Observed) -> io::Result<Vec<u8>> {
+    let canonical = crate::validate::hexadecimal(&crate::merge_history::hash(hash.trim())?);
+    let path = scope
+        .join("objects")
+        .join(&canonical[..2])
+        .join(&canonical[2..]);
+    observed.ancestors(
+        scope,
+        path.parent().ok_or_else(|| unsupported("fork remote object parent"))?,
+    )?;
+    required(observed, &path)
+}
+fn version_id(model: &Value, id: &str, hash: &str) -> String {
+    let hash = hash.trim();
+    if let Some((_, version)) = id.trim().rsplit_once('@') {
+        let version = version.trim();
+        if !version.is_empty() && !matches!(version, "latest" | "head") {
+            return version.into();
+        }
+    }
+    model["versions"]
+        .as_object()
+        .into_iter()
+        .chain(model["orphanedVersions"].as_object())
+        .flat_map(|versions| versions.iter())
+        .find(|(_, value)| trimmed_str(value) == Some(hash))
+        .map_or_else(|| hash.into(), |(tag, _)| tag.trim().to_owned())
+}
+pub(super) fn configs(version: &Value) -> io::Result<Value> {
+    let mut configs = json!({});
+    let Some(entries) = version["extensions"].as_array() else {
+        return Ok(configs);
+    };
+    for entry in entries {
+        let name = super::super::configuration::extension_key(entry)
+            .ok_or_else(|| unsupported("fork remote extension identity"))?;
+        if let Some(config) = entry.get("config") {
+            configs[&name] = config.clone();
+        }
+    }
+    Ok(configs)
+}
+#[inline]
+fn missing(id: &str) -> io::Error {
+    let id = id.trim();
+    io::Error::new(io::ErrorKind::NotFound, format!(r#"error: component "{id}" was not found"#))
+}
+
+fn validate_sources(objects: &shared::Objects) -> io::Result<()> {
+    use sha1::{Digest, Sha1};
+    for (hash, (kind, bytes)) in objects {
+        if kind.trim() == "Source"
+            && !crate::validate::hexadecimal(&Sha1::digest(bytes)).eq_ignore_ascii_case(hash.trim())
+        {
+            return Err(unsupported("fork remote Source identity differs"));
+        }
+    }
+    Ok(())
+}

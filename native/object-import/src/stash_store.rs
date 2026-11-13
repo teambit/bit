@@ -1,0 +1,148 @@
+//! Published stash metadata files ([`PreparedLoad`], [`PreparedSave`], `Observation`, [`list`]), lexical naming, and retained filesystem observations.
+pub use save::PreparedSave;
+mod observation;
+mod save;
+#[cfg(test)]
+mod tests;
+
+use observation::Observation;
+use serde_json::{Value, json};
+use std::{fs, io, path::Path};
+
+/// Retained stash metadata file selection and `Observation` directory state for `bit stash load`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct PreparedLoad {
+    observation: Observation,
+    filename: String,
+    data: Value,
+}
+impl PreparedLoad {
+    /// Select an explicit stash ID or the lexically latest published filename from `Observation`.
+    pub fn prepare(scope: &Path, id: Option<&str>) -> io::Result<Self> {
+        let observation = Observation::read(scope)?;
+        let filename = match id
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+        {
+            Some(id) => {
+                let id = id
+                    .strip_suffix(".json")
+                    .unwrap_or(id)
+                    .trim();
+                validate_id(id)?;
+                format!("{id}.json")
+            }
+            None => observation
+                .latest()
+                .ok_or_else(|| invalid("no stashed components found"))?
+                .to_owned(),
+        };
+        let bytes = observation
+            .file(&filename)
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::NotFound, format!("stash file {filename} not found"))
+            })?;
+        let data = crate::parse_jsonc(bytes)?;
+        Ok(Self { observation, filename, data })
+    }
+    /// Returns the complete detached-`Version` and `.bitmap` metadata JSON without `Source` bodies.
+    #[inline]
+    #[must_use]
+    pub fn data(&self) -> &Value {
+        &self.data
+    }
+    /// The selected published filename, including its JSON extension.
+    #[inline]
+    #[must_use]
+    pub fn filename(&self) -> &str {
+        &self.filename
+    }
+    /// Revalidate the selected metadata and the stash filename inventory via `Observation`.
+    pub fn validate(&self) -> io::Result<()> {
+        self.observation.validate()
+    }
+    /// Consume a stash only after its checkout operation has succeeded.
+    pub fn consume(&self) -> io::Result<()> {
+        self.validate()?;
+        fs::remove_file(self.observation.directory().join(&self.filename))
+    }
+}
+/// Maximum byte size (32 MiB) and entry count (4,096) enforced via `Observation` on `.bit/stash`.
+/// Project the published list result in stash filename discovery order.
+pub fn list(scope: &Path) -> io::Result<Vec<Value>> {
+    let observation = Observation::read(scope)?;
+    let result = observation
+        .files()
+        .iter()
+        .map(|(name, bytes)| {
+            let data = crate::parse_jsonc(bytes)?;
+            let components = data["stashCompsData"]
+                .as_array()
+                .ok_or_else(|| invalid("stash component entries"))?
+                .iter()
+                .map(|row| component_id(&row["id"]))
+                .collect::<io::Result<Vec<_>>>()?;
+            let mut row = json!({
+                "id": name.strip_suffix(".json").unwrap_or(name),
+                "components": components,
+            });
+            if let Some(message) = data["metadata"]
+                .get("message")
+                .filter(|msg| !msg.is_null())
+            {
+                row["message"] = message.clone();
+            }
+            Ok(row)
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    observation.validate()?;
+    Ok(result)
+}
+fn component_id(id: &Value) -> io::Result<String> {
+    if let Some(raw) = id
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+    {
+        if raw.contains(['\\', '\0']) || raw.contains("..") {
+            return Err(invalid("stash component identity"));
+        }
+        return Ok(raw.to_owned());
+    }
+    let name = id["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty() && !name.contains(['\\', '\0']) && !name.contains(".."))
+        .ok_or_else(|| invalid("stash component identity"))?;
+    let mut name = match id["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+    {
+        None => name.to_owned(),
+        Some(scope) if !scope.contains(['/', '\\', '\0']) && !scope.contains("..") => {
+            format!("{scope}/{name}")
+        }
+        Some(_) => return Err(invalid("stash component identity")),
+    };
+    if let Some(version) = id["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+    {
+        name.push('@');
+        name.push_str(version);
+    }
+    Ok(name)
+}
+#[inline]
+fn validate_id(id: &str) -> io::Result<()> {
+    if id.is_empty() || id.contains(['/', '\\', '\0']) || matches!(id, "." | "..") {
+        return Err(invalid("invalid stash ID"));
+    }
+    Ok(())
+}
+#[inline]
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message)
+}

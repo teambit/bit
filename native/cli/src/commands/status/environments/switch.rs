@@ -1,0 +1,133 @@
+//! Retain one published switch loader while Rust captures each requested source.
+//!
+//! Extends [`Environments`] with [`Environments::switch_begin`], [`Environments::switch_one`], and [`Environments::switch_finish`] over [`Capture`], [`Host`], and [`callbacks`].
+
+use super::{Environments, Host, Value, callbacks, decline, io, json};
+use crate::commands::status::capture::{Capture, callback_load_stdout, callback_startup_stdout};
+
+impl Environments {
+    /// Begins an ordered checkout/switch callback stage on `self.host` when checkout callbacks are active.
+    pub(in crate::commands::status) fn switch_begin(
+        &self,
+        context: &Value,
+        capture: &Capture,
+        order: &[String],
+    ) -> io::Result<Option<callbacks::SwitchStage>> {
+        let Some(host) = self.host
+            .as_ref()
+            .filter(|_| self.checkout && !order.is_empty())
+        else {
+            return Ok(None);
+        };
+        callbacks::switch_begin(host, context, capture, order)
+            .map_err(|error| self.callback_failure(capture, error))
+    }
+
+    /// Returns the active checkout callback [`Host`] or [`decline`]s if absent for [`Self::switch_one`].
+    #[inline]
+    fn switch_host(&self) -> io::Result<&Host> {
+        self.host.as_ref().ok_or_else(|| decline("switch callback host"))
+    }
+
+    /// Invokes [`callbacks::switch_one`] on the active checkout callback [`Host`] for `identity`.
+    #[inline]
+    pub(in crate::commands::status) fn switch_one(
+        &self,
+        context: &Value,
+        capture: &Capture,
+        identity: &str,
+    ) -> io::Result<Value> {
+        let identity = validated_switch_id(identity)?;
+        let host = self.switch_host()?;
+        callbacks::switch_one(host, context, capture, identity)
+            .map_err(|error| self.callback_failure(capture, error))
+    }
+
+    /// Stages the captured component row for `identity` on the active checkout callback [`Host`] via [`callbacks::switch_stage_row`].
+    #[inline]
+    pub(in crate::commands::status) fn switch_stage_row(
+        &self,
+        context: &Value,
+        capture: &Capture,
+        identity: &str,
+    ) -> io::Result<()> {
+        let identity = validated_switch_id(identity)?;
+        let host = self.switch_host()?;
+        callbacks::switch_stage_row(host, context, capture, identity)
+            .map_err(|error| self.callback_failure(capture, error))
+    }
+
+    /// Resumes the ordered switch callback stream on the active [`Host`] via [`callbacks::switch_resume`].
+    #[inline]
+    pub(in crate::commands::status) fn switch_resume(
+        &self,
+        capture: &Capture,
+    ) -> io::Result<Value> {
+        let host = self.switch_host()?;
+        callbacks::switch_resume(host, capture)
+            .map_err(|error| self.callback_failure(capture, error))
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn switch_accept(
+        &self,
+        capture: &mut Capture,
+        result: &Value,
+        identity: &str,
+    ) -> io::Result<()> {
+        let identity = validated_switch_id(identity)?;
+        callbacks::switch_accept(capture, result, identity)
+            .map_err(|error| self.callback_failure(capture, error))
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn switch_finish(
+        &mut self,
+        capture: &mut Capture,
+        stage: callbacks::SwitchStage,
+    ) -> io::Result<()> {
+        let host = self.switch_host()?;
+        callbacks::switch_finish(host, capture, stage)
+            .map_err(|error| self.callback_failure(capture, error))?;
+        capture.cache.retain_callback_host(self.host.take());
+        Ok(())
+    }
+
+    pub(in crate::commands::status) fn switch_abort(
+        &self,
+        capture: &Capture,
+        error: io::Error,
+    ) -> io::Error {
+        let host_failed = error
+            .get_ref()
+            .is_some_and(
+                <dyn std::error::Error + Send + Sync>::is::<
+                    crate::host::callback_error::CallbackError,
+                >,
+            );
+        if !host_failed && let Some(host) = &self.host {
+            let _ = host.call("switchStatusFinish", &json!({}));
+            capture.cache.retain_callback_stdout(&host.take_stdout());
+        }
+        if host_failed { error } else { self.callback_failure(capture, error) }
+    }
+
+    #[inline]
+    fn callback_failure(&self, capture: &Capture, error: io::Error) -> io::Error {
+        let output = self.host.as_ref().map_or_else(String::new, Host::take_stdout);
+        crate::host::callback_error::CallbackError::wrap(
+            error,
+            callback_startup_stdout(capture),
+            format!("{}{}", callback_load_stdout(capture), output),
+        )
+    }
+}
+
+#[inline]
+fn validated_switch_id(identity: &str) -> io::Result<&str> {
+    let identity = identity.trim();
+    if identity.is_empty() {
+        return Err(decline("switch callback identity"));
+    }
+    Ok(identity)
+}

@@ -1,0 +1,148 @@
+//! Pending merge and configuration [`Prepared`] cleanup after native `Version` publication.
+
+use super::{HashSet, Path, PathBuf, Value, fs, io, proof};
+
+/// Prepared `unmerged.json` and `merge-conflict` file cleanup state for resolved snapshots via [`prepare`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Prepared {
+    pending: PathBuf,
+    bytes: Option<Vec<u8>>,
+    conflict: Option<(PathBuf, Option<String>)>,
+    staged: bool,
+}
+impl Prepared {
+    /// Commits pending `unmerged.json` and `merge-conflict` updates via [`Prepared::commit`] and returns post-write [`proof::Proof`] entries.
+    pub(super) fn stage(&mut self) -> io::Result<Vec<proof::Proof>> {
+        self.commit()?;
+        let mut proofs = Vec::new();
+        if self.bytes.is_some() {
+            proof::read(&self.pending, &mut proofs)?;
+        }
+        if let Some((path, _)) = &self.conflict {
+            proof::read(path, &mut proofs)?;
+        }
+        self.staged = true;
+        Ok(proofs)
+    }
+    /// Writes or removes `unmerged.json` and `merge-conflict` on [`Prepared`] if not already staged.
+    pub(super) fn commit(&self) -> io::Result<()> {
+        if self.staged {
+            return Ok(());
+        }
+        if let Some(bytes) = &self.bytes {
+            fs::write(&self.pending, bytes)?;
+        }
+        if let Some((path, text)) = &self.conflict {
+            match text {
+                Some(text) => fs::write(path, text)?,
+                None => fs::remove_file(path)?,
+            }
+        }
+        Ok(())
+    }
+}
+/// Prepares `unmerged.json` and `merge-conflict` ([`prepare_conflict`]) [`Prepared`] cleanup plans for resolved `identities` under `root`.
+pub(super) fn prepare(
+    root: &Path,
+    pending: &[Value],
+    identities: &HashSet<&str>,
+    proofs: &mut Vec<proof::Proof>,
+) -> io::Result<Prepared> {
+    let path = crate::scope_path(root).join("unmerged.json");
+    proof::read(&path, proofs)?;
+    let bytes = path
+        .try_exists()?
+        .then(|| pending_bytes(pending, identities))
+        .transpose()?;
+    let conflict = prepare_conflict(root, pending, identities, proofs)?;
+    Ok(Prepared { pending: path, bytes, conflict, staged: false })
+}
+/// Prepares the `merge-conflict` file update or removal plan via [`retained_sections`] for unresolved `pending` entries.
+fn prepare_conflict(
+    root: &Path,
+    pending: &[Value],
+    identities: &HashSet<&str>,
+    proofs: &mut Vec<proof::Proof>,
+) -> io::Result<Option<(PathBuf, Option<String>)>> {
+    if pending.is_empty() {
+        return Ok(None);
+    }
+    let path = root.join("merge-conflict");
+    let Some(bytes) = proof::read(&path, proofs)? else { return Ok(None) };
+    let text = std::str::from_utf8(&bytes).map_err(io::Error::other)?;
+    let remaining = pending_bytes(pending, identities)?;
+    let sections = retained_sections(text, identities);
+    let text = if remaining == b"[]" || sections.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "# Resolve configuration conflicts per component and make sure the Component ID remain in place\n\n{}",
+            sections.join("\n\n"),
+        ))
+    };
+    Ok(Some((path, text)))
+}
+fn retained_sections(text: &str, identities: &HashSet<&str>) -> Vec<String> {
+    const DIVIDER: &str =
+        "--------------------------------------------------------------------------------";
+    let clean = text
+        .lines()
+        .filter(|line| *line != DIVIDER && !line.starts_with('#'))
+        .collect::<Vec<_>>()
+        .join("\n");
+    clean
+        .split("[*]")
+        .filter_map(|part| {
+            let (id, content) = part
+                .split_once('\n')
+                .unwrap_or((part, ""));
+            let id = id.trim();
+            let base = id.rsplit_once('@').map_or(id, |(prefix, _)| prefix.trim());
+            (!id.is_empty()
+                && !matches_selected(id, identities)
+                && !matches_selected(base, identities))
+            .then(|| format!("{DIVIDER}\n[*] {id}\n{DIVIDER}\n{content}"))
+        })
+        .collect()
+}
+fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Vec<u8>> {
+    let remaining = pending
+        .iter()
+        .filter(|row| {
+            let id = &row["id"];
+            if let Some(raw) = id.as_str() {
+                let trimmed = raw.trim();
+                let base = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+                return !matches_selected(base, identities);
+            }
+            let scope = id["scope"].as_str().map_or("", str::trim);
+            let raw_name = id["name"].as_str().map_or("", str::trim);
+            let name = raw_name.rsplit_once('@').map_or(raw_name, |(base, _)| base.trim());
+            if scope.is_empty() {
+                !matches_selected(name, identities)
+            } else {
+                !matches_selected(&format!("{scope}/{name}"), identities)
+            }
+        })
+        .collect::<Vec<_>>();
+    serde_json::to_vec_pretty(&remaining).map_err(io::Error::other)
+}
+
+#[inline]
+fn matches_selected(identity: &str, identities: &HashSet<&str>) -> bool {
+    let identity = identity.trim().trim_start_matches('/');
+    if identity.is_empty() {
+        return false;
+    }
+    if identities.contains(identity) {
+        return true;
+    }
+    !identity.contains('/')
+        && identities
+            .iter()
+            .any(|cand| {
+                cand.trim()
+                    .split_once('/')
+                    .is_some_and(|(_, name)| name.trim() == identity)
+            })
+}

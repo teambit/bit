@@ -1,0 +1,104 @@
+//! Workspace, variant, and env dependency policies.
+//!
+//! Combines `workspace.jsonc`, `package.json`, `merge-conflict`, variant, and environment policies via [`workspace_policy`].
+
+pub mod entries;
+pub mod env;
+pub mod load;
+pub mod overrides;
+pub mod scope;
+pub mod slots;
+#[cfg(test)]
+pub(crate) mod tests;
+
+/// Re-exported variant policy options and multi-layer policy merge helper.
+pub use entries::{VariantOptions, merge};
+/// Re-exported environment policy loader, core environment constants, and version-splitting helper.
+pub use load::{CORE_ENVS, EnvJsoncReader, is_core_env, load_env_policies, split_version};
+
+use crate::{
+    config::DependencyResolverConfig,
+    model::{EnvPolicy, Manifest, PolicyEntry, WorkspaceComponent},
+};
+use serde_json::Value;
+
+/// Aspect ID of `teambit.dependencies/dependency-resolver` inspected for component dependency policy overrides.
+pub const DEPENDENCY_RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+
+/// The workspace policy (`getWorkspacePolicy`): `workspace.jsonc`, overridden by the
+/// root `package.json`, overridden by the merge-config file's policy.
+#[must_use]
+#[inline]
+pub fn workspace_policy(
+    config: &DependencyResolverConfig,
+    root_package_json: Option<&Manifest>,
+    merge_config_policy: Option<&Value>,
+) -> Vec<PolicyEntry> {
+    let from_config = entries::from_workspace_config(&config.policy);
+    let from_package_json = root_package_json.map_or_else(Vec::new, entries::from_package_json);
+    let from_merge_config =
+        merge_config_policy.map_or_else(Vec::new, entries::from_workspace_config);
+    merge(vec![from_config, merge(vec![from_package_json, from_merge_config])])
+}
+
+/// The merged policy of a component (`mergeVariantPolicies`): its env's policy, the
+/// env's policy for itself when the component is an env, the policies of the aspects
+/// it configures (`registerDependenciesPolicies`), then the component's own
+/// `dependency-resolver` config policy.
+#[must_use]
+#[inline]
+pub fn component_policy(
+    component: &WorkspaceComponent,
+    env_policy: &EnvPolicy,
+    own_env_policy: Option<&EnvPolicy>,
+    registry: &[slots::Registration],
+) -> Vec<PolicyEntry> {
+    let config = component_resolver_config(component)
+        .and_then(|config| config.get("policy"))
+        .map(|policy| {
+            entries::from_variant_config(
+                policy,
+                &VariantOptions { source: Some("config"), ..VariantOptions::default() },
+            )
+        })
+        .unwrap_or_default();
+    let own = own_env_policy.map_or_else(Vec::new, |policy| policy.self_policy.clone());
+    let slots = slots::component_slots(component, registry);
+    merge(vec![env_policy.component.clone(), own, slots, config])
+}
+
+/// `toManifest()` of a workspace [`PolicyEntry`] slice: `[dependencies, peerDependencies]` with
+/// snap versions converted to semver via [`scope::snap_to_semver`].
+#[must_use]
+#[inline]
+pub fn workspace_manifest(policy: &[PolicyEntry]) -> [indexmap::IndexMap<String, String>; 2] {
+    let mut manifest: [indexmap::IndexMap<String, String>; 2] = Default::default();
+    for entry in policy {
+        let name = entry.name.trim();
+        let version = entry.version.trim();
+        if name.is_empty() || version.is_empty() || version == "-" {
+            continue;
+        }
+        let index = usize::from(entry.lifecycle == crate::model::Lifecycle::Peer);
+        manifest[index].insert(name.to_owned(), scope::snap_to_semver(version));
+    }
+    manifest
+}
+
+/// Look up the [`DEPENDENCY_RESOLVER`] (`teambit.dependencies/dependency-resolver`) aspect [`Value`] on [`WorkspaceComponent`] `component.config`.
+#[inline]
+fn component_resolver_config(component: &WorkspaceComponent) -> Option<&Value> {
+    if component.config.is_empty() {
+        return None;
+    }
+    component.config
+        .get(DEPENDENCY_RESOLVER)
+        .or_else(|| {
+            component.config
+                .iter()
+                .find_map(|(key, value)| {
+                    (crate::config::aspect_id_without_version(key.trim()) == DEPENDENCY_RESOLVER)
+                        .then_some(value)
+                })
+        })
+}

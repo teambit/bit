@@ -1,0 +1,70 @@
+//! Private temporary scratch [`Directory`] allocation and cleanup for command staging.
+
+use std::{
+    fs, io,
+    path::PathBuf,
+    sync::atomic::{AtomicU64, Ordering},
+};
+/// Monotonic counter used by [`Directory::create`] to allocate unique temporary scratch directory names within the process.
+static SEQUENCE: AtomicU64 = AtomicU64::new(0);
+/// Owned temporary directory [`PathBuf`] created by [`Directory::create`] that removes its contents when dropped.
+#[derive(Debug, PartialEq, Eq)]
+pub(super) struct Directory(pub(super) PathBuf);
+impl Directory {
+    /// Allocates a new private `0700` temporary directory via [`private_builder`] under the system temp directory.
+    pub(super) fn create() -> io::Result<Self> {
+        let parent = fs::canonicalize(std::env::temp_dir())?;
+        let meta = fs::symlink_metadata(&parent)?;
+        if !meta.is_dir() || meta.file_type().is_symlink() {
+            return Err(io::Error::other("command scratch parent directory"));
+        }
+        let builder = private_builder();
+        let pid = std::process::id();
+        for _ in 0..64 {
+            let path = parent.join(format!(
+                "bit-native-command-{pid}-{}",
+                SEQUENCE.fetch_add(1, Ordering::Relaxed),
+            ));
+            match builder.create(&path) {
+                Ok(()) => return Ok(Self(path)),
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Err(io::Error::other("command scratch directory allocation limit"))
+    }
+
+    /// Creates an empty `0o700` subdirectory via [`private_builder`] for user `index` under this [`Directory`].
+    pub(super) fn child(&self, index: usize) -> io::Result<PathBuf> {
+        let meta = fs::symlink_metadata(&self.0)?;
+        if index > 65536 || !meta.is_dir() || meta.file_type().is_symlink() {
+            return Err(io::Error::other("command scratch child index limit"));
+        }
+        let path = self.0.join(index.to_string());
+        private_builder().create(&path)?;
+        Ok(path)
+    }
+}
+
+impl Drop for Directory {
+    fn drop(&mut self) {
+        let _cleanup = fs::remove_dir_all(&self.0);
+    }
+}
+
+/// Constructs a [`fs::DirBuilder`] configured with `0o700` permissions on Unix platforms for [`Directory`].
+#[inline]
+fn private_builder() -> fs::DirBuilder {
+    let builder = fs::DirBuilder::new();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::DirBuilderExt;
+        let mut builder = builder;
+        builder.mode(0o700);
+        builder
+    }
+    #[cfg(not(unix))]
+    {
+        builder
+    }
+}

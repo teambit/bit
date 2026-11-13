@@ -1,0 +1,49 @@
+//! Unit tests for `bit publish` [`Options`] CLI parsing ([`parse_options`]), [`is_empty_workspace`], and unexported/untagged checks ([`collect_unexported_ids`], [`collect_untagged_ids`]).
+//!
+//! Verifies `--dry-run`, `--allow-staged`, and `--json` flags alongside [`Bitmap`] entry inspection in [`collect_unexported_ids`] and [`collect_untagged_ids`].
+
+use super::{
+    Options, collect_unexported_ids, collect_untagged_ids, is_empty_workspace, parse_options,
+};
+use bit_install::workspace::Bitmap;
+use std::fs;
+
+/// Verifies [`parse_options`] into [`Options`] for `bit publish`, [`is_empty_workspace`] detection, and unexported ID collection.
+///
+/// Ensures [`collect_unexported_ids`] and [`collect_untagged_ids`] report unversioned `.bitmap` entries.
+#[test]
+fn parses_publish_options_and_detects_empty_workspace() {
+    assert_eq!(parse_options(&[]), None);
+    assert_eq!(
+        parse_options(&["comp1", "-d", "--allow-staged", "-j"]),
+        Some(Options { pattern: "comp1".into(), dry_run: true, allow_staged: true, json: true }),
+    );
+
+    let temp = tempfile::tempdir().unwrap();
+    fs::write(
+        temp.path().join("workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my-scope" } }"#,
+    )
+    .unwrap();
+    fs::write(temp.path().join(".bitmap"), "{}").unwrap();
+    assert!(is_empty_workspace(temp.path()).unwrap());
+
+    fs::write(
+        temp.path().join(".bitmap"),
+        r#"{"comp1":{"scope":"","version":"","mainFile":"index.js","rootDir":"comp1"}}"#,
+    )
+    .unwrap();
+    let bitmap = Bitmap::load(temp.path(), Some("my-scope")).unwrap();
+    let entries = bitmap.entries.iter().collect::<Vec<_>>();
+    assert_eq!(collect_unexported_ids(temp.path(), &entries), vec!["my-scope/comp1".to_owned()]);
+    assert_eq!(collect_untagged_ids(temp.path(), &entries), vec!["my-scope/comp1".to_owned()]);
+}
+
+/// Verifies that [`parse_options`] rejects multiple positional patterns or unknown flags.
+///
+/// Ensures `bit publish` accepts only a single component pattern argument.
+#[test]
+fn rejects_multiple_patterns_or_unknown_publish_flags() {
+    assert_eq!(parse_options(&["comp1", "comp2"]), None);
+    assert_eq!(parse_options(&["comp1", "--unknown"]), None);
+}

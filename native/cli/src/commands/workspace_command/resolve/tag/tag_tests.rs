@@ -1,0 +1,62 @@
+//! Unit tests for per-component tag version [`selections`] glob patterns and [`entered_versions`] / [`planned_versions`] extraction.
+//!
+//! Verifies `@<version>` / `@<release-type>` pattern suffixes and rejection of invalid version specs across [`selections`].
+
+use super::{entered_versions, planned_versions, selections};
+use serde_json::json;
+
+/// Verifies [`selections`] and [`entered_versions`] resolve [`json`] component patterns and version suffixes.
+#[test]
+fn literal_patterns_select_one_component_with_its_version() {
+    let context = json!({ "targets": [{ "identity": "s/ui/one" }, { "identity": "s/two" }] });
+    assert_eq!(selections(&context, &[]).unwrap(), None);
+    let patterns = ["one@2.0.0".to_string(), "s/two@minor".to_string()];
+    let rows = selections(&context, &patterns).unwrap().unwrap();
+    assert_eq!(
+        rows,
+        json!([
+            { "identity": "s/ui/one", "version": "2.0.0", "patternIndex": 0 },
+            { "identity": "s/two", "version": "minor", "patternIndex": 1 },
+        ]),
+    );
+    assert_eq!(entered_versions(Some(&rows)), ["2.0.0", "minor"]);
+    let globbed = selections(&context, &["s/*@minor".to_string()]).unwrap().unwrap();
+    assert_eq!(globbed, json!([{ "identity": "s/two", "version": "minor", "patternIndex": 0 }]));
+    let listed = selections(&context, &["s/two, s/ui/one".to_string()]).unwrap().unwrap();
+    assert_eq!(listed.as_array().map(Vec::len), Some(2));
+    for pattern in ["s/{a,b}", "s/two@bad", "s/two@1@2", "s/three"] {
+        assert!(selections(&context, &[pattern.to_string()]).is_err(), "{pattern}");
+    }
+}
+
+/// Verifies that [`planned_versions`] extracts target versions from `taggedComponents` and `autoTaggedResults`.
+///
+/// Also confirms that missing component identities in `planned_versions` return an error.
+#[test]
+fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
+    let result = json!({ "taggedComponents": ["s/two@0.0.2"], "autoTaggedResults": [{ "id": "s/one@0.0.2", "triggeredBy": ["s/two@0.0.2"] }] });
+    let identities = ["s/two".to_string(), "s/one".to_string()];
+    assert_eq!(planned_versions(&result, &identities).unwrap(), ["0.0.2", "0.0.2"]);
+    assert!(planned_versions(&result, &["s/three".to_string()]).is_err());
+    assert!(entered_versions(None).is_empty());
+}
+
+/// Verifies that [`selections`] preserves target component order and per-pattern version specs for bracket and negation globs.
+///
+/// Ensures `patternIndex` tracks the winning pattern when negated globs override earlier matches.
+#[test]
+fn advanced_globs_preserve_component_order_and_per_pattern_versions() {
+    let context =
+        json!({"targets":[{"identity":"s/foo1"},{"identity":"s/foo2"},{"identity":"s/bar"}]});
+    let rows = selections(&context, &["s/foo[12]*@minor".into(), "!s/foo*@major".into()])
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        rows,
+        json!([
+            {"identity":"s/foo1","version":"minor","patternIndex":0},
+            {"identity":"s/foo2","version":"minor","patternIndex":0},
+            {"identity":"s/bar","version":"major","patternIndex":1}
+        ]),
+    );
+}

@@ -1,0 +1,39 @@
+//! Unit tests for merging ([`merge`]) plugin callback issue objects into native component status issues.
+//!
+//! Verifies replacement of existing issue types, custom plugin insertion order, and ignored issue filtering across [`merge`].
+
+use super::merge;
+use serde_json::json;
+use std::collections::HashSet;
+
+/// Verifies [`merge`] replaces existing [`json`] issue types, orders custom plugin issues before later checks, and filters ignored issues.
+///
+/// Ensures `ParseErrors` is replaced in-place while `IgnoredPluginIssue` is omitted via [`HashSet`].
+#[test]
+fn callbacks_replace_existing_types_and_precede_later_native_checks() {
+    let replacement = json!({"type":"ParseErrors","dataAsString":"callback parser details","data":{"a.js":"error"}});
+    let custom =
+        json!({"type":"CustomPluginIssue","dataAsString":"plugin details","isTagBlocker":false});
+    let ignored = json!({"type":"IgnoredPluginIssue","dataAsString":"ignored"});
+    let raw = json!([
+        {"type":"ParseErrors","data":"{}"},
+        {"callbackObject":custom},
+        {"callbackObject":replacement},
+        {"callbackObject":ignored}
+    ]);
+    let later = json!({"type":"MissingDists","data":true});
+    let mut issues = vec![json!({"type":"ParseErrors","data":{}}), later.clone()];
+    merge(&mut issues, &raw, &HashSet::from(["IgnoredPluginIssue"])).unwrap();
+    assert_eq!(issues, vec![replacement, custom, later]);
+}
+
+/// Verifies that [`merge`] leaves existing component issues untouched when the callback array is empty (`[]`).
+///
+/// Ensures native issues are preserved verbatim when no plugin callbacks emit overrides.
+#[test]
+fn empty_callback_array_leaves_existing_issues_unchanged() {
+    let mut issues = vec![json!({"type":"MissingDists","data":true})];
+    let before = issues.clone();
+    merge(&mut issues, &json!([]), &HashSet::new()).unwrap();
+    assert_eq!(issues, before);
+}

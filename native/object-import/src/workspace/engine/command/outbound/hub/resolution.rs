@@ -1,0 +1,156 @@
+//! [`Remote`] scope host [`Resolution`] and [`Resolved`] hub endpoint discovery via [`Resolver`].
+
+use super::{Prepare, invalid};
+use bit_client_transfer::{
+    GlobalConfig,
+    http::Network,
+    remotes::{Remote, Remotes},
+    resolver::Resolver,
+};
+use serde::Deserialize;
+use serde_json::Value;
+use std::{
+    collections::HashMap,
+    fs, io,
+    path::{Path, PathBuf},
+    sync::Mutex,
+};
+
+/// Resolved remote scope host URL and central-hub flag returned by [`resolve`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(in super::super) struct Resolved {
+    pub host: String,
+    pub hub: bool,
+}
+
+/// Remote scope host resolution settings and in-memory [`Resolved`] host cache for an outbound export.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in super::super) struct Resolution {
+    global_remotes_file: PathBuf,
+    #[serde(default, rename = "skipRemoteResolution")]
+    preflight_only: bool,
+    #[serde(skip)]
+    resolved_hosts: Mutex<HashMap<String, Resolved>>,
+}
+
+impl Resolution {
+    /// Returns `true` when remote host resolution is skipped for preflight-only validation.
+    #[inline]
+    pub(in super::super) fn preflight(&self) -> bool {
+        self.preflight_only
+    }
+    /// Returns the filesystem path to the global remotes configuration file.
+    #[inline]
+    pub(in super::super) fn globals_path(&self) -> &Path {
+        &self.global_remotes_file
+    }
+    /// Resolves a configured host URL for `scope` from `local` (`scope.json`) or `self.global_remotes_file` on [`Resolution`].
+    fn configured(&self, local: &Value, scope: &str) -> io::Result<Option<String>> {
+        if local
+            .get("remotes")
+            .is_some_and(|remotes| !remotes.is_null() && !remotes.is_object())
+        {
+            return Err(invalid("outbound local remotes"));
+        }
+        if let Some(host) = local["remotes"][scope]
+            .as_str()
+            .map(str::trim)
+            .filter(|host| !host.is_empty())
+        {
+            return Ok(Some(host.to_owned()));
+        }
+        let globals: Value = match fs::read(&self.global_remotes_file) {
+            Ok(bytes) => crate::parse_jsonc(&bytes)?,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
+            Err(error) => return Err(error),
+        };
+        if !globals.is_null() && !globals.is_object() {
+            return Err(invalid("outbound global remotes"));
+        }
+        Ok(globals[scope]
+            .as_str()
+            .map(str::trim)
+            .filter(|host| !host.is_empty())
+            .map(str::to_owned))
+    }
+    #[inline]
+    fn cache(&self) -> io::Result<std::sync::MutexGuard<'_, HashMap<String, Resolved>>> {
+        self.resolved_hosts.lock().map_err(|_| invalid("outbound remote cache"))
+    }
+}
+
+pub(in super::super) fn resolve(input: &Prepare, scope: &str) -> io::Result<Resolved> {
+    let scope = scope.trim();
+    if scope.is_empty()
+        || matches!(scope, "." | "..")
+        || scope.contains(['/', '\\'])
+        || scope.chars().any(char::is_control)
+    {
+        return Err(invalid("outbound remote scope"));
+    }
+    if let Some(resolved) = input.resolution.cache()?.get(scope) {
+        return Ok(resolved.clone());
+    }
+    let local: Value =
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+    let resolved = match input.resolution.configured(&local, scope)? {
+        Some(host) => Resolved { host, hub: false },
+        None if input.resolution.preflight() => {
+            Resolved { host: "https://native-preflight.invalid".into(), hub: true }
+        }
+        None => Resolved { host: resolve_hub(input, &local, scope)?, hub: true },
+    };
+    input.resolution.cache()?.insert(scope.to_owned(), resolved.clone());
+    Ok(resolved)
+}
+
+fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String> {
+    let global = global_with_scope(input, local)?;
+    let name = local["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("outbound local scope"))?;
+    let resolver = Resolver::configured(
+        local,
+        input.transport.node_executable.clone(),
+        input.transport.bit_dir.clone(),
+        name,
+        &global,
+    );
+    let remotes =
+        Remotes::load(local, &input.transport.global_config_dir, &global)?.with_resolver(resolver);
+    let network = Network::new(
+        &global,
+        &input.transport.bit_version,
+        Some(name),
+        input.transport.token.as_deref(),
+    )?;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    match runtime.block_on(remotes.resolve(scope, &network))? {
+        Remote::File(path) => Ok(format!("file://{}", path.display())),
+        Remote::Http(url) => Ok(url),
+    }
+}
+
+#[inline]
+pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
+    let scope: Value =
+        crate::parse_jsonc(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
+    global_with_scope(input, &scope)
+}
+
+fn global_with_scope(input: &Prepare, scope: &Value) -> io::Result<GlobalConfig> {
+    let global = serde_json::from_value(bit_workspace_config::read_global_config(
+        &input.transport.global_config_dir,
+    )?)
+    .map_err(io::Error::other)?;
+    let workspace =
+        crate::workspace::engine::effective_workspace_configuration(&input.root, &input.home)?;
+    Ok(bit_client_transfer::config::effective(
+        global,
+        &scope["config"],
+        &Value::Object(bit_workspace_config::workspace_values(&workspace)),
+    ))
+}

@@ -1,0 +1,91 @@
+//! Workspace file materialization ([`apply`]) from prepared checkout [`plan`] buffers.
+
+use super::{invalid, plan, wire};
+use serde_json::{Value, json};
+use std::{
+    collections::HashSet,
+    fs::{self, OpenOptions},
+    io::{self, Write},
+    path::PathBuf,
+};
+/// Materialize prepared checkout files from [`plan::State`] onto the workspace filesystem via [`prepare`] and [`write`].
+pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
+    let request: wire::Materialize = serde_json::from_value(input).map_err(io::Error::other)?;
+    let plan = state.plans
+        .get(request.token.trim())
+        .ok_or_else(|| invalid("stale checkout materialize token"))?;
+    let contents = prepare(&request, plan)?;
+    let mut completed = 0_usize;
+    let mut skipped = Vec::new();
+    let mut directories = HashSet::with_capacity(request.files.len());
+    for (index, (file, body)) in request.files
+        .iter()
+        .zip(&contents)
+        .enumerate()
+    {
+        if !file.overwrite && fs::metadata(&file.path).is_ok() {
+            skipped.push(index);
+        } else if write(file, body, &mut directories).is_err() {
+            break;
+        }
+        completed = completed.saturating_add(1);
+    }
+    Ok(json!({"completed":completed,"skipped":skipped,"failed":completed!=request.files.len()}))
+}
+/// Validate destination [`PathBuf`]s and normalize prepared file bodies from [`plan::Plan`] for [`wire::Materialize`] (`request`).
+#[inline]
+fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
+    if request.files.len() > 4096 {
+        return Err(invalid("checkout materialize file limit"));
+    }
+    let mut contents = Vec::with_capacity(request.files.len());
+    let mut total = 0_usize;
+    let mut paths = HashSet::with_capacity(request.files.len());
+    for file in &request.files {
+        let canonical_path: PathBuf = file.path.components().collect();
+        if !file.path.is_absolute()
+            || file.path
+                .to_str()
+                .is_none_or(|path| path.len() > 32768 || path.contains('\0'))
+            || !paths.insert(canonical_path)
+            || !file.eol.trim().eq_ignore_ascii_case("auto")
+        {
+            return Err(invalid("checkout materialize unsupported destination"));
+        }
+        let body = plan.bodies
+            .get(file.plan_index)
+            .ok_or_else(|| invalid("checkout materialize body index"))?;
+        let body = crate::checkout::eol::auto(body.contents.clone());
+        total = total.saturating_add(body.len());
+        if total > 32 * 1024 * 1024 {
+            return Err(invalid("checkout materialize byte limit"));
+        }
+        contents.push(body);
+    }
+    Ok(contents)
+}
+/// Create parent directories in `directories` ([`HashSet`] of [`PathBuf`]) if needed and write `body` to [`wire::Destination`] `file.path`.
+#[inline]
+fn write(
+    file: &wire::Destination,
+    body: &[u8],
+    directories: &mut HashSet<PathBuf>,
+) -> io::Result<()> {
+    if let Ok(metadata) = fs::metadata(&file.path)
+        && !metadata.is_file()
+    {
+        return Err(invalid("checkout materialize target is not a regular file"));
+    }
+    let parent =
+        file.path.parent().ok_or_else(|| invalid("checkout materialize destination parent"))?;
+    if !parent.as_os_str().is_empty() && !directories.contains(parent) {
+        fs::create_dir_all(parent)?;
+        directories.insert(parent.to_path_buf());
+    }
+    OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&file.path)?
+        .write_all(body)
+}

@@ -1,0 +1,224 @@
+//! The range desugaring of npm's `semver` (`replaceCaret`, `replaceTilde`,
+//! `replaceXRange`, `replaceStars`, `hyphenReplace`). semver 6 and 7 differ
+//! only in the `-0` suffix 7 appends to exclusive upper bounds.
+//!
+//! Expands shorthand semver operators into explicit `>=` and `<` comparator pairs according to [`Flavor`].
+
+use super::{
+    Flavor,
+    re::{Token, replace_first, split_whitespace},
+};
+
+/// Return `true` when `id` is empty, `"x"`, `"X"`, or `"*"`.
+#[inline]
+fn is_x(id: Option<&str>) -> bool {
+    id.is_none_or(|id| {
+        let trimmed = id.trim();
+        trimmed.is_empty() || trimmed.eq_ignore_ascii_case("x") || trimmed == "*"
+    })
+}
+
+/// `+id + 1` for a numeric identifier in [`caret`] and [`tilde`].
+#[inline]
+fn next(id: Option<&str>) -> u64 {
+    id.and_then(|id| id.trim().parse::<u64>().ok())
+        .unwrap_or(0)
+        .saturating_add(1)
+}
+
+/// `^…` and `~…` share the `[M, m, p, pr]` capture layout.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+struct Parts<'a> {
+    /// Major version token (`"0"`, `"1"`, `"x"`, `"*"`, etc.).
+    major: &'a str,
+    /// Optional minor version token.
+    minor: Option<&'a str>,
+    /// Optional patch version token.
+    patch: Option<&'a str>,
+    /// Optional prerelease suffix following `-`.
+    pre: Option<&'a str>,
+}
+
+impl<'a> Parts<'a> {
+    /// Extract major, minor, patch, and prerelease capture groups starting at `offset`.
+    #[inline]
+    fn new(groups: &[Option<&'a str>], offset: usize) -> Self {
+        let group = |index: usize| {
+            groups
+                .get(index)
+                .copied()
+                .flatten()
+                .map(str::trim)
+        };
+        Parts {
+            major: group(offset).unwrap_or_default(),
+            minor: group(offset + 1),
+            patch: group(offset + 2),
+            pre: group(offset + 3).filter(|pre| !pre.is_empty()),
+        }
+    }
+
+    /// Format the inclusive lower-bound comparator (`>=M.m.p[-pre]`) for `self`.
+    #[inline]
+    fn lower(&self) -> String {
+        let (major, minor, patch) =
+            (self.major, self.minor.unwrap_or("0"), self.patch.unwrap_or("0"));
+        match self.pre {
+            Some(pre) => format!(">={major}.{minor}.{patch}-{pre}"),
+            None => format!(">={major}.{minor}.{patch}"),
+        }
+    }
+}
+
+/// Expand a parsed caret range (`^M.m.p`) in [`Parts`] `parts` into explicit `>=` and `<` bounds using `suffix` ([`is_x`], [`next`]).
+fn caret(parts: &Parts<'_>, suffix: &str) -> String {
+    let (major, minor) = (parts.major, parts.minor.unwrap_or_default());
+    if is_x(Some(major)) {
+        return String::new();
+    }
+    if is_x(parts.minor) {
+        return format!(">={major}.0.0 <{}.0.0{suffix}", next(Some(major)));
+    }
+    if is_x(parts.patch) {
+        let upper = if major == "0" {
+            format!("{major}.{}.0", next(Some(minor)))
+        } else {
+            format!("{}.0.0", next(Some(major)))
+        };
+        return format!(">={major}.{minor}.0 <{upper}{suffix}");
+    }
+    let upper = match (major, minor) {
+        ("0", "0") => format!("{major}.{minor}.{}", next(parts.patch)),
+        ("0", _) => format!("{major}.{}.0", next(Some(minor))),
+        _ => format!("{}.0.0", next(Some(major))),
+    };
+    format!("{} <{upper}{suffix}", parts.lower())
+}
+
+fn tilde(parts: &Parts<'_>, suffix: &str) -> String {
+    let (major, minor) = (parts.major, parts.minor.unwrap_or_default());
+    if is_x(Some(major)) {
+        return String::new();
+    }
+    if is_x(parts.minor) {
+        return format!(">={major}.0.0 <{}.0.0{suffix}", next(Some(major)));
+    }
+    if is_x(parts.patch) {
+        return format!(">={major}.{minor}.0 <{major}.{}.0{suffix}", next(Some(minor)));
+    }
+    format!("{} <{major}.{}.0{suffix}", parts.lower(), next(Some(minor)))
+}
+
+fn each_token(comp: &str, token: Token, replace: impl Fn(&Parts<'_>) -> String) -> String {
+    split_whitespace(comp.trim())
+        .into_iter()
+        .map(|part| replace_first(token, part, |groups| replace(&Parts::new(groups, 1))))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// `>1.x` / `<=1.2.x`: `>` becomes `>=` and `<=` becomes `<` on the next major or minor.
+fn xrange_with_operator(operator: &str, groups: &[Option<&str>], suffix: &str) -> String {
+    let x_minor = is_x(groups[3]);
+    let major = groups[2].unwrap_or_default().trim();
+    let minor = if x_minor { "0" } else { groups[3].unwrap_or_default().trim() };
+    let (operator, bump) = match operator.trim() {
+        ">" => (">=", true),
+        "<=" => ("<", true),
+        operator => (operator, false),
+    };
+    let pre = if operator == "<" { suffix } else { "" };
+    match (bump, x_minor) {
+        (false, _) => format!("{operator}{major}.{minor}.0{pre}"),
+        (true, true) => format!("{operator}{}.{minor}.0{pre}", next(Some(major))),
+        (true, false) => format!("{operator}{major}.{}.0{pre}", next(Some(minor))),
+    }
+}
+
+/// `1.x` / `1.2.x` without an operator.
+fn xrange_without_operator(matched: &str, groups: &[Option<&str>], suffix: &str) -> String {
+    let major = groups[2].unwrap_or_default().trim();
+    if is_x(groups[3]) {
+        return format!(">={major}.0.0 <{}.0.0{suffix}", next(Some(major)));
+    }
+    if is_x(groups[4]) {
+        let minor = groups[3].unwrap_or_default().trim();
+        return format!(">={major}.{minor}.0 <{major}.{}.0{suffix}", next(Some(minor)));
+    }
+    matched.to_string()
+}
+
+fn xrange(matched: &str, groups: &[Option<&str>], suffix: &str) -> String {
+    let any_x = is_x(groups[2]) || is_x(groups[3]) || is_x(groups[4]);
+    let operator = match groups[1].unwrap_or_default() {
+        "=" if any_x => "",
+        operator => operator,
+    };
+    if is_x(groups[2]) {
+        return if operator == ">" || operator == "<" { "<0.0.0-0" } else { "*" }.to_string();
+    }
+    if !operator.is_empty() && any_x {
+        return xrange_with_operator(operator, groups, suffix);
+    }
+    xrange_without_operator(matched, groups, suffix)
+}
+
+fn replace_xranges(comp: &str, suffix: &str) -> String {
+    split_whitespace(comp)
+        .into_iter()
+        .map(str::trim)
+        .map(|part| {
+            replace_first(Token::Xrange, part, |groups| {
+                xrange(groups[0].unwrap_or_default(), groups, suffix)
+            })
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// `parseComparator`: carets, tildes, x-ranges, then stars.
+pub(super) fn parse_comparator(comp: &str, flavor: Flavor) -> String {
+    let suffix = flavor.upper_suffix();
+    let comp = each_token(comp, Token::Caret, |parts| caret(parts, suffix));
+    let comp = each_token(&comp, Token::Tilde, |parts| tilde(parts, suffix));
+    let comp = replace_xranges(&comp, suffix);
+    replace_first(Token::Star, comp.trim(), |_| String::new())
+}
+
+fn hyphen_from(groups: &[Option<&str>]) -> String {
+    let (major, minor) = (groups[2], groups[3]);
+    if is_x(major) {
+        String::new()
+    } else if is_x(minor) {
+        format!(">={}.0.0", major.unwrap_or_default())
+    } else if is_x(groups[4]) {
+        format!(">={}.{}.0", major.unwrap_or_default(), minor.unwrap_or_default())
+    } else {
+        format!(">={}", groups[1].unwrap_or_default())
+    }
+}
+
+fn hyphen_to(groups: &[Option<&str>], suffix: &str) -> String {
+    let (major, minor, patch) = (groups[8], groups[9], groups[10]);
+    let (major_text, minor_text) = (major.unwrap_or_default(), minor.unwrap_or_default());
+    if is_x(major) {
+        String::new()
+    } else if is_x(minor) {
+        format!("<{}.0.0{suffix}", next(major))
+    } else if is_x(patch) {
+        format!("<{major_text}.{}.0{suffix}", next(minor))
+    } else if let Some(pre) = groups[11].filter(|pre| !pre.is_empty()) {
+        format!("<={major_text}.{minor_text}.{}-{pre}", patch.unwrap_or_default())
+    } else {
+        format!("<={}", groups[7].unwrap_or_default())
+    }
+}
+
+/// `range.replace(re[HYPHENRANGE], hyphenReplace)`.
+pub(super) fn replace_hyphen(range: &str, flavor: Flavor) -> String {
+    replace_first(Token::HyphenRange, range, |groups| {
+        format!("{} {}", hyphen_from(groups), hyphen_to(groups, flavor.upper_suffix()))
+            .trim()
+            .to_string()
+    })
+}

@@ -1,0 +1,100 @@
+//! Local native deprecation policy ([`COMMAND`], [`UNDEPRECATE`], `bit deprecate`, `bit undeprecate`), published through the ordinary snapshot pipeline later.
+mod options;
+mod report;
+use super::{
+    Command, add,
+    color::Chalk,
+    workspace_command::{self, format::Formatter, results::Report},
+};
+use crate::{native::Outcome, workspace};
+use bit_object_import::component_deprecation::Plan;
+use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit deprecate` (`bit d`) CLI command.
+pub const COMMAND: Command = Command { name: "deprecate", aliases: &["d"], run };
+/// Descriptor for the `bit undeprecate` CLI command.
+pub const UNDEPRECATE: Command = Command { name: "undeprecate", aliases: &[], run };
+/// Executes `bit deprecate` ([`COMMAND`]) or `bit undeprecate` ([`UNDEPRECATE`]) via [`run_workspace`].
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("deprecation arguments are not UTF-8".into()));
+    };
+    let Some((first, tail)) = argv.split_first() else {
+        return Ok(Outcome::Declined("outside native deprecation grammar".into()));
+    };
+    let undo = first.trim() == "undeprecate";
+    let Some(options) = options::parse(tail, undo) else {
+        return Ok(Outcome::Declined("outside native deprecation grammar".into()));
+    };
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        if is_ci_active() {
+            return Ok(Outcome::Declined("not inside a workspace".into()));
+        }
+        return workspace_command::execute_failure_scope(
+            &cwd,
+            args,
+            command_name(undo),
+            false,
+            "",
+            io::Error::other("Cannot read properties of undefined (reading 'idsByPattern')"),
+        );
+    };
+    run_workspace(&root, args, &options, undo)
+}
+/// Prepares the [`Plan`], captures projected link state, and commits `.bitmap` deprecation updates under [`options::Options`].
+fn run_workspace(
+    root: &std::path::Path,
+    args: &[OsString],
+    options: &options::Options<'_>,
+    undo: bool,
+) -> io::Result<Outcome> {
+    let plan = match Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
+    {
+        Ok(plan) => plan,
+        Err(error) => {
+            if error.kind() != io::ErrorKind::InvalidInput || is_ci_active() {
+                return Ok(Outcome::Declined(format!("deprecation: {error}")));
+            }
+            return workspace_command::execute_then(root, args, command_name(undo), |_output| {
+                Err(error)
+            });
+        }
+    };
+    let mut linker = add::ProjectedLinker::prepare(root)?;
+    print!("{}", linker.take_stdout());
+    let formatter = Formatter::new(Chalk::detect(args));
+    workspace_command::execute_then(root, args, command_name(undo), |_output| {
+        let plan = Plan::prepare(root, options.pattern, options.replacement, options.range, undo)
+            .unwrap_or(plan);
+        let report = Report {
+            data: report::render(&plan, options, undo, &formatter),
+            code: 0,
+            details: None,
+        };
+        let bitmap = plan.original_bitmap()?;
+        for id in plan.hydration_ids() {
+            linker.capture(root, &bitmap, std::slice::from_ref(id))?;
+            print!("{}", linker.take_stdout());
+        }
+        linker.validate_captures()?;
+        plan.commit(&workspace_command::file_id())?;
+        Ok(report)
+    })
+}
+
+/// Returns the CLI command name (`"deprecate"` or `"undeprecate"`) for `undo` in [`run`] and [`run_workspace`].
+#[inline]
+const fn command_name(undo: bool) -> &'static str {
+    if undo { "undeprecate" } else { "deprecate" }
+}
+
+/// Returns `true` when the `CI` environment variable is set to a truthy value.
+#[inline]
+fn is_ci_active() -> bool {
+    env::var_os("CI")
+        .is_some_and(|value| {
+            let text = value.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}

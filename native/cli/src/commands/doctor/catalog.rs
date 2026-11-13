@@ -1,0 +1,93 @@
+//! Core [`Diagnosis`] entries ([`DIAGNOSES`]) in `DoctorRegistrarBuilder` registration order (`doctor.main.runtime.ts`).
+use serde_json::{Value, json};
+/// Static metadata for a single registered `bit doctor` check in [`DIAGNOSES`].
+pub(super) struct Diagnosis {
+    pub name: &'static str,
+    pub description: &'static str,
+    pub category: &'static str,
+}
+/// Ordered table of built-in [`Diagnosis`] checks executed by `bit doctor` ([`Diagnosis::listing`], [`Diagnosis::result`]).
+pub(super) const DIAGNOSES: &[Diagnosis] = &[
+    Diagnosis {
+        name: "validate workspace's bit config",
+        description: "validate workspace configuration object",
+        category: "configuration",
+    },
+    Diagnosis {
+        name: "validate git exec",
+        description: "validate that git executable found",
+        category: "vendors",
+    },
+    Diagnosis {
+        name: "check orphan refs",
+        description: "checks for empty internal refs in local workspace",
+        category: "internal store",
+    },
+    Diagnosis {
+        name: "check environment symlinks",
+        description: "validate generated symlinks for workspace environments",
+        category: "local environments",
+    },
+    Diagnosis {
+        name: "validate npm exec",
+        description: "validate that npm executable found",
+        category: "vendors",
+    },
+    Diagnosis {
+        name: "validate yarn exec",
+        description: "validate that yarn executable found",
+        category: "vendors",
+    },
+    Diagnosis {
+        name: "validate bit version",
+        description: "validate that bit version is up to date",
+        category: "core",
+    },
+    Diagnosis {
+        name: "validate scope objects",
+        description: "check if all components have their head version objects",
+        category: "scope integrity",
+    },
+];
+impl Diagnosis {
+    /// Serializes `self` into the JSON entry emitted by `bit doctor --list --json`.
+    #[inline]
+    pub fn listing(&self) -> Value {
+        json!({"name":self.name,"description":self.description,"category":self.category})
+    }
+    /// Wraps `bare` ([`Value`]) diagnosis output with metadata, symptoms, and manual treatment instructions via [`is_valid`].
+    #[inline]
+    pub fn result(&self, bare: Value, symptoms: &str, treatment: &str) -> Value {
+        let valid = is_valid(&bare);
+        let mut res = json!({
+            "diagnosisMetaData": {
+                "category": self.category,
+                "name": self.name,
+                "description": self.description,
+            },
+            "bareResult": null,
+            "formattedSymptoms": if valid { "" } else { symptoms.trim() },
+            "formattedManualTreat": if valid { "" } else { treatment.trim() },
+        });
+        res["bareResult"] = bare;
+        res
+    }
+}
+
+/// Returns `true` when `bare` contains a truthy `"valid"`, `"pass"`, or `"passed"` status field for [`Diagnosis::result`].
+#[inline]
+fn is_valid(bare: &Value) -> bool {
+    ["valid", "pass", "passed"]
+        .into_iter()
+        .filter_map(|key| bare.get(key))
+        .any(|value| {
+            value.as_bool().unwrap_or(false)
+                || value.as_u64() == Some(1)
+                || value
+                    .as_str()
+                    .is_some_and(|text| {
+                        let trimmed = text.trim();
+                        trimmed.eq_ignore_ascii_case("true") || trimmed == "1"
+                    })
+        })
+}

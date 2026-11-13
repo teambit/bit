@@ -1,0 +1,165 @@
+//! Checkout version [`Selection`] via [`select`] and [`versions`] for workspace commands.
+
+pub(super) mod versions;
+
+#[cfg(test)]
+mod tests;
+
+use super::{super::invalid, input::Options, repository::Repository};
+use serde_json::{Value, json};
+use std::io;
+
+/// Per-component target, model, head, and modification inputs for checkout transition selection via [`select`] and [`Options`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Selection<'a> {
+    pub(super) target: &'a Value,
+    pub(super) model: Option<&'a Value>,
+    pub(super) modified: bool,
+    pub(super) merge_pending: bool,
+    pub(super) remote_head: Option<&'a str>,
+    pub(super) lane_head: Option<&'a str>,
+    pub(super) semver: &'a Value,
+}
+
+/// Drives the `checkoutSelectBegin` ([`begin`]) / `checkoutSelectReceipt` state machine for `selection` ([`Selection`]).
+pub(super) fn select(
+    options: &Options,
+    selection: &Selection<'_>,
+    repository: &mut Repository,
+    state: &mut crate::checkout_transition::State,
+) -> io::Result<Value> {
+    let mut cursor = crate::checkout_transition::apply(
+        "checkoutSelectBegin",
+        begin(options, selection)?,
+        state,
+    )?;
+    let mut observed = Vec::with_capacity(10);
+    for _ in 0..10 {
+        let directive = &cursor["directive"];
+        if directive["kind"] != "observe" {
+            let mut result = directive.clone();
+            result["observations"] = json!(observed);
+            return Ok(result);
+        }
+        let observation = directive["observation"]
+            .as_str()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .ok_or_else(|| invalid("command checkout observation"))?;
+        let value = observe(observation, directive, options, selection, repository)?;
+        observed.push(observation.to_owned());
+        cursor = crate::checkout_transition::apply(
+            "checkoutSelectReceipt",
+            json!({
+                "token":cursor["token"],"revision":cursor["revision"],"observation":observation,"value":value,
+            }),
+            state,
+        )?;
+    }
+    Err(invalid("command checkout selection limit"))
+}
+
+/// Builds the initial `checkoutSelectBegin` payload for `selection` ([`Selection`]) and `options` ([`Options`]) via [`parse_ancestor`].
+fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
+    let to = options.to
+        .as_deref()
+        .map(str::trim)
+        .filter(|to| !to.is_empty())
+        .unwrap_or("head");
+    let lower = to.to_ascii_lowercase();
+    let identity = selection.target["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("command checkout identity"))?;
+    let version = selection.target["version"].as_str().map_or("", str::trim);
+    let ancestor = parse_ancestor(&lower)?;
+    let load_stash = super::checkout_stash::loading(options);
+    let historical = super::lane_history::phase(options).is_some();
+    let exact = !historical
+        && !load_stash
+        && !matches!(lower.as_str(), "head" | "latest" | "reset" | "main")
+        && ancestor.is_none();
+    Ok(json!({
+        "component":{"id":if version.is_empty(){identity.to_owned()}else{format!("{identity}@{version}")},
+            "idWithoutVersion":identity,"componentVersion":version,"hasBitmap":true,"currentExists":true,"isRemoved":false},
+        "model":selection.model.map(|model|json!({"hasMainHead":model["head"].as_str().is_some_and(|head| !head.trim().is_empty())})),
+        "options":{"reset":lower=="reset","head":lower=="head" && !load_stash && !historical,"main":lower=="main","latest":lower=="latest",
+            "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":load_stash,
+            "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":(historical || load_stash || selection.target.get("switchVersion").is_some()).then(||json!({}))},
+    }))
+}
+
+/// Parses a `head~<N>` ancestor distance from `lower` for [`begin`], enforcing `1 <= N <= 4096`.
+#[inline]
+fn parse_ancestor(lower: &str) -> io::Result<Option<usize>> {
+    let ancestor = lower
+        .strip_prefix("head~")
+        .map(|suffix| suffix.trim().parse::<usize>())
+        .transpose()
+        .map_err(io::Error::other)?;
+    if ancestor.is_some_and(|count| count == 0 || count > 4096) {
+        return Err(invalid("command checkout ancestor count"));
+    }
+    Ok(ancestor)
+}
+
+#[inline]
+fn version_arg(directive: &Value) -> io::Result<&str> {
+    directive["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| invalid("command target version"))
+}
+
+fn observe(
+    observation: &str,
+    directive: &Value,
+    options: &Options,
+    selection: &Selection<'_>,
+    repository: &mut Repository,
+) -> io::Result<Value> {
+    let model = selection.model.ok_or_else(|| invalid("command checkout missing model"))?;
+    match observation {
+        "unmerged" => Ok(json!(false)),
+        "resolveTarget" => versions::resolve(options, selection, repository).map(Value::String),
+        "hasVersion" => {
+            versions::has(model, version_arg(directive)?, repository, selection.lane_head)
+                .map(Value::Bool)
+        }
+        "currentVersion" => Ok(
+            json!({"value":selection.target["version"].as_str().map(str::trim),"hasBitmap":true}),
+        ),
+        "mergePending" => Ok(json!(selection.merge_pending)),
+        "modified" => Ok(json!({"modified":selection.modified,"isRemoved":false})),
+        "targetRemoved" => {
+            let hash = versions::reference(model, version_arg(directive)?)?;
+            let removed = match repository.read(&hash, "Version") {
+                Ok(version) => removed(&version)?,
+                Err(error) if error.kind() == io::ErrorKind::NotFound => false,
+                Err(error) => return Err(error),
+            };
+            Ok(json!({"removed":removed,"hasBitmap":true}))
+        }
+        _ => Err(invalid("command checkout unknown observation")),
+    }
+}
+
+pub(super) fn removed(version: &Value) -> io::Result<bool> {
+    let Some(extensions) = version
+        .get("extensions")
+        .filter(|val| !val.is_null())
+    else {
+        return Ok(false);
+    };
+    let extensions = extensions.as_array().ok_or_else(|| invalid("command Version extensions"))?;
+    Ok(extensions
+        .iter()
+        .any(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                extension,
+                "teambit.component/remove",
+            ) && extension["config"]["removed"] == true
+        }))
+}

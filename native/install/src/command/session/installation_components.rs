@@ -1,0 +1,146 @@
+//! Validate actual class-directory metadata against the native eligible component inventory.
+//!
+//! [`load`] and [`initial`] synchronize host-reported [`WorkspaceComponent`] roots and environment descriptors with `.bitmap` entries.
+#[cfg(test)]
+mod tests;
+
+use super::{Loaded, Session};
+use crate::model::WorkspaceComponent;
+use std::{collections::HashMap, io, path::Path};
+
+/// Load and synchronize [`WorkspaceComponent`] entries with the host for the given install `phase` on [`Session`].
+pub(crate) async fn load(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    phase: &str,
+) -> io::Result<Vec<WorkspaceComponent>> {
+    load_with_status(session, loaded, phase, true).await
+}
+
+/// Load and synchronize [`WorkspaceComponent`] entries for the `"initial"` install phase on [`Session`].
+pub(crate) async fn initial(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    classes_loaded: bool,
+) -> io::Result<Vec<WorkspaceComponent>> {
+    load_with_status(session, loaded, "initial", !classes_loaded).await
+}
+
+/// Query the host for live component directories in `phase` and optionally announce component loading.
+async fn load_with_status(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    phase: &str,
+    announce: bool,
+) -> io::Result<Vec<WorkspaceComponent>> {
+    let components = loaded.components();
+    let ids = components
+        .iter()
+        .map(identity)
+        .collect::<Vec<_>>();
+    let Some(receipt) = session.host.installation_components(phase, &ids).await? else {
+        if announce {
+            session.loading(loaded);
+        }
+        return Ok(components);
+    };
+    ordered(&session.root, components, &receipt)
+}
+
+/// Format `component.id` on [`WorkspaceComponent`] as `scope/name` with `@<version>` appended when a version is present.
+#[inline]
+pub(crate) fn identity(component: &WorkspaceComponent) -> String {
+    let mut id = component.id.to_string_without_version();
+    if let Some(version) = component.id.version
+        .as_deref()
+        .map(str::trim)
+        .filter(|version| !version.is_empty())
+    {
+        id.push('@');
+        id.push_str(version);
+    }
+    id
+}
+
+/// Reorders and updates [`WorkspaceComponent`] entries against the host `receipt` under `root`.
+fn ordered(
+    root: &Path,
+    components: Vec<WorkspaceComponent>,
+    receipt: &serde_json::Value,
+) -> io::Result<Vec<WorkspaceComponent>> {
+    let invalid = || io::Error::other("installation class directory inventory changed");
+    let rows = receipt["components"].as_array().ok_or_else(invalid)?;
+    if rows.len() != components.len() {
+        return Err(invalid());
+    }
+    let mut remaining = components
+        .into_iter()
+        .map(|row| (identity(&row), row))
+        .collect::<HashMap<_, _>>();
+    rows.iter()
+        .map(|row| ordered_row(root, row, &mut remaining))
+        .collect()
+}
+
+fn ordered_row(
+    root: &Path,
+    row: &serde_json::Value,
+    remaining: &mut HashMap<String, WorkspaceComponent>,
+) -> io::Result<WorkspaceComponent> {
+    let invalid = || io::Error::other("installation class directory inventory changed");
+    let id = row["id"]
+        .as_str()
+        .or_else(|| row["identity"].as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(invalid)?;
+    let component = remove_matching(remaining, id).ok_or_else(invalid)?;
+    let directory = row["directory"]
+        .as_str()
+        .or_else(|| row["rootDir"].as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(invalid)?;
+    let expected_rel = trim_rel(&component.root_dir);
+    if !Path::new(directory).is_absolute() && trim_rel(directory) == expected_rel {
+        return Ok(component);
+    }
+    let actual = if Path::new(directory).is_absolute() {
+        Path::new(directory.trim_end_matches(['/', '\\'])).to_path_buf()
+    } else {
+        root.join(trim_rel(directory))
+    };
+    let expected = root.join(expected_rel);
+    if actual != expected {
+        return Err(invalid());
+    }
+    Ok(component)
+}
+
+#[inline]
+fn trim_rel(rel: &str) -> &str {
+    rel.trim()
+        .trim_start_matches("./")
+        .trim_start_matches(r".\")
+        .trim_end_matches(['/', '\\'])
+}
+
+#[inline]
+fn remove_matching(
+    remaining: &mut HashMap<String, WorkspaceComponent>,
+    id: &str,
+) -> Option<WorkspaceComponent> {
+    if let Some(component) = remaining.remove(id) {
+        return Some(component);
+    }
+    if let Some((bare, _)) = id.rsplit_once('@') {
+        return remaining.remove(bare.trim());
+    }
+    let key = remaining
+        .keys()
+        .find(|candidate| {
+            candidate.rsplit_once('@').map_or(candidate.as_str(), |(bare, _)| bare.trim()) == id
+        })?
+        .clone();
+    remaining.remove(&key)
+}

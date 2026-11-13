@@ -1,0 +1,154 @@
+//! Test case and suite formatting for `JUnit` XML reports.
+//!
+//! [`Case`] represents an individual Jest assertion serialized from [`Value`] rows with [`xml`] escaping.
+use super::xml;
+use serde_json::Value;
+use std::{fmt::Write, io};
+
+/// Single `JUnit` `<testcase>` record extracted from a Jest assertion result ([`collect`]).
+pub(super) struct Case {
+    file: String,
+    name: String,
+    duration: Option<u64>,
+    pub failure: Option<String>,
+    pub error: Option<String>,
+    pub skipped: bool,
+}
+impl Case {
+    /// Appends the `<testcase>` XML element for `self` ([`Case`]) onto `output` via [`xml::attribute`] and [`message`].
+    pub(super) fn render(&self, output: &mut String) {
+        write!(
+            output,
+            r#"    <testcase classname="{}" name="{}""#,
+            xml::attribute(&self.file),
+            xml::attribute(&self.name),
+        )
+        .unwrap();
+        if let Some(duration) = self.duration.filter(|duration| *duration != 0) {
+            let seconds = duration / 1000;
+            let fraction = duration % 1000;
+            if fraction == 0 {
+                write!(output, r#" time="{seconds}""#).unwrap();
+            } else {
+                let frac = format!("{fraction:03}");
+                write!(output, r#" time="{seconds}.{}""#, frac.trim_end_matches('0')).unwrap();
+            }
+        }
+        if self.failure.is_none() && self.error.is_none() && !self.skipped {
+            output.push_str("/>\n");
+            return;
+        }
+        output.push_str(">\n");
+        message(output, "failure", self.failure.as_deref());
+        message(output, "error", self.error.as_deref());
+        if self.skipped {
+            output.push_str("      <skipped/>\n");
+        }
+        output.push_str("    </testcase>\n");
+    }
+}
+/// Appends a `<failure>` or `<error>` child element with ANSI-stripped `message` onto `output`.
+#[inline]
+fn message(output: &mut String, kind: &str, message: Option<&str>) {
+    let Some(message) = message else {
+        return;
+    };
+    let message = xml::strip_ansi(message);
+    if message.is_empty() {
+        writeln!(output, "      <{kind}/>").unwrap();
+    } else {
+        writeln!(output, r#"      <{kind} message="{}"/>"#, xml::attribute(&message)).unwrap();
+    }
+}
+/// Collects [`Case`] records across all `testFiles` and assertions in `component` ([`Value`]) via [`test_case()`].
+pub(super) fn collect(component: &Value, raw: &Value) -> io::Result<Vec<Case>> {
+    let mut cases = Vec::new();
+    let source = source_rows(component, raw);
+    for (index, file) in component["results"]["testFiles"]
+        .as_array()
+        .ok_or_else(|| io::Error::other("JUnit files"))?
+        .iter()
+        .enumerate()
+    {
+        let name = file["file"]
+            .as_str()
+            .map(str::trim)
+            .filter(|file_name| !file_name.is_empty())
+            .ok_or_else(|| io::Error::other("JUnit filename"))?;
+        if file
+            .get("error")
+            .is_some_and(|err| !err.is_null())
+        {
+            cases.push(Case {
+                file: name.to_owned(),
+                name: name.to_owned(),
+                duration: None,
+                failure: None,
+                error: Some(file_error(source, index)?),
+                skipped: false,
+            });
+        }
+        for test in file["tests"].as_array().ok_or_else(|| io::Error::other("JUnit assertions"))? {
+            cases.push(test_case(name, test)?);
+        }
+    }
+    Ok(cases)
+}
+
+/// Converts a single Jest assertion JSON [`Value`] `test` in `file_name` into a [`Case`].
+#[inline]
+fn test_case(file_name: &str, test: &Value) -> io::Result<Case> {
+    Ok(Case {
+        file: file_name.to_owned(),
+        name: test["name"]
+            .as_str()
+            .map(str::trim)
+            .filter(|test_name| !test_name.is_empty())
+            .ok_or_else(|| io::Error::other("JUnit test name"))?
+            .to_owned(),
+        duration: test["duration"].as_u64(),
+        failure: test["failureErrOrStr"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned),
+        error: test["error"]
+            .as_str()
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned),
+        skipped: matches!(test["status"].as_str().map(str::trim), Some("pending" | "skipped")),
+    })
+}
+#[inline]
+fn non_empty(val: &Value) -> Option<&str> {
+    val.as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
+fn source_rows<'a>(component: &Value, raw: &'a Value) -> &'a Value {
+    let id = &component["componentId"];
+    let owned = if id.is_string() {
+        None
+    } else {
+        let scope = non_empty(&id["_legacy"]["scope"])
+            .or_else(|| non_empty(&id["_scope"]))
+            .or_else(|| non_empty(&id["scope"]));
+        let name = non_empty(&id["_legacy"]["name"]).or_else(|| non_empty(&id["name"]));
+        scope
+            .zip(name)
+            .map(|(scope, name)| format!("{scope}/{name}"))
+    };
+    non_empty(id)
+        .or(owned.as_deref())
+        .and_then(|identity| raw["componentRows"].get(identity))
+        .unwrap_or_else(|| &raw["results"]["testResults"])
+}
+
+#[inline]
+fn file_error(rows: &Value, index: usize) -> io::Result<String> {
+    let row = rows.get(index).ok_or_else(|| io::Error::other("JUnit source file"))?;
+    Ok(row["executionErrorMessage"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned())
+}

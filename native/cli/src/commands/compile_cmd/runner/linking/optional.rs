@@ -1,0 +1,128 @@
+//! Optional package and component flags follow the first merged [`WorkspaceComponent`] [`PolicyEntry`].
+//!
+//! Exposes [`apply`] to mark optional dependencies on [`ComponentDependencies`] lists.
+use crate::commands::workspace_command::component_service::Loaded;
+use bit_install::{
+    model::{
+        ComponentDependencies, ComponentDependency, ComponentId, EnvPolicy, Lifecycle, PolicyEntry,
+        WorkspaceComponent,
+    },
+    policy,
+};
+use indexmap::IndexMap;
+use serde_json::Value;
+use std::io;
+
+/// Propagates optional dependency flags from merged [`PolicyEntry`] rules onto [`ComponentDependencies`] via [`optional`] and [`append`].
+pub(super) fn apply(
+    components: &[WorkspaceComponent],
+    loaded: &Loaded,
+    dependencies: &mut IndexMap<String, ComponentDependencies>,
+) -> io::Result<()> {
+    for component in components {
+        let identity = component.id.to_string_without_version();
+        let entries = policy::component_policy(component, &EnvPolicy::default(), None, &[]);
+        let list = dependencies
+            .get_mut(&identity)
+            .ok_or_else(|| io::Error::other("compiler dependency list"))?;
+        let has_optional = entries.iter().any(|entry| entry.optional);
+        for package in &mut list.packages {
+            package.optional = has_optional && optional(&entries, &package.name);
+        }
+        let state = loaded
+            .dependency_state(&identity)
+            .ok_or_else(|| io::Error::other("compiler component dependency state"))?;
+        append(list, state, &entries)?;
+    }
+    Ok(())
+}
+/// Checks whether the first matching [`PolicyEntry`] for `name` is marked `optional` for [`apply`] and [`append`].
+#[inline]
+fn optional(entries: &[PolicyEntry], name: &str) -> bool {
+    let name = name.trim();
+    !name.is_empty()
+        && entries
+            .iter()
+            .find(|entry| entry.name.trim() == name)
+            .is_some_and(|entry| entry.optional)
+}
+/// Appends optional component dependencies ([`component`]) from `state` ([`Value`]) onto `list` for each [`Lifecycle`] group.
+fn append(
+    list: &mut ComponentDependencies,
+    state: &Value,
+    policy: &[PolicyEntry],
+) -> io::Result<()> {
+    let entries = state["entries"]
+        .as_array()
+        .ok_or_else(|| io::Error::other("compiler component dependency entries"))?;
+    for (index, lifecycle) in
+        [Lifecycle::Runtime, Lifecycle::Dev, Lifecycle::Peer].into_iter().enumerate()
+    {
+        let indices = state["components"][index]
+            .as_array()
+            .ok_or_else(|| io::Error::other("compiler dependency lifecycle"))?;
+        for index in indices {
+            let entry = index
+                .as_u64()
+                .and_then(|index| usize::try_from(index).ok())
+                .and_then(|index| entries.get(index))
+                .ok_or_else(|| io::Error::other("compiler dependency index"))?;
+            let Some(package) = entry["packageName"].as_str() else { continue };
+            if optional(policy, package) {
+                list.components.push(component(entry, package, lifecycle)?);
+            }
+        }
+    }
+    Ok(())
+}
+/// Builds an optional [`ComponentDependency`] from a raw dependency state `entry` ([`Value`]) and `package` name for [`Lifecycle`].
+fn component(
+    entry: &Value,
+    package: &str,
+    lifecycle: Lifecycle,
+) -> io::Result<ComponentDependency> {
+    let (identity, version) = split_component_identity(entry)?;
+    let (scope, name) =
+        identity.split_once('/').ok_or_else(|| io::Error::other("compiler dependency scope"))?;
+    let (scope, name, version, package) =
+        (scope.trim(), name.trim(), version.trim(), package.trim());
+    if scope.is_empty() || name.is_empty() || version.is_empty() || package.is_empty() {
+        return Err(io::Error::other("compiler dependency coordinates"));
+    }
+    Ok(ComponentDependency {
+        id: ComponentId {
+            scope: Some(scope.to_owned()),
+            default_scope: None,
+            name: name.to_owned(),
+            version: Some(version.to_owned()),
+        },
+        package_name: package.to_owned(),
+        lifecycle,
+        is_extension: false,
+        optional: true,
+        hidden: false,
+    })
+}
+
+#[inline]
+fn split_component_identity(entry: &Value) -> io::Result<(&str, &str)> {
+    let raw = entry["identity"]
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| io::Error::other("compiler dependency identity"))?;
+    if let Some((base, ver)) = raw
+        .rsplit_once('@')
+        .filter(|(base, ver)| {
+            !base.trim().is_empty() && !base.contains('@') && !ver.trim().is_empty()
+        })
+    {
+        return Ok((base.trim(), ver.trim()));
+    }
+    let version = entry["version"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| io::Error::other("compiler dependency version"))?;
+    Ok((raw.trim_end_matches('@').trim(), version))
+}

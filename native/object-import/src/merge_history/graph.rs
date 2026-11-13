@@ -1,0 +1,346 @@
+//! [`Version`] ancestry graph validation ([`Load`], [`validate`], [`Reader`]), subset extraction, and common-ancestor divergence analysis.
+
+use super::{count, hash, invalid, path};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    io,
+    path::PathBuf,
+};
+/// Single `Version` node (`hash`, `parents`, `unrelated`, `squashed`) in a component ancestry graph.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Version {
+    pub(super) hash: String,
+    parents: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    unrelated: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    squashed: Option<Vec<String>>,
+}
+/// Deserialized [`Version`] ancestry graph load request (`objectsDirectory`, `heads`, `cached`, `overlay`).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Load {
+    objects_directory: PathBuf,
+    heads: Vec<String>,
+    cached: Vec<Version>,
+    overlay: Vec<Version>,
+    from: Option<String>,
+    #[serde(default)]
+    stop_at: Vec<String>,
+}
+/// Validates `versions` count, unique SHA-1 `hash` keys, and non-self parent/squashed/unrelated edges.
+pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
+    count(versions.len())?;
+    let mut seen = HashSet::with_capacity(versions.len());
+    let mut edges = 0;
+    for version in versions {
+        let current = version.hash.trim();
+        hash(current)?;
+        if !seen.insert(current) {
+            return Err(invalid("history duplicate record"));
+        }
+        validate_version_edges(version, current, &mut edges)?;
+    }
+    Ok(())
+}
+/// Validates parent, unrelated, and squashed edges on `version` ([`Version`]) and enforces the total edge budget.
+fn validate_version_edges(version: &Version, current: &str, edges: &mut usize) -> io::Result<()> {
+    for parent in edges_of(version, true) {
+        let parent = parent.trim();
+        hash(parent)?;
+        if parent == current {
+            return Err(invalid("history self parent"));
+        }
+        *edges += 1;
+        if *edges > super::MAX_FILES * 16 {
+            return Err(invalid("history edge limit"));
+        }
+    }
+    Ok(())
+}
+/// Local `Version` object reader wrapper projecting ancestry graph nodes ([`Version`]).
+struct Reader<'a> {
+    repository: crate::read_version::Reader<'a>,
+}
+impl Reader<'_> {
+    fn version(&mut self, current: &str) -> io::Result<Version> {
+        let value = self.repository.read(current)?;
+        let parents = value
+            .get("parents")
+            .filter(|value| !value.is_null())
+            .cloned()
+            .unwrap_or(json!([]));
+        let unrelated = value
+            .get("unrelated")
+            .and_then(|item| item.get("head"))
+            .cloned();
+        let squashed = value
+            .get("squashed")
+            .and_then(|item| item.get("previousParents"))
+            .cloned();
+        let version: Version = serde_json::from_value(
+            json!({"hash":current,"parents":parents,"unrelated":unrelated,"squashed":squashed}),
+        )
+        .map_err(io::Error::other)?;
+        validate(std::slice::from_ref(&version))?;
+        Ok(version)
+    }
+    fn traverse(
+        &mut self,
+        head: &str,
+        known: &mut HashSet<String>,
+        added: &mut Vec<Version>,
+    ) -> io::Result<()> {
+        let head = head.trim();
+        hash(head)?;
+        let mut stack = vec![head.to_string()];
+        while let Some(current) = stack.pop() {
+            if !known.insert(current.clone()) {
+                continue;
+            }
+            count(known.len())?;
+            let version = self.version(&current)?;
+            for parent in version.parents.iter().rev() {
+                stack.push(parent.trim().to_string());
+            }
+            added.push(version);
+        }
+        Ok(())
+    }
+}
+fn heads(request: &Load) -> io::Result<Vec<String>> {
+    count(request.heads.len())?;
+    let mut heads = request.heads.clone();
+    let known: HashSet<_> = request.overlay
+        .iter()
+        .chain(&request.cached)
+        .map(|version| version.hash.as_str())
+        .collect();
+    for version in &request.overlay {
+        for parent in &version.parents {
+            if !known.contains(parent.as_str()) {
+                heads.push(parent.clone());
+            }
+        }
+    }
+    count(heads.len())?;
+    Ok(heads)
+}
+pub(super) fn load(request: &Load) -> io::Result<Value> {
+    path(&request.objects_directory)?;
+    validate(&request.cached)?;
+    validate(&request.overlay)?;
+    count(request.stop_at.len())?;
+    for item in &request.stop_at {
+        hash(item)?;
+    }
+    let mut versions: indexmap::IndexMap<_, _> = request.cached
+        .iter()
+        .map(|version| (version.hash.clone(), version.clone()))
+        .collect();
+    let mut known = versions.keys().cloned().collect();
+    let mut added = Vec::new();
+    let mut reader = Reader {
+        repository: crate::read_version::Reader::history_with_artifacts(
+            &request.objects_directory,
+        )?,
+    };
+    for head in heads(request)? {
+        reader.traverse(&head, &mut known, &mut added)?;
+    }
+    for version in added.iter().chain(&request.overlay) {
+        versions.insert(version.hash.clone(), version.clone());
+    }
+    let versions = versions.into_values().collect::<Vec<_>>();
+    validate(&versions)?;
+    let mut data = json!({"versions":versions,"added":added,"missing":[]});
+    if let Some(from) = &request.from {
+        hash(from)?;
+        data["hashes"] = json!(subset(&versions, from, &request.stop_at));
+    }
+    Ok(data)
+}
+pub(super) fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
+    let from = from.trim();
+    let mut index = HashMap::with_capacity(versions.len());
+    for version in versions {
+        index.entry(version.hash.trim()).or_insert(version);
+    }
+    let stop: HashSet<_> = stop
+        .iter()
+        .map(|item| item.trim())
+        .collect();
+    if stop.contains(from) {
+        return Vec::new();
+    }
+    let mut stack = vec![from.to_string()];
+    let mut seen = HashSet::from([from.to_string()]);
+    let mut result = Vec::new();
+    while let Some(current) = stack.pop() {
+        let Some(version) = index.get(current.as_str()) else {
+            continue;
+        };
+        result.push(current);
+        for parent in version.parents.iter().rev() {
+            if !stop.contains(parent.as_str())
+                && index.contains_key(parent.as_str())
+                && seen.insert(parent.clone())
+            {
+                stack.push(parent.clone());
+            }
+        }
+    }
+    result
+}
+fn edges_of(version: &Version, full: bool) -> Vec<String> {
+    let mut result = version.parents.clone();
+    if full {
+        result.extend(version.unrelated.iter().cloned());
+        result.extend(
+            version.squashed
+                .iter()
+                .flatten()
+                .filter(|parent| !version.parents.contains(parent))
+                .cloned(),
+        );
+    } else {
+        result.retain(|parent| version.unrelated.as_ref() != Some(parent));
+    }
+    let mut seen = HashSet::new();
+    result.retain(|item| seen.insert(item.clone()));
+    result
+}
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct Graph {
+    edges: HashMap<String, Vec<String>>,
+}
+impl Graph {
+    fn new(versions: &[Version], full: bool) -> Self {
+        let edges = versions
+            .iter()
+            .map(|version| (version.hash.clone(), edges_of(version, full)))
+            .collect();
+        Self { edges }
+    }
+    fn successors(&self, from: &str) -> Vec<String> {
+        let mut stack = vec![from.to_string()];
+        let mut visited = HashSet::new();
+        let mut result = Vec::new();
+        while let Some(current) = stack.pop() {
+            if !visited.insert(current.clone()) {
+                continue;
+            }
+            if let Some(parents) = self.edges.get(&current) {
+                stack.extend(parents.iter().rev().cloned());
+            }
+            result.push(current);
+        }
+        result
+    }
+    fn closest(&self, from: &str, common: &[String]) -> Option<String> {
+        let mut queue = VecDeque::from([from.to_string()]);
+        let mut seen = HashSet::new();
+        while let Some(current) = queue.pop_front() {
+            if !seen.insert(current.clone()) {
+                continue;
+            }
+            if common.contains(&current) {
+                return Some(current);
+            }
+            if let Some(parents) = self.edges.get(&current) {
+                queue.extend(parents.iter().cloned());
+            }
+        }
+        None
+    }
+}
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Distance {
+    graph: Graph,
+    source: Vec<String>,
+    target: Vec<String>,
+    common: Vec<String>,
+}
+impl Distance {
+    fn new(versions: &[Version], source: &str, target: &str) -> Self {
+        let mut graph = Graph::new(versions, false);
+        let mut left = graph.successors(source);
+        let mut right = graph.successors(target);
+        let mut common: Vec<_> = left
+            .iter()
+            .filter(|item| right.contains(item))
+            .cloned()
+            .collect();
+        if common.is_empty() {
+            graph = Graph::new(versions, true);
+            let full = graph.successors(target);
+            common = graph
+                .successors(source)
+                .into_iter()
+                .filter(|item| full.contains(item))
+                .collect();
+            left.retain(|item| !common.contains(item));
+            right.retain(|item| !common.contains(item));
+        }
+        Self { graph, source: left, target: right, common }
+    }
+    fn closest(&self, source: &str, target: &str) -> io::Result<Option<String>> {
+        if self.common.is_empty() {
+            return Ok(None);
+        }
+        if self.common.len() == 1 {
+            return Ok(self.common.first().cloned());
+        }
+        let left = self.graph
+            .closest(source, &self.common)
+            .ok_or_else(|| invalid("history common source unreachable"))?;
+        let right = self.graph
+            .closest(target, &self.common)
+            .ok_or_else(|| invalid("history common target unreachable"))?;
+        Ok(Some(if self.graph.successors(&left).contains(&right) { left } else { right }))
+    }
+}
+pub(super) fn diverge(
+    versions: &[Version],
+    source: &str,
+    target: &str,
+    unrelated: bool,
+) -> io::Result<Value> {
+    let source = source.trim();
+    let target = target.trim();
+    validate(versions)?;
+    hash(source)?;
+    hash(target)?;
+    let source_version = versions
+        .iter()
+        .find(|version| version.hash.trim() == source)
+        .ok_or_else(|| invalid("history missing head"))?;
+    if !versions
+        .iter()
+        .any(|version| version.hash.trim() == target)
+    {
+        return Err(invalid("history missing head"));
+    }
+    if source == target {
+        return Ok(json!({"sourceOnly":[],"targetOnly":[],"noCommon":false,"common":source}));
+    }
+    let distance = Distance::new(versions, source, target);
+    let closest = distance.closest(source, target)?;
+    let source_only: Vec<_> = distance.source
+        .iter()
+        .filter(|item| !distance.target.contains(item))
+        .collect();
+    let target_only: Vec<_> = distance.target
+        .iter()
+        .filter(|item| !distance.source.contains(item))
+        .collect();
+    let version_unrelated = source_version.unrelated.as_deref().map(str::trim) == Some(target);
+    let mut data = json!({"sourceOnly":source_only,"targetOnly":target_only,"noCommon":closest.is_none()&&!unrelated&&!version_unrelated});
+    if let Some(common) = closest {
+        data["common"] = json!(common);
+    }
+    Ok(data)
+}

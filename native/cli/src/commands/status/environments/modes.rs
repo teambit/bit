@@ -1,0 +1,170 @@
+//! Retained callback sessions change operation without replaying providers.
+//!
+//! Extends [`Environments`] with [`Environments::stash_added`], [`dev_files`], checkout, and install callback dispatch over [`Host`].
+use super::{Environments, Host, Path, Value, component, io, json, text};
+
+impl Environments {
+    /// Creates an empty [`Environments`] session configured for post-stash callback execution.
+    #[inline]
+    pub(in crate::commands) fn for_stash_callbacks() -> Self {
+        Self::new()
+    }
+
+    /// Invoke registered add/compile callbacks after Rust restores stashed sources and bitmap.
+    pub(in crate::commands) fn stash_added(
+        &mut self,
+        root: &Path,
+        ids: &[String],
+    ) -> io::Result<String> {
+        let ids = ids
+            .iter()
+            .map(String::as_str)
+            .map(str::trim)
+            .filter(|id| !id.is_empty())
+            .collect::<Vec<_>>();
+        if ids.is_empty() {
+            return Ok(String::new());
+        }
+        let host = self.host(root)?;
+        host.call("stashAdded", &json!({"ids":ids}))?;
+        Ok(host.take_stdout())
+    }
+
+    /// Wraps an already-running [`Host`] into an [`Environments`] session.
+    #[inline]
+    pub(in crate::commands) fn from_host(host: Host) -> Self {
+        Self { host: Some(host), ..Self::new() }
+    }
+
+    /// Notifies `self.host` ([`Host`]) of a snapshot continuation and configures snapshot `build` mode via [`Self::for_snapshot_build`].
+    #[inline]
+    pub(in crate::commands) fn continue_snapshot(self, build: bool) -> io::Result<Self> {
+        if let Some(host) = &self.host {
+            host.call("snapshotContinuation", &json!({}))?;
+        }
+        Ok(self.for_snapshot_build(build))
+    }
+
+    /// Configures this [`Environments`] session for snapshot creation with optional `build` execution.
+    #[inline]
+    pub(in crate::commands) fn for_snapshot_build(mut self, build: bool) -> Self {
+        self.snapshot = true;
+        self.snapshot_build = build;
+        self
+    }
+
+    /// Returns `true` when this [`Environments`] session is running in snapshot mode (`self.snapshot`).
+    #[inline]
+    pub(in crate::commands::status) fn is_snapshot(&self) -> bool {
+        self.snapshot
+    }
+
+    #[inline]
+    pub(in crate::commands) fn for_checkout(mut self) -> Self {
+        self.checkout = true;
+        self
+    }
+
+    /// Import publishes eligible dependency data before actual onLoad subscribers run.
+    #[inline]
+    pub(in crate::commands) fn for_import_callbacks(mut self, cache_initialized: bool) -> Self {
+        self.import = Some(cache_initialized);
+        self
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn is_import(&self) -> bool {
+        self.import.is_some()
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn import_cache_initialized(&self) -> bool {
+        self.import == Some(true)
+    }
+
+    #[inline]
+    pub(in crate::commands::status) fn is_checkout(&self) -> bool {
+        self.checkout
+    }
+
+    #[inline]
+    pub(in crate::commands) fn with_issue_facts(mut self, enabled: bool) -> Self {
+        self.issue_facts = enabled;
+        self
+    }
+}
+
+pub(in crate::commands::status) fn dev_files(
+    root: &Path,
+    context: &Value,
+    target: &Value,
+    files: &[String],
+) -> io::Result<Vec<String>> {
+    use bit_install::dependencies::{DevPatternConfig, dev_files, dev_patterns};
+    let mut comp = component(root, context, target)?;
+    comp.files = files.to_vec();
+    let identity = text(
+        target
+            .get("identity")
+            .filter(|val| !val.is_null())
+            .or_else(|| target.get("id")),
+    )?
+    .trim();
+    let facts = &context["environmentFacts"][identity];
+    if let Some(env_id) = facts["envId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|env_id| !env_id.is_empty())
+    {
+        env_id.clone_into(&mut comp.env_id);
+    }
+    let env = env_dev_patterns(facts);
+    let config = DevPatternConfig::from_aspects(&|id| {
+        crate::commands::update_cmd::aspect_entry(&context["workspace"], id)
+            .map(|(_, val)| val.clone())
+    });
+    Ok(dev_files(&comp, &dev_patterns(&comp, &config, &env)))
+}
+
+/// The env's `getDevPatterns()` facts: manifest patterns first, then the hook lists.
+fn env_dev_patterns(facts: &Value) -> bit_install::dependencies::EnvDevPatterns {
+    let hooks = &facts["devPatterns"];
+    let list = |key: &str| {
+        hooks
+            .get(key)
+            .filter(|val| !val.is_null())
+            .map(strings)
+    };
+    bit_install::dependencies::EnvDevPatterns {
+        patterns: facts
+            .get("manifestPatterns")
+            .filter(|val| !val.is_null())
+            .or_else(|| {
+                hooks
+                    .get("devPatterns")
+                    .filter(|val| !val.is_null())
+            })
+            .cloned(),
+        tests: list("tests"),
+        docs: list("docs"),
+        compositions: list("compositions"),
+    }
+}
+
+#[inline]
+fn strings(value: &Value) -> Vec<String> {
+    match value {
+        Value::Array(values) => values
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
+            .map(str::to_owned)
+            .collect(),
+        Value::String(value) => {
+            let trimmed = value.trim();
+            if trimmed.is_empty() { Vec::new() } else { vec![trimmed.to_owned()] }
+        }
+        _ => Vec::new(),
+    }
+}

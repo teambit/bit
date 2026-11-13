@@ -1,0 +1,29 @@
+//! Unit tests for separating `.bitmap` aspect configuration from structural targets via [`project`] and [`project_snapshot`].
+//!
+//! Confirms that `.bitmap` config overrides are extracted cleanly via [`project`] ([`keeps_bitmap_policy_separate_from_structural_target`]) and custom providers are rejected outside [`project_snapshot`].
+
+use super::{project, project_snapshot};
+use serde_json::json;
+/// Verifies that [`project`] extracts `.bitmap` aspect configuration overrides without mutating the structural target JSON.
+#[test]
+fn keeps_bitmap_policy_separate_from_structural_target() {
+    let original = json!({"component":{"rootDir":"component","config":{"teambit.dependencies/dependency-resolver@1.0.0":{"policy":{"dependencies":{"pkg":"1.0.0"}}}}}});
+    let (projected, configs) = project(&original).unwrap();
+    assert!(projected["component"].get("config").is_none());
+    assert_eq!(configs["component"], original["component"]["config"]);
+    assert!(original["component"].get("config").is_some());
+}
+/// Verifies that [`project`] rejects custom providers and removed aspects while [`project_snapshot`] preserves `-` aspect removals ([`json`], [`keeps_bitmap_policy_separate_from_structural_target`]).
+#[test]
+fn rejects_custom_providers_and_removed_aspects_while_snapshot_accepts_removed() {
+    for config in [
+        json!({"custom/aspect":{}}),
+        json!({"teambit.pkg/pkg":"-"}),
+        json!({"teambit.envs/envs":{"env":"custom/env"}}),
+    ] {
+        assert!(project(&json!({"component":{"rootDir":"component","config":config}})).is_err());
+    }
+    let snapshot = json!({"component":{"rootDir":"component","config":{"teambit.pkg/pkg":"-"}}});
+    let (_, configs) = project_snapshot(&snapshot).unwrap();
+    assert_eq!(configs["component"], json!({"teambit.pkg/pkg":"-"}));
+}

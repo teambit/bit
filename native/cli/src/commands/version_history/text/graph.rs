@@ -1,0 +1,210 @@
+//! Reproduce cleargraph node insertion, edge replacement, and topological order.
+//!
+//! [`Graph`] and [`Node`] model version-history DAG vertices and parent edges across [`HashMap`] and [`HashSet`].
+use serde_json::Value;
+use std::collections::{HashMap, HashSet};
+
+/// Vertex in the `version-history` DAG ([`Graph`]) holding a snap hash and outgoing parent edges.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Node {
+    pub hash: String,
+    pub edges: Vec<(usize, &'static str)>,
+}
+
+/// Directed acyclic version-history graph reproducing `cleargraph` insertion and topological order over [`Node`] vertices.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Graph {
+    pub nodes: Vec<Node>,
+    indices: HashMap<String, usize>,
+}
+
+impl Graph {
+    /// Builds a [`Graph`] from a `VersionHistory` [`Value`], validating unique 9-char prefixes when `short` is set.
+    #[must_use]
+    pub fn build(history: &Value, short: bool) -> Option<Self> {
+        let rows = history["versions"].as_array()?;
+        if rows.len() > 10000 {
+            return None;
+        }
+        let mut graph = Self {
+            nodes: Vec::with_capacity(rows.len()),
+            indices: HashMap::with_capacity(rows.len()),
+        };
+        let mut seen_rows = HashSet::with_capacity(rows.len());
+        for row in rows {
+            let hash = row["hash"]
+                .as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())?;
+            if !seen_rows.insert(hash) {
+                return None;
+            }
+            graph.add_row_nodes(hash, row)?;
+        }
+        if short && !graph.unique_short_hashes() {
+            return None;
+        }
+        for row in rows {
+            graph.add_edges(row)?;
+        }
+        Some(graph)
+    }
+
+    /// Inserts `hash` and all referenced parent, squashed, and unrelated hashes from `row` as graph vertices.
+    fn add_row_nodes(&mut self, hash: &str, row: &Value) -> Option<()> {
+        self.add_node(hash)?;
+        for hash in refs(row, "parents")?
+            .into_iter()
+            .chain(refs(row, "squashed")?)
+        {
+            self.add_node(hash)?;
+        }
+        if let Some(hash) = optional(row, "unrelated")? {
+            self.add_node(hash)?;
+        }
+        Some(())
+    }
+
+    /// Returns `true` when every [`Node`] in `self.nodes` has a distinct 9-character hash prefix.
+    fn unique_short_hashes(&self) -> bool {
+        if self.nodes
+            .iter()
+            .any(|node| node.hash.len() < 9)
+        {
+            return false;
+        }
+        let mut unique = HashSet::with_capacity(self.nodes.len());
+        self.nodes
+            .iter()
+            .all(|node| unique.insert(&node.hash[..9]))
+    }
+
+    /// Inserts `hash` as a vertex in `self.nodes` if not already present, enforcing a 10,000-node cap.
+    fn add_node(&mut self, hash: &str) -> Option<()> {
+        if hash.len() != 40 || !hash.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return None;
+        }
+        if !self.indices.contains_key(hash) {
+            if self.nodes.len() >= 10000 {
+                return None;
+            }
+            self.indices.insert(hash.to_owned(), self.nodes.len());
+            self.nodes.push(Node { hash: hash.to_owned(), edges: Vec::new() });
+        }
+        Some(())
+    }
+
+    /// Adds `"parent"`, `"squashed"`, and `"unrelated"` outgoing edges for `row` in `self`.
+    fn add_edges(&mut self, row: &Value) -> Option<()> {
+        let source = *self.indices.get(row["hash"].as_str().map(str::trim)?)?;
+        let parents = refs(row, "parents")?;
+        for parent in &parents {
+            self.edge(source, parent, "parent")?;
+        }
+        if let Some(unrelated) = optional(row, "unrelated")? {
+            self.edge(source, unrelated, "unrelated")?;
+        }
+        for hash in refs(row, "squashed")? {
+            if !parents.contains(&hash) {
+                self.edge(source, hash, "squashed")?;
+            }
+        }
+        Some(())
+    }
+
+    fn edge(&mut self, source: usize, hash: &str, kind: &'static str) -> Option<()> {
+        let target = *self.indices.get(hash)?;
+        let edges = &mut self.nodes[source].edges;
+        if let Some(edge) = edges
+            .iter_mut()
+            .find(|(index, _)| *index == target)
+        {
+            edge.1 = kind;
+        } else {
+            if edges.len() >= 10000 {
+                return None;
+            }
+            edges.push((target, kind));
+        }
+        Some(())
+    }
+
+    #[must_use]
+    pub fn order(&self) -> Option<Vec<usize>> {
+        let mut states = vec![0u8; self.nodes.len()];
+        let mut output = Vec::with_capacity(self.nodes.len());
+        for index in (0..self.nodes.len()).rev() {
+            self.visit(index, &mut states, &mut output)?;
+        }
+        output.reverse();
+        Some(output)
+    }
+
+    fn visit(&self, index: usize, states: &mut [u8], output: &mut Vec<usize>) -> Option<()> {
+        if states[index] == 2 {
+            return Some(());
+        }
+        let mut stack = vec![(index, self.nodes[index].edges.len())];
+        states[index] = 1;
+        while let Some((node, remaining)) = stack.last_mut() {
+            if *remaining == 0 {
+                states[*node] = 2;
+                output.push(*node);
+                stack.pop();
+                continue;
+            }
+            *remaining -= 1;
+            let child = self.nodes[*node].edges[*remaining].0;
+            match states[child] {
+                1 => return None,
+                2 => continue,
+                _ => {
+                    states[child] = 1;
+                    stack.push((child, self.nodes[child].edges.len()));
+                }
+            }
+        }
+        Some(())
+    }
+}
+
+#[inline]
+fn refs<'a>(row: &'a Value, key: &str) -> Option<Vec<&'a str>> {
+    match row.get(key) {
+        None | Some(Value::Null) if matches!(key, "parents" | "squashed") => Some(Vec::new()),
+        Some(Value::Array(values)) => values
+            .iter()
+            .map(|entry| {
+                non_empty_str(entry)
+                    .or_else(|| entry.get("hash").and_then(non_empty_str))
+                    .or_else(|| entry.get("id").and_then(non_empty_str))
+            })
+            .collect(),
+        _ => None,
+    }
+}
+
+#[inline]
+fn optional<'a>(row: &'a Value, key: &str) -> Option<Option<&'a str>> {
+    match row.get(key) {
+        None | Some(Value::Null) => Some(None),
+        Some(Value::String(value)) => {
+            let trimmed = value.trim();
+            Some((!trimmed.is_empty()).then_some(trimmed))
+        }
+        Some(Value::Object(map)) => [map.get("head"), map.get("hash"), map.get("id")]
+            .into_iter()
+            .flatten()
+            .find_map(non_empty_str)
+            .map(Some),
+        _ => None,
+    }
+}
+
+#[inline]
+fn non_empty_str(value: &Value) -> Option<&str> {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}

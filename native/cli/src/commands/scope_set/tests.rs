@@ -1,0 +1,48 @@
+//! Unit tests for `bit scope set` [`Options`] CLI argument parsing ([`parse_options`]) and unsupported-selector rejection.
+//!
+//! Verifies workspace-wide and component-pattern scope assignment argument parsing in [`parse_options`].
+
+use super::{Options, parse_options};
+use std::ffi::OsString;
+
+/// Parses a slice of string tokens as [`OsString`] args into [`Options`] via [`parse_options`].
+fn parse(words: &[&str]) -> Option<Options> {
+    let args = words
+        .iter()
+        .map(OsString::from)
+        .collect::<Vec<_>>();
+    parse_options(&args)
+}
+
+/// Verifies [`parse_options`] via [`parse`] for workspace-wide and component-specific `bit scope set` [`Options`].
+#[test]
+fn parses_workspace_and_component_scope_set() {
+    assert_eq!(
+        parse(&["scope", "set", "org.my-scope"]),
+        Some(Options { scope_name: "org.my-scope".to_owned(), pattern: None }),
+    );
+    assert_eq!(
+        parse(&["scope", "set", "org.my-scope", "comp1"]),
+        Some(Options { scope_name: "org.my-scope".to_owned(), pattern: Some("comp1".to_owned()) }),
+    );
+}
+
+/// Verifies that [`parse`] returns `None` for missing, flag, `$modified`, or excess `bit scope set` arguments.
+#[test]
+fn declines_unsupported_scope_set_arguments() {
+    assert_eq!(parse(&["scope", "set"]), None);
+    assert_eq!(parse(&["scope", "set", "org.scope", "--help"]), None);
+    assert_eq!(parse(&["scope", "set", "org.scope", "$modified"]), None);
+    assert_eq!(parse(&["scope", "set", "org.scope", "comp1", "extra"]), None);
+}
+
+/// Verifies that [`parse`] accepts `--no-color` alongside a workspace scope name.
+///
+/// Ensures `--no-color` is stripped before validating positional `scope_name` and `pattern` tokens.
+#[test]
+fn accepts_no_color_flag_with_scope_set() {
+    assert_eq!(
+        parse(&["scope", "set", "org.my-scope", "--no-color"]),
+        Some(Options { scope_name: "org.my-scope".to_owned(), pattern: None }),
+    );
+}
