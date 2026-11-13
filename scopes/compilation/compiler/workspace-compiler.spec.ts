@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { Component } from '@teambit/component';
 import type { CompIdGraph } from '@teambit/graph';
 import fs from 'fs-extra';
@@ -26,6 +27,7 @@ function createCompiler({
     inInstallContext: false,
     inInstallAfterPmContext: false,
     hasId: () => true,
+    listIds: () => new ComponentIdList(),
     ...workspace,
   };
   return new WorkspaceCompiler(
@@ -92,6 +94,40 @@ describe('WorkspaceCompiler.onAspectLoadFail', () => {
     const err = Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' });
     expect(await compiler.onAspectLoadFail(err, aspect)).to.be.false;
     expect(compiled).to.be.empty;
+  });
+
+  it('should compile the workspace version of an aspect that failed to load at another version, with its dependencies', async () => {
+    // e.g. after a lane switch, components still point to their env at the version of the other lane. the env is
+    // loaded from the package dir of the workspace component, so compiling the workspace version fixes it, while
+    // the other version and its dependencies are not in the workspace.
+    const envAtOtherVersion = ComponentID.fromString('my-org.my-scope/my-env@1.0.0');
+    const workspaceIds = ComponentIdList.fromArray(
+      ['my-org.my-scope/my-env@2.0.0', 'my-org.my-scope/my-env-dep@2.0.0'].map((id) => ComponentID.fromString(id))
+    );
+    // each version of the env depends on the same version of the dep
+    const getGraphIds = async ([envId]: ComponentID[]) => {
+      const depId = ComponentID.fromString(`my-org.my-scope/my-env-dep@${envId.version}`);
+      return new Graph(
+        [envId, depId].map((id) => new Node(id.toString(), id)),
+        [new Edge(envId.toString(), depId.toString(), 'prod')]
+      );
+    };
+    const compiler = createCompiler({
+      workspace: {
+        listIds: () => workspaceIds,
+        hasId: (id: ComponentID, opts?: { ignoreVersion?: boolean }) =>
+          opts?.ignoreVersion ? workspaceIds.hasWithoutVersion(id) : workspaceIds.has(id),
+        getGraphIds,
+      },
+    });
+    const compiled: string[][] = [];
+    compiler.compileComponents = async (ids) => {
+      compiled.push(ids as string[]);
+      return [];
+    };
+    const err = Object.assign(new Error('Cannot find module'), { code: 'MODULE_NOT_FOUND' });
+    expect(await compiler.onAspectLoadFail(err, { id: envAtOtherVersion } as Component)).to.be.true;
+    expect(compiled).to.deep.equal([['my-org.my-scope/my-env@2.0.0', 'my-org.my-scope/my-env-dep@2.0.0']]);
   });
 
   it('should not compile while another process is installing', async () => {

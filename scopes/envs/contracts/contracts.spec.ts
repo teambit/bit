@@ -27,6 +27,7 @@ import type { DocsRootProps } from '@teambit/docs';
 import type { TypescriptMain } from '@teambit/typescript';
 import type { DevFilesMain } from '@teambit/dev-files';
 import type { HarmonyWorker } from '@teambit/worker';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type * as Contract from './index';
 
 /**
@@ -66,6 +67,7 @@ export type BitToEnv = [
   Assert<IsAssignable<TypescriptMain, Contract.TypescriptSchemaProvider>>,
   Assert<IsAssignable<DevFilesMain, Contract.DevFilesMain>>,
   Assert<IsAssignable<HarmonyWorker<unknown>, Contract.EnvWorker<unknown>>>,
+  Assert<IsAssignable<DependencyResolverMain, Contract.DependencyResolverMain>>,
 ];
 
 // envs return these to Bit.
