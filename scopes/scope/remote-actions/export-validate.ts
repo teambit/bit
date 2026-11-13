@@ -157,8 +157,9 @@ to get these snaps locally, run "bit fetch --lanes ${forkedFrom.toString()} --al
 
   /**
    * fetch the missing snaps from the scope of the original lane, as objects, with the objects they reference (files,
-   * dependencies data). a component import is not used, because it merges the component object of the original lane
-   * into this scope, which is wrong for a component whose home is this scope.
+   * artifacts, dependencies data). the referenced objects are best effort. a component import is not used, because it
+   * merges the component object of the original lane into this scope, which is wrong for a component whose home is
+   * this scope.
    * each round fetches the snaps that `findMissing` reports, which makes their parents known for the next round. it
    * stops when nothing is missing, or nothing new can be fetched. returns what is still missing.
    */
@@ -188,7 +189,7 @@ to get these snaps locally, run "bit fetch --lanes ${forkedFrom.toString()} --al
       const versions = await Promise.all(
         hashes.map((hash) => Ref.from(hash).load(this.scope.objects) as Promise<Version | undefined>)
       );
-      const subRefs = compact(versions).flatMap((version) => version.refsWithOptions(false, false));
+      const subRefs = compact(versions).flatMap((version) => version.refsWithOptions(false, true));
       if (subRefs.length) await importObjects(subRefs.map((ref) => ref.toString()));
       missingPerComp = await findMissing();
     }

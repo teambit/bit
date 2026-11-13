@@ -960,7 +960,9 @@ describe('lane export skips main history objects', function () {
     // e.g. the lane was exported by an older client, which didn't send the snaps and the remote didn't fetch them
     describe('when a later export finds the snap missing on scope-M', () => {
       before(() => {
-        fs.removeSync(path.join(scopeMPath, 'objects', helper.general.getHashPathOfObject(laneAFirstSnap)));
+        const laneAFirstSnapPath = path.join(scopeMPath, 'objects', helper.general.getHashPathOfObject(laneAFirstSnap));
+        expect(fs.existsSync(laneAFirstSnapPath)).to.be.true;
+        fs.removeSync(laneAFirstSnapPath);
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
       });
