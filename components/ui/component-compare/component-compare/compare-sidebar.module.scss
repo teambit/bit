@@ -37,6 +37,88 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
   }
 }
 
+// Only the collapse transition is animated, and only after the remembered state has been applied —
+// see `.animated` in compare-sidebar.tsx.
+.animated {
+  transition:
+    width 0.18s ease,
+    min-width 0.18s ease;
+}
+
+.sidebarCollapsed {
+  width: 36px;
+  min-width: 36px;
+  overflow: hidden;
+
+  .sidebarHeader {
+    padding: 0;
+    justify-content: center;
+  }
+
+  .sidebarTitle,
+  .clearSelectionLink,
+  .sidebarContent {
+    display: none;
+  }
+}
+
+.collapseToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: $text-secondary;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: $text-primary;
+  }
+}
+
+.chevronLeft {
+  transform: rotate(90deg);
+}
+
+.chevronRight {
+  transform: rotate(-90deg);
+}
+
+// The rail doubles the collapsed sidebar's hit target: the whole strip expands it, not just the
+// 20px chevron. Hidden from assistive tech because the header button already exposes the control.
+.collapsedRail {
+  flex: 1;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: $text-muted;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+
+  &:hover {
+    color: $text-secondary;
+  }
+}
+
+.collapsedRailLabel {
+  writing-mode: vertical-rl;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 // At narrow embedded widths, keep the diff usable by falling back to the pre-sidebar layout.
 // Use a container query because compare can be embedded in a pane much narrower than the viewport.
 @container component-compare-layout (max-width: 640px) {
@@ -70,6 +152,11 @@ $text-muted: var(--on-background-medium-color, #a0aec0);
 
 .sidebarTitle {
   font-size: 12px;
+  flex: 1;
+  margin-left: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clearSelectionLink {
