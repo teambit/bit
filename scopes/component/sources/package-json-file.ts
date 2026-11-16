@@ -7,6 +7,7 @@ import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
 
@@ -29,6 +30,8 @@ export type PackageJsonComponent = Parameters<typeof componentIdToPackageName>[0
  * then we could preserve it later on while writing the file. this is same process used by NPM when
  * writing the package.json file
  */
+const FIELDS_TO_SORT = [...DEPENDENCIES_FIELDS, 'optionalDependencies', 'peerDependenciesMeta'];
+
 export class PackageJsonFile {
   packageJsonObject: Record<string, any>;
   fileExist: boolean;
@@ -204,6 +207,17 @@ export class PackageJsonFile {
       ...this.packageJsonObject.peerDependencies,
       ...peerDependencies,
     };
+  }
+
+  /**
+   * deps are merged from several sources in varying order. sort them by name for a stable, diffable output.
+   */
+  sortDependencies() {
+    FIELDS_TO_SORT.forEach((field) => {
+      const deps = this.packageJsonObject[field];
+      if (!deps || typeof deps !== 'object') return;
+      this.packageJsonObject[field] = sortObjectByKeys(deps);
+    });
   }
 
   removeDependency(dependency: string) {

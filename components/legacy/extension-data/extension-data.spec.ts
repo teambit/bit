@@ -242,3 +242,22 @@ describe('ExtensionDataList', () => {
     });
   });
 });
+
+describe('ExtensionDataEntry serialization', () => {
+  it('should put the identifying fields before config and data', () => {
+    const coreEntry = new ExtensionDataEntry(undefined, undefined, 'teambit.pkg/pkg', {}, { big: 'data' });
+    const nonCoreEntry = new ExtensionDataEntry(
+      undefined,
+      ComponentID.fromString('my-scope/ext1@0.0.1'),
+      undefined,
+      {},
+      { big: 'data' }
+    );
+    // undefined fields are dropped by JSON.stringify, the same way the object is persisted
+    const keysOf = (obj: Record<string, any>) => Object.keys(JSON.parse(JSON.stringify(obj)));
+    expect(keysOf(coreEntry.toModelObject())).to.deep.equal(['name', 'config', 'data']);
+    expect(keysOf(coreEntry.toComponentObject())).to.deep.equal(['name', 'config', 'data']);
+    expect(keysOf(nonCoreEntry.toModelObject())).to.deep.equal(['extensionId', 'config', 'data']);
+    expect(keysOf(nonCoreEntry.toComponentObject())).to.deep.equal(['extensionId', 'config', 'data']);
+  });
+});

@@ -1640,6 +1640,8 @@ export class IsolatorMain {
     };
     addDependencies(packageJson);
     packageJson.addOrUpdateProperty('version', currentVersion);
+    // the file was written sorted, but the component deps added above are appended to the end. sort again.
+    packageJson.sortDependencies();
     return packageJson;
   }
 
@@ -1680,6 +1682,7 @@ export class IsolatorMain {
       packageJson.packageJsonObject,
       this.dependencyResolver.getHiddenPeerDependencies(component)
     );
+    packageJson.sortDependencies();
     dataToPersist.addFile(packageJson.toVinylFile());
     const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
