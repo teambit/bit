@@ -2,7 +2,9 @@ import { expect } from 'chai';
 
 import { MDXDependencyDetector } from './mdx.detector';
 
-describe('MDXDependencyDetector', () => {
+describe('MDXDependencyDetector', function () {
+  // the first test loads the MDX compiler, which is slow on CI and can exceed mocha's default 2s
+  this.timeout(10000);
   describe('detect - compileSync path', () => {
     it('should return modules from compileSync imports data', () => {
       const src = `import React from 'react';

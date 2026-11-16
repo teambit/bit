@@ -219,7 +219,12 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       loose,
     });
 
-    const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });
+    const mergeResult = mergeReport({
+      ...mergeResults,
+      configMergeResults,
+      verbose,
+      abortCommand: 'bit lane merge-abort',
+    });
     const localDeleteOutput = deleteResults.localResult ? removeTemplate(deleteResults.localResult, false) : '';
     const remoteDeleteOutput = joinSections(
       (deleteResults.remoteResult || []).map((item) => removeTemplate(item, true))

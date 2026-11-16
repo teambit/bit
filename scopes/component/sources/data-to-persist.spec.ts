@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 
 import { DataToPersist } from './data-to-persist';
+import { RemovePath } from './remove-path';
 import type AbstractVinyl from './abstract-vinyl';
 
 // only `path` is read by the collision logic, so a partial fixture is enough
@@ -67,6 +68,18 @@ describe('DataToPersist', () => {
         const addFile2 = () => dataToPersist.addFile(fakeVinyl(path.normalize('bar/foo.js')));
         expect(addFile2).to.not.throw();
       });
+    });
+  });
+  describe('addBasePath', () => {
+    it('should set the base path as the stop-dir of the removed paths, and keep it after a merge', () => {
+      const basePath = path.join(path.sep, 'workspace');
+      const dataToPersist = new DataToPersist();
+      dataToPersist.removePath(new RemovePath('ui/button', true));
+      dataToPersist.addBasePath(basePath);
+      const merged = new DataToPersist();
+      merged.merge(dataToPersist);
+      expect(merged.remove[0].path).to.equal(path.join(basePath, 'ui/button'));
+      expect(merged.remove[0].stopAtDir).to.equal(basePath);
     });
   });
 });

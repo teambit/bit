@@ -1000,8 +1000,8 @@ importers:
         specifier: ~0.0.502
         version: 0.0.502
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ~0.0.10
-        version: 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+        specifier: ~0.0.12
+        version: 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ~0.0.2
         version: 0.0.2
@@ -1231,8 +1231,8 @@ importers:
         specifier: 3.0.4
         version: 3.0.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/mousetrap':
         specifier: 1.6.5
         version: 1.6.5
@@ -2241,9 +2241,12 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   components/config-store:
     dependencies:
@@ -2319,8 +2322,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -2365,8 +2368,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/pluralize':
         specifier: 0.0.29
         version: 0.0.29
@@ -2396,8 +2399,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/hooks/use-lane-components:
     dependencies:
@@ -2436,8 +2439,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/hooks/use-lanes:
     dependencies:
@@ -2482,8 +2485,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/hooks/use-navigation-message-listener:
     dependencies:
@@ -2513,8 +2516,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/hooks/use-url-change-broadcaster:
     dependencies:
@@ -2544,8 +2547,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/hooks/use-viewed-lane-from-url_1:
     dependencies:
@@ -2581,8 +2584,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/legacy-component-log:
     dependencies:
@@ -2780,8 +2783,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
@@ -3702,8 +3705,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/modules/find-scope-path:
     dependencies:
@@ -3736,8 +3739,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/modules/generate-asset-manifest:
     dependencies:
@@ -3764,8 +3767,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -3804,8 +3807,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/plugins/manifest-plugin:
     dependencies:
@@ -4025,8 +4028,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/avatar:
     dependencies:
@@ -4071,8 +4074,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/buttons/collapser:
     dependencies:
@@ -4114,8 +4117,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/code-compare:
     dependencies:
@@ -4223,8 +4226,8 @@ importers:
         specifier: 4.4.6
         version: 4.4.6
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/code-editor:
     dependencies:
@@ -4257,8 +4260,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/code-tab-page:
     dependencies:
@@ -4348,8 +4351,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/code-view:
     dependencies:
@@ -4400,8 +4403,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
@@ -4457,9 +4460,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   components/ui/compare/lane-compare-hooks/use-lane-diff-status:
     dependencies:
@@ -4495,8 +4495,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/compare/lane-compare-page:
     dependencies:
@@ -4526,8 +4526,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/changelog:
     dependencies:
@@ -4563,8 +4563,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/compare-aspects/compare-aspect-view:
     dependencies:
@@ -4615,8 +4615,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/compare-aspects/compare-aspects:
     dependencies:
@@ -4691,8 +4691,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/component-compare:
     dependencies:
@@ -4773,8 +4773,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/context:
     dependencies:
@@ -4810,8 +4810,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/models/component-compare-props:
     dependencies:
@@ -4853,8 +4853,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
@@ -4890,8 +4890,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-compare/version-picker:
     dependencies:
@@ -4933,8 +4933,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -4997,8 +4997,8 @@ importers:
         specifier: 4.4.6
         version: 4.4.6
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-filters/component-filter-context:
     dependencies:
@@ -5031,8 +5031,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-filters/deprecate-filter:
     dependencies:
@@ -5068,8 +5068,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-filters/env-filter:
     dependencies:
@@ -5114,8 +5114,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-filters/show-main-filter:
     dependencies:
@@ -5154,8 +5154,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/component-meta:
     dependencies:
@@ -5230,8 +5230,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/components-overview:
     dependencies:
@@ -5297,8 +5297,8 @@ importers:
         specifier: 3.0.6
         version: 3.0.6
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/composition-compare:
     dependencies:
@@ -5373,8 +5373,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -5404,8 +5404,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/deps-diff-table:
     dependencies:
@@ -5438,8 +5438,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/diff-viewer:
     dependencies:
@@ -5487,8 +5487,8 @@ importers:
         specifier: ^5.2.3
         version: 5.2.3
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/hooks/scope-context:
     dependencies:
@@ -5515,8 +5515,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/hooks/use-bulk-paged-query:
     dependencies:
@@ -5549,8 +5549,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/hooks/use-core-aspects:
     dependencies:
@@ -5580,8 +5580,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/hooks/use-data-query:
     dependencies:
@@ -5614,8 +5614,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inline-code-compare:
     dependencies:
@@ -5645,8 +5645,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inline-config-compare:
     dependencies:
@@ -5679,8 +5679,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inline-deps-compare:
     dependencies:
@@ -5713,8 +5713,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inline-preview-compare:
     dependencies:
@@ -5741,8 +5741,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inline-tests-compare:
     dependencies:
@@ -5772,8 +5772,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/inputs/lane-selector_1:
     dependencies:
@@ -5845,8 +5845,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
@@ -5897,8 +5897,8 @@ importers:
         specifier: 4.4.6
         version: 4.4.6
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/models/lanes-model:
     dependencies:
@@ -5940,8 +5940,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/pages/preview-not-found:
     dependencies:
@@ -5968,8 +5968,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/pages/static-error:
     dependencies:
@@ -6005,8 +6005,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/preserve-workspace-mode:
     dependencies:
@@ -6036,8 +6036,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/preview-compare:
     dependencies:
@@ -6064,8 +6064,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/queries/get-file-content:
     dependencies:
@@ -6098,8 +6098,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/react-router/slot-router:
     dependencies:
@@ -6141,8 +6141,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/rendering/html:
     dependencies:
@@ -6169,8 +6169,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/side-bar:
     dependencies:
@@ -6242,8 +6242,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -6303,8 +6303,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/test-page:
     dependencies:
@@ -6370,8 +6370,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/time-ago:
     dependencies:
@@ -6422,8 +6422,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/tooltip:
     dependencies:
@@ -6468,8 +6468,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/use-workspace-mode:
     dependencies:
@@ -6499,8 +6499,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/version-block:
     dependencies:
@@ -6542,8 +6542,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   components/ui/version-dropdown:
     dependencies:
@@ -6621,8 +6621,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -6670,8 +6670,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   node_modules/.bit_roots/teambit.harmony_envs_core-aspect-env@2.1.2:
     dependencies:
@@ -13138,9 +13138,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/cloud/cloud:
     dependencies:
@@ -13214,9 +13211,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -13255,8 +13249,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/hooks/use-current-user:
     dependencies:
@@ -13286,8 +13280,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/hooks/use-logout:
     dependencies:
@@ -13317,8 +13311,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/models/cloud-scope:
     dependencies:
@@ -13348,8 +13342,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/models/cloud-user:
     dependencies:
@@ -13376,8 +13370,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/modules/get-cloud-user:
     dependencies:
@@ -13404,8 +13398,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/ripple:
     dependencies:
@@ -13490,8 +13484,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/ui/login:
     dependencies:
@@ -13521,8 +13515,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/cloud/ui/user-bar:
     dependencies:
@@ -13564,8 +13558,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/community/community:
     dependencies:
@@ -13597,9 +13591,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compilation/aspect-docs/babel:
     dependencies:
@@ -13632,8 +13623,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -13669,8 +13660,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -13706,8 +13697,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -13748,9 +13739,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compilation/bundler:
     dependencies:
@@ -13803,9 +13791,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compilation/compiler:
     dependencies:
@@ -13882,12 +13867,12 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
+      strip-ansi:
+        specifier: 6.0.0
+        version: 6.0.0
 
   scopes/compilation/modules/babel-compiler:
     dependencies:
@@ -13920,8 +13905,8 @@ importers:
         specifier: 7.20.0
         version: 7.20.0
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -13959,9 +13944,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/aspect-docs/component:
     dependencies:
@@ -13994,8 +13976,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -14054,9 +14036,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/checkout:
     dependencies:
@@ -14115,9 +14094,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -14164,9 +14140,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component:
     dependencies:
@@ -14330,9 +14303,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -14418,9 +14388,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component-descriptor:
     dependencies:
@@ -14458,9 +14425,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component-log:
     dependencies:
@@ -14528,9 +14492,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component-package-version:
     dependencies:
@@ -14605,9 +14566,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component-tree:
     dependencies:
@@ -14639,9 +14597,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/component-url:
     dependencies:
@@ -14677,8 +14632,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -14740,9 +14695,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/deprecation:
     dependencies:
@@ -14798,9 +14750,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -14850,9 +14799,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/forking:
     dependencies:
@@ -14911,9 +14857,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15026,9 +14969,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15169,9 +15109,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
@@ -15221,9 +15158,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/lister:
     dependencies:
@@ -15279,9 +15213,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15340,9 +15271,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/modules/merge-helper:
     dependencies:
@@ -15396,8 +15324,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -15450,9 +15378,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/new-component-helper:
     dependencies:
@@ -15502,9 +15427,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/refactoring:
     dependencies:
@@ -15554,9 +15476,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/remove:
     dependencies:
@@ -15627,9 +15546,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15697,9 +15613,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/snap-distance:
     dependencies:
@@ -15846,9 +15759,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -15980,9 +15890,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/status:
     dependencies:
@@ -16038,9 +15945,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/component/testing/mock-components:
     dependencies:
@@ -16079,8 +15983,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/component/tracker:
     dependencies:
@@ -16154,9 +16058,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compositions/aspect-docs/compositions:
     dependencies:
@@ -16189,8 +16090,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -16234,9 +16135,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compositions/compositions:
     dependencies:
@@ -16376,9 +16274,6 @@ importers:
       '@types/lodash.head':
         specifier: 4.0.6
         version: 4.0.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/compositions/model/composition-id:
     dependencies:
@@ -16411,8 +16306,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -16442,8 +16337,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/compositions/panels/composition-gallery:
     dependencies:
@@ -16488,8 +16383,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/defender/eslint:
     dependencies:
@@ -16592,8 +16487,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/defender/formatter:
     dependencies:
@@ -16643,9 +16538,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/defender/jest:
     dependencies:
@@ -16774,9 +16666,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/defender/mocha:
     dependencies:
@@ -16817,9 +16706,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/defender/multi-tester:
     dependencies:
@@ -16866,9 +16752,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/defender/prettier:
     dependencies:
@@ -16906,9 +16789,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/prettier':
         specifier: 2.7.3
         version: 2.7.3
@@ -16947,8 +16827,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/prettier':
         specifier: 2.7.3
         version: 2.7.3
@@ -17049,9 +16929,6 @@ importers:
       '@types/lodash.compact':
         specifier: 3.0.6
         version: 3.0.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/defender/validator:
     dependencies:
@@ -17118,8 +16995,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -17155,8 +17032,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -17197,8 +17074,8 @@ importers:
         specifier: ~0.0.4
         version: 0.0.4
       '@teambit/typescript.deps-detectors.detective-typescript':
-        specifier: ~0.0.10
-        version: 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+        specifier: ~0.0.12
+        version: 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript':
         specifier: ~0.0.2
         version: 0.0.2
@@ -17302,9 +17179,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -17429,9 +17303,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -17464,8 +17335,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/dependencies/pnpm:
     dependencies:
@@ -17560,9 +17431,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -17639,9 +17507,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/docs/ui/queries/get-docs:
     dependencies:
@@ -17671,8 +17536,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/envs/aspect-docs/envs:
     dependencies:
@@ -17705,8 +17570,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -17875,9 +17740,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       sinon:
         specifier: 17.0.1
         version: 17.0.1
@@ -17907,8 +17769,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/explorer/command-bar:
     dependencies:
@@ -17982,9 +17844,6 @@ importers:
       '@types/lodash.flatten':
         specifier: 4.4.6
         version: 4.4.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/mousetrap':
         specifier: 1.6.5
         version: 1.6.5
@@ -18040,9 +17899,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -18078,8 +17934,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -18153,9 +18009,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/generator/workspace-starter:
     dependencies:
@@ -18333,9 +18186,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/git/modules/git-executable:
     dependencies:
@@ -18365,8 +18215,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/git/modules/ignore-file-reader:
     dependencies:
@@ -18402,8 +18252,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/api-server:
     dependencies:
@@ -18483,9 +18333,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/node-fetch':
         specifier: 2.5.12
         version: 2.5.12
@@ -18553,9 +18400,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/aspect:
     dependencies:
@@ -18700,8 +18544,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -18737,8 +18581,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -18821,9 +18665,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       reflect-metadata:
         specifier: 0.1.13
         version: 0.1.13
@@ -19003,9 +18844,6 @@ importers:
       '@types/cacache':
         specifier: 19.0.0
         version: 19.0.0
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -19079,9 +18917,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/yargs':
         specifier: 17.0.0
         version: 17.0.0
@@ -19111,8 +18946,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -19171,9 +19006,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/diagnostic:
     dependencies:
@@ -19208,9 +19040,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/doctor:
     dependencies:
@@ -19367,9 +19196,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/global-config:
     dependencies:
@@ -19428,9 +19254,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/graphql:
     dependencies:
@@ -19546,9 +19369,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/node-fetch':
         specifier: 2.5.12
         version: 2.5.12
@@ -19650,9 +19470,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/logger:
     dependencies:
@@ -19693,9 +19510,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -19725,8 +19539,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/feature-toggle:
     dependencies:
@@ -19756,8 +19570,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -19790,8 +19604,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/in-memory-cache:
     dependencies:
@@ -19824,8 +19638,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -19858,8 +19672,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -19889,8 +19703,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/resolved-component:
     dependencies:
@@ -19917,8 +19731,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/runtimes:
     dependencies:
@@ -19948,8 +19762,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/send-server-sent-events:
     dependencies:
@@ -19976,8 +19790,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/worker-expose:
     dependencies:
@@ -20007,8 +19821,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/modules/workspace-config-template:
     dependencies:
@@ -20041,8 +19855,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -20165,9 +19979,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/harmony/testing/load-aspect:
     dependencies:
@@ -20197,8 +20008,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/ui/aspect-box:
     dependencies:
@@ -20249,8 +20060,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/harmony/worker:
     dependencies:
@@ -20285,9 +20096,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/html/aspect-docs/html:
     dependencies:
@@ -20320,8 +20128,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -20351,8 +20159,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/html/modules/fetch-html-from-url:
     dependencies:
@@ -20379,8 +20187,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/lanes/diff:
     dependencies:
@@ -20437,8 +20245,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -20474,8 +20282,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/lanes/lanes:
     dependencies:
@@ -20579,9 +20387,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/lanes/merge-lanes:
     dependencies:
@@ -20652,9 +20457,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/lanes/modules/create-lane:
     dependencies:
@@ -20702,8 +20504,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/mcp/cli-mcp-server:
     dependencies:
@@ -20812,8 +20614,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -20843,8 +20645,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -20940,9 +20742,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/pipelines/aspect-docs/builder:
     dependencies:
@@ -20975,8 +20774,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -21077,9 +20876,6 @@ importers:
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/pretty-time':
         specifier: ^1.1.5
         version: 1.1.5
@@ -21111,9 +20907,6 @@ importers:
       '@types/chai':
         specifier: 4.2.15
         version: 4.2.15
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -21149,8 +20942,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/pkg/aspect-docs/pkg:
     dependencies:
@@ -21183,8 +20976,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -21223,8 +21016,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -21322,9 +21115,6 @@ importers:
       '@types/mime':
         specifier: 2.0.3
         version: 2.0.3
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/ssri':
         specifier: ^7.1.5
         version: 7.1.5
@@ -21360,8 +21150,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -21391,8 +21181,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/preview/preview:
     dependencies:
@@ -21517,9 +21307,6 @@ importers:
       '@types/mime':
         specifier: 2.0.3
         version: 2.0.3
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -21576,8 +21363,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 4.3.0
         version: 4.3.0
@@ -21610,8 +21397,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/aspect-docs/react:
     dependencies:
@@ -21644,8 +21431,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -21704,9 +21491,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/react/eslint-config-bit-react:
     dependencies:
@@ -22039,9 +21823,6 @@ importers:
       '@types/mini-css-extract-plugin':
         specifier: 2.2.0
         version: 2.2.0(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.25)(uglify-js@3.19.3)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/react-dev-utils':
         specifier: 9.0.15
         version: 9.0.15
@@ -22083,8 +21864,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/docs-app:
     dependencies:
@@ -22123,8 +21904,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/docs/apply-providers:
     dependencies:
@@ -22157,8 +21938,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/docs/compositions-carousel:
     dependencies:
@@ -22194,8 +21975,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/docs/docs-content:
     dependencies:
@@ -22236,9 +22017,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/react/ui/docs/properties-table:
     dependencies:
@@ -22277,8 +22055,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/error-fallback:
     dependencies:
@@ -22320,8 +22098,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/highlighter-provider:
     dependencies:
@@ -22357,8 +22135,8 @@ importers:
         specifier: ^2.3.4
         version: 2.3.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/react/ui/loader-fallback:
     dependencies:
@@ -22388,8 +22166,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/scope/export:
     dependencies:
@@ -22463,9 +22241,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/scope/importer:
     dependencies:
@@ -22530,9 +22305,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/scope/models/scope-model:
     dependencies:
@@ -22562,8 +22334,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/scope/network:
     dependencies:
@@ -22931,9 +22703,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -23044,9 +22813,6 @@ importers:
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       chai-subset:
         specifier: ^1.6.0
         version: 1.6.0
@@ -23085,8 +22851,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23113,8 +22879,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23162,8 +22928,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23193,8 +22959,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23236,8 +23002,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23282,8 +23048,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23316,8 +23082,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23359,8 +23125,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23390,8 +23156,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23421,8 +23187,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23449,8 +23215,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23486,8 +23252,8 @@ importers:
         specifier: 3.0.4
         version: 3.0.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23520,8 +23286,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -23551,8 +23317,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23588,8 +23354,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23619,8 +23385,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23650,8 +23416,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23681,8 +23447,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23712,8 +23478,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23740,8 +23506,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23768,8 +23534,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23833,8 +23599,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23861,8 +23627,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23889,8 +23655,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23920,8 +23686,8 @@ importers:
         specifier: 4.2.15
         version: 4.2.15
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -23957,8 +23723,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -24000,8 +23766,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -24121,9 +23887,6 @@ importers:
       '@types/minimatch':
         specifier: 3.0.4
         version: 3.0.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/ui-foundation/harmony-ui-app/harmony-ui-app:
     dependencies:
@@ -24155,9 +23918,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/ui-foundation/notifications/aspect:
     dependencies:
@@ -24201,9 +23961,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
@@ -24247,9 +24004,6 @@ importers:
       '@types/classnames':
         specifier: ^2.3.4
         version: 2.3.4
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/react-tabs':
         specifier: 2.3.2
         version: 2.3.2
@@ -24293,9 +24047,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/ui-foundation/sidebar:
     dependencies:
@@ -24345,9 +24096,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/ui-foundation/ui:
     dependencies:
@@ -24520,9 +24268,6 @@ importers:
       '@types/http-proxy':
         specifier: ^1.17.16
         version: 1.17.17
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/react-dev-utils':
         specifier: 9.0.15
         version: 9.0.15
@@ -24563,9 +24308,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/ua-parser-js':
         specifier: 0.7.35
         version: 0.7.35
@@ -24659,8 +24401,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.5.25)(uglify-js@3.19.3)
@@ -24696,8 +24438,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -24727,8 +24469,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       json-formatter-js:
         specifier: 2.3.4
         version: 2.3.4
@@ -24755,8 +24497,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@4.41.0)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/webpack/plugins/inject-head-webpack-plugin:
     dependencies:
@@ -24792,8 +24534,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/webpack/style-regexps:
     dependencies:
@@ -24820,8 +24562,8 @@ importers:
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/webpack/webpack:
     dependencies:
@@ -25014,8 +24756,8 @@ importers:
         specifier: ^29.2.2
         version: 29.5.14
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       '@types/testing-library__jest-dom':
         specifier: ^5.9.5
         version: 5.9.5
@@ -25080,9 +24822,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/workspace/config-merger:
     dependencies:
@@ -25184,9 +24923,6 @@ importers:
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/workspace/install:
     dependencies:
@@ -25284,9 +25020,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/object-hash':
         specifier: 1.3.4
         version: 1.3.4
@@ -25337,8 +25070,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -25389,8 +25122,8 @@ importers:
         specifier: 3.0.4
         version: 3.0.4
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
       chai:
         specifier: 5.2.1
         version: 5.2.1
@@ -25441,8 +25174,8 @@ importers:
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/workspace/modules/workspace-locator:
     dependencies:
@@ -25475,8 +25208,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/workspace/scripts:
     dependencies:
@@ -25555,8 +25288,8 @@ importers:
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
+        specifier: 10.0.10
+        version: 10.0.10
 
   scopes/workspace/variants:
     dependencies:
@@ -25603,9 +25336,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/workspace/watcher:
     dependencies:
@@ -25673,9 +25403,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
 
   scopes/workspace/workspace:
     dependencies:
@@ -25860,9 +25587,6 @@ importers:
       '@types/lodash.compact':
         specifier: 3.0.6
         version: 3.0.6
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/pluralize':
         specifier: 0.0.29
         version: 0.0.29
@@ -25936,9 +25660,6 @@ importers:
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
-      '@types/mocha':
-        specifier: 9.1.0
-        version: 9.1.0
       '@types/normalize-path':
         specifier: ^3.0.0
         version: 3.0.2
@@ -34129,8 +33850,8 @@ packages:
       '@teambit/mdx.ui.mdx-layout': ^1.0.14
       react: 19.1.0
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10':
-    resolution: {integrity: sha512-RPHrkHxnXWl8C++ns92PxYVKWLmNMGXWsYTeVa6EtDkW49z9aP4VkLPci5c4GUHLEPxepWxmAKBhrkVquBihmA==}
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12':
+    resolution: {integrity: sha512-wYHADGXNnWYGERG4WnnzH59JC8CM7OzPYLTPDCySpWEEJsoAVdXj6mwJYkRFn9xo9wXUpWOyzaVh/gIwsQgjfg==}
     peerDependencies:
       typescript: 5.5.3
 
@@ -35280,9 +35001,6 @@ packages:
 
   '@types/mocha@10.0.10':
     resolution: {integrity: sha512-xPyYSz1cMPnJQhl0CLMH68j3gprKZaTjG3s5Vi+fDgx+uhG9NOXwbVt52eFS8ECyXhyKcjDLCBEqBExKuiZb7Q==}
-
-  '@types/mocha@9.1.0':
-    resolution: {integrity: sha512-QCWHkbMv4Y5U9oW10Uxbr45qMMSzl4OzijsozynUAgx3kEHUdXB00udx2dWDQ7f2TU2a2uuiFaRZjCe3unPpeg==}
 
   '@types/mousetrap@1.6.5':
     resolution: {integrity: sha512-OwVhKFim9Y/MprzCe4I6a59p31pMy8+LrtP6qS7J0kaOxYmW6VVJPBw5NYm+g7nSbgPUz22FvqU1F1hC5YGTfg==}
@@ -61378,7 +61096,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.26.9)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61494,7 +61212,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61610,7 +61328,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@6.0.3)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@6.0.3)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@4.3.0)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -61726,7 +61444,7 @@ snapshots:
       '@teambit/toolbox.fs.extension-getter': file:scopes/toolbox/fs/extension-getter
       '@teambit/toolbox.fs.last-modified': file:scopes/toolbox/fs/last-modified
       '@teambit/toolbox.path.path': file:scopes/toolbox/path/path
-      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.10(supports-color@9.4.0)(typescript@5.9.2)
+      '@teambit/typescript.deps-detectors.detective-typescript': 0.0.12(supports-color@9.4.0)(typescript@5.9.2)
       '@teambit/typescript.deps-lookups.lookup-typescript': 0.0.2
       '@teambit/workspace.testing.mock-workspace': file:scopes/workspace/testing/mock-workspace(@babel/core@7.28.3)(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@pnpm/logger@1100.0.0)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.28.8)(bufferutil@4.0.3)(chai@5.2.1)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.5.25)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(typanion@3.14.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -81644,7 +81362,7 @@ snapshots:
       react-dom: 18.3.1(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@19.2.7)
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10(supports-color@9.4.0)(typescript@5.9.2)':
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12(supports-color@9.4.0)(typescript@5.9.2)':
     dependencies:
       '@teambit/node.deps-detectors.parser-helper': 0.0.6
       '@typescript-eslint/typescript-estree': 8.39.0(supports-color@9.4.0)(typescript@5.9.2)
@@ -81653,7 +81371,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@teambit/typescript.deps-detectors.detective-typescript@0.0.10(supports-color@9.4.0)(typescript@6.0.3)':
+  '@teambit/typescript.deps-detectors.detective-typescript@0.0.12(supports-color@9.4.0)(typescript@6.0.3)':
     dependencies:
       '@teambit/node.deps-detectors.parser-helper': 0.0.6
       '@typescript-eslint/typescript-estree': 8.39.0(supports-color@9.4.0)(typescript@6.0.3)
@@ -86540,8 +86258,6 @@ snapshots:
   '@types/minimatch@3.0.4': {}
 
   '@types/mocha@10.0.10': {}
-
-  '@types/mocha@9.1.0': {}
 
   '@types/mousetrap@1.6.5': {}
 

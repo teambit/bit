@@ -321,7 +321,7 @@
         "@teambit/toolbox.network.agent": "~0.0.554",
         "@teambit/toolbox.object.sorter": "~0.0.2",
         "@teambit/toolbox.time.time-format": "~0.0.502",
-        "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.10",
+        "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.12",
         "@teambit/typescript.deps-lookups.lookup-typescript": "~0.0.2",
         "@teambit/typescript.typescript-compiler": "^5.1.1",
         "@teambit/ui-foundation.ui.constants.z-indexes": "~0.0.504",
@@ -396,7 +396,7 @@
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
         "@types/minimatch": "3.0.4",
-        "@types/mocha": "9.1.0",
+        "@types/mocha": "10.0.10",
         "@types/mousetrap": "1.6.5",
         "@types/node": "22.10.5",
         "@types/node-fetch": "2.5.12",
@@ -799,7 +799,7 @@
         "policy": {
           "dependencies": {},
           "devDependencies": {
-            "@types/mocha": "9.1.0"
+            "@types/mocha": "10.0.10"
           },
           "peerDependencies": {}
         }
