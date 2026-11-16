@@ -260,6 +260,18 @@ describe('ModelComponent', () => {
       expect(missing).to.have.length(0);
     });
 
+    it('looks up the given version objects before the repo', async () => {
+      // the head and one lane snap are only in the given objects (e.g. an export that is not persisted yet)
+      const repo = fakeRepo([versionObject(2, [1], true)]);
+      const versionObjects = new Map([
+        [hash(4), versionObject(4, [3], true)],
+        [hash(3), versionObject(3, [2], true)],
+      ]);
+      const { ancestors, missing } = await component().getLaneOriginAncestors(repo, ref(4), versionObjects);
+      expect(ancestors.map((r) => r.toString())).to.deep.equal([hash(2), hash(3)]);
+      expect(missing.map((r) => r.toString())).to.deep.equal([hash(1)]);
+    });
+
     it('returns nothing when the head is missing locally', async () => {
       const { ancestors, missing } = await component().getLaneOriginAncestors(fakeRepo([]), ref(4));
       expect(ancestors).to.have.length(0);

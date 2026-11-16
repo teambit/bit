@@ -404,11 +404,17 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
           );
         }
+        const refs = [head];
         if (includeParents) {
           const headVersion = await modelComponent.loadVersion(head.toString(), scope.objects);
-          return [head, ...headVersion.parents];
+          refs.push(...headVersion.parents);
         }
-        return [head];
+        if (laneObject?.isNewForkToAnotherScope()) {
+          // the new scope needs the snaps of the original lane as well. see `getLaneOriginAncestors`.
+          const { ancestors } = await modelComponent.getLaneOriginAncestors(scope.objects, head);
+          refs.unshift(...ancestors.filter((ref) => !refs.find((r) => r.isEqual(ref))));
+        }
+        return refs;
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
       // populate lane-aware heads so divergence is computed against the LANE remote head —
