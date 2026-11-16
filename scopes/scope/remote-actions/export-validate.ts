@@ -46,8 +46,10 @@ export class ExportValidate implements Action<Options> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
     const bitObjectList = await objectList.toBitObjects();
     await this.importAndThrowForMissingHistoryOnLane(bitObjectList);
-    await this.importMissingSnapsOfForkedLane(bitObjectList);
     await this.waitIfNeeded();
+    // from here, this client is first in the queue of this scope until its objects are persisted, so it's safe to
+    // update the VersionHistory objects.
+    await this.importMissingSnapsOfForkedLane(bitObjectList);
     try {
       logger.profile('export-validate.mergeObjects');
       await mergeObjects(scope, bitObjectList, true); // if fails, it throws merge-conflict/component-not-found
@@ -114,19 +116,20 @@ export class ExportValidate implements Action<Options> {
    * forked lane breaks once the original lane is deleted. clients older than 2.3.23 don't send them, and newer clients
    * fetch them best effort. the VersionHistory check above doesn't catch it, because the VersionHistory fetched from the
    * forked-from lane lists these snaps.
-   * the missing snaps are fetched from the scope of the original lane. on the first export of the lane, when some are
-   * still missing, the export fails. on a later export, it only repairs a lane that was exported without them, and it
-   * never fails.
+   * it runs on the first export of the lane to this scope only. the missing snaps are fetched from the scope of the
+   * original lane and added to the VersionHistory. when some are still missing, the export fails.
    */
   private async importMissingSnapsOfForkedLane(bitObjectList: BitObjectList) {
     const lane = bitObjectList.getLanes()[0];
     if (!lane?.forkedFrom || lane.forkedFrom.scope === this.scope.name) return;
+    if (await this.scope.loadLane(lane.toLaneId())) return; // not the first export of this lane to this scope
     const forkedFrom = lane.forkedFrom;
-    const isFirstExport = !(await this.scope.loadLane(lane.toLaneId()));
     const versionObjects = indexVersionObjects(bitObjectList.getVersions());
-    const findMissing = () => this.findMissingLaneOriginSnaps(lane, bitObjectList.getComponents(), versionObjects);
+    const modelComponents = bitObjectList.getComponents();
+    const findMissing = () => this.findMissingLaneOriginSnaps(lane, modelComponents, versionObjects);
     const suspected = await this.importMissingSnapsFromScope(forkedFrom.scope, findMissing);
-    if (!suspected.length || !isFirstExport) return;
+    await this.addLaneOriginSnapsToVersionHistory(lane, modelComponents, versionObjects);
+    if (!suspected.length) return;
     // the main head known here might be behind, which makes a newer main snap look like a lane snap. re-check against
     // the main head of the home scope before failing the export.
     const ids = ComponentIdList.fromArray(suspected.map(({ modelComponent }) => modelComponent.toComponentId()));
@@ -194,6 +197,35 @@ to get these snaps locally, run "bit fetch --lanes ${forkedFrom.toString()} --al
       missingPerComp = await findMissing();
     }
     return missingPerComp;
+  }
+
+  /**
+   * the fetched snaps are not part of the export, so the persist step doesn't add them to the VersionHistory. without
+   * them, the VersionHistory of a component whose home is this scope has a parent that is not in the graph.
+   * only the snaps that are in this scope are added. the incoming ones are added when the export is persisted.
+   */
+  private async addLaneOriginSnapsToVersionHistory(
+    lane: Lane,
+    modelComponents: ModelComponent[],
+    versionObjects: Map<string, Version>
+  ) {
+    const versionHistories = await pMapPool(
+      modelComponents,
+      async (modelComponent) => {
+        const laneHead = lane.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId());
+        if (!laneHead) return undefined;
+        const { ancestors } = await modelComponent.getLaneOriginAncestors(this.scope.objects, laneHead, versionObjects);
+        const versionHistory = await modelComponent.getVersionHistory(this.scope.objects);
+        const toAdd = ancestors.filter((ref) => !versionObjects.has(ref.toString()) && !versionHistory.hasHash(ref));
+        if (!toAdd.length) return undefined;
+        const versions = await Promise.all(toAdd.map((ref) => ref.load(this.scope.objects) as Promise<Version>));
+        versionHistory.addFromVersionsObjects(compact(versions));
+        return versionHistory;
+      },
+      { concurrency: concurrentComponentsLimit() }
+    );
+    const updated = compact(versionHistories);
+    if (updated.length) await this.scope.objects.writeObjectsToTheFS(updated);
   }
 
   /**

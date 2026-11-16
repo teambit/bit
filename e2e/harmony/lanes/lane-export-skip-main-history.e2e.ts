@@ -941,12 +941,13 @@ describe('lane export skips main history objects', function () {
   // the remote fetches the snaps of the original lane that the client didn't send (older clients never send them).
   // comp2's home is the scope of the new lane, so it's not an external component there, and it needs them as well.
   describe('fork a lane to another scope when the client cannot fetch the snaps of the original lane', () => {
+    let scopeM: string;
     let scopeMPath: string;
     let laneAFirstSnap: string;
     let comp2LaneAFirstSnap: string;
     before(() => {
       const setup = setupLaneAImportedWithHeadsOnly({ comp2OnScopeM: true });
-      ({ scopeMPath, laneAFirstSnap, comp2LaneAFirstSnap } = setup);
+      ({ scopeM, scopeMPath, laneAFirstSnap, comp2LaneAFirstSnap } = setup);
       // the client has no access to the scope of the original lane, so it can't fetch the snaps and send them
       helper.scopeHelper.removeRemoteScope(setup.scopeL);
       helper.command.createLane('lane-b', `--scope ${setup.scopeM} --fork-lane-new-scope`);
@@ -957,17 +958,10 @@ describe('lane export skips main history objects', function () {
       expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
       expect(() => helper.command.catObject(comp2LaneAFirstSnap, false, scopeMPath)).to.not.throw();
     });
-    // e.g. the lane was exported by an older client, which didn't send the snaps and the remote didn't fetch them
-    describe('when a later export finds the snap missing on scope-M', () => {
-      before(() => {
-        const laneAFirstSnapPath = path.join(scopeMPath, 'objects', helper.general.getHashPathOfObject(laneAFirstSnap));
-        expect(fs.existsSync(laneAFirstSnapPath)).to.be.true;
-        fs.removeSync(laneAFirstSnapPath);
-        helper.command.snapAllComponentsWithoutBuild('--unmodified');
-        helper.command.export();
-      });
-      it('the remote should fetch the snap again', () => {
-        expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
+    it("scope-M's VersionHistory should be a closed graph for both components", () => {
+      [`${helper.scopes.remote}/comp1`, `${scopeM}/comp2`].forEach((id) => {
+        const dangling = danglingParentsIn(helper.command.catVersionHistory(id, scopeMPath));
+        expect(dangling, `dangling parent refs in scope-M VH for ${id}:\n${dangling.join('\n')}`).to.have.lengthOf(0);
       });
     });
   });
