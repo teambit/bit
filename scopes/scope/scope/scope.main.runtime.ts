@@ -2,7 +2,6 @@ import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
-import multimatch from 'multimatch';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import type { CLIMain } from '@teambit/cli';
@@ -62,7 +61,7 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
-import { compact, slice, difference, partition } from 'lodash';
+import { compact, slice, difference } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -71,7 +70,8 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
-import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
+import type { FilterByStateFunc } from './filter-ids-by-pattern';
+import { filterIdsByPattern } from './filter-ids-by-pattern';
 import type { ScopeLoadAspectsOptions } from './scope-aspects-loader';
 import { ScopeAspectsLoader } from './scope-aspects-loader';
 import { ClearCacheAction } from './clear-cache-action';
@@ -1082,57 +1082,13 @@ export class ScopeMain implements ComponentFactory {
     return this.filterIdsFromPoolIdsByPattern(pattern, ids, throwForNoMatch);
   }
 
-  // todo: move this to somewhere else (where?)
   async filterIdsFromPoolIdsByPattern(
     pattern: string,
     ids: ComponentID[],
     throwForNoMatch = true,
-    filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
+    filterByStateFunc?: FilterByStateFunc
   ) {
-    const patterns = pattern.split(',').map((p) => p.trim());
-
-    if (patterns.every((p) => p.startsWith('!'))) {
-      // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
-      patterns.unshift('**');
-    }
-    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
-    const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
-    const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
-      ids.map((id) => [id.toStringWithoutVersion(), id])
-    );
-    const idsFiltered = nonStatePatternsNoVer.length
-      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
-      : [];
-
-    const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
-      if (!filterByStateFunc) {
-        throw new Error(`filter by a state (${statePattern}) is currently supported on the workspace only`);
-      }
-      if (statePattern.includes(' AND ')) {
-        let filteredByAnd: ComponentID[] = ids;
-        const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
-        // check also as legacyId.toString, as it doesn't have the defaultScope
-        const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
-        for await (const onePattern of patternSplit) {
-          filteredByAnd = onePattern.startsWith('$')
-            ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)
-            : filteredByAnd.filter((id) => multimatch(idsToCheck(id), [onePattern.split('@')[0]]).length);
-        }
-        return filteredByAnd;
-      }
-      return filterByStateFunc(statePattern.replace('$', ''), ids);
-    });
-    const idsStateFilteredFlat = idsStateFiltered.flat();
-    const combineFilteredIds = () => {
-      if (!idsStateFiltered) return idsFiltered;
-      const allIds = [...idsFiltered, ...idsStateFilteredFlat];
-      return ComponentIdList.uniqFromArray(allIds);
-    };
-    const allIdsFiltered = combineFilteredIds();
-    if (throwForNoMatch && !allIdsFiltered.length) {
-      throw new NoIdMatchPattern(pattern);
-    }
-    return allIdsFiltered;
+    return filterIdsByPattern(pattern, ids, throwForNoMatch, filterByStateFunc);
   }
 
   async getSnapDistance(id: ComponentID, throws = true, workspaceId?: ComponentID): Promise<SnapsDistance> {
