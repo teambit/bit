@@ -1,0 +1,114 @@
+//! Retain canonical [`PackageFinalize`] metadata via [`finalize`] without publishing objects.
+
+use super::{Phase, invalid, proof};
+use crate::workspace::engine::command::State;
+use serde::Deserialize;
+use serde_json::{Value, json};
+use std::io;
+
+/// Deserialized package finalization payload carrying `package.json` manifest plans and [`proof::Proof`] records.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct PackageFinalize {
+    token: String,
+    manifests: Vec<Value>,
+    #[serde(default)]
+    dependency_read_set: Vec<proof::Proof>,
+}
+/// Verifies that `token` matches `retained.record.token` on an active snapshot/callback batch for [`finalize`] and [`stage`].
+#[inline]
+fn validate_package_token(retained: &super::Retained, token: &str) -> io::Result<()> {
+    let token = token.trim();
+    if token.is_empty()
+        || retained.record.token != token
+        || retained.materials.is_empty()
+        || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
+    {
+        return Err(invalid("snapshot package token"));
+    }
+    Ok(())
+}
+
+/// Finalizes [`PackageFinalize`] `package.json` manifests on `state.resolve` via [`validate_package_token`] after snapshot objects have been persisted.
+pub(in crate::workspace::engine::command::resolve) fn finalize(
+    input: PackageFinalize,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
+    validate_package_token(retained, &input.token)?;
+    if input.manifests.len() > retained.materials.len() {
+        return Err(invalid("snapshot package manifest count"));
+    }
+    proof::verify(&input.dependency_read_set)?;
+    super::validate(retained)?;
+    let Phase::Prepared(prepared) = &mut retained.finalized else {
+        return Err(invalid("snapshot package phase"));
+    };
+    if !prepared.objects_persisted {
+        return Err(invalid("snapshot package objects not persisted"));
+    }
+    prepared.publication.package_manifests(&input.manifests, &prepared.snapshot.versions)?;
+    prepared.publication.validate()?;
+    retained.record.proofs.extend(input.dependency_read_set);
+    Ok((retained.materials.len(), json!({"token":retained.record.token,"result":retained.result})))
+}
+
+/// Deserialized request payload to [`persist`] snapshot objects via [`stage`] before generating `package.json` manifests.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct StagePackages {
+    token: String,
+}
+
+/// Validates and commits staged snapshot objects on `state.resolve` via [`persist`] before `package.json` manifest generation.
+pub(in crate::workspace::engine::command::resolve) fn stage(
+    input: &StagePackages,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
+    validate_package_token(retained, &input.token)?;
+    super::validate(retained)?;
+    let Phase::Prepared(prepared) = &mut retained.finalized else {
+        return Err(invalid("snapshot package phase"));
+    };
+    if prepared.objects_persisted {
+        return Err(invalid("snapshot package objects already persisted"));
+    }
+    prepared.snapshot.validate()?;
+    prepared.publication.validate()?;
+    if prepared.staged_snaps.is_none() {
+        super::builder::stage_prepared(retained)?;
+    }
+    let controls = persist(retained)?;
+    Ok((
+        retained.materials.len(),
+        json!({"token":retained.record.token,"staged":true,"controlReadSet":controls}),
+    ))
+}
+
+fn persist(retained: &mut super::Retained) -> io::Result<Vec<proof::Proof>> {
+    let mut files = retained.record.repository.commit_import_retained()?;
+    let Phase::Prepared(prepared) = &mut retained.finalized else {
+        return Err(invalid("snapshot package phase"));
+    };
+    let root = &retained.record.request.root;
+    prepared.snapshot.accept_published(&files)?;
+    prepared.publication.accept_published(&files)?;
+    prepared.snapshot.commit(root)?;
+    files.extend(prepared.snapshot.published_files(root)?);
+    files.extend([prepared.publication.stage_index(root)?]);
+    proof::accept_published(&mut retained.record.proofs, &files);
+    retained.record.repository.accept_published(&files)?;
+    prepared.snapshot.accept_published(&files)?;
+    let controls = prepared.publication.stage_controls()?;
+    retained.record.proofs.retain(|before| {
+        !controls
+            .iter()
+            .any(|after| before.path == after.path)
+    });
+    retained.record.proofs.extend(controls.iter().cloned());
+    proof::verify(&retained.record.proofs)?;
+    prepared.objects_persisted = true;
+    prepared.notifications = super::super::super::apply_command::notify(root);
+    Ok(controls)
+}

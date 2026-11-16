@@ -1,0 +1,92 @@
+//! `Http.doctor` projects diagnostic metadata without transferring scope objects.
+//!
+//! Extends [`Network`] with [`Network::doctor`] and [`projection`] to execute [`QUERY`] and bound the returned JSON [`Value`] payload.
+use super::Network;
+use crate::invalid;
+use futures_util::StreamExt;
+use serde_json::{Value, json};
+use std::io;
+
+/// Embedded `GraphQL` query (`doctor.graphql`) for remote scope diagnostic checks via [`Network::doctor`].
+const QUERY: &str = concat!(include_str!("doctor.graphql"), "    ");
+/// Maximum buffered response size (`32 MiB`) for remote `doctor` `GraphQL` queries.
+const MAX_BYTES: usize = 32 * 1024 * 1024;
+
+impl Network {
+    /// Request the published remote doctor's complete results and runtime metadata.
+    pub async fn doctor(&self, url: &str, scope: &str, name: Option<&str>) -> io::Result<Value> {
+        let base = url.trim().trim_end_matches('/');
+        if base.is_empty() || scope.trim().is_empty() {
+            return Err(invalid("remote doctor request"));
+        }
+        let mut variables = json!({});
+        if let Some(name) = name
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+        {
+            variables["diagnosisName"] = json!(name);
+        }
+        let query = QUERY.replace("\r\n", "\n");
+        let request = self.client
+            .post(format!("{base}/graphql"))
+            .header("x-verb", "read");
+        let request = match &self.token {
+            Some(token) => request.header("authorization", format!("Bearer {token}")),
+            None => request,
+        };
+        let request =
+            request.json(&json!({"query":query,"variables":variables,"operationName":"doctor"}));
+        let response = self.send(request).await?;
+        let value = self.doctor_response(response).await?;
+        projection(value, scope)
+    }
+
+    /// Stream and parse the bounded JSON [`Value`] body of a `doctor` `GraphQL` `response`.
+    async fn doctor_response(&self, response: reqwest::Response) -> io::Result<Value> {
+        let mut stream = response.bytes_stream();
+        let mut bytes = Vec::new();
+        while let Some(chunk) = self.cancellation.run(stream.next()).await? {
+            let chunk = chunk.map_err(|error| super::network_error(&error))?;
+            if chunk.len() > MAX_BYTES - bytes.len() {
+                return Err(invalid("remote doctor response limit"));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        serde_json::from_slice(&bytes).map_err(io::Error::other)
+    }
+}
+
+/// Extracts and validates the `data.scope.doctor` [`Value`] object from `value` for remote `scope` in [`Network::doctor`].
+#[inline]
+fn projection(mut value: Value, scope: &str) -> io::Result<Value> {
+    let scope = scope.trim();
+    if let Some(message) = value["errors"][0]["message"]
+        .as_str()
+        .or_else(|| value["error"]["message"].as_str())
+        .or_else(|| value["error"].as_str())
+        .or_else(|| value["message"].as_str())
+        .map(str::trim)
+        .filter(|message| !message.is_empty())
+    {
+        if message.contains(r#"Cannot query field "doctor""#) {
+            return Err(io::Error::other(format!(
+                r#"Remote scope "{scope}" does not support doctor checks. Please upgrade the remote scope to a newer version."#,
+            )));
+        }
+        return Err(io::Error::other(message.to_owned()));
+    }
+    let mut normalized = value["data"]["scope"]["doctor"].take();
+    if normalized.get("metaData").is_none()
+        && let Some(meta_val) = normalized.get("metadata").cloned()
+    {
+        normalized["metaData"] = meta_val;
+    }
+    if normalized["examineResults"]
+        .as_array()
+        .is_none_or(|rows| rows.len() > 4096)
+        || !normalized.get("metaData").is_some_and(Value::is_object)
+    {
+        return Err(invalid("remote doctor result"));
+    }
+    Ok(normalized)
+}

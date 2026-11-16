@@ -1,0 +1,449 @@
+{
+  "schema": 1,
+  "artifact": {
+    "url": "https://github.com/zkochan/bit/releases/download/rust-benchmark-evidence-2026-10-18/bit-rust-benchmark-evidence-9b0756851.tar.gz",
+    "sha256": "3d2275e38ef2e37116202809f3d3fec4575583796b5ecef3fe77fd2384aae3b5",
+    "bytes": 15552688,
+    "manifest_sha256": "5c3fc3a144b5411689dcf3b0d4e5030cc6dd5e3618782f3afdb8670bb651090f"
+  },
+  "original_source_commit": "9b0756851ec8308618a5fb336116cb345047f6c4",
+  "semantics": "Exact committed benchmark evidence; all measurement source/helper/controller identities inside files remain unchanged. Packaging only, no timings rerun or retagged.",
+  "files": {
+    "scripts/rust/benchmarks/add-contended.json": {
+      "sha256": "3031d38a3fe3ad6ab2b919c0f69e2fca9599ee377bb6f230e782f8e676e1e1ff",
+      "bytes": 59857,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/add-final-contended.json": {
+      "sha256": "8aae21f8819f31282e2c16f5c2c51a6ec8579a7f0f8eb571f3fdbe6af8d94ada",
+      "bytes": 55891,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/add-regressions-contended.json": {
+      "sha256": "dfef7e5f20f914cdc6da480a875d66dd8d01ef957899ea961487120400849fb7",
+      "bytes": 47179,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/add-regressions-final-contended.json": {
+      "sha256": "5a1a12f4ab9337f3884038ea6ab6b760eec45b907e8d603c1eb17b66942ca34d",
+      "bytes": 43200,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/add-regressions.json": {
+      "sha256": "87df9152ca75f9d701cb139fc851310592be8ece1e6a815b209a8d3b962ca699",
+      "bytes": 41763,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/add.json": {
+      "sha256": "b4c5701f0c59fa2670f1c6775f3afab2a82d8f64a302a39e72f2e457e844c93a",
+      "bytes": 54449,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/checkout.json": {
+      "sha256": "2a9a79599b36458e123a159a1c3faf879fdb4876756799f31112e02862b510be",
+      "bytes": 11563,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/consolidation-regressions.json": {
+      "sha256": "bb457942f83853cf5a58c3f69cd871c051276029f22c7e30fcc900b8c6169491",
+      "bytes": 13725,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/consolidation.json": {
+      "sha256": "0b757cb632a6ac1e1ec70cad041b5e24b86f642966cfa6a2e4d25e92e8391101",
+      "bytes": 21185,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion-add.json": {
+      "sha256": "aa0655bd41b04d3774fbab2f98cced6c4d0d7ac4899a3a9af40587082d35aff1",
+      "bytes": 56450,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion-identity.json": {
+      "sha256": "b9c7a8f88e88c80e270b7e748b1edf8eee0c9d574e6082cb0af59680d8ea9f80",
+      "bytes": 62103,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion-mutation.json": {
+      "sha256": "673bc6405ee435f05f52b08feea26849dc6c5b7472bd278cee2b0a1b2ad2a1e9",
+      "bytes": 53044,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion-qualification.json": {
+      "sha256": "430e60a40478762338cc96d5b49e7acd1594c802c3116b922f454add9f4a9860",
+      "bytes": 899101,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion-regressions.json": {
+      "sha256": "4df081f7ee207248d933feb3aa4a0108c1ba9d39ad284c7faa6cdcb045dbc929",
+      "bytes": 11385,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-completion.json": {
+      "sha256": "55d4cdca4fd2d4fb4eeb7d432baf5203d5a0364b60112bec64304b870f3e2716",
+      "bytes": 75000,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse-add.json": {
+      "sha256": "e521a7237d11fd737ba7e8b8646729188b7a8cb6cfa0f17f71c5307e6ba40694",
+      "bytes": 56527,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse-identity.json": {
+      "sha256": "f9d462fa0206cc128fdbf1dcb135a1f37f5794ce93b403c86b3f7045358d8fff",
+      "bytes": 62194,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse-mutation.json": {
+      "sha256": "f02b37214e42dfac9dfc296ef1b75f42bdb8746b019645d33cec79b17211e933",
+      "bytes": 53110,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse-qualification.json": {
+      "sha256": "ac7a41accdc9b0f7e2f190d6862ede5e6f97bb5b11510a9950f23f4fb07ada41",
+      "bytes": 899772,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse-regressions.json": {
+      "sha256": "4fd90cb79e9dafe3d94945a55ec43d4d63f8566dadad693f66020ce0ad6de9f7",
+      "bytes": 11404,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/fork-planning-reuse.json": {
+      "sha256": "132768ed9ac8e1d0492ba3d39052e46c88b5b2b15b1623584c5fcf878322bec9",
+      "bytes": 75110,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-add-regressions-contended.json": {
+      "sha256": "56823b0893b8b56f01dad54c7d2ce3d2beff75b2e2c2687d93b1bb5240d4851c",
+      "bytes": 23831,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-add-regressions.json": {
+      "sha256": "4328ee376903f6d9c0bcf8eb3a9b3014b2545efefc22e5c41b8431489a36db6b",
+      "bytes": 98127,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-ci-fix-qualification.json": {
+      "sha256": "90e57d273488daca4802c0c8242a08db9fd226a5db2e72e2baf898428ab284dd",
+      "bytes": 887746,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-contended.json": {
+      "sha256": "045c18ecf8321dd1e698dfc3b9d03dcf80499fce156023fb150cbe77013960b7",
+      "bytes": 19353,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-qualification.json": {
+      "sha256": "560b0f202bf6c204a2fcbba70358b75c7aeefaec4736dda4d34d9c97c94563c2",
+      "bytes": 535828,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-regressions-contended.json": {
+      "sha256": "8520b8eb3c7ed7ac6366808d677a4aa715861cb3ea738df7562d1bb814f6977b",
+      "bytes": 11265,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity-regressions.json": {
+      "sha256": "400ff07dc5484b7dc4d5918b71b1804bad7a021a80e5b32a6eb67a9d0077a134",
+      "bytes": 30402,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/identity.json": {
+      "sha256": "8d67847527cf975c3fe74a985e4a44dc64c28755aa61234330c373a14a51b518",
+      "bytes": 103412,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-add.json": {
+      "sha256": "9330ce7f0bcc43947e0d05e7325816ac6e8bc8c8f0335a67f45fdd8d5626971b",
+      "bytes": 136015,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-fork.json": {
+      "sha256": "1ce32650ec68bd9f4f4d4aa76a977016b05add1779ae0bbc72b94b096437b909",
+      "bytes": 188050,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-identity.json": {
+      "sha256": "87c520920a89ffbd83c5f315c11dd35c15974019d34713ec2243233ff7ca7b19",
+      "bytes": 161132,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-mutation.json": {
+      "sha256": "a2430a4141a977ec1a27e7765b37c9a269d8804f5c1c4d29ccd00dabcbd5b24e",
+      "bytes": 151363,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-provenance-correction.json": {
+      "sha256": "96dda312fe2af83173d14429b792edb9e9fbb4894f1e8f6483f37ac51717d211",
+      "bytes": 1252,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-qualification.json": {
+      "sha256": "dcab69d0c1b93a142a381586a38fa0efd999ea984796c5ea3825db521d11724d",
+      "bytes": 13955461,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion-regressions.json": {
+      "sha256": "6c915342004d300aa8abf960ed44031bcc1cb9b0ad0c993c32df1aa29164afe3",
+      "bytes": 20188,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-completion.json": {
+      "sha256": "16ee52fa54e1b01068daec2adead2bc7c634dce19ac3eac5a17356d84a1ea30c",
+      "bytes": 203404,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-add.json": {
+      "sha256": "b13e6bbefa034ca10a1494ebd30b054c888e7fcdde3e34892a19e12576585aaf",
+      "bytes": 9377132,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-fork.json": {
+      "sha256": "90d893db0d954c1e85b9b7fbc6cd5b158fa6dcd852e5b1cf5e9d728200b5d0cb",
+      "bytes": 9549246,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-identity.json": {
+      "sha256": "42117d7297be3fcc551c8c0b03329fd3c136585f6117944582d4af7e628dcb2c",
+      "bytes": 9421440,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-mutation.json": {
+      "sha256": "c5aaf6ccf03c15c15786b088aa3a6d01b0d153cdde741a1398fb646423cd7ed6",
+      "bytes": 9474169,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-qualification.json": {
+      "sha256": "739018877c1d2d5abf82851e2d991e21a2fc722574a9dd87801399963c68d7e8",
+      "bytes": 51179003,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle-regressions.json": {
+      "sha256": "24bd7f996a1669c2dc8c78c729e0223ecee28a0757970a7ca14009d74f4068ef",
+      "bytes": 9261239,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/import-adoption-fork-oracle.json": {
+      "sha256": "5b6d7c9f8bf6b4ec0a8216b3d07baa0b5b0046a6ca6d08e45742571b125ec3a8",
+      "bytes": 9462808,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/init-index-order.json": {
+      "sha256": "c6c72777f394e47e6c0a4011585891feeb97a722fc6fc1cef0d32aae3eff6b53",
+      "bytes": 901,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-add.json": {
+      "sha256": "1f8297c40bb418d541d9a89bffdbd7097138b454d19f8d33ccaca4ec41aa252f",
+      "bytes": 247937,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-decode-provenance.py": {
+      "sha256": "e8fbd39b57e2812b643efd8a1f007e94822d93d6e81887722f1efdbb703bfaa3",
+      "bytes": 4300,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-fork.json": {
+      "sha256": "62fa9359e2bf4e324fd068a02b464af57ae20fbf4012260b601d492efb010f91",
+      "bytes": 384820,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-identity.json": {
+      "sha256": "3cd076ea649a4bc30722d4e6afd7f15d34101216fc81f44b75294eade13e119a",
+      "bytes": 296689,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-import.json": {
+      "sha256": "b0480351a6e3d31045856fdbccaf4cbb6a1f2f94f48425e3d66d4b46de02c81c",
+      "bytes": 366079,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-mutation.json": {
+      "sha256": "6817e7c4cc2daeddd678b40ab445017c9cca039513e0170663a51fdd41adeeb1",
+      "bytes": 270748,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-provenance-1.json": {
+      "sha256": "c0762729e78e8cec172aa008925a2f785513247350586ccdcf02105491874a76",
+      "bytes": 6506800,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-qualification.json": {
+      "sha256": "d9d970b204df26575bafd324dcebcd503a6f5164389812daddba906d614b77ac",
+      "bytes": 371876,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-add-1.json": {
+      "sha256": "a4d1f01043e449249abb20ac12366aa2d988de521cf932f99b8708437e283440",
+      "bytes": 620716,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-fork-1.json": {
+      "sha256": "59dd2820201f0f9457fb3c17635c212d3b7050757cdfaddaf4fe898aafa039ea",
+      "bytes": 9923137,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-identity-1.json": {
+      "sha256": "e8295f30e6dbbaabd3ecf779067148056ecbd5c643742365d6775a7982c615d2",
+      "bytes": 603717,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-import-adoption-1.json": {
+      "sha256": "7e0b900b4817ec1f1b4f19f003ea8f25638d5da86ac39d01ed7563f948bec431",
+      "bytes": 766385,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-lane-adoption-1.json": {
+      "sha256": "be0d6ef67a3c527bce36084a98dcef54d36d5c35d721174b3657104583891051",
+      "bytes": 8805546,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-regressions-1.json": {
+      "sha256": "f51d0a0cd0b6c56a0d3534d4c861e3390752aa0f369dea2e8d48e9851c1cf8ba",
+      "bytes": 214243,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-raw-workspace-mutation-1.json": {
+      "sha256": "b3483e939f9a00c22773205f16556606979873bb2228c1ce2312e57d29c7255b",
+      "bytes": 6181176,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-regressions.json": {
+      "sha256": "8706a112dee8ab26598e419dbe6a42ca579c733ba6718963c33dae3c21bde250",
+      "bytes": 23700,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion-test-only-continuation.json": {
+      "sha256": "8940628f31b9eb2b4cb37943ba26b878ab6bc432112735c7fc0e15795492d0a9",
+      "bytes": 279352,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/lane-adoption-completion.json": {
+      "sha256": "9fd5463163e9cf296fa565f18f16c5ae1f748c35465a876d8e90f5a7227f7fd7",
+      "bytes": 567707,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/merge-history.json": {
+      "sha256": "c1379d87b8bbccc6071de28296bc42160476761a96318bd34dc174d9d5f1ba87",
+      "bytes": 19607,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/snapshot-tag.json": {
+      "sha256": "2f8511a893aa53b70f7644f35d2d9a70d25d5a93f147117a07e21134ad01e139",
+      "bytes": 5094,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/stash-contended.json": {
+      "sha256": "7f61d45c647e1a05e3f2bb09d6ead3bd76a0fc40df834a84c1b0ddba9b6b1134",
+      "bytes": 95160,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/stash-regressions-contended.json": {
+      "sha256": "96058b63bbce459b92c91ff3c8f340ec0f42476806715026faaef45c5314b2ea",
+      "bytes": 63315,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/stash-regressions.json": {
+      "sha256": "d1dd51a81617d6974af843560bb4aa6af0bfc2bc5dd243c6b7dd36b50112a39f",
+      "bytes": 33030,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/stash.json": {
+      "sha256": "a60e0f9b9b887ea4694d26fed7b99bc7705b2fe7c649e6764a66611216eb646e",
+      "bytes": 42912,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/transfer-configured-index-order.json": {
+      "sha256": "3d8e5738363cbd6fa06ea3cb835b770d9ebf815923fd3179d68106cd9e3f87e1",
+      "bytes": 2434,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/transfer-server-order.json": {
+      "sha256": "1e8d7823a6b2295ed2c30d8473f61ccf84a9a641557fc273bce4432836521986",
+      "bytes": 1892,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/transfer.json": {
+      "sha256": "c2502e211bb9ea66f5b8c9deaab6159fb9d7781159fc534d03bd380cdf423a3c",
+      "bytes": 82279,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-add.json": {
+      "sha256": "c82175bb1fd6050c73c4351739f4880abbff9c501a54d8224a2aeafef4726d19",
+      "bytes": 56581,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-batch-regex-add.json": {
+      "sha256": "380231bdb592bba5a8f3888050ff3379203649b6ebb313792148b2ec74748bce",
+      "bytes": 56636,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-batch-regex-identity.json": {
+      "sha256": "428c988503c87f9eb7ae6fcc869a4bd2464a9ea488a8d5671a9703f934608db7",
+      "bytes": 62340,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-batch-regex-qualification.json": {
+      "sha256": "113fa4661de38df0a54bdde8dd21e3a16f5d4142ff346e6b00e7665f2a1f4233",
+      "bytes": 677395,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-batch-regex-regressions.json": {
+      "sha256": "6d7b8f9e273b8ba4bddcd5580fc80ac247fc05f427bce443e1856a5f2d98b467",
+      "bytes": 11446,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-batch-regex.json": {
+      "sha256": "a83401807196487e218ee782f508fd4a6496c20ac3ac8d302703d6bfc7b07313",
+      "bytes": 53237,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-checkout-fix-add.json": {
+      "sha256": "72924c4d58a9a25acc34570d19c3cdbfe55adc5905ca134a3baae28b8c2b8b4c",
+      "bytes": 56719,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-checkout-fix-identity.json": {
+      "sha256": "e90880792e6d67c0f6ff342033d0202896144427608d1d7c91ed29c7870f245b",
+      "bytes": 62432,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-checkout-fix-qualification.json": {
+      "sha256": "fb8d6f3d4b54a4cc14a998ec58cc3e06547b90584133551fc46d7e593e6b73b9",
+      "bytes": 676068,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-checkout-fix-regressions.json": {
+      "sha256": "7825f69d2c92bada043af2d0ca2d0d60222b807b60528208f05d6a61656738a6",
+      "bytes": 11466,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-checkout-fix.json": {
+      "sha256": "28c4713b61e8768c6e15450a94c44364dfc5a3ad39bcdee5683e5ef31e9f1725",
+      "bytes": 53314,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-identity.json": {
+      "sha256": "1e068cc1ec20c613622848a2ee46cce3b4a5d33ba0cdeda4353bc4cad6c2ecf3",
+      "bytes": 62262,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-qualification.json": {
+      "sha256": "cc14b2911a1d601ef753e96ea7804aaf75e34cf135965396ab8a34a518445462",
+      "bytes": 732318,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation-regressions.json": {
+      "sha256": "bbdc6bda49b00ebdd7ee4f9a50a38c387e27b39def11253a9c833d0a09afc45b",
+      "bytes": 11423,
+      "mode": 420
+    },
+    "scripts/rust/benchmarks/workspace-mutation.json": {
+      "sha256": "272e07887402ac7515ab6404e30218962f8d85f55929f7668130a0a00b0b3239",
+      "bytes": 53294,
+      "mode": 420
+    }
+  },
+  "publication_state": "Published; downloaded asset checksum verified."
+}

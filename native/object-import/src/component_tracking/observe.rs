@@ -1,0 +1,149 @@
+//! Bounded regular-file digest and directory-entry observation ([`Observed`]) for read-then-write plans.
+
+#[cfg(test)]
+mod tests;
+
+use super::unsupported;
+use sha2::{Digest, Sha256};
+use std::{
+    collections::BTreeMap,
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+/// Preimage digests, directory listings, and ancestor checks recorded before plan publication.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct Observed {
+    files: BTreeMap<PathBuf, Option<Vec<u8>>>,
+    directories: BTreeMap<PathBuf, Vec<String>>,
+    bytes: usize,
+    ancestors: BTreeMap<PathBuf, PathBuf>,
+}
+impl Observed {
+    /// Read a regular file at [`Path`] `path` under the 32 MiB budget and record its [`Sha256`] digest proof.
+    pub(crate) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
+        let bytes = match fs::symlink_metadata(path) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+            Ok(metadata)
+                if metadata.is_file()
+                    && !metadata.file_type().is_symlink()
+                    && metadata.len() <= 32 * 1024 * 1024 =>
+            {
+                Some(crate::read_budget::Budget::new(32 * 1024 * 1024).read(fs::File::open(path)?)?)
+            }
+            Ok(_) => return Err(unsupported("tracking requires bounded regular files")),
+            Err(error) => return Err(error),
+        };
+        let hash = bytes
+            .as_ref()
+            .map(|bytes| Sha256::digest(bytes).to_vec());
+        if let Some(original) = self.files.get(path) {
+            if original != &hash {
+                return Err(unsupported("tracking source changed during planning"));
+            }
+            return Ok(bytes);
+        }
+        self.bytes = self.bytes
+            .checked_add(bytes.as_ref().map_or(0, Vec::len))
+            .ok_or_else(|| unsupported("tracking retained input limit"))?;
+        if self.bytes > 128 * 1024 * 1024 || self.files.len() >= 65536 {
+            return Err(unsupported("tracking retained input limit"));
+        }
+        self.files.insert(path.to_owned(), hash);
+        Ok(bytes)
+    }
+    /// Read and sort the directory entry names at `path` and record the listing proof.
+    pub(crate) fn directory(&mut self, path: &Path) -> io::Result<Vec<String>> {
+        let names = directory(path)?;
+        if let Some(original) = self.directories.get(path) {
+            if original != &names {
+                return Err(unsupported("tracking directory changed during planning"));
+            }
+            return Ok(names);
+        }
+        if self.directories.len() >= 65536 {
+            return Err(unsupported("tracking directory limit"));
+        }
+        self.directories.insert(path.to_owned(), names.clone());
+        Ok(names)
+    }
+    /// Verify and record canonicalized ancestor directories from `path` up to `root`.
+    pub(crate) fn ancestors(&mut self, root: &Path, path: &Path) -> io::Result<()> {
+        if !path.starts_with(root) {
+            return Err(unsupported("tracking ancestor outside workspace"));
+        }
+        for parent in path
+            .ancestors()
+            .take_while(|parent| parent.starts_with(root))
+        {
+            let real = ancestor(parent)?;
+            match self.ancestors.get(parent) {
+                Some(original) if original != &real => {
+                    return Err(unsupported("tracking ancestor changed during planning"));
+                }
+                Some(_) => {}
+                None if self.ancestors.len() >= 65536 => {
+                    return Err(unsupported("tracking ancestor limit"));
+                }
+                None => {
+                    self.ancestors.insert(parent.to_owned(), real);
+                }
+            }
+        }
+        Ok(())
+    }
+    /// Re-verify all recorded ancestor paths, directory listings, and file [`Sha256`] digests on disk.
+    pub(crate) fn validate(&self) -> io::Result<()> {
+        for (path, real) in &self.ancestors {
+            if ancestor(path)? != *real {
+                return Err(unsupported("tracking ancestor changed before publication"));
+            }
+        }
+        let mut current = Self::default();
+        for (path, hash) in &self.files {
+            current.read(path)?;
+            if current.files.get(path) != Some(hash) {
+                return Err(unsupported("tracking source changed before publication"));
+            }
+        }
+        for (path, names) in &self.directories {
+            if directory(path)? != *names {
+                return Err(unsupported("tracking directory changed before publication"));
+            }
+        }
+        Ok(())
+    }
+}
+fn directory(path: &Path) -> io::Result<Vec<String>> {
+    if !fs::symlink_metadata(path)?.is_dir() {
+        return Err(unsupported("tracking directory type"));
+    }
+    let mut names = fs::read_dir(path)?
+        .map(|entry| {
+            entry.and_then(|entry| {
+                entry
+                    .file_name()
+                    .into_string()
+                    .map_err(|_| unsupported("tracking UTF-8 paths"))
+            })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    names.retain(|name| !matches!(name.as_str(), "node_modules" | ".git" | ".bit" | ".bitTmp"));
+    names.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
+    Ok(names)
+}
+
+fn ancestor(path: &Path) -> io::Result<PathBuf> {
+    let metadata = fs::symlink_metadata(path)?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return Err(unsupported("tracking ancestor is not a regular directory"));
+    }
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        if metadata.file_attributes() & 0x0400 != 0 {
+            return Err(unsupported("tracking ancestor is a reparse point"));
+        }
+    }
+    fs::canonicalize(path)
+}

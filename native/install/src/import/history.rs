@@ -1,0 +1,200 @@
+//! `BIT_FETCH_INCOMPLETE_VERSION_HISTORY` (`ScopeComponentsImporter.getIncompleteVersionHistory`):
+//! a component whose local `VersionHistory` is not complete since the requested
+//! version is fetched again, and complete histories record that fact in
+//! `graphCompleteRefs`.
+//!
+//! Traverses parent pointers in `VersionHistory` objects and persists updated `graphCompleteRefs` when [`refetch_requested`] is enabled.
+
+#[cfg(test)]
+mod tests;
+
+use super::{
+    bitmap::Id,
+    fs_remote::resolve_version,
+    objects::{Repo, compress_json, invalid, version_history_hash},
+};
+use serde_json::{Map, Value};
+use std::{collections::HashSet, io};
+
+/// Return `true` when `BIT_FETCH_INCOMPLETE_VERSION_HISTORY` is set to a truthy non-empty value.
+#[must_use]
+#[inline]
+pub fn refetch_requested() -> bool {
+    std::env::var_os("BIT_FETCH_INCOMPLETE_VERSION_HISTORY")
+        .is_some_and(|value| {
+            let trimmed = value.as_encoded_bytes().trim_ascii();
+            !matches!(trimmed, b"" | b"0") && !trimmed.eq_ignore_ascii_case(b"false")
+        })
+}
+
+/// Versioned [`Id`] entries whose component exists locally in [`Repo`] and whose `VersionHistory` is
+/// not complete since that version. Histories that are complete but did not
+/// say so yet are rewritten with the version added to `graphCompleteRefs`.
+pub fn incomplete(repo: &Repo, ids: &[Id]) -> io::Result<Vec<Id>> {
+    let mut incomplete = Vec::new();
+    for id in ids {
+        let Some(version) = id.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty() && !matches!(*ver, "latest" | "head"))
+        else {
+            continue;
+        };
+        let Some(component) = repo.read_json(&super::objects::component_hash(&id.scope, &id.name))?
+        else {
+            continue;
+        };
+        let hash = version_history_hash(&id.scope, &id.name);
+        let Some(history) = repo.read_json(&hash)? else { continue };
+        if versions(&history).is_empty() {
+            continue;
+        }
+        let reference = resolve_version(&component, version)
+            .ok_or_else(|| {
+                invalid(&format!(
+                    "importMany, a ref for {} is needed for version-history validation",
+                    id.to_request(),
+                ))
+            })?;
+        match check(&history, &reference) {
+            Completeness::Recorded => {}
+            Completeness::Complete => record(repo, &hash, &history, &reference)?,
+            Completeness::Incomplete => incomplete.push(id.clone()),
+        }
+    }
+    Ok(incomplete)
+}
+
+/// Completeness state of a component's local `VersionHistory` graph relative to a target version.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Completeness {
+    /// `graphCompleteRefs` already lists the version.
+    Recorded,
+    /// Every ancestor is in the history; not recorded yet.
+    Complete,
+    /// At least one ancestor is missing from the local `VersionHistory` object.
+    Incomplete,
+}
+
+/// `VersionHistory.isGraphCompleteSince`: `getAllHashesFrom(ref)` finds no missing parent in `history` [`Value`].
+#[must_use]
+#[inline]
+pub fn check(history: &Value, reference: &str) -> Completeness {
+    let reference = reference.trim();
+    let recorded = history["graphCompleteRefs"]
+        .as_array()
+        .is_some_and(|refs| {
+            refs.iter()
+                .any(|item| item.as_str().map(str::trim) == Some(reference))
+        });
+    if recorded {
+        return Completeness::Recorded;
+    }
+    if missing_from(history, reference) { Completeness::Incomplete } else { Completeness::Complete }
+}
+
+/// Return `true` when `getAllHashesFrom(start).missing` is non-empty for `history` [`Value`].
+fn missing_from(history: &Value, start: &str) -> bool {
+    let start = start.trim();
+    let by_hash = versions_by_hash(history);
+    let Some(&first) = by_hash.get(start) else { return true };
+    let mut seen: HashSet<&str> = HashSet::from([start]);
+    let mut stack = vec![first];
+    while let Some(current) = stack.pop() {
+        for parent in parent_hashes(&current["parents"]) {
+            if !seen.insert(parent) {
+                continue;
+            }
+            let Some(&next) = by_hash.get(parent) else { return true };
+            stack.push(next);
+        }
+    }
+    false
+}
+
+fn versions_by_hash(history: &Value) -> std::collections::HashMap<&str, &Value> {
+    let versions = versions(history);
+    let mut by_hash = std::collections::HashMap::with_capacity(versions.len());
+    for version in versions {
+        if let Some(hash) = version["hash"]
+            .as_str()
+            .map(str::trim)
+            .filter(|hash| !hash.is_empty())
+        {
+            by_hash.entry(hash).or_insert(version);
+        }
+    }
+    by_hash
+}
+
+/// Write the history again with `reference` appended to `graphCompleteRefs`,
+/// serialized in `VersionHistory.toObject()` key order.
+fn record(repo: &Repo, hash: &str, history: &Value, reference: &str) -> io::Result<()> {
+    let reference = reference.trim();
+    let mut refs: Vec<Value> = history["graphCompleteRefs"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    if !refs
+        .iter()
+        .any(|item| item.as_str().map(str::trim) == Some(reference))
+    {
+        refs.push(Value::String(reference.to_string()));
+    }
+    let mut object = Map::new();
+    object.insert("name".into(), history["name"].clone());
+    object.insert("scope".into(), history["scope"].clone());
+    object.insert(
+        "versions".into(),
+        Value::Array(
+            versions(history)
+                .iter()
+                .map(to_object)
+                .collect(),
+        ),
+    );
+    object.insert("graphCompleteRefs".into(), Value::Array(refs));
+    repo.write_raw(hash, &compress_json("VersionHistory", hash, &Value::Object(object))?)
+}
+
+/// One `VersionParents` as `toObject()` writes it: `unrelated` and `squashed`
+/// only when set.
+fn to_object(version: &Value) -> Value {
+    let mut object = Map::new();
+    object.insert("hash".into(), version["hash"].clone());
+    object.insert(
+        "parents".into(),
+        Value::Array(
+            version["parents"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default(),
+        ),
+    );
+    for key in ["unrelated", "squashed"] {
+        if !version[key].is_null() {
+            object.insert(key.into(), version[key].clone());
+        }
+    }
+    Value::Object(object)
+}
+
+#[inline]
+fn versions(history: &Value) -> &[Value] {
+    history["versions"]
+        .as_array()
+        .map_or(&[], Vec::as_slice)
+}
+
+#[inline]
+fn parent_hashes(value: &Value) -> impl Iterator<Item = &str> {
+    value
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|item| {
+            item.as_str()
+                .map(str::trim)
+                .filter(|hash| !hash.is_empty())
+        })
+}

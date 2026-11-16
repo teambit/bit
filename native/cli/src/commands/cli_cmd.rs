@@ -1,0 +1,174 @@
+//! Native `bit cli generate --docs` with `--metadata`, `--skill`, and `--json` options (`cli.cmd.ts`).
+//!
+//! Validates `--skill` arguments and runs [`NodeCli`] doc generation when required.
+
+#[cfg(test)]
+mod tests;
+
+use super::{
+    Command,
+    workspace_command::{self, NodeCli},
+};
+use crate::{history::History, native::Outcome, workspace};
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    process::ExitCode,
+};
+
+/// Native `bit cli` [`Command`] descriptor.
+pub const COMMAND: Command = Command { name: "cli", aliases: &[], run };
+
+/// Executes `bit cli generate --docs` or reports unknown `--skill` types via [`parse_unknown_skill`] and [`emit_unknown_skill`].
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cli arguments are not UTF-8".into()));
+    };
+    if let Some(skill) = parse_unknown_skill(&argv[1..]) {
+        if env::var_os("CI")
+            .is_some_and(|val| {
+                let text = val.to_string_lossy();
+                let trimmed = text.trim();
+                !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+            })
+        {
+            return Ok(Outcome::Declined("CI cli generate skill error delegated".into()));
+        }
+        return emit_unknown_skill(args, skill);
+    }
+    if !is_generate_docs(&argv[1..]) {
+        return Ok(Outcome::Declined("outside native cli generate --docs grammar".into()));
+    }
+    let Ok(cli) = NodeCli::find() else {
+        return Ok(Outcome::Declined("unable to locate Bit CLI package version".into()));
+    };
+    let version = cli.version.trim();
+    if version.is_empty() {
+        return Ok(Outcome::Declined("empty Bit CLI version".into()));
+    }
+    let history = workspace::root(&env::current_dir()?).map(|root| History::start(&root, args));
+    let mut stdout = io::stdout().lock();
+    writeln!(stdout, "{}", render_docs_frontmatter(version))?;
+    stdout.flush()?;
+    if let Some(history) = history {
+        history.end(true);
+    }
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+/// Emits the unknown `--skill` type error for `bit cli generate` when [`parse_unknown_skill`] matches.
+fn emit_unknown_skill(args: &[OsString], skill: &str) -> io::Result<Outcome> {
+    let msg = format!(r#"Unknown skill type: "{skill}". Use "commands" or "reference"."#);
+    let err = io::Error::other(msg);
+    let cwd = env::current_dir()?;
+    if let Some(root) = workspace::root(&cwd) {
+        return workspace_command::execute_without_loader(&root, args, "generate", |_| Err(err));
+    }
+    workspace_command::execute_failure_scope(&cwd, args, "generate", true, "", err)
+}
+
+/// Extracts an unrecognized `--skill` / `-s` value from `bit cli generate` arguments when `--docs` is absent.
+pub(super) fn parse_unknown_skill<'a>(args: &[&'a str]) -> Option<&'a str> {
+    let ["generate", rest @ ..] = args else { return None };
+    if docs_enabled(rest) || !valid_docs_options(rest) {
+        return None;
+    }
+    let mut skill = None;
+    let mut index = 0;
+    while index < rest.len() {
+        match &rest[index..] {
+            ["--skill" | "-s", value, ..] => {
+                skill = Some(*value);
+                index += 2;
+            }
+            [arg, ..]
+                if let Some(val) = arg
+                    .strip_prefix("--skill=")
+                    .or_else(|| arg.strip_prefix("-s=")) =>
+            {
+                skill = Some(val);
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    skill
+        .map(str::trim)
+        .filter(|val| {
+            !val.is_empty() && !val.starts_with('-') && *val != "commands" && *val != "reference"
+        })
+}
+
+/// Returns `true` when `args` matches a supported `bit cli generate --docs` invocation.
+#[inline]
+pub(super) fn is_generate_docs(args: &[&str]) -> bool {
+    let ["generate", rest @ ..] = args else { return false };
+    docs_enabled(rest) && valid_docs_options(rest)
+}
+
+#[inline]
+fn docs_enabled(rest: &[&str]) -> bool {
+    let mut enabled = false;
+    for &arg in rest {
+        match arg {
+            "-d" | "-d=true" | "-dm" | "-md" | "--docs" | "--docs=true" => enabled = true,
+            "-d=false" | "--docs=false" => enabled = false,
+            _ => {}
+        }
+    }
+    enabled
+}
+
+#[inline]
+fn valid_docs_options(rest: &[&str]) -> bool {
+    let mut index = 0;
+    while index < rest.len() {
+        let Some(consumed) = docs_option_len(&rest[index..]) else { return false };
+        index += consumed;
+    }
+    true
+}
+
+fn docs_option_len(rest: &[&str]) -> Option<usize> {
+    match rest {
+        ["--"] => Some(1),
+        ["--skill" | "-s", value, ..] if is_non_flag_value(value) => Some(2),
+        [
+            "-d" | "-d=true" | "-d=false" | "-dm" | "-md" | "--docs" | "--docs=true"
+            | "--docs=false" | "-m" | "-m=true" | "-m=false" | "--metadata" | "--metadata=true"
+            | "--metadata=false" | "--no-color" | "--no-color=true" | "--no-color=false",
+            ..,
+        ] => Some(1),
+        [arg, ..]
+            if arg
+                .strip_prefix("--metadata.")
+                .and_then(|rest| rest.split_once('='))
+                .is_some_and(|(key, _)| !key.trim().is_empty()) =>
+        {
+            Some(1)
+        }
+        [arg, ..]
+            if arg
+                .strip_prefix("--skill=")
+                .or_else(|| arg.strip_prefix("-s="))
+                .is_some_and(is_non_flag_value) =>
+        {
+            Some(1)
+        }
+        _ => None,
+    }
+}
+
+#[inline]
+fn is_non_flag_value(val: &str) -> bool {
+    let trimmed = val.trim();
+    !trimmed.is_empty() && !trimmed.starts_with('-')
+}
+
+#[inline]
+pub(super) fn render_docs_frontmatter(version: &str) -> String {
+    format!(
+        "---\ndescription: 'Bit command synopses. Bit version: {version}'\nlabels: ['cli', 'mdx', 'docs']\n---",
+    )
+}

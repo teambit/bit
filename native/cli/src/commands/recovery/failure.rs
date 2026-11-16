@@ -1,0 +1,68 @@
+//! A lane abort reports checkout failure after its control restoration has committed.
+//!
+//! [`preflight`] ([`restored`], [`result`], [`retain`]) verifies recovery eligibility ([`array()`], [`decline`]) through [`Engine`] and [`Startup`] autosync.
+use super::{Engine, array, decline};
+use crate::commands::status::autosync::Startup;
+use serde_json::Value;
+use std::{fmt, io};
+
+/// Runs a preflight recovery preparation check on `request` ([`Value`]) via [`Engine`] before executing a merge abort.
+pub(super) fn preflight(request: &Value) -> io::Result<()> {
+    let mut engine = Engine::new()?;
+    let result = engine.request::<Value>(request);
+    match result {
+        Ok(prepared) => {
+            let token = super::text(prepared.get("token"))?.trim();
+            if token.is_empty() || !prepared.get("context").is_some_and(Value::is_object) {
+                return Err(decline("recovery missing component root"));
+            }
+            let capture_targets =
+                array(prepared.get("captureTargets"), "recovery capture targets")?;
+            let targets = array(prepared.get("targets"), "recovery targets")?;
+            if capture_targets.len() != targets.len() || capture_targets.len() > 4096 {
+                return Err(decline("recovery missing component root"));
+            }
+            Ok(())
+        }
+        Err(error) if !crate::commands::engine::is_canonical(&error) => Err(error),
+        _ => Ok(()),
+    }
+}
+/// Wrapper error carrying a partially restored lane-abort [`Value`] payload.
+#[derive(Debug)]
+struct Restored(Value);
+impl fmt::Display for Restored {
+    #[inline]
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("restored lane checkout failure")
+    }
+}
+impl std::error::Error for Restored {}
+/// Wraps a partially restored lane-abort [`Value`] inside an [`io::Error`].
+#[inline]
+pub(super) fn restored(result: Value) -> io::Error {
+    io::Error::other(Restored(result))
+}
+/// Extracts the inner lane-abort [`Value`] payload from `error` when it wraps a [`Restored`] error.
+#[inline]
+pub(super) fn result(error: &io::Error) -> Option<&Value> {
+    error
+        .get_ref()?
+        .downcast_ref::<Restored>()
+        .map(|error| &error.0)
+}
+/// Appends any unprinted startup or build stdout from a [`crate::host::callback_error::CallbackError`] onto `startup`.
+#[inline]
+pub(super) fn retain(startup: &mut Startup, error: &io::Error) {
+    if let Some(error) = error
+        .get_ref()
+        .and_then(|error| error.downcast_ref::<crate::host::callback_error::CallbackError>())
+    {
+        if !error.startup.trim().is_empty() && !startup.stdout.ends_with(&error.startup) {
+            startup.stdout.push_str(&error.startup);
+        }
+        if !error.output.trim().is_empty() && !startup.build_stdout.ends_with(&error.output) {
+            startup.build_stdout.push_str(&error.output);
+        }
+    }
+}

@@ -1,0 +1,108 @@
+//! Integration tests for `bit diff` inputs the native command leaves to the `Node.js` CLI ([`STUB`]).
+//!
+//! Verifies each [`declined`] fallback reason across [`workspace`] checks, [`bit`] arguments, and [`write`] fixtures.
+
+use std::{
+    fs,
+    path::Path,
+    process::{Command, Output},
+};
+use tempfile::TempDir;
+
+/// Echoes its arguments, so a delegated run is recognizable.
+const STUB: &str = "process.stdout.write(JSON.stringify(process.argv.slice(2)));";
+
+/// Writes `content` to `path`, creating parent directories as needed.
+fn write(path: &Path, content: &str) {
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, content).unwrap();
+}
+
+/// Creates a [`TempDir`] workspace fixture containing [`STUB`] (`bin/bit.js`) and one `alpha` component.
+fn workspace() -> TempDir {
+    let dir = TempDir::new().unwrap();
+    let root = dir.path();
+    write(&root.join("bin/bit.js"), STUB);
+    fs::create_dir_all(root.join("home")).unwrap();
+    fs::create_dir_all(root.join("ws/.bit/objects")).unwrap();
+    write(&root.join("ws/.bit/index.json"), "[]");
+    write(
+        &root.join("ws/workspace.jsonc"),
+        r#"{ "teambit.workspace/workspace": { "defaultScope": "my.scope" } }"#,
+    );
+    write(
+        &root.join("ws/.bit/scope.json"),
+        r#"{ "name": "local", "lanes": { "current": "main" } }"#,
+    );
+    write(
+        &root.join("ws/.bitmap"),
+        r#"{ "alpha": { "name": "alpha", "scope": "", "version": "", "mainFile": "index.ts", "rootDir": "alpha" }, "$schema-version": "17.0.0" }"#,
+    );
+    write(&root.join("ws/alpha/index.ts"), "export const a = 1;\n");
+    dir
+}
+
+/// Runs the compiled `bit` binary in `cwd` with `BIT_NATIVE_TRACE=1` and custom `env` pairs.
+fn bit(dir: &TempDir, cwd: &Path, args: &[&str], env: &[(&str, &str)]) -> Output {
+    let home = dir.path().join("home");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_bit"));
+    command
+        .current_dir(cwd)
+        .args(args)
+        .env("BIT_NODE_CLI", dir.path().join("bin/bit.js"))
+        .env("HOME", &home)
+        .env("USERPROFILE", &home)
+        .env("BIT_GLOBALS_DIR", dir.path().join("globals"))
+        .env("BIT_NATIVE_TRACE", "1")
+        .env_remove("BIT_NATIVE")
+        .env_remove("BIT_FEATURES")
+        .env_remove("BIT_CONFIG_GIT_PATH");
+    for (key, value) in env {
+        command.env(key, value);
+    }
+    command.output().unwrap()
+}
+
+/// Delegated with `args`, for the traced reason.
+fn declined(output: &Output, args: &str, reason: &str) {
+    assert_eq!(String::from_utf8_lossy(&output.stdout), args);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("`diff` declined") && stderr.contains(reason), "{stderr}");
+}
+
+/// Verifies that unsupported `bit diff` arguments decline to the [`STUB`] `Node.js` CLI.
+#[test]
+fn other_arguments_decline() {
+    let dir = workspace();
+    let root = dir.path().join("ws");
+    declined(&bit(&dir, &root, &["diff"], &[]), r#"["diff"]"#, "needs the Node.js CLI's own Node");
+    let output = bit(&dir, &root, &["diff", "alpha", "0.0.1", "--json"], &[]);
+    declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "needs the Node.js CLI's own Node");
+}
+
+/// Verifies that unresolved or case-mismatched `bit diff` component patterns in [`workspace`] decline to [`STUB`] via [`declined`].
+#[test]
+fn unresolved_patterns_decline() {
+    let dir = workspace();
+    let root = dir.path().join("ws");
+    let output = bit(&dir, &root, &["diff", "Alpha", "--json"], &[]);
+    declined(&output, r#"["diff","Alpha","--json"]"#, "exactly one component");
+    let output = bit(&dir, &root, &["diff", "missing", "-j"], &[]);
+    declined(&output, r#"["diff","missing","-j"]"#, "exactly one component");
+}
+
+/// Verifies that `BIT_CONFIG_GIT_PATH` reaches status capture before the [`STUB`] host declines.
+#[test]
+fn configured_git_reaches_capture_before_the_stub_host_declines() {
+    let dir = workspace();
+    let root = dir.path().join("ws");
+    let output = bit(&dir, &root, &["diff", "--json"], &[("BIT_CONFIG_GIT_PATH", "/opt/git")]);
+    declined(&output, r#"["diff","--json"]"#, "needs the Node.js CLI's own Node");
+}
+
+#[test]
+fn outside_a_workspace_declines() {
+    let dir = workspace();
+    let output = bit(&dir, dir.path(), &["diff", "--json"], &[]);
+    declined(&output, r#"["diff","--json"]"#, "not inside a workspace");
+}

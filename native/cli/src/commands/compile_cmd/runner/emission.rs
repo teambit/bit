@@ -1,0 +1,159 @@
+//! Compiler output [`Emitted`] file collection and [`Diagnostic`] mapping for [`Component`]s.
+//!
+//! Invokes [`tool::compile`] via [`prepare`] and groups results into [`Compiled`] component entries.
+
+use super::{Compiled, Diagnostic, Emitted, tool};
+use crate::commands::workspace_command::component_service::Component;
+use serde_json::{Value, json};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
+
+/// Compiles `components` via [`tool::compile`] and [`compile`], grouping outputs into [`Compiled`] component entries.
+pub(super) fn prepare(
+    root: &Path,
+    components: &[Component],
+    identities: &[String],
+    directories: &[Vec<PathBuf>],
+) -> io::Result<Vec<Compiled>> {
+    let files: Vec<_> = components
+        .iter()
+        .flat_map(|component| {
+            let directory = json!(root.join(&component.directory));
+            component.files
+                .iter()
+                .map(move |file| {
+                    let mut file = file.clone();
+                    file["directory"] = directory.clone();
+                    file
+                })
+        })
+        .collect();
+    let results = if files.is_empty() { Vec::new() } else { tool::compile(&files)? };
+    if results.len() != files.len() {
+        return Err(io::Error::other("compiler result count mismatch"));
+    }
+    let mut offset = 0;
+    let mut compiled = Vec::with_capacity(components.len());
+    for ((component, identity), directories) in components
+        .iter()
+        .zip(identities)
+        .zip(directories)
+    {
+        let end = offset + component.files.len();
+        compiled.push(compile(
+            &files[offset..end],
+            &results[offset..end],
+            identity.clone(),
+            directories,
+        )?);
+        offset = end;
+    }
+    Ok(compiled)
+}
+/// Groups emitted files and compiler errors for a single `identity` component via [`source_path`] and [`append`].
+fn compile(
+    files: &[Value],
+    result: &[Value],
+    identity: String,
+    directories: &[PathBuf],
+) -> io::Result<Compiled> {
+    let mut compiled = Compiled { identity, files: Vec::new(), errors: Vec::new() };
+    let mut ordered: Vec<_> = files.iter().zip(result).collect();
+    ordered.sort_by_key(|(_, row)| row["copied"] != true);
+    for (source, row) in ordered {
+        if let Some(error) = row["error"].as_str() {
+            compiled.errors.push(Diagnostic {
+                path: source_path(source)?,
+                message: error.to_owned(),
+            });
+        }
+        append(&mut compiled, row, directories)?;
+    }
+    Ok(compiled)
+}
+
+/// Resolves the source file path from `absolutePath`, `path`, or `directory` + `relativePath` for [`compile`].
+#[inline]
+fn source_path(source: &Value) -> io::Result<PathBuf> {
+    if let Some(path) = source["absolutePath"]
+        .as_str()
+        .or_else(|| source["path"].as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        return Ok(PathBuf::from(path));
+    }
+    let directory = source["directory"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| io::Error::other("compiler source path"))?;
+    let relative = source["relativePath"]
+        .as_str()
+        .map(str::trim)
+        .filter(|value| {
+            !value.is_empty()
+                && !Path::new(value).is_absolute()
+                && !Path::new(value)
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+        })
+        .ok_or_else(|| io::Error::other("compiler source path"))?;
+    Ok(Path::new(directory).join(relative))
+}
+
+/// Appends [`Emitted`] file entries from compiler output `row` for each target directory in `directories`.
+fn append(
+    compiled: &mut Compiled,
+    row: &Value,
+    directories: &[std::path::PathBuf],
+) -> io::Result<()> {
+    let files =
+        row["files"].as_array().ok_or_else(|| io::Error::other("compiler emitted files"))?;
+    if directories.is_empty() {
+        return Ok(());
+    }
+    let parsed = files
+        .iter()
+        .map(parse_emitted_file)
+        .collect::<io::Result<Vec<_>>>()?;
+    for directory in directories {
+        for (relative, content) in &parsed {
+            compiled.files.push(Emitted {
+                path: directory
+                    .join(relative)
+                    .components()
+                    .collect(),
+                content: (*content).to_owned(),
+            });
+        }
+    }
+    Ok(())
+}
+
+#[inline]
+fn parse_emitted_file(file: &Value) -> io::Result<(&str, &str)> {
+    let relative = file["outputPath"]
+        .as_str()
+        .or_else(|| file["relativePath"].as_str())
+        .or_else(|| file["path"].as_str())
+        .map(|val| val.trim().trim_start_matches("./"))
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| io::Error::other("compiler output path"))?;
+    if relative.contains('\\')
+        || relative.chars().any(char::is_control)
+        || Path::new(relative)
+            .components()
+            .any(|part| !matches!(part, std::path::Component::Normal(_)))
+    {
+        return Err(io::Error::other("compiler output relative path"));
+    }
+    let content = file["outputText"]
+        .as_str()
+        .or_else(|| file["content"].as_str())
+        .or_else(|| file["contents"].as_str())
+        .ok_or_else(|| io::Error::other("compiler emitted content"))?;
+    Ok((relative, content))
+}

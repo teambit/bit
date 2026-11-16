@@ -1,0 +1,229 @@
+//! Structural eligibility checks ([`eligible`], [`history`], [`query`]) for `Version` dependency, edge, and extension fields.
+
+use serde_json::Value;
+use std::io;
+
+use crate::transfer::{MAX_OBJECTS, invalid};
+
+/// The entries one Version array may hold. A large app's `flattenedDependencies`
+/// lists thousands of components.
+const MAX_VERSION_ARRAY: usize = 65_536;
+
+/// Validates that `value` satisfies full `Version` transfer eligibility (including builder artifacts) via [`prepare`].
+#[inline]
+pub(super) fn eligible(value: &Value) -> io::Result<()> {
+    prepare(value, true)
+}
+
+/// Validates that `value` satisfies `Version` history structural eligibility without requiring builder artifacts.
+#[inline]
+pub(crate) fn history(value: &Value) -> io::Result<()> {
+    prepare(value, false)
+}
+
+/// Validates that `value` satisfies `Version` query structural eligibility (including builder artifacts).
+#[inline]
+pub(crate) fn query(value: &Value) -> io::Result<()> {
+    prepare(value, true)
+}
+
+/// Validates `Version` dependency, flattened dependency, parent, edge, and extension fields via [`dependencies`] and [`flattened`] before metadata validation.
+fn prepare(value: &Value, artifacts: bool) -> io::Result<()> {
+    let mut clean = value.clone();
+    dependencies(value, &mut clean)?;
+    flattened(value, &mut clean)?;
+    if let Some(parents) = array(value, "parents")? {
+        for parent in parents {
+            crate::merge_history::hash(
+                parent
+                    .as_str()
+                    .map(str::trim)
+                    .ok_or_else(|| invalid("unsupported Version parent"))?,
+            )?;
+        }
+    }
+    edges(value, &mut clean)?;
+    extensions(value, &mut clean, artifacts)?;
+    crate::merge_history::metadata::validate(&clean)
+}
+
+/// Validates `dependencies` and `devDependencies` arrays on `value` via [`array`] and [`identity`] and clears them on `clean`.
+fn dependencies(value: &Value, clean: &mut Value) -> io::Result<()> {
+    for field in ["dependencies", "devDependencies"] {
+        if let Some(items) = array(value, field)? {
+            for item in items {
+                identity(item.get("id"))?;
+                relatives(item.get("relativePaths"))?;
+            }
+            clean[field] = Value::Array(Vec::new());
+        }
+    }
+    Ok(())
+}
+/// Validates `flattenedDependencies` and `flattenedDevDependencies` arrays on `value` and clears them on `clean`.
+fn flattened(value: &Value, clean: &mut Value) -> io::Result<()> {
+    for field in ["flattenedDependencies", "flattenedDevDependencies"] {
+        let Some(items) = array(value, field)? else { continue };
+        for item in items {
+            match item {
+                Value::String(text) => string_id(text)?,
+                _ => identity(Some(item))?,
+            }
+        }
+        clean[field] = Value::Array(Vec::new());
+    }
+    Ok(())
+}
+
+/// Extracts optional array `field` from `value`, enforcing [`MAX_VERSION_ARRAY`].
+fn array<'a>(value: &'a Value, field: &str) -> io::Result<Option<&'a Vec<Value>>> {
+    let Some(value) = value.get(field) else { return Ok(None) };
+    let items = value.as_array().ok_or_else(|| invalid("unsupported Version array"))?;
+    if items.len() > MAX_VERSION_ARRAY {
+        return Err(invalid("Version array limit"));
+    }
+    Ok(Some(items))
+}
+
+/// Validates a `{ scope, name, version }` component identity object on a `Version` dependency entry.
+fn identity(value: Option<&Value>) -> io::Result<()> {
+    let value = value
+        .and_then(Value::as_object)
+        .ok_or_else(|| invalid("unsupported component identity"))?;
+    let scope = value
+        .get("scope")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .ok_or_else(|| invalid("missing component scope"))?;
+    let name = value
+        .get("name")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .ok_or_else(|| invalid("missing component name"))?;
+    if !segment(scope, false)
+        || !segment(name, true)
+        || value
+            .get("version")
+            .is_some_and(|value| {
+                value
+                    .as_str()
+                    .map(str::trim)
+                    .is_none_or(|ver| ver.is_empty() || ver.len() > 256 || ver.contains('\0'))
+            })
+    {
+        return Err(invalid("unsupported component identity"));
+    }
+    Ok(())
+}
+
+#[inline]
+#[must_use]
+fn segment(text: &str, slash: bool) -> bool {
+    !text.is_empty()
+        && text.len() <= 4096
+        && !text.starts_with('/')
+        && !text.ends_with('/')
+        && !text.contains("//")
+        && text
+            .bytes()
+            .all(|byte| {
+                byte.is_ascii_lowercase()
+                    || byte.is_ascii_digit()
+                    || b"._-".contains(&byte)
+                    || slash && byte == b'/'
+            })
+}
+
+fn string_id(text: &str) -> io::Result<()> {
+    let text = text.trim();
+    let (id, version) = match text.split_once('@') {
+        Some((id, ver)) => (id.trim(), Some(ver.trim())),
+        None => (text, None),
+    };
+    let (scope, name) =
+        id.split_once('/').ok_or_else(|| invalid("unsupported flattened identity"))?;
+    if !segment(scope.trim(), false)
+        || !segment(name.trim(), true)
+        || text.len() > 8192
+        || version.is_some_and(|ver| ver.is_empty() || ver.len() > 256 || ver.contains('\0'))
+    {
+        return Err(invalid("unsupported flattened identity"));
+    }
+    Ok(())
+}
+
+fn relatives(value: Option<&Value>) -> io::Result<()> {
+    let Some(Value::Array(items)) = value else { return Ok(()) };
+    if items.len() > MAX_OBJECTS {
+        return Err(invalid("relative path count limit"));
+    }
+    for item in items {
+        if !item.is_object() {
+            return Err(invalid("unsupported dependency relative path"));
+        }
+        specifiers(item)?;
+    }
+    Ok(())
+}
+
+fn specifiers(value: &Value) -> io::Result<()> {
+    let Some(value) = value
+        .get("importSpecifiers")
+        .filter(|value| !value.is_null() && value != &&Value::Bool(false))
+    else {
+        return Ok(());
+    };
+    let items = value.as_array().ok_or_else(|| invalid("unsupported import specifiers"))?;
+    if items.len() > MAX_OBJECTS
+        || items
+            .iter()
+            .any(|item| !item.is_object())
+    {
+        return Err(invalid("unsupported import specifiers"));
+    }
+    Ok(())
+}
+
+fn extensions(value: &Value, clean: &mut Value, artifacts: bool) -> io::Result<()> {
+    let Some(items) = array(value, "extensions")? else { return Ok(()) };
+    for (index, item) in items.iter().enumerate() {
+        if let Some(id) = item
+            .get("extensionId")
+            .filter(|value| !value.is_null())
+        {
+            identity(Some(id))?;
+            clean["extensions"][index]
+                .as_object_mut()
+                .ok_or_else(|| invalid("invalid extension"))?
+                .remove("extensionId");
+        }
+        if artifacts
+            && crate::workspace::engine::client_status::config::is_extension_aspect(
+                item,
+                "teambit.pipelines/builder",
+            )
+            && let Some(data) =
+                clean["extensions"][index].get_mut("data").and_then(Value::as_object_mut)
+        {
+            data.insert("artifacts".to_owned(), Value::Array(Vec::new()));
+        }
+    }
+    Ok(())
+}
+
+fn edges(value: &Value, clean: &mut Value) -> io::Result<()> {
+    if value
+        .get("flattenedEdgesRef")
+        .and_then(Value::as_str)
+        .is_some_and(|text| !text.trim().is_empty())
+    {
+        return Ok(());
+    }
+    let Some(items) = array(value, "flattenedEdges")? else { return Ok(()) };
+    for item in items {
+        identity(item.get("source"))?;
+        identity(item.get("target"))?;
+    }
+    clean["flattenedEdges"] = Value::Array(Vec::new());
+    Ok(())
+}

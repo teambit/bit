@@ -1,0 +1,88 @@
+//! Preserve an actual started [`import`] on [`Record`] when validation fails before its receipt.
+
+#[cfg(test)]
+mod tests;
+use super::phase;
+use crate::{
+    command_import,
+    workspace::engine::{command::Record, response},
+};
+use serde_json::{Value, json};
+use std::io;
+
+/// Imports [`command_import::Target`] entries into `record.repository` ([`Record`]) while preserving started import progress on [`failure`].
+pub(in crate::workspace::engine::command) fn import(
+    record: &mut Record,
+    targets: &[command_import::Target],
+) -> io::Result<()> {
+    let ids = targets
+        .iter()
+        .map(|target| {
+            let name = target.name.trim();
+            let name = name.rsplit_once('@').map_or(name, |(base, _)| base.trim());
+            let version = target.version.trim();
+            match target.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+            {
+                Some(scope) => {
+                    let bare = name
+                        .strip_prefix(scope)
+                        .and_then(|rest| rest.strip_prefix('/'))
+                        .map_or(name, str::trim);
+                    format!("{scope}/{bare}@{version}")
+                }
+                None => format!("{name}@{version}"),
+            }
+        })
+        .collect::<Vec<_>>();
+    record.context["historyCheckoutImport"] = json!({"requested":targets.len(),"ids":ids,"performed":!targets.is_empty(),"completed":false});
+    record.context["historyImportProgressStart"] =
+        json!(record.repository.progress()["imports"].as_array().map_or(0, Vec::len));
+    record.repository.prepare_versions(targets)?;
+    record.context["historyCheckoutImport"]["completed"] = json!(true);
+    Ok(())
+}
+/// Attaches retained `historyCheckoutImport` progress onto `error` via [`discard_incomplete`] when a historical checkout phase fails.
+#[inline]
+pub(in crate::workspace::engine::command) fn failure(
+    error: io::Error,
+    record: &Record,
+) -> io::Error {
+    if phase(&record.request.options).is_none() {
+        return error;
+    }
+    let mut progress = record.repository.progress();
+    discard_incomplete(&mut progress, &record.context);
+    if let Some(imported) = record.context.get("historyCheckoutImport") {
+        progress["historyCheckoutImport"] = imported.clone();
+    }
+    let error = if response::is_canonical(&error) {
+        error
+    } else {
+        response::canonical(
+            command_import::remote_inflate_message(&error).unwrap_or_else(|| error.to_string()),
+        )
+    };
+    response::with_progress(error, progress)
+}
+
+/// Removes an incomplete `historyCheckoutImport` progress entry from `progress["imports"]` using `context["historyImportProgressStart"]` for [`failure`].
+#[inline]
+fn discard_incomplete(progress: &mut Value, context: &Value) {
+    if context["historyCheckoutImport"]["completed"] != false {
+        return;
+    }
+    let Some(index) = context["historyImportProgressStart"]
+        .as_u64()
+        .and_then(|index| usize::try_from(index).ok())
+    else {
+        return;
+    };
+    if let Some(rows) = progress["imports"].as_array_mut()
+        && index < rows.len()
+    {
+        rows.remove(index);
+    }
+}

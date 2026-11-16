@@ -1,0 +1,274 @@
+[
+  {
+    "type": "UntrackedDependencies",
+    "data": {
+      "src/a.js": {
+        "nested": false,
+        "untrackedFiles": [
+          {
+            "relativePath": "other.js",
+            "existing": true
+          },
+          {
+            "relativePath": "new.js"
+          }
+        ]
+      },
+      "src/nested.js": {
+        "nested": true,
+        "untrackedFiles": [
+          {
+            "relativePath": "deep.js"
+          }
+        ]
+      }
+    },
+    "expected": {
+      "type": "UntrackedDependencies",
+      "description": "untracked file dependencies",
+      "solution": "use \"bit add <file>\" to track untracked files as components",
+      "isTagBlocker": true,
+      "data": {
+        "src/a.js": {
+          "nested": false,
+          "untrackedFiles": [
+            {
+              "relativePath": "other.js",
+              "existing": true
+            },
+            {
+              "relativePath": "new.js"
+            }
+          ]
+        },
+        "src/nested.js": {
+          "nested": true,
+          "untrackedFiles": [
+            {
+              "relativePath": "deep.js"
+            }
+          ]
+        }
+      },
+      "dataAsString": "          src/a.js -> other.js, new.js\n            src/nested.js -> deep.js"
+    }
+  },
+  {
+    "type": "RelativeComponents",
+    "data": {
+      "a.js": [
+        {
+          "scope": "s",
+          "name": "foo",
+          "version": "1.0.0"
+        }
+      ]
+    },
+    "expected": {
+      "type": "RelativeComponents",
+      "description": "components with relative import statements found",
+      "solution": "use module paths for imported components",
+      "isTagBlocker": true,
+      "data": {
+        "a.js": [
+          {
+            "_legacy": {
+              "scope": "s",
+              "name": "foo",
+              "version": "1.0.0"
+            }
+          }
+        ]
+      },
+      "dataAsString": "          a.js -> [object Object]"
+    }
+  },
+  {
+    "type": "RelativeComponentsAuthored",
+    "data": {
+      "a.js": [
+        {
+          "importSource": "../foo",
+          "componentId": {
+            "name": "foo",
+            "scope": "s",
+            "version": "1.0.0"
+          },
+          "relativePath": "foo.js"
+        }
+      ]
+    },
+    "expected": {
+      "type": "RelativeComponentsAuthored",
+      "description": "components with relative import statements found",
+      "solution": "replace to module paths or use \"bit link --rewire\" to replace",
+      "isTagBlocker": true,
+      "data": {
+        "a.js": [
+          {
+            "importSource": "../foo",
+            "componentId": {
+              "_legacy": {
+                "scope": "s",
+                "name": "foo",
+                "version": "1.0.0"
+              }
+            },
+            "relativePath": "foo.js"
+          }
+        ]
+      },
+      "dataAsString": "          a.js -> \"../foo\" (s/foo@1.0.0)"
+    }
+  },
+  {
+    "type": "ParseErrors",
+    "data": {
+      "src/a.js": "Unexpected token (2:4)"
+    },
+    "expected": {
+      "type": "ParseErrors",
+      "description": "error found while parsing the file",
+      "solution": "edit the file and fix the parsing error",
+      "isTagBlocker": true,
+      "data": {
+        "src/a.js": "Unexpected token (2:4)"
+      },
+      "dataAsString": "          src/a.js -> Unexpected token (2:4)"
+    }
+  },
+  {
+    "type": "ResolveErrors",
+    "data": {
+      "src/a.js": "unable to resolve file"
+    },
+    "expected": {
+      "type": "ResolveErrors",
+      "description": "error found while resolving the file dependencies",
+      "solution": "see the log for the full error",
+      "isTagBlocker": true,
+      "data": {
+        "src/a.js": "unable to resolve file"
+      },
+      "dataAsString": "          src/a.js -> unable to resolve file"
+    }
+  },
+  {
+    "type": "SelfReference",
+    "data": {
+      "a.js": [
+        "@s/foo",
+        "@s/foo/internal"
+      ]
+    },
+    "expected": {
+      "type": "SelfReference",
+      "description": "a component has an import statement that points to itself",
+      "solution": "edit the file and change the import statement to a relative path",
+      "isTagBlocker": true,
+      "data": {
+        "a.js": [
+          "@s/foo",
+          "@s/foo/internal"
+        ]
+      },
+      "dataAsString": "          a.js -> @s/foo, @s/foo/internal"
+    }
+  },
+  {
+    "type": "ExternalEnvWithoutVersion",
+    "data": {
+      "envId": "org/env@1.0.0",
+      "componentId": "s/foo"
+    },
+    "expected": {
+      "type": "ExternalEnvWithoutVersion",
+      "description": "failed loading env - external env without a version",
+      "solution": "",
+      "isTagBlocker": true,
+      "data": {
+        "envId": "org/env@1.0.0",
+        "componentId": "s/foo"
+      },
+      "dataAsString": "          org/env@1.0.0"
+    }
+  },
+  {
+    "type": "ImportNonMainFiles",
+    "data": {
+      "a.js": [
+        "@s/foo/internal.js"
+      ]
+    },
+    "expected": {
+      "type": "ImportNonMainFiles",
+      "description": "importing non-main files",
+      "solution": "the dependency should expose its API from the main file",
+      "isTagBlocker": true,
+      "data": {
+        "a.js": [
+          "@s/foo/internal.js"
+        ]
+      },
+      "dataAsString": "          a.js -> @s/foo/internal.js"
+    }
+  },
+  {
+    "type": "LegacyInsideHarmony",
+    "data": true,
+    "expected": {
+      "type": "LegacyInsideHarmony",
+      "description": "legacy component inside Harmony workspace",
+      "solution": "remove the component and re-create it via Harmony",
+      "isTagBlocker": true,
+      "data": true,
+      "dataAsString": ""
+    }
+  },
+  {
+    "type": "MergeConfigHasConflict",
+    "data": true,
+    "expected": {
+      "type": "MergeConfigHasConflict",
+      "description": "merge-conflict file has unresolved conflicts",
+      "solution": "edit the merge-conflict file in the workspace root and resolve the conflicts",
+      "isTagBlocker": true,
+      "data": true,
+      "dataAsString": ""
+    }
+  },
+  {
+    "type": "LoadFailures",
+    "data": [
+      {
+        "failedId": "org/env@1.0.0",
+        "phase": "load",
+        "error": "missing aspect"
+      },
+      {
+        "failedId": "org/plugin",
+        "phase": "onLoad",
+        "error": "broken callback"
+      }
+    ],
+    "expected": {
+      "type": "LoadFailures",
+      "description": "failed loading some aspects/envs of this component (the load continued without them)",
+      "solution": "see the error details below, often resolved by running \"bit install\" or \"bit compile\"",
+      "isTagBlocker": false,
+      "data": [
+        {
+          "failedId": "org/env@1.0.0",
+          "phase": "load",
+          "error": "missing aspect"
+        },
+        {
+          "failedId": "org/plugin",
+          "phase": "onLoad",
+          "error": "broken callback"
+        }
+      ],
+      "dataAsString": "          org/env@1.0.0 (during load) -> missing aspect\n          org/plugin (during onLoad) -> broken callback"
+    }
+  }
+]

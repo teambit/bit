@@ -1,0 +1,173 @@
+//! Canonical `Component`, `Version`, `Lane`, `VersionHistory`, and `LaneHistory` object projection ([`project`], [`identity`], [`serialize`], [`Semantic`], [`semantic`]).
+
+pub use semantic::{Semantic, semantic};
+
+#[path = "snapshot_projection/artifacts.rs"]
+mod artifacts;
+#[path = "snapshot_projection/models.rs"]
+mod models;
+#[path = "snapshot_projection/semantic.rs"]
+mod semantic;
+
+#[path = "snapshot_projection/version.rs"]
+mod version;
+
+use sha1::{Digest, Sha1};
+use std::io;
+
+use crate::js_json::{Value, stringify};
+
+/// Project raw default-class fields without calling `JavaScript` serializers.
+pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
+    object(fields)?;
+    match kind.trim() {
+        "Version" => version::project(fields),
+        "Component" => models::component(fields),
+        "Lane" => models::lane(fields),
+        "VersionHistory" => models::history(fields),
+        "LaneHistory" => choose(fields, &["name", "scope", "laneHash", "history"], false),
+        _ => Err(invalid("unsupported snapshot metadata type")),
+    }
+}
+
+/// Computes the canonical repository identity string (`scope/name`, `hash`, etc.) for `kind` and `fields` ([`Value`]).
+pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Result<String> {
+    let kind = kind.trim();
+    object(fields)?;
+    if kind == "LaneHistory" {
+        return lane_history_identity(fields);
+    }
+    if matches!(kind, "Version" | "Lane") {
+        let hash = allocated.map(str::trim).ok_or_else(|| invalid("preallocated hash missing"))?;
+        if !is_sha1_hex(hash) {
+            return Err(invalid("invalid preallocated hash"));
+        }
+        return Ok(hash.to_owned());
+    }
+    let (name, scope_text) = component_name_and_scope(fields)?;
+    let id = match kind {
+        "Component" if scope_text.is_empty() => name,
+        "Component" => format!("{scope_text}/{name}"),
+        "VersionHistory" => {
+            if scope_text.is_empty() {
+                return Err(invalid("snapshot empty history scope"));
+            }
+            format!("{scope_text}/{name}:VersionHistory")
+        }
+        _ => return Err(invalid("unsupported object identity")),
+    };
+    Ok(hexadecimal(&Sha1::digest(id.as_bytes())))
+}
+
+/// Extracts and validates `(name, scope)` from raw component/history `fields` ([`Value`]).
+fn component_name_and_scope(fields: &Value) -> io::Result<(String, String)> {
+    let raw_name = text(get(fields, "name"))?;
+    let name = raw_name.trim();
+    if name.is_empty() || name.contains("..") || name.contains(['\\', '\0']) {
+        return Err(invalid("snapshot empty component name"));
+    }
+    let scope = get(fields, "scope");
+    let scope_text = if scope.truthy()? { text(scope)?.trim().to_owned() } else { String::new() };
+    if scope_text.contains("..") || scope_text.contains(['/', '\\', '\0']) {
+        return Err(invalid("snapshot invalid component scope"));
+    }
+    Ok((name.to_owned(), scope_text))
+}
+
+/// Computes the `<laneHash>:LaneHistory` SHA-1 digest for a `LaneHistory` object.
+fn lane_history_identity(fields: &Value) -> io::Result<String> {
+    let lane_hash = text(get(fields, "laneHash"))?;
+    let trimmed = lane_hash.trim();
+    if !is_sha1_hex(trimmed) {
+        return Err(invalid("invalid laneHash"));
+    }
+    let mut hasher = Sha1::new();
+    hasher.update(trimmed.as_bytes());
+    hasher.update(b":LaneHistory");
+    Ok(hexadecimal(&hasher.finalize()))
+}
+
+/// Projects and serializes `fields` of `kind` into canonical JSON bytes (`pretty` when `true`).
+pub fn serialize(kind: &str, fields: &Value, pretty: bool) -> io::Result<Vec<u8>> {
+    stringify(&project(kind, fields)?, pretty)?.ok_or_else(|| invalid("missing serialization"))
+}
+
+/// Looks up property `name` on object `fields`, returning [`Value::Undefined`] when absent.
+fn get<'a>(fields: &'a Value, name: &str) -> &'a Value {
+    static UNDEFINED: Value = Value::Undefined;
+    let Value::Object(fields) = fields else {
+        return &UNDEFINED;
+    };
+    fields
+        .iter()
+        .find(|(key, _)| {
+            key.iter()
+                .copied()
+                .eq(name.encode_utf16())
+        })
+        .map_or(&UNDEFINED, |(_, value)| value)
+}
+
+fn object(fields: &Value) -> io::Result<&[(Vec<u16>, Value)]> {
+    let Value::Object(fields) = fields else {
+        return Err(invalid("snapshot object fields required"));
+    };
+    let mut seen = std::collections::HashSet::with_capacity(fields.len());
+    if fields
+        .iter()
+        .any(|(key, _)| !seen.insert(key))
+    {
+        return Err(invalid("duplicate snapshot field"));
+    }
+    Ok(fields)
+}
+
+fn choose(fields: &Value, names: &[&str], truthy: bool) -> io::Result<Value> {
+    let mut selected = Vec::with_capacity(names.len());
+    for &name in names {
+        let value = get(fields, name);
+        if !truthy || value.truthy()? {
+            selected.push((name.encode_utf16().collect(), value.clone()));
+        }
+    }
+    Ok(Value::Object(selected))
+}
+
+fn insert(fields: &mut Value, name: &str, value: Value) {
+    let Value::Object(fields) = fields else {
+        unreachable!("created object");
+    };
+    fields.push((name.encode_utf16().collect(), value));
+}
+
+fn text(value: &Value) -> io::Result<String> {
+    let Value::String(units) = value else {
+        return Err(invalid("snapshot string required"));
+    };
+    Ok(String::from_utf16_lossy(units))
+}
+
+fn hexadecimal(bytes: &[u8]) -> String {
+    const DIGITS: &[u8; 16] = b"0123456789abcdef";
+    let mut text = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        text.push(char::from(DIGITS[usize::from(byte >> 4)]));
+        text.push(char::from(DIGITS[usize::from(byte & 15)]));
+    }
+    text
+}
+
+#[inline]
+#[must_use]
+fn is_sha1_hex(hash: &str) -> bool {
+    hash.len() == 40
+        && hash
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+#[inline]
+#[must_use]
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, message)
+}

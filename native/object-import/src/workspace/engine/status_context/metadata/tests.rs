@@ -1,0 +1,41 @@
+//! Unit tests for status context component [`configuration`] and [`component_id_matches`] checks in `bit-object-import`.
+//!
+//! Verifies environment extension validation via [`configuration`] ([`environment_shapes_are_admitted_but_invalid_callbacks_decline`]) and object/string component ID matching via [`component_id_matches`] ([`component_id_matches_accepts_object_and_string_ids`], [`component_id_matches_rejects_mismatched_or_missing_component_id`]).
+
+use super::{component_id_matches, configuration};
+use serde_json::json;
+
+/// Verifies that [`configuration`] admits valid environment shapes and declines non-string `env` values.
+#[test]
+fn environment_shapes_are_admitted_but_invalid_callbacks_decline() {
+    let value = json!({"componentId":{"scope":"scope.test","name":"component"},"propagate":false,"extensions":{"teambit.envs/envs":{},"teambit.semantics/schema":{},"teambit.dependencies/dependency-resolver":{}}});
+    assert!(configuration(&value, true).is_ok());
+    assert!(configuration(&value, false).is_ok());
+    let mut custom = value.clone();
+    custom["extensions"]["teambit.envs/envs"] = json!({"env":"custom/env"});
+    assert!(configuration(&custom, true).is_ok());
+    custom["extensions"]["teambit.envs/envs"] = json!({"env":42});
+    assert!(configuration(&custom, true).is_err());
+    let mut unknown = value;
+    unknown["extensions"]["custom/aspect"] = json!({});
+    assert!(configuration(&unknown, true).is_ok());
+    unknown["extensions"]["custom/aspect"] = json!({"unqualifiedCallback":true});
+    assert!(configuration(&unknown, true).is_ok());
+}
+
+/// Verifies that [`component_id_matches`] accepts both object and versioned string `componentId` representations.
+#[test]
+fn component_id_matches_accepts_object_and_string_ids() {
+    let object_id = json!({"componentId":{"scope":"scope.test","name":"comp"}});
+    assert!(component_id_matches(&object_id, "scope.test/comp"));
+    let string_id = json!({"componentId":"scope.test/comp@1.0.0"});
+    assert!(component_id_matches(&string_id, "scope.test/comp"));
+}
+
+/// Verifies that [`component_id_matches`] returns `false` when `componentId` (`ComponentID`) differs or is absent ([`json`]).
+#[test]
+fn component_id_matches_rejects_mismatched_or_missing_component_id() {
+    let object_id = json!({"componentId":{"scope":"scope.test","name":"other"}});
+    assert!(!component_id_matches(&object_id, "scope.test/comp"));
+    assert!(!component_id_matches(&json!({}), "scope.test/comp"));
+}

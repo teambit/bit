@@ -1,0 +1,86 @@
+//! `ArtifactFiles` class projection ([`convert`], [`artifact`], [`reference`], [`replace`]) for `teambit.pipelines/builder` extension [`Value`] data.
+
+use super::{get, invalid, object};
+use crate::js_json::Value;
+use std::io;
+
+/// Converts `teambit.pipelines/builder` artifact entries in a snapshot extension `data` ([`Value`]) object via [`artifact`].
+pub(super) fn convert(data: &Value) -> io::Result<Value> {
+    let artifacts = get(data, "artifacts");
+    if !artifacts.truthy()? {
+        return Ok(data.clone());
+    }
+    let Value::Array(artifacts) = artifacts else {
+        return Err(invalid("snapshot builder artifacts array"));
+    };
+    if artifacts.len() > 4096 {
+        return Err(invalid("snapshot builder artifacts budget"));
+    }
+    let artifacts = artifacts
+        .iter()
+        .map(artifact)
+        .collect::<io::Result<Vec<_>>>()?;
+    replace(data, "artifacts", Value::Array(artifacts))
+}
+/// Projects a single `teambit.pipelines/builder` artifact [`Value`] descriptor and its `files` via [`reference`].
+fn artifact(artifact: &Value) -> io::Result<Value> {
+    object(artifact)?;
+    let files = get(artifact, "files");
+    object(files)?;
+    if !matches!(get(files, "snapshotArtifactFiles"), Value::Boolean(true)) {
+        return Err(invalid("snapshot ArtifactFiles class projection required"));
+    }
+    let Value::Array(refs) = get(files, "refs") else {
+        return Err(invalid("snapshot artifact refs array"));
+    };
+    if refs.len() > 4096 {
+        return Err(invalid("snapshot artifact refs budget"));
+    }
+    let refs = refs
+        .iter()
+        .map(reference)
+        .collect::<io::Result<Vec<_>>>()?;
+    replace(artifact, "files", Value::Array(refs))
+}
+/// Projects a single artifact file `reference` into `("relativePath", "file", "url")` field order.
+fn reference(reference: &Value) -> io::Result<Value> {
+    object(reference)?;
+    if let Value::String(units) = get(reference, "relativePath") {
+        let rel = String::from_utf16_lossy(units);
+        let trimmed = rel.trim();
+        if trimmed.contains('\0')
+            || trimmed
+                .split(['/', '\\'])
+                .any(|part| matches!(part, "" | "." | ".."))
+        {
+            return Err(invalid("snapshot artifact relative path"));
+        }
+    }
+    let mut fields = Vec::with_capacity(3);
+    for (name, source) in [("relativePath", "relativePath"), ("file", "ref"), ("url", "url")] {
+        fields.push((name.encode_utf16().collect(), get(reference, source).clone()));
+    }
+    Ok(Value::Object(fields))
+}
+/// Replaces the first occurrence of property `name` on `value` with `replacement`.
+fn replace(value: &Value, name: &str, replacement: Value) -> io::Result<Value> {
+    let fields = object(value)?;
+    let mut replacement = Some(replacement);
+    Ok(Value::Object(
+        fields
+            .iter()
+            .map(|(field_name, field_value)| {
+                let next = if field_name
+                    .iter()
+                    .copied()
+                    .eq(name.encode_utf16())
+                {
+                    replacement.take().unwrap_or_else(|| field_value.clone())
+                } else {
+                    field_value.clone()
+                };
+                (field_name.clone(), next)
+            })
+            .collect(),
+    ))
+}

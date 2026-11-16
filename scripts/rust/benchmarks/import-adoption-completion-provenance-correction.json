@@ -1,0 +1,13 @@
+{
+  "applies_to": "import-adoption-completion*.json build_provenance.rustc",
+  "original_reports_unchanged": true,
+  "binary_sha256": "3740d7f551c89cf5fc088cfa0c8d746ff1f2b3fae424cba5d83aa7555675ae35",
+  "original_builder_sha256": "f4ab56d6c96a972bdc0d208ee166281f6fc3bef47ad112088863514a2d1d2c42",
+  "original_recorded_rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+  "actual_compiler": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "evidence": {
+    "binary_elf_comment": "\nString dump of section '.comment':\n  [     0]  GCC: (GNU) 16.2.1 20260819 (Red Hat 16.2.1-2)\n  [    2e]  rustc version 1.97.0 (2d8144b78 2026-07-07)\n  [    5b]  mold 3.0.0 (compatible with GNU ld)\n\n",
+    "pinned_toolchain": "[toolchain]\nchannel = \"1.97.0\"\nprofile = \"default\"\n"
+  },
+  "reason": "Cargo built from native/ using its pinned1.97.0 toolchain. The original builder later queried rustc outside that working directory and recorded the unrelated host1.98.1. Source/binary hashes and every measurement remain unchanged. The builder now queries rustc in the actual Cargo working directory."
+}

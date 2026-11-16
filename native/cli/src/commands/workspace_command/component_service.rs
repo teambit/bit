@@ -1,0 +1,79 @@
+//! Prepare built-in service components and retain loader effects until the command owns execution.
+//!
+//! Coordinates [`filesystem`], [`docs`], [`load`] ([`Loaded`]), and [`selection`] ([`Selection`], [`Progress`]) submodules.
+pub(in crate::commands) mod filesystem;
+pub(in crate::commands) use load::Loaded;
+mod docs;
+mod load;
+mod selection;
+use serde_json::{Value, json};
+use std::io;
+
+/// Component selection options for a built-in environment service (`compile`, `lint`, `format`, `check-types`, `test`; [`Loaded`]).
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(in crate::commands) struct Selection {
+    pub pattern: Option<String>,
+    pub changed: bool,
+    pub allow_cached_pair: bool,
+    pub single_file_write: bool,
+    pub exact: Option<Vec<String>>,
+    pub allow_cached_many: bool,
+    pub compiler: bool,
+    pub explicit_file_order: bool,
+}
+
+/// Loader progress metadata (environment ID, task name, component identities, and batch load counts via [`initial_loads`]).
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(in crate::commands) struct Progress {
+    pub environment: String,
+    pub name: String,
+    pub identities: Vec<String>,
+    pub loads: Vec<usize>,
+}
+
+/// Component identity, workspace directory, and file list ([`Value`]) prepared for an environment service.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(in crate::commands) struct Component {
+    pub id: Value,
+    pub directory: String,
+    pub files: Vec<Value>,
+}
+
+/// Constructs an [`io::Error`] with `message` for invalid component-service state.
+#[inline]
+fn invalid(message: &str) -> io::Error {
+    io::Error::other(message)
+}
+
+/// Returns `val` trimmed without reallocating when no leading or trailing whitespace is present.
+#[inline]
+fn trim_owned(val: String) -> String {
+    if val.trim().len() == val.len() { val } else { val.trim().to_owned() }
+}
+
+impl Progress {
+    /// Initializes a [`Progress`] tracker for `name` and `environment` from `counts` and `options` ([`Selection`]).
+    #[inline]
+    fn new(name: String, environment: String, counts: [usize; 2], options: &Selection) -> Self {
+        Self {
+            name: trim_owned(name),
+            environment: trim_owned(environment),
+            identities: Vec::new(),
+            loads: initial_loads(counts, options),
+        }
+    }
+}
+
+#[inline]
+fn initial_loads(counts: [usize; 2], options: &Selection) -> Vec<usize> {
+    let has_pattern = options.pattern
+        .as_deref()
+        .is_some_and(|pat| !pat.trim().is_empty())
+        || options.exact
+            .as_ref()
+            .is_some_and(|list| {
+                list.iter()
+                    .any(|item| !item.trim().is_empty())
+            });
+    if options.changed && !has_pattern { counts.to_vec() } else { vec![counts[1]] }
+}

@@ -1,0 +1,394 @@
+//! Native [`CAT_OBJECT`], [`CAT_COMPONENT`], [`CAT_LANE`],
+//! [`CAT_VERSION_HISTORY`], and [`CAT_LANE_HISTORY`] commands via [`lookup`].
+//!
+//! Reads, resolves, and formats low-level scope objects across workspaces and bare scopes.
+
+pub(in crate::commands) mod lookup;
+#[cfg(test)]
+mod tests;
+
+use self::lookup::{
+    diagnose_cat_component_error, diagnose_component_lookup_error, diagnose_lane_lookup_error,
+    load_cat_component, resolve_component_entry, resolve_lane_entry,
+};
+use super::{
+    Command,
+    color::Chalk,
+    lane::scope_root::{self, ScopeRoot},
+    workspace_command::{
+        self, execute_failure_scope, execute_then, execute_with_scope, execute_without_loader,
+        execute_without_loader_scope, results::Report,
+    },
+};
+use crate::{history::History, native::Outcome};
+use serde::Serialize;
+use serde_json::{Value, json, ser::PrettyFormatter};
+use sha1::{Digest, Sha1};
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
+
+pub const CAT_OBJECT: Command = Command { name: "cat-object", aliases: &[], run: run_object };
+pub const CAT_COMPONENT: Command =
+    Command { name: "cat-component", aliases: &["cmp"], run: run_component };
+pub const CAT_LANE: Command = Command { name: "cat-lane", aliases: &["cl"], run: run_lane };
+pub const CAT_VERSION_HISTORY: Command =
+    Command { name: "cat-version-history", aliases: &["cvh"], run: run_version_history };
+pub const CAT_LANE_HISTORY: Command =
+    Command { name: "cat-lane-history", aliases: &["clh"], run: run_lane_history };
+/// Parsed CLI flags and 40-hex `SHA-1` object hash for `bit cat-object` ([`CAT_OBJECT`]).
+#[derive(Debug, Default, PartialEq, Eq)]
+struct ObjectOptions {
+    hash: String,
+    pretty: bool,
+    stringify: bool,
+    headers: bool,
+}
+/// Parses `args` into [`ObjectOptions`] when given a 40-hex `SHA-1` object hash and supported CLI flags for [`run_object`].
+fn parse_object_options(args: &[&str]) -> Option<ObjectOptions> {
+    let mut opts = ObjectOptions::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                super::eject::consume_trailing_eject(iter, &mut opts.hash)?;
+                break;
+            }
+            "-p" | "--pretty" | "--pretty=true" => opts.pretty = true,
+            "--pretty=false" => opts.pretty = false,
+            "-s" | "--stringify" | "--stringify=true" => opts.stringify = true,
+            "--stringify=false" => opts.stringify = false,
+            "-ps" | "-sp" => (opts.pretty, opts.stringify) = (true, true),
+            "--headers" | "--headers=true" => opts.headers = true,
+            "--headers=false" => opts.headers = false,
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            val if !val.starts_with('-') && !val.trim().is_empty() && opts.hash.is_empty() => {
+                val.trim().clone_into(&mut opts.hash);
+            }
+            _ => return None,
+        }
+    }
+    (opts.hash.len() == 40 && opts.hash.bytes().all(|byte| byte.is_ascii_hexdigit())).then_some(
+        opts,
+    )
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+struct IdJsonOptions {
+    id: String,
+    json: bool,
+}
+
+#[inline]
+fn parse_id_json_options(args: &[&str]) -> Option<IdJsonOptions> {
+    parse_id_options(args, true)
+}
+
+#[inline]
+fn parse_single_id(args: &[&str]) -> Option<String> {
+    parse_id_options(args, false).map(|opts| opts.id)
+}
+
+fn parse_id_options(args: &[&str], allow_json: bool) -> Option<IdJsonOptions> {
+    let mut opts = IdJsonOptions::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                super::eject::consume_trailing_eject(iter, &mut opts.id)?;
+                break;
+            }
+            "-j" | "--json" | "--json=true" if allow_json => opts.json = true,
+            "--json=false" if allow_json => opts.json = false,
+            "--no-color" | "--no-color=true" | "--no-color=false" => {}
+            val if !val.starts_with('-') && !val.trim().is_empty() && opts.id.is_empty() => {
+                val.trim().clone_into(&mut opts.id);
+            }
+            _ => return None,
+        }
+    }
+    (!opts.id.is_empty()).then_some(opts)
+}
+
+fn run_object(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cat-object arguments are not UTF-8".into()));
+    };
+    let Some(opts) = argv
+        .get(1..)
+        .and_then(parse_object_options)
+    else {
+        return Ok(Outcome::Declined("outside native cat-object grammar".into()));
+    };
+    let Ok(Some(root)) = scope_root::discover() else {
+        return emit_scope_not_found(args, "cat-object", true);
+    };
+    let scope_dir = scope_dir_for(&root);
+    let Some(data) = render_cat_object(&scope_dir, &opts) else {
+        if !opts.headers
+            && !ci_enabled()
+            && matches!(bit_object_import::read_raw_scope_object(&scope_dir, &opts.hash), Ok(None))
+        {
+            let msg = "object not found".into();
+            return emit_failure(&root, args, "cat-object", false, false, msg);
+        }
+        return Ok(Outcome::Declined("cat-object delegated".into()));
+    };
+    emit_text(&root, args, "cat-object", false, data)
+}
+
+#[inline]
+fn ci_enabled() -> bool {
+    env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+}
+
+fn render_cat_object(scope_dir: &Path, opts: &ObjectOptions) -> Option<String> {
+    let (headers, body) = bit_object_import::read_raw_scope_object(scope_dir, &opts.hash).ok()??;
+    if opts.headers {
+        return Some(headers.join(","));
+    }
+    let content = String::from_utf8(body).ok()?;
+    if opts.stringify {
+        return serde_json::to_string(&content).ok();
+    }
+    let kind = headers.first()?.as_str();
+    match kind {
+        "Version" | "Component" | "Symlink" | "ScopeMeta" | "VersionHistory" => {
+            let val: Value = serde_json::from_str(&content).ok()?;
+            if opts.pretty {
+                serde_json::to_string_pretty(&val).ok()
+            } else {
+                serde_json::to_string(&val).ok()
+            }
+        }
+        "Source" if opts.pretty => {
+            let val: Value = serde_json::from_str(&content).ok()?;
+            serde_json::to_string_pretty(&val).ok()
+        }
+        _ => Some(content),
+    }
+}
+
+fn run_lane(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cat-lane arguments are not UTF-8".into()));
+    };
+    let Some(id) = parse_single_id(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native cat-lane grammar".into()));
+    };
+    let Ok(Some(root)) = scope_root::discover() else {
+        return emit_scope_not_found(args, "cat-lane", true);
+    };
+    let scope_dir = scope_dir_for(&root);
+    let Some((_, _, hash)) = resolve_lane_entry(&scope_dir, &id) else {
+        if !ci_enabled()
+            && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, false)
+        {
+            return emit_failure(&root, args, "cat-lane", false, false, err);
+        }
+        return Ok(Outcome::Declined("cat-lane lane lookup delegated".into()));
+    };
+    let Ok(Some((kind, mut val))) = bit_object_import::read_scope_object(&scope_dir, &hash) else {
+        return Ok(Outcome::Declined("cat-lane object missing".into()));
+    };
+    let Some(map) = (kind == "Lane").then(|| val.as_object_mut()).flatten() else {
+        return Ok(Outcome::Declined("cat-lane object invalid".into()));
+    };
+    map.insert("hash".into(), Value::String(hash));
+    let Ok(data) = format_json_4(&val) else {
+        return Ok(Outcome::Declined("cat-lane serialization failed".into()));
+    };
+    emit_text(&root, args, "cat-lane", false, data)
+}
+
+fn run_lane_history(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cat-lane-history arguments are not UTF-8".into()));
+    };
+    let Some(id) = parse_single_id(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native cat-lane-history grammar".into()));
+    };
+    let Ok(Some(root)) = scope_root::discover() else {
+        return emit_scope_not_found(args, "cat-lane-history", false);
+    };
+    let scope_dir = scope_dir_for(&root);
+    let Some((scope, name, lane_hash)) = resolve_lane_entry(&scope_dir, &id) else {
+        if !ci_enabled()
+            && let Some(err) = diagnose_lane_lookup_error(&scope_dir, &id, true)
+        {
+            return emit_failure(&root, args, "cat-lane-history", true, false, err);
+        }
+        return Ok(Outcome::Declined("cat-lane-history lane lookup delegated".into()));
+    };
+    let history_hash = sha1_hex(&format!("{lane_hash}:LaneHistory"));
+    let val = match bit_object_import::read_scope_object(&scope_dir, &history_hash) {
+        Ok(Some((kind, val))) if kind == "LaneHistory" => val,
+        Ok(None) => json!({"name": name, "scope": scope, "laneHash": lane_hash, "history": {}}),
+        _ => return Ok(Outcome::Declined("cat-lane-history object invalid".into())),
+    };
+    let Ok(data) = serde_json::to_string_pretty(&val) else {
+        return Ok(Outcome::Declined("cat-lane-history serialization failed".into()));
+    };
+    emit_text(&root, args, "cat-lane-history", true, data)
+}
+
+fn run_version_history(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cat-version-history arguments are not UTF-8".into()));
+    };
+    let Some(opts) = parse_id_json_options(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native cat-version-history grammar".into()));
+    };
+    let Ok(Some(root)) = scope_root::discover() else {
+        return emit_scope_not_found(args, "cat-version-history", opts.json);
+    };
+    let scope_dir = scope_dir_for(&root);
+    let (bare_id, _) = opts.id
+        .rsplit_once('@')
+        .unwrap_or((&opts.id, ""));
+    let Some((Some(scope), name, _)) = resolve_component_entry(&scope_dir, bare_id) else {
+        if !ci_enabled()
+            && let Some(err) =
+                diagnose_component_lookup_error(&scope_dir, &opts.id, bare_id, Chalk::detect(args))
+        {
+            return emit_failure(&root, args, "cat-version-history", true, opts.json, err);
+        }
+        return Ok(Outcome::Declined("cat-version-history component lookup delegated".into()));
+    };
+    let vh_hash = sha1_hex(&format!("{scope}/{name}:VersionHistory"));
+    let mut val = match bit_object_import::read_scope_object(&scope_dir, &vh_hash) {
+        Ok(Some((kind, val))) if kind == "VersionHistory" => val,
+        Ok(None) => json!({"name": name, "scope": scope, "versions": [], "graphCompleteRefs": []}),
+        _ => return Ok(Outcome::Declined("cat-version-history object invalid".into())),
+    };
+    let Some(map) = val.as_object_mut() else {
+        return Ok(Outcome::Declined("cat-version-history object invalid".into()));
+    };
+    map.insert("hash".into(), Value::String(vh_hash));
+    emit_value(&root, args, "cat-version-history", opts.json, &val)
+}
+
+fn run_component(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("cat-component arguments are not UTF-8".into()));
+    };
+    let Some(opts) = parse_id_json_options(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native cat-component grammar".into()));
+    };
+    let Ok(Some(root)) = scope_root::discover() else {
+        return emit_scope_not_found(args, "cat-component", opts.json);
+    };
+    let scope_dir = scope_dir_for(&root);
+    let Some(val) = load_cat_component(&root, &scope_dir, &opts.id) else {
+        if !ci_enabled()
+            && let Some(err) =
+                diagnose_cat_component_error(&root, &scope_dir, &opts.id, Chalk::detect(args))
+        {
+            return emit_failure(&root, args, "cat-component", true, opts.json, err);
+        }
+        return Ok(Outcome::Declined("cat-component delegated".into()));
+    };
+    emit_value(&root, args, "cat-component", opts.json, &val)
+}
+
+pub(in crate::commands) fn emit_scope_not_found(
+    args: &[OsString],
+    command: &str,
+    quiet: bool,
+) -> io::Result<Outcome> {
+    if !ci_enabled()
+        && let Ok(cwd) = env::current_dir()
+        && cwd
+            .ancestors()
+            .all(|dir| !dir.join(".git").exists())
+    {
+        let chalk = Chalk::detect(args);
+        let msg = format!("error: scope not found at {}", chalk.bold(&cwd.to_string_lossy()));
+        return execute_failure_scope(&cwd, args, command, quiet, "", io::Error::other(msg));
+    }
+    Ok(Outcome::Declined(format!("{command} requires a scope")))
+}
+
+#[inline]
+pub(in crate::commands) fn scope_dir_for(root: &ScopeRoot) -> PathBuf {
+    if root.bare { root.path.clone() } else { bit_object_import::scope_path(&root.path) }
+}
+
+#[inline]
+pub(in crate::commands) fn sha1_hex(input: &str) -> String {
+    format!("{:x}", Sha1::digest(input.as_bytes()))
+}
+
+#[inline]
+pub(in crate::commands) fn format_json_4(val: &Value) -> io::Result<String> {
+    let mut buf = Vec::with_capacity(256);
+    let mut ser =
+        serde_json::Serializer::with_formatter(&mut buf, PrettyFormatter::with_indent(b"    "));
+    val.serialize(&mut ser).map_err(io::Error::other)?;
+    String::from_utf8(buf).map_err(io::Error::other)
+}
+
+pub(in crate::commands) fn emit_value(
+    root: &ScopeRoot,
+    args: &[OsString],
+    command: &str,
+    json_flag: bool,
+    val: &Value,
+) -> io::Result<Outcome> {
+    if json_flag {
+        let history = (!root.bare).then(|| History::start(&root.path, args));
+        let mut stdout = io::stdout().lock();
+        stdout.write_all(serde_json::to_string_pretty(val)?.as_bytes())?;
+        stdout.flush()?;
+        if let Some(history) = history {
+            history.end(true);
+        }
+        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+    }
+    let data = format_json_4(val)?;
+    emit_text(root, args, command, false, data)
+}
+
+pub(in crate::commands) fn emit_text(
+    root: &ScopeRoot,
+    args: &[OsString],
+    command: &str,
+    loader: bool,
+    data: String,
+) -> io::Result<Outcome> {
+    let report = Report { data, code: 0, details: None };
+    match (root.bare, loader) {
+        (false, false) => execute_without_loader(&root.path, args, command, |_| Ok(report)),
+        (true, false) => execute_without_loader_scope(&root.path, args, command, |_| Ok(report)),
+        (false, true) => execute_then(&root.path, args, command, |_| Ok(report)),
+        (true, true) => execute_with_scope(&root.path, args, command, &report),
+    }
+}
+
+pub(in crate::commands) fn emit_failure(
+    root: &ScopeRoot,
+    args: &[OsString],
+    command: &str,
+    loader: bool,
+    json_flag: bool,
+    msg: String,
+) -> io::Result<Outcome> {
+    let quiet = json_flag || !loader;
+    let err = io::Error::other(msg);
+    if root.bare {
+        execute_failure_scope(&root.path, args, command, quiet, "", err)
+    } else if quiet {
+        execute_without_loader(&root.path, args, command, |_| Err(err))
+    } else {
+        execute_then(&root.path, args, command, |_| Err(err))
+    }
+}

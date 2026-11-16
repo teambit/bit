@@ -1,0 +1,131 @@
+//! Safe regular-file truncation, write, and metadata restoration ([`commit`], [`commit_metadata`], [`validate_existing`], [`validate_path`]) for merge state files.
+
+#[cfg(windows)]
+mod windows;
+use super::invalid;
+use std::{
+    fs::{self, OpenOptions},
+    io::{self, Write},
+    path::Path,
+};
+
+/// Writes `contents` to `path` ([`Path`]) via [`commit_metadata`] after verifying regular-file identity and truncating in place.
+#[inline]
+pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
+    commit_metadata(path, contents, None, false)
+}
+
+/// Copy-file attributes belong to the held destination, never a reopened path.
+pub(crate) fn commit_metadata(
+    path: &Path,
+    contents: &str,
+    metadata: Option<&fs::Metadata>,
+    restore: bool,
+) -> io::Result<()> {
+    validate_path(path)?;
+    let existing = match fs::symlink_metadata(path) {
+        Ok(metadata) => Some(metadata),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+        Err(error) => return Err(error),
+    };
+    let mut file = open(path, existing.as_ref())?;
+    file.set_len(0)?;
+    let apply_after = restore || cfg!(windows);
+    if !apply_after && let Some(metadata) = metadata {
+        apply_metadata(&file, metadata)?;
+    }
+    file.write_all(contents.as_bytes())?;
+    file.flush()?;
+    if apply_after && let Some(metadata) = metadata {
+        apply_metadata(&file, metadata)?;
+    }
+    Ok(())
+}
+/// Validates that `path` ([`Path`]) is an absolute `UTF-8` path without `..` or NUL bytes.
+fn validate_path(path: &Path) -> io::Result<()> {
+    let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
+    if !path.is_absolute()
+        || name.len() > 32768
+        || name.contains('\0')
+        || path
+            .components()
+            .any(|part| matches!(part, std::path::Component::ParentDir))
+    {
+        return Err(invalid("invalid merge state path"));
+    }
+    Ok(())
+}
+/// Copies access/modification timestamps and file permissions from `metadata` onto `file`.
+fn apply_metadata(file: &fs::File, metadata: &fs::Metadata) -> io::Result<()> {
+    file.set_times(
+        fs::FileTimes::new()
+            .set_accessed(metadata.accessed()?)
+            .set_modified(metadata.modified()?),
+    )?;
+    file.set_permissions(metadata.permissions())
+}
+/// Check the same held-file identity rules as [`commit`] before a larger plan
+/// starts publishing unrelated files. Opening here never truncates the file.
+pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
+    validate_path(path)?;
+    drop(open_existing(path, &fs::symlink_metadata(path)?)?);
+    Ok(())
+}
+/// Opens or creates a regular destination file at `path` for truncation, verifying `existing` metadata.
+fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
+    let Some(metadata) = existing else {
+        fs::create_dir_all(path.parent().ok_or_else(|| invalid("missing merge state parent"))?)?;
+        return OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path);
+    };
+    open_existing(path, metadata)
+}
+fn open_existing(path: &Path, metadata: &fs::Metadata) -> io::Result<fs::File> {
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        return Err(invalid("unsupported merge state file"));
+    }
+    existing_file(path, metadata)
+}
+#[cfg(windows)]
+fn existing_file(path: &Path, _metadata: &fs::Metadata) -> io::Result<fs::File> {
+    windows::open(path)
+}
+#[cfg(not(windows))]
+fn existing_file(path: &Path, metadata: &fs::Metadata) -> io::Result<fs::File> {
+    if !single_link(metadata) {
+        return Err(invalid("unsupported merge state file"));
+    }
+    let file = OpenOptions::new().write(true).open(path)?;
+    if !same_file(metadata, &file.metadata()?) {
+        return Err(invalid("merge state file changed"));
+    }
+    Ok(file)
+}
+#[cfg(not(windows))]
+fn single_link(metadata: &fs::Metadata) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        metadata.nlink() == 1
+    }
+    #[cfg(not(unix))]
+    {
+        let _metadata = metadata;
+        false
+    }
+}
+#[cfg(not(windows))]
+fn same_file(before: &fs::Metadata, after: &fs::Metadata) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        before.dev() == after.dev() && before.ino() == after.ino()
+    }
+    #[cfg(not(unix))]
+    {
+        let _metadata = (before, after);
+        false
+    }
+}

@@ -1,0 +1,120 @@
+//! Narrow grammar of `RemoteCmd` and its `add`, `del`, and `list` subcommands.
+//!
+//! Defines [`Action`] (`List`, `Add`, `Del`), [`Options`], and [`split_subcommand`] parsed from [`OsString`] CLI arguments.
+
+use std::ffi::OsString;
+
+/// Subcommand action for `bit remote` (`list`, `add <url>`, or `del <name>`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum Action {
+    List,
+    Add(String),
+    Del(String),
+}
+
+/// Validated command-line options for `bit remote`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct Options {
+    pub(super) command: &'static str,
+    pub(super) action: Action,
+    pub(super) global: bool,
+}
+
+impl Options {
+    /// Parses `args` ([`OsString`]) into [`Options`] via [`split_subcommand`] and [`parse_flags_and_values`] when they fit the native `bit remote` (`list`, `add`, `del`) grammar.
+    pub(super) fn parse(args: &[OsString]) -> Option<Self> {
+        let tokens = args
+            .iter()
+            .skip(1)
+            .map(|arg| arg.to_str().map(str::trim))
+            .filter(|token| !token.is_some_and(is_no_color_flag))
+            .collect::<Option<Vec<_>>>()?;
+        let (command, rest) = split_subcommand(&tokens)?;
+        let (global, values) = parse_flags_and_values(rest)?;
+        let action = match (command, values.as_slice()) {
+            ("remote" | "list", []) => Action::List,
+            ("add", [url])
+                if valid_target(url)
+                    && url
+                        .strip_prefix("file://")
+                        .is_some_and(|path| !path.trim().is_empty()) =>
+            {
+                Action::Add((*url).to_owned())
+            }
+            ("del", [name]) if valid_target(name) => Action::Del((*name).to_owned()),
+            _ => return None,
+        };
+        Some(Self { command, action, global })
+    }
+}
+
+/// Splits the leading `bit remote` subcommand (`list`, `add`, `del`, or default `"remote"`) from `tokens`.
+#[inline]
+fn split_subcommand<'a>(tokens: &'a [&'a str]) -> Option<(&'static str, &'a [&'a str])> {
+    match tokens.split_first() {
+        Some((&"list", rest)) => Some(("list", rest)),
+        Some((&"add", rest)) => Some(("add", rest)),
+        Some((&"del", rest)) => Some(("del", rest)),
+        Some((arg, _)) if !arg.starts_with('-') => None,
+        _ => Some(("remote", tokens)),
+    }
+}
+
+/// Parses `--global` (`-g`) flags and positional values from `tokens` for `bit remote`.
+fn parse_flags_and_values<'a>(tokens: &[&'a str]) -> Option<(bool, Vec<&'a str>)> {
+    let mut global = false;
+    let mut values = Vec::with_capacity(tokens.len());
+    let mut iter = tokens.iter().copied();
+    while let Some(token) = iter.next() {
+        match token {
+            "--" => {
+                consume_trailing_values(iter, &mut values)?;
+                break;
+            }
+            "-g" | "--global" | "--global=true" => global = true,
+            "--global=false" => global = false,
+            flag if flag.starts_with('-') => return None,
+            value => values.push(value),
+        }
+    }
+    Some((global, values))
+}
+
+/// Consumes non-flag trailing positional tokens after `--` into `values` for `bit remote` (`RemoteCmd`).
+#[inline]
+fn consume_trailing_values<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    values: &mut Vec<&'a str>,
+) -> Option<()> {
+    for rest in iter {
+        if rest.starts_with('-') || rest.is_empty() {
+            return None;
+        }
+        values.push(rest);
+    }
+    Some(())
+}
+
+#[inline]
+fn is_no_color_flag(token: &str) -> bool {
+    matches!(
+        token,
+        "--no-color"
+            | "--no-color=true"
+            | "--no-color=false"
+            | "--color"
+            | "--color=true"
+            | "--color=false"
+            | "--color=always"
+            | "--color=never",
+    )
+}
+
+#[inline]
+fn valid_target(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 4096
+        && value != "__proto__"
+        && !value.contains(char::is_whitespace)
+        && !value.contains(['!', '\0'])
+}

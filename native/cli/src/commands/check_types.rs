@@ -1,0 +1,189 @@
+//! Native `bit check-types [component-pattern]` (`scopes/typescript/typescript/cmds/check-types.cmd.ts`, `--unmodified`, `--strict`).
+//!
+//! Parses [`Options`] and delegates workspace type checking to [`checker`].
+
+mod checker;
+#[cfg(test)]
+mod tests;
+
+use super::{
+    Command,
+    color::Chalk,
+    script::active_component_count,
+    workspace_command::{self, format::Formatter, results::Report},
+};
+use crate::{native::Outcome, workspace};
+use bit_object_import::parse_jsonc;
+use std::{env, ffi::OsString, fs, io, path::Path};
+
+/// Native `bit check-types` [`Command`] descriptor handled by [`run`].
+pub const COMMAND: Command = Command { name: "check-types", aliases: &[], run };
+
+/// Error message emitted when `bit check-types` is invoked outside a Bit workspace.
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Hint message emitted when `bit check-types` finds no candidate components to check.
+const EMPTY_CHECK_TYPES_HINT: &str = "no components found to check.\nuse \"--unmodified\" flag to check all components or specify the ids to check.\notherwise, only new and modified components will be checked";
+
+/// Parsed CLI options and component pattern for `bit check-types`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Options {
+    pub pattern: Option<String>,
+    pub all: bool,
+    pub unmodified: bool,
+    pub strict: bool,
+    pub json: bool,
+}
+
+/// Executes `bit check-types` via [`checker::try_run`], delegating when outside the native grammar or in CI.
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("check-types arguments are not UTF-8".into()));
+    };
+    let Some(options) = parse_options(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native check-types grammar".into()));
+    };
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let text = val.to_string_lossy();
+            let trimmed = text.trim();
+            !trimmed.is_empty() && trimmed != "0" && !trimmed.eq_ignore_ascii_case("false")
+        })
+    {
+        return Ok(Outcome::Declined("CI check-types delegated".into()));
+    }
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return emit_outside_workspace(&cwd, args, &options);
+    };
+    if options.pattern.is_none() && is_empty_workspace(&root).unwrap_or(false) {
+        return emit_empty_check_types(&root, args, &options);
+    }
+    if let Some(outcome) = checker::try_run(&root, args, &options)? {
+        return Ok(outcome);
+    }
+    Ok(Outcome::Declined("check-types execution delegated".into()))
+}
+
+/// Emits the outside-workspace error for `bit check-types` in text or `--json` mode using [`OUTSIDE_WORKSPACE_ERR`].
+fn emit_outside_workspace(cwd: &Path, args: &[OsString], options: &Options) -> io::Result<Outcome> {
+    if options.json {
+        return workspace_command::execute_failure_scope(
+            cwd,
+            args,
+            "check-types",
+            true,
+            "",
+            io::Error::other(OUTSIDE_WORKSPACE_ERR),
+        );
+    }
+    let all = options.all;
+    workspace_command::execute_without_loader_scope(cwd, args, "check-types", move |output| {
+        if all {
+            output.warning("--all is deprecated, use --unmodified instead");
+        }
+        Err(io::Error::other(OUTSIDE_WORKSPACE_ERR))
+    })
+}
+
+/// Emits the empty-workspace `bit check-types` report in text or `--json` mode.
+fn emit_empty_check_types(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<Outcome> {
+    let all = options.all;
+    let data = if options.json {
+        "[]".to_owned()
+    } else {
+        Formatter::new(Chalk::detect(args)).hint(EMPTY_CHECK_TYPES_HINT)
+    };
+    workspace_command::execute_without_loader(root, args, "check-types", move |output| {
+        if all {
+            output.warning("--all is deprecated, use --unmodified instead");
+        }
+        Ok(Report { data, code: 0, details: None })
+    })
+}
+
+#[inline]
+pub(super) fn is_empty_workspace(root: &Path) -> io::Result<bool> {
+    if !root.is_absolute()
+        || root.as_os_str().is_empty()
+        || root
+            .as_os_str()
+            .as_encoded_bytes()
+            .iter()
+            .all(u8::is_ascii_whitespace)
+    {
+        return Ok(false);
+    }
+    let ws_config = parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
+    if super::build_cmd::is_bitmap_auto_sync(&ws_config) {
+        return Ok(false);
+    }
+    let bitmap = parse_jsonc(&fs::read(root.join(".bitmap"))?)?;
+    Ok(active_component_count(&bitmap) == 0)
+}
+
+pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
+    let mut options = Options::default();
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        match arg {
+            "--" => {
+                consume_trailing_check_types_pattern(iter, &mut options.pattern)?;
+                break;
+            }
+            "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+            | "--color=false" | "--color=always" => {}
+            "-a" | "-a=true" | "--all" | "--all=true" => options.all = true,
+            "-a=false" | "--all=false" => options.all = false,
+            "-u" | "-u=true" | "--unmodified" | "--unmodified=true" => options.unmodified = true,
+            "-u=false" | "--unmodified=false" => options.unmodified = false,
+            "--strict" | "--strict=true" => options.strict = true,
+            "--strict=false" => options.strict = false,
+            "-j" | "-j=true" | "--json" | "--json=true" => options.json = true,
+            "-j=false" | "--json=false" => options.json = false,
+            val if !val.starts_with('-')
+                && !val.trim().is_empty()
+                && options.pattern.is_none() =>
+            {
+                options.pattern = Some(val.trim().to_owned());
+            }
+            val => apply_short_flags(val, &mut options)?,
+        }
+    }
+    Some(options)
+}
+
+#[inline]
+fn consume_trailing_check_types_pattern<'a>(
+    iter: impl Iterator<Item = &'a str>,
+    pattern: &mut Option<String>,
+) -> Option<()> {
+    for val in iter {
+        let trimmed = val.trim();
+        (!trimmed.is_empty()
+            && !trimmed.starts_with('-')
+            && pattern.replace(trimmed.to_owned()).is_none())
+        .then_some(())?;
+    }
+    Some(())
+}
+
+#[inline]
+fn apply_short_flags(arg: &str, options: &mut Options) -> Option<()> {
+    let flags = arg.trim().strip_prefix('-')?;
+    if flags.is_empty() || flags.starts_with('-') {
+        return None;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'a' => options.all = true,
+            'u' => options.unmodified = true,
+            'j' => options.json = true,
+            _ => return None,
+        }
+    }
+    Some(())
+}

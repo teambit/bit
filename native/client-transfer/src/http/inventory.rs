@@ -1,0 +1,223 @@
+//! Public remote list and latest-version `GraphQL`, with bounded JSON responses.
+//!
+//! Extends [`Network`] over [`LIST_QUERY`] and [`Listed`] and exposes [`old_server_fallback`] for legacy servers.
+#[cfg(test)]
+mod tests;
+
+use super::{LIST_QUERY, Listed, Network, network_error, throw_for_status};
+use crate::invalid;
+use serde_json::{Map, Value, json};
+use std::io;
+
+/// Marker error wrapper indicating that the legacy server fallback warning was already printed by [`Network::inventory_with_warning`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct OldServerFallbackError(String);
+impl std::fmt::Display for OldServerFallbackError {
+    #[inline]
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+impl std::error::Error for OldServerFallbackError {}
+
+/// The published warning was already observable before a failed retry.
+#[inline]
+#[must_use]
+pub fn old_server_fallback(error: &io::Error) -> bool {
+    error.get_ref().is_some_and(<dyn std::error::Error + Send + Sync>::is::<OldServerFallbackError>)
+}
+
+/// Wrap `error` in [`OldServerFallbackError`] so callers know the fallback warning was already emitted.
+#[inline]
+fn fallback_error(error: &io::Error) -> io::Error {
+    io::Error::other(OldServerFallbackError(error.to_string()))
+}
+
+/// `GraphQL` query (`list`) including `includeDeleted` and `teambit.component/remove` aspect data.
+const LIST_DELETED_QUERY: &str = r#"query list($namespaces: [String!], $includeDeleted: Boolean) { scope { components(namespaces: $namespaces, includeDeleted: $includeDeleted) { id { scope version name } aspects(include: ["teambit.component/remove"]) { id config } deprecation { isDeprecate } } } }"#;
+/// `GraphQL` query (`getLatestVersions`) for resolving the latest version of each component ID.
+const LATEST_VERSIONS_QUERY: &str =
+    "query getLatestVersions($ids: [String]!) { scope { _legacyLatestVersions(ids: $ids) } }";
+/// Maximum buffered response size (`8 MiB`) for remote `inventory` and `latestVersions` `GraphQL` queries.
+const MAX_GRAPHQL_BYTES: usize = 8 * 1024 * 1024;
+
+impl Network {
+    /// `Http.list` on [`Network`] with the published `includeDeleted` projection via [`Network::inventory_with_warning`].
+    #[inline]
+    pub async fn inventory(
+        &self,
+        url: &str,
+        namespaces: Option<&str>,
+        include_deleted: bool,
+    ) -> io::Result<Vec<Value>> {
+        self.inventory_with_warning(url, namespaces, include_deleted).await.map(|(rows, _)| rows)
+    }
+
+    /// Return the rows and whether the published older-server warning precedes them.
+    pub async fn inventory_with_warning(
+        &self,
+        url: &str,
+        namespaces: Option<&str>,
+        include_deleted: bool,
+    ) -> io::Result<(Vec<Value>, bool)> {
+        let query = if include_deleted { LIST_DELETED_QUERY } else { LIST_QUERY };
+        let body = json!({
+            "query": query,
+            "variables": list_variables(namespaces, include_deleted),
+        });
+        let endpoint = format!("{}/graphql", url.trim().trim_end_matches('/'));
+        let response = self.graphql_bounded(&endpoint, &body).await?;
+        if include_deleted && unknown_include_deleted(&response) {
+            let fallback = self
+                .graphql_bounded(
+                    &endpoint,
+                    &json!({
+                        "query": LIST_QUERY,
+                        "variables": list_variables(namespaces, false),
+                    }),
+                )
+                .await
+                .map_err(|error| fallback_error(&error))?;
+            graphql_error(&fallback).map_err(|error| fallback_error(&error))?;
+            return inventory_rows(&fallback, false)
+                .map(|rows| (rows, true))
+                .map_err(|error| fallback_error(&error));
+        }
+        graphql_error(&response)?;
+        inventory_rows(&response, include_deleted).map(|rows| (rows, false))
+    }
+
+    /// `Http.latestVersions`: `GraphQL` `getLatestVersions` query returns ids in the remote's own order.
+    pub async fn latest_versions(&self, url: &str, ids: &[String]) -> io::Result<Vec<String>> {
+        let base = url.trim().trim_end_matches('/');
+        if base.is_empty()
+            || ids.len() > 4096
+            || ids
+                .iter()
+                .any(|id| id.trim().is_empty())
+        {
+            return Err(invalid("remote latest versions request"));
+        }
+        let response = self.graphql_bounded(
+            &format!("{base}/graphql"),
+            &json!({
+                "query": LATEST_VERSIONS_QUERY,
+                "variables": {"ids": ids},
+            }),
+        )
+        .await?;
+        graphql_error(&response)?;
+        let rows = response["data"]["scope"]["_legacyLatestVersions"]
+            .as_array()
+            .ok_or_else(|| invalid("remote latest versions response"))?;
+        if rows.len() > 4096 {
+            return Err(invalid("remote latest versions limit"));
+        }
+        rows.iter()
+            .map(|id| {
+                id.as_str()
+                    .map(str::trim)
+                    .filter(|id| !id.is_empty())
+                    .map(str::to_owned)
+                    .ok_or_else(|| invalid("remote latest version id"))
+            })
+            .collect()
+    }
+
+    async fn graphql_bounded(&self, url: &str, body: &Value) -> io::Result<Value> {
+        let response = self.send(
+            self.headers(self.client.post(url), "read")?
+                .json(body),
+        )
+        .await?;
+        let mut response = self.cancellation.run(throw_for_status(response)).await??;
+        let capacity = response
+            .content_length()
+            .and_then(|len| usize::try_from(len).ok())
+            .unwrap_or(0)
+            .min(MAX_GRAPHQL_BYTES);
+        let mut bytes = Vec::with_capacity(capacity);
+        while let Some(chunk) =
+            self.cancellation.run(response.chunk()).await?.map_err(|error| network_error(&error))?
+        {
+            if chunk.len() > MAX_GRAPHQL_BYTES.saturating_sub(bytes.len()) {
+                return Err(invalid("remote GraphQL response limit"));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        serde_json::from_slice(&bytes).map_err(|_| invalid("remote GraphQL response"))
+    }
+}
+
+#[inline]
+fn list_variables(namespaces: Option<&str>, include_deleted: bool) -> Value {
+    let mut variables = Map::new();
+    if let Some(namespaces) = namespaces
+        .map(str::trim)
+        .filter(|ns| !ns.is_empty())
+    {
+        variables.insert("namespaces".to_owned(), json!([namespaces]));
+    }
+    if include_deleted {
+        variables.insert("includeDeleted".to_owned(), json!(true));
+    }
+    Value::Object(variables)
+}
+
+#[inline]
+fn unknown_include_deleted(response: &Value) -> bool {
+    response["errors"][0]["message"]
+        .as_str()
+        .is_some_and(|message| {
+            message.contains("Unknown argument") && message.contains("includeDeleted")
+        })
+}
+
+#[inline]
+fn graphql_error(response: &Value) -> io::Result<()> {
+    if let Some(message) = response["errors"][0]["message"]
+        .as_str()
+        .map(str::trim)
+        .filter(|msg| !msg.is_empty())
+    {
+        return Err(io::Error::other(message.to_owned()));
+    }
+    Ok(())
+}
+
+#[inline]
+fn inventory_rows(response: &Value, include_deleted: bool) -> io::Result<Vec<Value>> {
+    let components = response["data"]["scope"]["components"]
+        .as_array()
+        .ok_or_else(|| invalid("remote inventory response"))?;
+    if components.len() > 4096 {
+        return Err(invalid("remote inventory limit"));
+    }
+    components
+        .iter()
+        .map(|component| {
+            let listed = Listed::parse(component)?;
+            let mut row = json!({"id": listed.id(), "deprecated": listed.deprecated});
+            if include_deleted && let Some(removed) = removed_config(component) {
+                row["removed"] = removed.clone();
+            }
+            Ok(row)
+        })
+        .collect()
+}
+
+#[inline]
+fn removed_config(component: &Value) -> Option<&Value> {
+    component["aspects"]
+        .as_array()?
+        .iter()
+        .find(|aspect| {
+            aspect["id"]
+                .as_str()
+                .map(str::trim)
+                .is_some_and(|id| {
+                    id == "teambit.component/remove" || id.starts_with("teambit.component/remove@")
+                })
+        })?["config"]
+        .get("removed")
+}

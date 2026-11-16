@@ -1,0 +1,5 @@
+__pycache__/
+benchmarks/*.json
+!benchmarks/lane-adoption-completion-evidence-index.json
+!benchmarks/lane-adoption-completion-summary.json
+!benchmarks/import-adoption-completion-provenance-correction.json

@@ -1,0 +1,240 @@
+//! Unexported component synchronization and explicit version import preparation on [`PreparedImport`].
+
+use super::{
+    PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,
+    remote, version_ref,
+};
+use serde_json::{Value, json};
+use std::{io, path::Path};
+impl PreparedImport {
+    /// Synchronize unexported external [`Target`]s against `global_remotes_file` before checkout.
+    pub(crate) fn sync_unexported(
+        &mut self,
+        global_remotes_file: &Path,
+        targets: &[Target],
+    ) -> io::Result<()> {
+        if targets.len() > 4096 {
+            return Err(invalid("import unexported count"));
+        }
+        let external = self.external_targets(targets);
+        if external.is_empty() {
+            return Ok(());
+        }
+        let remotes = self.sync_remotes(global_remotes_file)?;
+        self.progress.push(super::super::Progress {
+            reason: Some(
+                "for making sure the new components are really new and are not out-of-sync".into(),
+            ),
+            ..Default::default()
+        });
+        for target in external {
+            let scope = target.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+                .ok_or_else(|| invalid("import unexported scope"))?;
+            let directory = remote(self, &remotes, scope)?;
+            let incoming = read_model(self, &directory, &target)?
+                .ok_or_else(|| invalid("import unexported remote missing"))?;
+            let hash = version_ref(&incoming, "latest")?;
+            let progress =
+                self.progress.last_mut().ok_or_else(|| invalid("import unexported progress"))?;
+            progress.ids.push(format!("{}@latest", identity(&target)?));
+            progress.objects.insert(object_hash(scope));
+            receive(self, &directory, &target, &incoming, &hash, false)?;
+        }
+        self.validate()
+    }
+    /// Filter [`Target`] `targets` to those belonging to an external scope distinct from `local_scope`.
+    #[inline]
+    fn external_targets(&self, targets: &[Target]) -> Vec<Target> {
+        targets
+            .iter()
+            .filter(|target| {
+                target.scope
+                    .as_deref()
+                    .map(str::trim)
+                    .is_some_and(|scope| {
+                        !scope.is_empty() && scope != self.environment.local_scope
+                    })
+            })
+            .cloned()
+            .collect()
+    }
+    /// Merge global and local `scope.json` remote maps into `self.environment.remotes` as a [`Value`].
+    fn sync_remotes(&mut self, global_remotes_file: &Path) -> io::Result<Value> {
+        let global = self.capture.json(global_remotes_file)?;
+        if global.is_none() {
+            self.environment.missing_global_remotes = Some(global_remotes_file.to_owned());
+        }
+        let mut remotes = global.unwrap_or_else(|| json!({}));
+        let scope_path = self.environment.local_directory
+            .parent()
+            .ok_or_else(|| invalid("import scope path"))?
+            .join("scope.json");
+        let scope =
+            self.capture.json(&scope_path)?.ok_or_else(|| invalid("import scope absent"))?;
+        let map = remotes.as_object_mut().ok_or_else(|| invalid("import global remotes"))?;
+        if let Some(local) = scope["remotes"].as_object() {
+            map.extend(local.clone());
+        }
+        self.environment.remotes = remotes.clone();
+        Ok(remotes)
+    }
+    /// Checkout's `cache=true` `importWithoutDeps` stage for [`Target`] `targets`, after status selection.
+    #[inline]
+    pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, None)
+    }
+    /// Prepare explicit target versions for a lane switch without switching existing local versions.
+    #[inline]
+    pub(crate) fn prepare_switch_versions(
+        &mut self,
+        targets: &[Target],
+    ) -> io::Result<super::super::Progress> {
+        let previous = self.cache.switch_existing_versions;
+        self.cache.switch_existing_versions = false;
+        let result = self.prepare_versions(targets);
+        self.cache.switch_existing_versions = previous;
+        result?;
+        self.progress.pop().ok_or_else(|| invalid("switch checkout import progress"))
+    }
+    pub(crate) fn prepare_diff_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, Some("to show diff"))?;
+        let ids = self.progress
+            .last()
+            .ok_or_else(|| invalid("diff import progress"))?
+            .ids
+            .clone();
+        for scope in targets
+            .iter()
+            .filter_map(|target| target.scope.as_deref().map(str::trim))
+            .filter(|scope| !scope.is_empty())
+        {
+            if self.environment.remote_overrides.contains_key(scope)
+                && ids
+                    .iter()
+                    .any(|id| {
+                        id.strip_prefix(scope)
+                            .is_some_and(|rest| rest.starts_with('/'))
+                    })
+                && let std::collections::hash_map::Entry::Vacant(entry) = self
+                    .overlay
+                    .objects
+                    .entry(object_hash(scope))
+            {
+                let object =
+                    super::super::publish::object(entry.key(), "ScopeMeta", json!({"name":scope}))?;
+                entry.insert(object);
+            }
+        }
+        Ok(())
+    }
+    #[inline]
+    pub(crate) fn prepare_merge_gap(&mut self, targets: &[Target]) -> io::Result<()> {
+        let reason = self.cache.lane_reason
+            .clone()
+            .unwrap_or_else(|| "for getting the common-snap between main and main".into());
+        self.prepare_versions_with_reason(targets, Some(&reason))
+    }
+    #[inline]
+    pub(crate) fn prepare_lane_pattern_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, Some("import all history of given patterns components to check whether they have dependencies on the lane"))
+    }
+    #[inline]
+    pub(crate) fn prepare_scope_additions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(
+            targets,
+            Some("to import new components from the defaultScope"),
+        )
+    }
+    #[inline]
+    pub(super) fn prepare_versions_with_reason(
+        &mut self,
+        targets: &[Target],
+        reason: Option<&str>,
+    ) -> io::Result<()> {
+        if targets.len() > 4096 {
+            return Err(invalid("import selected target limit"));
+        }
+        self.progress.push(super::super::Progress {
+            reason: reason.map(str::to_owned),
+            ..Default::default()
+        });
+        for target in targets {
+            self.prepare_selected_target(target)?;
+        }
+        self.validate()
+    }
+    fn prepare_selected_target(&mut self, target: &Target) -> io::Result<()> {
+        if target.scope.is_none() {
+            return Ok(());
+        }
+        let target_id = identity(target)?;
+        let remote_scope = self.cache.lane_sources
+            .get(&target_id)
+            .cloned()
+            .or_else(|| target.scope.clone());
+        if remote_scope.as_deref() == Some(self.environment.local_scope.as_str()) {
+            return Ok(());
+        }
+        if let Some(path) = self.environment.missing_global_remotes.take() {
+            self.environment.global_remotes = Some(path);
+        }
+        if self.cached_selected(target)? {
+            return Ok(());
+        }
+        let remotes = self.environment.remotes.clone();
+        let directory = remote(
+            self,
+            &remotes,
+            remote_scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
+        )?;
+        let row = self.progress.last_mut().ok_or_else(|| invalid("import selected progress"))?;
+        row.ids.push(format!("{target_id}@{}", target.version.trim()));
+        row.objects.insert(object_hash(
+            remote_scope
+                .as_deref()
+                .unwrap_or_default()
+                .trim(),
+        ));
+        let incoming = read_model(self, &directory, target)?
+            .ok_or_else(|| invalid("import selected component missing"))?;
+        let hash = version_ref(&incoming, &target.version)?;
+        super::transfer::receive_cached(self, &directory, target, &incoming, &hash)
+    }
+    fn cached_selected(&mut self, target: &Target) -> io::Result<bool> {
+        let local = self.environment.local_directory.clone();
+        let model = read_model(self, &local, target)?;
+        let hash = model
+            .as_ref()
+            .and_then(|model| version_ref(model, &target.version).ok());
+        let version = hash
+            .as_ref()
+            .map(|hash| read_version(self, hash))
+            .transpose()?
+            .flatten();
+        // The preceding switch refresh primes the published importer's cache.
+        // Its subsequent cached checkout import keeps an available pending Version.
+        if self.cache.switch_existing_versions && version.is_some() {
+            return Ok(true);
+        }
+        let first_unbuilt = version
+            .as_ref()
+            .is_some_and(|version| {
+                !matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
+            })
+            && !hash
+                .as_ref()
+                .is_some_and(|hash| {
+                    self.cache.staged
+                        .lines()
+                        .any(|line| line == hash)
+                })
+            && self.cache.unbuilt.insert(format!("{}@{}", identity(target)?, target.version));
+        if version.is_some() && !first_unbuilt {
+            return Ok(true);
+        }
+        Ok(false)
+    }
+}

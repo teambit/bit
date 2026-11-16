@@ -1,0 +1,221 @@
+//! Env policies of the envs workspace components use (`getComponentEnvPolicy`).
+//!
+//! A core env's policy comes from its `getDependencies()` through the host. Any
+//! other env is read from its `env.jsonc`: from the component directory when the
+//! env is a workspace component, otherwise from the env's `Version` in the scope
+//! objects (the pre-install import fetches it). `extends` is resolved the same way.
+//! An env without `env.jsonc` falls back to `getDependencies()` and is marked
+//! `without_manifest`.
+//! Resolves `extends` chains up to 16 levels across workspace, [`Scope`], and `node_modules` `env.jsonc` files.
+
+use super::{env, scope::Scope};
+use crate::{
+    host::Host,
+    model::{EnvPolicy, WorkspaceComponent},
+};
+use indexmap::IndexMap;
+use serde_json::Value;
+use std::{fs, io, path::Path};
+
+/// `getCoreEnvsIds()`: built-in core environment aspect IDs shipped with Bit.
+pub const CORE_ENVS: [&str; 10] = [
+    "teambit.harmony/aspect",
+    "teambit.react/react",
+    "teambit.harmony/node",
+    "teambit.react/react-native",
+    "teambit.html/html",
+    "teambit.mdx/mdx",
+    "teambit.envs/env",
+    "teambit.mdx/readme",
+    "teambit.harmony/bit-custom-aspect",
+    "teambit.harmony/empty-env",
+];
+
+/// Maximum recursion depth (`16`) when following `extends` chains in `env.jsonc` via [`EnvJsoncReader`].
+const MAX_EXTENDS: usize = 16;
+
+/// Whether `id` (with or without a version via [`split_version`]) is one of [`CORE_ENVS`].
+#[must_use]
+#[inline]
+pub fn is_core_env(id: &str) -> bool {
+    CORE_ENVS.contains(&split_version(id).0)
+}
+
+/// Split `scope/name@version` into `("scope/name", Some("version"))` (or `(id, None)` when unversioned).
+#[must_use]
+#[inline]
+pub fn split_version(id: &str) -> (&str, Option<&str>) {
+    let id = id.trim();
+    match id.rfind('@') {
+        Some(index) if index > 0 && !id[index + 1..].contains('/') => {
+            (id[..index].trim(), Some(id[index + 1..].trim()).filter(|version| !version.is_empty()))
+        }
+        _ => (id, None),
+    }
+}
+
+/// The policy of every env used by `components`, keyed by the env ID as written
+/// in [`WorkspaceComponent::env_id`].
+pub async fn load_env_policies(
+    root: &Path,
+    components: &[WorkspaceComponent],
+    host: &dyn Host,
+) -> io::Result<IndexMap<String, EnvPolicy>> {
+    let reader = EnvJsoncReader { components, scope: Scope::find(root) };
+    let mut policies = IndexMap::new();
+    for component in components {
+        let env_id = component.env_id.trim();
+        if env_id.is_empty() || policies.contains_key(env_id) {
+            continue;
+        }
+        let policy = env_policy(&reader, env_id, host).await?;
+        policies.insert(env_id.to_owned(), policy);
+    }
+    Ok(policies)
+}
+
+/// Resolve the [`EnvPolicy`] of `env_id` from `env.jsonc` via [`EnvJsoncReader`] or by querying [`Host`].
+pub async fn env_policy(
+    reader: &EnvJsoncReader<'_>,
+    env_id: &str,
+    host: &dyn Host,
+) -> io::Result<EnvPolicy> {
+    if is_core_env(env_id) {
+        let config = host.env_policy(split_version(env_id).0).await?;
+        return config.map_or_else(
+            || Ok(EnvPolicy::default()),
+            |config| env::from_config(&config, true),
+        );
+    }
+    if let Some(manifest) = reader.resolved(env_id)? {
+        return manifest
+            .get("policy")
+            .filter(|policy| policy.is_object())
+            .map_or_else(|| Ok(EnvPolicy::default()), |policy| env::from_config(policy, false));
+    }
+    let default_env = host.env_falls_back(env_id).await?;
+    let config = host.env_policy(env_id).await?;
+    let failed_to_load = default_env || config.is_none();
+    let mut policy =
+        config.map_or_else(|| Ok(EnvPolicy::default()), |config| env::from_config(&config, false))?;
+    policy.without_manifest = true;
+    policy.failed_to_load = failed_to_load;
+    policy.default_env = default_env;
+    Ok(policy)
+}
+
+/// Finds and resolves `env.jsonc` files.
+pub struct EnvJsoncReader<'a> {
+    pub components: &'a [WorkspaceComponent],
+    pub scope: Option<Scope>,
+}
+
+impl EnvJsoncReader<'_> {
+    /// The `env.jsonc` of `env_id` with its `extends` chain merged in.
+    #[inline]
+    pub fn resolved(&self, env_id: &str) -> io::Result<Option<Value>> {
+        self.resolve(env_id, None, 0)
+    }
+
+    fn resolve(
+        &self,
+        env_id: &str,
+        dependent: Option<&Value>,
+        depth: usize,
+    ) -> io::Result<Option<Value>> {
+        if depth > MAX_EXTENDS {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("env.jsonc extends cycle at {env_id}"),
+            ));
+        }
+        let Some((manifest, version)) = self.read(env_id, dependent)? else { return Ok(None) };
+        let Some(parent) = manifest
+            .get("extends")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|parent| !parent.is_empty())
+        else {
+            return Ok(Some(manifest));
+        };
+        // A core env parent contributes nothing (`resolveEnvManifest` returns `{}`).
+        let parent_manifest = if is_core_env(parent) {
+            Value::Object(serde_json::Map::new())
+        } else {
+            self.resolve(parent, version.as_ref(), depth + 1)?
+                .unwrap_or_else(|| Value::Object(serde_json::Map::new()))
+        };
+        let mut merged = env::merge_manifests(&parent_manifest, &manifest);
+        if let Some(object) = merged.as_object_mut() {
+            object.remove("extends");
+        }
+        Ok(Some(merged))
+    }
+
+    /// The raw `env.jsonc` of an env, with the `Version` object it came from (scope only).
+    fn read(
+        &self,
+        env_id: &str,
+        dependent: Option<&Value>,
+    ) -> io::Result<Option<(Value, Option<Value>)>> {
+        let (id, version) = split_version(env_id);
+        if let Some(component) = self.components
+            .iter()
+            .find(|component| component.id.to_string_without_version() == id)
+        {
+            return read_dir(&component.dir)
+                .map(|manifest| manifest.map(|manifest| (manifest, None)));
+        }
+        let Some(scope) = &self.scope else { return Ok(None) };
+        let version = version.map(str::to_owned).or_else(|| dependency_version(dependent, id));
+        let Some(object) = scope.version(id, version.as_deref())? else { return Ok(None) };
+        let Some(bytes) = scope
+            .file(&object, "env.jsonc")?
+            .map_or_else(|| scope.file(&object, "env.json"), |bytes| Ok(Some(bytes)))?
+        else {
+            return Ok(None);
+        };
+        Ok(Some((parse(&bytes, env_id)?, Some(object))))
+    }
+}
+
+/// The version a dependent env's `Version` records for its parent env.
+fn dependency_version(dependent: Option<&Value>, id: &str) -> Option<String> {
+    let dependent = dependent?;
+    let target = split_version(id.trim()).0;
+    ["dependencies", "devDependencies", "peerDependencies"]
+        .iter()
+        .filter_map(|field| dependent[field].as_array())
+        .flatten()
+        .find_map(|dependency| {
+            let parsed = crate::dependencies::data::id_from_object(
+                dependency.get("id").unwrap_or(dependency),
+            )?;
+            let version = parsed.version.as_deref()?.trim();
+            (parsed.to_string_without_version() == target && !version.is_empty()).then(|| {
+                version.to_owned()
+            })
+        })
+}
+
+#[inline]
+fn read_dir(dir: &Path) -> io::Result<Option<Value>> {
+    for name in ["env.jsonc", "env.json"] {
+        match fs::read(dir.join(name)) {
+            Ok(bytes) => return parse(&bytes, dir.display()).map(Some),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(None)
+}
+
+#[inline]
+fn parse(bytes: &[u8], location: impl std::fmt::Display) -> io::Result<Value> {
+    bit_object_import::parse_jsonc(bytes).map_err(|error| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("Syntax error in env.jsonc for {location}: {error}. Please check the file for invalid JSONC syntax."),
+        )
+    })
+}

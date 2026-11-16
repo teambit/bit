@@ -1,0 +1,53 @@
+#![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
+#![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
+//! The `bit` executable ([`main`]). Commands implemented in Rust ([`commands`], [`native`]) run in this process;
+//! every other command runs the Node.js Bit CLI ([`delegate`]), found by [`discovery`], with
+//! the same arguments, terminal, environment and [`ExitCode`]. Nothing in the
+//! Node.js CLI knows about this binary. See `docs/rust-cli.md` and [`run`].
+
+mod commands;
+mod delegate;
+mod discovery;
+mod history;
+mod host;
+mod native;
+mod trace;
+mod workspace;
+
+use std::{env, ffi::OsString, process::ExitCode};
+
+/// Entry point of the native `bit` CLI binary (`docs/rust-cli.md`) invoking [`run`] and returning an [`ExitCode`].
+fn main() -> ExitCode {
+    // pnpm's cached umask read briefly changes the process-wide mask. Initialize
+    // it before workers can create directories with an unmasked mode.
+    #[cfg(unix)]
+    let _ = pnpm_fs::file_mode::current_umask();
+    pnpm_diagnostics::enable_tracing_by_env();
+    let args: Vec<OsString> = env::args_os().skip(1).collect();
+    match run(&args) {
+        Ok(code) => code,
+        Err(error) => {
+            use std::io::Write as _;
+            let text = error.to_string();
+            let detail = text.trim();
+            let mut stderr = std::io::stderr().lock();
+            if detail.is_empty() {
+                let _ = writeln!(stderr, "bit: {}", error.kind());
+            } else {
+                let _ = writeln!(stderr, "bit: {detail}");
+            }
+            let _ = stderr.flush();
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Dispatches `args` ([`OsString`]) to a [`native::run`] command when supported or [`delegate::run`]s to the [`discovery::find`] Node.js CLI.
+#[inline]
+fn run(args: &[OsString]) -> std::io::Result<ExitCode> {
+    if let Some(code) = native::run(args)? {
+        return Ok(code);
+    }
+    let target = discovery::find()?;
+    delegate::run(&target, args)
+}

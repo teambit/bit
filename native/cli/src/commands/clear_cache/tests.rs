@@ -1,0 +1,87 @@
+//! Unit tests for `bit clear-cache` [`parse_args`], [`clear_caches`], and [`format_report`].
+//!
+//! Verifies local and `--remote` ([`format_remote_report`]) cache clearing and [`Chalk`] report formatting.
+
+use super::{clear_caches, format_remote_report, format_report, parse_args};
+use crate::commands::color::Chalk;
+use serde_json::json;
+use std::{ffi::OsString, fs};
+
+/// Converts string slices into owned [`OsString`] CLI arguments for `clear-cache` tests.
+fn args(items: &[&str]) -> Vec<OsString> {
+    items
+        .iter()
+        .map(OsString::from)
+        .collect()
+}
+
+/// Verifies [`parse_args`] for plain `clear-cache` / `cc` and `--remote` invocations constructed via [`args`].
+#[test]
+fn parses_plain_and_remote_invocations() {
+    assert_eq!(parse_args(&args(&["clear-cache"])), Some(None));
+    assert_eq!(parse_args(&args(&["cc", "--no-color"])), Some(None));
+    assert_eq!(
+        parse_args(&args(&["clear-cache", "--remote", "my-scope"])),
+        Some(Some("my-scope".to_owned())),
+    );
+    assert_eq!(
+        parse_args(&args(&["clear-cache", "-r", "my-scope", "--no-color"])),
+        Some(Some("my-scope".to_owned())),
+    );
+    assert_eq!(parse_args(&args(&["cc", "--remote=my-scope"])), Some(Some("my-scope".to_owned())));
+    assert_eq!(parse_args(&args(&["clear-cache", "--remote"])), None);
+    assert_eq!(parse_args(&args(&["clear-cache", "--remote", "--no-color"])), None);
+    assert_eq!(parse_args(&args(&["clear-cache", "positional"])), None);
+}
+
+/// Verifies [`format_remote_report`] output with [`Chalk`] for both truthy (`true`) and falsy (`false`) remote responses.
+#[test]
+fn formats_remote_report_for_truthy_and_falsy_responses() {
+    let chalk = Chalk::new(false);
+    let ok = format_remote_report("my-scope", &json!(true), chalk);
+    assert!(ok.contains(r#"cleaned the cache of "my-scope""#));
+    let failed = format_remote_report("my-scope", &json!(false), chalk);
+    assert!(failed.contains(r#"failed cleaning the cache of "my-scope""#));
+}
+
+/// Verifies [`clear_caches`] and [`format_report`] remove both `.bit/cache/components` and `.bit/index.json`.
+#[test]
+fn clears_workspace_fs_cache_and_scope_index() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    fs::write(root.join("workspace.jsonc"), "{}").unwrap();
+    let scope = root.join(".bit");
+    let fs_cache = scope.join("cache").join("components");
+    fs::create_dir_all(&fs_cache).unwrap();
+    fs::write(fs_cache.join("entry"), "cached").unwrap();
+    fs::write(scope.join("index.json"), "[]").unwrap();
+
+    let cleared = clear_caches(root, Some(root));
+    assert_eq!(cleared, vec!["components cache on the filesystem", "scope-index file"]);
+    assert!(!fs_cache.exists());
+    assert!(!scope.join("index.json").exists());
+
+    let report = format_report(&cleared, Chalk::new(false));
+    assert!(report.contains("caches cleared"));
+    assert!(report.contains("components cache on the filesystem"));
+    assert!(report.contains("scope-index file"));
+}
+
+/// Verifies that [`clear_caches`] on a bare scope removes `index.json` without reporting a workspace filesystem cache.
+#[test]
+fn clears_bare_scope_index_only() {
+    let dir = tempfile::tempdir().unwrap();
+    let scope = dir.path();
+    fs::write(scope.join("scope.json"), "{}").unwrap();
+    fs::write(scope.join("index.json"), "[]").unwrap();
+
+    let cleared = clear_caches(scope, None);
+    assert_eq!(cleared, vec!["scope-index file"]);
+    assert!(!scope.join("index.json").exists());
+}
+
+#[test]
+fn empty_cleared_list_formats_empty_report() {
+    let report = format_report(&[], Chalk::new(false));
+    assert!(report.is_empty());
+}

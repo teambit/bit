@@ -1,0 +1,217 @@
+//! Comparator helpers of `semver-range-intersect` (`utils.js`).
+//!
+//! Normalizes prerelease stripping and equality checks across [`Comparator`]s.
+//! Selects stricter lower and upper bounds when merging intersecting range intervals.
+
+use super::super::semver::{Comparator, SemVer};
+use std::{cmp::Ordering, io};
+
+/// Format the [`SemVer`] version of `comparator`, or `""` when `None`.
+#[inline]
+fn version_text(comparator: &Comparator) -> String {
+    comparator.semver
+        .as_ref()
+        .map(SemVer::format)
+        .unwrap_or_default()
+}
+
+/// Return `true` when [`Comparator`] `comparator`'s version includes a non-empty prerelease tag.
+#[inline]
+fn is_prerelease(comparator: &Comparator) -> bool {
+    comparator.semver
+        .as_ref()
+        .is_some_and(|semver| !semver.prerelease.is_empty())
+}
+
+/// `stripSemVerPrerelease`: `M.m.p` of the [`Comparator`]'s [`SemVer`] version.
+#[inline]
+fn strip_prerelease(comparator: &Comparator) -> String {
+    comparator.semver
+        .as_ref()
+        .map(|semver| format!("{}.{}.{}", semver.major, semver.minor, semver.patch))
+        .unwrap_or_default()
+}
+
+/// `isSameVersionEqualsLikeComparator`: check whether `left` and `right` are `=`-like comparators with identical versions.
+#[inline]
+pub(super) fn same_version_equals_like(left: &Comparator, right: &Comparator) -> bool {
+    let equals_like = |comparator: &Comparator| {
+        let operator = comparator.operator.trim();
+        operator.is_empty() || operator.contains('=')
+    };
+    if !equals_like(left) || !equals_like(right) {
+        return false;
+    }
+    let left_version = version_text(left);
+    !left_version.is_empty() && left_version == version_text(right)
+}
+
+/// Return `true` (`isEqualsComparator`) when [`Comparator`] `comparator` has a [`SemVer`] and an empty or `"="` operator.
+#[inline]
+pub(super) fn is_equals(comparator: &Comparator) -> bool {
+    comparator.semver.is_some() && matches!(comparator.operator.trim(), "" | "=")
+}
+
+/// `stripComparatorOperator`.
+#[inline]
+pub(super) fn strip_operator(comparator: &Comparator) -> io::Result<Comparator> {
+    if comparator.operator.trim().is_empty() {
+        return Ok(comparator.clone());
+    }
+    Comparator::parse(&version_text(comparator))
+}
+
+/// Which end of a range a bound limits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum End {
+    /// Lower interval bound (`>` or `>=`).
+    Lower,
+    /// Upper interval bound (`<` or `<=`).
+    Upper,
+}
+
+impl End {
+    /// Return the exclusive and inclusive comparator operators (`[">", ">="]` or `["<", "<="]`) for `self`.
+    #[inline]
+    const fn operators(self) -> [&'static str; 2] {
+        match self {
+            Self::Lower => [">", ">="],
+            Self::Upper => ["<", "<="],
+        }
+    }
+
+    /// `>=` for a lower bound, `<=` for an upper one.
+    #[inline]
+    pub(super) const fn inclusive(self) -> &'static str {
+        match self {
+            Self::Lower => ">=",
+            Self::Upper => "<=",
+        }
+    }
+
+    /// `>` for a lower bound, `<` for an upper one: the tighter operator.
+    #[inline]
+    const fn exclusive(self) -> &'static str {
+        match self {
+            Self::Lower => ">",
+            Self::Upper => "<",
+        }
+    }
+
+    /// The comparison result that makes the left bound the tighter one.
+    #[inline]
+    const fn tighter(self) -> Ordering {
+        match self {
+            Self::Lower => Ordering::Greater,
+            Self::Upper => Ordering::Less,
+        }
+    }
+}
+
+/// The opposite-end operator whose versions keep a prerelease bound as is
+/// (`<=` versions for a lower bound, `>=` versions for an upper one).
+#[inline]
+fn opposite_inclusive(end: End) -> &'static str {
+    match end {
+        End::Lower => "<=",
+        End::Upper => ">=",
+    }
+}
+
+struct Reducer<'a> {
+    end: End,
+    single_range: bool,
+    opposite_versions: &'a [String],
+}
+
+impl Reducer<'_> {
+    /// One side is `*`: keep the other, widening a prerelease bound to its release.
+    fn against_any(&self, bound: &Comparator) -> io::Result<Comparator> {
+        let kept_as_is = bound.operator.trim() == self.end.inclusive()
+            && self.opposite_versions.contains(&version_text(bound));
+        if self.single_range || !is_prerelease(bound) || kept_as_is {
+            return Ok(bound.clone());
+        }
+        let operator = match self.end {
+            End::Lower => ">=",
+            End::Upper => "<",
+        };
+        Comparator::parse(&format!("{operator}{}", strip_prerelease(bound)))
+    }
+
+    fn both_prerelease(
+        &self,
+        left: &Comparator,
+        right: &Comparator,
+        main: Ordering,
+    ) -> io::Result<Comparator> {
+        let pick_left = match self.end {
+            End::Lower => main == Ordering::Greater,
+            End::Upper => main == Ordering::Less,
+        };
+        let chosen = if pick_left { left } else { right };
+        let operator = match self.end {
+            End::Lower => chosen.operator.trim(),
+            End::Upper => "<",
+        };
+        Comparator::parse(&format!("{operator}{}", strip_prerelease(chosen)))
+    }
+
+    /// Both bounds have versions: the tighter one, prereleases widened unless
+    /// reducing a single range.
+    fn reduce_versions(
+        &self,
+        (left, left_semver): (&Comparator, &SemVer),
+        (right, right_semver): (&Comparator, &SemVer),
+    ) -> io::Result<Comparator> {
+        let order = left_semver.compare(right_semver);
+        let left_op = left.operator.trim();
+        let right_op = right.operator.trim();
+        if left_op != right_op && order == Ordering::Equal {
+            let tighter = if left_op == self.end.exclusive() { left } else { right };
+            return Ok(tighter.clone());
+        }
+        let main = left_semver.compare_main(right_semver);
+        let both_pre =
+            !left_semver.prerelease.is_empty() && !right_semver.prerelease.is_empty();
+        if !self.single_range && main != Ordering::Equal && both_pre {
+            return self.both_prerelease(left, right, main);
+        }
+        Ok(if order == self.end.tighter() { left.clone() } else { right.clone() })
+    }
+
+    #[inline]
+    fn reduce(&self, left: &Comparator, right: &Comparator) -> io::Result<Comparator> {
+        match (&left.semver, &right.semver) {
+            (None, _) => self.against_any(right),
+            (_, None) => self.against_any(left),
+            (Some(left_semver), Some(right_semver)) => {
+                self.reduce_versions((left, left_semver), (right, right_semver))
+            }
+        }
+    }
+}
+
+/// `getLowerBoundComparator` / `getUpperBoundComparator`.
+pub(super) fn bound(
+    comparators: &[Comparator],
+    end: End,
+    single_range: bool,
+) -> io::Result<Comparator> {
+    let operators = end.operators();
+    let mut valid = comparators
+        .iter()
+        .filter(|comp| operators.contains(&comp.operator.trim()) || comp.semver.is_none());
+    let Some(first) = valid.next() else { return Comparator::parse("") };
+    let opposite_versions: Vec<String> = comparators
+        .iter()
+        .filter(|comp| comp.operator.trim() == opposite_inclusive(end))
+        .map(version_text)
+        .collect();
+    let reducer = Reducer { end, single_range, opposite_versions: &opposite_versions };
+    let mut result = first.clone();
+    for next in valid {
+        result = reducer.reduce(&result, next)?;
+    }
+    Ok(result)
+}

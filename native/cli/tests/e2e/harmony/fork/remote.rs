@@ -1,0 +1,100 @@
+//! Remote component `bit fork` and provenance retention tests ([`remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance`]).
+//!
+//! Covers single-ID, wildcard, and comma-separated remote forks and validation errors.
+
+use super::support;
+use crate::commands::move_paths::support::{compare, json, successful};
+
+/// Verifies that remote `bit fork <scope>/<name>` defaults the target name and records `forkedFrom` provenance.
+#[test]
+fn remote_fork_defaults_the_target_name_and_retains_scoped_original_provenance() {
+    let helper = support::remote_workspace(1);
+    successful(&helper, &format!("fork {}/comp1 -x", helper.scopes.remote));
+    assert_eq!(
+        json(&helper, "status --json")["newComponents"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
+    );
+    assert_eq!(support::ids(&helper), ["my-scope/comp1"]);
+    support::assert_origins(&helper, &["comp1"]);
+}
+
+/// Verifies remote wildcard `bit fork "<scope>/*"` forks all matching components into `--scope`.
+#[test]
+fn remote_wildcard_forks_each_matching_component_into_the_requested_scope() {
+    let helper = support::remote_workspace(2);
+    support::delay_copies(&helper);
+    successful(&helper, &format!(r#"fork "{}/*" --scope target.scope -x"#, helper.scopes.remote));
+    assert_eq!(
+        json(&helper, "status --json")["newComponents"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2,
+    );
+    assert_eq!(
+        support::ids(&helper),
+        ["fixture.tools/env/fork-batch-barrier", "target.scope/comp1", "target.scope/comp2"],
+    );
+    support::assert_origins(&helper, &["comp1", "comp2"]);
+}
+/// Verifies comma-separated remote component IDs fork only the specified components into `--scope`.
+#[test]
+fn comma_separated_remote_ids_fork_only_the_requested_components() {
+    let helper = support::remote_workspace(3);
+    support::delay_copies(&helper);
+    successful(
+        &helper,
+        &format!(r#"fork "{0}/comp1,{0}/comp3" --scope target.scope -x"#, helper.scopes.remote),
+    );
+    assert_eq!(
+        json(&helper, "status --json")["newComponents"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2,
+    );
+    assert_eq!(
+        support::ids(&helper),
+        ["fixture.tools/env/fork-batch-barrier", "target.scope/comp1", "target.scope/comp3"],
+    );
+    support::assert_origins(&helper, &["comp1", "comp3"]);
+}
+/// Verifies passing an explicit target name with a wildcard pattern fails with the released validation error ([`compare`]).
+#[test]
+fn pattern_with_an_explicit_target_preserves_the_released_validation_error() {
+    let helper = support::remote_workspace(2);
+    let result = compare(&helper, &format!(r#"fork "{}/*" comp2 -x"#, helper.scopes.remote));
+    assert!(!result.status.success());
+    assert!(result.stderr.contains("target-component-name is not allowed when using patterns"));
+}
+/// Verifies `--refactor` on a remote component fails before any target component is tracked ([`compare`], [`support::remote_workspace`], [`support::ids`], [`successful`]).
+#[test]
+fn remote_single_refactor_fails_before_any_component_is_tracked() {
+    let helper = support::remote_workspace(1);
+    let result =
+        compare(&helper, &format!("fork {}/comp1 comp2 --refactor -x", helper.scopes.remote));
+    assert!(!result.status.success());
+    assert!(result.stderr.contains("you can't use the --refactor flag"));
+    assert!(support::ids(&helper).is_empty());
+}
+
+#[test]
+fn remote_single_no_link_omits_provenance_while_materializing_a_new_component() {
+    let helper = support::remote_workspace(1);
+    successful(&helper, &format!("fork {}/comp1 comp-copy --no-link -x", helper.scopes.remote));
+    assert!(
+        crate::commands::move_paths::support::aspect(&helper, "comp-copy", support::FORK).is_none(),
+    );
+    assert_eq!(support::ids(&helper), ["my-scope/comp-copy"]);
+}
+
+#[test]
+fn remote_missing_id_failure_preserves_the_canonical_repository_prefix() {
+    let helper = support::remote_workspace(1);
+    let result = compare(&helper, &format!("fork {}/missing comp-copy -x", helper.scopes.remote));
+    assert!(!result.status.success());
+    assert!(support::ids(&helper).is_empty());
+}

@@ -1,0 +1,314 @@
+#![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
+#![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
+//! Native `JavaScript` and `TypeScript` dependency scanner and empty-documentation prover ([`proves_empty_docs`]).
+//!
+//! Extracts static and dynamic module specifiers and line numbers via `scan` using the Oxc parser.
+
+pub use documentation::proves_empty_docs;
+mod calls;
+mod classification;
+mod documentation;
+mod embedded;
+#[cfg(test)]
+mod embedded_tests;
+mod exports;
+mod limits;
+mod scanning;
+#[cfg(test)]
+mod tests;
+
+use crate::scanning::scan;
+use indexmap::IndexMap;
+use oxc_ast::ast::{
+    Argument, CallExpression, Decorator, ExportAllDeclaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, Expression,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, ImportOrExportKind,
+    TSExternalModuleReference,
+};
+use oxc_ast_visit::{Visit, walk};
+use oxc_span::Span;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::BTreeMap;
+
+/// Deserialized batch dependency scan request containing version, ID, [`File`] entries, and options.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Request {
+    version: u32,
+    #[serde(default)]
+    id: Value,
+    files: Vec<File>,
+    #[serde(default)]
+    options: BTreeMap<String, Value>,
+}
+/// Single file entry in a batch dependency scan request with optional inline source and kind.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct File {
+    path: String,
+    source: Option<String>,
+    kind: Option<String>,
+}
+/// Serialized scan result for a single [`File`], including status, dependencies, and diagnostics.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
+struct Outcome {
+    path: String,
+    status: &'static str,
+    dependencies: IndexMap<String, Dependency>,
+    diagnostics: Vec<String>,
+}
+/// Extracted dependency entry with [`Specifier`] import specifiers and optional `isTypeImport` flag.
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Dependency {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    import_specifiers: Vec<Specifier>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    is_type_import: Option<bool>,
+}
+/// Imported or re-exported symbol specifier attached to a [`Dependency`].
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Specifier {
+    is_default: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exported: Option<bool>,
+}
+/// Oxc AST visitor state accumulating [`Dependency`] entries and line numbers for a single source file.
+#[derive(Debug, Default, Clone)]
+struct Scanner {
+    line_starts: Vec<u32>,
+    ts: bool,
+    no_check: bool,
+    comments: Vec<(usize, String)>,
+    deps: IndexMap<String, Dependency>,
+    unsupported: bool,
+}
+/// Compute the byte offsets of the start of each line in `source` for [`Scanner`].
+#[inline]
+fn line_starts(source: &str) -> Vec<u32> {
+    std::iter::once(0)
+        .chain(
+            source
+                .bytes()
+                .enumerate()
+                .filter(|(_, byte)| *byte == b'\n')
+                .map(|(index, _)| u32::try_from(index + 1).unwrap_or(u32::MAX)),
+        )
+        .collect()
+}
+/// One-based line number of a byte offset.
+#[inline]
+fn line(line_starts: &[u32], offset: u32) -> usize {
+    line_starts.partition_point(|start| *start <= offset)
+}
+impl Scanner {
+    #[inline]
+    fn ignored(&self, span: Span) -> bool {
+        if self.no_check {
+            return true;
+        }
+        let node_line = line(&self.line_starts, span.start);
+        self.comments
+            .iter()
+            .any(|(comment_line, text)| {
+                *comment_line + 1 == node_line && text.contains("@bit-ignore")
+            })
+    }
+    #[inline]
+    fn add(&mut self, name: &str, span: Span) -> Option<&mut Dependency> {
+        if name.is_empty() || (self.ts && self.ignored(span)) {
+            return None;
+        }
+        if classification::legacy_object_key(name) {
+            self.unsupported = true;
+            return None;
+        }
+        Some(self.deps.entry(name.to_owned()).or_default())
+    }
+    #[inline]
+    fn exported(&mut self, name: &str) {
+        for dep in self.deps.values_mut() {
+            if let Some(spec) = dep.import_specifiers
+                .iter_mut()
+                .find(|specifier| specifier.name.as_deref() == Some(name))
+            {
+                spec.exported = Some(true);
+            }
+        }
+    }
+}
+#[inline]
+fn string(expr: &Expression<'_>) -> Option<String> {
+    match expr.without_parentheses() {
+        Expression::StringLiteral(s) => Some(s.value.to_string()),
+        Expression::TemplateLiteral(t) if t.expressions.is_empty() && t.quasis.len() == 1 => {
+            Some(t.quasis[0].value.raw.to_string())
+        }
+        _ => None,
+    }
+}
+#[inline]
+fn argument(arg: &Argument<'_>) -> Option<String> {
+    arg.as_expression().and_then(string)
+}
+#[inline]
+fn identifier_name(name: &oxc_ast::ast::ModuleExportName<'_>) -> Option<String> {
+    if matches!(name, oxc_ast::ast::ModuleExportName::StringLiteral(_)) {
+        None
+    } else {
+        Some(name.name().to_string())
+    }
+}
+#[inline]
+fn import_specifier(spec: &ImportDeclarationSpecifier<'_>) -> Specifier {
+    let (is_default, name) = match spec {
+        ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
+            (false, identifier_name(&specifier.imported))
+        }
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
+            (true, Some(specifier.local.name.to_string()))
+        }
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
+            (false, Some(specifier.local.name.to_string()))
+        }
+    };
+    Specifier { is_default, name, exported: None }
+}
+impl<'a> Visit<'a> for Scanner {
+    fn visit_import_declaration(&mut self, node: &ImportDeclaration<'a>) {
+        let ts = self.ts;
+        if node.phase.is_some() || node.with_clause.is_some() {
+            self.unsupported = true;
+        }
+        if let Some(dep) = self.add(node.source.value.as_str(), node.span) {
+            if ts {
+                dep.is_type_import = Some(node.import_kind == ImportOrExportKind::Type);
+            }
+            if let Some(specs) = &node.specifiers {
+                dep.import_specifiers.reserve(specs.len());
+                dep.import_specifiers.extend(specs.iter().map(import_specifier));
+            }
+        }
+        walk::walk_import_declaration(self, node);
+    }
+    fn visit_export_from_declaration(&mut self, node: &ExportFromDeclaration<'a>) {
+        let ts = self.ts;
+        if node.with_clause.is_some() {
+            self.unsupported = true;
+        }
+        if let Some(dep) = self.add(node.source.value.as_str(), node.span) {
+            if ts {
+                dep.is_type_import = Some(node.export_kind == ImportOrExportKind::Type);
+            } else {
+                dep.import_specifiers.reserve(node.specifiers.len());
+                for spec in &node.specifiers {
+                    dep.import_specifiers.push(Specifier {
+                        is_default: spec.local.name() == "default",
+                        name: identifier_name(&spec.exported),
+                        exported: Some(true),
+                    });
+                }
+            }
+        }
+        walk::walk_export_from_declaration(self, node);
+    }
+    fn visit_export_all_declaration(&mut self, node: &ExportAllDeclaration<'a>) {
+        let ts = self.ts;
+        if node.exported.is_some() || node.with_clause.is_some() {
+            self.unsupported = true;
+        }
+        if let Some(dep) = self.add(node.source.value.as_str(), node.span)
+            && ts
+        {
+            dep.is_type_import = Some(node.export_kind == ImportOrExportKind::Type);
+        }
+        walk::walk_export_all_declaration(self, node);
+    }
+    fn visit_export_named_declaration(&mut self, node: &ExportNamedDeclaration<'a>) {
+        for spec in &node.specifiers {
+            self.exported(spec.exported.name().as_str());
+        }
+        walk::walk_export_named_declaration(self, node);
+    }
+    fn visit_export_default_declaration(&mut self, node: &ExportDefaultDeclaration<'a>) {
+        if let ExportDefaultDeclarationKind::Identifier(id) = &node.declaration {
+            self.exported(id.name.as_str());
+        }
+        walk::walk_export_default_declaration(self, node);
+    }
+    fn visit_import_expression(&mut self, node: &ImportExpression<'a>) {
+        if matches!(
+            &node.source,
+            Expression::NumericLiteral(_)
+                | Expression::BooleanLiteral(_)
+                | Expression::BigIntLiteral(_)
+                | Expression::RegExpLiteral(_),
+        ) {
+            self.unsupported = true;
+        }
+        if let Expression::StringLiteral(lit) = &node.source {
+            self.add(lit.value.as_str(), node.span);
+        }
+        walk::walk_import_expression(self, node);
+    }
+    fn visit_call_expression(&mut self, node: &CallExpression<'a>) {
+        if matches!(node.callee.without_parentheses(), Expression::Identifier(id) if id.name == "define")
+        {
+            self.unsupported = true;
+        }
+        let accepted = calls::accepted(node, self.ts);
+        if accepted && self.ts && calls::nonstring_literal(node.arguments.first()) {
+            self.unsupported = true;
+        }
+        if accepted && let Some(name) = node.arguments.first().and_then(argument) {
+            self.add(&name, node.span);
+        }
+        walk::walk_call_expression(self, node);
+    }
+    fn visit_ts_external_module_reference(&mut self, node: &TSExternalModuleReference<'a>) {
+        self.add(node.expression.value.as_str(), node.span);
+        walk::walk_ts_external_module_reference(self, node);
+    }
+    fn visit_decorator(&mut self, node: &Decorator<'a>) {
+        self.unsupported = true;
+        walk::walk_decorator(self, node);
+    }
+}
+#[inline]
+fn outcome(file: &File, status: &'static str, message: String) -> Outcome {
+    Outcome {
+        path: file.path.clone(),
+        status,
+        dependencies: IndexMap::new(),
+        diagnostics: vec![message],
+    }
+}
+
+/// Scan an owned request on the caller's bounded worker pool.
+#[inline]
+pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serde_json::Error> {
+    if input.len() > limits::REQUEST_BYTES {
+        return Ok(invalid_request("request exceeds 8 MiB limit"));
+    }
+    embedded::process(input, pool)
+}
+
+/// Scan one captured source on a caller-owned worker without a JSON source round trip.
+/// The caller owns scheduling and aggregate output limits; per-source limits remain enforced.
+#[inline]
+pub fn scan_source(path: String, source: String) -> Result<Value, serde_json::Error> {
+    let file = File { path, source: Some(source), kind: None };
+    serde_json::to_value(scan(&file, false))
+}
+
+/// The response to a request the scanner cannot read.
+#[must_use]
+#[inline]
+pub(crate) fn invalid_request(message: &str) -> Value {
+    let trimmed = message.trim();
+    serde_json::json!({"version":1,"status":"invalid_request","diagnostics":[trimmed]})
+}

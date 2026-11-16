@@ -1,0 +1,264 @@
+{
+  "multimatch": "5.0.0",
+  "minimatch": "3.1.5",
+  "ids": [
+    "scope/ui/foo",
+    "scope/ui/foobar",
+    "scope/ui/card",
+    "scope/ui/comp01",
+    "scope/ui/comp02",
+    "scope/ui/comp03",
+    "scope/ui/a",
+    "scope/ui/b",
+    "scope/ui/c",
+    "scope/.hidden",
+    "scope/ui/x.test",
+    "scope/ui/y.test"
+  ],
+  "cases": [
+    {
+      "pattern": "**",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/[fc]*",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/c"
+      ]
+    },
+    {
+      "pattern": "**/[!fc]*",
+      "expected": [
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/[^fc]*",
+      "expected": [
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/!(foo)*",
+      "expected": [
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/!(foo)",
+      "expected": [
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/!(foo|card)",
+      "expected": [
+        "scope/ui/foobar",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/+(foo|card)",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/card"
+      ]
+    },
+    {
+      "pattern": "**/+(foo|card)*",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card"
+      ]
+    },
+    {
+      "pattern": "**/?(foo)*",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/*(foo)*",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/@(foo|card)",
+      "expected": []
+    },
+    {
+      "pattern": "**/{foo,card}",
+      "expected": []
+    },
+    {
+      "pattern": "**/comp{01..03}",
+      "expected": [
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03"
+      ]
+    },
+    {
+      "pattern": "**/comp{03..01..2}",
+      "expected": [
+        "scope/ui/comp01",
+        "scope/ui/comp03"
+      ]
+    },
+    {
+      "pattern": "**/{a..c}",
+      "expected": [
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c"
+      ]
+    },
+    {
+      "pattern": "**/{c..a..2}",
+      "expected": [
+        "scope/ui/a",
+        "scope/ui/c"
+      ]
+    },
+    {
+      "pattern": "**, !**/foo, **/foo",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "!**/foo",
+      "expected": [
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c",
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "!!**/foo",
+      "expected": [
+        "scope/ui/foo"
+      ]
+    },
+    {
+      "pattern": "**/*.test",
+      "expected": [
+        "scope/ui/x.test",
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/!(*.test)",
+      "expected": [
+        "scope/ui/foo",
+        "scope/ui/foobar",
+        "scope/ui/card",
+        "scope/ui/comp01",
+        "scope/ui/comp02",
+        "scope/ui/comp03",
+        "scope/ui/a",
+        "scope/ui/b",
+        "scope/ui/c"
+      ]
+    },
+    {
+      "pattern": "**/!(x).test",
+      "expected": [
+        "scope/ui/y.test"
+      ]
+    },
+    {
+      "pattern": "**/+(!(x)).test",
+      "expected": [
+        "scope/ui/y.test"
+      ]
+    }
+  ]
+}

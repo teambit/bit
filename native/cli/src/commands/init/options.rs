@@ -1,0 +1,236 @@
+//! `InitCmd` flags, with optional values for `--bare` and `--agent`.
+//!
+//! Defines [`Options`], [`Defaults`], [`Flags`], and [`Resets`] and flag parsing ([`parse`], [`apply_arg`]) from [`OsString`] CLI arguments.
+use std::ffi::OsString;
+
+/// Parsed CLI options ([`Defaults`], [`Resets`], [`Flags`]) for `bit init`.
+#[derive(Default)]
+pub(super) struct Options {
+    pub path: Option<String>,
+    pub bare: Option<String>,
+    pub shared: Option<String>,
+    pub defaults: Defaults,
+    pub resets: Resets,
+    pub flags: Flags,
+    pub agent: Option<String>,
+}
+/// Default workspace name, directory, scope, and generator values configured during `bit init`.
+#[derive(Default)]
+pub(super) struct Defaults {
+    pub name: Option<String>,
+    pub directory: Option<String>,
+    pub scope: Option<String>,
+    pub generator: Option<String>,
+}
+/// Boolean provisioning flags (`--standalone`, `--no-package-json`, `--force`, `--skip-interactive`, `--external-package-manager`).
+#[derive(Default)]
+pub(super) struct Flags {
+    pub standalone: bool,
+    pub no_package_json: bool,
+    pub force: bool,
+    pub skip_interactive: bool,
+    pub external_pm: bool,
+}
+/// Reset mode flags (`--reset`, `--reset-hard`, `--reset-scope`, `--reset-new`, `--reset-lane-new`).
+#[derive(Default)]
+pub(super) struct Resets {
+    pub repair: bool,
+    pub hard: bool,
+    pub scope: bool,
+    pub new: bool,
+    pub lane_new: bool,
+}
+
+/// Parses [`OsString`] CLI arguments for `bit init` into [`Options`] via [`apply_arg`], returning `None` for unsupported syntax.
+pub(super) fn parse(args: &[OsString]) -> Option<Options> {
+    let mut options = Options::default();
+    let mut args = args
+        .iter()
+        .skip(1)
+        .map(|arg| arg.to_str())
+        .peekable();
+    while let Some(arg) = args.next() {
+        let arg = arg?.trim();
+        if arg == "--" {
+            consume_trailing_init_path(args, &mut options)?;
+            break;
+        }
+        if !matches!(
+            arg,
+            "--no-color"
+                | "--no-color=true"
+                | "--no-color=false"
+                | "--color"
+                | "--color=true"
+                | "--color=false"
+                | "--color=always"
+                | "--color=never",
+        ) {
+            apply_arg(arg, &mut args, &mut options)?;
+        }
+    }
+    Some(options)
+}
+
+/// Consumes a single trailing workspace path token after `--` for `bit init`.
+#[inline]
+fn consume_trailing_init_path<'a>(
+    args: impl Iterator<Item = Option<&'a str>>,
+    options: &mut Options,
+) -> Option<()> {
+    for rest in args {
+        let val = rest?.trim();
+        if val.is_empty() || val.starts_with('-') || options.path.is_some() {
+            return None;
+        }
+        options.path = Some(val.to_owned());
+    }
+    Some(())
+}
+
+/// Parses a single `bit init` flag or positional path token `arg` into `options`.
+#[inline]
+fn apply_arg<'a>(
+    arg: &'a str,
+    args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
+    options: &mut Options,
+) -> Option<()> {
+    match arg {
+        "--bare" | "-b" => options.bare = Some(optional(args)?),
+        "--agent" => options.agent = Some(optional(args)?),
+        "--name" | "-n" => options.defaults.name = Some(required(args)?),
+        "--default-directory" | "-d" => options.defaults.directory = Some(required(args)?),
+        "--default-scope" => options.defaults.scope = Some(required(args)?),
+        "--generator" => options.defaults.generator = Some(required(args)?),
+        "--shared" | "-s" => options.shared = Some(required(args)?),
+        value => apply_non_space_arg(value, options)?,
+    }
+    Some(())
+}
+
+#[inline]
+fn apply_non_space_arg(value: &str, options: &mut Options) -> Option<()> {
+    if let Some(res) = inline_option(value, options) {
+        return res;
+    }
+    if flag(value, options) {
+        return Some(());
+    }
+    let trimmed = value.trim();
+    if !trimmed.starts_with('-') && !trimmed.is_empty() && options.path.is_none() {
+        options.path = Some(trimmed.to_owned());
+        return Some(());
+    }
+    None
+}
+
+#[inline]
+fn required<'a>(args: &mut impl Iterator<Item = Option<&'a str>>) -> Option<String> {
+    let val = args.next()??.trim();
+    (!val.is_empty() && !val.starts_with('-')).then(|| val.to_owned())
+}
+
+#[inline]
+fn inline_option(arg: &str, options: &mut Options) -> Option<Option<()>> {
+    let (key, val) = arg.split_once('=')?;
+    let (key, val) = (key.trim(), val.trim());
+    match key {
+        "--bare" | "-b" => {
+            options.bare = Some(val.to_owned());
+            Some(Some(()))
+        }
+        "--agent" => {
+            options.agent = Some(val.to_owned());
+            Some(Some(()))
+        }
+        "--name"
+        | "-n"
+        | "--default-directory"
+        | "-d"
+        | "--default-scope"
+        | "--generator"
+        | "--shared"
+        | "-s" => {
+            if val.is_empty() || val.starts_with('-') {
+                return Some(None);
+            }
+            set_inline_string(key, val, options);
+            Some(Some(()))
+        }
+        _ => None,
+    }
+}
+
+#[inline]
+fn set_inline_string(key: &str, val: &str, options: &mut Options) {
+    match key {
+        "--name" | "-n" => options.defaults.name = Some(val.to_owned()),
+        "--default-directory" | "-d" => options.defaults.directory = Some(val.to_owned()),
+        "--default-scope" => options.defaults.scope = Some(val.to_owned()),
+        "--generator" => options.defaults.generator = Some(val.to_owned()),
+        _ => options.shared = Some(val.to_owned()),
+    }
+}
+
+#[inline]
+fn optional<'a>(
+    args: &mut std::iter::Peekable<impl Iterator<Item = Option<&'a str>>>,
+) -> Option<String> {
+    if let Some(Some(arg)) = args.peek()
+        && !arg.trim().starts_with('-')
+    {
+        return Some(args.next()??.trim().to_owned());
+    }
+    Some(String::new())
+}
+
+#[inline]
+fn flag(arg: &str, options: &mut Options) -> bool {
+    if apply_combined_short_init(arg, options) {
+        return true;
+    }
+    let (key, bool_val) = match arg.split_once('=') {
+        Some((key, "true")) if key.starts_with("--") => (key, true),
+        Some((key, "false")) if key.starts_with("--") => (key, false),
+        None => (arg, true),
+        _ => return false,
+    };
+    let value = match key {
+        "--standalone" | "-T" => &mut options.flags.standalone,
+        "--no-package-json" => &mut options.flags.no_package_json,
+        "--force" | "-f" => &mut options.flags.force,
+        "--skip-interactive" => &mut options.flags.skip_interactive,
+        "--external-package-manager" => &mut options.flags.external_pm,
+        "--reset" | "-r" => &mut options.resets.repair,
+        "--reset-hard" => &mut options.resets.hard,
+        "--reset-scope" => &mut options.resets.scope,
+        "--reset-new" => &mut options.resets.new,
+        "--reset-lane-new" => &mut options.resets.lane_new,
+        _ => return false,
+    };
+    *value = bool_val;
+    true
+}
+
+#[inline]
+fn apply_combined_short_init(arg: &str, options: &mut Options) -> bool {
+    let Some(flags) = arg.strip_prefix('-') else {
+        return false;
+    };
+    if flags.len() < 2
+        || flags.starts_with('-')
+        || !flags
+            .chars()
+            .all(|ch| matches!(ch, 'T' | 'f' | 'r'))
+    {
+        return false;
+    }
+    for ch in flags.chars() {
+        match ch {
+            'T' => options.flags.standalone = true,
+            'f' => options.flags.force = true,
+            _ => options.resets.repair = true,
+        }
+    }
+    true
+}

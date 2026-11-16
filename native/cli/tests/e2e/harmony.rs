@@ -1,0 +1,111 @@
+//! End-to-end tests for `e2e/harmony/` covering workspace, scope, lane, and merge workflows ([`add`], [`bit_ignore`], [`delete`], [`deprecation`], [`fork`], [`lanes`], [`refactor`], [`rename`]).
+//!
+//! Groups Harmony aspect, status, checkout, export, import, lane, merge, and dependency end-to-end suites.
+
+/// End-to-end Harmony `bit add` callback, inspection, policy, and workspace-root suites alongside [`add_harmony`].
+mod add;
+/// End-to-end Harmony workspace-root tracking and cloning tests.
+mod add_harmony;
+/// End-to-end Harmony `bit aspect` command parity tests.
+mod aspect;
+/// End-to-end `.bitignore` and `.gitignore` tracking precedence tests.
+mod bit_ignore;
+/// End-to-end `.bitmap` status section parity tests (`localOnly`, `softTaggedComponents`, `importPendingComponents`).
+mod bitmap_states;
+/// End-to-end Harmony build and multi-compiler (`Babel`, `TypeScript`) pipeline tests (`build-and-compilers-harmony.e2e.ts`).
+mod build_and_compilers_harmony;
+mod checkout_callbacks;
+mod checkout_harmony;
+mod checkout_local;
+mod checkout_platform;
+mod checkout_policy;
+mod checkout_scope;
+mod checkout_selection;
+mod ci_bitmap_auto_sync;
+mod ci_commands_harmony;
+mod ci_sync;
+mod component_config;
+mod config;
+mod custom_env;
+mod debug_load;
+mod delete;
+mod dependencies_cmd;
+mod dependencies_harmony;
+mod dependencies_policies_and_scripts;
+mod deprecation;
+mod deps_graph_suite;
+mod doctor;
+mod doctor_remote;
+mod eject_harmony;
+mod env;
+mod env_jsonc_policies;
+mod export_callbacks;
+mod export_completion;
+mod export_harmony;
+mod export_hub;
+mod extensions_config;
+mod extensions_config_diff;
+mod file_history;
+mod fork;
+mod generator_and_test;
+mod git_worktree;
+mod http_harmony;
+mod import_harmony;
+mod import_non_main_files;
+mod init_and_import_misc;
+mod init_harmony;
+mod install_compat;
+mod install_harmony;
+mod lane_adoption;
+mod lane_graph_reset;
+mod lane_import_callbacks;
+mod lane_restoration;
+mod lanes;
+mod local_head_not_found;
+mod log;
+mod merge_callbacks;
+mod merge_config;
+mod merge_history;
+mod merge_lifecycle;
+mod merge_policy;
+mod merge_recovery;
+mod new_component_id_exists_on_remote;
+mod no_files;
+mod no_fs_cache;
+mod out_of_sync_components_harmony;
+mod recover;
+mod recovery_after_deletion;
+mod refactor;
+mod rename;
+mod reset_selection;
+mod revert;
+mod root_components_harmony;
+mod scope_fork;
+mod scope_rename;
+mod scope_trust;
+mod scripts_cmd;
+mod set_default_owner_and_scope;
+mod snap;
+mod snapshot_environments;
+mod stash;
+mod status_autosync;
+mod status_completion;
+mod status_component_policy;
+mod status_component_selectors;
+mod status_environments;
+mod status_graph_remote;
+mod status_harmony;
+mod status_lanes;
+mod status_relative;
+mod tag_harmony;
+mod testers_harmony;
+mod track_directories_harmony;
+mod ui_and_watch_harmony;
+mod uninstall_cmd;
+mod untag;
+mod update_and_publish_harmony;
+mod updates_from_main_and_lane;
+mod use_cmd;
+mod validate;
+mod workspace_config;
+mod workspace_misc;

@@ -1,0 +1,219 @@
+//! Native `bit doctor` ([`COMMAND`], [`Context`], [`Options`]) built-in configuration, executable, filesystem, and repository diagnostics.
+mod archive;
+mod catalog;
+mod checks;
+mod context;
+mod options;
+mod remote;
+mod report;
+mod store;
+mod vendors;
+
+use super::{
+    Command,
+    color::Chalk,
+    workspace_command::{self, results::Report},
+};
+use crate::native::Outcome;
+use context::Context;
+use options::Options;
+use serde_json::{Value, json};
+use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit doctor` CLI command.
+pub const COMMAND: Command = Command { name: "doctor", aliases: &[], run };
+/// Executes `bit doctor` ([`COMMAND`]) across local ([`prepare_context`]) or `--remote` ([`prepare_remote`]) scopes via [`execute_doctor`].
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("doctor arguments are not UTF-8".into()));
+    };
+    let Some(options) = argv.get(1..).and_then(Options::parse) else {
+        return Ok(Outcome::Declined("outside the native doctor grammar".into()));
+    };
+    let in_ci = env::var("CI")
+        .ok()
+        .is_some_and(|val| {
+            let trimmed = val.trim();
+            !trimmed.is_empty() && !trimmed.eq_ignore_ascii_case("false") && trimmed != "0"
+        });
+    if options.validate().is_err() && in_ci {
+        return Ok(Outcome::Declined("CI doctor option validation error stack".into()));
+    }
+    let chalk = Chalk::detect(args);
+    if in_ci && colored_unknown(&options, chalk) {
+        return Ok(Outcome::Declined("published colored diagnosis error stack".into()));
+    }
+    let context = match prepare_context(&options) {
+        Ok(context) => context,
+        Err(error) => return Ok(Outcome::Declined(format!("doctor preflight: {error}"))),
+    };
+    let remote = match prepare_remote(context.as_ref(), &options) {
+        Ok(remote) => remote,
+        Err(error) => return Ok(Outcome::Declined(format!("doctor remote preflight: {error}"))),
+    };
+    let cwd = env::current_dir()?;
+    let work = |output: &bit_install::output::Output| {
+        produce(&options, context.as_ref(), remote.as_ref(), chalk, output)
+    };
+    execute_doctor(&cwd, args, options.json, work)
+}
+/// Runs `work` ([`Report`]) inside the workspace or bare-scope command harness with text or `--json` formatting ([`Outcome`]).
+fn execute_doctor<Work>(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    json: bool,
+    work: Work,
+) -> io::Result<Outcome>
+where
+    Work: FnOnce(&bit_install::output::Output) -> io::Result<Report>,
+{
+    if let Some(root) = bit_workspace_config::workspace_root(cwd) {
+        if json {
+            workspace_command::execute_json(&root, args, "doctor", work)
+        } else {
+            workspace_command::execute_then(&root, args, "doctor", work)
+        }
+    } else if json {
+        workspace_command::execute_json_scope(cwd, args, "doctor", work)
+    } else {
+        workspace_command::execute_then_scope(cwd, args, "doctor", work)
+    }
+}
+/// Loads the local [`Context`] and validates scope [`store::preflight`] when diagnostics will run under [`Options`].
+#[inline]
+fn prepare_context(options: &Options) -> io::Result<Option<Context>> {
+    if options.list || options.validate().is_err() {
+        return Ok(None);
+    }
+    let context = Context::load()?;
+    store::preflight(&context, options.name.as_deref())?;
+    Ok(Some(context))
+}
+/// Prepares the [`remote::Plan`] when `--remote` is requested and local preflight succeeded.
+#[inline]
+fn prepare_remote(
+    context: Option<&Context>,
+    options: &Options,
+) -> io::Result<Option<remote::Plan>> {
+    if options.list || options.validate().is_err() {
+        return Ok(None);
+    }
+    remote::prepare(context.ok_or_else(|| io::Error::other("missing doctor context"))?, options)
+}
+#[inline]
+fn colored_unknown(options: &Options, chalk: Chalk) -> bool {
+    !options.list
+        && options.remote.is_none()
+        && chalk.enabled()
+        && options.name
+            .as_deref()
+            .map(str::trim)
+            .filter(|trimmed| !trimmed.is_empty())
+            .is_some_and(|trimmed| {
+                !catalog::DIAGNOSES
+                    .iter()
+                    .any(|diagnosis| diagnosis.name == trimmed)
+            })
+}
+fn produce(
+    options: &Options,
+    context: Option<&Context>,
+    remote: Option<&remote::Plan>,
+    chalk: Chalk,
+    output: &bit_install::output::Output,
+) -> io::Result<Report> {
+    options.validate().map_err(io::Error::other)?;
+    if options.list {
+        let data = if options.json {
+            pretty(&Value::Array(
+                catalog::DIAGNOSES
+                    .iter()
+                    .map(catalog::Diagnosis::listing)
+                    .collect(),
+            ))?
+        } else {
+            report::list(chalk)
+        };
+        return Ok(Report { data, code: 0, details: None });
+    }
+    let context = context.ok_or_else(|| io::Error::other("missing doctor context"))?;
+    let (results, metadata) = if let Some(remote) = remote {
+        remote::examine(context, options, remote)?
+    } else {
+        (examine(options, context, chalk, output)?, context.metadata()?)
+    };
+    let saved = archive::save(context, options, &results, &metadata)?;
+    let data = if options.json {
+        json_results(options, &results, saved.as_deref())?
+    } else {
+        report::results(&results, &metadata, saved.as_deref(), chalk)
+    };
+    Ok(Report { data, code: 0, details: None })
+}
+fn examine(
+    options: &Options,
+    context: &Context,
+    chalk: Chalk,
+    output: &bit_install::output::Output,
+) -> io::Result<Vec<Value>> {
+    if let Some(name) = &options.name {
+        let trimmed = name.trim();
+        let diagnosis = catalog::DIAGNOSES
+            .iter()
+            .find(|diagnosis| diagnosis.name == trimmed)
+            .ok_or_else(|| io::Error::other(format!("error: diagnosis {trimmed} not found")))?;
+        return Ok(vec![checks::examine(diagnosis, context)?]);
+    }
+    let mut results = Vec::with_capacity(catalog::DIAGNOSES.len());
+    for (diagnosis, result) in catalog::DIAGNOSES
+        .iter()
+        .zip(examine_all(context))
+    {
+        match result {
+            Ok(result) => results.push(result),
+            Err(error) => output.failure(&chalk.red(&format!(
+                "doctor failed running diagnosis \"{}\".\nerror-message: {error}",
+                diagnosis.name,
+            ))),
+        }
+    }
+    Ok(results)
+}
+fn examine_all(context: &Context) -> Vec<io::Result<Value>> {
+    std::thread::scope(|scope| {
+        let mut workers = Vec::with_capacity(catalog::DIAGNOSES.len());
+        for diagnosis in catalog::DIAGNOSES {
+            workers.push(scope.spawn(move || checks::examine(diagnosis, context)));
+        }
+        workers
+            .into_iter()
+            .map(|worker| {
+                worker
+                    .join()
+                    .unwrap_or_else(|_| Err(io::Error::other("doctor diagnosis worker panicked")))
+            })
+            .collect()
+    })
+}
+#[inline]
+fn json_results(options: &Options, results: &[Value], saved: Option<&str>) -> io::Result<String> {
+    let mut value = json!({});
+    if let Some(saved) = saved
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+    {
+        value["savedFilePath"] = json!(saved);
+    }
+    if options.name.is_some() {
+        value["examineResult"] = results
+            .first()
+            .cloned()
+            .unwrap_or(Value::Null);
+    } else {
+        value["examineResults"] = json!(results);
+    }
+    pretty(&value)
+}
+#[inline]
+fn pretty(value: &Value) -> io::Result<String> {
+    serde_json::to_string_pretty(value).map_err(io::Error::other)
+}

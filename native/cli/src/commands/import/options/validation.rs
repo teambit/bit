@@ -1,0 +1,137 @@
+//! Command-line flag and wildcard pattern validation for `bit import` and `bit fetch`.
+//!
+//! [`args`] and [`mode`] verify supported flags ([`WriteOptions`], [`DependencyOptions`]) and [`valid_pattern`] syntax before workspace execution.
+use super::{DependencyOptions, WriteOptions, has_wildcard, valid_pattern};
+
+/// Returns whether all `flags` ([`valid_import_flags`]) and `ids` ([`has_wildcard`], [`valid_pattern`]) belong to the supported native `bit import` grammar.
+#[inline]
+pub(super) fn args(flags: &[&str], ids: &[String]) -> bool {
+    valid_import_flags(flags)
+        && (!flags.contains(&"--lane-only") || ids.iter().any(|id| has_wildcard(id)))
+        && ids
+            .iter()
+            .all(|id| !has_wildcard(id) || valid_pattern(id))
+}
+
+/// Returns `true` when every flag in `flags` is supported and no short/long alias pair is duplicated.
+#[inline]
+fn valid_import_flags(flags: &[&str]) -> bool {
+    let allowed = [
+        "--json",
+        "-j",
+        "--verbose",
+        "-v",
+        "--objects",
+        "-o",
+        "--all-history",
+        "--skip-dependency-installation",
+        "-x",
+        "--skip-write-config-files",
+        "--include-deprecated",
+        "--override",
+        "--merge",
+        "--fetch-deps",
+        "--dependencies",
+        "--dependencies-head",
+        "--lane-only",
+        "--track-only",
+        "--write-to-empty-dir",
+        "--dependents",
+        "--dependents-all",
+        "--silent",
+    ];
+    let has = |flag: &str| flags.contains(&flag);
+    let both =
+        (has("--objects") && has("-o")) || (has("--skip-dependency-installation") && has("-x"));
+    !both
+        && flags
+            .iter()
+            .all(|flag| {
+                allowed.contains(flag)
+                    || flag
+                        .strip_prefix("--merge=")
+                        .is_some_and(|val| matches!(val.trim(), "manual" | "ours" | "theirs"))
+            })
+}
+
+/// Validates that `write` ([`WriteOptions`]) options, `ids`, and `--objects` flags form a supported import mode via [`valid_dependencies`].
+#[inline]
+pub(super) fn mode(
+    write: &WriteOptions,
+    ids: &[String],
+    objects_only: bool,
+    explicit_objects: bool,
+) -> bool {
+    let path = write.path.as_deref();
+    valid_dependencies(
+        &write.dependencies,
+        ids,
+        objects_only,
+        write.override_existing,
+        write.merge,
+        path,
+    ) && valid_merge_mode(
+        write.merge,
+        write.merge_strategy.as_deref(),
+        ids,
+        explicit_objects,
+        write.override_existing,
+    ) && (!write.override_existing || !explicit_objects)
+        && valid_path(path, ids, objects_only)
+}
+
+/// Validates `--dependencies`, `--dependencies-head`, and `--dependencies-depth` combinations in `options`.
+#[inline]
+fn valid_dependencies(
+    options: &DependencyOptions,
+    ids: &[String],
+    objects_only: bool,
+    override_existing: bool,
+    merge: bool,
+    path: Option<&str>,
+) -> bool {
+    let enabled = options.import_dependencies || options.import_head_dependencies;
+    if options.import_dependencies && options.import_head_dependencies {
+        return false;
+    }
+    let active = enabled || options.raw_depth.is_some();
+    !active
+        || (!objects_only && !ids.is_empty() && !override_existing && !merge && path.is_none())
+        || (ids.is_empty() && enabled && options.raw_depth.is_none())
+}
+
+/// Validates `--merge` and `--merge=<strategy>` combinations against `ids`, `explicit_objects`, and `override_existing`.
+#[inline]
+fn valid_merge_mode(
+    merge: bool,
+    strategy: Option<&str>,
+    ids: &[String],
+    explicit_objects: bool,
+    override_existing: bool,
+) -> bool {
+    if !merge {
+        return true;
+    }
+    if explicit_objects || override_existing {
+        return false;
+    }
+    if ids.is_empty() {
+        return true;
+    }
+    strategy.is_some_and(|strat| !strat.trim().is_empty()) && ids.len() == 1
+}
+
+#[inline]
+fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
+    match path {
+        None => true,
+        Some(target_path) => {
+            !target_path.trim().is_empty()
+                && !target_path.contains('\0')
+                && !objects_only
+                && ids.len() == 1
+                && !ids[0].trim().is_empty()
+                && !has_wildcard(&ids[0])
+        }
+    }
+}

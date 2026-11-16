@@ -1,0 +1,88 @@
+//! Published warning, eject, and cloud build [`Formatter`] sections ([`ids`], [`missing`]) around exported components.
+use crate::commands::{color::Chalk, workspace_command::format::Formatter};
+use serde_json::Value;
+
+/// Extracts non-empty string identifiers from `receipt[field]` ([`Value`]) via [`entry_text`].
+#[inline]
+pub(super) fn ids<'a>(receipt: &'a Value, field: &str) -> Vec<&'a str> {
+    receipt[field.trim()]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(entry_text)
+        .collect()
+}
+
+/// Extracts a non-empty string or nested `id`/`identity`/`url`/`name` field from `entry` ([`Value`]) for [`ids`].
+#[inline]
+fn entry_text(entry: &Value) -> Option<&str> {
+    entry
+        .as_str()
+        .or_else(|| entry["id"].as_str())
+        .or_else(|| entry["identity"].as_str())
+        .or_else(|| entry["url"].as_str())
+        .or_else(|| entry["name"].as_str())
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
+/// Formats the warning section and hint via [`Formatter`] and [`ids`] for components skipped due to missing remote scope configuration.
+#[inline]
+pub(super) fn missing(receipt: &Value, format: &Formatter) -> String {
+    let missing = ids(receipt, "missingScope");
+    if missing.is_empty() {
+        return String::new();
+    }
+    let warn = format.warn_symbol();
+    let items = missing
+        .iter()
+        .map(|id| Formatter::item_with(id, &warn))
+        .collect::<Vec<_>>();
+    let section =
+        format.section("components not exported (no remote scope configured)", "", &items);
+    let hint = format.hint(r#"please specify <remote> to export them, run 'bit scope set <scope> <component>', or set a "defaultScope" in your workspace config"#);
+    format!("{section}\n{hint}")
+}
+
+/// Formats the warning and hint for exported components that are absent from `.bitmap`.
+#[inline]
+pub(super) fn untracked(receipt: &Value, format: &Formatter) -> String {
+    let ids = ids(receipt, "nonExistOnBitMap");
+    if ids.is_empty() {
+        return String::new();
+    }
+    let hint = format.hint("exported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they were tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.");
+    format!("{} {}\n{hint}", format.warn_symbol(), format.chalk.yellow(&ids.join(", ")))
+}
+
+/// Formats the Ripple CI cloud build tracking URLs section from `receipt`.
+pub(super) fn cloud(receipt: &Value, chalk: Chalk) -> String {
+    let mut urls = ids(receipt, "rippleJobUrls");
+    if urls.is_empty() {
+        urls = ids(receipt, "rippleJobs");
+    }
+    if urls.is_empty() {
+        return String::new();
+    }
+    let browser_opened = receipt["browserOpened"] == true
+        || receipt["browserOpened"]
+            .as_str()
+            .is_some_and(|val| val.trim().eq_ignore_ascii_case("true"));
+    let prefix = if browser_opened {
+        "Your browser has been opened to the following link"
+    } else {
+        "Visit the link below"
+    };
+    let mut unique = Vec::with_capacity(urls.len());
+    for url in urls {
+        if !unique.contains(&url) {
+            unique.push(url);
+        }
+    }
+    let urls = unique
+        .into_iter()
+        .map(|url| chalk.bold(&chalk.underline(url)))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("{prefix} to track the progress of building the components in the cloud\n{urls}")
+}

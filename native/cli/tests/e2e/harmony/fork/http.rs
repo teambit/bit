@@ -1,0 +1,61 @@
+//! Real released file-backed HTTP scope; private `bit fork` capture must not import objects ([`http_single_fork_preserves_private_capture_and_original_provenance`]).
+//!
+//! Ensures single and pattern HTTP forks materialize components without polluting `.bit/objects`.
+
+use super::support;
+use crate::commands::{diff_completion::http as server, move_paths::support::successful};
+use std::{collections::BTreeMap, fs, path::Path};
+
+/// Verifies that single-component HTTP `bit fork` materializes the target without importing remote objects into `.bit/objects` ([`inventory`], [`server::start`]).
+#[test]
+fn http_single_fork_preserves_private_capture_and_original_provenance() {
+    let helper = support::remote_workspace(1);
+    let _server = server::start(&helper);
+    let objects = bit_object_import::scope_path(&helper.scopes.local_path).join("objects");
+    let before = inventory(&objects);
+    successful(&helper, &format!("fork {}/comp1 comp-copy -x", helper.scopes.remote));
+    assert_eq!(inventory(&objects), before, "remote fork must not publish its private closure");
+    assert_eq!(support::ids(&helper), ["my-scope/comp-copy"]);
+}
+/// Verifies HTTP pattern `bit fork` preserves batch ordering without importing remote objects into `.bit/objects`.
+#[test]
+fn http_pattern_batch_keeps_ordered_results_and_does_not_publish_remote_objects() {
+    let helper = support::remote_workspace(2);
+    support::delay_copies(&helper);
+    let _server = server::start(&helper);
+    let objects = bit_object_import::scope_path(&helper.scopes.local_path).join("objects");
+    let before = inventory(&objects);
+    successful(&helper, &format!(r#"fork "{}/*" --scope target.scope -x"#, helper.scopes.remote));
+    assert_eq!(inventory(&objects), before, "batch capture must remain private");
+    assert_eq!(
+        support::ids(&helper),
+        ["fixture.tools/env/fork-batch-barrier", "target.scope/comp1", "target.scope/comp2"],
+    );
+    support::assert_origins(&helper, &["comp1", "comp2"]);
+}
+/// Collects all relative file paths and contents under `root` into a [`BTreeMap`] ([`visit`]).
+fn inventory(root: &Path) -> BTreeMap<String, Vec<u8>> {
+    let mut files = BTreeMap::new();
+    if root.exists() {
+        visit(root, root, &mut files);
+    }
+    files
+}
+/// Recursively inserts relative file paths and bytes under `directory` into `files` ([`BTreeMap`], [`inventory`], [`Path`]).
+fn visit(root: &Path, directory: &Path, files: &mut BTreeMap<String, Vec<u8>>) {
+    for entry in fs::read_dir(directory).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            visit(root, &path, files);
+        } else {
+            files.insert(
+                path.strip_prefix(root)
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_owned(),
+                fs::read(path).unwrap(),
+            );
+        }
+    }
+}
