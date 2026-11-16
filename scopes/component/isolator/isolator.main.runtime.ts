@@ -1640,6 +1640,7 @@ export class IsolatorMain {
     };
     addDependencies(packageJson);
     packageJson.addOrUpdateProperty('version', currentVersion);
+    // the file was written sorted, but the component deps added above are appended to the end. sort again.
     packageJson.sortDependencies();
     return packageJson;
   }

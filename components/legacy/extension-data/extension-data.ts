@@ -58,20 +58,15 @@ export class ExtensionDataEntry {
   toModelObject() {
     const extensionId =
       this.extensionId && this.extensionId.serialize ? this.extensionId.serialize() : this.extensionId;
-    return {
-      // the identifying fields go first, before the (potentially big) data, so the entry is readable and diffable
-      name: this.name,
-      extensionId,
-      newExtensionId: this.newExtensionId,
-      legacyId: this.legacyId,
-      // Do not use raw config here
-      config: this.config,
-      data: this.data,
-    };
+    return this.toObject(extensionId);
   }
 
   toComponentObject() {
     const extensionId = this.extensionId ? this.extensionId.toString() : this.extensionId;
+    return this.toObject(extensionId);
+  }
+
+  private toObject(extensionId: unknown) {
     return {
       // the identifying fields go first, before the (potentially big) data, so the entry is readable and diffable
       name: this.name,

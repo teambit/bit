@@ -30,6 +30,8 @@ export type PackageJsonComponent = Parameters<typeof componentIdToPackageName>[0
  * then we could preserve it later on while writing the file. this is same process used by NPM when
  * writing the package.json file
  */
+const FIELDS_TO_SORT = [...DEPENDENCIES_FIELDS, 'optionalDependencies', 'peerDependenciesMeta'];
+
 export class PackageJsonFile {
   packageJsonObject: Record<string, any>;
   fileExist: boolean;
@@ -208,12 +210,10 @@ export class PackageJsonFile {
   }
 
   /**
-   * sort the dependencies fields by package name. these fields are populated from several sources (the component
-   * dependencies, transformers, overrides, the package.json of the last build), so their order depends on the order in
-   * which the entries were added, which changes between builds of the same component and makes them hard to diff.
+   * deps are merged from several sources in varying order. sort them by name for a stable, diffable output.
    */
   sortDependencies() {
-    [...DEPENDENCIES_FIELDS, 'optionalDependencies', 'peerDependenciesMeta'].forEach((field) => {
+    FIELDS_TO_SORT.forEach((field) => {
       const deps = this.packageJsonObject[field];
       if (!deps || typeof deps !== 'object') return;
       this.packageJsonObject[field] = sortObjectByKeys(deps);
