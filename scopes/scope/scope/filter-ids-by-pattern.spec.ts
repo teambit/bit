@@ -30,6 +30,12 @@ describe('filterIdsByPattern', () => {
   it('should exclude a negated glob inside an AND pattern', async () => {
     expect(await run('$modified AND !my-scope/ui/**')).to.deep.equal(['comp1']);
   });
+  it('should evaluate an AND pattern that starts with a negated state', async () => {
+    expect(await run('!$modified AND my-scope/**')).to.deep.equal(['comp2']);
+  });
+  it('should evaluate an AND pattern that starts with a negated glob', async () => {
+    expect(await run('!my-scope/ui/** AND $modified')).to.deep.equal(['comp1']);
+  });
   it('should keep excluding a negated glob', async () => {
     expect(await run('**, !my-scope/ui/**')).to.deep.equal(['comp1', 'comp2']);
   });

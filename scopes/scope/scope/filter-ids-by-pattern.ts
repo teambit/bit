@@ -18,57 +18,48 @@ export async function filterIdsByPattern(
   filterByStateFunc?: FilterByStateFunc
 ): Promise<ComponentID[]> {
   const allPatterns = pattern.split(',').map((p) => p.trim());
-
-  if (allPatterns.every((p) => p.startsWith('!'))) {
+  // an " AND " expression is evaluated as a whole, even when its first clause is negated
+  const isExclusion = (p: string) => p.startsWith('!') && !p.includes(' AND ');
+  if (allPatterns.every(isExclusion)) {
     // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
     allPatterns.unshift('**');
   }
-  const getFilterByStateFunc = (statePattern: string) => {
+  const filterByState = (statePattern: string, poolIds: ComponentID[]) => {
     if (!filterByStateFunc) {
       throw new Error(`filter by a state (${statePattern}) is currently supported on the workspace only`);
     }
-    return filterByStateFunc;
+    return filterByStateFunc(statePattern.replace('$', ''), poolIds);
   };
-  const filterByState = (statePattern: string, poolIds: ComponentID[]) =>
-    getFilterByStateFunc(statePattern)(statePattern.replace('$', ''), poolIds);
+  const excludeByState = async (negatedStatePattern: string, poolIds: ComponentID[]) => {
+    const excluded = await filterByState(negatedStatePattern.slice(1), poolIds);
+    const excludedStr = new Set(excluded.map((id) => id.toStringWithoutVersion()));
+    return poolIds.filter((id) => !excludedStr.has(id.toStringWithoutVersion()));
+  };
+  const filterByAndPattern = async (andPattern: string) => {
+    // check also as legacyId.toString, as it doesn't have the defaultScope
+    const matchesGlob = (id: ComponentID, glob: string) =>
+      multimatch([id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()], [glob.split('@')[0]]).length > 0;
+    let filtered = ids;
+    for (const clause of andPattern.split(' AND ').map((p) => p.trim())) {
+      if (clause.startsWith('!$')) filtered = await excludeByState(clause, filtered);
+      else if (clause.startsWith('!')) filtered = filtered.filter((id) => !matchesGlob(id, clause.slice(1)));
+      else if (clause.startsWith('$')) filtered = await filterByState(clause, filtered);
+      else filtered = filtered.filter((id) => matchesGlob(id, clause));
+    }
+    return filtered;
+  };
 
-  const [negatedStatePatterns, patterns] = partition(allPatterns, (p) => p.startsWith('!$'));
+  const [negatedStatePatterns, patterns] = partition(allPatterns, (p) => p.startsWith('!$') && !p.includes(' AND '));
   const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
   const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
   const idsMap: { [id: string]: ComponentID } = Object.fromEntries(ids.map((id) => [id.toStringWithoutVersion(), id]));
-  const idsFiltered = nonStatePatternsNoVer.length
-    ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
-    : [];
-
-  const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
-    if (statePattern.includes(' AND ')) {
-      let filteredByAnd: ComponentID[] = ids;
-      const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
-      // check also as legacyId.toString, as it doesn't have the defaultScope
-      const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
-      const matchesGlob = (id: ComponentID, glob: string) =>
-        multimatch(idsToCheck(id), [glob.split('@')[0]]).length > 0;
-      for await (const onePattern of patternSplit) {
-        if (onePattern.startsWith('!$')) {
-          const excluded = ComponentIdList.fromArray(await filterByState(onePattern.slice(1), filteredByAnd));
-          filteredByAnd = filteredByAnd.filter((id) => !excluded.hasWithoutVersion(id));
-        } else if (onePattern.startsWith('!')) {
-          filteredByAnd = filteredByAnd.filter((id) => !matchesGlob(id, onePattern.slice(1)));
-        } else if (onePattern.startsWith('$')) {
-          filteredByAnd = await filterByState(onePattern, filteredByAnd);
-        } else {
-          filteredByAnd = filteredByAnd.filter((id) => matchesGlob(id, onePattern));
-        }
-      }
-      return filteredByAnd;
-    }
-    return filterByState(statePattern, ids);
-  });
-  let allIdsFiltered = ComponentIdList.uniqFromArray([...idsFiltered, ...idsStateFiltered.flat()]);
-  if (negatedStatePatterns.length) {
-    const excludedPerPattern = await mapSeries(negatedStatePatterns, (p) => filterByState(p.slice(1), allIdsFiltered));
-    const excluded = ComponentIdList.fromArray(excludedPerPattern.flat());
-    allIdsFiltered = ComponentIdList.fromArray(allIdsFiltered.filter((id) => !excluded.hasWithoutVersion(id)));
+  const idsFiltered = multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr]);
+  const idsStateFiltered = await mapSeries(statePatterns, (statePattern) =>
+    statePattern.includes(' AND ') ? filterByAndPattern(statePattern) : filterByState(statePattern, ids)
+  );
+  let allIdsFiltered: ComponentID[] = ComponentIdList.uniqFromArray([...idsFiltered, ...idsStateFiltered.flat()]);
+  for (const negatedStatePattern of negatedStatePatterns) {
+    allIdsFiltered = await excludeByState(negatedStatePattern, allIdsFiltered);
   }
   if (throwForNoMatch && !allIdsFiltered.length) {
     throw new NoIdMatchPattern(pattern);
