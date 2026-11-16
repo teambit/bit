@@ -28,6 +28,7 @@ list of supported states: [${statesFilter.join(', ')}].
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.
 list of supported multi-params states: [env].
 to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.
+to exclude by a state, use '!$'. e.g. '!$localOnly' or '$modified AND !$deprecated'.
 `;
   examples = [
     { cmd: "bit pattern '**'", description: 'matches all components' },
