@@ -1,6 +1,6 @@
 import type { PeerDependencyRules } from '@pnpm/types';
 import type { WorkspacePolicyConfigObject } from './policy';
-import type { PackageImportMethod, PackageExtension } from './package-manager';
+import type { PackageImportMethod, PackageExtension, LockfileFormat } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 
@@ -142,6 +142,13 @@ export interface DependencyResolverWorkspaceConfig {
    * when `nodeLinker` is `hoisted`, which uses no virtual store.
    */
   enableGlobalVirtualStore?: boolean;
+
+  /*
+   * The format pnpm writes the workspace's `pnpm-lock.yaml` in. `v13` writes pnpm's experimental
+   * `lockfileVersion: '13.0'` format. Defaults to `v9`.
+   * Capsules are unaffected - their lockfiles always use the default format.
+   */
+  lockfileFormat?: LockfileFormat;
 
   /*
    * Path to the global virtual store directory. Defaults to pnpm's own shared `<storeDir>/links`.

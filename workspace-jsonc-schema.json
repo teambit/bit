@@ -139,6 +139,11 @@
           "enum": ["auto", "hardlink", "copy", "clone"],
           "description": "The package import method for the package manager."
         },
+        "lockfileFormat": {
+          "type": "string",
+          "enum": ["v9", "v13"],
+          "description": "The format pnpm-lock.yaml is written in. \"v13\" is pnpm's experimental lockfileVersion 13.0 format. Defaults to \"v9\"."
+        },
         "peerDependencyRules": {
           "type": "object",
           "description": "Rules for peer dependencies.",

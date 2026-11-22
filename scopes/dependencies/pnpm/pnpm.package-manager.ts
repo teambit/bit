@@ -247,6 +247,7 @@ export class PnpmPackageManager implements PackageManager {
           engineStrict: installOptions.engineStrict ?? config.engineStrict,
           excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
           lockfileOnly: installOptions.lockfileOnly,
+          lockfileFormat: installOptions.lockfileFormat,
           minimumReleaseAge: installOptions.minimumReleaseAge,
           minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
           neverBuiltDependencies: installOptions.neverBuiltDependencies,
