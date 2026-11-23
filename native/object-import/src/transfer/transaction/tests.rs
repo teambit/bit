@@ -1,0 +1,89 @@
+//! Unit tests for multi-scope transfer transaction [`State`] directives, [`apply`] retries, and cleanup in `bit-object-import`.
+//!
+//! Ensures failed uploads clean up only previously acknowledged remote scopes and preserve revision ordering.
+
+use crate::transfer::{State, apply};
+use serde_json::{Value, json};
+
+/// Initializes a three-scope transfer transaction in `state` with `resuming: resume`.
+fn initialize(state: &mut State, resume: bool) -> Value {
+    apply("transferTransactionInitialize",&json!({"scopes":["one.scope","two.scope","three.scope"],"clientId":"same-client","resuming":resume}),state).unwrap()
+}
+/// Submits a `transferTransactionReceipt` for `previous` with `success` to `state`.
+fn receipt(state: &mut State, previous: &Value, success: bool) -> Value {
+    apply(
+        "transferTransactionReceipt",
+        &json!({"token":previous["token"],"revision":previous["revision"],"success":success}),
+        state,
+    )
+    .unwrap()
+}
+/// Verifies that a failed upload cleans up only previously acknowledged remotes and rejects stale receipts.
+#[test]
+fn failed_upload_cleans_only_prior_acknowledged_remotes() {
+    let mut state = State::default();
+    let first = initialize(&mut state, false);
+    let second = receipt(&mut state, &first, true);
+    let failed = receipt(&mut state, &second, false);
+    assert_eq!(failed["directive"], json!({"kind":"cleanup","indices":[0],"reason":"push"}));
+    let terminal = receipt(&mut state, &failed, true);
+    assert_eq!(terminal["directive"]["kind"], "failed");
+    assert!(
+        apply(
+            "transferTransactionReceipt",
+            &json!({"token":first["token"],"revision":0,"success":true}),
+            &mut state
+        )
+        .is_err(),
+    );
+}
+/// Verifies that validation failure cleans up all remotes on a fresh transfer (`resume = false`) while skipping cleanup on `--resume`.
+#[test]
+fn fresh_validation_failure_cleans_all_but_resume_never_cleans() {
+    let mut state = State::default();
+    let mut next = initialize(&mut state, false);
+    for _ in 0..3 {
+        next = receipt(&mut state, &next, true);
+    }
+    assert_eq!(next["directive"]["kind"], "validate");
+    next = receipt(&mut state, &next, false);
+    assert_eq!(next["directive"], json!({"kind":"cleanup","indices":[0,1,2],"reason":"validate"}));
+    next = initialize(&mut state, true);
+    assert_eq!(next["directive"]["kind"], "validate");
+    next = receipt(&mut state, &next, false);
+    assert_eq!(next["directive"], json!({"kind":"failed","indices":[],"reason":"validate"}));
+}
+/// Verifies that `persist` retries at most three times before transitioning to `"failed"` without deleting pending directories.
+#[test]
+fn persist_retries_exactly_three_times_then_preserves_pending_dirs() {
+    let mut state = State::default();
+    let init = initialize(&mut state, true);
+    let mut next = receipt(&mut state, &init, true);
+    for attempt in 1..=3 {
+        assert_eq!(next["directive"]["attempt"], attempt);
+        next = receipt(&mut state, &next, false);
+    }
+    assert_eq!(next["directive"], json!({"kind":"failed","indices":[],"reason":"persist"}));
+}
+/// Verifies that reinitializing a transfer transaction via [`initialize`] and [`receipt`] invalidates older tokens and advances `persist` directives through `"done"` ([`persist_retries_exactly_three_times_then_preserves_pending_dirs`]).
+#[test]
+fn successful_persist_series_and_stale_reinitialization_never_repeat_acks() {
+    let mut state = State::default();
+    let old = initialize(&mut state, true);
+    let current = initialize(&mut state, true);
+    assert_ne!(old["token"], current["token"]);
+    assert!(
+        apply(
+            "transferTransactionReceipt",
+            &json!({"token":old["token"],"revision":0,"success":true}),
+            &mut state
+        )
+        .is_err(),
+    );
+    let mut next = receipt(&mut state, &current, true);
+    for index in 0..3 {
+        assert_eq!(next["directive"]["indices"], json!([index]));
+        next = receipt(&mut state, &next, true);
+    }
+    assert_eq!(next["directive"], json!({"kind":"done","indices":[]}));
+}

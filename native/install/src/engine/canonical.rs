@@ -1,0 +1,80 @@
+//! Run the published `lynx.install` package step in this process after its
+//! retained `InstallMain` and dependency-installer callbacks have finished.
+//!
+//! Validates all package-manager inputs before any filesystem or network effect via [`CanonicalInstall`].
+//! Declines unsupported options cleanly so callers can fall back before mutations occur ([`EngineResult`]).
+
+mod environment;
+mod parse;
+mod settings;
+
+#[cfg(test)]
+mod tests;
+
+use super::{EngineInstallOptions, EngineResult, EngineSettings, OutputSink, run};
+use crate::{host::HostInfo, model::InstallPlan};
+use serde_json::Value;
+use std::io;
+
+/// Fully validated package-manager inputs. Constructing this performs no
+/// package-manager write, so an unsupported request can run the published
+/// package manager once with its original arguments.
+pub struct CanonicalInstall {
+    /// Prepared [`EngineSettings`] for the canonical install invocation.
+    settings: EngineSettings,
+    options: EngineInstallOptions,
+    plan: InstallPlan,
+    payload: Value,
+    info: HostInfo,
+}
+
+impl CanonicalInstall {
+    /// Return `None` before build-script `PATH` preparation or engine effects (`Prepared` validation).
+    #[must_use]
+    #[inline]
+    pub fn prepare(payload: &Value, info: &HostInfo) -> Option<Self> {
+        let request = parse::Request::new(payload)
+            .filter(|request| request.environment.can_inherit_parent())?;
+        let (settings, options, plan) = settings::prepare(&request, info)?;
+        Some(Self { settings, options, plan, payload: payload.clone(), info: info.clone() })
+    }
+
+    /// Run the already accepted package step after the retained Host prepares
+    /// its published node-gyp PATH.
+    pub async fn run(
+        mut self,
+        build_scripts_path: String,
+        output: Option<OutputSink>,
+    ) -> io::Result<EngineResult> {
+        let trimmed_path = build_scripts_path.trim();
+        if trimmed_path.is_empty() || trimmed_path.contains(['\0', '\n', '\r']) {
+            return Err(io::Error::other("retained build scripts PATH is empty"));
+        }
+        let build_scripts_path = if trimmed_path.len() == build_scripts_path.len() {
+            build_scripts_path
+        } else {
+            trimmed_path.to_owned()
+        };
+        let environment = self.payload["environment"]
+            .as_object_mut()
+            .ok_or_else(|| io::Error::other("retained Host environment unavailable"))?;
+        environment.retain(|key, _| !key.trim().eq_ignore_ascii_case("PATH"));
+        environment.insert("PATH".to_string(), Value::String(build_scripts_path.clone()));
+        let request = parse::Request::new(&self.payload)
+            .filter(|request| request.environment.can_inherit_parent())
+            .ok_or_else(|| io::Error::other("retained package inputs changed after PATH setup"))?;
+        let (settings, options, plan) = settings::prepare(&request, &self.info)
+            .ok_or_else(|| {
+                io::Error::other("retained pnpm configuration changed after PATH setup")
+            })?;
+        self.settings = settings;
+        self.options = options;
+        self.plan = plan;
+        self.settings.set_build_scripts_path(build_scripts_path);
+        self.options.output = output;
+        run::install(&self.plan, &self.settings, &self.options).await
+    }
+}
+
+/// Validated tuple of [`EngineSettings`], [`EngineInstallOptions`], and [`InstallPlan`] ready before [`run::install`] begins effects on [`CanonicalInstall`].
+type Prepared = (super::EngineSettings, EngineInstallOptions, InstallPlan);

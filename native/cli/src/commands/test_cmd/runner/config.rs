@@ -1,0 +1,145 @@
+//! Jest and dev-pattern configuration resolution for `bit test`.
+//!
+//! [`request`] and [`request_with_empty`] resolve [`DevPatternConfig`], [`EnvDevPatterns`], and [`Settings`] over [`Workspace`] and [`Component`] via [`dev_files`] and [`dev_patterns`].
+use super::{Value, files, invalid, json, settings::Settings};
+use crate::commands::workspace_command::component_service::Component;
+use bit_install::{
+    config::WorkspaceConfig,
+    dependencies::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns},
+    workspace::Workspace,
+};
+use std::{fs, io, path::Path};
+
+/// Builds the Jest worker request [`Value`] for `selected` ([`Component`]) when matching test files exist via [`request_with_empty`].
+#[inline]
+pub(super) fn request(
+    root: &Path,
+    selected: &Component,
+    environment: &str,
+    settings: &Settings,
+) -> io::Result<Option<Value>> {
+    let (request, has_tests) = request_with_empty(root, selected, environment, settings)?;
+    Ok(has_tests.then_some(request))
+}
+
+/// Builds the Jest worker request [`Value`] and returns whether any matching test files exist via [`test_match`] and [`tool_options`].
+pub(super) fn request_with_empty(
+    root: &Path,
+    selected: &Component,
+    environment: &str,
+    settings: &Settings,
+) -> io::Result<(Value, bool)> {
+    let patterns = patterns(root, selected)?;
+    let tests = files::tests(selected, &patterns.tests)?;
+    let component_dir = root.join(selected.directory.trim());
+    let directory = super::paths::normalized(&component_dir);
+    let requested: Vec<_> = settings.files
+        .iter()
+        .filter(|file| file.starts_with(&directory))
+        .cloned()
+        .collect();
+    if requested
+        .iter()
+        .any(|file| !tests.contains(file))
+    {
+        return Err(invalid("tester requested file recognition"));
+    }
+    let has_tests =
+        if settings.files.is_empty() { !tests.is_empty() } else { !requested.is_empty() };
+    let mut config: Value = serde_json::from_str(include_str!("config.json"))?;
+    config["rootDir"] = json!(root);
+    config["roots"] = json!([root]);
+    config["testMatch"] =
+        test_match(&component_dir, &patterns.tests, &tests, &requested, settings.files.is_empty());
+    if bit_install::config::aspect_id_without_version(environment.trim()) == "teambit.react/react" {
+        config["testEnvironment"] = json!("$jsdom");
+        config["setupFiles"] = json!(["$polyfill"]);
+    }
+    let options = tool_options(&mut config, patterns.dev_files, settings);
+    Ok((json!({"root":root,"config":config,"options":options}), has_tests))
+}
+
+/// Builds the Jest `testMatch` array from either glob `patterns` or explicit `requested` test files.
+#[inline]
+fn test_match(
+    component_dir: &Path,
+    patterns: &[String],
+    tests: &[std::path::PathBuf],
+    requested: &[std::path::PathBuf],
+    all_files: bool,
+) -> Value {
+    if all_files {
+        json!(
+            patterns
+                .iter()
+                .map(|pattern| absolute_pattern(component_dir, pattern))
+                .collect::<Vec<_>>()
+        )
+    } else {
+        json!(
+            tests
+                .iter()
+                .filter(|file| requested.contains(file))
+                .collect::<Vec<_>>()
+        )
+    }
+}
+/// Populates Jest CLI `options` (`updateSnapshot`, `coverage`, `coveragePathIgnorePatterns`) for `settings`.
+#[inline]
+fn tool_options(config: &mut Value, dev_files: Vec<String>, settings: &Settings) -> Value {
+    let mut options = json!({});
+    if settings.update_snapshot {
+        options["updateSnapshot"] = json!(true);
+    }
+    if settings.coverage {
+        options["coverage"] = json!(true);
+        options["collectCoverage"] = json!(true);
+        options["coverageReporters"] = json!(["text", "json-summary"]);
+        let mut ignored = Vec::with_capacity(dev_files.len() + 2);
+        ignored.push("/node_modules/".to_owned());
+        ignored.extend(dev_files);
+        ignored.push("/^.*/.*.bit-app..*$/".to_owned());
+        config["coveragePathIgnorePatterns"] = json!(ignored);
+    }
+    options
+}
+
+struct Patterns {
+    tests: Vec<String>,
+    dev_files: Vec<String>,
+}
+fn patterns(root: &Path, selected: &Component) -> io::Result<Patterns> {
+    let raw: Value = bit_object_import::parse_jsonc(&fs::read(root.join("workspace.jsonc"))?)?;
+    let config = WorkspaceConfig::load(root).map_err(io::Error::other)?;
+    let core: Vec<String> = serde_json::from_str(include_str!(
+        "../../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+    ))?;
+    let workspace = Workspace::load(root, &config, &core).map_err(io::Error::other)?;
+    let (_, component) = workspace
+        .active()
+        .find(|(entry, _)| entry.root_dir.trim() == selected.directory.trim())
+        .ok_or_else(|| invalid("tester component patterns"))?;
+    let configured = DevPatternConfig::from_aspects(&|id| {
+        crate::commands::update_cmd::aspect_entry(&raw, id).map(|(_, val)| val.clone())
+    });
+    let mut patterns = dev_patterns(component, &configured, &EnvDevPatterns::default());
+    let dev_files = dev_files(component, &patterns);
+    Ok(Patterns {
+        tests: patterns.shift_remove("teambit.defender/tester").unwrap_or_default(),
+        dev_files,
+    })
+}
+
+#[inline]
+fn absolute_pattern(directory: &Path, pattern: &str) -> String {
+    let pattern = pattern.trim();
+    let (prefix, relative) = pattern
+        .strip_prefix('!')
+        .map_or(("", pattern), |value| ("!", value.trim()));
+    let relative = relative.trim_start_matches("./").trim_start_matches('/');
+    let joined = directory
+        .join(relative)
+        .to_string_lossy()
+        .replace('\\', "/");
+    format!("{prefix}{joined}")
+}

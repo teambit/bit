@@ -1,0 +1,72 @@
+//! End-to-end tests ([`compare`]) verifying file/link failures retain the exact publication prefix before `.bitmap` persistence and CI delegation.
+//!
+//! Verifies unchanged `.bitmap` bytes on package link failure and path-prefix sibling isolation in [`workspace`].
+use super::support::{compare, workspace};
+use std::fs;
+/// Verifies [`compare`] leaves `.bitmap` and source files in [`workspace`] unchanged when `node_modules` linking fails.
+#[test]
+fn package_link_failure_keeps_bitmap_and_source_bytes_unchanged() {
+    let helper = workspace();
+    helper.output_file("bar/index.js", "module.exports=1;\n");
+    helper.output_file(&format!("node_modules/@{}", helper.scopes.remote), "not a directory\n");
+    let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
+    let result = compare(&helper, "add bar -i bar/foo");
+    assert!(!result.status.success());
+    assert_eq!(fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(), bitmap);
+    assert_eq!(
+        fs::read_to_string(helper.scopes.local_path.join("bar/index.js")).unwrap(),
+        "module.exports=1;\n",
+    );
+}
+/// Verifies that sibling directories sharing a path prefix (`foo` and `foobar`) do not transfer tracked files via [`compare`].
+#[test]
+fn path_prefix_siblings_do_not_transfer_tracked_files() {
+    let helper = workspace();
+    helper.output_file("foo/index.js", "module.exports=1;\n");
+    helper.output_file("foobar/index.js", "module.exports=2;\n");
+    helper.run("add foo -i foo");
+    compare(&helper, "add foobar -i foobar");
+}
+/// Verifies `bit add` before `bit init` reports the released missing-workspace error without creating `.bitmap`.
+#[test]
+fn add_before_init_reports_the_released_workspace_error() {
+    let helper = crate::helper::Helper::new();
+    helper.output_file("bar/index.js", "module.exports=1;\n");
+    let oracle = helper.clone_workspace();
+    let expected = super::support::node(&oracle, "add bar -i bar/foo");
+    let actual = helper.native_run("add bar -i bar/foo");
+    assert_eq!(actual.status.code(), expected.status.code());
+    assert_eq!(actual.stdout, expected.stdout);
+    assert_eq!(actual.stderr, expected.stderr);
+    assert!(!actual.status.success());
+    assert!(!helper.scopes.local_path.join(".bitmap").exists());
+}
+
+/// Verifies [`super::support::compare_ci`] keeps successful `bit add` runs native under `CI=true`.
+#[test]
+fn ci_success_stays_native_and_preserves_exact_released_output() {
+    let helper = workspace();
+    helper.output_file("bar/index.js", "module.exports=1;\n");
+    let result = super::support::compare_ci(&helper, "add bar -i bar/foo", true);
+    assert!(result.status.success());
+}
+
+/// Verifies that fully ignored `bit add` inputs under `CI=true` delegate before effects with the exact error stack.
+#[test]
+fn ci_fully_ignored_input_delegates_before_effects_with_exact_error_stack() {
+    let helper = workspace();
+    helper.output_file("bar/index.js", "module.exports=1;\n");
+    helper.output_file(".gitignore", "bar/\n");
+    let result = super::support::compare_ci(&helper, "add bar -i bar/foo", false);
+    assert!(!result.status.success());
+}
+
+/// Verifies that a blocked `node_modules` link parent under `CI=true` delegates before effects with the exact error stack.
+#[test]
+fn ci_blocked_link_parent_delegates_before_effects_with_exact_error_stack() {
+    let helper = workspace();
+    helper.output_file("bar/index.js", "module.exports=1;\n");
+    helper.output_file(&format!("node_modules/@{}", helper.scopes.remote), "not a directory\n");
+    let result = super::support::compare_ci(&helper, "add bar -i bar/foo", false);
+    assert!(!result.status.success());
+}

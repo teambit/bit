@@ -1,0 +1,102 @@
+//! Workspace file, repository object, and hex-body `Source` payload loading ([`read`], [`workspace`], [`hex`], [`hex_digit`]) and `SHA-1` verification.
+
+#[cfg(test)]
+#[path = "source_tests.rs"]
+mod tests;
+
+use sha1::{Digest, Sha1};
+use std::{
+    fs::File,
+    io::{self, Read},
+};
+
+use super::{MAX_RAW, invalid, path, wire};
+
+/// Reads, validates, and normalizes a snapshot `Source` payload within `maximum` bytes via [`workspace`] or [`hex`].
+pub(super) fn read(
+    object: &wire::Object,
+    maximum: usize,
+    compressed: &mut usize,
+) -> io::Result<Vec<u8>> {
+    let bytes = match (&object.source, &object.repository, &object.body, &object.fields) {
+        (Some(source), None, None, None) => workspace(source, maximum)?,
+        (None, Some(repository), None, None) => {
+            path(&repository.objects_directory)?;
+            crate::checkout::repository::source(
+                &repository.objects_directory,
+                crate::merge_history::hash(&repository.hash)?,
+                maximum,
+                compressed,
+            )?
+        }
+        (None, None, Some(body), None) => hex(body, maximum)?,
+        _ => return Err(invalid("unsupported Source input")),
+    };
+    let hash = object.hash
+        .as_deref()
+        .map(str::trim)
+        .ok_or_else(|| invalid("Source hash missing"))?;
+    crate::merge_history::hash(hash)?;
+    if !crate::validate::hexadecimal(&Sha1::digest(&bytes)).eq_ignore_ascii_case(hash) {
+        return Err(invalid("snapshot Source identity differs"));
+    }
+    Ok(bytes)
+}
+
+/// Reads a workspace `source` file within `maximum` bytes, strips optional BOM, and normalizes line endings.
+fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
+    path(&source.path)?;
+    if source.path.parent().is_none_or(std::path::Path::is_symlink) {
+        return Err(invalid("snapshot workspace size/type"));
+    }
+    crate::merge_history::hash(&source.hash)?;
+    crate::merge_history::hash(&source.source_hash)?;
+    let metadata = std::fs::symlink_metadata(&source.path)?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > maximum as u64 {
+        return Err(invalid("snapshot workspace size/type"));
+    }
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    File::open(&source.path)?
+        .take((maximum + 1) as u64)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > maximum
+        || !crate::validate::hexadecimal(&Sha1::digest(&bytes))
+            .eq_ignore_ascii_case(source.hash.trim())
+    {
+        return Err(invalid("workspace snapshot differs"));
+    }
+    if source.normalization == wire::Normalization::Workspace && bytes.starts_with(b"\xef\xbb\xbf")
+    {
+        bytes.drain(..3);
+    }
+    let bytes = crate::checkout::eol::normalize(bytes, false);
+    if !crate::validate::hexadecimal(&Sha1::digest(&bytes))
+        .eq_ignore_ascii_case(source.source_hash.trim())
+    {
+        return Err(invalid("normalized Source identity differs"));
+    }
+    Ok(bytes)
+}
+
+/// Decodes a hexadecimal `Source` body string `text` into raw bytes within `maximum` (capped at [`MAX_RAW`]) via [`hex_digit`].
+fn hex(text: &str, maximum: usize) -> io::Result<Vec<u8>> {
+    let text = text.trim();
+    if text.len() > maximum.min(MAX_RAW) * 2 || !text.len().is_multiple_of(2) {
+        return Err(invalid("Source body encoding limit"));
+    }
+    text.as_bytes()
+        .chunks_exact(2)
+        .map(|chunk| Ok((hex_digit(chunk[0])? << 4) | hex_digit(chunk[1])?))
+        .collect()
+}
+
+/// Converts an ASCII hexadecimal digit `byte` into its 4-bit numeric value (`0..16`).
+#[inline]
+fn hex_digit(byte: u8) -> io::Result<u8> {
+    match byte {
+        b'0'..=b'9' => Ok(byte - b'0'),
+        b'a'..=b'f' => Ok(byte - b'a' + 10),
+        b'A'..=b'F' => Ok(byte - b'A' + 10),
+        _ => Err(invalid("Source body encoding limit")),
+    }
+}

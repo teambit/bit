@@ -1,0 +1,198 @@
+//! Default Node environment `package.json` [`manifest`] synthesis for unlinked [`Input`] components.
+//! Validates default environment compatibility, main/types paths, and dependency maps.
+
+use super::{Input, Map, Value, invalid, value};
+use std::io;
+
+/// `NodeModuleLinker.createPackageJson` for an unlinked [`Input`] component using the default Node env via [`parse_package_identity`] and [`package_versions`].
+pub(super) fn manifest(input: &Input<'_>, package_name: &str, snapshot: bool) -> io::Result<Value> {
+    let (scope, name) = parse_package_identity(input.identity)?;
+    let main_file = input.version["mainFile"]
+        .as_str()
+        .map(str::trim)
+        .filter(|file| !file.is_empty())
+        .ok_or_else(|| invalid("tag package main file"))?;
+    crate::checkout::plan::relative_path(main_file)?;
+    let (main, types) = if snapshot {
+        package_paths(input.version, main_file).unwrap_or_else(|_| (main_file.to_owned(), None))
+    } else {
+        validate_default_env(input.version)?;
+        package_paths(input.version, main_file)?
+    };
+    let (version, component_version) = package_versions(input);
+    let package_name = package_name.trim();
+    let mut fields = Map::with_capacity(14);
+    fields.insert("name".into(), value!(package_name));
+    fields.insert("version".into(), value!(version));
+    fields.insert("main".into(), value!(main));
+    fields.insert(
+        "componentId".into(),
+        value!({"name":name,"version":component_version,"scope":scope}),
+    );
+    insert_dependency_fields(&mut fields, input.version);
+    fields.insert("license".into(), value!("SEE LICENSE IN UNLICENSED"));
+    fields.insert("exported".into(), value!(false));
+    fields.insert("optionalDependencies".into(), Value::Object(Map::new()));
+    fields.insert("peerDependenciesMeta".into(), Value::Object(Map::new()));
+    if let Some(bit) = peer_bit_metadata(input.version) {
+        fields.insert("bit".into(), bit);
+    }
+    if let Some(types) = types {
+        fields.insert("types".into(), value!(types));
+    }
+    fields.insert("_bit_local".into(), value!(true));
+    fields.insert("source".into(), value!(main_file));
+    Ok(Value::Object(fields))
+}
+
+/// Computes the `(package_version, component_id_version)` pair for `input` ([`Input`]) from its semantic version or hash for [`manifest`].
+#[inline]
+fn package_versions<'a>(input: &'a Input<'_>) -> (String, &'a str) {
+    let hash = input.hash.trim();
+    let semantic = input.semantic_version
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty());
+    let version = semantic.map_or_else(|| format!("0.0.0-{hash}"), str::to_owned);
+    (version, semantic.unwrap_or(hash))
+}
+
+/// Parses `<scope>/<name>[@<version>]` into trimmed `(scope, name)` slices for `componentId`.
+#[inline]
+fn parse_package_identity(identity: &str) -> io::Result<(&str, &str)> {
+    let identity = identity.trim();
+    let bare = identity.rsplit_once('@').map_or(identity, |(prefix, _)| prefix.trim());
+    bare.split_once('/')
+        .map(|(scope, name)| (scope.trim(), name.trim()))
+        .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+        .ok_or_else(|| invalid("tag package identity"))
+}
+
+/// Copies `packageDependencies`, `devPackageDependencies`, and `peerPackageDependencies` from `version` into `fields` for [`manifest`].
+#[inline]
+fn insert_dependency_fields(fields: &mut Map<String, Value>, version: &Value) {
+    for (target, source) in [
+        ("dependencies", "packageDependencies"),
+        ("devDependencies", "devPackageDependencies"),
+        ("peerDependencies", "peerPackageDependencies"),
+    ] {
+        fields.insert(target.into(), version[source].clone());
+    }
+}
+
+#[inline]
+fn matches_aspect(row: &Value, id: &str) -> bool {
+    crate::workspace::engine::client_status::config::is_extension_aspect(row, id)
+}
+
+fn peer_bit_metadata(version: &Value) -> Option<Value> {
+    let config = version["extensions"]
+        .as_array()?
+        .iter()
+        .find(|row| matches_aspect(row, "teambit.dependencies/dependency-resolver"))?
+        .get("config")?;
+    if !truthy(config.get("peer")) {
+        return None;
+    }
+    let mut bit = Map::new();
+    bit.insert("peer".into(), value!(true));
+    if let Some(range) = config
+        .get("defaultPeerRange")
+        .filter(|range| truthy(Some(range)))
+    {
+        bit.insert("defaultPeerRange".into(), range.clone());
+    }
+    Some(Value::Object(bit))
+}
+
+#[inline]
+fn truthy(value: Option<&Value>) -> bool {
+    match value {
+        None | Some(Value::Null) => false,
+        Some(Value::Bool(flag)) => *flag,
+        Some(Value::Number(number)) => number
+            .as_f64()
+            .is_some_and(|number| number != 0.0),
+        Some(Value::String(text)) => !text.trim().is_empty(),
+        Some(_) => true,
+    }
+}
+
+fn validate_default_env(version: &Value) -> io::Result<()> {
+    let env = version["extensions"]
+        .as_array()
+        .and_then(|rows| rows.iter().find(|row| matches_aspect(row, "teambit.envs/envs")));
+    let props = &version["packageJsonChangedProps"];
+    let unchanged = props.is_null() || props.as_object().is_some_and(Map::is_empty);
+    let optional = version["extensions"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter(|row| matches_aspect(row, "teambit.dependencies/dependency-resolver"))
+        .flat_map(|row| {
+            row["data"]["dependencies"]
+                .as_array()
+                .into_iter()
+                .flatten()
+        })
+        .any(|dependency| dependency["optional"] == true);
+    if env.is_none_or(|env| {
+        env["data"]["id"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(|id| {
+                id != "teambit.harmony/node" && !id.starts_with("teambit.harmony/node@")
+            })
+            || !env["config"].as_object().is_some_and(Map::is_empty)
+    }) || !unchanged
+        || optional
+    {
+        return Err(invalid("tag package requires canonical linker"));
+    }
+    Ok(())
+}
+
+fn package_paths(version: &Value, main_file: &str) -> io::Result<(String, Option<String>)> {
+    let pkg = version["extensions"]
+        .as_array()
+        .and_then(|rows| rows.iter().find(|row| matches_aspect(row, "teambit.pkg/pkg")));
+    let changes = pkg
+        .filter(|pkg| pkg["config"].as_object().is_some_and(Map::is_empty))
+        .map(|pkg| &pkg["data"]["packageJsonModification"]);
+    let Some(changes) = changes.and_then(Value::as_object) else {
+        return Err(invalid("tag package props"));
+    };
+    if changes
+        .keys()
+        .any(|key| !matches!(key.as_str(), "main" | "types"))
+    {
+        return Err(invalid("tag package custom props"));
+    }
+    let stem = main_file.rsplit_once('.').map_or(main_file, |(stem, _)| stem);
+    let replace = |text: &str| text.replace("{main}", stem);
+    let main = changes
+        .get("main")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|main| !main.is_empty())
+        .ok_or_else(|| invalid("tag package main"))?;
+    let types = match changes.get("types") {
+        None => None,
+        Some(Value::String(types)) => Some(types.trim())
+            .filter(|types| !types.is_empty())
+            .map(replace),
+        Some(_) => return Err(invalid("tag package types")),
+    };
+    let main = replace(main);
+    validate_generated_paths(&main, types.as_deref())?;
+    Ok((main, types))
+}
+
+fn validate_generated_paths(main: &str, types: Option<&str>) -> io::Result<()> {
+    for path in std::iter::once(main).chain(types) {
+        if path.contains(['{', '}']) {
+            return Err(invalid("tag package placeholder"));
+        }
+        crate::checkout::plan::relative_path(path)?;
+    }
+    Ok(())
+}

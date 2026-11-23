@@ -1,0 +1,117 @@
+//! Object-backed capture ([`from_model`], [`Captured`], [`Repository`]) for hidden lane dependents outside workspace directories.
+//! Retains `Source` blob proofs without exposing private token paths to workspace materialization.
+
+#[cfg(test)]
+mod tests;
+
+use super::{Captured, comparison, invalid, snapshots};
+use crate::workspace::engine::{command::repository::Repository, status_models::harmony};
+use serde_json::{Value, json};
+use std::{collections::HashSet, io, path::Path};
+
+/// Hidden lane dependents are `ConsumerComponents` loaded from object storage.
+/// Paths are private token keys only; they must never enter workspace inventory
+/// or materialization. [`Repository`] object proofs bind all retained `Source` bytes via [`retain_files`].
+pub(in crate::workspace::engine::command) fn from_model(
+    private_root: &Path,
+    identity: &str,
+    version: &str,
+    value: &Value,
+    repository: &mut Repository,
+    state: &mut snapshots::State,
+) -> io::Result<Captured> {
+    crate::merge_history::hash(version)?;
+    let current = harmony::project(value)?;
+    let rows = current["files"]
+        .as_array()
+        .filter(|rows| !rows.is_empty() && rows.len() <= 4096)
+        .ok_or_else(|| invalid("hidden lane files"))?;
+    let references = rows
+        .iter()
+        .map(|row| {
+            row["file"]
+                .as_str()
+                .map(str::trim)
+                .filter(|reference| !reference.is_empty())
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("hidden Source reference"))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let contents = repository.source_batch(&references)?;
+    let (files, paths) = retain_files(private_root, version.trim(), rows, contents, state)?;
+    let metadata = current["files"].clone();
+    Ok(Captured {
+        added: false,
+        hidden: true,
+        model_backed: true,
+        target: comparison::Target {
+            source_overlays: std::collections::HashMap::new(),
+            source_overlay_root: None,
+            identity: identity.trim().into(),
+            version: version.trim().into(),
+            directory: String::new(),
+            files: paths,
+            current,
+        },
+        metadata,
+        files: json!(files),
+    })
+}
+
+/// Retains hidden component `Source` blobs under `private_root/<version>` and records their [`snapshots`] proofs after verifying `SHA-1` digests for [`from_model`].
+fn retain_files(
+    private_root: &Path,
+    version: &str,
+    rows: &[Value],
+    contents: Vec<Vec<u8>>,
+    state: &mut snapshots::State,
+) -> io::Result<(Vec<Value>, Vec<String>)> {
+    let mut files = Vec::with_capacity(rows.len());
+    let mut paths = Vec::with_capacity(rows.len());
+    let mut seen = HashSet::with_capacity(rows.len());
+    let version_root = private_root.join(version);
+    for (row, bytes) in rows.iter().zip(contents) {
+        let relative = row["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("hidden file path"))?;
+        validate_relative(relative, &mut seen)?;
+        let reference = row["file"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("hidden Source reference"))?;
+        let hash = crate::workspace::engine::hash(&bytes);
+        if !hash.eq_ignore_ascii_case(reference) {
+            return Err(invalid("hidden lane Source hash mismatch"));
+        }
+        let path = version_root.join(relative);
+        let token = state
+            .retain(snapshots::Observation {
+                path: path.clone(),
+                raw_hash: hash.clone(),
+                snapshot_hash: hash.clone(),
+                raw_bytes: bytes.len(),
+                contents: bytes.into(),
+            })
+            .ok_or_else(|| invalid("hidden lane Source retention"))?;
+        files.push(json!({"relativePath":relative,"path":path,"rawHash":hash,"snapshotHash":hash,
+            "readToken":token,"protected":false}));
+        paths.push(relative.to_owned());
+    }
+    Ok((files, paths))
+}
+
+#[inline]
+fn validate_relative<'a>(relative: &'a str, seen: &mut HashSet<&'a str>) -> io::Result<()> {
+    if relative.len() > 4096
+        || relative
+            .split('/')
+            .any(|part| part.is_empty() || matches!(part, "." | ".."))
+        || relative.contains(['\\', ':', '\0'])
+        || relative.chars().any(char::is_control)
+        || !seen.insert(relative)
+    {
+        return Err(invalid("hidden lane file path"));
+    }
+    Ok(())
+}

@@ -1,0 +1,121 @@
+//! Prove via [`Readset`] ([`MAX_READSET_BYTES`], [`validate_hash`]) that every object used for a remote delete decision still matches its preimage bytes.
+
+#[cfg(test)]
+mod tests;
+
+use super::{invalid, object_path};
+use crate::workspace::engine::command::outbound;
+use serde_json::Value;
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+const MAX_READSET_BYTES: usize = 128 * 1024 * 1024;
+
+/// Preimage byte log of loose scope objects inspected during remote-delete planning.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Readset {
+    objects: PathBuf,
+    entries: Vec<(PathBuf, Option<Vec<u8>>)>,
+    bytes: usize,
+}
+
+impl Readset {
+    /// Creates an empty [`Readset`] rooted at `scope/objects` (`scope` [`Path`]).
+    #[inline]
+    pub(super) fn new(scope: &Path) -> Self {
+        Self { objects: scope.join("objects"), entries: Vec::new(), bytes: 0 }
+    }
+
+    /// Reads and decodes loose object [`Value`] `hash` of `kind`, recording its preimage bytes in `self`.
+    pub(super) fn read(&mut self, hash: &str, kind: &str) -> io::Result<Value> {
+        let hash = hash.trim();
+        validate_hash(hash)?;
+        let path = object_path(&self.objects, hash);
+        let before = optional(&path)?;
+        let result = outbound::read_object(&self.objects, hash, kind);
+        if optional(&path)? != before {
+            return Err(invalid("remote object changed during delete planning"));
+        }
+        self.record(path, before)?;
+        result
+    }
+
+    /// Records the preimage of the loose object at `hash` in `self.objects` without decoding it.
+    pub(super) fn watch_hash(&mut self, hash: &str) -> io::Result<()> {
+        let hash = hash.trim();
+        validate_hash(hash)?;
+        self.watch(&object_path(&self.objects, hash))
+    }
+
+    /// Records the current preimage bytes of `path` in `self`.
+    pub(super) fn watch(&mut self, path: &Path) -> io::Result<()> {
+        self.record(path.into(), optional(path)?)
+    }
+
+    /// Revalidates that every recorded path in `self.entries` still matches its captured preimage bytes.
+    pub(super) fn validate(&self) -> io::Result<()> {
+        for (path, bytes) in &self.entries {
+            if optional(path)? != *bytes {
+                return Err(invalid("remote object changed before deletion"));
+            }
+        }
+        Ok(())
+    }
+
+    /// Appends `(path, bytes)` to `self.entries` within the 128 MiB / 32,768-entry readset budget.
+    fn record(&mut self, path: PathBuf, bytes: Option<Vec<u8>>) -> io::Result<()> {
+        if let Some((_, previous)) = self.entries
+            .iter()
+            .find(|(existing, _)| existing == &path)
+        {
+            if previous != &bytes {
+                return Err(invalid("remote object changed during delete planning"));
+            }
+            return Ok(());
+        }
+        if self.entries.len() >= 32768 {
+            return Err(invalid("remote object readset budget"));
+        }
+        self.bytes = self.bytes
+            .checked_add(bytes.as_ref().map_or(0, Vec::len))
+            .filter(|total| *total <= MAX_READSET_BYTES)
+            .ok_or_else(|| invalid("remote object readset budget"))?;
+        self.entries.push((path, bytes));
+        Ok(())
+    }
+}
+
+#[inline]
+fn validate_hash(hash: &str) -> io::Result<()> {
+    if hash.len() != 40
+        || !hash
+            .bytes()
+            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+    {
+        return Err(invalid("remote object hash"));
+    }
+    Ok(())
+}
+
+fn optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
+    match fs::symlink_metadata(path) {
+        Ok(meta)
+            if meta.file_type().is_symlink()
+                || !meta.is_file()
+                || meta.len() > 32 * 1024 * 1024 =>
+        {
+            return Err(invalid("remote object readset budget"));
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    }
+    match fs::read(path) {
+        Ok(bytes) if bytes.len() > 32 * 1024 * 1024 => Err(invalid("remote object readset budget")),
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
+}

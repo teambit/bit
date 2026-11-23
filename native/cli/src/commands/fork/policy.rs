@@ -1,0 +1,145 @@
+//! Workspace `workspace.jsonc` [`Document`] variant and policy updates ([`persist`]) on [`ProjectedLinker`] during `bit fork`.
+
+use crate::commands::{add::ProjectedLinker, workspace_command};
+use bit_workspace_config::jsonc::Document;
+use serde_json::{Value, json};
+use std::{
+    fs,
+    io::{self, Write},
+    path::Path,
+};
+/// Aspect ID of the Bit dependency resolver in `workspace.jsonc`.
+const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+/// Updates `workspace.jsonc` dependency-resolver policy ([`RESOLVER`]) with forked dependency `facts` via [`build_policy`] and notifies `linker`.
+pub(super) fn persist(
+    root: &Path,
+    linker: &mut ProjectedLinker,
+    facts: &[Value],
+    old_packages: &[String],
+    multiple: bool,
+) -> io::Result<()> {
+    let mut config = linker.call(root, "forkPolicyFacts", &json!({}))?;
+    print!("{}", linker.take_stdout());
+    config["policy"] = build_policy(&config["policy"], facts, old_packages, multiple)?;
+    write(root, &config, if multiple { "fork" } else { "fork (save deps)" })?;
+    linker.call(root, "forkPolicyApplied", &json!({"config":config}))?;
+    print!("{}", linker.take_stdout());
+    Ok(())
+}
+/// Merges forked dependency `facts` ([`Value`]) into the existing `workspace.jsonc` `policy` object via [`dependencies`].
+#[inline]
+fn build_policy(
+    config: &Value,
+    facts: &[Value],
+    old_packages: &[String],
+    multiple: bool,
+) -> io::Result<Value> {
+    let mut policy = config
+        .as_object()
+        .cloned()
+        .unwrap_or_default();
+    for field in ["dependencies", "peerDependencies"] {
+        if !policy.get(field).is_some_and(Value::is_object) {
+            policy.insert(field.into(), json!({}));
+        }
+    }
+    for entry in dependencies(facts, old_packages, multiple)? {
+        insert_policy_entry(&mut policy, &entry)?;
+    }
+    for value in policy.values_mut() {
+        if let Some(entries) = value.as_object_mut() {
+            entries.sort_keys();
+        }
+    }
+    Ok(Value::Object(policy))
+}
+/// Inserts a single dependency policy `entry` ([`Value`]) into `policy["dependencies"]` or `policy["peerDependencies"]` for [`build_policy`].
+#[inline]
+fn insert_policy_entry(
+    policy: &mut serde_json::Map<String, Value>,
+    entry: &Value,
+) -> io::Result<()> {
+    let id = entry["dependencyId"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| io::Error::other("fork dependency identity"))?;
+    let Some(version) = entry["value"]["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+    else {
+        return Ok(());
+    };
+    let is_peer = entry["lifecycleType"]
+        .as_str()
+        .is_some_and(|kind| kind.trim().eq_ignore_ascii_case("peer"));
+    let field = if is_peer { "peerDependencies" } else { "dependencies" };
+    policy
+        .get_mut(field)
+        .and_then(Value::as_object_mut)
+        .ok_or_else(|| io::Error::other("fork root policy"))?
+        .insert(id.into(), Value::String(version.to_owned()));
+    Ok(())
+}
+/// Collects deduplicated dependency policy entries from forked component `facts`.
+#[inline]
+fn dependencies(
+    facts: &[Value],
+    old_packages: &[String],
+    multiple: bool,
+) -> io::Result<Vec<Value>> {
+    let mut seen = std::collections::HashSet::with_capacity(facts.len());
+    let mut entries = Vec::with_capacity(facts.len());
+    for source in facts {
+        for entry in bit_object_import::component_fork::dependency_policy(source)? {
+            let id = entry["dependencyId"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+                .ok_or_else(|| io::Error::other("fork dependency identity"))?;
+            let is_seen = !seen.insert(id.to_owned());
+            if multiple
+                && (is_seen
+                    || old_packages
+                        .iter()
+                        .any(|old| old.trim() == id))
+            {
+                continue;
+            }
+            entries.push(entry);
+        }
+    }
+    Ok(entries)
+}
+fn write(root: &Path, config: &Value, reason: &str) -> io::Result<()> {
+    let path = root.join("workspace.jsonc");
+    let before = fs::read(&path)?;
+    let mut document = Document::parse(std::str::from_utf8(&before).map_err(io::Error::other)?)?;
+    let resolver_key = crate::commands::update_cmd::aspect_entry(&document.value(), RESOLVER)
+        .map_or_else(|| RESOLVER.to_owned(), |(key, _)| key.to_owned());
+    for (key, value) in
+        config.as_object().ok_or_else(|| io::Error::other("fork resolver config"))?
+    {
+        document.set(&[&resolver_key, key], value);
+    }
+    let text = format!("{document}\n");
+    let text = if cfg!(windows) { text.replace("\r\n", "\n").replace('\n', "\r\n") } else { text };
+    if fs::read(&path)? != before {
+        return Err(io::Error::other("fork workspace configuration changed"));
+    }
+    let reason = reason.trim();
+    let id = workspace_command::file_id();
+    let history = bit_object_import::scope_path(root).join("workspace-config-history");
+    let files_dir = history.join("files");
+    fs::create_dir_all(&files_dir)?;
+    fs::write(files_dir.join(&id), &before)?;
+    writeln!(
+        fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(history.join("metadata.txt"))?,
+        "{id} {reason}",
+    )?;
+    fs::write(path, text)
+}

@@ -1,0 +1,217 @@
+//! Single publication ([`Batch`], [`Plan`], [`Selected`], [`BytesChange`]) for `bit reset --silent` across staged `main`-lane `Component` objects.
+
+use super::{BytesChange, Plan, bitmap::find_key, invalid, outbound};
+use serde_json::Value;
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+/// Retained multi-component `main`-lane reset transaction publishing scope and `.bitmap` changes.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Batch {
+    root: PathBuf,
+    head_only: bool,
+    selected: Option<Selected>,
+    items: Vec<Plan>,
+    bitmap: BytesChange,
+    index: Option<BytesChange>,
+    controls: Vec<crate::reset_lane::controls::Control>,
+}
+
+/// Explicit component identities and `--force` flag for [`Batch::prepare_selected`].
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct Selected {
+    identities: Vec<String>,
+    force: bool,
+}
+
+impl Batch {
+    /// Prepares a silent `main`-lane [`Batch`] reset across all staged components at `root` ([`Path`]).
+    #[inline]
+    pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
+        Self::prepare_with(root, head_only, None)
+    }
+
+    /// Prepares a `main`-lane reset across explicit component `identities` at `root`.
+    pub fn prepare_selected(
+        root: &Path,
+        identities: &[String],
+        head_only: bool,
+        force: bool,
+    ) -> io::Result<Self> {
+        let mut normalized = Vec::with_capacity(identities.len());
+        for id in identities {
+            let trimmed = id.trim();
+            let bare = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+            if !bare.is_empty()
+                && !normalized
+                    .iter()
+                    .any(|existing| existing == bare)
+            {
+                normalized.push(bare.to_owned());
+            }
+        }
+        if normalized.is_empty() {
+            return Err(invalid("no selected components found to reset"));
+        }
+        Self::prepare_with(root, head_only, Some(Selected { identities: normalized, force }))
+    }
+
+    /// Discovers candidate `main`-lane components and prepares per-component reset [`Plan`]s with `selected` ([`Selected`]).
+    fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
+        let mut ids = candidates(root)?;
+        if let Some(selected) = &selected {
+            ids.retain(|id| selected.identities.contains(id));
+            if ids.is_empty() {
+                return Err(invalid("no selected components found to reset"));
+            }
+        }
+        let items = ids
+            .iter()
+            .map(|id| {
+                Plan::prepare(
+                    root,
+                    id,
+                    head_only,
+                    selected.as_ref().is_none_or(|selected| selected.force),
+                )
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let bitmap = project_bitmap(root, &items)?;
+        let index = project_index(root, &items)?;
+        let controls = crate::reset_lane::controls::prepare(root, &ids)?;
+        Ok(Self { root: root.to_owned(), head_only, selected, items, bitmap, index, controls })
+    }
+
+    /// Iterates over `(identity, reset_version_labels)` pairs across all prepared [`Plan`] items.
+    pub fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
+        self.items
+            .iter()
+            .map(|item| (item.input.identity.as_str(), item.selection.labels.as_slice()))
+    }
+
+    /// Revalidates the live workspace and publishes all prepared `main`-lane batch reset changes.
+    pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        super::validate_file_id(file_id)?;
+        let fresh = Self::prepare_with(&self.root, self.head_only, self.selected.clone())?;
+        if self.bitmap != fresh.bitmap
+            || self.index != fresh.index
+            || self.controls != fresh.controls
+            || !self.items
+                .iter()
+                .map(|item| (&item.object, &item.history))
+                .eq(fresh.items
+                    .iter()
+                    .map(|item| (&item.object, &item.history)))
+        {
+            return Err(invalid("reset batch changed during preparation"));
+        }
+        for item in &self.items {
+            super::publication::write_object(&self.root, &item.object)?;
+            if let Some(history) = &item.history {
+                super::publication::write_object(&self.root, history)?;
+            }
+        }
+        if let Some(index) = &self.index {
+            fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
+        }
+        crate::reset_lane::controls::publish(&self.controls)?;
+        super::backup_bitmap(&self.root, file_id)?;
+        fs::write(self.root.join(".bitmap"), &self.bitmap.after)
+    }
+}
+
+fn candidates(root: &Path) -> io::Result<Vec<String>> {
+    let scope_dir = crate::scope_path(root);
+    let index_bytes = fs::read(scope_dir.join("index.json"))?;
+    if index_bytes.len() > 16 * 1024 * 1024 {
+        return Err(invalid("reset batch index budget"));
+    }
+    let index: Value = crate::parse_jsonc(&index_bytes)?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("reset batch index"))?;
+    let objects = scope_dir.join("objects");
+    let mut selected = Vec::new();
+    for row in rows {
+        if row["isSymlink"] == true {
+            continue;
+        }
+        let hash = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("reset batch model hash"))?;
+        let model = outbound::read_object(&objects, hash, "Component")?;
+        if model["state"]["versions"]
+            .as_object()
+            .is_some_and(|state| {
+                state
+                    .values()
+                    .any(|version| version["local"] == true)
+            })
+        {
+            selected.push(identity(row)?);
+        }
+    }
+    if selected.is_empty() {
+        return Err(invalid("no components found to reset"));
+    }
+    Ok(selected)
+}
+
+fn identity(row: &Value) -> io::Result<String> {
+    let (scope_opt, name) =
+        crate::workspace::engine::command::inbound::remote::file_list::row_id_parts(row)
+            .ok_or_else(|| invalid("reset batch name"))?;
+    let scope = scope_opt
+        .filter(|val| !val.is_empty())
+        .ok_or_else(|| invalid("reset batch scope"))?;
+    Ok(format!("{scope}/{name}"))
+}
+
+fn project_bitmap(root: &Path, items: &[Plan]) -> io::Result<BytesChange> {
+    let before = fs::read(root.join(".bitmap"))?;
+    let mut document = crate::recovery::jsonc::parse(&before)?;
+    for item in items {
+        apply_bitmap(&mut document, item)?;
+    }
+    let after = crate::inspection::render_bitmap(&document)?;
+    Ok(BytesChange { before, after })
+}
+
+fn apply_bitmap(document: &mut Value, item: &Plan) -> io::Result<()> {
+    let (scope, name) =
+        item.input.identity.split_once('/').ok_or_else(|| invalid("reset batch identity"))?;
+    let fields = document.as_object_mut().ok_or_else(|| invalid("reset batch bitmap"))?;
+    let key = find_key(fields, scope, name)?;
+    let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
+    let version = single[&key]["version"].as_str().ok_or_else(|| invalid("reset batch version"))?;
+    let row = fields[&key].as_object_mut().ok_or_else(|| invalid("reset batch row"))?;
+    row.insert("version".into(), Value::String(version.to_owned()));
+    row.shift_remove("nextVersion");
+    crate::reset_config::restore(row, single[&key].get("config").cloned());
+    Ok(())
+}
+
+fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>> {
+    if items.iter().all(|item| item.index.is_none()) {
+        return Ok(None);
+    }
+    let before = fs::read(crate::scope_path(root).join("index.json"))?;
+    let mut index: Value = crate::parse_jsonc(&before)?;
+    let rows =
+        if index.is_array() { index.as_array_mut() } else { index["components"].as_array_mut() }
+            .ok_or_else(|| invalid("reset batch index"))?;
+    for item in items.iter().filter(|item| item.index.is_some()) {
+        let position = rows
+            .iter()
+            .position(|row| row["hash"].as_str().map(str::trim) == Some(item.object.hash.as_str()))
+            .ok_or_else(|| invalid("reset batch model absent"))?;
+        rows.remove(position);
+    }
+    let mut after = serde_json::to_vec_pretty(&index)?;
+    after.push(b'\n');
+    Ok(Some(BytesChange { before, after }))
+}

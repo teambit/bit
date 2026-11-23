@@ -1,0 +1,287 @@
+//! Merge file-body preparation ([`State`], [`Binding`], [`cache`], [`reads`]), checkout transition binding, and materialization execution.
+
+#[cfg(test)]
+mod tests;
+use super::{cache, invalid, journal, reads};
+use serde_json::{Value, json};
+use std::{collections::HashMap, io, path::PathBuf};
+/// Retained merge file-body state and active checkout transition bindings.
+#[derive(Default)]
+pub(super) struct State {
+    checkout: crate::checkout_transition::State,
+    bindings: HashMap<String, Binding>,
+}
+/// Retained per-component merge body binding associating checkout token, owner journal, and `Source` groups ([`Value`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Binding {
+    owner: String,
+    index: usize,
+    directory: PathBuf,
+    objects: PathBuf,
+    row_count: usize,
+    groups: Vec<Value>,
+    current: Vec<Value>,
+    ordered: bool,
+}
+impl State {
+    /// Prepares a merge file-body plan via [`Self::prepare_overlay`] without an in-memory object overlay.
+    pub(super) fn prepare(
+        &mut self,
+        input: Value,
+        owners: &journal::State,
+        snapshots: Option<&crate::workspace::snapshots::State>,
+    ) -> io::Result<Value> {
+        self.prepare_overlay(input, owners, snapshots, None)
+    }
+    /// Prepares a merge file-body plan with optional workspace `snapshots` and an in-memory object `overlay`.
+    pub(super) fn prepare_overlay(
+        &mut self,
+        mut input: Value,
+        owners: &journal::State,
+        snapshots: Option<&crate::workspace::snapshots::State>,
+        overlay: Option<&crate::command_import::Overlay>,
+    ) -> io::Result<Value> {
+        if self.bindings.len() >= 4096 {
+            return Err(invalid("merge body plan limit"));
+        }
+        let owner = text(&input, "token")?.to_owned();
+        let index = input["index"]
+            .as_u64()
+            .filter(|index| *index < 4096)
+            .ok_or_else(|| invalid("merge plan index"))? as usize;
+        owners.verify(&owner, index)?;
+        let directory = PathBuf::from(text(&input, "snapshotDirectory")?);
+        let objects = PathBuf::from(text(&input, "objectsDirectory")?);
+        crate::merge_history::path(&directory)?;
+        crate::merge_history::path(&objects)?;
+        translate_current(&mut input, &directory)?;
+        let mut response = prepare_response(&input, &mut self.checkout, snapshots, overlay)?;
+        let token = text(&response, "token")?.to_owned();
+        response["ownerToken"] = json!(owner);
+        response["index"] = json!(index);
+        self.bindings.insert(
+            token,
+            Binding {
+                owner,
+                index,
+                ordered: false,
+                directory,
+                objects,
+                current: take_array(&mut input, "current")?,
+                row_count: array_len(&response, "mergeRows")?,
+                groups: array(&response, "sourceGroups")?,
+            },
+        );
+        Ok(response)
+    }
+    /// Looks up the active [`Binding`] and `planToken` for `input` after verifying owner retention in `owners`.
+    fn binding<'a>(
+        &'a self,
+        input: &Value,
+        owners: &journal::State,
+    ) -> io::Result<(&'a Binding, String)> {
+        let token = text(input, "planToken")?.to_owned();
+        let binding = self.bindings.get(&token).ok_or_else(|| invalid("stale merge body plan"))?;
+        if text(input, "token")? != binding.owner {
+            return Err(invalid("merge body owner mismatch"));
+        }
+        owners.verify_retained(&binding.owner, binding.index)?;
+        Ok((binding, token))
+    }
+    pub(super) fn apply(&mut self, input: &Value, owners: &journal::State) -> io::Result<Value> {
+        self.apply_overlay(input, owners, None)
+    }
+    pub(super) fn apply_overlay(
+        &mut self,
+        input: &Value,
+        owners: &journal::State,
+        overlay: Option<&crate::command_import::Overlay>,
+    ) -> io::Result<Value> {
+        let (binding, token) = self.binding(input, owners)?;
+        let scope = reads::Scope::begin();
+        let mut manifest = crate::checkout_transition::retarget_with_overlay(
+            json!({"token":token,"target":input["target"],"objectsDirectory":binding.objects,"snapshotDirectory":binding.directory,"knownBodies":input["knownBodies"]}),
+            &mut self.checkout,
+            overlay,
+        )?;
+        let mut response = crate::checkout_transition::apply(
+            "checkoutApply",
+            json!({"token":token,"strategy":input["strategy"],"forceOurs":false,"currentExists":false,"tracked":false,"workspaceRoot":false}),
+            &mut self.checkout,
+        )?;
+        response["reads"] = scope.finish().stats();
+        response["bodies"] = manifest["bodies"].take();
+        if let Some(known) = manifest.get_mut("knownBodies") {
+            response["knownBodies"] = known.take();
+            response["bodyCount"] = manifest["bodyCount"].take();
+        } else {
+            response["targetFiles"] = manifest["targetFiles"].take();
+        }
+        if let Some(files) = response["files"].as_array_mut() {
+            for (index, file) in files.iter_mut().enumerate() {
+                file["finalIndex"] = json!(index);
+            }
+        }
+        Ok(response)
+    }
+    pub(super) fn order(&mut self, input: &Value, owners: &journal::State) -> io::Result<Value> {
+        let (binding, token) = self.binding(input, owners)?;
+        if binding.ordered {
+            return Err(invalid("merge completion order already acknowledged"));
+        }
+        let indices = super::order::permutation(input, &binding.groups, binding.row_count)?;
+        let output = crate::checkout_transition::order(
+            &token,
+            &indices,
+            input["indexedRows"] == true,
+            &mut self.checkout,
+        )?;
+        self.bindings.get_mut(&token).ok_or_else(|| invalid("stale merge body plan"))?.ordered =
+            true;
+        Ok(output)
+    }
+    pub(super) fn removals(&self, input: &Value, owners: &journal::State) -> io::Result<Value> {
+        let (binding, _) = self.binding(input, owners)?;
+        if super::decision::boolean(input, "tracked")?
+            && binding.current
+                .iter()
+                .enumerate()
+                .any(|(index, file)| {
+                    file.get("sourceHash").is_some()
+                        && file["path"]
+                            == json!(binding.directory.join(format!("current-{index}.source")))
+                })
+        {
+            return Err(invalid("merge tracked Source lacks workspace path"));
+        }
+        super::removals::apply(input, &binding.current)
+    }
+    pub(super) fn materialize(
+        &mut self,
+        input: &Value,
+        owners: &journal::State,
+    ) -> io::Result<Value> {
+        let (_, token) = self.binding(input, owners)?;
+        crate::checkout_transition::apply(
+            "checkoutMaterialize",
+            json!({"token":token,"files":input["files"]}),
+            &mut self.checkout,
+        )
+    }
+    pub(super) fn finish(&mut self, owners: &[String]) -> io::Result<()> {
+        let tokens = self.bindings
+            .iter()
+            .filter(|(_, binding)| owners.contains(&binding.owner))
+            .map(|(token, _)| token.clone())
+            .collect::<Vec<_>>();
+        for token in tokens {
+            crate::checkout_transition::apply(
+                "checkoutFinish",
+                json!({"token":token}),
+                &mut self.checkout,
+            )?;
+            self.bindings.remove(&token);
+        }
+        Ok(())
+    }
+}
+fn current_file(file: &Value, directory: &std::path::Path, index: usize) -> io::Result<Value> {
+    let mut output = json!({"relativePath":text(file,"relativePath")?,"protected":file.get("protected").cloned().unwrap_or(json!(false))});
+    match (file.get("workspace"), file.get("source")) {
+        (Some(workspace), None) => {
+            output["path"] = workspace["path"].clone();
+            output["rawHash"] = workspace["rawHash"].clone();
+            output["snapshotHash"] = workspace["snapshotHash"].clone();
+            if let Some(token) = workspace.get("readToken") {
+                output["readToken"] = token.clone();
+            }
+            output["bitmap"] = workspace
+                .get("bitmap")
+                .cloned()
+                .unwrap_or(json!(false));
+        }
+        (None, Some(source)) => {
+            let hash = text(source, "hash")?;
+            output["sourceHash"] = json!(hash);
+            output["rawHash"] = json!(hash);
+            output["snapshotHash"] = json!(hash);
+            output["path"] = source
+                .get("path")
+                .cloned()
+                .unwrap_or_else(|| json!(directory.join(format!("current-{index}.source"))));
+        }
+        _ => return Err(invalid("merge current provenance")),
+    }
+    Ok(output)
+}
+fn text<'a>(value: &'a Value, field: &str) -> io::Result<&'a str> {
+    value[field]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty() && val.len() <= 32768 && !val.contains('\0'))
+        .ok_or_else(|| invalid("merge string field"))
+}
+
+fn translate_current(input: &mut Value, directory: &std::path::Path) -> io::Result<()> {
+    let current = input["current"]
+        .as_array()
+        .filter(|files| files.len() <= 4096)
+        .ok_or_else(|| invalid("merge current files"))?;
+    input["current"] = json!(
+        current
+            .iter()
+            .enumerate()
+            .map(|(index, file)| current_file(file, directory, index))
+            .collect::<io::Result<Vec<_>>>()?
+    );
+    let fields = input.as_object_mut().ok_or_else(|| invalid("merge plan request"))?;
+    fields.remove("token");
+    fields.remove("index");
+    Ok(())
+}
+fn array(input: &Value, field: &str) -> io::Result<Vec<Value>> {
+    input[field]
+        .as_array()
+        .cloned()
+        .ok_or_else(|| invalid("merge plan metadata array"))
+}
+fn take_array(input: &mut Value, field: &str) -> io::Result<Vec<Value>> {
+    match input.get_mut(field).map(Value::take) {
+        Some(Value::Array(rows)) => Ok(rows),
+        _ => Err(invalid("merge plan metadata array")),
+    }
+}
+fn array_len(input: &Value, field: &str) -> io::Result<usize> {
+    input[field]
+        .as_array()
+        .map(Vec::len)
+        .ok_or_else(|| invalid("merge plan metadata array"))
+}
+
+fn prepare_response(
+    input: &Value,
+    state: &mut crate::checkout_transition::State,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    let scope = reads::Scope::begin();
+    let mut response = if let Some(overlay) = overlay {
+        crate::checkout_transition::prepare_with_overlay(input, state, snapshots, overlay)?
+    } else {
+        match snapshots {
+            Some(snapshots) => {
+                crate::checkout_transition::prepare_with_workspace(input, state, snapshots)?
+            }
+            None => crate::checkout_transition::apply("checkoutPrepare", input.clone(), state)?,
+        }
+    };
+    if let Err(error) = cache::receipts(input, &mut response, scope.finish()) {
+        crate::checkout_transition::apply(
+            "checkoutFinish",
+            json!({"token":response["token"]}),
+            state,
+        )?;
+        return Err(error);
+    }
+    Ok(response)
+}

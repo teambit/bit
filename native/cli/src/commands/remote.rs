@@ -1,0 +1,133 @@
+//! Native `bit remote` (`bit remote`, `bit remote list`, `bit remote add`, `bit remote del`).
+//!
+//! Coordinates [`COMMAND`], [`run`], [`execute`], [`options`], and [`stores`] to inspect or mutate global and scope remotes into [`Outcome`].
+
+mod options;
+mod stores;
+#[cfg(test)]
+mod tests;
+
+use crate::{
+    commands::{Command, color::Chalk, workspace_command},
+    history::History,
+    native::Outcome,
+    workspace,
+};
+use options::Options;
+use std::{
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    process::ExitCode,
+};
+use stores::Failure;
+
+/// Descriptor for the native `bit remote` command.
+pub const COMMAND: Command = Command { name: "remote", aliases: &[], run };
+
+/// Entry point for `bit remote` ([`COMMAND`]) that parses [`Options`], prepares [`stores`], and commits via [`execute`] or reports diagnostics.
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(options) = Options::parse(args) else {
+        return Ok(Outcome::Declined("arguments outside the native `remote` grammar".to_owned()));
+    };
+    let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
+    if let Some(root) = &root
+        && invalid_workspace_config(root)
+    {
+        return Ok(Outcome::Declined("invalid workspace configuration".to_owned()));
+    }
+    let chalk = Chalk::detect(args);
+    match stores::prepare(&options, args) {
+        Ok(prepared) => execute(root.as_deref(), args, options.command, chalk, &prepared),
+        Err(Failure::Declined(reason)) => Ok(Outcome::Declined(format!("remote: {reason}"))),
+        Err(Failure::User(message)) => {
+            if env::var_os("CI")
+                .is_some_and(|value| {
+                    let text = value.to_string_lossy();
+                    let trimmed = text
+                        .trim()
+                        .trim_matches(['"', '\''])
+                        .trim();
+                    !trimmed.is_empty()
+                        && !trimmed.eq_ignore_ascii_case("0")
+                        && !trimmed.eq_ignore_ascii_case("false")
+                        && !trimmed.eq_ignore_ascii_case("no")
+                        && !trimmed.eq_ignore_ascii_case("off")
+                })
+            {
+                return Ok(Outcome::Declined("CI remote error stack".to_owned()));
+            }
+            execute_error(root.as_deref(), args, options.command, chalk, &message)
+        }
+    }
+}
+
+/// Returns `true` when `workspace.jsonc` inside `root` is missing, malformed, or lacks a valid `defaultScope`.
+#[inline]
+fn invalid_workspace_config(root: &std::path::Path) -> bool {
+    let Ok(bytes) = std::fs::read(root.join("workspace.jsonc")) else {
+        return true;
+    };
+    let Ok(config) = bit_workspace_config::parse_jsonc(&bytes) else {
+        return true;
+    };
+    super::aspect::workspace_default_scope(&config).is_err()
+}
+
+/// Commits `prepared` file writes and prints the formatted `bit remote` output to stdout as an [`Outcome`].
+fn execute(
+    root: Option<&std::path::Path>,
+    args: &[OsString],
+    command: &str,
+    chalk: Chalk,
+    prepared: &stores::Prepared,
+) -> io::Result<Outcome> {
+    let history = root.map(|root| History::start(root, args));
+    let output = workspace_command::loader_output(chalk, false);
+    output.restart(&format!(r#"running command "{command}"..."#));
+    let committed = prepared.commit();
+    output.stop();
+    match committed {
+        Ok(()) => {
+            let mut stdout = io::stdout().lock();
+            writeln!(stdout, "{}", prepared.report)?;
+            stdout.flush()?;
+            if let Some(history) = history {
+                history.end(true);
+            }
+            Ok(Outcome::Exit(ExitCode::SUCCESS))
+        }
+        Err(error) => {
+            if let Some(history) = history {
+                history.end(false);
+            }
+            let message = error.to_string();
+            let mut stderr = io::stderr().lock();
+            writeln!(stderr, "{}", chalk.red(message.trim()))?;
+            stderr.flush()?;
+            Ok(Outcome::Exit(ExitCode::FAILURE))
+        }
+    }
+}
+
+#[inline]
+fn execute_error(
+    root: Option<&std::path::Path>,
+    args: &[OsString],
+    command: &str,
+    chalk: Chalk,
+    message: &str,
+) -> io::Result<Outcome> {
+    let history = root.map(|root| History::start(root, args));
+    let output = workspace_command::loader_output(chalk, false);
+    output.restart(&format!(r#"running command "{command}"..."#));
+    output.stop();
+    if let Some(history) = history {
+        history.end(false);
+    }
+    let mut stderr = io::stderr().lock();
+    writeln!(stderr, "{}", chalk.red(message.trim()))?;
+    stderr.flush()?;
+    Ok(Outcome::Exit(ExitCode::FAILURE))
+}

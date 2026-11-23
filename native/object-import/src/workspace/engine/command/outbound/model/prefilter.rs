@@ -1,0 +1,117 @@
+//! Retain [`Prepared`] wildcard discovery [`HistoryBytes`] via [`prepare`] before publication.
+
+#[cfg(test)]
+mod tests;
+
+use super::{HistoryBytes, candidates, invalid};
+use crate::store::Store;
+use serde_json::Value;
+use sha1::{Digest, Sha1};
+use std::{
+    collections::BTreeMap,
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+/// Retained `VersionHistory` payloads and control file preimages captured during wildcard prefiltering.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(in super::super) struct Prepared {
+    root: PathBuf,
+    histories: Vec<HistoryBytes>,
+    preimages: BTreeMap<PathBuf, Option<Vec<u8>>>,
+}
+
+/// Captures control file preimages, component models, and [`HistoryBytes`] objects into [`Prepared`] via [`candidates::histories`].
+pub(super) fn prepare(root: &Path) -> io::Result<Prepared> {
+    let mut prepared = Prepared { root: root.to_owned(), ..Prepared::default() };
+    let scope = crate::scope_path(root);
+    let index_path = scope.join("index.json");
+    for path in [root.join(".bitmap"), scope.join("scope.json"), index_path.clone()] {
+        prepared.capture(path)?;
+    }
+    let index: Value = crate::parse_jsonc(
+        prepared.preimages
+            .get(&index_path)
+            .and_then(Option::as_deref)
+            .ok_or_else(|| invalid("outbound prefilter index absent"))?,
+    )?;
+    let rows = index["components"]
+        .as_array()
+        .or_else(|| index.as_array())
+        .ok_or_else(|| invalid("outbound prefilter index"))?;
+    if rows.len() > 4096 {
+        return Err(invalid("outbound prefilter index bounds"));
+    }
+    let objects = scope.join("objects");
+    for row in rows {
+        prepared.capture_component(&objects, row)?;
+    }
+    prepared.histories = candidates::histories(root)?;
+    prepared.validate()?;
+    Ok(prepared)
+}
+
+impl Prepared {
+    /// Records the current on-disk byte preimage of `path` inside `self.preimages` via [`read`].
+    #[inline]
+    fn capture(&mut self, path: PathBuf) -> io::Result<()> {
+        let before = read(&path)?;
+        self.preimages.insert(path, before);
+        Ok(())
+    }
+    /// Captures the `ModelComponent` and `VersionHistory` object preimages for a non-symlink index `row`.
+    fn capture_component(&mut self, objects: &Path, row: &Value) -> io::Result<()> {
+        if row["isSymlink"] == true {
+            return Ok(());
+        }
+        let model = row["hash"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("outbound prefilter model"))?;
+        let model = crate::validate::hexadecimal(&crate::merge_history::hash(model)?);
+        self.capture(
+            objects
+                .join(&model[..2])
+                .join(&model[2..]),
+        )?;
+        let (scope, name) =
+            crate::workspace::engine::command::inbound::remote::file_list::row_scoped_id_parts(row)
+                .ok_or_else(|| invalid("outbound prefilter id"))?;
+        let hash =
+            crate::validate::hexadecimal(&Sha1::digest(format!("{scope}/{name}:VersionHistory")));
+        self.capture(
+            objects
+                .join(&hash[..2])
+                .join(&hash[2..]),
+        )
+    }
+    /// Verifies that all captured control and object preimages in `self.preimages` remain unchanged on disk.
+    fn validate(&self) -> io::Result<()> {
+        for (path, before) in &self.preimages {
+            if read(path)? != *before {
+                return Err(invalid("outbound wildcard discovery changed after prepare"));
+            }
+        }
+        Ok(())
+    }
+    pub(in super::super) fn stage(&self) -> io::Result<()> {
+        self.validate()?;
+        if self.histories.is_empty() {
+            return Ok(());
+        }
+        let store = Store::new(crate::scope_path(&self.root).join("objects"), None)?;
+        for history in &self.histories {
+            store.write(&history.hash, &history.bytes)?;
+        }
+        Ok(())
+    }
+}
+
+#[inline]
+fn read(path: &Path) -> io::Result<Option<Vec<u8>>> {
+    match fs::read(path) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    }
+}

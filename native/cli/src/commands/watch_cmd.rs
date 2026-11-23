@@ -1,0 +1,198 @@
+//! Native `bit watch` ([`COMMAND`]; `scopes/workspace/watcher/watch.cmd.ts`).
+//!
+//! Validates workspace ([`OUTSIDE_WORKSPACE_ERR`]) and [`Options`] ([`parse_options`], [`check_types_error`]) watcher flags before delegating long-running file watching into [`Outcome`].
+
+#[cfg(test)]
+mod tests;
+
+use super::{Command, workspace_command};
+use crate::{native::Outcome, workspace};
+use std::{env, ffi::OsString, io, path::Path};
+
+/// Descriptor for the native `bit watch` command ([`COMMAND`]).
+pub const COMMAND: Command = Command { name: "watch", aliases: &[], run };
+
+/// Error message emitted when `bit watch` is run outside a workspace.
+const OUTSIDE_WORKSPACE_ERR: &str = "This command can only be run inside a bit workspace. Please check that you are inside a bit workspace and then re-run (to initialize a new workspace please use bit init)";
+/// Deprecation warning emitted when `--import` is passed to `bit watch`.
+const DEPRECATED_IMPORT_WARN: &str =
+    r#"the "--import" flag is deprecated and is now the default behavior"#;
+
+/// Parsed CLI options for `bit watch`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(super) struct Options {
+    pub verbose: bool,
+    pub skip_pre_compilation: bool,
+    pub check_types: Option<String>,
+    pub import: bool,
+    pub skip_import: bool,
+    pub generate_types: bool,
+    pub trigger: Option<String>,
+}
+
+/// Entry point for `bit watch`.
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("watch arguments are not UTF-8".into()));
+    };
+    let Some(options) = parse_options(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside native watch grammar".into()));
+    };
+    if ci_enabled() {
+        return Ok(Outcome::Declined("CI watch delegated".into()));
+    }
+    let cwd = env::current_dir()?;
+    let root = workspace::root(&cwd);
+    if let Some(err) = check_types_error(&options) {
+        return emit_watch_err(&cwd, root.as_deref(), args, options.import, err);
+    }
+    if root.is_none() {
+        return emit_watch_err(&cwd, None, args, options.import, OUTSIDE_WORKSPACE_ERR.to_owned());
+    }
+    Ok(Outcome::Declined("watch execution delegated".into()))
+}
+
+/// Emits `err` (and optional `--import` [`DEPRECATED_IMPORT_WARN`] warning) for `bit watch` inside or outside a workspace into [`Outcome`].
+fn emit_watch_err(
+    cwd: &Path,
+    root: Option<&Path>,
+    args: &[OsString],
+    import: bool,
+    err: String,
+) -> io::Result<Outcome> {
+    if let Some(root) = root {
+        return workspace_command::execute_without_loader(root, args, "watch", move |output| {
+            if import {
+                output.warning(DEPRECATED_IMPORT_WARN);
+            }
+            Err(io::Error::other(err))
+        });
+    }
+    workspace_command::execute_without_loader_scope(cwd, args, "watch", move |output| {
+        if import {
+            output.warning(DEPRECATED_IMPORT_WARN);
+        }
+        Err(io::Error::other(err))
+    })
+}
+
+/// Returns `true` when CI environment variables disable interactive native error paths.
+#[inline]
+fn ci_enabled() -> bool {
+    super::scope_rename::ci_active()
+}
+
+/// Returns an error message when `--check-types` in `options` is neither `"file"` nor `"project"`.
+#[must_use]
+#[inline]
+pub(super) fn check_types_error(options: &Options) -> Option<String> {
+    let val = options.check_types.as_deref()?.trim();
+    if val.is_empty() || val == "file" || val == "project" {
+        None
+    } else {
+        Some(format!(r#"check-types can be either "file" or "project". got "{val}""#))
+    }
+}
+
+/// Parses CLI `args` into [`Options`] for `bit watch`.
+#[must_use]
+#[inline]
+pub(super) fn parse_options(args: &[&str]) -> Option<Options> {
+    let mut options = Options::default();
+    let mut idx = 0;
+    while idx < args.len() {
+        if args[idx].trim() == "--" {
+            return (idx + 1 == args.len()).then_some(options);
+        }
+        apply_token(args, &mut idx, &mut options)?;
+        idx += 1;
+    }
+    Some(options)
+}
+
+#[inline]
+fn apply_token(args: &[&str], idx: &mut usize, options: &mut Options) -> Option<()> {
+    let arg = args[*idx].trim();
+    if apply_combined_short(arg, options) {
+        return Some(());
+    }
+    match arg {
+        "--no-color" | "--no-color=true" | "--no-color=false" | "--color" | "--color=true"
+        | "--color=false" | "--color=always" | "--color=never" => {}
+        "-v" | "--verbose" | "--verbose=true" => options.verbose = true,
+        "--verbose=false" => options.verbose = false,
+        "-Y" | "--skip-pre-compilation" | "--skip-pre-compilation=true" => {
+            options.skip_pre_compilation = true;
+        }
+        "--skip-pre-compilation=false" => options.skip_pre_compilation = false,
+        "-i" | "--import" | "--import=true" => options.import = true,
+        "--import=false" => options.import = false,
+        "--skip-import" | "--skip-import=true" => options.skip_import = true,
+        "--skip-import=false" => options.skip_import = false,
+        "--generate-types" | "--generate-types=true" => options.generate_types = true,
+        "--generate-types=false" => options.generate_types = false,
+        "-t" | "--check-types" => options.check_types = Some(take_optional_check_types(args, idx)),
+        "--trigger" => options.trigger = Some(take_required_trigger(args, idx)?),
+        _ => apply_inline(arg, options)?,
+    }
+    Some(())
+}
+
+#[inline]
+fn apply_combined_short(arg: &str, options: &mut Options) -> bool {
+    if !arg.starts_with('-')
+        || arg.starts_with("--")
+        || arg.len() <= 2
+        || !arg[1..]
+            .bytes()
+            .all(|byte| matches!(byte, b'v' | b'i' | b'Y'))
+    {
+        return false;
+    }
+    for byte in arg[1..].bytes() {
+        match byte {
+            b'v' => options.verbose = true,
+            b'i' => options.import = true,
+            _ => options.skip_pre_compilation = true,
+        }
+    }
+    true
+}
+
+#[inline]
+fn take_optional_check_types(args: &[&str], idx: &mut usize) -> String {
+    if let Some(&next) = args.get(*idx + 1)
+        && !next.trim().is_empty()
+        && !next.trim().starts_with('-')
+    {
+        *idx += 1;
+        next.trim().to_owned()
+    } else {
+        String::new()
+    }
+}
+
+#[inline]
+fn take_required_trigger(args: &[&str], idx: &mut usize) -> Option<String> {
+    let next = args.get(*idx + 1)?.trim();
+    if next.is_empty() || next.starts_with('-') {
+        return None;
+    }
+    *idx += 1;
+    Some(next.to_owned())
+}
+
+#[inline]
+fn apply_inline(arg: &str, options: &mut Options) -> Option<()> {
+    if let Some(val) = arg
+        .strip_prefix("--check-types=")
+        .or_else(|| arg.strip_prefix("-t="))
+    {
+        options.check_types = Some(val.trim().to_owned());
+    } else {
+        let val = arg.strip_prefix("--trigger=")?.trim();
+        (!val.is_empty() && !val.starts_with('-')).then_some(())?;
+        options.trigger = Some(val.to_owned());
+    }
+    Some(())
+}

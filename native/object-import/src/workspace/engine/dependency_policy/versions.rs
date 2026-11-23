@@ -1,0 +1,93 @@
+//! Component and extension version [`apply`] on [`Request`] via [`index`], [`select`], [`validate`], and [`wire`].
+
+pub(in crate::workspace::engine) use wire::Request;
+
+mod index;
+mod select;
+mod validate;
+#[cfg(test)]
+mod versions_tests;
+mod wire;
+
+use super::{invalid, io};
+use serde_json::{Value, json};
+
+/// Applies resolved component and extension version selection via [`select::select`] and [`update`] to `request` ([`Request`]).
+pub(in crate::workspace::engine) fn apply(request: &Request) -> io::Result<(usize, Value)> {
+    validate::validate(request)?;
+    let index = index::Index::new(request);
+    let mut entries = request.entries.clone();
+    for (field, indices) in request.components.iter().enumerate() {
+        for position in indices {
+            update(&index, &mut entries[*position], field)?;
+        }
+    }
+    let extensions = request.extensions
+        .iter()
+        .map(|identity| {
+            let trimmed = identity.trim();
+            Ok(select::select(&index, trimmed, 1, None)?
+                .map_or_else(
+                    || trimmed.to_owned(),
+                    |(version, _, _)| wire::identity(trimmed, &version),
+                ))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    Ok((1, json!({"entries":entries,"extensions":extensions})))
+}
+/// Updates `entry` ([`super::wire::Entry`]) with the selected version and [`updated_range`] from `index` ([`index::Index`]) for `field`.
+#[inline]
+fn update(
+    index: &index::Index<'_>,
+    entry: &mut super::wire::Entry,
+    field: usize,
+) -> io::Result<()> {
+    let request = index.request;
+    let Some((version, range, from_config)) =
+        select::select(index, &entry.identity, field, entry.package_name.as_deref())?
+    else {
+        return Ok(());
+    };
+    entry.version_from_config = from_config;
+    entry.identity = wire::identity(&entry.identity, &version);
+    if request.policy.ranges() {
+        entry.version_range = updated_range(request, entry.version_range.take(), range, &version);
+    } else if field != 2
+        && entry.version_range
+            .as_deref()
+            .is_some_and(|range| !crate::plus_version::is_plus(range.trim()))
+    {
+        entry.version_range = None;
+    }
+    Ok(())
+}
+
+/// Computes the updated version range string for `version` using `selected`, `request.policy.prefix` ([`Request`]), or `previous`.
+#[inline]
+fn updated_range(
+    request: &Request,
+    previous: Option<String>,
+    selected: Option<String>,
+    version: &str,
+) -> Option<String> {
+    if let Some(selected) = selected {
+        let trimmed = selected.trim();
+        if !trimmed.is_empty() {
+            return Some(if trimmed.len() == selected.len() {
+                selected
+            } else {
+                trimmed.to_owned()
+            });
+        }
+    }
+    let version = version.trim();
+    if !version.is_empty()
+        && !version.eq_ignore_ascii_case("latest")
+        && !version.eq_ignore_ascii_case("head")
+        && !wire::snap(version)
+        && let Some(prefix @ ("^" | "~")) = request.policy.prefix.as_deref().map(str::trim)
+    {
+        return Some(format!("{prefix}{version}"));
+    }
+    previous
+}

@@ -1,0 +1,143 @@
+//! The parts of `ComponentID` (and the legacy `BitId` behind it) that
+//! `diffMetadata` uses: parsing, equality with and without the version, and
+//! the version as stored, where `latest` counts as no version.
+//!
+//! Exposes [`Id`] ([`Id::parse`], [`Id::from_object`]) for normalized component identity comparisons across diff and status commands.
+
+use crate::commands::status::js::{decline, text};
+use serde_json::Value;
+use std::io;
+
+/// Parsed component identifier (`scope`, `name`, and optional `version`) used by diff and status commands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Id {
+    scope: String,
+    name: String,
+    /// `id.version`: `None` is `undefined`; `latest` is kept as it is.
+    pub version: Option<String>,
+}
+
+impl Id {
+    /// Parses an [`Id`] via `ComponentID.fromString(text)` (`BitId.parse(text, true)`).
+    pub fn parse(id: &str) -> io::Result<Self> {
+        let id = id.trim();
+        let (id, version) = match id.rsplit_once('@') {
+            Some((prefix, ver)) if !prefix.trim().is_empty() => {
+                (prefix.trim(), ver.trim().to_string())
+            }
+            _ => (id, "latest".to_string()),
+        };
+        let (scope, name) = id.split_once('/').ok_or_else(|| decline("invalid component id"))?;
+        let (scope, name) = (scope.trim(), name.trim());
+        if name.is_empty() || scope.is_empty() {
+            return Err(decline("component id without scope or name"));
+        }
+        let version = Some(version).filter(|version| !version.is_empty());
+        Ok(Self { scope: scope.to_string(), name: name.to_string(), version })
+    }
+
+    /// Parses an [`Id`] via `ComponentID.fromObject({ scope, name, version })` from `id` ([`Value`]).
+    pub fn from_object(id: &Value) -> io::Result<Self> {
+        if let Some(raw) = id.as_str() {
+            return Self::parse(raw);
+        }
+        let scope = text(id.get("scope"))?.trim();
+        let raw_name = text(id.get("name"))?.trim();
+        let (name, inline_ver) = raw_name
+            .rsplit_once('@')
+            .map_or((raw_name, ""), |(nm, ver)| (nm.trim(), ver.trim()));
+        if scope.is_empty() || name.is_empty() {
+            return Err(decline("component id without scope or name"));
+        }
+        let version = match id.get("version") {
+            None | Some(Value::Null) => (!inline_ver.is_empty()).then(|| inline_ver.to_owned()),
+            Some(version) => Some(text(Some(version))?.trim().to_string())
+                .filter(|value| !value.is_empty())
+                .or_else(|| (!inline_ver.is_empty()).then(|| inline_ver.to_owned())),
+        };
+        Ok(Self { scope: scope.to_string(), name: name.to_string(), version })
+    }
+
+    /// `id.changeVersion(version)`.
+    #[inline]
+    #[must_use]
+    pub fn with_version(&self, version: Option<String>) -> Self {
+        let version = version
+            .map(|val| val.trim().to_owned())
+            .filter(|value| !value.is_empty());
+        Self { version, ..self.clone() }
+    }
+
+    /// `id.scope`.
+    ///
+    /// Returns the component's scope name slice.
+    #[inline]
+    #[must_use]
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+
+    /// `hasVersion()`: a version other than `latest` or `head`.
+    #[inline]
+    #[must_use]
+    pub fn has_version(&self) -> bool {
+        self.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|version| !version.is_empty())
+            .is_some_and(|version| {
+                !version.eq_ignore_ascii_case("latest") && !version.eq_ignore_ascii_case("head")
+            })
+    }
+
+    /// Formats this [`Id`] as `<scope>/<name>` without any `@version` suffix.
+    #[inline]
+    #[must_use]
+    pub fn without_version(&self) -> String {
+        format!("{}/{}", self.scope, self.name)
+    }
+
+    /// `id.toString()`.
+    #[inline]
+    #[must_use]
+    pub fn display(&self) -> String {
+        match self.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|_| self.has_version())
+        {
+            Some(version) => format!("{}/{}@{version}", self.scope, self.name),
+            None => self.without_version(),
+        }
+    }
+
+    /// `searchWithoutVersion`'s test: same scope and name.
+    #[inline]
+    #[must_use]
+    pub fn same_without_version(&self, other: &Self) -> bool {
+        self.scope == other.scope && self.name == other.name
+    }
+
+    /// `isEqual`: same scope and name, and the same version where both have one.
+    #[inline]
+    #[must_use]
+    pub fn same(&self, other: &Self) -> bool {
+        let same_version = match (self.has_version(), other.has_version()) {
+            (true, true) => {
+                self.version.as_deref().map(str::trim) == other.version.as_deref().map(str::trim)
+            }
+            (false, false) => true,
+            _ => false,
+        };
+        self.same_without_version(other) && same_version
+    }
+
+    /// `ComponentIdList.uniqFromArray`: the first of each `toString()`.
+    #[inline]
+    pub fn unique(ids: impl IntoIterator<Item = Self>) -> Vec<Self> {
+        let mut seen = std::collections::HashSet::new();
+        ids.into_iter()
+            .filter(|id| seen.insert(id.display()))
+            .collect()
+    }
+}

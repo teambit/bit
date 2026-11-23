@@ -1,0 +1,17 @@
+[package]
+name = "bit-workspace-config"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+serde = "1"
+ryu-js = "=1.0.3"
+indexmap = "2"
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+pretty_assertions = "1"

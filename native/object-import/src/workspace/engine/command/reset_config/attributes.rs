@@ -1,0 +1,54 @@
+//! Linux extended attribute and `SELinux` context [`validate`] checks for `component.json` writes.
+
+use super::invalid;
+use std::{
+    fs, io,
+    path::Path,
+    sync::atomic::{AtomicUsize, Ordering},
+};
+/// Monotonic probe file counter used by [`validate`] when testing parent directory `SELinux` inheritance.
+static NEXT: AtomicUsize = AtomicUsize::new(0);
+
+/// Validates that `path` has no non-`SELinux` extended attributes ([`has_non_selinux_xattr`]) and matches parent directory inheritance ([`equivalent`], [`NEXT`]).
+#[inline]
+pub(super) fn validate(path: &Path) -> io::Result<()> {
+    let meta = fs::symlink_metadata(path)?;
+    if meta.file_type().is_symlink() || !meta.is_file() || has_non_selinux_xattr(path)? {
+        return Err(invalid("reset config extended attributes"));
+    }
+    let parent = path.parent().ok_or_else(|| invalid("reset config parent"))?;
+    let parent_meta = fs::symlink_metadata(parent).map_err(|_| invalid("reset config parent"))?;
+    if parent_meta.file_type().is_symlink() || !parent_meta.is_dir() {
+        return Err(invalid("reset config parent"));
+    }
+    let temporary = parent.join(format!(
+        ".bit-reset-config-probe-{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed),
+    ));
+    let file = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)?;
+    let result = equivalent(path, &temporary);
+    drop(file);
+    let removed = fs::remove_file(&temporary);
+    result.and(removed)
+}
+
+/// Returns `true` when `path` carries any extended attribute other than `security.selinux` for [`validate`].
+#[inline]
+fn has_non_selinux_xattr(path: &Path) -> io::Result<bool> {
+    Ok(xattr::list(path)?.any(|name| name != "security.selinux"))
+}
+
+/// Verifies that `temporary` has no non-`SELinux` extended attributes ([`has_non_selinux_xattr`]) and matches `original`'s `SELinux` context.
+#[inline]
+fn equivalent(original: &Path, temporary: &Path) -> io::Result<()> {
+    if has_non_selinux_xattr(temporary)?
+        || xattr::get(original, "security.selinux")? != xattr::get(temporary, "security.selinux")?
+    {
+        return Err(invalid("reset config nondefault metadata attributes"));
+    }
+    Ok(())
+}

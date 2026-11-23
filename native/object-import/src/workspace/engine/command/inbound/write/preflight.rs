@@ -1,0 +1,185 @@
+//! Local-only eligibility ([`check`], [`Target`], [`Options`]) before providers; authoritative preparation repeats these reads.
+
+use super::{Options, Target, directories, existing, invalid, new_directory, target_directories};
+use serde_json::Value;
+use std::{io, path::Path};
+
+/// Validates local `.bitmap`, directory templates, and existing [`Target`] directories ([`existing_target`]) under [`Options`] before remote provider calls.
+pub(in super::super) fn check(
+    root: &Path,
+    targets: &[Target],
+    options: Options<'_>,
+) -> io::Result<()> {
+    let bitmap = super::super::config::document(&root.join(".bitmap"))?;
+    let rows = bitmap.as_object().ok_or_else(|| invalid("inbound bitmap object"))?;
+    let template = directories::default_directory(root)?;
+    let shape = ["{scopeId}", "{scope}", "{owner}", "{name}"]
+        .iter()
+        .fold(template.clone(), |path, token| path.replace(token, "component"));
+    if shape.contains('{') || shape.contains('}') {
+        return Err(invalid("inbound unsupported workspace directory template"));
+    }
+    crate::checkout::plan::relative_path(&shape)?;
+    let directories = target_directories(
+        root,
+        &template,
+        targets,
+        rows,
+        options,
+        &mut super::relocation::Retained::default(),
+    )?;
+    let mut directories = directories.iter();
+    for target in targets {
+        let matched = rows.iter().find(|(key, row)| super::matches_target(key, row, target));
+        if let Some((key, row)) = matched {
+            existing_target(root, target, key, row, options)?;
+        } else if !options.track_only && !options.write_to_empty_dir {
+            let directory =
+                directories.next().ok_or_else(|| invalid("inbound preflight directory"))?;
+            new_directory(root, directory, options.override_existing)?;
+        }
+    }
+    Ok(())
+}
+
+/// Validates that an existing `.bitmap` [`Target`] can be updated or merged cleanly under `options` ([`Options`]) via [`find_existing_model`].
+fn existing_target(
+    root: &Path,
+    target: &Target,
+    key: &str,
+    row: &Value,
+    options: Options<'_>,
+) -> io::Result<()> {
+    if options.track_only {
+        return Ok(());
+    }
+    let (scope, _) = crate::reset_lane::bitmap::row_identity(key, row);
+    let Some(scope) = scope
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .or_else(|| {
+            row["defaultScope"]
+                .as_str()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
+        .or_else(|| {
+            target.scope
+                .as_deref()
+                .map(str::trim)
+                .filter(|scope| !scope.is_empty())
+        })
+    else {
+        return Ok(());
+    };
+    let Some(model) = find_existing_model(root, scope, target.name.trim())? else {
+        return Ok(());
+    };
+    if options.merge_strategy.is_some() && has_local_versions(&model) {
+        return Err(invalid("inbound existing component has local versions"));
+    }
+    let requested = requested_version(key, row)?;
+    let (_, hash) = super::version(&model, requested)?;
+    let Some(version) = super::super::details::local_object(root, &hash, "Version")? else {
+        return Ok(());
+    };
+    if options.override_existing || options.merge_strategy.is_some() {
+        return Ok(());
+    }
+    check_sources(root, row, &version)
+}
+
+/// Searches local component candidate hashes for `(scope, name)` under `root` and returns the first stored `Component` object for [`existing_target`].
+#[inline]
+fn find_existing_model(root: &Path, scope: &str, name: &str) -> io::Result<Option<Value>> {
+    for hash in
+        super::super::details::candidate_component_hashes(&crate::scope_path(root), scope, name)
+    {
+        if let Some(found) = super::super::details::local_object(root, &hash, "Component")? {
+            return Ok(Some(found));
+        }
+    }
+    Ok(None)
+}
+
+#[inline]
+fn has_local_versions(model: &Value) -> bool {
+    model["state"]["versions"]
+        .as_object()
+        .is_some_and(|versions| {
+            versions
+                .values()
+                .any(|entry| entry["local"] == true)
+        })
+}
+
+#[inline]
+fn requested_version<'a>(key: &'a str, row: &'a Value) -> io::Result<&'a str> {
+    row["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .or_else(|| {
+            key.rsplit_once('@')
+                .map(|(_, ver)| ver.trim())
+                .filter(|ver| !ver.is_empty())
+        })
+        .ok_or_else(|| invalid("inbound existing version"))
+}
+
+fn check_sources(root: &Path, row: &Value, version: &Value) -> io::Result<()> {
+    let directory = row["rootDir"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound existing root directory"))?;
+    crate::checkout::plan::relative_path(directory)?;
+    let files = version["files"]
+        .as_array()
+        .filter(|files| !files.is_empty() && files.len() <= 4096)
+        .ok_or_else(|| invalid("inbound existing files"))?;
+    let mut compressed = 0;
+    let mut bytes = 0_usize;
+    let mut seen = std::collections::HashSet::with_capacity(files.len());
+    for file in files {
+        let relative = file["relativePath"]
+            .as_str()
+            .map(str::trim)
+            .ok_or_else(|| invalid("inbound existing file path"))?;
+        crate::checkout::plan::relative_path(relative)?;
+        if !seen.insert(relative) {
+            return Err(invalid("inbound duplicate existing file"));
+        }
+        check_source_file(root, directory, relative, file, &mut compressed, &mut bytes)?;
+    }
+    Ok(())
+}
+
+fn check_source_file(
+    root: &Path,
+    directory: &str,
+    relative: &str,
+    file: &Value,
+    compressed: &mut usize,
+    bytes: &mut usize,
+) -> io::Result<()> {
+    let hash = file["file"]
+        .as_str()
+        .map(str::trim)
+        .ok_or_else(|| invalid("inbound existing Source"))?;
+    let body = crate::checkout::repository::source(
+        &crate::scope_path(root).join("objects"),
+        crate::merge_history::hash(hash)?,
+        32 * 1024 * 1024,
+        compressed,
+    )?;
+    *bytes = bytes
+        .checked_add(body.len())
+        .filter(|total| *total <= super::MAX_WRITTEN_BYTES)
+        .ok_or_else(|| invalid("inbound preflight source budget"))?;
+    let path = root.join(directory).join(relative);
+    match std::fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
+        Ok(_) => existing::check(root, &path, &crate::checkout::eol::auto(body)),
+    }
+}

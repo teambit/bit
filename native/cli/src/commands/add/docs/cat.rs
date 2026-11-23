@@ -1,0 +1,122 @@
+//! Cold `cat` documentation ([`CatDocs`], [`cat_prepare`]) uses the published parser without starting Harmony.
+//!
+//! Validates [`cache_hits`] and [`observe`]d sources before serving `cat-component` docs.
+use super::{cache_hits, observe, order, validate};
+use crate::commands::status::cache;
+use serde_json::Value;
+use std::{
+    collections::BTreeMap,
+    io,
+    path::{Path, PathBuf},
+};
+
+/// Staged cold `cat-component` documentation state, [`cache_hits::Plan`], and observed source preimages.
+pub(in crate::commands) struct CatDocs {
+    root: PathBuf,
+    components: Vec<Value>,
+    observed: BTreeMap<PathBuf, super::Source>,
+    directory: PathBuf,
+    plan: cache_hits::Plan,
+    host_published: bool,
+}
+
+/// Cache corruption and ambiguous feature precedence must reach the published
+/// consumer, whose `FsCache` owns its cleanup and option semantics.
+pub(in crate::commands) fn cat_prepare(root: &Path, component: Value) -> Option<CatDocs> {
+    if !root.is_absolute()
+        || root.as_os_str().is_empty()
+        || !component.is_object()
+        || cache::no_fs_cache(root)
+    {
+        return None;
+    }
+    let components = vec![component];
+    let observed = observe(root, &components).ok()?;
+    let directory = bit_object_import::scope_path(root).join("cache/components/docs");
+    let plan = cache_hits::inspect(root, &directory, &components, &observed).ok()?;
+    validate(&plan.proven, &observed).ok()?;
+    Some(CatDocs {
+        root: root.to_owned(),
+        components,
+        observed,
+        directory,
+        plan,
+        host_published: false,
+    })
+}
+
+impl CatDocs {
+    /// Returns the component [`Value`] entries whose documentation cache entries missed during [`cat_prepare`].
+    #[inline]
+    pub(in crate::commands) fn misses(&self) -> &[Value] {
+        &self.plan.misses
+    }
+
+    /// Returns the component entries tracked by this [`CatDocs`] session.
+    #[inline]
+    pub(in crate::commands) fn components(&self) -> &[Value] {
+        &self.components
+    }
+
+    /// Records the host documentation parser `receipt` via [`parse_doc_receipt`] and marks the cache host-published.
+    #[inline]
+    pub(in crate::commands) fn absorb(&mut self, receipt: &Value) -> io::Result<Option<String>> {
+        let error = parse_doc_receipt(receipt)?;
+        self.host_published = true;
+        Ok(error)
+    }
+
+    /// Publishes proven `cat-component` documentation cache entries when [`observe`]d sources and [`cache_hits`] state remain unchanged.
+    pub(in crate::commands) fn publish(self) -> io::Result<()> {
+        if self.observed != observe(&self.root, &self.components)? {
+            return Err(io::Error::other("cat documentation sources changed"));
+        }
+        if self.host_published {
+            // The published FsCache already owns every parser/cache effect. Replaying
+            // writes here would change metadata timestamps and failure behavior.
+            return Ok(());
+        }
+        let current =
+            cache_hits::inspect(&self.root, &self.directory, &self.components, &self.observed)?;
+        if current.hits != self.plan.hits
+            || current.misses != self.plan.misses
+            || current.proven != self.plan.proven
+        {
+            return Err(io::Error::other("cat documentation cache changed"));
+        }
+        let mut writes = self.plan.proven;
+        if writes.is_empty() {
+            return Ok(());
+        }
+        order(&self.root, &self.components, &mut writes)?;
+        for (path, bytes) in validate(&writes, &self.observed)? {
+            // Published FsCache.saveDataInCache treats IO failures as nonfatal.
+            let _ = bit_install::dependencies::cache::put(&self.directory, &path, &bytes);
+        }
+        Ok(())
+    }
+}
+
+/// Validates a host documentation parser `receipt` and extracts any trimmed error message for [`CatDocs::absorb`].
+#[inline]
+fn parse_doc_receipt(receipt: &Value) -> io::Result<Option<String>> {
+    if receipt["published"] != true
+        && !receipt["published"]
+            .as_str()
+            .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"))
+    {
+        return Err(io::Error::other("cat documentation parser receipt"));
+    }
+    let error = &receipt["error"];
+    if error.is_null() || error.as_bool() == Some(false) {
+        return Ok(None);
+    }
+    if let Some(message) = error
+        .as_str()
+        .or_else(|| error.get("message").and_then(Value::as_str))
+    {
+        let trimmed = message.trim();
+        return Ok((!trimmed.is_empty()).then(|| trimmed.to_owned()));
+    }
+    Err(io::Error::other("cat documentation parser receipt"))
+}

@@ -1,0 +1,54 @@
+//! End-to-end Harmony lane test suites (`e2e/harmony/lanes/`: [`abort_merge_lane`], [`bit_checkout_on_lanes`], [`bit_import_on_lanes`], [`bit_remove_on_lanes`], [`lane_basic_operations`], [`lane_diff`], [`lane_export`], [`lane_import`], [`lane_merge`], [`lane_snapping`]).
+//!
+//! Covers lane creation, diffing, export, import, merge, and removal parity across Harmony lane workspaces.
+
+/// End-to-end tests for `bit lane merge-abort`.
+mod abort_merge_lane;
+/// End-to-end tests for `bit checkout` on lanes.
+mod bit_checkout_on_lanes;
+/// End-to-end tests for `bit import` on lanes.
+mod bit_import_on_lanes;
+/// End-to-end tests for `bit remove` and `bit delete` on lanes.
+mod bit_remove_on_lanes;
+/// End-to-end tests for diverged forked lanes ([`diverged_from_remote_lane`], [`import_lanes`], [`lane_forking`]).
+mod diverged_from_forked;
+mod diverged_from_remote_lane;
+mod import_lanes;
+mod lane_basic_operations;
+mod lane_diff;
+mod lane_eject;
+mod lane_env_jsonc_dep;
+mod lane_export;
+mod lane_export_skip_main_history;
+mod lane_export_skip_main_history_http;
+mod lane_forking;
+mod lane_from_lane;
+mod lane_history_diff;
+mod lane_history_merge;
+mod lane_import;
+mod lane_import_git_branch;
+mod lane_management;
+mod lane_merge;
+mod lane_multiple_scopes;
+mod lane_snapping;
+mod lanes_with_issues;
+mod merge_lane_to_main_stale_dep_ref;
+mod merge_lanes_diverge;
+mod merge_lanes_edge_cases;
+mod merge_lanes_edge_cases_2;
+mod merge_lanes_main;
+mod merge_lanes_partial;
+mod merge_lanes_remote;
+mod merge_lanes_squash;
+mod merge_lanes_squash_diverge;
+mod merge_lanes_unrelated;
+mod merge_main_env_policy;
+mod multiple_comps_same_name_on_lane;
+mod remove_lanes;
+mod rename_lane;
+mod skip_publish_unpublished_dep;
+mod switch_lanes;
+mod unrelated_and_removed;
+mod update_dependents_cascade;
+mod update_dependents_cascade_import;
+mod update_dependents_cascade_reset;

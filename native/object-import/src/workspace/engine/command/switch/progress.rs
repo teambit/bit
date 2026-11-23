@@ -1,0 +1,104 @@
+//! Checkout [`import_count`] and [`receipt`] include already cached or unchanged IDs.
+
+use super::invalid;
+use serde_json::{Value, json};
+use std::{io, path::Path};
+
+/// Computes the total component import count for a lane switch from `context` ([`Value`]) and `targets`.
+pub(in crate::workspace::engine::command) fn import_count(
+    _root: &Path,
+    context: &Value,
+    targets: &[Value],
+) -> io::Result<usize> {
+    if let Some(count) = context["switchCheckoutImport"]["requested"].as_u64() {
+        return usize::try_from(count).map_err(io::Error::other);
+    }
+    let additions = context["lane"]["addedTargets"]
+        .as_array()
+        .ok_or_else(|| invalid("switch addition count"))?
+        .len();
+    targets
+        .len()
+        .checked_add(additions)
+        .ok_or_else(|| invalid("switch addition count"))
+}
+
+/// Builds a synthetic zero-object import progress receipt ([`Value`]) for `count` switch components.
+#[inline]
+pub(in crate::workspace::engine::command) fn receipt(count: usize) -> Value {
+    json!({"requested":count,"components":count,"objects":0,"performed":count > 0})
+}
+
+/// Appends `context["lane"]["addedTargets"]` as [`crate::command_import::Target`] entries into `targets`.
+#[inline]
+pub(in crate::workspace::engine::command) fn additions(
+    context: &Value,
+    targets: &mut Vec<crate::command_import::Target>,
+) -> io::Result<()> {
+    let added = context["lane"]["addedTargets"]
+        .as_array()
+        .ok_or_else(|| invalid("switch addition count"))?;
+    targets.reserve(added.len());
+    for target in added {
+        targets.push(addition_target(target)?);
+    }
+    Ok(())
+}
+
+/// Converts a single `addedTargets` entry into a [`crate::command_import::Target`] for object import via [`identity_parts`].
+#[inline]
+fn addition_target(target: &Value) -> io::Result<crate::command_import::Target> {
+    let version = target["version"]
+        .as_str()
+        .or_else(|| target["head"].as_str())
+        .map(str::trim)
+        .filter(|ver| !ver.is_empty())
+        .ok_or_else(|| invalid("switch addition version"))?;
+    let (scope, name) = identity_parts(target)?;
+    Ok(crate::command_import::Target { scope: Some(scope), name, version: version.into() })
+}
+
+/// Extracts `(scope, name)` from `target["identity"]`, `target["id"]`, or explicit `scope`/`name` fields on `target` ([`Value`]).
+fn identity_parts(target: &Value) -> io::Result<(String, String)> {
+    if let Some(identity) = target["identity"]
+        .as_str()
+        .or_else(|| target["id"].as_str())
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        let base = identity.rsplit_once('@').map_or(identity, |(base, _)| base.trim());
+        let (scope, name) = base
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid("switch addition scope"))?;
+        return Ok((scope.into(), name.into()));
+    }
+    let scope = target["scope"]
+        .as_str()
+        .or_else(|| target["id"]["scope"].as_str())
+        .map(str::trim)
+        .filter(|scope| !scope.is_empty())
+        .ok_or_else(|| invalid("switch addition scope"))?;
+    let name = target["name"]
+        .as_str()
+        .or_else(|| target["id"]["name"].as_str())
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .ok_or_else(|| invalid("switch addition identity"))?;
+    Ok((scope.into(), name.into()))
+}
+
+pub(in crate::workspace::engine::command) fn failure(
+    error: io::Error,
+    record: &super::Record,
+) -> io::Error {
+    if record.request.operation != super::super::input::Operation::Switch {
+        return error;
+    }
+    let mut progress = record.repository.progress();
+    if let Some(imported) = record.context.get("switchCheckoutImport") {
+        progress["switchCheckoutImport"] = imported.clone();
+    }
+    super::super::super::response::with_progress(error, progress)
+}

@@ -1,0 +1,307 @@
+//! `calcDependenciesGraph` of `@teambit/pnpm`, as snapping runs it
+//! (`_addDependenciesGraphToComponents`): each [`Snapped`] component's
+//! dependency graph, cut from the workspace's `pnpm-lock.yaml`, which the
+//! snap stores beside its `Version` (`dependenciesGraphRef`).
+//!
+//! The lockfile is read and filtered by pnpm's own `pnpm-lockfile` crate,
+//! the code `@pnpm/napi` runs for the Node.js CLI, re-exporting [`WorkspaceComponent`].
+
+pub use replacer::WorkspaceComponent;
+
+mod convert;
+#[cfg(test)]
+mod graph_tests;
+mod reachable;
+mod replacer;
+
+use replacer::Replacer;
+
+use crate::commands::status::js::decline;
+use bit_install::config::WorkspaceConfig;
+use pnpm_lockfile::{FilterByImportersOptions, IncludedDependencies, Lockfile, PeerEdgeOptions};
+use serde_json::{Map, Value};
+use std::{collections::HashSet, io, path::Path};
+
+/// Snapped component descriptor with root directory, package name, and environment ID for [`graphs`] and [`graph`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Snapped<'s> {
+    /// `componentMap.rootDir`.
+    pub directory: &'s str,
+    /// Resolved npm package name for the snapped component.
+    pub package_name: &'s str,
+    /// Configured environment aspect ID for the snapped component.
+    pub env_id: &'s str,
+}
+
+/// The serialized graph of each snapped component, `None` where the
+/// lockfile has no importer for it.
+pub fn graphs(
+    root: &Path,
+    snapped: &[Snapped<'_>],
+    components: &[WorkspaceComponent<'_>],
+) -> io::Result<Vec<Option<String>>> {
+    let roots = roots_dir(root)?;
+    let loaded = Lockfile::load_from_path(&root.join(Lockfile::FILE_NAME))
+        .map_err(|error| decline(format!("lockfile: {error}")))?;
+    let Some(lockfile) = loaded else { return Ok(vec![None; snapped.len()]) };
+    let lockfile = serde_json::to_value(lockfile).map_err(io::Error::other)?;
+    if lockfile.get("importers").is_none_or(Value::is_null) {
+        return Ok(vec![None; snapped.len()]);
+    }
+    let workspace = Replacer::new(components)?;
+    let version = super::receipt::NodeCli::find()?.version;
+    let modern = node_semver::Version::parse(version).map_err(io::Error::other)?
+        >= node_semver::Version::parse("2.2.147").map_err(io::Error::other)?;
+    snapped
+        .iter()
+        .map(|component| {
+            let environment = environment_importer(root, &roots, component.env_id)?;
+            if modern {
+                reachable::graph(&lockfile, component, &workspace, &environment)
+            } else {
+                graph(&lockfile, component, &workspace, &environment)
+            }
+        })
+        .collect()
+}
+
+/// Resolves the workspace `.bit_roots` directory from [`WorkspaceConfig`] in `root`.
+#[inline]
+fn roots_dir(root: &Path) -> io::Result<std::path::PathBuf> {
+    let config = WorkspaceConfig::load(root)?;
+    let root_directory = config.aspects
+        .iter()
+        .find_map(|(key, val)| {
+            (bit_install::config::aspect_id_without_version(key.trim())
+                == "teambit.workspace/workspace")
+                .then_some(val)
+        })
+        .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
+        .map(str::trim)
+        .filter(|dir| !dir.is_empty())
+        .unwrap_or("node_modules");
+    Ok(root.join(root_directory).join(".bit_roots"))
+}
+
+/// Builds one [`Snapped`] component's dependency graph from its lockfile importers via pnpm filtering and [`convert::convert`].
+fn graph(
+    lockfile: &Value,
+    component: &Snapped<'_>,
+    workspace: &Replacer,
+    environment: &str,
+) -> io::Result<Option<String>> {
+    let importers = &lockfile["importers"];
+    let directory = component.directory.trim();
+    let importer = if directory.is_empty() { "." } else { directory };
+    if importers.get(importer).is_none() {
+        return Ok(None);
+    }
+    let has_root = importers.get(environment).is_some();
+    if has_root
+        && importer == "."
+        && importers[environment]["dependencies"][component.package_name.trim()]["version"]
+            .as_str()
+            .map(str::trim)
+            .is_none_or(str::is_empty)
+    {
+        return Ok(None);
+    }
+    let mut ids = vec![importer.to_string()];
+    if has_root && environment != importer {
+        ids.push(environment.to_string());
+    }
+    let narrowed = narrow(lockfile, &ids, importer, component, workspace);
+    let partial = filter(narrowed, ids)?;
+    let root_dir = has_root.then_some(environment);
+    let graph = convert::convert(partial, importer, root_dir, component.package_name, workspace)?;
+    serde_json::to_string(&graph).map(Some).map_err(io::Error::other)
+}
+
+/// The lockfile without the other workspace packages in `ids`' importers.
+#[inline]
+fn narrow(
+    lockfile: &Value,
+    ids: &[String],
+    importer: &str,
+    component: &Snapped<'_>,
+    workspace: &Replacer,
+) -> Value {
+    let mut narrowed = lockfile.clone();
+    let own_name = component.package_name.trim();
+    for id in ids {
+        let entry = &mut narrowed["importers"][id.as_str()];
+        for name in workspace
+            .package_names()
+            .filter(|name| *name != own_name)
+        {
+            remove_workspace_package(entry, name, id == importer);
+        }
+    }
+    narrowed
+}
+
+/// The other workspace packages are wiring, not the component's
+/// dependencies, unless the component's own importer injects them.
+#[inline]
+fn remove_workspace_package(importer: &mut Value, name: &str, own: bool) {
+    let lookup = |field: &str| {
+        importer
+            .get(field)
+            .and_then(|deps| deps.get(name))
+    };
+    let reference = lookup("dependencies")
+        .or_else(|| lookup("devDependencies"))
+        .or_else(|| lookup("optionalDependencies"));
+    let injected = reference
+        .and_then(|reference| reference.get("version"))
+        .and_then(Value::as_str)
+        .is_some_and(|version| version.trim().starts_with("file:"));
+    if own && injected {
+        return;
+    }
+    for field in ["dependencies", "devDependencies", "optionalDependencies", "dependenciesMeta"] {
+        if let Some(deps) = importer.get_mut(field).and_then(Value::as_object_mut) {
+            deps.shift_remove(name);
+        }
+    }
+}
+
+/// `filterLockfileByImporters(lockfile, ids)` with the default options.
+fn filter(lockfile: Value, ids: Vec<String>) -> io::Result<Map<String, Value>> {
+    let snapshot_order = snapshot_order(&lockfile, &ids);
+    let lockfile: Lockfile =
+        serde_json::from_value(lockfile).map_err(|error| decline(format!("lockfile: {error}")))?;
+    let options = FilterByImportersOptions {
+        include: IncludedDependencies {
+            dependencies: true,
+            dev_dependencies: true,
+            optional_dependencies: true,
+        },
+        skipped: HashSet::new(),
+        fail_on_missing_dependencies: false,
+        peer_edges: PeerEdgeOptions { resolve_peers_from_workspace_root: false },
+    };
+    let filtered = lockfile
+        .filter_by_importers(ids, &options)
+        .map_err(|error| decline(format!("lockfile: {error}")))?;
+    let Value::Object(mut map) = serde_json::to_value(filtered).map_err(io::Error::other)? else {
+        return Err(decline("lockfile shape"));
+    };
+    reorder_entries(
+        &mut map,
+        "packages",
+        snapshot_order
+            .iter()
+            .map(|id| pnpm_deps_path::remove_suffix(id).to_string()),
+    );
+    reorder_entries(&mut map, "snapshots", snapshot_order.into_iter());
+    Ok(map)
+}
+
+#[inline]
+fn reorder_entries(map: &mut Map<String, Value>, field: &str, order: impl Iterator<Item = String>) {
+    let Some(Value::Object(entries)) = map.get_mut(field) else { return };
+    let mut ordered = Map::new();
+    for id in order {
+        if let Some(value) = entries.shift_remove(&id) {
+            ordered.insert(id, value);
+        }
+    }
+    ordered.extend(std::mem::take(entries));
+    *entries = ordered;
+}
+
+/// pnpm's `lockfileWalker` visits importer dependencies in dev, runtime,
+/// optional order, marking each sibling before descending into its children.
+#[inline]
+fn snapshot_order(lockfile: &Value, importers: &[String]) -> Vec<String> {
+    let snapshots = &lockfile["snapshots"];
+    let mut roots = Vec::new();
+    for importer in importers {
+        let entry = &lockfile["importers"][importer.as_str()];
+        roots.extend(importer_children(entry));
+    }
+    walk_snapshots(snapshots, roots)
+}
+
+#[inline]
+fn importer_children(entry: &Value) -> Vec<String> {
+    ["devDependencies", "dependencies", "optionalDependencies"]
+        .into_iter()
+        .flat_map(|field| {
+            entry[field]
+                .as_object()
+                .into_iter()
+                .flat_map(|deps| deps.iter())
+        })
+        .filter_map(|(name, reference)| {
+            reference["version"]
+                .as_str()
+                .and_then(|version| convert::ref_to_relative(version, name))
+        })
+        .collect()
+}
+
+fn walk_snapshots(snapshots: &Value, roots: Vec<String>) -> Vec<String> {
+    let mut visited = HashSet::new();
+    let mut order = Vec::new();
+    let mut pending = vec![snapshot_siblings(snapshots, roots, &mut visited).into_iter()];
+    while let Some(siblings) = pending.last_mut() {
+        let Some(id) = siblings.next() else {
+            pending.pop();
+            continue;
+        };
+        order.push(id.clone());
+        let children = snapshot_children(&snapshots[&id]);
+        pending.push(snapshot_siblings(snapshots, children, &mut visited).into_iter());
+    }
+    order
+}
+
+#[inline]
+fn snapshot_children(snapshot: &Value) -> Vec<String> {
+    ["dependencies", "optionalDependencies"]
+        .into_iter()
+        .flat_map(|field| {
+            snapshot[field]
+                .as_object()
+                .into_iter()
+                .flat_map(|deps| deps.iter())
+        })
+        .filter_map(|(name, reference)| {
+            reference.as_str().and_then(|reference| convert::ref_to_relative(reference, name))
+        })
+        .collect()
+}
+
+#[inline]
+fn snapshot_siblings(
+    snapshots: &Value,
+    ids: Vec<String>,
+    visited: &mut HashSet<String>,
+) -> Vec<String> {
+    ids.into_iter()
+        .filter(|id| {
+            if !visited.contains(id) && snapshots.get(id).is_some() {
+                visited.insert(id.clone());
+                true
+            } else {
+                false
+            }
+        })
+        .collect()
+}
+
+#[inline]
+fn environment_importer(root: &Path, roots: &Path, env_id: &str) -> io::Result<String> {
+    let unversioned =
+        roots.join(crate::commands::status::js::without_version(env_id).replace('/', "_"));
+    let directory =
+        if unversioned.try_exists()? { unversioned } else { roots.join(env_id.replace('/', "_")) };
+    let relative =
+        directory.strip_prefix(root).map_err(|_| decline("environment root outside workspace"))?;
+    relative
+        .to_str()
+        .map(|path| path.replace('\\', "/"))
+        .ok_or_else(|| decline("environment root encoding"))
+}

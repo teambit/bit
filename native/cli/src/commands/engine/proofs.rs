@@ -1,0 +1,80 @@
+//! Deduplicate identical [`Engine`] read receipts ([`MAX_PROOFS`]) and validate bounded [`MAX_REQUEST`] protocol frames before publication.
+#[cfg(test)]
+mod tests;
+
+use super::{Engine, MAX_REQUEST};
+use serde_json::{Value, json};
+use std::{collections::HashSet, io, ops::Range};
+
+/// Maximum number of dependency read-set proofs allowed in a single `dependencyFreshValidate` frame ([`frames`]).
+const MAX_PROOFS: usize = 16384;
+
+impl Engine {
+    /// Deduplicates `proofs` ([`Value`]) and verifies them in bounded [`MAX_REQUEST`] [`frames`] before committing mutations.
+    #[inline]
+    pub(in crate::commands) fn validate_read_set(
+        &mut self,
+        proofs: &[Value],
+        stale: &str,
+    ) -> io::Result<()> {
+        if proofs.is_empty() {
+            return Ok(());
+        }
+        let mut seen = HashSet::with_capacity(proofs.len());
+        let unique = proofs
+            .iter()
+            .filter(|proof| !proof.is_null() && seen.insert(*proof))
+            .collect::<Vec<_>>();
+        if unique.is_empty() {
+            return Ok(());
+        }
+        let frames = frames(&unique)?;
+        crate::trace::log(format!(
+            "dependency proofs: {} receipts, {} distinct, {} frame(s)",
+            proofs.len(),
+            unique.len(),
+            frames.len(),
+        ));
+        for frame in frames {
+            let result: Value =
+                self.request(&json!({"kind":"dependencyFreshValidate","readSet":unique[frame]}))?;
+            let is_fresh = result["fresh"] == true
+                || result["fresh"]
+                    .as_str()
+                    .is_some_and(|text| text.trim().eq_ignore_ascii_case("true"));
+            if !is_fresh {
+                let msg = Some(stale.trim())
+                    .filter(|text| !text.is_empty())
+                    .unwrap_or("stale dependency proof");
+                return Err(io::Error::other(msg.to_owned()));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Splits `proofs` ([`Value`]) into index [`Range`] slices bounded by [`MAX_PROOFS`] and [`MAX_REQUEST`] byte size.
+#[inline]
+fn frames(proofs: &[&Value]) -> io::Result<Vec<Range<usize>>> {
+    const OVERHEAD: usize = r#"{"kind":"dependencyFreshValidate","readSet":[]}"#.len();
+    let mut output = Vec::new();
+    let mut start = 0;
+    let mut bytes = OVERHEAD;
+    for (index, proof) in proofs.iter().enumerate() {
+        let length = serde_json::to_vec(proof)?.len();
+        if length > MAX_REQUEST.saturating_sub(OVERHEAD) {
+            return Err(io::Error::other("status input limit"));
+        }
+        if index - start == MAX_PROOFS || bytes + length + usize::from(index > start) > MAX_REQUEST
+        {
+            output.push(start..index);
+            start = index;
+            bytes = OVERHEAD;
+        }
+        bytes += length + usize::from(index > start);
+    }
+    if start < proofs.len() {
+        output.push(start..proofs.len());
+    }
+    Ok(output)
+}

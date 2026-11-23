@@ -1,0 +1,74 @@
+//! Unit tests for retained workspace snapshot [`Observation`] and [`State`] ownership and LRU eviction in `bit-object-import`.
+//!
+//! Validates [`MAX_BYTES`], [`MAX_FILES`], and [`MAX_TOKEN`] bounds for retained file observations via [`snapshot`] ([`ownership_requires_the_exact_read_token_path_and_disk_identity`], [`snapshots_evict_oldest_observations_at_both_limits`], [`token_exhaustion_declines_without_reusing_an_observation_identity`]).
+
+use super::{MAX_BYTES, MAX_FILES, MAX_TOKEN, Observation, State};
+use std::path::PathBuf;
+
+/// Builds a synthetic [`Observation`] fixture of `bytes` zero bytes for `workspace/file`.
+fn snapshot(bytes: usize) -> Observation {
+    Observation {
+        path: PathBuf::from("workspace/file"),
+        raw_hash: "a".repeat(40),
+        snapshot_hash: "b".repeat(40),
+        raw_bytes: bytes,
+        contents: vec![0; bytes].into(),
+    }
+}
+
+/// Verifies that [`State::get`] requires an exact match on the read token, file path, and raw disk hash.
+#[test]
+fn ownership_requires_the_exact_read_token_path_and_disk_identity() {
+    let original = snapshot(7);
+    let mut state = State::default();
+    let token = state.retain(original.clone()).unwrap();
+    assert!(state.get(token, &original.path, &original.raw_hash).is_some());
+    assert!(
+        state
+            .get(token + 1, &original.path, &original.raw_hash)
+            .is_none(),
+    );
+    assert!(
+        state
+            .get(token, &original.path.join("other"), &original.raw_hash)
+            .is_none(),
+    );
+    assert!(state.get(token, &original.path, &original.snapshot_hash).is_none());
+    assert!(State::default().get(token, &original.path, &original.raw_hash).is_none());
+}
+
+/// Verifies that [`State::retain`] evicts oldest [`Observation`]s when exceeding either [`MAX_BYTES`] or [`MAX_FILES`].
+#[test]
+fn snapshots_evict_oldest_observations_at_both_limits() {
+    let original = snapshot(MAX_BYTES / 2 + 1);
+    let mut state = State::default();
+    let first = state.retain(original.clone()).unwrap();
+    let second = state.retain(original.clone()).unwrap();
+    assert!(state.get(first, &original.path, &original.raw_hash).is_none());
+    assert!(state.get(second, &original.path, &original.raw_hash).is_some());
+    let empty = snapshot(0);
+    for _ in 0..MAX_FILES {
+        state.retain(empty.clone()).unwrap();
+    }
+    assert!(state.get(second, &original.path, &original.raw_hash).is_none());
+    assert_eq!(state.bytes, 0);
+    assert_eq!(state.records.len(), MAX_FILES);
+}
+
+/// Verifies that [`State::retain`] declines once [`MAX_TOKEN`] is reached without wrapping or reusing observation tokens.
+#[test]
+fn token_exhaustion_declines_without_reusing_an_observation_identity() {
+    let mut state = State { next: MAX_TOKEN - 1, ..State::default() };
+    assert_eq!(state.retain(snapshot(0)), Some(MAX_TOKEN));
+    assert_eq!(state.retain(snapshot(0)), None);
+    assert_eq!(state.records.len(), 1);
+}
+
+/// Verifies that [`State::retain`] rejects a single [`snapshot`] ([`Observation`]) whose size exceeds [`MAX_BYTES`].
+#[test]
+fn oversized_single_snapshot_beyond_byte_limit_is_rejected() {
+    let mut state = State::default();
+    assert_eq!(state.retain(snapshot(MAX_BYTES + 1)), None);
+    assert!(state.records.is_empty());
+    assert_eq!(state.bytes, 0);
+}

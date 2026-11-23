@@ -1,0 +1,178 @@
+//! Import specifiers of one component file (JS/TS, style sheets, and MDX) via [`specifiers`].
+//!
+//! `JavaScript` and `TypeScript` go through the Oxc dependency scanner. Files it
+//! reports as `unsupported` (decorators, AMD, exotic syntax) fall back to a lexical
+//! scan of `import`/`export ... from`/`require(...)`. Style sheets yield their
+//! `@import`/`@use`/`@forward` targets; a `~` prefix marks a package and anything
+//! else is a relative file, following Sass resolution.
+
+use std::{fs, io, path::Path};
+
+/// File extensions scanned as `JavaScript` or `TypeScript` modules by [`specifiers`].
+const SCRIPT: [&str; 8] = ["js", "jsx", "mjs", "cjs", "ts", "tsx", "mts", "cts"];
+/// File extensions scanned as CSS/Sass/Less style sheets by [`specifiers`].
+const STYLE: [&str; 4] = ["scss", "sass", "less", "css"];
+/// Maximum file size in bytes (`1 MiB`) read by the dependency specifier scanner.
+const MAX_SOURCE: u64 = 1024 * 1024;
+
+/// The import specifiers of `path`, in encounter order and without duplicates, within [`MAX_SOURCE`].
+pub fn specifiers(path: &Path) -> io::Result<Vec<String>> {
+    let extension = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .unwrap_or_default();
+    let is_script = SCRIPT
+        .iter()
+        .any(|ext| extension.eq_ignore_ascii_case(ext));
+    let is_style = STYLE
+        .iter()
+        .any(|ext| extension.eq_ignore_ascii_case(ext));
+    let is_markdown = extension.eq_ignore_ascii_case("mdx");
+    if !is_script && !is_style && !is_markdown {
+        return Ok(Vec::new());
+    }
+    let Some(source) = read(path)? else { return Ok(Vec::new()) };
+    let found = if is_style {
+        style(&source)
+    } else if is_script {
+        script(path, source)
+    } else {
+        lexical(&source)
+    };
+    Ok(dedupe(found))
+}
+
+/// Read `path` as UTF-8 (stripping any UTF-8 BOM) when it is a regular file of at most [`MAX_SOURCE`] bytes.
+fn read(path: &Path) -> io::Result<Option<String>> {
+    match fs::metadata(path) {
+        Ok(metadata) if metadata.len() > MAX_SOURCE || !metadata.is_file() => return Ok(None),
+        Ok(_) => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    }
+    let bytes = fs::read(path)?;
+    Ok(String::from_utf8(bytes)
+        .ok()
+        .map(|mut text| {
+            if text.starts_with('\u{feff}') {
+                text.remove(0);
+            }
+            text
+        }))
+}
+
+/// Scan a `JavaScript` or `TypeScript` file at [`Path`] `path` with [`bit_dependency_scanner`], falling back to [`lexical`] on unsupported syntax.
+fn script(path: &Path, source: String) -> Vec<String> {
+    let lexical_fallback = lexical(&source);
+    let Ok(result) =
+        bit_dependency_scanner::scan_source(path.to_string_lossy().into_owned(), source)
+    else {
+        return lexical_fallback;
+    };
+    match result["status"].as_str() {
+        Some("ok") => result["dependencies"]
+            .as_object()
+            .map(|dependencies| dependencies.keys().cloned().collect())
+            .unwrap_or_default(),
+        // A file Bit cannot parse yields no dependencies, like the parse-error issue.
+        Some("parse_error") => Vec::new(),
+        _ => lexical_fallback,
+    }
+}
+
+/// `import ... from 'x'`, `import 'x'`, `export ... from 'x'`, `import('x')`, `require('x')`.
+#[must_use]
+pub fn lexical(source: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for keyword in ["from", "import", "require"] {
+        let mut rest = source;
+        while let Some(index) = rest.find(keyword) {
+            let before = rest[..index].chars().next_back();
+            let after = &rest[index + keyword.len()..];
+            rest = after;
+            if before.is_some_and(|character| {
+                character.is_alphanumeric() || matches!(character, '_' | '$' | '.')
+            }) {
+                continue;
+            }
+            if let Some(specifier) = quoted(
+                after
+                    .trim_start()
+                    .strip_prefix('(')
+                    .unwrap_or(after)
+                    .trim_start(),
+            ) {
+                found.push(specifier);
+            }
+        }
+    }
+    found
+}
+
+fn style(source: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for keyword in ["@import", "@use", "@forward"] {
+        let mut rest = source;
+        while let Some(index) = rest.find(keyword) {
+            rest = &rest[index + keyword.len()..];
+            found.extend(quoted(rest.trim_start()).and_then(|target| style_specifier(&target)));
+        }
+    }
+    found
+}
+
+/// A style import target as a specifier: `~pkg` is a package, anything else a relative file.
+#[inline]
+fn style_specifier(target: &str) -> Option<String> {
+    let trimmed = target.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if ["http:", "https:", "sass:", "data:", "file:"]
+        .iter()
+        .any(|prefix| {
+            trimmed
+                .get(..prefix.len())
+                .is_some_and(|head| head.eq_ignore_ascii_case(prefix))
+        })
+    {
+        return None;
+    }
+    match trimmed.strip_prefix('~') {
+        Some(package) => {
+            let pkg = package.trim();
+            (!pkg.is_empty()).then(|| pkg.to_owned())
+        }
+        None if trimmed.starts_with('.') || trimmed.starts_with('/') => Some(trimmed.to_owned()),
+        None => Some(format!("./{trimmed}")),
+    }
+}
+
+#[inline]
+fn quoted(text: &str) -> Option<String> {
+    let quote = text
+        .chars()
+        .next()
+        .filter(|character| matches!(character, '\'' | '"' | '`'))?;
+    let body = &text[1..];
+    let end = body.find(quote)?;
+    let specifier = body[..end].trim();
+    (!specifier.is_empty() && !specifier.contains(['\n', '\r', '$'])).then(|| specifier.to_owned())
+}
+
+/// `found` without repeated specifiers, keeping the first occurrence.
+#[inline]
+pub fn dedupe(found: Vec<String>) -> Vec<String> {
+    let mut result: Vec<String> = Vec::with_capacity(found.len());
+    for specifier in found {
+        let trimmed = specifier.trim();
+        if !trimmed.is_empty()
+            && !result
+                .iter()
+                .any(|existing| existing == trimmed)
+        {
+            result.push(trimmed.to_owned());
+        }
+    }
+    result
+}

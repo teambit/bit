@@ -1,0 +1,102 @@
+//! Unit tests for `bit git` [`Parsed`] subcommand CLI parsing ([`parse_args`]) and `.bitmap` conflict merge strategies ([`merge_bitmap_contents`]).
+//!
+//! Verifies `merge-bitmaps`, `set-merge-driver`, and [`format_unrecognized`] [`Chalk`] error formatting across [`parse_args`] and [`merge_bitmap_contents`].
+
+use super::{Chalk, Parsed, format_unrecognized, merge_bitmap_contents, parse_args};
+use std::ffi::OsString;
+
+/// Verifies [`parse_args`] into [`Parsed`] for `bit git` subcommands across `merge-bitmaps` and `set-merge-driver` (`smd`).
+#[test]
+fn parses_git_subcommands_and_flags() {
+    assert_eq!(
+        parse_args(&[
+            OsString::from("git"),
+            OsString::from("merge-bitmaps"),
+            OsString::from("anc"),
+            OsString::from("cur"),
+            OsString::from("oth"),
+        ]),
+        Some(Parsed::MergeBitmaps { current: "cur".to_owned(), other: "oth".to_owned() }),
+    );
+    assert_eq!(
+        parse_args(&[
+            OsString::from("git"),
+            OsString::from("set-merge-driver"),
+            OsString::from("--no-color=false"),
+        ]),
+        Some(Parsed::SetMergeDriver { global: false }),
+    );
+    assert_eq!(
+        parse_args(&[OsString::from("git"), OsString::from("smd"), OsString::from("-g")]),
+        Some(Parsed::SetMergeDriver { global: true }),
+    );
+    assert_eq!(
+        parse_args(&[
+            OsString::from("git"),
+            OsString::from("smd"),
+            OsString::from("--global=false"),
+        ]),
+        Some(Parsed::SetMergeDriver { global: false }),
+    );
+    assert_eq!(
+        parse_args(&[OsString::from("git"), OsString::from("smd"), OsString::from("--no-global")]),
+        None,
+    );
+    assert_eq!(
+        parse_args(&[OsString::from("git"), OsString::from("unknown")]),
+        Some(Parsed::Unrecognized("unknown".to_owned())),
+    );
+    assert_eq!(parse_args(&[OsString::from("git")]), None);
+    assert_eq!(parse_args(&[OsString::from("git"), OsString::from("--help")]), None);
+}
+
+/// Verifies [`merge_bitmap_contents`] across `manual`, `ours`, and `theirs` merge strategies.
+#[test]
+fn merges_bitmap_contents_across_strategies_and_detects_conflicts() {
+    let current = r#"{
+    "comp2": { "version": "0.0.1" },
+    "comp1": { "version": "0.0.1" },
+    "$schema-version": "17.0.0"
+}"#;
+    let other = r#"{
+    "comp1": { "version": "0.0.2" },
+    "comp3": { "version": "0.0.1" },
+    "$schema-version": "17.0.0"
+}"#;
+    let err = merge_bitmap_contents(current, other, "manual").unwrap_err();
+    assert!(err.to_string().contains("conflict merging Bitmap"));
+
+    let ours = merge_bitmap_contents(current, other, "ours").unwrap();
+    let ours_json: serde_json::Value =
+        serde_json::from_str(&ours[ours.find('{').unwrap()..]).unwrap();
+    assert_eq!(ours_json["comp1"]["version"], "0.0.1");
+    assert_eq!(ours_json["comp2"]["version"], "0.0.1");
+    assert_eq!(ours_json["comp3"]["version"], "0.0.1");
+    assert_eq!(
+        ours_json
+            .as_object()
+            .unwrap()
+            .keys()
+            .next_back()
+            .unwrap(),
+        "$schema-version",
+    );
+
+    let theirs = merge_bitmap_contents(current, other, "theirs").unwrap();
+    let theirs_json: serde_json::Value =
+        serde_json::from_str(&theirs[theirs.find('{').unwrap()..]).unwrap();
+    assert_eq!(theirs_json["comp1"]["version"], "0.0.2");
+
+    assert_eq!(
+        format_unrecognized("foo", Chalk::new(false)),
+        r#""foo" is not a subcommand of "git", please run "bit git --help" to list the subcommands"#,
+    );
+}
+
+/// Verifies that [`merge_bitmap_contents`] returns an error when given malformed JSON input.
+///
+/// Confirms invalid JSON strings fail before any merge strategy is applied.
+#[test]
+fn merge_bitmap_contents_with_invalid_json_returns_error() {
+    assert!(merge_bitmap_contents("not-json", "{}", "ours").is_err());
+}

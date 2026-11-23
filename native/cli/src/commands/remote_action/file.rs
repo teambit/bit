@@ -1,0 +1,90 @@
+//! Built-in pending-directory actions for file remotes, without loading the published runtime.
+//!
+//! [`supports`], [`prepare`], [`action`], and [`pending_path`] coordinate staged object commits and [`removal`] cleanup across local file-remote directories.
+mod removal;
+
+use serde_json::{Value, json};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+    time::Duration,
+};
+
+/// Returns `true` when `name` is `"PendingDirStatus"` or `"RemovePendingDir"`.
+#[inline]
+pub(super) fn supports(name: &str) -> bool {
+    matches!(name.trim(), "PendingDirStatus" | "RemovePendingDir")
+}
+
+/// Resolves and validates the local file-remote scope directory at `path`.
+pub(super) fn prepare(path: &Path) -> io::Result<Option<PathBuf>> {
+    let absolute = std::path::absolute(path)?;
+    let scope = crate::workspace::root(&absolute)
+        .map(|root| crate::workspace::scope_path(&root))
+        .or_else(|| {
+            absolute
+                .ancestors()
+                .find(|candidate| candidate.join("scope.json").is_file())
+                .map(Path::to_path_buf)
+        });
+    if let Some(scope) = &scope {
+        let Ok(bytes) = fs::read(scope.join("scope.json")) else { return Ok(None) };
+        let Ok(json) = bit_object_import::parse_jsonc(&bytes) else { return Ok(None) };
+        if json["name"]
+            .as_str()
+            .is_none_or(|name| name.trim().is_empty())
+            || !scope.join("objects").is_dir()
+        {
+            return Ok(None);
+        }
+    }
+    Ok(scope)
+}
+
+/// Executes `"PendingDirStatus"` or `"RemovePendingDir"` ([`supports`]) against the local file-remote `scope` via [`pending_path`] and [`removal::remove`].
+pub(super) fn action(scope: &Path, name: &str, payload: &Value) -> io::Result<Value> {
+    let name = name.trim();
+    if !supports(name) {
+        return Err(io::Error::other("unsupported native file action"));
+    }
+    let path = pending_path(scope, payload.get("clientId"))?;
+    if name == "PendingDirStatus" {
+        // `fs.pathExists` follows symlinks: a dangling link is absent.
+        return Ok(json!({"exists":fs::metadata(&path).is_ok()}));
+    }
+    let existed = fs::symlink_metadata(&path).is_ok();
+    match removal::remove(&path) {
+        Err(error) if error.kind() == io::ErrorKind::DirectoryNotEmpty => {
+            std::thread::sleep(Duration::from_secs(1));
+            removal::remove(&path)?;
+        }
+        result => result?,
+    }
+    Ok(json!({"existed":existed}))
+}
+
+/// Validates the `clientId` string in `value` and returns its `pending-objects/<clientId>` [`PathBuf`] under `scope` for [`action`].
+#[inline]
+fn pending_path(scope: &Path, value: Option<&Value>) -> io::Result<PathBuf> {
+    let valid = value
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|id| {
+            !id.is_empty()
+                && !matches!(*id, "." | "..")
+                && id.encode_utf16().count() <= 4096
+                && !id
+                    .chars()
+                    .any(|character| {
+                        matches!(
+                            character,
+                            '/' | '\\' | '\0' | '<' | '>' | '|' | '?' | '*' | ':' | '"',
+                        )
+                    })
+        });
+    let Some(id) = valid else {
+        let shown = value.map_or_else(|| "undefined".to_owned(), Value::to_string);
+        return Err(io::Error::other(format!("invalid clientId: {shown}")));
+    };
+    Ok(scope.join("pending-objects").join(id))
+}

@@ -1,0 +1,80 @@
+//! Native dependency facts before linking and after the actual manifest class load.
+//!
+//! [`Resolved`] aggregates [`EnvPolicy`], [`PolicyEntry`], and per-component [`ComponentDependencies`].
+//! Supports both unlinked initial resolution and post-link initialized resolution.
+use super::{dependency_options, workspace_aspects, workspace_policy};
+use crate::{
+    command::session::{Loaded, Session},
+    dependencies,
+    model::{ComponentDependencies, EnvPolicy, PolicyEntry, WorkspaceComponent},
+    policy,
+    workspace::ScopeObjects,
+};
+use indexmap::IndexMap;
+use std::io;
+
+/// Aggregated [`EnvPolicy`] map, workspace root [`PolicyEntry`] list, and per-component [`ComponentDependencies`].
+pub(super) struct Resolved {
+    pub(super) env_policies: IndexMap<String, EnvPolicy>,
+    pub(super) workspace_policy: Vec<PolicyEntry>,
+    pub(super) dependencies: IndexMap<String, ComponentDependencies>,
+}
+
+/// Validate that [`Session`] `session.root` and [`Loaded`] `loaded.workspace.scope_path` are non-empty and non-whitespace.
+#[inline]
+fn validate_paths(session: &Session<'_>, loaded: &Loaded) -> io::Result<()> {
+    if [&session.root, &loaded.workspace.scope_path]
+        .into_iter()
+        .any(|path| {
+            path.as_os_str()
+                .as_encoded_bytes()
+                .iter()
+                .all(u8::is_ascii_whitespace)
+        })
+    {
+        return Err(io::Error::other("workspace or scope path is empty"));
+    }
+    Ok(())
+}
+
+/// Prepares installation aspects on the [`Session`] host and resolves workspace policies and dependencies into [`Resolved`].
+pub(super) async fn resolve(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    components: &[WorkspaceComponent],
+) -> io::Result<Resolved> {
+    validate_paths(session, loaded)?;
+    // `InstallMain.install` loads the components before the manifests; the envs that
+    // registers are the only ones the env requests see until the package manager ran.
+    session.host.prepare_install(&workspace_aspects(session, loaded)).await?;
+    resolve_initialized(session, loaded, components, false).await
+}
+
+/// Resolves environment policies, workspace root policy, and component dependencies after host preparation.
+pub(super) async fn resolve_initialized(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    components: &[WorkspaceComponent],
+    cache_initialized: bool,
+) -> io::Result<Resolved> {
+    validate_paths(session, loaded)?;
+    let objects = ScopeObjects::new(&loaded.workspace.scope_path);
+    let env_policies = policy::load_env_policies(&session.root, components, session.host).await?;
+    let workspace_policy = workspace_policy(loaded)?;
+    let mut options = dependency_options(session, loaded, components)?;
+    options.cache_initialized |= cache_initialized;
+    options.policy_slots =
+        policy::slots::registry(components, &session.info.core_aspects, &objects, session.host)
+            .await?;
+    let dependencies = dependencies::compute(
+        &session.root,
+        components,
+        &workspace_policy,
+        &env_policies,
+        loaded.workspace.root_package_json.as_ref(),
+        &options,
+        session.host,
+    )
+    .await?;
+    Ok(Resolved { env_policies, workspace_policy, dependencies })
+}

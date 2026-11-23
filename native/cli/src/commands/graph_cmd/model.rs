@@ -1,0 +1,219 @@
+//! Component ID graph model, filtering, and SVG serialization for `bit graph`.
+//!
+//! Traverses reachability queues ([`CompGraph`], [`GraphEdge`], [`VecDeque`], [`HashSet`]) and formats graphviz or JSON payloads.
+
+use crate::commands::scope_set::Failure;
+use serde::Serialize;
+use std::{
+    collections::{HashSet, VecDeque},
+    env,
+    fmt::Write,
+    fs,
+    path::PathBuf,
+};
+
+/// Directed dependency edge between `source_id` and `target_id` in a [`CompGraph`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub(crate) struct GraphEdge {
+    pub id: String,
+    #[serde(rename = "sourceId")]
+    pub(crate) source_id: String,
+    #[serde(rename = "targetId")]
+    pub(crate) target_id: String,
+    pub attr: String,
+    pub bidirectional: bool,
+}
+
+/// Component dependency graph holding ordered `nodes` and [`GraphEdge`]s.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct CompGraph {
+    pub(crate) nodes: Vec<String>,
+    pub(crate) edges: Vec<GraphEdge>,
+}
+
+/// Returns `val` unchanged when already trimmed, or allocates a trimmed `String` otherwise for [`CompGraph`].
+#[inline]
+fn trim_owned(val: String) -> String {
+    if val.len() == val.trim().len() { val } else { val.trim().to_owned() }
+}
+
+impl CompGraph {
+    /// Inserts `id` (trimmed via [`trim_owned`]) into `self.nodes` if it is non-empty and not already present.
+    #[inline]
+    pub(crate) fn add_node(&mut self, id: String) {
+        let id = trim_owned(id);
+        if !id.is_empty()
+            && !self.nodes
+                .iter()
+                .any(|existing| existing == &id)
+        {
+            self.nodes.push(id);
+        }
+    }
+
+    /// Inserts or updates a directed [`GraphEdge`] from `source_id` to `target_id` with `attr`.
+    pub(crate) fn add_edge(&mut self, source_id: String, target_id: String, attr: &str) {
+        let attr = attr.trim();
+        let source_id = trim_owned(source_id);
+        let target_id = trim_owned(target_id);
+        if source_id.is_empty() || target_id.is_empty() {
+            return;
+        }
+        self.add_node(source_id.clone());
+        self.add_node(target_id.clone());
+        let edge_id = format!("{source_id}->{target_id}");
+        if let Some(existing) = self.edges
+            .iter_mut()
+            .find(|edge| edge.id == edge_id)
+        {
+            if !attr.is_empty() {
+                attr.clone_into(&mut existing.attr);
+            }
+        } else {
+            self.edges.push(GraphEdge {
+                id: edge_id,
+                source_id,
+                target_id,
+                attr: attr.to_owned(),
+                bidirectional: false,
+            });
+        }
+    }
+
+    /// Retains only nodes and [`GraphEdge`]s reachable from `seeders` via [`Self::reachable_from`].
+    #[inline]
+    pub(super) fn filter_to_seeders(&mut self, seeders: &[String]) {
+        let reachable = self.reachable_from(seeders);
+        self.nodes.retain(|node| reachable.contains(node));
+        self.edges.retain(|edge| {
+            reachable.contains(&edge.source_id) && reachable.contains(&edge.target_id)
+        });
+    }
+
+    fn reachable_from(&self, seeders: &[String]) -> HashSet<String> {
+        let mut reachable = HashSet::with_capacity(self.nodes.len());
+        let mut queue = VecDeque::new();
+        for seeder in seeders {
+            let trimmed = seeder.trim();
+            if self.nodes
+                .iter()
+                .any(|node| node == trimmed)
+                && reachable.insert(trimmed.to_owned())
+            {
+                queue.push_back(trimmed.to_owned());
+            }
+        }
+        while let Some(curr) = queue.pop_front() {
+            for target in self.direct_targets(&curr) {
+                if reachable.insert(target.to_owned()) {
+                    queue.push_back(target.to_owned());
+                }
+            }
+        }
+        reachable
+    }
+
+    #[inline]
+    pub(super) fn filter_local_only(&mut self, local_ids: &[String]) {
+        let allowed: HashSet<&str> = local_ids
+            .iter()
+            .map(|id| id.trim())
+            .collect();
+        self.nodes.retain(|node| allowed.contains(node.as_str()));
+        self.edges.retain(|edge| {
+            allowed.contains(edge.source_id.as_str()) && allowed.contains(edge.target_id.as_str())
+        });
+    }
+
+    pub(super) fn filter_cycles(&mut self) {
+        let cycle_nodes: HashSet<String> = self.nodes
+            .iter()
+            .filter(|node| self.can_reach(node, node))
+            .cloned()
+            .collect();
+        let kept_edges = self.edges
+            .iter()
+            .filter(|edge| {
+                cycle_nodes.contains(&edge.source_id)
+                    && cycle_nodes.contains(&edge.target_id)
+                    && self.can_reach(&edge.target_id, &edge.source_id)
+            })
+            .cloned()
+            .collect();
+        self.nodes.retain(|node| cycle_nodes.contains(node));
+        self.edges = kept_edges;
+    }
+
+    fn can_reach(&self, start: &str, goal: &str) -> bool {
+        let mut visited = HashSet::new();
+        let mut queue: VecDeque<&str> = self
+            .direct_targets(start)
+            .into_iter()
+            .collect();
+        for &target in &queue {
+            visited.insert(target);
+        }
+        while let Some(curr) = queue.pop_front() {
+            if curr == goal {
+                return true;
+            }
+            for next in self.direct_targets(curr) {
+                if visited.insert(next) {
+                    queue.push_back(next);
+                }
+            }
+        }
+        false
+    }
+
+    #[inline]
+    fn direct_targets(&self, src: &str) -> Vec<&str> {
+        let src = src.trim();
+        self.edges
+            .iter()
+            .filter(|edge| edge.source_id == src)
+            .map(|edge| edge.target_id.as_str())
+            .collect()
+    }
+
+    #[inline]
+    pub(super) fn sort_deterministic(&mut self) {
+        self.nodes.sort();
+        self.edges.sort_by(|left, right| left.id.cmp(&right.id));
+    }
+}
+
+pub(super) fn write_svg_file(graph: &CompGraph) -> Result<PathBuf, Failure> {
+    let mut rand_bytes = [0u8; 4];
+    getrandom::fill(&mut rand_bytes).map_err(|err| Failure::Declined(err.to_string()))?;
+    let mut rand_hex = String::with_capacity(8);
+    for byte in &rand_bytes {
+        let _ = write!(rand_hex, "{byte:02x}");
+    }
+    let svg_path = env::temp_dir().join(format!("{rand_hex}.svg"));
+    let height = graph.nodes
+        .len()
+        .saturating_mul(24)
+        .saturating_add(40)
+        .max(400);
+    let mut body = format!(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"{height}\">\n",
+    );
+    for (idx, node) in graph.nodes.iter().enumerate() {
+        let y_pos = 30 + idx * 24;
+        let escaped = escape_xml(node);
+        let _ = writeln!(body, r#"  <text x="20" y="{y_pos}">{escaped}</text>"#);
+    }
+    body.push_str("</svg>\n");
+    fs::write(&svg_path, body).map_err(|err| Failure::Declined(err.to_string()))?;
+    Ok(svg_path)
+}
+
+#[inline]
+fn escape_xml(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&apos;")
+}

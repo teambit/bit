@@ -1,0 +1,210 @@
+//! The component ids an import needs, from `.bitmap`.
+//!
+//! Parses exported component IDs ([`Id`]) and active lane headers ([`LANE_KEY`]) from the workspace `.bitmap` file.
+
+use super::objects::invalid;
+use serde_json::Value;
+use std::{fs, io, path::Path};
+
+/// Top-level `.bitmap` key (`_bit_lane`) storing the active [`LaneId`] metadata in [`Bitmap`].
+const LANE_KEY: &str = "_bit_lane";
+
+/// An exported component id with its `.bitmap` version.
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Id {
+    /// Remote scope name owning the component.
+    pub scope: String,
+    /// Component name within `scope` (may include `/` namespaces).
+    pub name: String,
+    /// Tag or snap hash; `None` asks for the head.
+    pub version: Option<String>,
+}
+
+impl Id {
+    /// Return `scope/name` without any `@version` suffix.
+    #[must_use]
+    #[inline]
+    pub fn without_version(&self) -> String {
+        format!("{}/{}", self.scope.trim(), self.name.trim())
+    }
+
+    /// `scope/name@version`, as the fetch protocol expects.
+    #[must_use]
+    #[inline]
+    pub fn to_request(&self) -> String {
+        match self.version
+            .as_deref()
+            .map(str::trim)
+            .filter(|ver| !ver.is_empty())
+        {
+            Some(version) => format!("{}/{}@{version}", self.scope.trim(), self.name.trim()),
+            None => self.without_version(),
+        }
+    }
+
+    /// Return a copy of `self` with `version` set (treating `"latest"`, `"head"`, and empty strings as `None`).
+    #[must_use]
+    #[inline]
+    pub fn with_version(&self, version: Option<String>) -> Self {
+        let version = version
+            .map(|ver| ver.trim().to_string())
+            .filter(|ver| !ver.is_empty() && !matches!(ver.as_str(), "latest" | "head"));
+        Self { version, ..self.clone() }
+    }
+
+    /// Parse `scope/name[@version]` where `name` may contain `/`.
+    pub fn parse(text: &str) -> io::Result<Self> {
+        let trimmed = text.trim();
+        let (path, version) = match trimmed.rsplit_once('@') {
+            Some((path, version)) if !path.trim().is_empty() => {
+                (path.trim(), Some(version.trim().to_string()))
+            }
+            _ => (trimmed, None),
+        };
+        let (scope, name) = path
+            .split_once('/')
+            .map(|(scope, name)| (scope.trim(), name.trim()))
+            .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
+            .ok_or_else(|| invalid(&format!("invalid component id {text}")))?;
+        Ok(Self {
+            scope: scope.to_string(),
+            name: name.to_string(),
+            version: version.filter(|version| {
+                !version.is_empty() && !matches!(version.as_str(), "latest" | "head")
+            }),
+        })
+    }
+}
+
+/// The active lane entry (`_bit_lane`) that `.bitmap` says the workspace is checked out on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LaneId {
+    pub scope: String,
+    pub name: String,
+    pub exported: bool,
+}
+
+impl LaneId {
+    /// Format this [`LaneId`] as `scope/name` for remote fetch requests.
+    #[must_use]
+    #[inline]
+    pub fn to_request(&self) -> String {
+        format!("{}/{}", self.scope.trim(), self.name.trim())
+    }
+}
+
+/// The parts of `.bitmap` the import reads.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Bitmap {
+    /// All exported ids (`getAllBitIdsFromAllLanes`, filtered by `hasScope`).
+    pub ids: Vec<Id>,
+    /// Exported ids available on the current lane (`getAllBitIds`).
+    pub current_lane_ids: Vec<Id>,
+    pub lane: Option<LaneId>,
+}
+
+/// Read `<root>/.bitmap`. A missing file has no components.
+pub fn read(root: &Path) -> io::Result<Bitmap> {
+    let bytes = match fs::read(root.join(".bitmap")) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Bitmap::default()),
+        Err(error) => return Err(error),
+    };
+    let document = bit_object_import::parse_jsonc(&bytes)?;
+    let entries = document.as_object().ok_or_else(|| invalid("invalid .bitmap"))?;
+    let mut bitmap = Bitmap {
+        ids: Vec::with_capacity(entries.len()),
+        current_lane_ids: Vec::with_capacity(entries.len()),
+        lane: entries.get(LANE_KEY).and_then(lane),
+    };
+    for (key, entry) in entries {
+        if key.starts_with('$') || key == LANE_KEY || key == "version" {
+            continue;
+        }
+        let Some(id) = exported_id(key, entry) else { continue };
+        if entry["isAvailableOnCurrentLane"].as_bool() != Some(false) {
+            bitmap.current_lane_ids.push(id.clone());
+        }
+        bitmap.ids.push(id);
+    }
+    Ok(bitmap)
+}
+
+fn exported_id(key: &str, entry: &Value) -> Option<Id> {
+    let key = key.trim();
+    let bare = key
+        .split('@')
+        .next()
+        .unwrap_or(key)
+        .trim();
+    let (scope, name) = exported_scope_and_name(bare, entry)?;
+    let version = entry["version"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .or_else(|| key.split_once('@').map(|(_, ver)| ver.trim()))
+        .filter(|version| !version.is_empty() && !matches!(*version, "latest" | "head"));
+    Some(Id {
+        scope: scope.to_string(),
+        name: name.to_string(),
+        version: version.map(str::to_string),
+    })
+}
+
+fn exported_scope_and_name<'a>(bare: &'a str, entry: &'a Value) -> Option<(&'a str, &'a str)> {
+    let entry_name = entry["name"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty());
+    if let Some(scope) = entry["scope"]
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+    {
+        let fallback = bare
+            .strip_prefix(scope)
+            .and_then(|rest| rest.strip_prefix('/'))
+            .unwrap_or(bare)
+            .trim();
+        let resolved_name = entry_name.unwrap_or(fallback);
+        return (!resolved_name.is_empty()).then_some((scope, resolved_name));
+    }
+    if entry.get("scope").is_none()
+        && entry["defaultScope"]
+            .as_str()
+            .map_or("", str::trim)
+            .is_empty()
+    {
+        let (key_scope, key_name) = bare.split_once('/')?;
+        let (key_scope, key_name) = (key_scope.trim(), key_name.trim());
+        if !key_scope.is_empty() && !key_name.is_empty() {
+            return Some((key_scope, entry_name.unwrap_or(key_name)));
+        }
+    }
+    None
+}
+
+fn lane(value: &Value) -> Option<LaneId> {
+    let id = &value["id"];
+    let (scope, name) = if let Some(raw) = id
+        .as_str()
+        .map(str::trim)
+        .filter(|raw| !raw.is_empty())
+        .or_else(|| {
+            value
+                .as_str()
+                .map(str::trim)
+                .filter(|raw| !raw.is_empty())
+        }) {
+        raw.split_once('/')?
+    } else {
+        (id["scope"].as_str()?, id["name"].as_str()?)
+    };
+    let trimmed_scope = scope.trim();
+    let trimmed_name = name.trim();
+    (!trimmed_scope.is_empty() && !trimmed_name.is_empty()).then(|| LaneId {
+        scope: trimmed_scope.to_string(),
+        name: trimmed_name.to_string(),
+        exported: value["exported"].as_bool().unwrap_or(false),
+    })
+}

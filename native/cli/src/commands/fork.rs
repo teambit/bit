@@ -1,0 +1,164 @@
+//! Copy, track, and refactor forked components (`bit fork`, [`COMMAND`], [`execution`], [`options`]) while retaining published extension classes.
+mod execution;
+mod inventory;
+mod options;
+mod policy;
+mod report;
+mod selection;
+use super::{Command, add::ProjectedLinker, color::Chalk, workspace_command};
+use crate::{native::Outcome, workspace};
+use std::{env, ffi::OsString, io};
+/// Descriptor for the `bit fork` ([`run`], [`run_mode`]) CLI [`Command`].
+pub const COMMAND: Command = Command { name: "fork", aliases: &[], run };
+///Entry point for `bit fork`.
+#[inline]
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    run_mode(args, false)
+}
+/// Runs `bit scope fork` using the shared [`run_mode`] implementation.
+#[inline]
+pub(in crate::commands) fn run_scope(args: &[OsString]) -> io::Result<Outcome> {
+    run_mode(args, true)
+}
+/// Shared entry point for `bit fork` (`scope_fork == false`) and `bit scope fork` (`scope_fork == true`) via [`execute`].
+fn run_mode(args: &[OsString], scope_fork: bool) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("fork arguments are not UTF-8".into()));
+    };
+    let offset = if scope_fork { 2 } else { 1 };
+    let Some(options) = argv
+        .get(offset..)
+        .and_then(|rest| options::parse(rest, scope_fork))
+    else {
+        return Ok(Outcome::Declined("outside native fork grammar".into()));
+    };
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return handle_outside_workspace(&cwd, args, &options, scope_fork);
+    };
+    let state = match inventory::read(&root) {
+        Ok(state) => state,
+        Err(error) => return Ok(Outcome::Declined(format!("fork: {error}"))),
+    };
+    if let Some(reason) = unsupported(&root, &options, &state) {
+        return Ok(Outcome::Declined(reason));
+    }
+    execute(args, &root, &options, &state)
+}
+/// Emits the outside-workspace error or declines under CI when `bit fork` is run outside a workspace.
+fn handle_outside_workspace(
+    cwd: &std::path::Path,
+    args: &[OsString],
+    options: &options::Options,
+    scope_fork: bool,
+) -> io::Result<Outcome> {
+    if env::var_os("CI")
+        .is_some_and(|val| {
+            let trimmed = val.as_encoded_bytes().trim_ascii();
+            !trimmed.is_empty() && trimmed != b"0" && !trimmed.eq_ignore_ascii_case(b"false")
+        })
+    {
+        return Ok(Outcome::Declined("fork requires a workspace".into()));
+    }
+    let msg = if !scope_fork && options.multiple() && options.target.is_some() {
+        "target-component-name is not allowed when using patterns"
+    } else {
+        super::log::OUTSIDE_WORKSPACE_ERR
+    };
+    let err = io::Error::other(msg);
+    if scope_fork {
+        workspace_command::execute_without_loader_scope(cwd, args, "fork", move |_| Err(err))
+    } else {
+        workspace_command::execute_failure_scope(cwd, args, "fork", false, "", err)
+    }
+}
+/// Prepares the [`ProjectedLinker`] and runs `bit fork` or `bit scope fork` inside `root` via [`execution::run`].
+fn execute(
+    args: &[OsString],
+    root: &std::path::Path,
+    options: &options::Options,
+    state: &serde_json::Value,
+) -> io::Result<Outcome> {
+    let invalid_pattern_target =
+        !options.scope_fork && options.multiple() && options.target.is_some();
+    let install = !options.flags.skip_install
+        && !invalid_pattern_target
+        && (options.multiple() || inventory::selected(state, &options.source).is_none());
+    let mut linker = if install {
+        ProjectedLinker::prepare_with_installation(root, args)?
+    } else {
+        ProjectedLinker::prepare(root)?
+    };
+    print!("{}", linker.take_stdout());
+    let chalk = Chalk::detect(args);
+    let work = |output: &bit_install::output::Output| {
+        execution::run(root, options, &mut linker, chalk, output)
+    };
+    if options.scope_fork {
+        workspace_command::execute_without_loader(root, args, "fork", work)
+    } else {
+        workspace_command::execute_then(root, args, "fork", work)
+    }
+}
+#[inline]
+fn unsupported(
+    root: &std::path::Path,
+    options: &options::Options,
+    state: &serde_json::Value,
+) -> Option<String> {
+    let trimmed = options.source.trim();
+    if let Some((bare, version)) = trimmed.rsplit_once('@')
+        && !bare.trim().is_empty()
+        && !version.trim().is_empty()
+        && inventory::selected(state, trimmed).is_none()
+        && inventory::selected(state, bare.trim()).is_some()
+    {
+        return Some("forking a requested historical workspace version".into());
+    }
+    if let Err(error) = preflight(root, options, state)
+        && error.kind() != io::ErrorKind::InvalidInput
+    {
+        return Some(format!("fork: {error}"));
+    }
+    None
+}
+fn preflight(
+    root: &std::path::Path,
+    options: &options::Options,
+    state: &serde_json::Value,
+) -> io::Result<()> {
+    if options.multiple() {
+        return Ok(());
+    }
+    let Some(source) = inventory::selected(state, &options.source) else {
+        return Ok(());
+    };
+    let source_id = source["identity"]
+        .as_str()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+        .or_else(|| {
+            source["id"]
+                .as_str()
+                .map(str::trim)
+                .filter(|id| !id.is_empty())
+        })
+        .ok_or_else(|| io::Error::other("fork source identity"))?;
+    let clean = |opt: Option<&str>| {
+        opt.map(str::trim)
+            .filter(|val| !val.is_empty())
+            .map(str::to_owned)
+    };
+    let kernel = bit_object_import::component_fork::Options {
+        source: source_id.into(),
+        target: clean(options.target.as_deref()),
+        scope: clean(options.scope.as_deref()),
+        path: clean(options.path.as_deref()),
+        remote: false,
+        preserve: options.flags.preserve,
+        ast: options.flags.ast,
+        no_link: options.flags.no_link,
+    };
+    bit_object_import::component_fork::Plan::prepare(root, &kernel, source)?;
+    Ok(())
+}

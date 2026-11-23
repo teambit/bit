@@ -1,0 +1,57 @@
+//! End-to-end command parity test modules (`e2e/commands/`) for native `bit` CLI commands.
+//!
+//! Organizes [`add`], [`diff_completion`], [`move_paths`], and individual command parity test suites.
+
+/// End-to-end parity tests for `bit add` component tracking, main-file resolution, and `.bitmap` history.
+pub(crate) mod add;
+/// End-to-end completion and fallback tests for `bit diff`.
+///
+/// Covers workspace diffing, version-to-version diffing, and traced delegation fallbacks in [`diff_completion`].
+pub(crate) mod diff_completion;
+/// End-to-end parity tests for path-moving commands (`move`, `rename`, `fork`, `remove`, `recover`).
+///
+/// Covers workspace `.bitmap` rewrites, directory moves, and scope history invariants in [`move_paths`].
+pub(crate) mod move_paths;
+
+mod app;
+mod capsule;
+mod cat;
+mod cli_generate;
+mod compile;
+mod config;
+mod delete;
+mod diff;
+mod export;
+mod format;
+#[cfg(unix)]
+mod gc;
+mod import;
+mod import_all;
+mod init;
+mod lane;
+mod lint;
+mod list;
+mod pattern;
+mod recover;
+mod remote;
+mod remove;
+mod reset;
+mod resume_export;
+mod run_action;
+mod run_cmd;
+mod scope_fixture;
+mod search;
+mod show;
+mod snap;
+mod system_git_scope;
+mod tag;
+
+mod tester;
+mod tester_junit;
+mod tester_modes;
+mod tester_multi;
+mod tester_multi_detail;
+mod tester_multi_files;
+mod tester_multi_junit;
+mod tester_text_stream;
+mod tester_text_summary;

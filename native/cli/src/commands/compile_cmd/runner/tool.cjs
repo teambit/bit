@@ -1,0 +1,23 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { createRequire } = require('node:module');
+const tool = createRequire(process.argv[1]);
+const ts = tool('typescript');
+const request = JSON.parse(fs.readFileSync(0, 'utf8'));
+request.config.compilerOptions.module = 'commonjs';
+const converted = ts.convertCompilerOptionsFromJson(request.config.compilerOptions, '.');
+if (converted.errors.length) throw new Error('compiler configuration rejected');
+const host = { getCanonicalFileName: p => p, getCurrentDirectory: ts.sys.getCurrentDirectory, getNewLine: () => ts.sys.newLine };
+const results = request.files.map(file => {
+  const supported = /\.(?:[mc]?tsx?|jsx?)$/.test(file.filePath) && !file.filePath.endsWith('.d.ts');
+  if (!supported) return { copied: true, files: [{ outputPath: file.filePath, outputText: file.source }], error: null };
+  const options = { ...converted.options, sourceRoot: file.directory, rootDir: '.' };
+  const result = ts.transpileModule(file.source, { compilerOptions: options, fileName: file.filePath, reportDiagnostics: true, transformers: {} });
+  if (result.diagnostics?.length) return { files: [], error: ts.formatDiagnosticsWithColorAndContext(result.diagnostics, host) };
+  const extension = path.extname(file.filePath);
+  const outputPath = file.filePath.slice(0, -extension.length) + extension.replace(/([tj]sx?)$/, 'js');
+  const files = [{ outputPath, outputText: result.outputText }];
+  if (result.sourceMapText) files.push({ outputPath: outputPath + '.map', outputText: result.sourceMapText });
+  return { files, error: null };
+});
+process.stdout.write(JSON.stringify(results));

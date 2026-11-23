@@ -1,0 +1,125 @@
+//! `getPlusRangeVersionsUsage` ([`usages`]): collect gated `+^` and `+~` range placeholders in snapshot inputs.
+use serde_json::Value;
+
+/// Collects deduplicated `+^` and `+~` range placeholder usage descriptions in consumer order across component dependencies, dependency resolver policy, and environment extensions.
+/// Dependency rows retain consumer order; repeated descriptions appear only once.
+#[must_use]
+pub fn usages(
+    dependencies: &[Value],
+    extensions: &[Value],
+    environment: Option<&Value>,
+) -> Vec<String> {
+    let mut usages = dependencies
+        .iter()
+        .filter_map(dependency_usage)
+        .collect::<Vec<_>>();
+    resolver_usages(&mut usages, extensions);
+    if let Some(policy) = environment.and_then(|value| value["policy"].as_object()) {
+        for (field, entries) in policy {
+            environment_usages(&mut usages, field, entries);
+        }
+    }
+    let mut unique = Vec::with_capacity(usages.len());
+    for usage in usages {
+        if !unique.contains(&usage) {
+            unique.push(usage);
+        }
+    }
+    unique
+}
+/// Formats a `<name>: "<range>"` usage entry when `dependency` [`Value`] carries a `+^` or `+~` range.
+fn dependency_usage(dependency: &Value) -> Option<String> {
+    if !is_range(&dependency["versionRange"]) {
+        return None;
+    }
+    let range = text(&dependency["versionRange"]);
+    if let Some(name) = dependency["packageName"]
+        .as_str()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+    {
+        return Some(format!(r#"{name}: "{range}""#));
+    }
+    if let Some(id) = dependency["id"].as_str().or_else(|| dependency.as_str()) {
+        let trimmed = id.trim();
+        let identity = trimmed
+            .rsplit_once('@')
+            .filter(|(base, _)| !base.trim().is_empty())
+            .map_or(trimmed, |(base, _)| base.trim());
+        Some(format!(r#"{identity}: "{range}""#))
+    } else {
+        let target = dependency
+            .get("id")
+            .filter(|sub| sub.is_object())
+            .unwrap_or(dependency);
+        Some(format!(r#"{}/{}: "{range}""#, text(&target["scope"]), text(&target["name"])))
+    }
+}
+/// Appends `+^` and `+~` policy version usages from the `teambit.dependencies/dependency-resolver` extension in `extensions` ([`Value`]).
+fn resolver_usages(usages: &mut Vec<String>, extensions: &[Value]) {
+    let Some(resolver) = extensions
+        .iter()
+        .find(|extension| {
+            crate::workspace::engine::client_status::config::is_extension_aspect(
+                extension,
+                "teambit.dependencies/dependency-resolver",
+            )
+        })
+    else {
+        return;
+    };
+    for entry in resolver["data"]["policy"]
+        .as_array()
+        .into_iter()
+        .flatten()
+    {
+        if is_range(&entry["value"]["version"]) {
+            usages.push(format!(
+                r#"{}: "{}""#,
+                text(&entry["dependencyId"]),
+                text(&entry["value"]["version"]),
+            ));
+        }
+    }
+}
+/// Appends `+^` and `+~` version/range usages from an environment `policy` `field` (`entries`).
+fn environment_usages(usages: &mut Vec<String>, field: &str, entries: &Value) {
+    if let Some(entries) = entries.as_array() {
+        for entry in entries {
+            for key in ["version", "supportedRange"] {
+                env_usage(usages, field, text(&entry["name"]), &entry[key]);
+            }
+        }
+        return;
+    }
+    for (name, value) in entries
+        .as_object()
+        .into_iter()
+        .flatten()
+    {
+        env_usage(
+            usages,
+            field,
+            name.trim(),
+            if value.is_string() { value } else { &value["version"] },
+        );
+    }
+}
+#[inline]
+fn env_usage(usages: &mut Vec<String>, field: &str, name: &str, value: &Value) {
+    if is_range(value) {
+        usages.push(format!(r#"env.jsonc policy.{field} {name}: "{}""#, text(value)));
+    }
+}
+#[inline]
+fn is_range(value: &Value) -> bool {
+    matches!(value.as_str().map(str::trim), Some("+^" | "+~"))
+}
+#[inline]
+fn text(value: &Value) -> &str {
+    value
+        .as_str()
+        .map(str::trim)
+        .filter(|val| !val.is_empty())
+        .unwrap_or("undefined")
+}

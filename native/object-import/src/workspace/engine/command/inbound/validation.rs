@@ -1,0 +1,223 @@
+//! Validate the bounded inbound command protocol ([`validate`], [`local`], [`Prepare`]) before remote reads or writes.
+
+use super::{Prepare, invalid};
+use serde_json::Value;
+use std::io;
+
+/// Validates [`Prepare`] for a full inbound import including workspace publication eligibility ([`validate_phase`]).
+#[inline]
+pub(super) fn validate(input: &Prepare) -> io::Result<()> {
+    validate_phase(input, true)
+}
+/// Validates [`Prepare`] for local-only operations via [`validate_phase`] without requiring workspace file publication mode.
+#[inline]
+pub(super) fn local(input: &Prepare) -> io::Result<()> {
+    validate_phase(input, false)
+}
+/// Validates path, operation, override ([`validate_override`]), merge ([`validate_merge`]), dependency ([`validate_dependencies`]), lane ([`validate_lane_ids`]), and adoption invariants on `input` ([`Prepare`]).
+fn validate_phase(input: &Prepare, publication: bool) -> io::Result<()> {
+    for path in
+        [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]
+    {
+        super::super::super::path(path)?;
+    }
+    if !input.transport.node_executable.is_absolute()
+        || input.transport.bit_version.trim().is_empty()
+        || input.ids.len() > 4096
+    {
+        return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    if input.options.from_original_scope
+        || !valid_operation(input)
+        || (!input.options.objects_only && has_local_unscoped_conflict(input)?)
+    {
+        return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    validate_override(input)?;
+    validate_merge(input)?;
+    validate_dependencies(input)?;
+    validate_lane_ids(input)?;
+    validate_adoption(input)?;
+    if (publication && !valid_write_mode(input))
+        || std::fs::symlink_metadata(input.root.join(".bitTmp")).is_ok()
+    {
+        return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    Ok(())
+}
+/// Validates lane ID count constraints for `--lanes` and `laneImport` operations.
+#[inline]
+fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
+    if input.options.lanes && input.ids.len() > 33 {
+        return Err(invalid("inbound lanes require explicit IDs"));
+    }
+    if input.operation.trim() == "laneImport" && input.ids.len() != 1 {
+        return Err(invalid("lane import requires one lane"));
+    }
+    Ok(())
+}
+fn validate_override(input: &Prepare) -> io::Result<()> {
+    let operation = input.operation.trim();
+    if input.options.resolution.recovery_local
+        && (operation != "import"
+            || input.options.objects_only
+            || !input.options.resolution.override_existing)
+    {
+        return Err(invalid("recovery cache requires explicit overriding workspace import"));
+    }
+    if input.options.resolution.override_existing
+        && (operation != "import" || input.options.objects_only || input.ids.is_empty())
+    {
+        return Err(invalid("inbound override requires explicit workspace import"));
+    }
+    if input.options.resolution.path.is_some()
+        && (operation != "import" || input.options.objects_only || input.ids.len() != 1)
+    {
+        return Err(invalid("inbound path requires one explicit workspace import"));
+    }
+    Ok(())
+}
+fn validate_merge(input: &Prepare) -> io::Result<()> {
+    let Some(strategy) = input.options.resolution.merge_strategy
+        .as_deref()
+        .map(str::trim)
+        .filter(|strategy| !strategy.is_empty())
+    else {
+        return Ok(());
+    };
+    if input.operation.trim() != "import"
+        || input.options.objects_only
+        || input.ids.is_empty()
+        || input.options.resolution.override_existing
+        || !matches!(strategy, "manual" | "ours" | "theirs")
+    {
+        return Err(invalid("inbound merge requires one explicit workspace import"));
+    }
+    Ok(())
+}
+fn validate_dependencies(input: &Prepare) -> io::Result<()> {
+    let options = &input.options.dependencies;
+    if !options.import_dependencies && !options.import_head_dependencies {
+        if options.dependencies_depth.is_some() {
+            return Err(invalid("inbound dependency depth requires dependency import"));
+        }
+        return Ok(());
+    }
+    let invalid_mode = options.import_dependencies == options.import_head_dependencies
+        || input.operation.trim() != "import"
+        || input.options.objects_only
+        || input.options.lanes
+        || input.ids.is_empty();
+    let conflicting_write = input.options.resolution.override_existing
+        || input.options.resolution.merge_strategy.is_some()
+        || input.options.resolution.path.is_some();
+    let invalid_depth = options.dependencies_depth.is_some_and(|depth| depth == 0 || depth > 4096);
+    if invalid_mode || conflicting_write || invalid_depth {
+        return Err(invalid("inbound dependencies require explicit workspace import"));
+    }
+    Ok(())
+}
+fn valid_operation(input: &Prepare) -> bool {
+    match input.operation.trim() {
+        "fetch" => {
+            (input.options.components || input.options.lanes)
+                && input.options.components != input.options.lanes
+                && input.options.objects_only
+        }
+        "import" => !input.options.components,
+        "laneImport" => {
+            input.options.lanes && input.options.objects_only && !input.options.components
+        }
+        "diff" => {
+            input.options.objects_only
+                && !input.options.components
+                && !input.options.lanes
+                && !input.options.all_history
+                && !input.ids.is_empty()
+        }
+        "status" => {
+            input.options.objects_only
+                && !input.options.components
+                && !input.ids.is_empty()
+                && (input.options.all_history != input.options.lanes)
+        }
+        _ => false,
+    }
+}
+/// Objects-only imports write no bitmap history. A write keeps one; the caller
+/// installs dependencies after publication unless they are skipped.
+#[inline]
+fn valid_write_mode(input: &Prepare) -> bool {
+    if input.options.objects_only {
+        !input.options.skip_dependency_installation
+            && input.bitmap_history_file_id.is_none()
+    } else {
+        input.bitmap_history_file_id.is_some()
+    }
+}
+
+fn is_unscoped_match(key: &str, row: &Value, raw_id: &str) -> bool {
+    let key = key.trim();
+    let raw_id = raw_id.trim();
+    if key.starts_with('$')
+        || matches!(key, "_bit_lane" | "version")
+        || !row.is_object()
+        || row["scope"]
+            .as_str()
+            .is_some_and(|scope| !scope.trim().is_empty())
+    {
+        return false;
+    }
+    let (id_scope, name_part) = raw_id
+        .split_once('/')
+        .map_or(("", raw_id), |(scope, name)| (scope.trim(), name.trim()));
+    let row_name = crate::reset_lane::bitmap::row_identity(key, row).1;
+    // An unscoped row whose default scope is the requested scope is the very
+    // component being imported (auto-sync promotes it), not a name clash.
+    let promotes = !id_scope.is_empty()
+        && row["defaultScope"]
+            .as_str()
+            .is_some_and(|default| default.trim().trim_matches('/') == id_scope);
+    key == raw_id || row_name == raw_id || (row_name == name_part && !promotes)
+}
+
+fn has_local_unscoped_conflict(input: &Prepare) -> io::Result<bool> {
+    if input.ids.is_empty() {
+        return Ok(false);
+    }
+    let Ok(bitmap) = super::config::document(&input.root.join(".bitmap")) else {
+        return Ok(false);
+    };
+    let Some(rows) = bitmap.as_object() else {
+        return Ok(false);
+    };
+    for id in &input.ids {
+        let trimmed = id.trim();
+        let raw_id = trimmed.rsplit_once('@').map_or(trimmed, |(base, _)| base.trim());
+        if rows.iter().any(|(key, row)| is_unscoped_match(key, row, raw_id)) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn validate_adoption(input: &Prepare) -> io::Result<()> {
+    let adoption = &input.options.resolution.adoption;
+    let dependents = &input.options.dependencies.dependents;
+    let graph = dependents.enabled || !dependents.via.is_empty();
+    if (adoption.track_only
+        || adoption.write_to_empty_dir
+        || adoption.write_deps.is_some()
+        || graph)
+        && (input.operation.trim() != "import" || input.options.objects_only)
+    {
+        return Err(invalid("inbound adoption requires workspace import"));
+    }
+    if graph && (!dependents.silent || dependents.via.len() > 4096) {
+        return Err(invalid("inbound interactive dependents"));
+    }
+    for id in &dependents.via {
+        super::requested_target(id)?;
+    }
+    Ok(())
+}

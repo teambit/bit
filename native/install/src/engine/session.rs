@@ -1,0 +1,116 @@
+//! What every engine call builds before `Install::new`: the HTTP client, the
+//! lazily loaded wanted lockfile, and a multi-thread runtime
+//! (`run_install_inner` in `@pnpm/napi`).
+//!
+//! Owns the per-invocation `tokio::runtime::Runtime`, [`ThrottledClient`], and [`LazyLockfile`] in [`Session`].
+
+use super::{config_overlay::http_client, hooks::normalize};
+use crate::model::Project;
+use pnpm_config::Config;
+use pnpm_lockfile::{LazyLockfile, MaybeLazyLockfile};
+use pnpm_network::ThrottledClient;
+use pnpm_package_manager::{Install, ResolvedPackages};
+use pnpm_package_manifest::{DependencyGroup, PackageManifest};
+use pnpm_tarball::MemCache;
+use serde_json::{Map, Value};
+use std::{
+    io,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
+
+/// Per-invocation engine session owning the HTTP client, [`LazyLockfile`], and multi-thread runtime.
+pub(super) struct Session {
+    /// Interned static engine configuration for this invocation.
+    config: &'static Config,
+    /// Shared throttled HTTP client for registry requests.
+    client: Arc<ThrottledClient>,
+    /// Deferred or disabled wanted lockfile loader for the workspace root.
+    lockfile: LazyLockfile,
+    /// Absolute path to the workspace wanted lockfile (`pnpm-lock.yaml`).
+    pub lockfile_path: PathBuf,
+    resolved_packages: ResolvedPackages,
+    /// The root importer's manifest.
+    manifest: PackageManifest,
+    pub runtime: tokio::runtime::Runtime,
+}
+
+impl Session {
+    /// A [`Session`] for the workspace at [`Path`] `root`, whose importer is the [`Project`] at `root`.
+    pub(super) fn new(
+        config: &'static Config,
+        root: &Path,
+        projects: &[Project],
+    ) -> io::Result<Self> {
+        let lockfile = if config.lockfile {
+            LazyLockfile::deferred(root.to_path_buf(), config.wanted_lockfile_selection())
+        } else {
+            LazyLockfile::disabled()
+        };
+        let wanted = config.wanted_lockfile_name().trim();
+        let lockfile_name =
+            if wanted.is_empty() { pnpm_lockfile::Lockfile::FILE_NAME } else { wanted };
+        Ok(Session {
+            config,
+            client: http_client(config)?,
+            lockfile,
+            lockfile_path: root.join(lockfile_name),
+            resolved_packages: ResolvedPackages::new(),
+            manifest: root_manifest(projects, root)?,
+            runtime: tokio::runtime::Builder::new_multi_thread().enable_all().build()?,
+        })
+    }
+
+    /// Construct [`Install::new`] over this session with the given [`DependencyGroup`] slices.
+    #[inline]
+    pub(super) fn install(
+        &self,
+        groups: Vec<DependencyGroup>,
+    ) -> Install<'_, Vec<DependencyGroup>> {
+        Install::new(
+            Arc::new(MemCache::new()),
+            &self.resolved_packages,
+            (&self.client, Arc::clone(&self.client)),
+            self.config,
+            &self.manifest,
+            MaybeLazyLockfile::Lazy(&self.lockfile),
+            groups,
+        )
+    }
+}
+
+/// The [`PackageManifest`] of the [`Project`] at [`Path`] `root` for [`Session::new`].
+#[inline]
+fn root_manifest(projects: &[Project], root: &Path) -> io::Result<PackageManifest> {
+    if projects.is_empty() {
+        return Err(io::Error::other(format!(
+            "the install plan has no projects for {}",
+            root.display(),
+        )));
+    }
+    let normalized_root = normalize(root);
+    let project = projects
+        .iter()
+        .find(|project| project.dir == root || normalize(&project.dir) == normalized_root)
+        .ok_or_else(|| {
+            io::Error::other(format!("the install plan has no project for {}", root.display()))
+        })?;
+    Ok(PackageManifest::from_value(
+        normalized_root.join("package.json"),
+        Value::Object(project.manifest.clone()),
+    ))
+}
+
+/// An engine importer of a project with its (transformed) manifest.
+#[inline]
+pub(super) fn engine_project(dir: &Path, manifest: Map<String, Value>) -> pnpm_workspace::Project {
+    let normalized_dir = normalize(dir);
+    pnpm_workspace::Project {
+        manifest: PackageManifest::from_value(
+            normalized_dir.join("package.json"),
+            Value::Object(manifest),
+        ),
+        root_dir: normalized_dir,
+        dependency_manifest: None,
+    }
+}
