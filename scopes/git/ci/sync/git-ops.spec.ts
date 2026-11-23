@@ -2,16 +2,21 @@ import { expect } from 'chai';
 import type { GitConfigIO } from './git-ops';
 import {
   ALL_HEADS_REFSPEC,
+  BIT_CI_GIT_USER_EMAIL,
+  BIT_CI_GIT_USER_NAME,
   SYNC_EXCLUDED_PATHS,
   addAllExceptScopeAndModules,
   assertCheckoutableBranch,
   checkoutPristine,
   checkoutPristineRestore,
   commitWithIdentity,
+  defaultMergeGitIdentity,
   deleteBranchArgs,
   localBranchExists,
   DEFAULT_GIT_USER_EMAIL,
   DEFAULT_GIT_USER_NAME,
+  GITHUB_ACTIONS_GIT_USER_EMAIL,
+  GITHUB_ACTIONS_GIT_USER_NAME,
   fetchRemoteHeads,
   isNonContentPath,
   isNonFastForwardRejection,
@@ -103,6 +108,39 @@ describe('resolveGitIdentity', () => {
   it('defaults to the identity the scaffolded workflows and the action both document', () => {
     expect(DEFAULT_GIT_USER_NAME).to.equal('bit-sync[bot]');
     expect(DEFAULT_GIT_USER_EMAIL).to.equal('bit-sync[bot]@users.noreply.github.com');
+  });
+
+  it('uses a custom fallback when neither git config nor env vars are set', async () => {
+    const fallback = { name: GITHUB_ACTIONS_GIT_USER_NAME, email: GITHUB_ACTIONS_GIT_USER_EMAIL };
+    expect(await resolveGitIdentity(fakeConfig(), {}, fallback)).to.deep.equal(fallback);
+    expect(await resolveGitIdentity(fakeConfig(DEV), {}, fallback)).to.deep.equal({
+      name: 'A Developer',
+      email: 'dev@example.com',
+    });
+    expect(await resolveGitIdentity(fakeConfig(), BOT_ENV, fallback)).to.deep.equal({
+      name: 'Release Bot',
+      email: 'release@acme.example',
+    });
+  });
+});
+
+describe('defaultMergeGitIdentity', () => {
+  it('uses github-actions[bot] when running in GitHub Actions', () => {
+    expect(defaultMergeGitIdentity({ GITHUB_ACTIONS: 'true' })).to.deep.equal({
+      name: 'github-actions[bot]',
+      email: '41898282+github-actions[bot]@users.noreply.github.com',
+    });
+  });
+
+  it('falls back to Bit CI outside GitHub Actions', () => {
+    expect(defaultMergeGitIdentity({})).to.deep.equal({
+      name: BIT_CI_GIT_USER_NAME,
+      email: BIT_CI_GIT_USER_EMAIL,
+    });
+    expect(defaultMergeGitIdentity({ GITHUB_ACTIONS: 'false' })).to.deep.equal({
+      name: 'Bit CI',
+      email: 'bit-ci[bot]@bit.cloud',
+    });
   });
 });
 

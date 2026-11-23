@@ -52,7 +52,7 @@ import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider, gitHubApiUrl } from './sync/github-client';
-import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
+import * as gitOps from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
 import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
 
@@ -338,7 +338,7 @@ export class CiMain {
   async detectDefaultBranchName(): Promise<string | undefined> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const local = parseOriginHeadRef(result);
+      const local = gitOps.parseOriginHeadRef(result);
       // Every candidate is validated before it is returned: this value becomes a checkout target and a
       // push refspec, and an option-like name ("-x") would be read by git as a flag. An unusable answer
       // falls through to the next source rather than reaching the argv.
@@ -346,7 +346,7 @@ export class CiMain {
     } catch {
       // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
     }
-    const remote = await remoteHeadBranch();
+    const remote = await gitOps.remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
     // Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
     try {
@@ -1802,8 +1802,7 @@ export class CiMain {
     defaultBranch: string;
   }) {
     this.logger.console('🔄 Git Operations');
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
+    const fallbackIdentity = gitOps.defaultMergeGitIdentity();
 
     const statusBeforeCommit = await git.status();
     this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
@@ -1829,9 +1828,9 @@ export class CiMain {
     // of the commit in a workspace whose `.gitignore` lacks Bit's block — otherwise this stages the
     // object store into the default branch. Same helper the sync executors use, so all three commit
     // paths agree on what counts as workspace content.
-    await addAllExceptScopeAndModules();
+    await gitOps.addAllExceptScopeAndModules();
     const commitMessage = await this.getCustomCommitMessage();
-    await git.commit(commitMessage);
+    await gitOps.commitWithIdentity(commitMessage, { fallback: fallbackIdentity });
 
     const statusAfterCommit = await git.status();
     this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
@@ -1839,7 +1838,7 @@ export class CiMain {
       this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
     });
 
-    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+    await gitOps.gitWithIdentity(['pull', '--rebase', 'origin', defaultBranch], { fallback: fallbackIdentity });
     if (skipPush) {
       this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
       return;
