@@ -379,6 +379,8 @@ export class DependencyInstaller {
       globalVirtualStoreDir: this.installingContext?.inCapsule
         ? undefined
         : await this.dependencyResolver.getGlobalVirtualStoreDir(finalRootDir),
+      // Capsule lockfiles are an internal cache, so they stay on the default format.
+      lockfileFormat: this.installingContext?.inCapsule ? undefined : this.dependencyResolver.config.lockfileFormat,
       patchedDependencies: this.resolvePatchPaths(finalRootDir, options.packageManagerConfigRootDir),
       packageExtensions: this.withBuiltInPackageExtensions(
         this.packageExtensions,
@@ -407,6 +409,7 @@ export class DependencyInstaller {
       // (see the comment above on TypeScript's declaration emit)
       calculatedPmOpts.enableGlobalVirtualStore = false;
       calculatedPmOpts.globalVirtualStoreDir = undefined;
+      calculatedPmOpts.lockfileFormat = undefined;
     }
     if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
