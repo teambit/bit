@@ -10,6 +10,8 @@ export { PeerDependencyIssuesByProjects };
 
 export type PackageImportMethod = 'auto' | 'hardlink' | 'copy' | 'clone';
 
+export type LockfileFormat = 'v9' | 'v13';
+
 /**
  * Dependency groups grafted onto a package that under-declares them - pnpm's `packageExtensions`
  * entry shape.
@@ -59,6 +61,12 @@ export type PackageManagerInstallOptions = {
    * never use it - the installer forces the project-local layout there.
    */
   enableGlobalVirtualStore?: boolean;
+
+  /**
+   * The format the wanted lockfile is written in. `v13` is pnpm's experimental
+   * `lockfileVersion: '13.0'` format. Capsule installs always use the default.
+   */
+  lockfileFormat?: LockfileFormat;
 
   /**
    * Where the global virtual store materializes those directories. pnpm's own shared
