@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.1341",
+        "version": "1.0.1342",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -208,7 +208,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.3.35",
+        "version": "2.3.36",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -257,14 +257,14 @@
     "checkout": {
         "name": "checkout",
         "scope": "teambit.component",
-        "version": "1.0.1305",
+        "version": "1.0.1306",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/checkout"
     },
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "1.0.711",
+        "version": "1.0.712",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -313,7 +313,7 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.1606",
+        "version": "0.0.1607",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud"
     },
@@ -488,7 +488,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1418",
+        "version": "2.0.1419",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -915,7 +915,7 @@
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.1327",
+        "version": "1.0.1328",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
@@ -964,14 +964,14 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.1328",
+        "version": "1.0.1329",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
     "merging": {
         "name": "merging",
         "scope": "teambit.component",
-        "version": "1.0.1308",
+        "version": "1.0.1309",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/merging"
     },
@@ -1412,7 +1412,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.1350",
+        "version": "1.0.1351",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
@@ -1510,7 +1510,7 @@
     "ripple": {
         "name": "ripple",
         "scope": "teambit.cloud",
-        "version": "0.0.395",
+        "version": "0.0.396",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ripple"
     },
@@ -1566,14 +1566,14 @@
     "stash": {
         "name": "stash",
         "scope": "teambit.component",
-        "version": "1.0.1305",
+        "version": "1.0.1306",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/stash"
     },
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.1332",
+        "version": "1.0.1333",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },
