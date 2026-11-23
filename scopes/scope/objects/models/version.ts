@@ -52,6 +52,19 @@ function countCachedFlattenedId() {
   cachedFlattenedIds += 1;
 }
 
+/**
+ * true when the JSON content is an empty array, by reading its first bytes only.
+ */
+function isEmptyJsonArray(contents: Buffer): boolean {
+  const isWhitespace = (byte: number) => byte === 0x20 || byte === 0x0a || byte === 0x0d || byte === 0x09;
+  let i = 0;
+  while (i < contents.length && isWhitespace(contents[i])) i += 1;
+  if (contents[i] !== 0x5b) return JSON.parse(contents.toString()).length === 0; // not "[": let JSON decide
+  i += 1;
+  while (i < contents.length && isWhitespace(contents[i])) i += 1;
+  return contents[i] === 0x5d; // "]"
+}
+
 function getFlattenedId(dep: string | Record<string, any>): ComponentID {
   if (typeof dep === 'string') {
     let id = flattenedIdStrsCache.get(dep);
@@ -293,6 +306,18 @@ export default class Version extends BitObject {
     }
 
     return this._flattenedEdges;
+  }
+
+  /**
+   * whether `getFlattenedEdges()` returns a non-empty list, without parsing the edges (a large JSON per version).
+   */
+  async hasFlattenedEdges(repo: Repository): Promise<boolean> {
+    if (this._flattenedEdges) return this._flattenedEdges.length > 0;
+    if (this.flattenedEdgesRef) {
+      const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, false)) as Source | undefined;
+      if (flattenedEdgesSource) return !isEmptyJsonArray(flattenedEdgesSource.contents);
+    }
+    return Boolean(this.flattenedEdges?.length);
   }
 
   async loadDependenciesGraph(repo: Repository): Promise<DependenciesGraph | undefined> {

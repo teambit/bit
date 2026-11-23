@@ -5,7 +5,7 @@ import versionFixture from '../fixtures/version-model-object.json';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import Version from './version';
 import type { ObjectsLoader } from './version';
-import type Source from './source';
+import Source from './source';
 import type { Ref } from '../objects';
 import { clone } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -229,6 +229,47 @@ describe('Version', () => {
       });
     });
   });
+  describe('hasFlattenedEdges()', () => {
+    const edge = {
+      source: ComponentID.fromString('my-scope/is-string@0.0.1'),
+      target: ComponentID.fromString('my-scope/is-type@0.0.1'),
+      type: 'prod' as const,
+    };
+    const loaderOf = (objects: Source[]) =>
+      ({ load: async (ref: Ref) => objects.find((obj) => obj.hash().isEqual(ref)) }) as any;
+    const versionWithRef = (source: Source) => {
+      const version = getVersionWithDepsFixture();
+      version.flattenedEdgesRef = source.hash();
+      return version;
+    };
+    it('should be true when the Source holds edges, and false when it holds an empty list', async () => {
+      const withEdges = Version.flattenedEdgeToSource([edge]) as Source;
+      const empty = Version.flattenedEdgeToSource([]) as Source;
+      expect(await versionWithRef(withEdges).hasFlattenedEdges(loaderOf([withEdges]))).to.equal(true);
+      expect(await versionWithRef(empty).hasFlattenedEdges(loaderOf([empty]))).to.equal(false);
+    });
+    it('should give the same answer as getFlattenedEdges() for whitespace around an empty list', async () => {
+      const spaced = Source.from(Buffer.from(' [ \n ] '));
+      const version = versionWithRef(spaced);
+      expect(await version.hasFlattenedEdges(loaderOf([spaced]))).to.equal(false);
+      expect(await version.getFlattenedEdges(loaderOf([spaced]))).to.deep.equal([]);
+    });
+    it('should fall back to the edges saved in the Version when the Source is missing', async () => {
+      const missing = Version.flattenedEdgeToSource([edge]) as Source;
+      const version = versionWithRef(missing);
+      expect(await version.hasFlattenedEdges(loaderOf([]))).to.equal(false);
+      // set as Version.parse() does for the format that saved the edges in the Version itself
+      (version as any).flattenedEdges = [edge];
+      expect(await version.hasFlattenedEdges(loaderOf([]))).to.equal(true);
+    });
+    it('should answer from the loaded edges once getFlattenedEdges() ran', async () => {
+      const withEdges = Version.flattenedEdgeToSource([edge]) as Source;
+      const version = versionWithRef(withEdges);
+      expect((await version.getFlattenedEdges(loaderOf([withEdges]))).length).to.equal(1);
+      expect(await version.hasFlattenedEdges(loaderOf([]))).to.equal(true);
+    });
+  });
+
   describe('validate()', () => {
     let version;
     let validateFunc;
