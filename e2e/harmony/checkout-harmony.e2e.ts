@@ -459,6 +459,34 @@ describe('bit checkout command', function () {
       expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
     });
   });
+  describe('sync new components when another new component was exported to a lane (no head on main)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";');
+      const scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
+      helper.command.createLane('dev');
+      helper.command.snapComponentWithoutBuild('comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('main');
+      helper.command.tagWithoutBuild('comp2');
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
+
+      // intermediate step, make sure they're both new.
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(2);
+    });
+    it('bit checkout head should still sync the component exported to main', () => {
+      helper.command.checkoutHead();
+      const status = helper.command.statusJson();
+      expect(status.newComponents).to.have.lengthOf(1);
+
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp2.scope).to.equal(helper.scopes.remote);
+      expect(bitMap.comp2.version).to.equal('0.0.1');
+    });
+  });
   describe('checkout latest vs head', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();

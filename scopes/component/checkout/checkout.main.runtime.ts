@@ -398,6 +398,7 @@ export class CheckoutMain {
         cache: false,
         reason: 'for making sure the new components are really new and are not out-of-sync',
         includeUnexported: true,
+        ignoreMissingHead: true,
       });
     } catch (err) {
       // don't stop the process. it's possible that the scope doesn't exist yet because these are new components
