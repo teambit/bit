@@ -4,6 +4,7 @@ import type { ChildProcess } from 'child_process';
 import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
+import * as yaml from 'yaml';
 
 import type { Helper } from './e2e-helper';
 
@@ -69,6 +70,7 @@ export class NpmCiRegistry {
       prepare({
         uplinkedRegistry: 'https://node-registry.bit.cloud/',
       });
+      this._stopForwardingClientAddress();
       this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
       this.registryServer.stdout!.on('data', async (data) => {
@@ -107,6 +109,36 @@ export class NpmCiRegistry {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
       });
     });
+  }
+
+  /**
+   * Verdaccio sends the address of the client it proxies for in an `X-Forwarded-For` header on
+   * every request to the uplink. The client is the test itself, so that address is a loopback one
+   * (`::1`/`127.0.0.1`), and the uplink registry rejects such requests with a 400. Verdaccio then
+   * reports every package it doesn't hold locally as missing, and the registry fails to start.
+   * Headers set on the uplink in the config override the ones Verdaccio adds, so send an empty one.
+   *
+   * registry-mock exposes no API for uplink headers, so this edits the config file `prepare()` wrote,
+   * whose location comes from an internal module. Verified against the exact @pnpm/registry-mock
+   * version pinned in workspace.jsonc. The module is loaded here rather than at the top of the file
+   * so that, if an upgrade moves it, only the registry tests fail, and with a clear message.
+   */
+  _stopForwardingClientAddress() {
+    let configPath: string;
+    let config: { uplinks?: Record<string, Record<string, unknown>> };
+    try {
+      configPath = require('@pnpm/registry-mock/dist/lib/locations').configPath();
+      config = yaml.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch (err: any) {
+      throw new Error(`failed to read the Verdaccio config written by @pnpm/registry-mock: ${err.message}`);
+    }
+    if (!config?.uplinks || !Object.keys(config.uplinks).length) {
+      throw new Error(`the Verdaccio config at ${configPath} has no uplinks to configure`);
+    }
+    for (const uplink of Object.values(config.uplinks)) {
+      uplink.headers = { ...(uplink.headers as Record<string, string>), 'x-forwarded-for': '' };
+    }
+    fs.writeFileSync(configPath, yaml.stringify(config));
   }
 
   async _addDefaultUser() {
