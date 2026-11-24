@@ -1,5 +1,9 @@
 export function getPackageNameFromTarget(targetPath: string): string {
-  const subPath = targetPath.substring(targetPath.lastIndexOf('node_modules'));
-  const packagePath = subPath.split('/').slice(0, 3).join('/');
+  const normalized = targetPath.replace(/\\/g, '/');
+  const nodeModulesIndex = normalized.lastIndexOf('node_modules');
+  if (nodeModulesIndex === -1) return targetPath;
+  const segments = normalized.substring(nodeModulesIndex).split('/');
+  const isScoped = segments[1]?.startsWith('@');
+  const packagePath = segments.slice(0, isScoped ? 3 : 2).join('/');
   return `./${packagePath}`;
 }

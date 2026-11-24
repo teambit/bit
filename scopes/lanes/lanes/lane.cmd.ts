@@ -252,6 +252,7 @@ export class LaneCreateCmd implements Command {
   ];
   description = `creates a new lane and switches to it`;
   extendedDescription = `a lane created from main (default-lane) is empty until components are snapped.
+if main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state.
 a lane created from another lane contains all the components of the original lane.`;
   alias = '';
   options = [
@@ -290,8 +291,13 @@ a lane created from another lane contains all the components of the original lan
       `successfully created and checked out to lane ${chalk.bold(result.alias || result.laneId.name)}`
     );
     const note = currentLane ? formatHint(`note - your new lane will be based on lane ${currentLane.name}`) : '';
+    const movedFromMain = formatSection(
+      'moved from main',
+      'these components had snaps on main that were not exported. the snaps were moved to the new lane',
+      (result.movedFromMain || []).map((id) => formatItem(id.toString()))
+    );
     const scopeInfo = formatHint(`this lane will be exported to ${remoteScopeOrDefaultScope}`);
-    return joinSections([summary, note, scopeInfo]);
+    return joinSections([summary, note, movedFromMain, scopeInfo]);
   }
 }
 

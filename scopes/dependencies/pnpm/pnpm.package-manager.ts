@@ -13,7 +13,7 @@ import type {
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import type { Logger } from '@teambit/logger';
-import { type LockfileFile } from '@pnpm/lockfile.types';
+import { type LockfileFile, type LockfileFileProjectSnapshot } from '@pnpm/lockfile.types';
 import { memoize, omit } from 'lodash';
 import type * as NodeApi from '@pnpm/napi';
 import type { DependentNode, DependentsTree, PeerDependencyIssuesByProjects, ResolvedConfig } from '@pnpm/napi';
@@ -23,7 +23,12 @@ import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
 import {
   convertLockfileToGraph,
+  markOptionalOnlyEntries,
+  refToDepPath,
   convertGraphToLockfile,
+  createFileVersionReplacer,
+  createLockfileToGraphCache,
+  filterLockfileByImporters,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
@@ -56,7 +61,7 @@ interface ModulesManifest {
 }
 
 /** One importer entry of a lockfile, in the file's own shape. */
-type LockfileFileImporter = Record<string, Record<string, { specifier?: string; version?: string }> | undefined>;
+type LockfileFileImporter = LockfileFileProjectSnapshot;
 
 /**
  * Required lazily so the native engine binary is not mapped into every
@@ -100,6 +105,8 @@ export class PnpmPackageManager implements PackageManager {
       registries?: Registries;
       proxyConfig?: PackageManagerProxyConfig;
       networkConfig?: PackageManagerNetworkConfig;
+      /** The install's `excludeLinksFromLockfile`, recorded in the restored lockfile's settings. */
+      excludeLinksFromLockfile?: boolean;
     }
   ) {
     await initLockfileDepsGraphConverter();
@@ -113,6 +120,9 @@ export class PnpmPackageManager implements PackageManager {
     const graphLockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
+      onComponentPkgDropped: (pkgId, reason) => {
+        this.logger.debug(`the lockfile restored from the dependencies graph leaves out ${pkgId}: ${reason}`);
+      },
     });
     const nodeApi = loadNodeApi();
     // Merge the graph-derived subset into any existing wanted lockfile rather than
@@ -121,6 +131,14 @@ export class PnpmPackageManager implements PackageManager {
     // locked version must be preserved so pnpm doesn't re-resolve it to a newer
     // registry version.
     const existingLockfile = await nodeApi.readLockfile<LockfileFile>({ dir: opts.rootDir });
+    // Whether the lockfile lists `link:` dependencies is the install's choice,
+    // not the resolution's. The graph carries the setting of the workspace it
+    // was saved in, which excludes links, and an install that includes them
+    // (fusepm does) would reject the restored lockfile over that alone. Both
+    // sides take the install's value before the merge compares their settings,
+    // so a difference in it alone does not cost the settings block.
+    applyInstallLinkSetting(graphLockfile, opts.excludeLinksFromLockfile);
+    if (existingLockfile) applyInstallLinkSetting(existingLockfile, opts.excludeLinksFromLockfile);
     const mergedLockfile = existingLockfile
       ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
       : graphLockfile;
@@ -174,6 +192,7 @@ export class PnpmPackageManager implements PackageManager {
           proxyConfig,
           networkConfig,
           cacheDir: config.cacheDir,
+          excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile ?? true,
         });
       } catch (error) {
         this.logger.error((error as Error).message);
@@ -228,6 +247,7 @@ export class PnpmPackageManager implements PackageManager {
           engineStrict: installOptions.engineStrict ?? config.engineStrict,
           excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
           lockfileOnly: installOptions.lockfileOnly,
+          lockfileFormat: installOptions.lockfileFormat,
           minimumReleaseAge: installOptions.minimumReleaseAge,
           minimumReleaseAgeExclude: installOptions.minimumReleaseAgeExclude,
           neverBuiltDependencies: installOptions.neverBuiltDependencies,
@@ -499,6 +519,8 @@ export class PnpmPackageManager implements PackageManager {
       return;
     }
     const originalImporters = originalLockfile.importers as Record<string, LockfileFileImporter>;
+    const replaceFileVersion = createFileVersionReplacer(opts.componentIdByPkgName);
+    const cache = createLockfileToGraphCache();
     for (const { componentRootDir, componentRelativeDir, pkgName, component } of opts.components) {
       const componentImporterId = (componentRelativeDir || '.') as ProjectId;
       let compRootDir: string | undefined;
@@ -510,7 +532,12 @@ export class PnpmPackageManager implements PackageManager {
       if (!originalImporters[componentImporterId]) {
         continue;
       }
-      const hasComponentRootImporter = compRootDir != null && Boolean(originalImporters[compRootDir]);
+      const rootImporterVersion =
+        compRootDir != null && pkgName != null
+          ? originalImporters[compRootDir]?.dependencies?.[pkgName]?.version
+          : undefined;
+      const hasComponentRootImporter =
+        rootImporterVersion != null && Boolean(originalLockfile.snapshots?.[`${pkgName}@${rootImporterVersion}`]);
       const filterByImporterIds = [componentImporterId];
       if (hasComponentRootImporter && compRootDir !== componentImporterId) {
         filterByImporterIds.push(compRootDir as ProjectId);
@@ -522,12 +549,8 @@ export class PnpmPackageManager implements PackageManager {
           clonedImporters[importerId] = structuredClone(originalImporters[importerId]);
         }
       }
-      const lockfile = {
-        ...originalLockfile,
-        importers: { ...originalImporters, ...clonedImporters },
-      };
       for (const importerId of filterByImporterIds) {
-        const importer = lockfile.importers[importerId];
+        const importer = clonedImporters[importerId];
         if (importer == null) continue;
         for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
           if (workspacePkgName === pkgName) continue;
@@ -544,18 +567,25 @@ export class PnpmPackageManager implements PackageManager {
               importer.optionalDependencies?.[workspacePkgName];
             if (ref?.version?.startsWith('file:')) continue;
           }
-          for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'dependenciesMeta']) {
+          for (const depType of [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'dependenciesMeta',
+          ] as const) {
             delete importer[depType]?.[workspacePkgName];
           }
         }
       }
       // Filters the lockfile so that it only includes packages related to the given component.
-      const partialLockfile = nodeApi.filterLockfileByImporters<LockfileFile>(lockfile, filterByImporterIds);
+      const partialLockfile = filterLockfileByImporters(originalLockfile, filterByImporterIds, clonedImporters);
       const graph = convertLockfileToGraph(partialLockfile, {
         ...opts,
         componentRootDir: hasComponentRootImporter ? compRootDir : undefined,
         componentRelativeDir: componentImporterId,
         pkgName,
+        replaceFileVersion,
+        cache,
       });
       component.state._consumer.dependenciesGraph = graph;
     }
@@ -673,6 +703,8 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     };
   }
   pruneUnreachableLockfileEntries(merged);
+  // The merged importers decide which entries only optional edges reach.
+  markOptionalOnlyEntries(merged);
   return merged;
 }
 
@@ -700,6 +732,16 @@ function mergeEntryRecords<T extends object>(
   return merged;
 }
 
+/**
+ * Record the install's `excludeLinksFromLockfile` in a lockfile's settings,
+ * when it records settings at all. See `dependenciesGraphToLockfile`.
+ */
+export function applyInstallLinkSetting(lockfile: LockfileFile, excludeLinksFromLockfile?: boolean): void {
+  if (lockfile.settings && excludeLinksFromLockfile != null) {
+    lockfile.settings.excludeLinksFromLockfile = excludeLinksFromLockfile;
+  }
+}
+
 function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
   const reachablePackages = new Set<string>();
   const reachableSnapshots = new Set<string>();
@@ -717,8 +759,8 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
-          if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
-          stack.push(`${name}@${ref}`);
+          const subDepPath = refToDepPath(ref, name);
+          if (subDepPath != null) stack.push(subDepPath);
         }
       }
     }
@@ -729,8 +771,8 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
         [string, { version?: string } | string]
       >) {
         const version = typeof dep === 'string' ? dep : dep.version;
-        if (!version || version.startsWith('link:') || version.startsWith('file:')) continue;
-        visit(`${name}@${version}`);
+        const depPath = version ? refToDepPath(version, name) : undefined;
+        if (depPath != null) visit(depPath);
       }
     }
   }

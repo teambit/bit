@@ -169,8 +169,8 @@ export default class VersionHistory extends BitObject {
   merge(versionHistory: VersionHistory) {
     const existingHashes = this.getAllHashesAsString();
     const incomingHashes = versionHistory.getAllHashesAsString();
-    const hashesInExistingOnly = difference(existingHashes, incomingHashes);
-    const versionsDataOnExistingOnly = this.versions.filter((v) => hashesInExistingOnly.includes(v.hash.toString()));
+    const hashesInExistingOnly = new Set(difference(existingHashes, incomingHashes));
+    const versionsDataOnExistingOnly = this.versions.filter((v) => hashesInExistingOnly.has(v.hash.toString()));
     const newVersions = [...versionHistory.versions, ...versionsDataOnExistingOnly];
     this.versionsObj = this.versionParentsToObject(newVersions);
   }

@@ -88,6 +88,7 @@ import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
 import { ServePreviewCmd } from './serve-preview.cmd';
+import type { EnvPreviewConfig, PreviewStrategyName } from '@teambit/envs.contracts';
 
 const noopResult = {
   results: [],
@@ -96,9 +97,9 @@ const noopResult = {
 
 const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
-export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
+export type { EnvPreviewConfig, PreviewStrategyName };
 
-export type PreviewStrategyName = 'env' | 'component';
+export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
 export type PreviewFiles = {
   files: string[];
@@ -170,18 +171,6 @@ export type PreviewConfig = {
    */
   maxChunkSize?: number;
   onlyOverview?: boolean;
-};
-
-export type EnvPreviewConfig = {
-  strategyName?: PreviewStrategyName;
-  splitComponentBundle?: boolean;
-  /**
-   * whether the env's preview pipeline can consume component source files directly
-   * (required when `bit start --use-source` is used).
-   * older envs without the matching preview/webpack config should leave this unset/false
-   * so bit falls back to the compiled dist paths for their components.
-   */
-  supportsUseSource?: boolean;
 };
 
 export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;

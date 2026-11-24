@@ -61,9 +61,12 @@ export class CiSyncCmd implements Command {
   // `[lane]: [string]` rather than `[string?]`: `CLIArgs` does not admit an undefined-carrying tuple.
   // The argument is genuinely optional at runtime, hence the `|| undefined` below.
   async report([lane]: [string], options: Options) {
-    this.logger.console('\n\n');
-    this.logger.console('Initializing sync command');
     if (!this.workspace) throw new OutsideWorkspaceError();
+    // --init prints its own report; the banner only frames a reconcile run.
+    if (!options.init) {
+      this.logger.console('\n\n');
+      this.logger.console('Initializing sync command');
+    }
 
     return this.ci.sync({
       lane: lane || undefined,

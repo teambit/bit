@@ -250,15 +250,12 @@ export class WorkspaceGenerator {
     if (!componentsToImport.length) return;
 
     await pMapSeries(componentsToImport, async (componentToImport) => {
-      await this.importer.import(
-        {
-          ids: [componentToImport.id],
-          installNpmPackages: false,
-          writeConfigFiles: false,
-          writeToPath: componentToImport.path,
-        },
-        []
-      );
+      await this.importer.import({
+        ids: [componentToImport.id],
+        installNpmPackages: false,
+        writeConfigFiles: false,
+        writeToPath: componentToImport.path,
+      });
     });
 
     await this.workspace.bitMap.write('new');

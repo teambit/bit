@@ -51,6 +51,7 @@ import { BitError } from '@teambit/bit-error';
 export class FlattenedEdgesGetter {
   private graph = new Graph<ComponentID, DepEdgeType>();
   private missingFromGraph: ComponentID[] = [];
+  private depEdgesCache = new Map<string, Map<string, DepEdge>>();
   constructor(
     private scope: ScopeMain,
     private consumerComponents: ConsumerComponent[],
@@ -90,13 +91,7 @@ export class FlattenedEdgesGetter {
 
   populateFlattenedAndEdgesForComp(component: ConsumerComponent) {
     const graphFromIds = this.graph.successorsSubgraph(component.id.toString());
-    const edgesFromGraph = graphFromIds.edges.map((edge) => {
-      return {
-        source: ComponentID.fromString(edge.sourceId),
-        target: ComponentID.fromString(edge.targetId),
-        type: edge.attr as DepEdgeType,
-      };
-    });
+    const edgesFromGraph = graphFromIds.edges.map((edge) => this.getDepEdge(edge));
 
     const flattenedFromGraphIncludeItself = graphFromIds.nodes.map((node) => node.attr);
     const flattenedFromGraph = flattenedFromGraphIncludeItself.filter((id) => !id.isEqual(component.id));
@@ -104,6 +99,25 @@ export class FlattenedEdgesGetter {
 
     component.flattenedDependencies = ComponentIdList.fromArray(flattenedFromGraph);
     component.flattenedEdges = edgesFromGraph;
+  }
+
+  private getDepEdge(edge: Edge<DepEdgeType>): DepEdge {
+    let byTarget = this.depEdgesCache.get(edge.sourceId);
+    if (!byTarget) {
+      byTarget = new Map();
+      this.depEdgesCache.set(edge.sourceId, byTarget);
+    }
+    const existing = byTarget.get(edge.targetId);
+    if (existing && existing.type === edge.attr) {
+      return existing;
+    }
+    const depEdge: DepEdge = {
+      source: this.graph.node(edge.sourceId)?.attr || ComponentID.fromString(edge.sourceId),
+      target: this.graph.node(edge.targetId)?.attr || ComponentID.fromString(edge.targetId),
+      type: edge.attr as DepEdgeType,
+    };
+    byTarget.set(edge.targetId, depEdge);
+    return depEdge;
   }
 
   private async importMissingAndAddToGraph() {

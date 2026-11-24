@@ -350,8 +350,13 @@ describe('haltCommentBody', () => {
       branch: LANE_NAME,
       laneId: `acme.shop/${LANE_NAME}`,
     });
-    expect(body).to.include(`git fetch origin && git checkout '${LANE_NAME}'`);
+    expect(body).to.include(
+      `git fetch origin && git checkout '${LANE_NAME}' && git merge --ff-only 'origin/${LANE_NAME}'`
+    );
     expect(body).to.include(`bit lane import 'acme.shop/${LANE_NAME}'`);
+    // On a branch whose .bitmap is already on the lane, `bit lane import` only fetches: the merge is this step.
+    // --workspace-only: no component of another scope lands here. The next run adds new ones of this scope.
+    expect(body).to.include('bit checkout head --manual --workspace-only');
     expect(body).to.include(`git push origin '${LANE_NAME}'`);
     // the reason is prose, not a command, and the runbook still reads as one
     expect(body).to.include('merge conflicts in: acme.shop/comp1');

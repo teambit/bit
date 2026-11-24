@@ -21,9 +21,8 @@ export default class FsHelper {
   }
 
   getConsumerFiles(ext = '*.{js,ts}', includeDot = true, includeNodeModules = true) {
-    const params = { cwd: this.scopes.localPath, dot: includeDot };
+    const params: { cwd: string; dot: boolean; ignore?: string } = { cwd: this.scopes.localPath, dot: includeDot };
     if (!includeNodeModules) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       params.ignore = 'node_modules/**/*';
     }
 

@@ -1,11 +1,11 @@
 import type { ComponentContext } from '../../../component-template';
 
 export function starterFile({ namePascalCase, name }: ComponentContext) {
-  return `import { WorkspaceContext, Starter } from '@teambit/generator';
+  return `import { WorkspaceContext, WorkspaceTemplate } from '@teambit/envs.contracts';
   import { workspaceConfig } from './template/files/workspace-config';
   import { gitIgnore } from './template/files/git-ignore';
 
-  export const ${namePascalCase}WorkspaceStarter: Starter = {
+  export const ${namePascalCase}WorkspaceStarter: WorkspaceTemplate = {
     name: '${name}-workspace',
     description: 'a ${name} workspace',
     generateFiles: async (context: WorkspaceContext) => {

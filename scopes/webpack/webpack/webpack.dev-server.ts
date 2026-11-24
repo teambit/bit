@@ -7,7 +7,6 @@ import type * as WDS from 'webpack-dev-server';
 import { inspect } from 'util';
 import { WebpackAspect } from './webpack.aspect';
 
-//@ts-ignore - ignoring ts errors here because WDS.Configuration is a complex type that might break
 // between versions, leads to errors such as:
 // error TS2430: Interface 'WebpackConfigWithDevServer' incorrectly extends interface 'Configuration'.
 export interface WebpackConfigWithDevServer extends Configuration {

@@ -354,4 +354,36 @@ describe('local snap cascades updateDependents on the lane', function () {
       expect(exportCmd).to.throw(/diverged|merge|reset|update/i);
     });
   });
+
+  // ---------------------------------------------------------------------------------------------
+  // Scenario 22: a hidden updateDependent depends on an older version of the snapped lane component
+  // than the one the snap starts from. it happens when the entry was cascaded against the other side
+  // of a merge, against a version that came from the remote, or when a snap skipped the auto-snap.
+  // the cascade must still snap the entry. otherwise it keeps depending on a version that is no longer
+  // the head of the lane, and once the lane is merged (squashed) into main, on a snap main doesn't have.
+  // ---------------------------------------------------------------------------------------------
+  describe('scenario 22: cascade into a hidden entry that depends on an older version of the snapped component', () => {
+    let comp2InUpdDepInitial: string;
+    let comp3Head: string;
+    let comp2AfterSnap: string;
+    before(async () => {
+      comp2InUpdDepInitial = await buildBaseRemoteState();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+      helper.command.importLane('dev', '-x');
+      // comp2 keeps depending on the previous head of comp3
+      helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
+      helper.command.snapComponentWithoutBuild('comp3', '--unmodified');
+      comp3Head = helper.command.getHeadOfLane('dev', 'comp3');
+      comp2AfterSnap = helper.command.catLane('dev').updateDependents[0].split('@')[1];
+    });
+    it('should snap the hidden entry', () => {
+      expect(comp2AfterSnap).to.not.equal(comp2InUpdDepInitial);
+    });
+    it('the hidden entry should depend on the new head of the snapped component', () => {
+      const comp2 = helper.command.catComponent(`${helper.scopes.remote}/comp2@${comp2AfterSnap}`);
+      const comp3Dep = comp2.dependencies.find((dep) => dep.id.name === 'comp3');
+      expect(comp3Dep.id.version).to.equal(comp3Head);
+    });
+  });
 });

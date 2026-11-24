@@ -3,8 +3,8 @@ import type { BitId } from '@teambit/legacy-bit-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ComponentLog } from '@teambit/objects';
-import type { AspectDefinition } from '@teambit/aspect-loader';
-import type { DependencyList } from '@teambit/dependency-resolver';
+import type { AspectDefinition } from './aspect-definition';
+import type { ComponentDependencyList } from './component-dependencies';
 import type { Component, InvalidComponent } from './component';
 import type { State } from './state';
 import type { Snap } from './snap';
@@ -145,7 +145,7 @@ export interface ComponentFactory {
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 
-  getDependencies(component: Component): DependencyList;
+  getDependencies(component: Component): ComponentDependencyList;
 
   componentPackageName(component: Component): string;
 

@@ -7,15 +7,31 @@ import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
+
+/**
+ * the fields of a legacy ConsumerComponent a package.json is created from.
+ * restated rather than imported because consumer-component depends on this component.
+ */
+export type PackageJsonComponent = Parameters<typeof componentIdToPackageName>[0] & {
+  version?: string;
+  mainFile: PathOsBased;
+  packageDependencies?: Record<string, string>;
+  devPackageDependencies?: Record<string, string>;
+  peerPackageDependencies?: Record<string, string>;
+  license?: unknown;
+  _getHomepage(): string | undefined;
+};
 
 /**
  * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
  * then we could preserve it later on while writing the file. this is same process used by NPM when
  * writing the package.json file
  */
+const FIELDS_TO_SORT = [...DEPENDENCIES_FIELDS, 'optionalDependencies', 'peerDependenciesMeta'];
+
 export class PackageJsonFile {
   packageJsonObject: Record<string, any>;
   fileExist: boolean;
@@ -136,7 +152,7 @@ export class PackageJsonFile {
 
   static createFromComponent(
     componentDir: PathRelative,
-    component: Component,
+    component: PackageJsonComponent,
     addExportProperty = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
@@ -193,6 +209,17 @@ export class PackageJsonFile {
     };
   }
 
+  /**
+   * deps are merged from several sources in varying order. sort them by name for a stable, diffable output.
+   */
+  sortDependencies() {
+    FIELDS_TO_SORT.forEach((field) => {
+      const deps = this.packageJsonObject[field];
+      if (!deps || typeof deps !== 'object') return;
+      this.packageJsonObject[field] = sortObjectByKeys(deps);
+    });
+  }
+
   removeDependency(dependency: string) {
     delete this.packageJsonObject.dependencies[dependency];
   }
@@ -238,7 +265,7 @@ export class PackageJsonFile {
   /*
    * remove components from package.json dependencies
    */
-  async removeComponentsFromDependencies(components: Component[]) {
+  async removeComponentsFromDependencies(components: Array<Parameters<typeof componentIdToPackageName>[0]>) {
     if (!this.fileExist) return;
     const deps = this.packageJsonObject.dependencies;
     if (!deps) return;
@@ -249,8 +276,7 @@ export class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const clone = new PackageJsonFile(this);
+    const clone = new PackageJsonFile(this as ConstructorParameters<typeof PackageJsonFile>[0]);
     clone.packageJsonObject = cloneDeep(this.packageJsonObject);
     return clone;
   }

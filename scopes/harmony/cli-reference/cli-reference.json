@@ -960,11 +960,6 @@
             "d",
             "install-packages",
             "install packages by the package-manager"
-          ],
-          [
-            "p",
-            "package-manager <name>",
-            "npm, yarn or pnpm, default to npm"
           ]
         ],
         "description": "create capsules for components",
@@ -1103,7 +1098,7 @@
       ]
     ],
     "description": "test and validate component patterns",
-    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
+    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\nto exclude by a state, use '!$'. e.g. '!$localOnly' or '$modified AND !$deprecated'.\n",
     "group": "info-analysis",
     "private": false,
     "remoteOp": true,
@@ -1388,6 +1383,11 @@
             "show build tasks for a specific component (full component ID)"
           ],
           [
+            "",
+            "full-log",
+            "show the full build log of the job (or of the component with --component), in any job status"
+          ],
+          [
             "j",
             "json",
             "return the output as JSON"
@@ -1417,7 +1417,7 @@
           ],
           [
             "",
-            "log",
+            "full-log",
             "show full build log for failed containers (not just the error summary)"
           ],
           [
@@ -1999,11 +1999,6 @@
         "",
         "tasks <string>",
         "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\nor the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
-      ],
-      [
-        "",
-        "cache-packages-on-capsule-root",
-        "set the package-manager cache on the capsule root"
       ],
       [
         "",
@@ -4123,7 +4118,7 @@
           ]
         ],
         "description": "creates a new lane and switches to it",
-        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\na lane created from another lane contains all the components of the original lane.",
+        "extendedDescription": "a lane created from main (default-lane) is empty until components are snapped.\nif main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state.\na lane created from another lane contains all the components of the original lane.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
@@ -5311,7 +5306,7 @@
       [
         "",
         "external-package-manager",
-        "enable external package manager mode (npm/yarn/pnpm)"
+        "enable external package manager mode (npm/pnpm)"
       ],
       [
         "",

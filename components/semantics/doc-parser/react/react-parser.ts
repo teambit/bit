@@ -5,7 +5,7 @@ import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import extractDataRegex from '../extract-data-regex';
-import type { Doclet } from '../types';
+import type { Doclet, Method } from '../types';
 
 function formatProperties(props) {
   const parseDescription = (description) => {
@@ -53,8 +53,8 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
     description,
     properties: formatProperties(props),
     access: 'public',
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    methods: formatMethods(methods),
+    // the `Method` type does not match what react-docgen returns (no `args`/`access`).
+    methods: formatMethods(methods) as unknown as Method[],
   };
 }
 

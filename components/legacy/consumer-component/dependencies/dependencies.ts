@@ -2,10 +2,7 @@ import { cloneDeep, uniqBy } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
-import { ValidationError } from '@teambit/legacy.cli.error';
-import type { Scope } from '@teambit/legacy.scope';
-import { validateType } from '@teambit/legacy.scope';
-import { fetchRemoteVersions } from '@teambit/scope.remotes';
+import { ValidationError, validateType } from '@teambit/legacy.cli.error';
 import Dependency from './dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
@@ -47,8 +44,8 @@ export default class Dependencies {
   }
 
   getClone(): Dependency[] {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.dependencies.map((dependency) => Dependency.getClone(dependency));
+    // Dependency.getClone() returns a plain object with the serializable props of the dependency
+    return this.dependencies.map((dependency) => Dependency.getClone(dependency)) as Dependency[];
   }
 
   add(dependency: Dependency) {
@@ -111,28 +108,6 @@ export default class Dependencies {
       result[dep.id.toString()] = dep.id;
     });
     return result;
-  }
-
-  async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
-    const dependenciesIds = this.dependencies.map((dependency) => dependency.id);
-    const localDependencies = await scope.latestVersions(dependenciesIds);
-    const remoteVersionsDependencies = await fetchRemoteVersions(scope, dependenciesIds);
-
-    this.dependencies.forEach((dependency) => {
-      const remoteVersionId = remoteVersionsDependencies.find((remoteId) =>
-        remoteId.isEqualWithoutVersion(dependency.id)
-      );
-      const localVersionId = localDependencies.find((localId) => localId.isEqualWithoutVersion(dependency.id));
-      const modelVersionId = modelDependencies
-        .get()
-        .find((modelDependency) => modelDependency.id.isEqualWithoutVersion(dependency.id));
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dependency.localVersion = localVersionId ? localVersionId.version : null;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
-    });
   }
 
   validate(bitId?: ComponentID): void {

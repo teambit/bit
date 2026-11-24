@@ -297,10 +297,8 @@ describe('lane export skips main history objects', function () {
           log = helper.command.logParsed('comp1');
         }).to.not.throw();
         const hashes = log.map((l: any) => l.hash);
-        // Lean fork: scope-F holds only the lane head. Deeper ancestry (mergeSnapOnL, laneSnapOnL)
-        // lives on scope-L and the client-side `collectLogs` fallback only retries against the
-        // component home scope, so it can't reach them here. Surfacing those would require the
-        // consumer to also fetch from the original lane scope — separate from this PR's lean fix.
+        // the fork export pushes the lane head along with the snaps made on the original lane
+        // (mergeSnapOnL, laneSnapOnL), so scope-F doesn't depend on scope-L for the lane history.
         expect(hashes).to.include(snapOnFork);
       });
 
@@ -842,6 +840,65 @@ describe('lane export skips main history objects', function () {
     });
   });
 
+  // the export-validate fetch from the forked-from lane brings only its heads (and the VersionHistory), so the
+  // non-head snaps of the original lane reach the new scope only if the fork export pushes them. here they are not
+  // even local, because the forking workspace imported the original lane with its heads only.
+  describe('fork a lane imported with its heads only to another scope, then delete the original lane', () => {
+    let scopeLPath: string;
+    let scopeL: string;
+    let scopeM: string;
+    let scopeMPath: string;
+    let laneAFirstSnap: string;
+    let firstSnapLocalAfterImport: boolean;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const scopeCPath = helper.scopes.remotePath;
+      const lNew = helper.scopeHelper.getNewBareScope('-lane-l');
+      scopeL = lNew.scopeName;
+      scopeLPath = lNew.scopePath;
+      const mNew = helper.scopeHelper.getNewBareScope('-lane-m');
+      scopeM = mNew.scopeName;
+      scopeMPath = mNew.scopePath;
+      [scopeLPath, scopeMPath].forEach((p) => {
+        helper.scopeHelper.addRemoteScope(p);
+        helper.scopeHelper.addRemoteScope(p, scopeCPath);
+        helper.scopeHelper.addRemoteScope(scopeCPath, p);
+      });
+      helper.scopeHelper.addRemoteScope(scopeLPath, scopeMPath);
+      helper.scopeHelper.addRemoteScope(scopeMPath, scopeLPath);
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('lane-a', `--scope ${scopeL}`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      laneAFirstSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope(scopeCPath);
+      helper.scopeHelper.addRemoteScope(scopeLPath);
+      helper.scopeHelper.addRemoteScope(scopeMPath);
+      helper.command.runCmd(`bit lane import ${scopeL}/lane-a -x`);
+      try {
+        helper.command.catObject(laneAFirstSnap);
+        firstSnapLocalAfterImport = true;
+      } catch {
+        firstSnapLocalAfterImport = false;
+      }
+      helper.command.createLane('lane-b', `--scope ${scopeM} --fork-lane-new-scope`);
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export('--fork-lane-new-scope');
+      helper.command.runCmd(`bit lane remove ${scopeL}/lane-a --remote --silent --force`);
+    });
+    it('the non-head lane-A snap should not be local after importing lane-A', () => {
+      expect(firstSnapLocalAfterImport).to.be.false;
+    });
+    it('scope-M should hold the non-head lane-A snap, so lane-B history survives the deletion of lane-A', () => {
+      expect(() => helper.command.catObject(laneAFirstSnap, false, scopeMPath)).to.not.throw();
+    });
+  });
+
   // Operational risk: a lane's forkedFrom pointer can outlive the upstream lane (delete /
   // rename / scope offline). The strict pre-fetch must NOT hard-block exports in that case;
   // it should degrade to a home-scope fetch and only fail if the closure check actually
@@ -913,6 +970,50 @@ describe('lane export skips main history objects', function () {
     it("scope-M's VersionHistory for comp2 should be closed (home-scope fetch satisfied closure)", () => {
       const dangling = danglingParentsIn(helper.command.catVersionHistory(`${scopeC}/comp2`, scopeMPath));
       expect(dangling, `dangling parent refs in scope-M VH for comp2:\n${dangling.join('\n')}`).to.have.lengthOf(0);
+    });
+  });
+
+  // snaps on main that were never exported are not on scope-C. creating a lane moves them to the lane, so main goes
+  // back to its remote head, and the lane export pushes them to scope-L as lane snaps.
+  describe('lane in scope-L created from main that has unexported snaps, then snapped and exported', () => {
+    let laneScopePath: string;
+    let unexportedMainSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const newScope = helper.scopeHelper.getNewBareScope();
+      const laneScope = newScope.scopeName;
+      laneScopePath = newScope.scopePath;
+      helper.scopeHelper.addRemoteScope(laneScopePath);
+      helper.scopeHelper.addRemoteScope(laneScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, laneScopePath);
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo(); // a new component, never exported
+      helper.command.snapAllComponentsWithoutBuild('--unmodified'); // not exported
+      unexportedMainSnap = helper.command.getHead('comp1');
+
+      helper.command.createLane('dev', `--scope ${laneScope}`);
+    });
+    it('main should have nothing staged, because the snaps were moved to the lane', () => {
+      helper.command.switchLocalLane('main', '-x');
+      expect(helper.command.statusJson().stagedComponents).to.have.lengthOf(0);
+    });
+    it('should be able to switch back to the lane', () => {
+      expect(() => helper.command.switchLocalLane('dev', '-x')).to.not.throw();
+    });
+    it('bit export should not throw after snapping on the lane', () => {
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      expect(() => helper.command.export()).to.not.throw();
+    });
+    it('the lane scope should contain the moved snap, as a lane snap, and have a closed VersionHistory', () => {
+      const version = helper.command.catObject(unexportedMainSnap, true, laneScopePath);
+      expect(version.origin.lane.name).to.equal('dev');
+      const vh = helper.command.catVersionHistory(`${helper.scopes.remote}/comp1`, laneScopePath);
+      const dangling = danglingParentsIn(vh);
+      expect(dangling, `dangling parent refs in scope-L VH:\n${dangling.join('\n')}`).to.have.lengthOf(0);
     });
   });
 });

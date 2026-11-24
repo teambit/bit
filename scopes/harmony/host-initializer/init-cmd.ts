@@ -63,7 +63,7 @@ supports various reset options to recover from corrupted state or restart from s
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
-    ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
+    ['', 'external-package-manager', 'enable external package manager mode (npm/pnpm)'],
     ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
     ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;

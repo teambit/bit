@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } 
 import { useParams, useSearchParams } from 'react-router-dom';
 import classNames from 'classnames';
 import head from 'lodash.head';
-import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -114,7 +113,13 @@ export function Compositions({
     enableLiveControls ? { fullscreen: true, livecontrols: true } : { fullscreen: true }
   );
 
-  const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
+  const queryParams = useMemo(() => {
+    const compositionSearchParams = new URLSearchParams();
+    Object.entries(compositionParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) compositionSearchParams.append(key, String(value));
+    });
+    return compositionSearchParams.toString();
+  }, [compositionParams]);
 
   // Tracks compositions the user has explicitly collapsed. Anything not in
   // this set defaults to expanded, which gives us "auto-open on load" as a

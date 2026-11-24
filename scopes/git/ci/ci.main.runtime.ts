@@ -41,6 +41,7 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { extractSkipTasksFromMessage } from './skip-tasks-from-message';
 import { isPullRequestRef } from './pull-request-ref';
+import { branchToLaneName } from './branch-to-lane-name';
 import { adoptAndRetrySwitch, isLaneMissingComponentError } from './sync/adopt-lane-new-components';
 
 export type CiSwitchLaneOptions = SwitchLaneOptions & {
@@ -51,7 +52,7 @@ import type { CiSyncConfig } from './sync/sync-config';
 import { SyncOrchestrator } from './sync/sync-orchestrator';
 import type { GitHostProvider } from './sync/git-host-provider';
 import { GitHubHostProvider, gitHubApiUrl } from './sync/github-client';
-import { addAllExceptScopeAndModules, parseOriginHeadRef, remoteHeadBranch } from './sync/git-ops';
+import * as gitOps from './sync/git-ops';
 import { isValidGitBranchName } from './sync/sync-config';
 import { NO_CHANGES_TO_SNAP, statusReportsUnsyncedWork } from './sync/sync-state';
 
@@ -306,26 +307,38 @@ export class CiMain {
 
   /**
    * Converts a branch name to a lane ID string using Bit's naming conventions.
-   * Sanitizes branch name by replacing slashes and dots with dashes, converting to lowercase, then
-   * prefixes with the workspace's default scope.
+   * Sanitizes the branch name (see `branchToLaneName`, which also avoids the reserved `main`/`master`
+   * names), then prefixes it with the workspace's default scope.
    *
    * @param branchName - The git branch name to convert
    * @returns Lane ID in format: {defaultScope}/{sanitizedBranch}
    * @example convertBranchToLaneId("feature/New-Component") => "my-scope/feature-new-component"
    */
   convertBranchToLaneId(branchName: string): string {
-    const sanitizedBranch = branchName.replace(/[/.]/g, '-').toLowerCase();
-    return `${this.workspace.defaultScope}/${sanitizedBranch}`;
+    return `${this.workspace.defaultScope}/${branchToLaneName(branchName)}`;
   }
 
   /**
    * The repository's default branch name, whole — slashes included (see `parseOriginHeadRef`).
-   * Local `origin/HEAD` symref first, then the remote's own answer, then the conventional probe.
+   * What `detectDefaultBranchName` finds, else `master`, with a warning that names it.
    */
   async getDefaultBranchName(): Promise<string> {
+    const detected = await this.detectDefaultBranchName();
+    if (detected) return detected;
+    this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master'`));
+    return 'master';
+  }
+
+  /**
+   * The default branch as the repository itself states it: the local `origin/HEAD` symref, then the
+   * remote's own answer, then `main`/`master` among the remote branches. Undefined when none of them
+   * answers (no origin, a repository not pushed yet, a server out of reach), so a caller can tell a
+   * detected branch from a guess.
+   */
+  async detectDefaultBranchName(): Promise<string | undefined> {
     try {
       const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const local = parseOriginHeadRef(result);
+      const local = gitOps.parseOriginHeadRef(result);
       // Every candidate is validated before it is returned: this value becomes a checkout target and a
       // push refspec, and an option-like name ("-x") would be read by git as a flag. An unusable answer
       // falls through to the next source rather than reaching the argv.
@@ -333,27 +346,18 @@ export class CiMain {
     } catch {
       // no local origin/HEAD — normal in a fresh CI clone; ask the remote itself below.
     }
-    const remote = await remoteHeadBranch();
+    const remote = await gitOps.remoteHeadBranch();
     if (remote && isValidGitBranchName(remote)) return remote;
-    return this.probeDefaultBranchName();
-  }
-
-  /**
-   * Last-resort fallback: the two conventional names among the remote branches, then `master`.
-   * Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
-   */
-  private async probeDefaultBranchName(originalError?: Error): Promise<string> {
+    // Deliberately only `main`/`master` — any wider guess risks protecting the wrong branch.
     try {
       const branches = await git.branch(['-r']);
       if (branches.all.includes('origin/main')) return 'main';
       if (branches.all.includes('origin/master')) return 'master';
-      return 'master';
-    } catch {
-      this.logger.console(
-        chalk.yellow(`Unable to detect default branch, using 'master'${originalError ? `: ${originalError}` : ''}`)
-      );
-      return 'master';
+    } catch (err) {
+      // debug only: the caller decides what to say, and what to use instead
+      this.logger.debug(`detectDefaultBranchName: "git branch -r" failed: ${(err as Error).message}`);
     }
+    return undefined;
   }
 
   async getGitCommitMessage() {
@@ -1735,6 +1739,10 @@ export class CiMain {
       } else {
         await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
       }
+    } else if (currentLane && !noBitmapCommit) {
+      // the switch to main rewrote the lane's .bitmap; without this commit, the default branch keeps the lane's
+      this.logger.console(chalk.yellow("No components were tagged; committing main's .bitmap"));
+      await this.commitAndPushBitmapChanges({ verbose, skipPush, defaultBranch });
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
     }
@@ -1794,8 +1802,7 @@ export class CiMain {
     defaultBranch: string;
   }) {
     this.logger.console('🔄 Git Operations');
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
+    const fallbackIdentity = gitOps.defaultMergeGitIdentity();
 
     const statusBeforeCommit = await git.status();
     this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
@@ -1821,9 +1828,9 @@ export class CiMain {
     // of the commit in a workspace whose `.gitignore` lacks Bit's block — otherwise this stages the
     // object store into the default branch. Same helper the sync executors use, so all three commit
     // paths agree on what counts as workspace content.
-    await addAllExceptScopeAndModules();
+    await gitOps.addAllExceptScopeAndModules();
     const commitMessage = await this.getCustomCommitMessage();
-    await git.commit(commitMessage);
+    await gitOps.commitWithIdentity(commitMessage, { fallback: fallbackIdentity });
 
     const statusAfterCommit = await git.status();
     this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
@@ -1831,7 +1838,7 @@ export class CiMain {
       this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
     });
 
-    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+    await gitOps.gitWithIdentity(['pull', '--rebase', 'origin', defaultBranch], { fallback: fallbackIdentity });
     if (skipPush) {
       this.logger.console(chalk.yellow('Skipping git push (--skip-push flag)'));
       return;
@@ -1840,16 +1847,17 @@ export class CiMain {
   }
 
   /**
-   * Compare lane Version extensions with main Version extensions for each component.
-   * Any config differences (e.g. env-set, deps-set) are saved to .bitmap so they survive
-   * the switch from lane to main and get included in the subsequent tag.
+   * Compare lane Version extensions with main Version extensions for each component this workspace tracks (a
+   * cross-scope lane also carries other scopes' components; their own workspaces release them). Config differences
+   * (e.g. env-set, deps-set) are saved to .bitmap so they survive the switch to main and get included in the tag.
    */
   private async restoreLaneConfigChanges(laneComponents: LaneComponent[]) {
     const scope = this.workspace.scope.legacyScope;
     const repo = scope.objects;
     let hasChanges = false;
 
-    const activeComponents = laneComponents.filter((c) => !c.isDeleted);
+    const isTracked = (c: LaneComponent) => this.workspace.bitMap.getBitmapEntryIfExist(c.id, { ignoreVersion: true });
+    const activeComponents = laneComponents.filter((c) => !c.isDeleted && isTracked(c));
     await Promise.all(
       activeComponents.map(async (laneComp) => {
         const laneVersion = (await repo.load(laneComp.head)) as Version;

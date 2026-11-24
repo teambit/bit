@@ -4,7 +4,7 @@ import { ApiDiffDataProvider, useApiDiffData } from './api-diff-data-context';
 import type { ApiDiffPair } from './api-diff-data-context';
 import { ApiDiffInsightProvider } from './api-diff-insights';
 import type { ApiDiffInsight } from './api-diff-insights';
-import { ComponentApiDiffSection } from './component-api-diff-section';
+import { ApiDiffUnsupportedState, ComponentApiDiffSection } from './component-api-diff-section';
 import styles from './api-diff-view.module.scss';
 
 export type ComponentDiffEntry = {
@@ -201,7 +201,16 @@ function useApiDiffAggregate(entries: ApiDiffEntry[], queried: ApiDiffEntry[]) {
     [apiDiffFor]
   );
 
-  return { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible, apiDiffFor };
+  return {
+    totals,
+    loadedCount,
+    allLoaded,
+    analyzedCount,
+    stable,
+    isVisible,
+    apiDiffFor,
+    unsupported: !!apiData?.unsupported,
+  };
 }
 
 /** pure rendering of the lane API view — runs under `ApiDiffDataProvider`, reads derived data from `useApiDiffAggregate`. */
@@ -218,10 +227,8 @@ function ApiDiffLaneBody({
   selectedExport?: string;
   onApiEntries?: (componentId: string, entries: ApiEntry[]) => void;
 }) {
-  const { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible, apiDiffFor } = useApiDiffAggregate(
-    entries,
-    queried
-  );
+  const { totals, loadedCount, allLoaded, analyzedCount, stable, isVisible, apiDiffFor, unsupported } =
+    useApiDiffAggregate(entries, queried);
 
   // feed each analyzed component's changed public exports to the host's sidebar tree (nested under the
   // component, exactly like files in code mode); the sidebar's scroll-sync then targets the
@@ -244,6 +251,16 @@ function ApiDiffLaneBody({
       onApiEntries(e.entry.componentId.toStringWithoutVersion(), registered);
     });
   }, [queried, apiDiffFor, onApiEntries]);
+
+  // the backend has no API diff support: one notice for the pane, instead of a summary that stays empty.
+  // the effect above still registers an empty export list per component, so the sidebar settles.
+  if (unsupported) {
+    return (
+      <div className={styles.fullView}>
+        <ApiDiffUnsupportedState componentIdStr="api-diff-unsupported" />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.fullView}>

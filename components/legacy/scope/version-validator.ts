@@ -15,7 +15,7 @@ import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { PathLinux } from '@teambit/legacy.utils';
 import { isValidPath } from '@teambit/legacy.utils';
-import { validateType } from './validate-type';
+import { validateType } from '@teambit/legacy.cli.error';
 import VersionInvalid from './exceptions/version-invalid';
 import type { Version } from '@teambit/objects';
 

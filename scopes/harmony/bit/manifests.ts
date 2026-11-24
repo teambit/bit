@@ -16,7 +16,6 @@ import { EnvsAspect } from '@teambit/envs';
 import { EnvAspect } from '@teambit/env';
 import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
-import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
 import { WorkspaceStarterAspect } from '@teambit/workspace-starter';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
@@ -140,7 +139,6 @@ export const manifestsMap = {
   [PreviewAspect.id]: PreviewAspect,
   [ComponentSizerAspect.id]: ComponentSizerAspect,
   [DocsAspect.id]: DocsAspect,
-  [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GlobalConfigAspect.id]: GlobalConfigAspect,
   [GraphqlAspect.id]: GraphqlAspect,

@@ -1,5 +1,4 @@
-import type { AspectDefinition } from '@teambit/aspect-loader';
-import type { Component } from '@teambit/component';
+import type { AspectDefinition, Component } from '@teambit/component';
 
 import type { Environment } from '../environment';
 

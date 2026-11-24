@@ -113,7 +113,6 @@ re-run with --silent to skip the confirmation, or run the command in an interact
     if (hard) {
       if (range) throw new BitError(`--range is not supported with --hard flag`);
       const { localResult, remoteResult = [] } = await this.remove.remove({ componentsPattern, remote: true, force });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       let localMessage = removeTemplate(localResult, false);
       if (localMessage !== '') localMessage += '\n';
       return `${localMessage}${this.paintArray(remoteResult)}`;

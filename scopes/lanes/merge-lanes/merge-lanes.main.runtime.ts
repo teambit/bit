@@ -238,7 +238,11 @@ export class MergeLanesMain {
     }
 
     const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
-    const snapshot = await lastMerged?.takeSnapshot(currentLane);
+    // not only the succeeded ones. with "--tag", the unchanged components are tagged as well
+    const snapshot = await lastMerged?.takeSnapshot(
+      currentLane,
+      allComponentsStatus.map((c) => c.id)
+    );
 
     const mergeResults = await this.merging.mergeSnaps({
       mergeStrategy,

@@ -91,8 +91,7 @@ export class HttpHelper {
         clearTimeout(timer);
         fn();
       };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.httpProcess.stdout.on('data', (data) => {
+      this.httpProcess.stdout!.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         stdoutData += data.toString();
         if (data.includes(readyMessageFor(this.uiRootAspectId))) {
@@ -100,8 +99,7 @@ export class HttpHelper {
           settle(resolve);
         }
       });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.httpProcess.stderr.on('data', (data) => {
+      this.httpProcess.stderr!.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
         stderrData += data.toString();
         this.stderr += data.toString();
@@ -118,8 +116,7 @@ export class HttpHelper {
       const timer = setTimeout(() => {
         reject(new Error(`http exceed the limit of ${timeoutAfter} ms, the message "${msg}" was not received`));
       }, timeoutAfter);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.httpProcess.stdout.on('data', (data) => {
+      this.httpProcess.stdout!.on('data', (data) => {
         if (data.includes(msg)) {
           clearTimeout(timer);
           resolve(data);

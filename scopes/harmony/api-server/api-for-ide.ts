@@ -40,6 +40,7 @@ import { ComponentUrl } from '@teambit/component.modules.component-url';
 import type { Logger } from '@teambit/logger';
 import { LaneDiffGenerator } from '@teambit/lanes.modules.diff';
 import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
+import { isReadOnlyCmdHistoryOp } from './cmd-history-filter';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -134,11 +135,13 @@ export class APIForIDE {
   ) {}
 
   async logStartCmdHistory(op: string) {
+    if (isReadOnlyCmdHistoryOp(op)) return;
     const str = `${op}, started`;
     await this.writeToCmdHistory(str);
   }
 
   async logFinishCmdHistory(op: string, code: number) {
+    if (isReadOnlyCmdHistoryOp(op)) return;
     const endStr = code === 0 ? 'succeeded' : 'failed';
     const str = `${op}, ${endStr}`;
     await this.writeToCmdHistory(str);
@@ -750,7 +753,7 @@ export class APIForIDE {
       })
     );
 
-    const deps = comp.getDependencies();
+    const deps = this.workspace.getDependencies(comp);
     showResults.dependencies = deps.map((dep) => {
       const pkg = dep.getPackageName?.() || dep.id;
       const pkgWithVer = `${pkg}@${dep.version}`;

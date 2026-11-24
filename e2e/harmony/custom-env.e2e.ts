@@ -43,7 +43,7 @@ describe('custom env', function () {
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
-      fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true, force: true });
     });
     it('should show the correct env in bit show (with no loaded indication)', () => {
       const componentShowParsed = helper.command.showComponentParsedHarmonyByTitle('comp1', 'env');
@@ -187,7 +187,7 @@ describe('custom env', function () {
       // Clean the capsule dir to make sure it's empty before we continue
       const scopeAspectsCapsulesRootDir = helper.command.capsuleListParsed().scopeAspectsCapsulesRootDir;
       if (fs.pathExistsSync(scopeAspectsCapsulesRootDir)) {
-        fs.rmdirSync(scopeAspectsCapsulesRootDir, { recursive: true });
+        fs.rmSync(scopeAspectsCapsulesRootDir, { recursive: true, force: true });
       }
 
       helper.scopeHelper.addRemoteScope();
@@ -398,6 +398,41 @@ describe('custom env', function () {
       it('replacing the env should fix the issue', () => {
         helper.command.replaceEnv(envId, `${envId}@0.0.2`);
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
+      });
+    });
+    describe('deleting an env on the lane when a component uses it as a regular dependency only', () => {
+      let envPkgName: string;
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.workspaceJsonc.setupDefault();
+        helper.fixtures.populateComponents(1);
+        envPkgName = helper.general.getPackageNameByCompName(envName);
+        helper.fs.outputFile('comp1/index.js', `require('${envPkgName}');`);
+        helper.command.createLane('env-as-dependency');
+        helper.command.importComponent(envName);
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
+        helper.command.export();
+
+        helper.command.softRemoveOnLane(envId);
+      });
+      it('bit status should not show the RemovedEnv issue, the env is not the env of the component', () => {
+        helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
+      });
+      it('should pin the deleted env to its main version in the workspace policy', () => {
+        const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+        expect(policy.dependencies[envPkgName]).to.have.string('0.0.2');
+      });
+      describe('installing and then snapping the component together with the deleted env', () => {
+        before(() => {
+          helper.command.install();
+          helper.command.snapComponentWithoutBuild(`"comp1, ${envId}"`, '--unmodified');
+        });
+        it('should save the main version of the deleted env as the dependency, not the deleted snap', () => {
+          const comp1 = helper.command.catComponent('comp1@latest');
+          const envDep = comp1.dependencies.find((dep) => dep.id.name === envName);
+          expect(envDep.id.version).to.equal('0.0.2');
+        });
       });
     });
     describe('missing modules in the env capsule', () => {

@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import chalk from 'chalk';
 import execa from 'execa';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import type { StdioOptions } from 'child_process';
 import childProcess from 'child_process';
 import rightpad from 'pad-right';

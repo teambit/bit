@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';

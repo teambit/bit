@@ -15,6 +15,8 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DevFilesMain } from '@teambit/dev-files';
 import type { Logger } from '@teambit/logger';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
+import type { ComponentIdList } from '@teambit/component-id';
 import { DependenciesData } from './dependencies-data';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
 import type { DebugDependencies } from './auto-detect-deps';
@@ -62,12 +64,22 @@ export class DependenciesLoader {
     };
   }
 
-  async loadFromScope(dependenciesData: Partial<DependenciesData>) {
+  /**
+   * `autoDetectOverrides` are the non-force policy entries (versions for dependencies that were detected). a workspace
+   * calculates them on its own, a scope gets them from the caller.
+   */
+  async loadFromScope(
+    dependenciesData: Partial<DependenciesData>,
+    autoDetectOverrides?: DependenciesOverridesData,
+    workspaceComponentIds?: ComponentIdList
+  ) {
     const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.logger);
+    applyOverrides.workspaceComponentIds = workspaceComponentIds;
     const { allDependencies, allPackagesDependencies, issues } = dependenciesData;
     if (allDependencies) applyOverrides.allDependencies = allDependencies;
     if (allPackagesDependencies) applyOverrides.allPackagesDependencies = allPackagesDependencies;
     if (issues) applyOverrides.issues = issues;
+    if (autoDetectOverrides) applyOverrides.autoDetectOverrides = autoDetectOverrides;
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
   }

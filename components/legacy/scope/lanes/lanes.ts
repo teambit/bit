@@ -3,7 +3,7 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import type { ComponentID } from '@teambit/component-id';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { Scope } from '..';
-import { LaneNotFound } from '@teambit/legacy.scope-api';
+import { LaneNotFound } from '../exceptions';
 import { logger } from '@teambit/legacy.logger';
 import type { LaneComponent, LaneLog, LaneItem, BitObject, Repository, Lane, Version } from '@teambit/objects';
 import { IndexType, LaneHistory } from '@teambit/objects';

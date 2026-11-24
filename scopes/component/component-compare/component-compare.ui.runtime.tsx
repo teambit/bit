@@ -18,6 +18,7 @@ import { AspectsCompareSection } from './component-compare-aspects.section';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { ComponentCompareSection } from './component-compare.section';
 import { CompareChangelogSection } from './component-compare-changelog.section';
+import { DependenciesCompareSection } from './component-compare-dependencies.section';
 import { ComponentComparePage } from './component-compare-page';
 
 export type ComponentCompareNav = Array<TabItem>;
@@ -201,8 +202,10 @@ export class ComponentCompareUI {
     componentUi.registerPinnedWidget(pinnedComponentCompareSection.navigationLink, pinnedComponentCompareSection.order);
     const aspectCompareSection = new AspectsCompareSection(componentCompareUI);
     const compareChangelog = new CompareChangelogSection(componentCompareUI);
-    componentCompareUI.registerNavigation([aspectCompareSection, compareChangelog]);
-    componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route]);
+    // graph owns the dependencies view; compare registers it so graph doesn't depend on compare
+    const dependenciesCompare = new DependenciesCompareSection();
+    componentCompareUI.registerNavigation([aspectCompareSection, compareChangelog, dependenciesCompare]);
+    componentCompareUI.registerRoutes([aspectCompareSection.route, compareChangelog.route, dependenciesCompare.route]);
     return componentCompareUI;
   }
 }

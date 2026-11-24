@@ -4,7 +4,7 @@ import { isEmpty } from 'lodash';
 import { formatTitle, formatItem, formatSuccessSummary, errorSymbol, joinSections } from '@teambit/cli';
 
 export function removeTemplate(
-  { dependentBits, modifiedComponents = [], removedComponentIds, missingComponents, removedFromLane },
+  { dependentBits, modifiedComponents = [] as ComponentID[], removedComponentIds, missingComponents, removedFromLane },
   isRemote
 ) {
   const paintMissingComponents = () => {

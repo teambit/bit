@@ -2,11 +2,18 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import Table from 'cli-table';
 import type { LastExportData } from '@teambit/export';
-import { formatSuccessSummary, formatItem, formatHint, joinSections } from '@teambit/cli';
+import {
+  formatSuccessSummary,
+  formatWarningSummary,
+  formatItem,
+  formatHint,
+  formatTitle,
+  joinSections,
+} from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import type { RippleMain, RippleJob, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
-import { colorPhase, isFailedPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
+import type { RippleMain, RippleJob, RippleJobFull, CiGraphNode, SimulateNetwork } from './ripple.main.runtime';
+import { colorPhase, isFailedPhase, isSuccessPhase, stripAnsi, resolveJobId, formatAge } from './ripple-utils';
 
 /**
  * a last-export entry matches the target context when its saved lane equals the current lane
@@ -210,6 +217,8 @@ export class RippleLogCmd implements Command {
   options: CommandOptions = [
     ['', 'lane <lane>', 'lane ID to find the latest job for (default: detected from .bitmap)'],
     ['c', 'component <component>', 'show build tasks for a specific component (full component ID)'],
+    // not "--log", which is bit's global flag for printing its own logs.
+    ['', 'full-log', 'show the full build log of the job (or of the component with --component), in any job status'],
     ['j', 'json', 'return the output as JSON'],
   ];
 
@@ -230,7 +239,7 @@ export class RippleLogCmd implements Command {
     return { job, error: undefined, source: resolved.source, lastExport: resolved.lastExport };
   }
 
-  async report([jobId]: [string], flags: { lane?: string; component?: string }) {
+  async report([jobId]: [string], flags: { lane?: string; component?: string; fullLog?: boolean }) {
     const { job, error, source, lastExport } = await this.resolveJob(jobId, flags);
     if (!job) {
       if (jobId) return chalk.red(`Job "${jobId}" not found.`);
@@ -257,16 +266,52 @@ export class RippleLogCmd implements Command {
     lines.push(`  ${chalk.cyan('URL:')}      ${jobUrl}`);
 
     if (flags.component) {
-      await this.appendComponentDetail(lines, job.id, flags.component);
+      await this.appendComponentDetail(lines, job, flags.component);
     } else {
       this.appendComponentList(lines, job);
     }
+    if (flags.fullLog) await this.appendFullLog(lines, job, flags.component);
 
     return lines.join('\n');
   }
 
-  private async appendComponentDetail(lines: string[], jobId: string, componentId: string) {
-    const summary = await this.ripple.getComponentBuildSummary(jobId, componentId);
+  private async appendFullLog(lines: string[], job: RippleJobFull, componentId?: string) {
+    const { nodes, logMap } = await this.fetchLogs(job, componentId);
+    if (!nodes.length) {
+      lines.push('');
+      lines.push(
+        chalk.yellow(
+          componentId
+            ? `No build log found for component "${componentId}" in this job.`
+            : 'No build logs found in this job.'
+        )
+      );
+      return;
+    }
+    for (const node of nodes) {
+      lines.push('');
+      lines.push(formatTitle(`Build log of ${node.componentIds.join(', ')}`));
+      const messages = logMap.get(node.containerName);
+      if (!messages?.length) {
+        lines.push(formatHint('  Build log not available.'));
+        continue;
+      }
+      messages.forEach((message) => lines.push(`  ${stripAnsi(message)}`));
+    }
+  }
+
+  /** the build logs of all the containers of the job, or of the container that built the given component. */
+  private async fetchLogs(job: RippleJobFull, componentId?: string) {
+    const nodes = this.ripple.getCiGraphNodesOfComponent(job, componentId);
+    const logMap = await this.ripple.getContainerLogs(
+      job.id,
+      nodes.map((node) => node.containerName)
+    );
+    return { nodes, logMap };
+  }
+
+  private async appendComponentDetail(lines: string[], job: RippleJob, componentId: string) {
+    const summary = await this.ripple.getComponentBuildSummary(job, componentId);
     if (!summary) {
       lines.push('');
       lines.push(chalk.yellow(`No build summary found for component "${componentId}" in this job.`));
@@ -327,7 +372,7 @@ export class RippleLogCmd implements Command {
         if (shown >= 30) break;
         const icon = isFailedPhase(node.phase)
           ? chalk.red('✗')
-          : node.phase === 'SUCCESS'
+          : isSuccessPhase(node.phase)
             ? chalk.green('✓')
             : chalk.yellow('○');
         lines.push(`  ${icon} ${compId}`);
@@ -336,13 +381,15 @@ export class RippleLogCmd implements Command {
     }
   }
 
-  async json([jobId]: [string], flags: { lane?: string; component?: string }) {
+  async json([jobId]: [string], flags: { lane?: string; component?: string; fullLog?: boolean }) {
     const { job, source, lastExport } = await this.resolveJob(jobId, flags);
+    const containerLogs =
+      job && flags.fullLog ? Object.fromEntries((await this.fetchLogs(job, flags.component)).logMap) : undefined;
     if (flags.component && job) {
-      const summary = await this.ripple.getComponentBuildSummary(job.id, flags.component);
-      return { job, componentBuild: summary, source, lastExport };
+      const summary = await this.ripple.getComponentBuildSummary(job, flags.component);
+      return { job, componentBuild: summary, containerLogs, source, lastExport };
     }
-    return { job, source, lastExport };
+    return { job, containerLogs, source, lastExport };
   }
 }
 
@@ -355,7 +402,8 @@ export class RippleErrorsCmd implements Command {
 
   options: CommandOptions = [
     ['', 'lane <lane>', 'lane ID to find the latest job for (default: detected from .bitmap)'],
-    ['', 'log', 'show full build log for failed containers (not just the error summary)'],
+    // not "--log", which is bit's global flag for printing its own logs.
+    ['', 'full-log', 'show full build log for failed containers (not just the error summary)'],
     ['j', 'json', 'return the output as JSON'],
   ];
 
@@ -368,7 +416,7 @@ export class RippleErrorsCmd implements Command {
 
   constructor(private ripple: RippleMain) {}
 
-  async report([jobId]: [string], flags: { lane?: string; log?: boolean }) {
+  async report([jobId]: [string], flags: { lane?: string; fullLog?: boolean }) {
     const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
 
     if (!job) {
@@ -403,22 +451,27 @@ export class RippleErrorsCmd implements Command {
     }
 
     const failedNodes = ciNodes.filter((n) => isFailedPhase(n.phase));
-    const succeededNodes = ciNodes.filter((n) => n.phase === 'SUCCESS');
-    const otherNodes = ciNodes.filter((n) => !isFailedPhase(n.phase) && n.phase !== 'SUCCESS');
+    const succeededNodes = ciNodes.filter((n) => isSuccessPhase(n.phase));
+    const otherNodes = ciNodes.filter((n) => !isFailedPhase(n.phase) && !isSuccessPhase(n.phase));
 
     const totalComponents = ciNodes.reduce((sum, n) => sum + n.componentIds.length, 0);
     const failedComponents = failedNodes.flatMap((n) => n.componentIds);
     const blockedComponents = otherNodes.flatMap((n) => n.componentIds);
 
     if (failedComponents.length === 0) {
-      if (job.status?.phase?.toUpperCase() === 'FAILURE') {
-        lines.push('');
+      lines.push('');
+      if (isFailedPhase(job.status?.phase)) {
         lines.push(
           chalk.yellow(`${totalComponents} component(s) in this job — no individual component failures found.`)
         );
         lines.push(chalk.yellow('The failure may be in a pipeline-level step. Check the Ripple CI URL above.'));
+      } else if (blockedComponents.length) {
+        lines.push(
+          formatWarningSummary(
+            `No failures so far. ${blockedComponents.length} of ${totalComponents} component(s) not built yet.`
+          )
+        );
       } else {
-        lines.push('');
         lines.push(chalk.green(`All ${totalComponents} component(s) built successfully.`));
       }
       return lines.join('\n');
@@ -438,12 +491,12 @@ export class RippleErrorsCmd implements Command {
 
       const logMessages = logMap.get(node.containerName);
       if (logMessages && logMessages.length > 0) {
-        const errorLines = flags.log ? logMessages : this.ripple.extractErrorsFromLog(logMessages);
+        const errorLines = flags.fullLog ? logMessages : this.ripple.extractErrorsFromLog(logMessages);
         if (errorLines.length > 0) {
           for (const msg of errorLines) {
             const clean = stripAnsi(msg);
-            // skip stack trace lines (noisy) unless --log is used
-            if (!flags.log && /^\s+at\s/.test(clean)) continue;
+            // skip stack trace lines (noisy) unless --full-log is used
+            if (!flags.fullLog && /^\s+at\s/.test(clean)) continue;
             if (clean.length > 0) {
               lines.push(`    ${clean}`);
             }
@@ -473,7 +526,7 @@ export class RippleErrorsCmd implements Command {
     return lines.join('\n');
   }
 
-  async json([jobId]: [string], flags: { lane?: string; log?: boolean }) {
+  async json([jobId]: [string], flags: { lane?: string; fullLog?: boolean }) {
     const { job, ciNodes, source, lastExport, error } = await this.getErrors(jobId, flags);
     if (!job) {
       return { error: error || 'No job found', job: null, ciNodes: [], containerLogs: {}, source, lastExport };
@@ -485,7 +538,7 @@ export class RippleErrorsCmd implements Command {
     const logMap = await this.ripple.getContainerLogs(job.id, containerNames);
     const containerLogs: Record<string, string[]> = {};
     for (const [name, messages] of logMap) {
-      containerLogs[name] = flags.log ? messages : this.ripple.extractErrorsFromLog(messages);
+      containerLogs[name] = flags.fullLog ? messages : this.ripple.extractErrorsFromLog(messages);
     }
 
     return { job, ciNodes, containerLogs, source, lastExport };

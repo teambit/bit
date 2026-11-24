@@ -511,5 +511,42 @@ describe('hoistDependencies', () => {
         );
       });
     });
+    describe('when there is a snap hash version which satisfies more components than the best range', () => {
+      const snapHash = '00000001';
+      beforeEach(() => {
+        index = new Map();
+        const items = generateItemsFromArrays(
+          undefined,
+          ['^4.0.0', snapHash, snapHash, snapHash, '^4.0.4'],
+          DEV_DEP_LIFECYCLE_TYPE
+        );
+        index.set(dependencyName, { metadata: {}, componentItems: items });
+        dedupedDependencies = hoistDependencies(index);
+      });
+      it('should hoist the most common version to the root', () => {
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, snapHash);
+      });
+      it('should not put the dependency in components that match the most common version', () => {
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-2`, dedupedDependencies);
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-3`, dedupedDependencies);
+      });
+      it('should put other ranges in the components', () => {
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`,
+          depKeyName,
+          dependencyName,
+          '^4.0.0'
+        );
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-4`,
+          depKeyName,
+          dependencyName,
+          '^4.0.4'
+        );
+      });
+    });
   });
 });

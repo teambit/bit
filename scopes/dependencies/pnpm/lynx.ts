@@ -22,6 +22,7 @@ import type {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
   PackageExtension,
+  LockfileFormat,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
@@ -280,6 +281,7 @@ export async function install(
     publicHoistPattern?: string[];
     hoistPattern?: string[];
     lockfileOnly?: boolean;
+    lockfileFormat?: LockfileFormat;
     nodeVersion?: string;
     enableModulesDir?: boolean;
     engineStrict?: boolean;
@@ -390,6 +392,7 @@ export async function install(
     autoInstallPeers: options.autoInstallPeers,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     lockfileOnly: options.lockfileOnly ?? false,
+    lockfileFormat: options.lockfileFormat,
     packageImportMethod: options.packageImportMethod,
     preferOffline: options.preferOffline,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,

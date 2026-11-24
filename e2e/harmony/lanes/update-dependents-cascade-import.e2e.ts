@@ -243,6 +243,11 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
       const comp3OnRemote = remoteLane.components.find((c) => c.id.name === 'comp3');
       expect(comp3OnRemote.head).to.equal(comp3HeadAfterSnap);
     });
+
+    it('the stale entry should be removed from the local lane as well', () => {
+      const localLane = helper.command.catLane('dev');
+      expect(localLane.updateDependents || []).to.have.lengthOf(0);
+    });
   });
 
   // ---------------------------------------------------------------------------------------------
@@ -463,6 +468,58 @@ describe('updateDependents cascade - import, fetch and promotion', function () {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp3');
       expect(bitMap).to.not.have.property('comp2');
+    });
+
+    // every Ripple job runs the cascade from a fresh bare scope. re-running it must fetch the existing
+    // cascade snap from the lane's scope and snap on top of it.
+    describe('re-running the cascade from a fresh bare scope', () => {
+      let comp2AfterRerun: string;
+      let comp2HashAfterRerun: string;
+      before(async () => {
+        const bareSnap = helper.scopeHelper.getNewBareScope('-bare-rerun-updep');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+        helper.scopeHelper.addRemoteScope(anotherRemotePath, bareSnap.scopePath);
+        await helper.snapping.snapFromScope(
+          bareSnap.scopePath,
+          [{ componentId: `${anotherRemote}/comp2`, message: 're-run cross-scope update-dependent' }],
+          { lane: `${helper.scopes.remote}/dev`, updateDependents: true, push: true }
+        );
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        comp2AfterRerun = lane.updateDependents[0];
+        comp2HashAfterRerun = comp2AfterRerun.split('@')[1];
+      });
+      it('should replace the cascade snap with a new one', () => {
+        expect(comp2AfterRerun).to.include(`${anotherRemote}/comp2`);
+        expect(comp2AfterRerun).to.not.equal(comp2InUpdDep);
+      });
+      it('the new cascade snap should descend from the previous one', () => {
+        const version = helper.command.catComponent(comp2AfterRerun, helper.scopes.remotePath);
+        expect(version.parents).to.include(comp2InUpdDep.split('@')[1]);
+      });
+      // `bit import` without ids (also run by `bit install`) re-fetches all lane ids, the hidden ones
+      // included. these must be routed to the lane's scope too, the origin scope doesn't have the
+      // cascade snap.
+      describe('then running `bit import` without ids in the workspace', () => {
+        before(() => {
+          helper.command.import();
+        });
+        it('should fetch the new cascade snap into the local scope', () => {
+          expect(() => helper.command.catObject(comp2HashAfterRerun)).to.not.throw();
+        });
+      });
+      // the lane's scope has the cascade snap of comp2 but not its main head (a cascade is pushed with its head
+      // only), so merging into main must fetch the main objects of the hidden entries from their origin scope.
+      describe('then merging the lane into main from a fresh workspace', () => {
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+          helper.scopeHelper.addRemoteScope(anotherRemotePath);
+          helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
+        });
+        it('should merge the hidden updateDependent into main', () => {
+          expect(helper.command.getHead(`${anotherRemote}/comp2`)).to.equal(comp2HashAfterRerun);
+        });
+      });
     });
   });
 

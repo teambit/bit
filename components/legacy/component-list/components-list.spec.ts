@@ -3,41 +3,38 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ModelComponent } from '@teambit/objects';
 import { ComponentsList } from './components-list';
 
+type ListLocalScopeArg = Parameters<typeof ComponentsList.listLocalScope>[0];
+type ComponentsListArg = ConstructorParameters<typeof ComponentsList>[0];
+
 describe('ComponentList', function () {
-  // @ts-ignore
   this.timeout(0);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const getModelComponent = () => ModelComponent.fromBitId(ComponentID.fromObject({ name: 'myName', scope: 'scope' }));
-  const getScope = (modelComponent) => ({
-    listLocal: () => {
-      return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
-    },
-  });
+  const getScope = (modelComponent?: ModelComponent) =>
+    ({
+      listLocal: () => {
+        return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
+      },
+    }) as unknown as ListLocalScopeArg;
   describe('listLocalScope', function () {
     before(() => {
-      // @ts-ignore
       this.timeout(0);
     });
     it('should return an empty array when there are no components in the scope', async () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const scope = getScope();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await ComponentsList.listLocalScope(scope);
       expect(results).to.deep.equal([]);
     });
   });
   describe('listScope', () => {
     let componentList;
-    const scope = {};
+    const scope: { listIncludeRemoteHead?: () => Promise<ModelComponent[]> } = {};
     before(() => {
       const bitMap = { getAllBitIds: () => new ComponentIdList() };
       const workspace = { consumer: { scope, bitMap, getCurrentLaneId: () => {} } };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentList = new ComponentsList(workspace);
+      componentList = new ComponentsList(workspace as unknown as ComponentsListArg);
     });
     it('should return results with the correct id', async () => {
       const modelComponent = getModelComponent();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope.listIncludeRemoteHead = async () => [modelComponent];
       const results = await componentList.listAll(false, true);
       const result = results[0];

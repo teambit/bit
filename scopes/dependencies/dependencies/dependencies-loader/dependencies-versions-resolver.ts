@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -8,10 +9,11 @@ import { isEmpty } from 'lodash';
 import type { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { isPlusVersion } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import type OverridesDependencies from './overrides-dependencies';
 import type { DebugComponentsDependency } from './auto-detect-deps';
-import { getValidComponentVersion } from './auto-detect-deps';
+import { getValidComponentVersion, getVersionInRangeIfOutOfIt } from './auto-detect-deps';
 
 type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
@@ -31,6 +33,8 @@ export async function updateDependenciesVersions(
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
   const dependenciesWithVersionFromConfig: string[] = [];
   component.dependenciesWithVersionFromConfig = dependenciesWithVersionFromConfig;
+  // components deleted from the workspace (e.g. "bit delete"). calculated lazily, only when needed.
+  let removedIds: ComponentIdList | undefined;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -78,7 +82,12 @@ export async function updateDependenciesVersions(
     // If there is a version in the node_modules/package folder, but it's not in the ws policy,
     // prefer the version from the model over the version from the node_modules
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const getFromModel = () => getIdFromModelDeps(component.componentFromModel!, id);
+    const getFromModelAlways = () => getIdFromModelDeps(component.componentFromModel!, id);
+    // when the dependency was deleted from the workspace (e.g. "bit delete --lane"), the version of the last snap is
+    // probably not available anymore (e.g. a lane snap). prefer the installed or the configured version in this case.
+    const getFromModel = () => (isRemovedFromWorkspace(id) ? null : getFromModelAlways());
+    // still better than no version at all.
+    const getFromModelOfRemoved = () => (isRemovedFromWorkspace(id) ? getFromModelAlways() : null);
 
     const strategies = [
       getFromComponentConfig,
@@ -90,6 +99,7 @@ export async function updateDependenciesVersions(
       getFromDepPackageJsonDueToAutoDetectOverrides,
       getFromModel,
       getFromDepPackageJson,
+      getFromModelOfRemoved,
     ];
 
     for (const strategy of strategies) {
@@ -111,9 +121,22 @@ export async function updateDependenciesVersions(
 
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
-    const { version: resolvedVersion, range, fromConfig } = resolveVersion(id, depType, packageName);
+    const resolved = resolveVersion(id, depType, packageName);
+    const { range, fromConfig } = resolved;
+    // the range that is recorded below. a range of a strategy (e.g. the workspace policy) replaces the one of the policy
+    const recordedRange = (supportComponentRange && range) || dependency.versionRange;
+    const resolvedVersion = fromConfig
+      ? resolved.version
+      : peerVersionInRange(dependency, depType, resolved.version, recordedRange);
     if (!resolvedVersion) {
       return;
+    }
+    if (resolvedVersion !== resolved.version) {
+      const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
+      if (debugDep) {
+        debugDep.versionResolvedFrom = `${debugDep.versionResolvedFrom} (out of the range ${recordedRange})`;
+        debugDep.version = resolvedVersion;
+      }
     }
     if (fromConfig) dependenciesWithVersionFromConfig.push(id.toStringWithoutVersion());
     dependency.id = dependency.id.changeVersion(resolvedVersion);
@@ -126,9 +149,24 @@ export async function updateDependenciesVersions(
       ) {
         dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
       }
-    } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
+    } else if (dependency.versionRange && depType !== 'peerDependencies' && !isPlusVersion(dependency.versionRange)) {
       dependency.versionRange = undefined;
     }
+  }
+  /**
+   * a policy (e.g. an env) sets the range of a component peer, and the package.json gets this range. the version found
+   * (e.g. the one of the last snap, or the installed one) can be out of this range, e.g. after the env raised it. then,
+   * take the version of the range, otherwise it's installed and recorded although the range doesn't allow it.
+   * a component of the workspace keeps its version.
+   */
+  function peerVersionInRange(
+    dependency: Dependency,
+    depType: DepType,
+    version?: string,
+    range?: string
+  ): string | undefined {
+    if (depType !== 'peerDependencies' || !version || !range || getIdFromBitMap(dependency.id)) return version;
+    return getVersionInRangeIfOutOfIt(version, range) || version;
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {
     dependencies.get().forEach((dep) => updateDependency(dep, depType));
@@ -151,6 +189,11 @@ export async function updateDependenciesVersions(
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
     return dependency;
+  }
+
+  function isRemovedFromWorkspace(componentId: ComponentID): boolean {
+    if (!removedIds) removedIds = consumer.bitMap.getRemoved();
+    return removedIds.hasWithoutVersion(componentId);
   }
 
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {

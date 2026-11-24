@@ -2,14 +2,12 @@ import { ComponentID } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { fetch, put, remove, action } from '@teambit/legacy.scope-api';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
-import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
 import { Ref } from '@teambit/objects';
-import type { LaneData, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
-import { RemovedObjects, loadScope } from '@teambit/legacy.scope';
+import type { LaneData, Scope, ScopeDescriptor, ListScopeResult } from '@teambit/legacy.scope';
+import { RemovedObjects, loadScope, listLocalScope } from '@teambit/legacy.scope';
 import type { DoctorResponse } from '@teambit/doctor';
 import { FsScopeNotLoaded } from '../exceptions';
 import type { Network } from '../network';
@@ -65,7 +63,7 @@ export default class Fs implements Network {
   }
 
   list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
-    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
+    return listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
   }
 
   show(bitId: ComponentID): Promise<Component> {

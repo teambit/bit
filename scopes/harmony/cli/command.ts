@@ -107,12 +107,6 @@ export interface Command {
   loadAspects?: boolean;
 
   /**
-   * do not set this. it is being set once the command run.
-   * the values are those followed `--` in the command line. (e.g. `bit import -- --no-optional`)
-   */
-  _packageManagerArgs?: string[];
-
-  /**
    * Command handler which prints the return value to the console and exits.
    * If the command has both, `render` and `report`, this one will be called when process.isTTY is false.
    * @param args  - arguments object as defined in name.

@@ -28,6 +28,7 @@ export {
   getRemovedOutput,
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
+  getConfigMergeConflictsOutput,
 } from './merge-output';
 
 export { applyModifiedVersion } from './apply-version';

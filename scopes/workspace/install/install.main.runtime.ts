@@ -58,6 +58,8 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
+  isPlusVersion,
+  resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -1167,7 +1169,7 @@ export class InstallMain {
 
   /**
    * Get the env's own peer dependencies from its policy (env.jsonc).
-   * Resolves "+" version placeholders using workspaceDeps.
+   * Resolves "+" (and "+^"/"+~") version placeholders using workspaceDeps.
    */
   private async _getEnvDependencies(
     envId: ComponentID,
@@ -1180,13 +1182,8 @@ export class InstallMain {
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => {
-          let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
-          // Similar to WorkspaceManifest._resolvePlusVersions
-          if (version === '+') {
-            version = workspaceDeps[dependencyId] || '*';
-          }
-          return [dependencyId, version];
+          return [dependencyId, resolvePlusVersion(value.version, workspaceDeps[dependencyId])];
         })
     );
   }
@@ -1318,7 +1315,8 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
+              // a plus supportedRange follows the version, so it doesn't need to be widened.
+              if (field === 'peers' && depEntry.supportedRange && !isPlusVersion(depEntry.supportedRange)) {
                 if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
                   depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
                 }
@@ -1755,7 +1753,7 @@ export class InstallMain {
 
     // Display a colorful and informative message
     this.logger.console(chalk.cyan('\n📦 External Package Manager Mode Detected'));
-    this.logger.console(chalk.gray('Your workspace is configured to use external package managers (npm, yarn, pnpm).'));
+    this.logger.console(chalk.gray('Your workspace delegates dependency installation to external npm or pnpm.'));
     this.logger.console(chalk.gray('Running "bit install" is not available in this mode.\n'));
 
     const question = chalk.bold(
@@ -1765,7 +1763,7 @@ export class InstallMain {
 
     if (!shouldSwitchToBitPM) {
       throw new Error(
-        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+        'External package manager mode is enabled. Please use npm or pnpm to install dependencies instead of "bit install".'
       );
     }
 

@@ -74,7 +74,9 @@ export class MDXDependencyDetector implements DependencyDetector {
       // Fall back to regex-based import detection which is sufficient for dependency resolution.
       const fileRef = filename ? ` File: ${filename}` : '';
       const msg = `MDX compilation failed, falling back to regex-based import detection.${fileRef} Error: ${err.message}`;
-      this.logger?.consoleWarning(msg);
+      // plain markdown (.md) isn't expected to be valid MDX (e.g. HTML comments are legit there), so don't warn.
+      if (filename?.endsWith('.md')) this.logger?.debug(msg);
+      else this.logger?.consoleWarning(msg);
       return detectImportsWithRegex(source);
     }
   }

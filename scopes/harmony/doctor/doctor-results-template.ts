@@ -30,8 +30,7 @@ function _createSummeryRow(examineResult: ExamineResult): SummeryRow {
 
 function _createSummeryTable(examineResult: ExamineResult[]): string {
   const header = [chalk.bold('category'), chalk.bold('name'), chalk.bold('description'), chalk.bold('status')];
-  const rows = examineResult.map(_createSummeryRow);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const rows: string[][] = examineResult.map(_createSummeryRow);
   rows.unshift(header);
   const output = table(rows, summeryTableColumnConfig);
   return output;
@@ -87,7 +86,6 @@ function _createMetaSection(metaData: DoctorMetaData) {
   bit version   : ${metaData.bitVersion}
   node version  : ${metaData.nodeVersion}
   npm version   : ${metaData.npmVersion || 'NA'}
-  yarn version  : ${metaData.yarnVersion || 'NA'}
   platform      : ${metaData.platform}
   user details  : ${metaData.userDetails}
 `;

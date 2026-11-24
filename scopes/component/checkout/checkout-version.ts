@@ -1,4 +1,5 @@
 import type { Consumer } from '@teambit/legacy.consumer';
+import type { ConfigMergeResult } from '@teambit/config-merger';
 import type { ComponentID } from '@teambit/component-id';
 import type { Version } from '@teambit/objects';
 import type { SourceFile } from '@teambit/component.sources';
@@ -23,6 +24,7 @@ export type ComponentStatusBase = {
 
 export type ComponentStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null | undefined;
+  configMergeResult?: ConfigMergeResult; // set only when the local config (.bitmap) conflicts with the checked out version
 };
 
 export type ApplyVersionWithComps = {

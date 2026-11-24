@@ -249,7 +249,6 @@ export class ScopeUI {
     const contexts = this.contextSlot.values();
     // eslint-disable-next-line react/prop-types
     const ComponentUrlFuncProvider: ScopeContextType = ({ children }) => (
-      // @ts-ignore TODO: fix this
       <ComponentUrlProvider value={componentUrlFn || this.componentUrlFunc}>{children}</ComponentUrlProvider>
     );
 

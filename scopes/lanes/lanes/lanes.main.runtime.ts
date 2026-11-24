@@ -229,6 +229,7 @@ export type CreateLaneResult = {
   laneId: LaneId;
   hash: string;
   alias?: string;
+  movedFromMain?: ComponentID[]; // components whose staged snaps on main were moved to the new lane
 };
 
 export class LanesMain {
@@ -575,6 +576,8 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
       alias,
       laneId: laneObj.toLaneId(),
       hash: laneObj.hash().toString(),
+      // a lane created from main gets only the staged snaps of main, which are moved to it
+      movedFromMain: currentLaneId.isDefault() ? laneObj.components.map((c) => c.id) : undefined,
     };
     return results;
   }

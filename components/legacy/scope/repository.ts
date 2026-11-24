@@ -4,7 +4,6 @@ import type Scope from './scope';
 
 export default class Repository {
   scope: Scope;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   path: string;
 
   constructor(scope: Scope) {

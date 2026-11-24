@@ -78,7 +78,7 @@ Flags: --include-message
 run build pipeline tasks in isolated environments
 
 executes the complete build pipeline including compilation, testing, linting, and other tasks defined by component environments. the build takes place in isolated directories called "capsules" where component files are copied and dependencies are installed via the package manager. by default processes only new and modified components - use --unmodified to build all components. because this process can take a while on large workspaces, various flags are available to optimize the process - see examples for debugging workflows.
-Flags: --unmodified, --dev, --install, --reuse-capsules, --rewrite, --reinstall, --tasks <string>, --cache-packages-on-capsule-root, --list-tasks <string>, --skip-tests, --loose, --skip-tasks <string>, --fail-fast, --include-snap, --include-tag, --ignore-issues <issues>
+Flags: --unmodified, --dev, --install, --reuse-capsules, --rewrite, --reinstall, --tasks <string>, --list-tasks <string>, --skip-tests, --loose, --skip-tasks <string>, --fail-fast, --include-snap, --include-tag, --ignore-issues <issues>
 
 ## bit capsule
 
@@ -95,7 +95,7 @@ Flags: --json, --with-stats
 ## bit capsule create [component-id...]
 
 create capsules for components
-Flags: --base-dir <name>, --root-base-dir <name>, --always-new, --seeders-only, --id <name>, --use-hash, --json, --install-packages, --package-manager <name>
+Flags: --base-dir <name>, --root-base-dir <name>, --always-new, --seeders-only, --id <name>, --use-hash, --json, --install-packages
 
 ## bit capsule delete
 
@@ -483,7 +483,7 @@ Flags: --json, --remote
 
 creates a new lane and switches to it
 
-a lane created from main (default-lane) is empty until components are snapped. a lane created from another lane contains all the components of the original lane.
+a lane created from main (default-lane) is empty until components are snapped. if main has snaps that were not exported, they are moved to the new lane, and main goes back to its remote state. a lane created from another lane contains all the components of the original lane.
 Flags: --scope <scope-name>, --alias <name>, --fork-lane-new-scope
 
 ## bit lane remove <lanes...>
@@ -714,7 +714,7 @@ Flags: --dry-run, --force
 
 test and validate component patterns
 
-this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
+this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'. to exclude by a state, use '!$'. e.g. '!$localOnly' or '$modified AND !$deprecated'.
 Flags: --json, --remote
 
 ## bit recover <component-pattern>
@@ -802,12 +802,12 @@ Flags: --all, --owner <owner>, --scope <scope>, --lane <lane>, --user <user>, --
 ## bit ripple log [job-id]
 
 show job details and component build task summaries (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --component <component>, --json
+Flags: --lane <lane>, --component <component>, --full-log, --json
 
 ## bit ripple errors [job-id]
 
 show build errors for a Ripple CI job (auto-detects current lane, or your last export when on main)
-Flags: --lane <lane>, --log, --json
+Flags: --lane <lane>, --full-log, --json
 
 ## bit ripple retry [job-id]
 

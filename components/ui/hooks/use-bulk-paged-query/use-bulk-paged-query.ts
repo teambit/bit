@@ -45,7 +45,42 @@ export type UseBulkPagedQueryResult<TItem> = {
   loading: boolean;
   /** number of pairs whose data has loaded so far. */
   loadedCount: number;
+  /**
+   * true when the server's GraphQL schema does not have this query or one of its fields, e.g. an older
+   * backend: the first page was rejected and no data loaded. Paging stops at once and every pair reads as
+   * `null`; retrying cannot help.
+   */
+  unsupported: boolean;
 };
+
+/**
+ * Whether an Apollo error says the server rejected the query itself: its GraphQL schema does not have
+ * a queried field or type (a validation error). That is a permanent mismatch with the backend, not a
+ * transient failure.
+ *
+ * Servers answer a validation error with HTTP 400. Some clients (e.g. Bit Cloud's error link) keep only
+ * Apollo's "Received status code 400" message and drop the server's text, so a 400 counts too: the
+ * callers' queries are static, so a 400 can only mean the schema rejected them.
+ */
+export function isUnsupportedQueryError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as {
+    graphQLErrors?: Array<{ message?: string }>;
+    networkError?: { statusCode?: number; result?: { errors?: Array<{ message?: string }> } };
+  };
+  if (err.networkError?.statusCode === 400) return true;
+  const messages = [
+    ...(err.graphQLErrors ?? []),
+    // Apollo reports a 400 response (how servers return validation errors) as a network error.
+    ...(err.networkError?.result?.errors ?? []),
+  ].map((e) => e?.message ?? '');
+  return messages.some(
+    (message) =>
+      /^Cannot query field "[^"]+" on type "[^"]+"/.test(message) ||
+      /^Unknown type "[^"]+"/.test(message) ||
+      message.endsWith('Received status code 400')
+  );
+}
 
 /**
  * Sequentially pages a bulk GraphQL query (page 1, then `fetchMore` for each subsequent page) and
@@ -78,7 +113,7 @@ export function useBulkPagedQuery<TItem>({
 
   // raw `useQuery` (not the app's `useDataQuery` wrapper) on purpose: the wrapper pops an error toast on
   // failure, which would fire on every transient page error this hook is designed to silently retry.
-  const { data, loading, fetchMore } = useQuery(query, {
+  const { data, loading, fetchMore, error } = useQuery(query, {
     variables: { pairs: stablePairs, offset: 0, limit: pageSize, host },
     skip,
     notifyOnNetworkStatusChange: true,
@@ -104,6 +139,10 @@ export function useBulkPagedQuery<TItem>({
     setStoppedShort(false);
     setErrorRetries(0);
   }, [sessionKey, skip]);
+  // the server's schema rejected the query. A schema mismatch rejects the very first page, so only a
+  // failed first page with no data counts: a later page's failure is retried as before, and results that
+  // already loaded are never discarded.
+  const unsupported = !skip && !data && isUnsupportedQueryError(error);
 
   // the session this hook is currently paging — a fetchMore started for an earlier session can still
   // resolve/reject after the inputs changed, so its callbacks check this before terminating the new
@@ -117,7 +156,7 @@ export function useBulkPagedQuery<TItem>({
   // every page loaded, paging stopped at a short page, or transient retries exhausted: no more requests.
   // NB: a transient error alone does NOT make us `done` — the loop retries it (up to MAX_PAGE_RETRIES),
   // and until then un-fetched pairs stay `undefined` (pending) rather than being reported as failed.
-  const done = allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES;
+  const done = allLoaded || stoppedShort || errorRetries >= MAX_PAGE_RETRIES || unsupported;
 
   // sequential background paging: whenever a page settles and pairs remain, request the next page.
   useEffect(() => {
@@ -206,7 +245,8 @@ export function useBulkPagedQuery<TItem>({
       },
       loading: !done,
       loadedCount: results.length,
+      unsupported,
     }),
-    [dataByCompareId, done, requestedCompareIds, results.length]
+    [dataByCompareId, done, requestedCompareIds, results.length, unsupported]
   );
 }

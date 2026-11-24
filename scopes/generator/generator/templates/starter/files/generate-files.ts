@@ -1,5 +1,5 @@
 export function generateFiles() {
-  return `import { WorkspaceContext, WorkspaceFile } from '@teambit/generator';
+  return `import { WorkspaceContext, WorkspaceFile } from '@teambit/envs.contracts';
   import { workspaceConfig } from './workspace-config';
   import { gitIgnore } from './git-ignore';
   

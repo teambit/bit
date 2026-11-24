@@ -17,7 +17,6 @@ export default class License extends AbstractVinyl {
   }
 
   static deserialize(str: string) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new License({ path: LICENSE_FILENAME, contents: str ? Buffer.from(str) : undefined });
+    return new License({ path: LICENSE_FILENAME, contents: (str ? Buffer.from(str) : undefined) as Buffer });
   }
 }

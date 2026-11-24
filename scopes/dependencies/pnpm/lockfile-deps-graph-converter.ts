@@ -1,12 +1,19 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
-import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
+import {
+  type LockfileFile,
+  type LockfileFileProjectResolvedDependencies,
+  type LockfileFileProjectSnapshot,
+} from '@pnpm/lockfile.types';
 import type * as Dp from '@pnpm/deps.path';
-import { pick, partition } from 'lodash';
+import { escapeRegExp, omit, pick, partition } from 'lodash';
+import type * as ParseOverridesModule from '@pnpm/config.parse-overrides';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
+import semver from 'semver';
 import {
   DependenciesGraph,
+  splitDependenciesGraphPeerIds,
   type PackagesMap,
   type PackageAttributes,
   type DependencyEdge,
@@ -28,13 +35,32 @@ import { type BitLockfileFile } from './lynx';
 type ResolveFunction = (
   wantedDependency: { alias?: string; bareSpecifier?: string },
   opts: { lockfileDir?: string; projectDir?: string; preferredVersions?: Record<string, unknown> }
-) => Promise<{ resolution?: Record<string, unknown> }>;
+) => Promise<{
+  resolution?: Record<string, unknown>;
+  /** The resolved package's manifest; a registry package's carries its tarball's integrity in `dist`. */
+  manifest?: unknown;
+}>;
+
+/**
+ * The integrity a resolution carries: in `resolution` when the resolver
+ * reports one, else in the resolved manifest's `dist`, which is where
+ * `@pnpm/napi`'s `resolveDependency` reports a registry package's.
+ */
+function resolvedIntegrity(resolveResult: Awaited<ReturnType<ResolveFunction>>): string | undefined {
+  const { resolution, manifest } = resolveResult;
+  if (resolution != null && typeof resolution.integrity === 'string' && resolution.integrity) {
+    return resolution.integrity;
+  }
+  const dist = (manifest as { dist?: { integrity?: unknown } } | undefined)?.dist;
+  return typeof dist?.integrity === 'string' && dist.integrity ? dist.integrity : undefined;
+}
 
 // @pnpm/deps.path is ESM-only; load it through a .cjs shim so the require()
 // chain in the build capsule's mocha runner doesn't trip on the transitive ESM
 // import. Call `init()` once before invoking the public converters; helpers
 // reach for this module-level slot synchronously.
 let dp!: typeof Dp;
+let parseOverrides!: typeof ParseOverridesModule.parseOverrides;
 let loading: Promise<void> | undefined;
 
 function ensureInitialized(): void {
@@ -46,10 +72,11 @@ function ensureInitialized(): void {
 export function init(): Promise<void> {
   loading ??= (async () => {
     const { loadEsm } = require('./load-pnpm-esm.cjs') as {
-      loadEsm: () => Promise<{ dp: typeof Dp }>;
+      loadEsm: () => Promise<{ dp: typeof Dp; parseOverrides: typeof ParseOverridesModule.parseOverrides }>;
     };
     const m = await loadEsm();
     dp = m.dp;
+    parseOverrides = m.parseOverrides;
   })();
   return loading;
 }
@@ -62,14 +89,114 @@ function getLockfileImporterId(lockfileDir: string, projectDir: string): string 
   return normalizePath(path.relative(lockfileDir, projectDir)) || '.';
 }
 
+function scrubOwnComponentFromLockfile(lockfile: BitLockfileFile, pkgName?: string): BitLockfileFile {
+  if (!pkgName) return lockfile;
+  const prefix = `${pkgName}@`;
+  let snapshots: BitLockfileFile['snapshots'] = lockfile.snapshots;
+  let snapshotsCopied = false;
+  const ensureSnapshotsCopy = () => {
+    if (!snapshotsCopied && snapshots) {
+      snapshots = { ...snapshots };
+      snapshotsCopied = true;
+    }
+  };
+  for (const depPath of Object.keys(snapshots ?? {})) {
+    if (depPath.startsWith(prefix) && depPath.slice(prefix.length).startsWith('file:')) {
+      ensureSnapshotsCopy();
+      delete snapshots![depPath];
+    }
+  }
+  let packages: BitLockfileFile['packages'] = lockfile.packages;
+  let packagesCopied = false;
+  for (const pkgId of Object.keys(packages ?? {})) {
+    if (pkgId.startsWith(prefix) && pkgId.slice(prefix.length).startsWith('file:')) {
+      if (!packagesCopied && packages) {
+        packages = { ...packages };
+        packagesCopied = true;
+      }
+      delete packages![pkgId];
+    }
+  }
+  for (const [depPath, snapshot] of Object.entries(snapshots ?? {})) {
+    let snapshotCopied = false;
+    let currentSnapshot = snapshot;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = currentSnapshot[depType];
+      if (deps && deps[pkgName]?.startsWith('file:')) {
+        ensureSnapshotsCopy();
+        if (!snapshotCopied) {
+          currentSnapshot = { ...currentSnapshot };
+          snapshots![depPath] = currentSnapshot;
+          snapshotCopied = true;
+        }
+        const nextDeps = { ...deps };
+        delete nextDeps[pkgName];
+        if (Object.keys(nextDeps).length === 0) {
+          delete currentSnapshot[depType];
+        } else {
+          currentSnapshot[depType] = nextDeps;
+        }
+      }
+    }
+  }
+  if (!snapshotsCopied && !packagesCopied) return lockfile;
+  return {
+    ...lockfile,
+    snapshots,
+    packages,
+  };
+}
+
+export interface LockfileToGraphCache {
+  edges: WeakMap<object, { depPath: string; edge: DependencyEdge | null }>;
+  packages: WeakMap<object, { pkgId: string; replacedPkgId: string; graphPkg: PackageAttributes }>;
+  componentIdByPkgName?: ComponentIdByPkgName;
+  depsRequiringBuild?: string[];
+  contextKey?: string;
+  replaceFileVersion?: (s: string) => string;
+}
+
+export function createLockfileToGraphCache(): LockfileToGraphCache {
+  return {
+    edges: new WeakMap(),
+    packages: new WeakMap(),
+  };
+}
+
+function getCacheContextKey(componentIdByPkgName: ComponentIdByPkgName, depsRequiringBuild?: string[]): string {
+  let key = '';
+  for (const [pkgName, compId] of componentIdByPkgName.entries()) {
+    key += `${pkgName}:${compId.scope}/${compId.fullName}@${compId.version};`;
+  }
+  if (depsRequiringBuild?.length) {
+    key += `|build:${depsRequiringBuild.join(',')}`;
+  }
+  return key;
+}
+
 function convertLockfileToGraphFromCapsule(
   lockfile: BitLockfileFile,
   {
+    pkgName,
     componentRelativeDir,
     componentIdByPkgName,
-  }: Pick<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
+    replaceFileVersion,
+    narrowToComponentImporter = false,
+    cache,
+  }: Pick<
+    CalcDepsGraphOptions & CalcDepsGraphForComponentOptions,
+    'pkgName' | 'componentRelativeDir' | 'componentIdByPkgName'
+  > & {
+    replaceFileVersion?: (s: string) => string;
+    narrowToComponentImporter?: boolean;
+    cache?: LockfileToGraphCache;
+  }
 ): DependenciesGraph {
-  const componentImporter = lockfile.importers![componentRelativeDir];
+  const narrowedLockfile = scrubOwnComponentFromLockfile(
+    narrowToComponentImporter ? filterLockfileByImporters(lockfile, [componentRelativeDir]) : lockfile,
+    pkgName
+  );
+  const componentImporter = narrowedLockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
     if (componentImporter[depType] != null) {
@@ -78,7 +205,12 @@ function convertLockfileToGraphFromCapsule(
       directDependencies.push(...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional));
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  return _convertLockfileToGraph(narrowedLockfile, {
+    componentIdByPkgName,
+    directDependencies,
+    replaceFileVersion,
+    cache,
+  });
 }
 
 function importerDepsToNeighbours(
@@ -104,19 +236,52 @@ export function convertLockfileToGraph(
     componentRootDir,
     componentRelativeDir,
     componentIdByPkgName,
-  }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'>
+    replaceFileVersion,
+    cache,
+  }: Omit<CalcDepsGraphOptions & CalcDepsGraphForComponentOptions, 'rootDir' | 'components' | 'component'> & {
+    replaceFileVersion?: (s: string) => string;
+    cache?: LockfileToGraphCache;
+  }
 ): DependenciesGraph {
   ensureInitialized();
   if (componentRootDir == null || pkgName == null) {
-    return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+      cache,
+    });
+  }
+  const rootImporterDeps = lockfile.importers![componentRootDir]?.dependencies?.[pkgName];
+  if (rootImporterDeps == null) {
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+      narrowToComponentImporter: lockfile.importers?.[componentRootDir] != null,
+      cache,
+    });
+  }
+  const lockedFileVersion = rootImporterDeps.version;
+  const lockedPkgDepPath = `${pkgName}@${lockedFileVersion}`;
+  const lockedPkg = lockfile.snapshots?.[lockedPkgDepPath];
+  if (lockedPkg == null) {
+    return convertLockfileToGraphFromCapsule(lockfile, {
+      pkgName,
+      componentRelativeDir,
+      componentIdByPkgName,
+      replaceFileVersion,
+      narrowToComponentImporter: lockfile.importers?.[componentRootDir] != null,
+      cache,
+    });
   }
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   if (componentDevImporter.devDependencies != null) {
     directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
   }
-  const lockedPkgDepPath = `${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`;
-  const lockedPkg = lockfile.snapshots![lockedPkgDepPath];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
@@ -131,8 +296,10 @@ export function convertLockfileToGraph(
       });
     }
   }
-  delete lockfile.snapshots![lockedPkgDepPath];
-  delete lockfile.packages![dp.removeSuffix(lockedPkgDepPath)];
+  const snapshots = { ...lockfile.snapshots };
+  const packages = { ...lockfile.packages };
+  delete snapshots[lockedPkgDepPath];
+  delete packages[dp.removeSuffix(lockedPkgDepPath)];
   // Scrub back-edges from a circular workspace dep (another workspace
   // component depending on the one we're processing). Otherwise the
   // back-edge survives buildEdges but its target — the just-deleted
@@ -140,17 +307,31 @@ export function convertLockfileToGraph(
   // convertGraphToLockfile would later materialise that neighbour as an
   // empty packages entry and ask the registry for the workspace
   // snap-version, which may never have been published.
-  const lockedFileVersion = lockfile.importers![componentRootDir].dependencies![pkgName].version;
-  for (const snapshot of Object.values(lockfile.snapshots ?? {})) {
+  for (const [depPath, snapshot] of Object.entries(snapshots)) {
+    let snapshotCopied = false;
+    let currentSnapshot = snapshot;
     for (const depType of ['dependencies', 'optionalDependencies'] as const) {
-      const deps = snapshot[depType];
+      const deps = currentSnapshot[depType];
       if (deps?.[pkgName] === lockedFileVersion) {
-        delete deps[pkgName];
-        if (Object.keys(deps).length === 0) delete snapshot[depType];
+        if (!snapshotCopied) {
+          currentSnapshot = { ...currentSnapshot };
+          snapshots[depPath] = currentSnapshot;
+          snapshotCopied = true;
+        }
+        const nextDeps = { ...deps };
+        delete nextDeps[pkgName];
+        if (Object.keys(nextDeps).length === 0) {
+          delete currentSnapshot[depType];
+        } else {
+          currentSnapshot[depType] = nextDeps;
+        }
       }
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  return _convertLockfileToGraph(
+    { ...lockfile, snapshots, packages },
+    { componentIdByPkgName, directDependencies, replaceFileVersion, cache }
+  );
 }
 
 function _convertLockfileToGraph(
@@ -158,14 +339,50 @@ function _convertLockfileToGraph(
   {
     componentIdByPkgName,
     directDependencies,
+    replaceFileVersion,
+    cache,
   }: {
     componentIdByPkgName: ComponentIdByPkgName;
     directDependencies: DependencyNeighbour[];
+    replaceFileVersion?: (s: string) => string;
+    cache?: LockfileToGraphCache;
   }
 ): DependenciesGraph {
+  let resolvedReplacer = replaceFileVersion;
+  if (cache) {
+    const depsRequiringBuild = lockfile.bit?.depsRequiringBuild;
+    let isContextChanged =
+      replaceFileVersion != null && cache.replaceFileVersion != null && cache.replaceFileVersion !== replaceFileVersion;
+    if (cache.componentIdByPkgName !== componentIdByPkgName || cache.depsRequiringBuild !== depsRequiringBuild) {
+      const contextKey = getCacheContextKey(componentIdByPkgName, depsRequiringBuild);
+      if (cache.contextKey !== contextKey) {
+        isContextChanged = true;
+        cache.contextKey = contextKey;
+      }
+      cache.componentIdByPkgName = componentIdByPkgName;
+      cache.depsRequiringBuild = depsRequiringBuild;
+    }
+    if (isContextChanged) {
+      cache.edges = new WeakMap();
+      cache.packages = new WeakMap();
+      cache.replaceFileVersion = undefined;
+    }
+    resolvedReplacer ??= cache.replaceFileVersion ?? createFileVersionReplacer(componentIdByPkgName);
+    cache.replaceFileVersion = resolvedReplacer;
+  } else {
+    resolvedReplacer ??= createFileVersionReplacer(componentIdByPkgName);
+  }
   const graph = new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
-    packages: buildPackages(lockfile, { componentIdByPkgName }),
+    edges: buildEdges(lockfile, {
+      directDependencies,
+      replaceFileVersion: resolvedReplacer,
+      edgesCache: cache?.edges,
+    }),
+    packages: buildPackages(lockfile, {
+      componentIdByPkgName,
+      replaceFileVersion: resolvedReplacer,
+      packagesCache: cache?.packages,
+    }),
     pnpmfileChecksum: lockfile.pnpmfileChecksum,
     lockfileSettings: lockfile.settings,
     overrides: lockfile.overrides,
@@ -178,32 +395,41 @@ function buildEdges(
   lockfile: BitLockfileFile,
   {
     directDependencies,
-    componentIdByPkgName,
+    replaceFileVersion,
+    edgesCache,
   }: {
     directDependencies: DependencyNeighbour[];
-    componentIdByPkgName: ComponentIdByPkgName;
+    replaceFileVersion: (s: string) => string;
+    edgesCache?: LockfileToGraphCache['edges'];
   }
 ): DependencyEdge[] {
-  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
-    const neighbours = extractDependenciesFromSnapshot(snapshot, replaceFileVersion);
-    const replacedDepPath = replaceFileVersion(depPath);
-    const edge: DependencyEdge = {
-      id: replacedDepPath,
-      neighbours,
-    };
-    const pkgId = dp.removeSuffix(replacedDepPath);
-    if (pkgId !== replacedDepPath) {
-      edge.attr = { pkgId };
-    }
-    if (snapshot.transitivePeerDependencies) {
-      edge.attr = {
-        ...edge.attr,
-        transitivePeerDependencies: snapshot.transitivePeerDependencies,
+    const cached = edgesCache?.get(snapshot);
+    let edge: DependencyEdge | null;
+    if (cached && cached.depPath === depPath) {
+      edge = cached.edge;
+    } else {
+      const neighbours = extractDependenciesFromSnapshot(snapshot, replaceFileVersion);
+      const replacedDepPath = replaceFileVersion(depPath);
+      const candidate: DependencyEdge = {
+        id: replacedDepPath,
+        neighbours,
       };
+      const pkgId = dp.removeSuffix(replacedDepPath);
+      if (pkgId !== replacedDepPath) {
+        candidate.attr = { pkgId };
+      }
+      if (snapshot.transitivePeerDependencies) {
+        candidate.attr = {
+          ...candidate.attr,
+          transitivePeerDependencies: snapshot.transitivePeerDependencies,
+        };
+      }
+      edge = candidate.neighbours.length > 0 || candidate.id !== pkgId ? candidate : null;
+      edgesCache?.set(snapshot, { depPath, edge });
     }
-    if (edge.neighbours.length > 0 || edge.id !== pkgId) {
+    if (edge) {
       edges.push(edge);
     }
   }
@@ -240,13 +466,25 @@ function extractDependenciesFromSnapshot(
 
 function buildPackages(
   lockfile: BitLockfileFile,
-  { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
+  {
+    componentIdByPkgName,
+    replaceFileVersion,
+    packagesCache,
+  }: {
+    componentIdByPkgName: ComponentIdByPkgName;
+    replaceFileVersion: (s: string) => string;
+    packagesCache?: LockfileToGraphCache['packages'];
+  }
 ): PackagesMap {
-  const replaceFileVersion = createFileVersionReplacer(componentIdByPkgName);
   const depsRequiringBuild = lockfile.bit?.depsRequiringBuild;
   const depsRequiringBuildSet = depsRequiringBuild ? new Set(depsRequiringBuild) : undefined;
   const packages: PackagesMap = new Map();
   for (const [pkgId, pkg] of Object.entries(lockfile.packages ?? {})) {
+    const cached = packagesCache?.get(pkg);
+    if (cached && cached.pkgId === pkgId) {
+      packages.set(cached.replacedPkgId, cached.graphPkg);
+      continue;
+    }
     const graphPkg = pick(pkg, [
       'bundledDependencies',
       'cpu',
@@ -276,12 +514,13 @@ function buildPackages(
     if (depsRequiringBuildSet?.has(pkgId)) {
       graphPkg.requiresBuild = true;
     }
+    packagesCache?.set(pkg, { pkgId, replacedPkgId, graphPkg });
     packages.set(replacedPkgId, graphPkg);
   }
   return packages;
 }
 
-function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): (s: string) => string {
+export function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): (s: string) => string {
   if (componentIdByPkgName.size === 0) return (s) => s;
 
   const replacements = new Map<string, string>();
@@ -298,16 +537,97 @@ function createFileVersionReplacer(componentIdByPkgName: ComponentIdByPkgName): 
   };
 }
 
+/**
+ * Narrow a lockfile in-memory to the transitive closure of what `importerIds`
+ * reaches, without crossing the N-API boundary or cloning the full lockfile.
+ */
+export function filterLockfileByImporters(
+  lockfile: BitLockfileFile,
+  importerIds: string[],
+  importersOverride?: Record<string, LockfileFileProjectSnapshot>
+): BitLockfileFile {
+  ensureInitialized();
+  const getImporter = (id: string) => importersOverride?.[id] ?? lockfile.importers?.[id];
+  const reachablePackages = new Set<string>();
+  const reachableSnapshots = new Set<string>();
+  const stack: string[] = [];
+
+  const visit = (depPath: string) => {
+    stack.push(depPath);
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      if (reachableSnapshots.has(current)) continue;
+      const pkgId = dp.removeSuffix(current);
+      if (lockfile.packages?.[pkgId] != null) {
+        reachablePackages.add(pkgId);
+      }
+      const snapshot = lockfile.snapshots?.[current];
+      if (!snapshot) continue;
+      reachableSnapshots.add(current);
+      for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+        for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
+          const subDepPath = dp.refToRelative(ref, name);
+          if (subDepPath != null) {
+            stack.push(subDepPath);
+          }
+        }
+      }
+    }
+  };
+
+  for (const importerId of importerIds) {
+    const importer = getImporter(importerId);
+    if (!importer) continue;
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      for (const [name, dep] of Object.entries(importer[depType] ?? {}) as Array<[string, { version?: string }]>) {
+        if (!dep?.version) continue;
+        const depPath = dp.refToRelative(dep.version, name);
+        if (depPath != null) {
+          visit(depPath);
+        }
+      }
+    }
+  }
+
+  const filteredPackages: NonNullable<BitLockfileFile['packages']> = {};
+  for (const pkgId of reachablePackages) {
+    filteredPackages[pkgId] = lockfile.packages![pkgId];
+  }
+
+  const filteredSnapshots: NonNullable<BitLockfileFile['snapshots']> = {};
+  for (const depPath of reachableSnapshots) {
+    filteredSnapshots[depPath] = lockfile.snapshots![depPath];
+  }
+
+  const filteredImporters: NonNullable<BitLockfileFile['importers']> = {};
+  for (const importerId of importerIds) {
+    const importer = getImporter(importerId);
+    if (importer != null) {
+      filteredImporters[importerId] = importer;
+    }
+  }
+
+  return {
+    ...lockfile,
+    importers: filteredImporters,
+    packages: filteredPackages,
+    snapshots: filteredSnapshots,
+  };
+}
+
 export async function convertGraphToLockfile(
   _graph: DependenciesGraph,
   {
     manifests,
     rootDir,
     resolve,
+    onComponentPkgDropped,
   }: {
     manifests: Record<string, ProjectManifest>;
     rootDir: string;
     resolve: ResolveFunction;
+    /** Called for each workspace-component package the lockfile leaves out, with why. */
+    onComponentPkgDropped?: (pkgId: string, reason: string) => void;
   }
 ): Promise<BitLockfileFile> {
   await init();
@@ -384,6 +704,12 @@ export async function convertGraphToLockfile(
   }
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
+    const workspaceVersions = new Map(
+      Array.from(workspaceComponentDirs(manifests, rootDir).keys()).map((pkgId) => {
+        const parsed = dp.parse(pkgId);
+        return [parsed.name!, parsed.version!] as [string, string];
+      })
+    );
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -397,11 +723,7 @@ export async function convertGraphToLockfile(
             const version = `link:${normalizePath(path.relative(projectDir, specifier.substring(5)))}`;
             lockfile.importers![projectId][depType][name] = { version, specifier };
           } else {
-            const edgeId = rootEdge.neighbours.find(
-              (directDep) =>
-                directDep.name === name &&
-                (directDep.specifier === specifier || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
-            )?.id;
+            const edgeId = findImporterDepPath(graph, rootEdge, name, specifier, workspaceVersions);
             if (edgeId) {
               const parsed = dp.parse(edgeId);
               const ref = depPathToRef(parsed);
@@ -412,6 +734,12 @@ export async function convertGraphToLockfile(
       }
     }
   }
+  dedupeSnapshotDepsToRootManifest(lockfile, manifests[rootDir]);
+  linkWorkspaceComponents(lockfile, manifests, rootDir);
+  // Only what the importers reach is worth resolving: a graph holds entries
+  // no manifest here declares (an attached extension's dev dependencies, for
+  // one), and a registry lookup for them would be wasted or could fail.
+  dropUnreachableLockfileEntries(lockfile);
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
@@ -444,15 +772,14 @@ export async function convertGraphToLockfile(
             graph.packages.get(pkgToResolve.pkgId)?.component != null
           ) {
             failedWorkspaceComponentPkgs.add(pkgToResolve.pkgId);
+            onComponentPkgDropped?.(pkgToResolve.pkgId, `the registry has no such version: ${(err as Error).message}`);
             return;
           }
           throw err;
         }
-        const { resolution } = resolveResult;
-        if (resolution != null && 'integrity' in resolution && resolution.integrity) {
-          lockfile.packages[pkgToResolve.pkgId].resolution = {
-            integrity: resolution.integrity as string,
-          };
+        const integrity = resolvedIntegrity(resolveResult);
+        if (integrity) {
+          lockfile.packages[pkgToResolve.pkgId].resolution = { integrity };
         }
       }
     })
@@ -476,6 +803,9 @@ export async function convertGraphToLockfile(
       (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) &&
       graph.packages.get(pkgId)?.component != null
     ) {
+      if (!failedWorkspaceComponentPkgs.has(pkgId)) {
+        onComponentPkgDropped?.(pkgId, 'its resolution has no integrity');
+      }
       failedWorkspaceComponentPkgs.add(pkgId);
     }
   }
@@ -483,6 +813,7 @@ export async function convertGraphToLockfile(
     scrubPkgsFromLockfile(lockfile, failedWorkspaceComponentPkgs);
   }
   dropUnreachableLockfileEntries(lockfile);
+  markOptionalOnlyEntries(lockfile);
   // Validate the generated lockfile
   for (const [depPath, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || Object.keys(pkg.resolution).length === 0) {
@@ -505,6 +836,84 @@ export async function convertGraphToLockfile(
     }
     return deps;
   }
+}
+
+/**
+ * The dep path a restored importer entry for `name@specifier` points at: the
+ * root edge neighbour the manifest's dependency matches, or, when the manifest
+ * asks for a version the graph holds only deeper in the tree (an env peer a
+ * capsule manifest took from the graph), the snapshot of that version,
+ * preferring the peer variant the component's own dependencies were resolved
+ * against. Nothing when the graph holds no such version.
+ */
+function findImporterDepPath(
+  graph: DependenciesGraph,
+  rootEdge: DependencyEdge,
+  name: string,
+  specifier: string,
+  workspaceVersions: Map<string, string>
+): string | undefined {
+  const sameName = rootEdge.neighbours.filter((directDep) => directDep.name === name);
+  // A merged graph keeps one neighbour per distinct specifier of a package,
+  // so the one recorded for this very specifier or version comes first; a
+  // range is matched only when none was, and among several resolutions that
+  // satisfy it the highest version, which is what a resolution would pick.
+  const recorded =
+    sameName.find((directDep) => directDep.specifier === specifier) ??
+    sameName.find((directDep) => dp.removeSuffix(directDep.id) === `${name}@${specifier}`);
+  if (recorded) return recorded.id;
+  const satisfying = sameName.filter((directDep) =>
+    specifierMatchesDirectDep(name, specifier, directDep, workspaceVersions)
+  );
+  if (satisfying.length > 0) {
+    return satisfying.reduce((highest, directDep) =>
+      semver.gt(dp.parse(directDep.id).version!, dp.parse(highest.id).version!) ? directDep : highest
+    ).id;
+  }
+  const pkgId = `${name}@${specifier}`;
+  const candidates = graph.edges
+    .filter(
+      (edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? dp.removeSuffix(edge.id)) === pkgId
+    )
+    .map((edge) => edge.id);
+  if (candidates.length === 0) return graph.packages.has(pkgId) ? pkgId : undefined;
+  const peerIdsOfDirectDeps = new Set<string>();
+  const stack = rootEdge.neighbours.map(({ id }) => id);
+  while (stack.length > 0) {
+    for (const peerId of splitDependenciesGraphPeerIds(stack.pop()!)) {
+      peerIdsOfDirectDeps.add(peerId);
+      stack.push(peerId);
+    }
+  }
+  return candidates.find((id) => peerIdsOfDirectDeps.has(id)) ?? candidates[0];
+}
+
+/**
+ * Whether the manifest's `specifier` for `name`, which no direct dependency
+ * was recorded for, is satisfied by the direct dependency the graph recorded
+ * under another specifier: a workspace reference the graph resolved to the
+ * version of the workspace component of that name, or a range the resolved
+ * version satisfies, read the way pnpm reads ranges, so a prerelease
+ * satisfies only a range that names one.
+ */
+function specifierMatchesDirectDep(
+  name: string,
+  specifier: string,
+  directDep: DependencyNeighbour,
+  workspaceVersions: Map<string, string>
+): boolean {
+  const { version } = dp.parse(directDep.id);
+  if (version == null) return false;
+  if (specifier.startsWith('workspace:')) {
+    // The entry becomes the workspace component's `file:` record, so only the
+    // version the workspace holds can stand for it, and the range, when the
+    // reference carries one, has to accept that version.
+    if (workspaceVersions.get(name) !== version) return false;
+    const range = specifier.slice('workspace:'.length);
+    if (range === '' || range === '*' || range === '^' || range === '~') return true;
+    return semver.validRange(range) != null && semver.satisfies(version, range);
+  }
+  return semver.validRange(specifier) != null && semver.satisfies(version, specifier);
 }
 
 interface PkgToResolve {
@@ -557,8 +966,8 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
-          if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
-          stack.push(`${name}@${ref}`);
+          const subDepPath = refToDepPath(ref, name);
+          if (subDepPath != null) stack.push(subDepPath);
         }
       }
     }
@@ -566,8 +975,8 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
   for (const importer of Object.values(lockfile.importers ?? {})) {
     for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
       for (const [name, { version }] of Object.entries(importer[depType] ?? {})) {
-        if (version.startsWith('link:') || version.startsWith('file:')) continue;
-        visit(`${name}@${version}`);
+        const depPath = refToDepPath(version, name);
+        if (depPath != null) visit(depPath);
       }
     }
   }
@@ -586,6 +995,206 @@ function dropUnreachableLockfileEntries(lockfile: BitLockfileFile): void {
       reachablePackages.has(dp.removeSuffix(depPath))
     );
   }
+}
+
+/**
+ * The workspace components among `manifests`, keyed by the `name@version`
+ * id the graph records them under, with the lockfile-relative directory pnpm
+ * records them at. The root project is not a component.
+ */
+function workspaceComponentDirs(manifests: Record<string, ProjectManifest>, rootDir: string): Map<string, string> {
+  const dirs = new Map<string, string>();
+  for (const [projectDir, { name, version }] of Object.entries(manifests)) {
+    if (!name || !version) continue;
+    const relativeDir = getLockfileImporterId(rootDir, projectDir);
+    if (relativeDir === '.') continue;
+    dirs.set(`${name}@${snapToSemver(version)}`, relativeDir);
+  }
+  return dirs;
+}
+
+/**
+ * The inverse of `createFileVersionReplacer`: rewrites every `name@version`
+ * of a workspace component in `dirs`, wherever it stands in a package id, a
+ * dep path or a peer suffix, to the `name@file:<dir>` pnpm records for it.
+ */
+function createWorkspaceComponentReplacer(dirs: Map<string, string>): (s: string) => string {
+  if (dirs.size === 0) return (s) => s;
+  const ids = Array.from(dirs.keys()).map(escapeRegExp);
+  // An id starts a dep path or a peer suffix segment, or follows the alias in
+  // an aliased dep path, and ends where its own peer suffix or the enclosing
+  // segment does.
+  const pattern = new RegExp(`(?<=^|[(@])(${ids.join('|')})(?=[()]|$)`, 'g');
+  return (s: string) => s.replace(pattern, (id) => `${id.slice(0, id.lastIndexOf('@'))}@file:${dirs.get(id)!}`);
+}
+
+/**
+ * Record the workspace components the graph resolved to, at the version the
+ * workspace holds them, the way pnpm does: as `file:` directory packages, with
+ * the graph's resolution of their dependencies as their snapshot. pnpm links
+ * every dependency on such a version to the workspace component
+ * (`linkWorkspacePackages: deep`), transitive ones included, so a registry
+ * entry for it would only be resolved again, and pnpm accepts the snapshot
+ * while the component's manifest still declares the dependencies it records.
+ * Other versions of the same component stay registry packages.
+ */
+function linkWorkspaceComponents(
+  lockfile: BitLockfileFile & Required<Pick<BitLockfileFile, 'packages'>>,
+  manifests: Record<string, ProjectManifest>,
+  rootDir: string
+): void {
+  const dirs = workspaceComponentDirs(manifests, rootDir);
+  if (dirs.size === 0) return;
+  const replace = createWorkspaceComponentReplacer(dirs);
+  const replaceRef = (name: string, ref: string) =>
+    ref.startsWith('link:') ? ref : replace(`${name}@${ref}`).slice(name.length + 1);
+  const packages: NonNullable<BitLockfileFile['packages']> = {};
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
+    const directory = dirs.get(pkgId);
+    if (directory == null) {
+      packages[pkgId] = pkg;
+      continue;
+    }
+    // The id carries the name and the version, and the directory is the
+    // resolution. The rest (peers, engines, bins, ...) describes the package
+    // either way.
+    packages[replace(pkgId)] = {
+      ...omit(pkg, ['resolution', 'name', 'version']),
+      resolution: { directory, type: 'directory' },
+    };
+  }
+  lockfile.packages = packages;
+  const snapshots: NonNullable<BitLockfileFile['snapshots']> = {};
+  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = snapshot[depType];
+      if (!deps) continue;
+      for (const [name, ref] of Object.entries(deps)) {
+        deps[name] = replaceRef(name, ref);
+      }
+    }
+    snapshots[replace(depPath)] = snapshot;
+  }
+  lockfile.snapshots = snapshots;
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
+      for (const [name, dep] of Object.entries(importer[depType] ?? {})) {
+        dep.version = replaceRef(name, dep.version);
+      }
+    }
+  }
+  if (lockfile.bit?.depsRequiringBuild) {
+    lockfile.bit.depsRequiringBuild = lockfile.bit.depsRequiringBuild.map(replace);
+  }
+}
+
+/**
+ * The dep path a lockfile ref under `name` points at, or `undefined` for a
+ * `link:` ref, which points at no snapshot. An aliased ref
+ * (`real-name@1.0.0` under the alias) names the real package, and a `file:`
+ * ref a workspace component's own snapshot.
+ */
+export function refToDepPath(ref: string, name: string): string | undefined {
+  ensureInitialized();
+  return dp.refToRelative(ref, name) ?? undefined;
+}
+
+/**
+ * Set each snapshot's `optional` flag the way pnpm does: on when every path
+ * from an importer to it goes through an `optionalDependencies` edge, off
+ * otherwise. The graph does not record the flag, and an install that takes
+ * the lockfile as it is relies on it: a package reached only optionally may
+ * fail to build or to install, one reached otherwise may not.
+ */
+export function markOptionalOnlyEntries(lockfile: Pick<LockfileFile, 'importers' | 'snapshots'>): void {
+  const snapshots = lockfile.snapshots ?? {};
+  // Walk (dep path, reached optionally): `dependencies` edges keep the
+  // context, `optionalDependencies` edges always enter it.
+  const visited = new Set<string>();
+  const reachedNonOptionally = new Set<string>();
+  const reachedOptionally = new Set<string>();
+  const queue: Array<[string, boolean]> = [];
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const [depType, optional] of [
+      ['dependencies', false],
+      ['devDependencies', false],
+      ['optionalDependencies', true],
+    ] as const) {
+      for (const [name, { version }] of Object.entries(importer[depType] ?? {})) {
+        const depPath = refToDepPath(version, name);
+        if (depPath != null) queue.push([depPath, optional]);
+      }
+    }
+  }
+  while (queue.length > 0) {
+    const [depPath, optional] = queue.pop()!;
+    const visitKey = `${optional ? 'o' : 'r'}:${depPath}`;
+    if (visited.has(visitKey)) continue;
+    visited.add(visitKey);
+    (optional ? reachedOptionally : reachedNonOptionally).add(depPath);
+    const snapshot = snapshots[depPath];
+    if (!snapshot) continue;
+    for (const [depType, edgeOptional] of [
+      ['dependencies', optional],
+      ['optionalDependencies', true],
+    ] as const) {
+      for (const [name, ref] of Object.entries(snapshot[depType] ?? {})) {
+        const subDepPath = refToDepPath(ref, name);
+        if (subDepPath != null) queue.push([subDepPath, edgeOptional]);
+      }
+    }
+  }
+  for (const [depPath, snapshot] of Object.entries(snapshots)) {
+    if (reachedOptionally.has(depPath) && !reachedNonOptionally.has(depPath)) {
+      snapshot.optional = true;
+    } else {
+      delete snapshot.optional;
+    }
+  }
+}
+
+function dedupeSnapshotDepsToRootManifest(lockfile: BitLockfileFile, rootManifest: ProjectManifest | undefined): void {
+  const overridden = new Set(overriddenPackageNames(lockfile.overrides));
+  const rootDeps = new Map(
+    Object.entries(nonOptionalDependencies(rootManifest)).filter(([name]) => !overridden.has(name))
+  );
+  if (rootDeps.size === 0) return;
+  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
+    const peers = new Set(Object.keys(lockfile.packages?.[dp.removeSuffix(depPath)]?.peerDependencies ?? {}));
+    dropSnapshotDeps(
+      snapshot,
+      (name, ref) => rootDeps.has(name) && rootVersionWins(name, ref, rootDeps.get(name)!, peers.has(name))
+    );
+  }
+}
+
+function nonOptionalDependencies(manifest: ProjectManifest | undefined): Record<string, string> {
+  return { ...manifest?.devDependencies, ...manifest?.dependencies };
+}
+
+function overriddenPackageNames(overrides: Record<string, string> | undefined): string[] {
+  return parseOverrides(overrides ?? {}).map((override) => override.targetPkg.name);
+}
+
+function dropSnapshotDeps(
+  snapshot: NonNullable<BitLockfileFile['snapshots']>[string],
+  shouldDrop: (name: string, ref: string) => boolean
+): void {
+  for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = snapshot[depType];
+    if (!deps) continue;
+    for (const [name, ref] of Object.entries(deps)) {
+      if (shouldDrop(name, ref)) delete deps[name];
+    }
+  }
+}
+
+function rootVersionWins(name: string, ref: string, rootSpecifier: string, isPeer: boolean): boolean {
+  const lockedVersion = dp.parse(`${name}@${ref}`).version;
+  if (lockedVersion == null) return false;
+  const rootVersion = semver.valid(rootSpecifier);
+  if (rootVersion != null) return lockedVersion !== rootVersion;
+  return isPeer;
 }
 
 function depPathToRef(depPath: Dp.DependencyPath): string {

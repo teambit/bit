@@ -1,8 +1,14 @@
 import { ComponentID } from '@teambit/component-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '@teambit/legacy.constants';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { parseScope, replacePlaceHolderForPackageValue } from '@teambit/legacy.utils';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
+
+/**
+ * the extensions lookup this module needs from legacy extension-data's ExtensionDataList.
+ * restated rather than imported because extension-data depends (through component-sources) on this module.
+ */
+export type ComponentExtensions = {
+  findExtension(extensionId: string): { data: { [key: string]: any }; config: { [key: string]: any } } | undefined;
+};
 
 /**
  * convert a component name to a valid npm package name
@@ -18,7 +24,7 @@ export function componentIdToPackageName({
   id: ComponentID;
   bindingPrefix?: string;
   defaultScope?: string | null; // if an id doesn't have a scope, use defaultScope if exists
-  extensions: ExtensionDataList;
+  extensions: ComponentExtensions;
   isDependency?: boolean;
 }): string {
   const fromExtensions = getNameFromExtensions(id, extensions, isDependency);
@@ -39,7 +45,11 @@ export function componentIdToPackageName({
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }
 
-function getNameFromExtensions(id: ComponentID, extensions?: ExtensionDataList, isDependency?: boolean): null | string {
+function getNameFromExtensions(
+  id: ComponentID,
+  extensions?: ComponentExtensions,
+  isDependency?: boolean
+): null | string {
   if (!extensions) return null;
   if (isDependency) {
     const dependencyResolverExt = extensions.findExtension(Extensions.dependencyResolver);
@@ -66,4 +76,10 @@ function getNameFromExtensions(id: ComponentID, extensions?: ExtensionDataList, 
   const { scope, owner } = parseScope(scopeId);
   if (!name) return null;
   return replacePlaceHolderForPackageValue({ name: id.fullName, scope, owner, scopeId }, name);
+}
+
+export function getBindingPrefixByDefaultScope(defaultScope: string): string {
+  const splittedScope = defaultScope.split('.');
+  const defaultOwner = splittedScope.length === 1 ? defaultScope : splittedScope[0];
+  return `@${defaultOwner}`;
 }

@@ -1,10 +1,8 @@
 import { WorkerAspect } from './worker.aspect';
-import { setFunctionHandlers } from './expose';
-
-setFunctionHandlers();
 
 export { WorkerAspect };
 export type { WorkerMain } from './worker.main.runtime';
 export type { HarmonyWorker } from './harmony-worker';
-export { expose } from './expose';
+// loading `expose` also sets comlink's proxy handler for node, which the worker host needs.
+export { expose } from '@teambit/harmony.modules.worker-expose';
 export default WorkerAspect;

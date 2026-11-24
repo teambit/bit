@@ -8,6 +8,7 @@ import { workspaceConfigTemplate } from './files/workspace-config-tpl';
 export const starterTemplate: ComponentTemplate = {
   name: 'standalone-starter',
   hidden: true,
+  installMissingDependencies: true,
   description:
     'create your own workspace starter (standalone) - \nDocs: https://bit.dev/reference/starters/create-starter',
   generateFiles: (context: ComponentContext) => {

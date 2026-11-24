@@ -5,6 +5,7 @@ import latestVersions from './lib/latest-versions';
 
 export { ExternalActions, action } from './lib/action';
 export { PushOptions, put } from './lib/put';
-export { LaneNotFound } from './lib/exceptions/lane-not-found';
+// thrown by the scope as well; re-exported here for existing importers
+export { LaneNotFound } from '@teambit/legacy.scope';
 export { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS, fetch } from './lib/fetch';
 export { initScope, scopeConfig, remove, latestVersions };

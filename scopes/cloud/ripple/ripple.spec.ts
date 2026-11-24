@@ -258,3 +258,63 @@ describe('RippleSimulateCmd', () => {
     expect(output).to.include('bit ripple log job-1');
   });
 });
+
+describe('RippleMain.getComponentBuildSummary()', () => {
+  const ciGraph = JSON.stringify({
+    nodes: [{ id: 'node-1', attr: JSON.stringify({ ids: ['org.scope/comp@abc123'], status: { phase: 'FAILURE' } }) }],
+  });
+  const job = { id: 'job-1', ciGraph };
+
+  async function getRequestedComponentId(componentId: string): Promise<string> {
+    const ripple = createRippleMain();
+    let requestedId = '';
+    (ripple as any).fetchRippleGQL = async (_query: string, variables: Record<string, any>) => {
+      requestedId = variables.componentId;
+      return { getComponentBuildSummary: { id: variables.componentId } };
+    };
+    await ripple.getComponentBuildSummary(job, componentId);
+    return requestedId;
+  }
+
+  it('should take the version from the job when the id has no version, as "bit ripple log" lists it', async () => {
+    expect(await getRequestedComponentId('org.scope/comp')).to.equal('org.scope/comp@abc123');
+  });
+
+  it('should keep the version when the id has one', async () => {
+    expect(await getRequestedComponentId('org.scope/comp@def456')).to.equal('org.scope/comp@def456');
+  });
+});
+
+describe('RippleMain.getCiGraphNodesOfComponent()', () => {
+  const node = (id: string, versionedId: string) => ({
+    id,
+    attr: JSON.stringify({ ids: [versionedId], status: { name: `container-${id}`, phase: 'SUCCESS' } }),
+  });
+  const job = {
+    ciGraph: JSON.stringify({
+      nodes: [node('1', 'org.scope/button@abc123'), node('2', 'org.scope/card@def456')],
+    }),
+  };
+  const ripple = createRippleMain();
+
+  it('should return all the nodes when no component is given', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job).map((n) => n.containerName)).to.deep.equal([
+      'container-1',
+      'container-2',
+    ]);
+  });
+
+  it('should return the node of the component, with or without a version', () => {
+    for (const id of ['org.scope/card', 'org.scope/card@def456']) {
+      expect(ripple.getCiGraphNodesOfComponent(job, id).map((n) => n.containerName)).to.deep.equal(['container-2']);
+    }
+  });
+
+  it('should return no nodes when the component is not in the job', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job, 'org.scope/other')).to.deep.equal([]);
+  });
+
+  it('should return no nodes when the job built another version of the component', () => {
+    expect(ripple.getCiGraphNodesOfComponent(job, 'org.scope/card@other789')).to.deep.equal([]);
+  });
+});

@@ -553,6 +553,7 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
+    this.logger.debug(`loading esm module "${path}"`);
     const module = await esmLoader(path);
     // only a load that succeeded leaves something in memory that needs its files kept around
     recordLoadedEsmFile(path);

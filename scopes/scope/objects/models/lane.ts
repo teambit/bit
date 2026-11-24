@@ -230,6 +230,10 @@ export default class Lane extends BitObject {
     (this.updateDependents ||= []).push(componentId);
     this.hasChanged = true;
   }
+  setUpdateDependents(componentIds: ComponentID[]) {
+    this.updateDependents = componentIds.length ? componentIds : undefined;
+    this.hasChanged = true;
+  }
   removeAllUpdateDependents() {
     if (!this.updateDependents?.length) return;
     this.updateDependents = undefined;
@@ -334,6 +338,12 @@ export default class Lane extends BitObject {
   }
   toLaneId() {
     return new LaneId({ scope: this.scope, name: this.name });
+  }
+  /**
+   * a lane that was forked and not exported yet, where the new lane's scope is different from the forked-from one.
+   */
+  isNewForkToAnotherScope(): this is Lane & { forkedFrom: LaneId } {
+    return Boolean(this.isNew && this.forkedFrom && this.forkedFrom.scope !== this.scope);
   }
   collectObjectsById(repo: Repository): Promise<Array<{ id: ComponentID; objects: BitObject[] }>> {
     return Promise.all(

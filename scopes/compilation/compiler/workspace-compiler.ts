@@ -9,10 +9,10 @@ import { OutsideWorkspaceError } from '@teambit/workspace';
 import type { WorkspaceComponentLoadOptions, SerializableResults, Workspace } from '@teambit/workspace';
 import type { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
-import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
+import { formatWatchCompileResults } from './output-formatter';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import { Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
@@ -474,14 +474,15 @@ export class WorkspaceCompiler {
 
         this.componentsBeingProcessedInOnAspectLoadFail.add(idStr);
         try {
-          const { graph, successors } = await this.getEnvDepsGraph(id);
-          // const deps = this.dependencyResolver.getDependencies(component);
-          // const depsIds = deps.getComponentDependencies().map((dep) => {
-          //   return dep.id.toString();
-          // });
+          // the failed aspect can be of another version than the workspace component, e.g. an env as saved in the
+          // config of its components, after a lane switch. it's loaded from the package dir of the workspace
+          // component anyway, so compile the workspace version and its dependencies. the dependencies of the other
+          // version and the other version itself are not in the workspace, so they would be skipped.
+          const workspaceId = this.workspace.listIds().searchWithoutVersion(id) || id;
+          const { graph, successors } = await this.getEnvDepsGraph(workspaceId);
           const depsIds = successors.map((s) => s.id);
           await this.compileComponents(
-            [id.toString(), ...depsIds],
+            [workspaceId.toString(), ...depsIds],
             { initiator: CompilationInitiator.AspectLoadFail },
             true,
             { loadExtensions: true, executeLoadSlot: true },
@@ -535,7 +536,7 @@ export class WorkspaceCompiler {
     return {
       results: buildResults,
       toString() {
-        return formatCompileResults(buildResults, watchOpts.verbose);
+        return formatWatchCompileResults(buildResults, watchOpts.verbose);
       },
     };
   }
@@ -888,18 +889,4 @@ export class WorkspaceCompiler {
     }
     return this.workspace.listIds();
   }
-}
-
-function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
-  // this gets called when a file is changed, so the buildResults array always has only one item
-  const buildResult = buildResults.find((result) => !result.skipped);
-  if (!buildResult) return '';
-  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
-  const verboseComponentFilesArrayToString = () => {
-    return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');
-  };
-
-  return `${title}
-  ${Logger.successSymbol()}SUCCESS\t${buildResult.component}\n
-  ${verbose ? `${verboseComponentFilesArrayToString()}\n` : ''}`;
 }

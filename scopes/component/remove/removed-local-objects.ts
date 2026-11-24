@@ -2,7 +2,7 @@ import type { ComponentIdList } from '@teambit/component-id';
 import { RemovedObjects } from '@teambit/legacy.scope';
 
 export class RemovedLocalObjects extends RemovedObjects {
-  modifiedComponents: ComponentIdList;
+  modifiedComponents?: ComponentIdList;
   constructor(
     removedComponentIds?: ComponentIdList,
     missingComponents?: ComponentIdList,
@@ -11,7 +11,6 @@ export class RemovedLocalObjects extends RemovedObjects {
     removedFromLane?: ComponentIdList
   ) {
     super({ removedComponentIds, missingComponents, dependentBits, removedFromLane });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.modifiedComponents = modifiedComponents;
   }
 }

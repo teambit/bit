@@ -113,3 +113,16 @@
     display: flex;
   }
 }
+
+// holds the loader while the file list loads (see `waitForList`). The loader is absolutely positioned,
+// so this box contains it to the diff area.
+.listLoader {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.listLoaderSkeleton {
+  height: 100%;
+}

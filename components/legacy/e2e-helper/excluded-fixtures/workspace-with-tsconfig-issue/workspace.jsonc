@@ -34,7 +34,7 @@
    **/
   "teambit.dependencies/dependency-resolver": {
     /**
-     * choose the package manager for Bit to use. you can choose between 'yarn', 'pnpm'
+     * choose the package manager for Bit to use.
      */
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {

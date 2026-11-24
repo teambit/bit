@@ -1,3 +1,4 @@
+import type { PipeName } from '@teambit/envs.contracts';
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import type {
   EnvService,
@@ -58,7 +59,7 @@ const pipeNames = {
   getSnapPipe: 'snap',
 };
 
-export type PipeName = 'build' | 'tag' | 'snap';
+export type { PipeName };
 
 export type BuilderDescriptor = Array<{ pipeName: PipeName; tasks: string[] }>;
 

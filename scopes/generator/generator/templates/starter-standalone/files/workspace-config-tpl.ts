@@ -1,5 +1,5 @@
 export function workspaceConfigTemplate() {
-  return `import { WorkspaceContext } from '@teambit/generator';
+  return `import { WorkspaceContext } from '@teambit/envs.contracts';
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {

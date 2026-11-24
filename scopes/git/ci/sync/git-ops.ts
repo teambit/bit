@@ -362,20 +362,39 @@ export const realGitConfigIO: GitConfigIO = {
 export const DEFAULT_GIT_USER_NAME = 'bit-sync[bot]';
 export const DEFAULT_GIT_USER_EMAIL = 'bit-sync[bot]@users.noreply.github.com';
 
+export const GITHUB_ACTIONS_GIT_USER_NAME = 'github-actions[bot]';
+export const GITHUB_ACTIONS_GIT_USER_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com';
+
+export const BIT_CI_GIT_USER_NAME = 'Bit CI';
+export const BIT_CI_GIT_USER_EMAIL = 'bit-ci[bot]@bit.cloud';
+
 export type GitIdentity = { name: string; email: string };
 
 /**
- * Who the sync commits as. Read-only on purpose: writing these keys into the repository's config
- * would outlive the run and re-author the developer's own later commits as the bot. Precedence per
- * key: configured git identity > `GIT_USER_NAME`/`GIT_USER_EMAIL` > default.
+ * Fallback identity for `bit ci merge` when neither git config nor `GIT_USER_NAME`/`GIT_USER_EMAIL`
+ * provides one. On GitHub Actions, uses GitHub's official bot identity (`@users.noreply.github.com`)
+ * so commits satisfy repository author-email rulesets.
+ */
+export function defaultMergeGitIdentity(env: NodeJS.ProcessEnv = process.env): GitIdentity {
+  if (env.GITHUB_ACTIONS === 'true') {
+    return { name: GITHUB_ACTIONS_GIT_USER_NAME, email: GITHUB_ACTIONS_GIT_USER_EMAIL };
+  }
+  return { name: BIT_CI_GIT_USER_NAME, email: BIT_CI_GIT_USER_EMAIL };
+}
+
+/**
+ * Who a CI git operation commits as. Read-only on purpose: writing these keys into the repository's
+ * config would outlive the run and re-author later commits as the bot. Precedence per key:
+ * configured git identity > `GIT_USER_NAME`/`GIT_USER_EMAIL` > `fallback`.
  */
 export async function resolveGitIdentity(
   io: GitConfigIO = realGitConfigIO,
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
+  fallback: GitIdentity = { name: DEFAULT_GIT_USER_NAME, email: DEFAULT_GIT_USER_EMAIL }
 ): Promise<GitIdentity> {
   return {
-    name: (await io.get('user.name')) || env.GIT_USER_NAME || DEFAULT_GIT_USER_NAME,
-    email: (await io.get('user.email')) || env.GIT_USER_EMAIL || DEFAULT_GIT_USER_EMAIL,
+    name: (await io.get('user.name')) || env.GIT_USER_NAME || fallback.name,
+    email: (await io.get('user.email')) || env.GIT_USER_EMAIL || fallback.email,
   };
 }
 
@@ -384,15 +403,20 @@ export function identityArgs(identity: GitIdentity): string[] {
   return ['-c', `user.name=${identity.name}`, '-c', `user.email=${identity.email}`];
 }
 
-export type IdentityDeps = { run?: GitArgsRunner; io?: GitConfigIO; env?: NodeJS.ProcessEnv };
+export type IdentityDeps = {
+  run?: GitArgsRunner;
+  io?: GitConfigIO;
+  env?: NodeJS.ProcessEnv;
+  fallback?: GitIdentity;
+};
 
 /**
  * Run a git command that may author a commit. Every such command needs the identity — a fresh CI
  * checkout has none, and git refuses to commit ("Please tell me who you are") without one.
  */
 export async function gitWithIdentity(args: string[], deps: IdentityDeps = {}): Promise<string> {
-  const { run = realGitRaw, io = realGitConfigIO, env = process.env } = deps;
-  const identity = await resolveGitIdentity(io, env);
+  const { run = realGitRaw, io = realGitConfigIO, env = process.env, fallback } = deps;
+  const identity = await resolveGitIdentity(io, env, fallback);
   return String((await run([...identityArgs(identity), ...args])) ?? '');
 }
 

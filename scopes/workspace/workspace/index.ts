@@ -21,5 +21,6 @@ export type { CompFiles, FilesStatus } from './workspace-component/comp-files';
 export type { MergeOptions as BitmapMergeOptions } from './bit-map';
 export type { WorkspaceExtConfig } from './types';
 export type { AutoTagResult } from './auto-tag';
+export { getAutoTagInfoFromComponents } from './auto-tag';
 export { WorkspaceAspect };
 export default WorkspaceAspect;

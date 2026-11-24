@@ -25,6 +25,7 @@ import {
   conflictSummaryReport,
   getRemovedOutput,
   getWorkspaceConfigUpdateOutput,
+  getConfigMergeConflictsOutput,
 } from '@teambit/component.modules.merge-helper';
 import type { MergingMain } from './merging.main.runtime';
 import { compHasBeenRemovedMsg } from './merge-status-provider';
@@ -166,7 +167,8 @@ export function mergeReport({
   verbose,
   configMergeResults,
   workspaceConfigUpdateResult,
-}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[] }): string | Report {
+  abortCommand = 'bit merge --abort',
+}: ApplyVersionResults & { configMergeResults?: ConfigMergeResult[]; abortCommand?: string }): string | Report {
   const getSuccessOutput = () => {
     if (!components || !components.length) return '';
     const title = formatTitle(
@@ -184,21 +186,17 @@ export function mergeReport({
     const conflictSummary = conflictSummaryReport(components);
     componentsWithConflicts = conflictSummary.conflictedComponents;
     const suggestion = formatHint(
-      `merge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".\nonce ready, snap/tag the components to complete the merge.`
+      `merge process not completed due to the conflicts above. fix conflicts manually and then run "bit install".\nonce ready, snap/tag the components to complete the merge.\nto cancel the merge, run "${abortCommand}".`
     );
     return `${title}\n${conflictSummary.conflictStr}\n\n${suggestion}`;
   };
 
   const configMergeWithConflicts = configMergeResults?.filter((c) => c.hasConflicts()) || [];
-  const getConfigMergeConflictSummary = () => {
-    if (!configMergeWithConflicts.length) return '';
-    const comps = configMergeWithConflicts.map((c) => c.compIdStr).join('\n');
-    const title = formatTitle(`${warnSymbol} components with config-merge conflicts`);
-    const suggestion = formatHint(
-      `conflicts were found while trying to merge the config. fix them manually by editing the ${MergeConfigFilename} file in the workspace root.\nonce ready, snap/tag the components to complete the merge.`
+  const getConfigMergeConflictSummary = () =>
+    getConfigMergeConflictsOutput(
+      configMergeWithConflicts.map((c) => c.compIdStr),
+      'snap/tag the components to complete the merge'
     );
-    return `${title}\n${comps}\n${suggestion}`;
-  };
 
   const getSnapsOutput = () => {
     if (mergeSnapError) {

@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatTitle, formatSuccessSummary, formatWarningSummary } from '@teambit/cli';
+import { formatTitle, formatSuccessSummary, formatWarningSummary, formatHint } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { ComponentMain } from '@teambit/component';
@@ -54,7 +54,8 @@ use --out-dir to download artifacts locally for inspection or deployment purpose
     const list = await artifactExtractor.list();
     const totalArtifacts = list.reduce((sum, r) => sum + r.artifacts.length, 0);
     if (totalArtifacts === 0) {
-      return formatWarningSummary(`no artifacts found for "${componentPattern}"`);
+      return `${formatWarningSummary(`no artifacts found for "${componentPattern}"`)}
+${formatHint('artifacts are created by the build pipeline. a local tag/snap runs it only with --build, otherwise, Ripple CI runs it after export')}`;
     }
     const grouped = artifactExtractor.groupResultsByAspect(list);
     const outputArtifacts = (aspectId: string, artifactData: ExtractorArtifactResult[]) => {

@@ -4,7 +4,7 @@ import type Ref from '../objects/ref';
 
 type ScopeMetaProps = {
   name: string;
-  license: string;
+  license?: string | null;
 };
 
 // TODO: fix parse
@@ -39,13 +39,11 @@ export default class ScopeMeta extends BitObject {
   }
 
   static fromScopeName(name: string): Ref {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ScopeMeta.fromObject({ name }).hash();
   }
 
   static parse(propsStr: string | Buffer): ScopeMeta {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.fromObject(JSON.parse(propsStr));
+    return this.fromObject(JSON.parse(propsStr.toString()));
   }
 
   static fromObject(props: ScopeMetaProps): ScopeMeta {

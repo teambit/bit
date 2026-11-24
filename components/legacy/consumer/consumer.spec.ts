@@ -6,11 +6,9 @@ import Consumer from './consumer';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 
 describe('Consumer', function () {
-  // @ts-ignore
   this.timeout(0);
   let sandbox;
   const getConsumerInstance = () => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumer = new Consumer({
       projectPath: '',
       // @ts-ignore
@@ -28,8 +26,7 @@ describe('Consumer', function () {
     let consumer;
     before(() => {
       sandbox = sinon.createSandbox();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      consumer = getConsumerInstance(sandbox);
+      consumer = getConsumerInstance();
     });
     after(() => {
       sandbox.restore();

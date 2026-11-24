@@ -70,6 +70,8 @@ export type ComponentBuildSummary = {
 
 export type CiGraphNode = {
   componentIds: string[];
+  /** the component ids with the versions built in the job */
+  versionedIds: string[];
   containerName: string;
   phase: string;
 };
@@ -272,9 +274,10 @@ export class RippleMain {
       if (!graph.nodes) return [];
       return graph.nodes.map((node) => {
         const attr = typeof node.attr === 'string' ? JSON.parse(node.attr) : node.attr;
-        const ids: string[] = (attr.ids || []).map((id: string) => stripComponentVersion(id));
+        const versionedIds: string[] = attr.ids || [];
         return {
-          componentIds: ids,
+          componentIds: versionedIds.map((id) => stripComponentVersion(id)),
+          versionedIds,
           containerName: attr.status?.name || node.id,
           phase: attr.status?.phase || 'UNKNOWN',
         };
@@ -284,10 +287,32 @@ export class RippleMain {
     }
   }
 
-  async getComponentBuildSummary(jobId: string, componentId: string): Promise<ComponentBuildSummary | null> {
+  /** the ci graph nodes of the job, or only the node that built the given component (with or without a version). */
+  getCiGraphNodesOfComponent(job: { ciGraph?: string }, componentId?: string): CiGraphNode[] {
+    const nodes = this.getCiGraphNodes(job);
+    if (!componentId) return nodes;
+    const idWithoutVersion = stripComponentVersion(componentId);
+    if (idWithoutVersion !== componentId) return nodes.filter((node) => node.versionedIds.includes(componentId));
+    return nodes.filter((node) => node.componentIds.includes(idWithoutVersion));
+  }
+
+  /**
+   * the build summary needs the component version built in the job. when it is missing (e.g. an id copied from
+   * "bit ripple log", which lists the ids without versions), take it from the job's ciGraph.
+   */
+  async getComponentBuildSummary(
+    job: { id: string; ciGraph?: string },
+    componentId: string
+  ): Promise<ComponentBuildSummary | null> {
+    const hasVersion = stripComponentVersion(componentId) !== componentId;
+    const versionedId = hasVersion
+      ? componentId
+      : (this.getCiGraphNodes(job)
+          .flatMap((node) => node.versionedIds)
+          .find((id) => stripComponentVersion(id) === componentId) ?? componentId);
     const data = await this.fetchRippleGQL<{ getComponentBuildSummary: ComponentBuildSummary }>(
       RippleMain.GET_COMPONENT_BUILD_SUMMARY,
-      { jobId, componentId }
+      { jobId: job.id, componentId: versionedId }
     );
     return data?.getComponentBuildSummary ?? null;
   }

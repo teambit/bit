@@ -3,7 +3,6 @@
  */
 import fs from 'fs-extra';
 import path from 'path';
-// @ts-ignore we currently have @types/node as v12, and this is available > 16. once updated, remove the ts-ignore
 import { isBuiltin } from 'module';
 
 import getModuleType from 'module-definition';
@@ -95,11 +94,10 @@ const assign = (o1, o2) => {
 };
 
 /**
- * Get file info from the given file path.
+ * Get file info from the given file path and its content.
  */
-const getFileInfo = (filename: string): FileInfo => {
+const getFileInfo = (filename: string, content: string): FileInfo => {
   const ext = path.extname(filename);
-  const content = fs.readFileSync(filename, 'utf8');
   return {
     ext,
     content,
@@ -194,13 +192,17 @@ const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
 };
 
-const getDepsFromFile = async (filename: string, options?: Options): Promise<string[]> => {
+/**
+ * returns undefined when the file type is not supported (no detector for it).
+ */
+const getDepsFromContent = async (
+  filename: string,
+  content: string,
+  options?: Options
+): Promise<string[] | undefined> => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
-  const fileInfo = getFileInfo(filename);
-  if (
-    typeof fileInfo.content === 'string' &&
-    (fileInfo.content.startsWith('// @bit-no-check') || fileInfo.content.startsWith('/* @bit-no-check'))
-  ) {
+  const fileInfo = getFileInfo(filename, content);
+  if (content.startsWith('// @bit-no-check') || content.startsWith('/* @bit-no-check')) {
     debug(`skipping file ${filename}, it has a @bit-no-check comment`);
     return [];
   }
@@ -208,7 +210,7 @@ const getDepsFromFile = async (filename: string, options?: Options): Promise<str
   const detective = getDetector(fileInfo, normalizedOptions) || getJsDetector(fileInfo, normalizedOptions);
   if (!detective) {
     debug(`skipping unsupported file ${filename}`);
-    return [];
+    return undefined;
   }
   debug('module type: ', fileInfo.type);
 
@@ -217,8 +219,17 @@ const getDepsFromFile = async (filename: string, options?: Options): Promise<str
   return normalizeDeps(deps, normalizedOptions?.includeCore);
 };
 
+const getDepsFromFile = async (filename: string, options?: Options): Promise<string[]> => {
+  const content = fs.readFileSync(filename, 'utf8');
+  return (await getDepsFromContent(filename, content, options)) || [];
+};
+
 const precinct = {
   paperwork: getDepsFromFile,
+  /**
+   * same as paperwork, for a file that is not on the filesystem (e.g. in a bare scope)
+   */
+  paperworkFromContent: getDepsFromContent,
 };
 
 export default precinct;

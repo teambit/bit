@@ -19,6 +19,7 @@ import {
   getRemovedOutput,
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
+  getConfigMergeConflictsOutput,
 } from '@teambit/component.modules.merge-helper';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
@@ -177,6 +178,7 @@ export function checkoutOutput(
     removedComponents,
     addedComponents,
     leftUnresolvedConflicts,
+    configMergeConflicts,
     workspaceConfigUpdateResult,
     newFromLane,
     newFromLaneAdded,
@@ -302,6 +304,7 @@ export function checkoutOutput(
       getNewFromScopeOutput(),
       getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult),
       getConflictSummary(),
+      getConfigMergeConflictsOutput(configMergeConflicts || [], 'snap/tag the components to persist the changes'),
       getSummary(),
       installationErrorOutput(installationError),
       compilationErrorOutput(compilationError),

@@ -44,15 +44,6 @@
           "type": "string",
           "examples": ["teambit.dependencies/pnpm"]
         },
-        "strictPeerDependencies": {
-          "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
-          "type": "boolean",
-          "default": false
-        },
-        "extraArgs": {
-          "description": "map of extra arguments to pass to the configured package manager upon the installation of dependencies.",
-          "type": "array"
-        },
         "policy": {
           "description": "Dependency type is defined by the file that import it. For example, library will be devDependency when the file that imports it is a test file.",
           "type": "object",

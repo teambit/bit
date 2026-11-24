@@ -11,6 +11,8 @@ import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
 import { compact } from 'lodash';
+import { Extensions } from '@teambit/legacy.constants';
+import { isEnvOfComponent } from './is-env-of-component';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
@@ -216,24 +218,32 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
    * only a tagged (published) main version is used. a component with no tag on main (only snaps, or it only ever
    * existed on the lane) is skipped - pinning a snap version would re-introduce the "No matching version" failure
    * this feature is meant to prevent, since snaps aren't fetchable as a regular registry package.
-   * envs are excluded on purpose: a deleted env surfaces as a "RemovedEnv" issue so the user can replace it
-   * explicitly (bit env replace), and we don't want to silently pin it to its main version and suppress that
-   * signal. only regular dependencies (e.g. a dependency of an env) need pinning so they install from main.
+   * an env that is the env of one of its dependents is excluded on purpose: it surfaces as a "RemovedEnv" issue so the
+   * user can replace it explicitly (bit env replace), and we don't want to silently pin it to its main version and
+   * suppress that signal. an env that is only a regular dependency of its dependents is pinned like any other one.
    */
   private async getDeletedDepsToPinToMain(deletedIds: ComponentID[]): Promise<WorkspacePolicyEntry[]> {
     const graph = await this.workspace.getGraphIds(undefined, false);
     const deletedIdList = ComponentIdList.fromArray(deletedIds);
-    const idsWithDependents = deletedIds.filter((id) => {
-      const dependents = graph.predecessors(id.toString(), {
-        nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
-      });
-      return dependents.length > 0;
-    });
-    if (!idsWithDependents.length) return [];
-    const isEnvFlags = await Promise.all(idsWithDependents.map((id) => this.isEnvByIdWithoutLoadingComponent(id)));
-    const nonEnvIds = idsWithDependents.filter((_id, index) => !isEnvFlags[index]);
-    if (!nonEnvIds.length) return [];
-    const comps = await this.workspace.getMany(nonEnvIds);
+    const idsToPin = compact(
+      await Promise.all(
+        deletedIds.map(async (id) => {
+          const dependents = graph
+            .predecessors(id.toString(), {
+              nodeFilter: (node) => this.workspace.hasId(node.attr) && !deletedIdList.hasWithoutVersion(node.attr),
+            })
+            .map((node) => node.attr);
+          if (!dependents.length) return undefined;
+          // cheap check first, to avoid loading the dependents of a non-env
+          if (!(await this.isEnvByIdWithoutLoadingComponent(id))) return id;
+          const dependentComps = await this.workspace.getMany(dependents);
+          const isOwnEnvFlags = await Promise.all(dependentComps.map((dependent) => this.isOwnEnv(dependent, id)));
+          return isOwnEnvFlags.some(Boolean) ? undefined : id;
+        })
+      )
+    );
+    if (!idsToPin.length) return [];
+    const comps = await this.workspace.getMany(idsToPin);
     const entries = await Promise.all(
       comps.map(async (comp): Promise<WorkspacePolicyEntry | undefined> => {
         const modelComponent = await this.workspace.scope.getBitObjectModelComponent(comp.id.changeVersion(undefined));
@@ -537,8 +547,17 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
 
   async isEnvByIdWithoutLoadingComponent(componentId: ComponentID): Promise<boolean> {
     const versionObj = await this.workspace.scope.getBitObjectVersionById(componentId);
-    const envData = versionObj?.extensions.findCoreExtension('teambit.envs/envs');
+    const envData = versionObj?.extensions.findCoreExtension(Extensions.envs);
     return envData?.data.type === 'env';
+  }
+
+  /**
+   * whether the given id is the env of the component (a deleted one is a "RemovedEnv" issue). an env that the
+   * component only depends on (e.g. it imports a config from it) is a regular dependency.
+   * when the envs data of the component is missing, check whether the id is an env at all.
+   */
+  private async isOwnEnv(component: Component, id: ComponentID): Promise<boolean> {
+    return isEnvOfComponent(component, id) ?? this.isEnvByIdWithoutLoadingComponent(id);
   }
 
   /**
@@ -580,8 +599,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
           return;
         }
 
-        const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
-        if (isEnv) {
+        if (await this.isOwnEnv(component, dep.componentId)) {
           removedEnv = dep.componentId;
         } else {
           removedDependencies.push(dep.componentId);

@@ -11,7 +11,9 @@
   //cannot assign max-width directly to right side
   max-width: calc(100% - 200px);
   display: flex;
-  background: var(--on-surface-neutral-low-color, #282828);
+  // a surface token, not the `on-surface` foreground used before (#9598A1 in the base theme), which
+  // painted the aspect pane grey on a light page.
+  background: var(--surface-color, #fff);
 }
 
 .right {
@@ -24,7 +26,8 @@
 
 .splitter {
   position: relative;
-  background: var(--on-surface-neutral-low-color, #282828);
+  // divider between the aspect view and the aspects tree — a border token.
+  background: var(--border-medium-color, #ededed);
 
   > :first-child {
     z-index: $pane-splitter-zIndex;
@@ -49,7 +52,7 @@
   justify-items: center;
   height: 100%;
   width: 100%;
-  color: var(--on-surface-neutral-low-color, #282828);
+  color: var(--surface-neutral-color, #fff);
 }
 
 .themeContainer {

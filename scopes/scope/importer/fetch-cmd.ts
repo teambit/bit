@@ -80,10 +80,9 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
   const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
   const getConflictMessage = () => {
-    if (!importDetails.filesStatus) return '';
-    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
+    const { filesStatus } = importDetails;
+    if (!filesStatus) return '';
+    const conflictedFiles = Object.keys(filesStatus).filter((file) => filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles
       .map((file) => chalk.bold(file))

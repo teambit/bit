@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useHighlightedLines, resolveTokenColor, computeDiffLines } from '@teambit/code.ui.diff-viewer';
 import type { DiffLineItem } from '@teambit/code.ui.diff-viewer';
 import type { APIDiffChange, APIDiffDetail, APIDiffResult, ImpactLevel } from './api-diff-model';
+import { isApiDiffUnsupported } from './api-diff-model';
 import { impactLabel, unavailableText } from './api-diff-format';
 import { useApiDiffInsights } from './api-diff-insights';
 import type { ApiDiffInsightContext } from './api-diff-insights';
@@ -668,6 +669,17 @@ export function ApiDiffBlankState({
   );
 }
 
+/** shown when the backend has no API diff support, in place of a per-component result. */
+export function ApiDiffUnsupportedState({ componentIdStr }: { componentIdStr: string }) {
+  return (
+    <ApiDiffBlankState
+      componentIdStr={componentIdStr}
+      title="API diff isn't available"
+      detail="This server doesn't support comparing component APIs yet."
+    />
+  );
+}
+
 export type ComponentApiDiffSectionProps = {
   /** component id without version — used for anchors and registry keys */
   componentIdStr: string;
@@ -719,6 +731,12 @@ export function ComponentApiDiffSection({
         </div>
       </div>
     );
+  }
+
+  // the backend has no API diff support (e.g. an older Bit). Nothing failed and there is nothing to act
+  // on here, so it reads as a calm notice rather than an error.
+  if (isApiDiffUnsupported(result)) {
+    return <ApiDiffUnsupportedState componentIdStr={componentIdStr} />;
   }
 
   if (error || result === null) {

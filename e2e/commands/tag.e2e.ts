@@ -147,7 +147,6 @@ describe('bit tag command', function () {
     });
     it('should write the file to the model with Linux EOL characters', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const fileHash = barFoo.files[0].file;
       const fileContent = helper.command.runCmd(`bit cat-object ${fileHash} -s`);
       // notice how the \r is stripped

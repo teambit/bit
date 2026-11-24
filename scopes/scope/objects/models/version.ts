@@ -4,7 +4,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
 import type { BuildStatus } from '@teambit/legacy.constants';
-import { DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import { Extensions } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isSchemaSupport,
@@ -37,12 +37,17 @@ const flattenedIdsCache = new Map<string, Map<string, Map<string, ComponentID>>>
 const flattenedIdStrsCache = new Map<string, ComponentID>();
 const MAX_CACHED_FLATTENED_IDS = 100_000;
 let cachedFlattenedIds = 0;
+let flattenedEdgesCache = new WeakMap<ComponentID, Map<ComponentID, Map<DepEdgeType, DepEdge>>>();
+const MAX_CACHED_FLATTENED_EDGES = 100_000;
+let cachedFlattenedEdges = 0;
 
 function countCachedFlattenedId() {
   if (cachedFlattenedIds >= MAX_CACHED_FLATTENED_IDS) {
     flattenedIdsCache.clear();
     flattenedIdStrsCache.clear();
     cachedFlattenedIds = 0;
+    flattenedEdgesCache = new WeakMap();
+    cachedFlattenedEdges = 0;
   }
   cachedFlattenedIds += 1;
 }
@@ -75,6 +80,30 @@ function getFlattenedId(dep: string | Record<string, any>): ComponentID {
     byVersion.set(dep.version, id);
   }
   return id;
+}
+
+function getFlattenedEdge(source: ComponentID, target: ComponentID, type: DepEdgeType): DepEdge {
+  if (cachedFlattenedEdges >= MAX_CACHED_FLATTENED_EDGES) {
+    flattenedEdgesCache = new WeakMap();
+    cachedFlattenedEdges = 0;
+  }
+  let byTarget = flattenedEdgesCache.get(source);
+  if (!byTarget) {
+    byTarget = new Map();
+    flattenedEdgesCache.set(source, byTarget);
+  }
+  let byType = byTarget.get(target);
+  if (!byType) {
+    byType = new Map();
+    byTarget.set(target, byType);
+  }
+  let edge = byType.get(type);
+  if (!edge) {
+    cachedFlattenedEdges += 1;
+    edge = { source, target, type };
+    byType.set(type, edge);
+  }
+  return edge;
 }
 
 // the deprecated `Version.flattenedDependencies` getter warns only once per process.
@@ -542,11 +571,7 @@ export default class Version extends BitObject {
     };
   }
   static depEdgeFromObject(depEdgeObj: Record<string, any>): DepEdge {
-    return {
-      source: ComponentID.fromObject(depEdgeObj.source),
-      target: ComponentID.fromObject(depEdgeObj.target),
-      type: depEdgeObj.type,
-    };
+    return getFlattenedEdge(getFlattenedId(depEdgeObj.source), getFlattenedId(depEdgeObj.target), depEdgeObj.type);
   }
   /**
    * until 1.9.86, we used depEdgeToObject.
@@ -558,11 +583,7 @@ export default class Version extends BitObject {
   }
   static depEdgeFromArray(depEdgeArr: string[]): DepEdge {
     const [sourceStr, targetStr, type] = depEdgeArr;
-    return {
-      source: ComponentID.fromString(sourceStr),
-      target: ComponentID.fromString(targetStr),
-      type: type as DepEdgeType,
-    };
+    return getFlattenedEdge(getFlattenedId(sourceStr), getFlattenedId(targetStr), type as DepEdgeType);
   }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
@@ -842,7 +863,7 @@ export default class Version extends BitObject {
       dependenciesGraphRef: dependenciesGraph?.hash(),
       flattenedDependencies: component.flattenedDependencies,
       // not saved in the Version when `flattenedEdgesRef` is set, see `toObject()`.
-      flattenedEdges: component.flattenedEdges,
+      flattenedEdges: flattenedEdges ? [] : component.flattenedEdges,
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
@@ -880,16 +901,6 @@ export default class Version extends BitObject {
     return this.origin?.id
       ? ComponentID.fromObject({ scope: this.origin.id.scope, name: this.origin.id.name })
       : undefined;
-  }
-
-  setDist(dist: Source | undefined) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.dist = dist
-      ? {
-          file: dist.hash(),
-          name: DEFAULT_BUNDLE_FILENAME,
-        }
-      : null;
   }
 
   hasParent(ref: Ref) {

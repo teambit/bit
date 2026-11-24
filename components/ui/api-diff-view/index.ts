@@ -4,6 +4,7 @@ export {
   ComponentApiDiffSection,
   ApiChangeBlock,
   ApiDiffSlimRow,
+  ApiDiffUnsupportedState,
   ImpactBadge,
   StatusIndicator,
 } from './component-api-diff-section';
@@ -15,6 +16,7 @@ export type {
 export { ApiDiffInsightProvider, useApiDiffInsights } from './api-diff-insights';
 export type { ApiDiffInsight, ApiDiffInsightContext } from './api-diff-insights';
 export { useApiDiff, API_DIFF_QUERY, API_DIFF_RESULT_FIELDS } from './use-api-diff';
+export { UNSUPPORTED_API_DIFF, isApiDiffUnsupported } from './api-diff-model';
 export { impactLabel, unavailableText } from './api-diff-format';
 export { ApiDiffDataProvider, useApiDiffData, QUERY_API_DIFFS, API_DIFF_PAGE_SIZE } from './api-diff-data-context';
 export type { ApiDiffDataContextModel, ApiDiffPair } from './api-diff-data-context';
@@ -25,6 +27,7 @@ export type {
   SchemaSideAvailability,
   ImpactLevel,
   APIDiffComputeStatus,
+  APIDiffResultStatus,
   SchemaUnavailableReason,
 } from './api-diff-model';
 export type { UseApiDiffOptions, UseApiDiffResult } from './use-api-diff';

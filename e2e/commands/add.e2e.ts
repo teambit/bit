@@ -37,7 +37,6 @@ describe('bit add command', function () {
       helper.git.initNewGitRepo();
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.command.init();
       helper.fixtures.createComponentBarFoo();
       const addCmd = () => helper.fixtures.addComponentBarFoo();

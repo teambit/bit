@@ -222,6 +222,11 @@ export function parseDevCommitCount(raw: string): boolean {
   return Number.isNaN(count) ? true : count > 0;
 }
 
+/** The lane id in `origin/<branch>`'s `.bitmap`, if it has an exported one. Assumes `git fetch origin` already ran. */
+export async function readBranchLanePointer(branch: string, defaultScope: string): Promise<string | undefined> {
+  return parseBranchBitmap(await readFileAtRef(`origin/${branch}`, BIT_MAP), defaultScope)?.laneIdStr;
+}
+
 /**
  * Read a remote branch's sync state from its committed `.bitmap`. Assumes `git fetch origin` already ran.
  * `--first-parent` is a correctness requirement: `git log` orders across all parents, so a `.bitmap`

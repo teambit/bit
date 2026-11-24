@@ -11,7 +11,6 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '@teambit/legacy.constants';
 import { getConfig } from '@teambit/config-store';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
-import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 
 export async function runDoctorOnScope(scope: Scope, diagnosisName?: string): Promise<DoctorResponse> {
   registerCoreAndExtensionsDiagnoses();
@@ -68,7 +67,6 @@ async function getEnvMeta(): Promise<DoctorMetaData> {
     platform: os.platform(),
     bitVersion: getBitVersion(),
     npmVersion: await getNpmVersion(),
-    yarnVersion: await getYarnVersion(),
     userDetails: `${name}<${email}>`,
   };
 }

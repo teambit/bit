@@ -1,8 +1,7 @@
 import type { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import type { Lane } from '@teambit/objects';
-import type { AuthData } from '@teambit/scope.network';
-import type { Action } from './action';
+import type { Action, AuthData } from './action';
 
 type Options = { ids: string[] };
 

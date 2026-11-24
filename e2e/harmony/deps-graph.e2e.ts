@@ -131,7 +131,9 @@ export default new ${className}();
       });
       helper.command.install('--add-missing-deps');
       helper.command.tagWithoutBuild('custom-react/env1 custom-react/env2', '--skip-tests --skip-auto-tag');
-      helper.command.tagAllComponents('--skip-tests');
+      // ExtractSchema runs a tsserver over the env's core-aspect types (bit's own source in this repo), which
+      // adds ~0.9GB and gets the tag OOM-killed on CI's 4GB machines. the schema is irrelevant to these tests.
+      helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
       helper.command.export();
     });
     after(() => {
@@ -251,7 +253,7 @@ export default new ${className}();
       await addDistTag({ package: '@pnpm.e2e/abc', version: '1.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.1', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
-      helper.command.tagAllComponents('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
       helper.command.export();
 
       await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
@@ -327,7 +329,7 @@ export default new ${className}();
       await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
-      helper.command.tagAllComponents('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
@@ -392,7 +394,7 @@ export default new ${className}();
       await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
-      helper.command.tagAllComponents('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();
@@ -447,7 +449,7 @@ export default new ${className}();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
-      helper.command.tagAllComponents('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests --skip-tasks ExtractSchema');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

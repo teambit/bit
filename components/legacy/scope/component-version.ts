@@ -38,7 +38,6 @@ export class ComponentVersion {
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }
