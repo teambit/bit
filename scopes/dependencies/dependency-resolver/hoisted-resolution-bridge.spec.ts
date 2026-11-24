@@ -6,8 +6,10 @@ import path from 'path';
 import {
   ensureHoistedDependencyResolution,
   hoistedResolutionDirs,
+  isGlobalVirtualStoreLayout,
   isPathInsideOrEqual,
   isSamePath,
+  parseRecordedStoreDir,
   parseRecordedVirtualStoreDir,
 } from './hoisted-resolution-bridge';
 
@@ -43,6 +45,92 @@ describe('parseRecordedVirtualStoreDir()', () => {
   });
   it('should return undefined when the manifest records no store dir', () => {
     expect(parseRecordedVirtualStoreDir(JSON.stringify({ layoutVersion: 5 }))).to.eq(undefined);
+  });
+});
+
+describe('parseRecordedStoreDir()', () => {
+  it('should read the JSON manifest current pnpm writes', () => {
+    const manifest = JSON.stringify({ storeDir: '/tmp/.pnpm-store/v11', virtualStoreDir: '.pnpm' }, null, 2);
+    expect(parseRecordedStoreDir(manifest)).to.eq('/tmp/.pnpm-store/v11');
+  });
+  it('should not confuse virtualStoreDir for the store dir in a block-YAML manifest', () => {
+    expect(parseRecordedStoreDir('virtualStoreDir: .pnpm\n')).to.eq(undefined);
+    expect(parseRecordedStoreDir('virtualStoreDir: .pnpm\nstoreDir: /store/v3\n')).to.eq('/store/v3');
+  });
+});
+
+describe('isGlobalVirtualStoreLayout()', () => {
+  let tmp: string;
+  let root: string;
+  let store: string;
+  const writeManifest = (manifest: Record<string, string>) =>
+    fs.outputFileSync(path.join(root, 'node_modules', '.modules.yaml'), JSON.stringify(manifest));
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'is-global-virtual-store-'));
+    root = path.join(tmp, 'workspace');
+    store = path.join(tmp, '.pnpm-store', 'v11');
+    fs.ensureDirSync(root);
+  });
+  afterEach(() => fs.removeSync(tmp));
+
+  it('should read a virtual store inside the store dir as the global virtual store', () => {
+    // what pnpm records: "../../.pnpm-store/v11/links", relative to the workspace's node_modules
+    const links = path.relative(path.join(root, 'node_modules'), path.join(store, 'links'));
+    writeManifest({ storeDir: store, virtualStoreDir: links });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+  });
+  it('should read an absolute virtual store inside the store dir as the global virtual store', () => {
+    // pnpm records virtualStoreDir as an absolute path on Windows
+    writeManifest({ storeDir: store, virtualStoreDir: path.join(store, 'links') });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+  });
+  it('should read the local .pnpm virtual store as project-local', () => {
+    writeManifest({ storeDir: store, virtualStoreDir: '.pnpm' });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should read a virtual store recorded before the installation was moved as project-local', () => {
+    // bvm on Windows: installed into versions/_tmp_* (recorded as an absolute path), then renamed
+    writeManifest({ storeDir: store, virtualStoreDir: path.join(tmp, '_tmp_moved_away', 'node_modules', '.pnpm') });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should read a manifest that records no store dir as project-local', () => {
+    writeManifest({ virtualStoreDir: '../../.pnpm-store/v11/links' });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should support a custom globalVirtualStoreDir outside storeDir while still rejecting a copied node_modules/.pnpm', () => {
+    const customGvs = path.join(tmp, 'custom-gvs');
+    fs.ensureDirSync(customGvs);
+    writeManifest({ storeDir: store, virtualStoreDir: customGvs });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+
+    writeManifest({ virtualStoreDir: customGvs });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+
+    const copiedLocalStore = path.join(tmp, 'copied-workspace', 'node_modules', '.pnpm');
+    fs.ensureDirSync(copiedLocalStore);
+    writeManifest({ storeDir: store, virtualStoreDir: copiedLocalStore });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should detect global virtual store through a symlinked workspaceRoot with a relative virtualStoreDir', () => {
+    const realRoot = path.join(tmp, 'nested', 'real-workspace');
+    const linkedRoot = path.join(tmp, 'workspace-link');
+    fs.ensureDirSync(realRoot);
+    fs.symlinkSync(realRoot, linkedRoot, 'junction');
+    try {
+      const writeLinkedManifest = (manifest: Record<string, string>) =>
+        fs.outputFileSync(path.join(realRoot, 'node_modules', '.modules.yaml'), JSON.stringify(manifest));
+
+      const linksFromLinkedRoot = path.relative(path.join(linkedRoot, 'node_modules'), path.join(store, 'links'));
+      writeLinkedManifest({ storeDir: store, virtualStoreDir: linksFromLinkedRoot });
+      expect(isGlobalVirtualStoreLayout(linkedRoot)).to.eq(true);
+
+      const linksFromRealRoot = path.relative(path.join(realRoot, 'node_modules'), path.join(store, 'links'));
+      writeLinkedManifest({ storeDir: store, virtualStoreDir: linksFromRealRoot });
+      expect(isGlobalVirtualStoreLayout(linkedRoot)).to.eq(true);
+    } finally {
+      fs.unlinkSync(linkedRoot);
+    }
   });
 });
 

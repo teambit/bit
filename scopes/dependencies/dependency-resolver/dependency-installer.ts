@@ -8,7 +8,11 @@ import type { Logger } from '@teambit/logger';
 import type { PathAbsolute } from '@teambit/toolbox.path.path';
 import type { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined, SelfHostedVirtualStoreTransition } from './exceptions';
-import { isPathInsideOrEqual, parseRecordedVirtualStoreDir } from './hoisted-resolution-bridge';
+import {
+  isGlobalVirtualStoreLayout,
+  isPathInsideOrEqual,
+  parseRecordedVirtualStoreDir,
+} from './hoisted-resolution-bridge';
 import type {
   PackageManager,
   PackageManagerInstallOptions,
@@ -226,10 +230,10 @@ export class DependencyInstaller {
    * installation outside the workspace; detect the combination up front and fail before
    * anything is rewritten.
    *
-   * The current layout is read off `node_modules/.modules.yaml`: pnpm records `virtualStoreDir`
-   * as `.pnpm` for the project-local layout and as a path escaping the workspace for the global
-   * one. No manifest (fresh install) or an unreadable one means nothing can be mid-flight -
-   * a fresh install writes whichever layout is requested.
+   * The current layout is classified via {@link isGlobalVirtualStoreLayout} (so this guard and
+   * the bootstrap gate can never disagree). No manifest (fresh install), an unreadable one, or
+   * one recording no `virtualStoreDir` means nothing can be mid-flight - a fresh install writes
+   * whichever layout is requested.
    */
   private async assertSafeVirtualStoreTransition(finalRootDir: string, enableGlobalVirtualStore: boolean) {
     const modulesDir = path.join(finalRootDir, 'node_modules');
@@ -239,23 +243,15 @@ export class DependencyInstaller {
     } catch {
       return;
     }
-    // same reader as the bootstrap-time layout gate, so the guard and the bridge can never
-    // disagree about which layout the workspace is currently on
-    const virtualStoreDir = parseRecordedVirtualStoreDir(modulesManifest);
-    if (!virtualStoreDir) return;
-    // compare real paths on both sides: resolving the recorded dir against the as-given (possibly
-    // symlinked) workspace spelling while comparing to the workspace's realpath would misread a
-    // project-local store as global for a workspace reached through a symlink
-    const workspaceRealpath = await fs.realpath(finalRootDir).catch(() => finalRootDir);
-    const resolvedStoreDir = path.resolve(workspaceRealpath, 'node_modules', virtualStoreDir);
-    const storeRealpath = await fs.realpath(resolvedStoreDir).catch(() => resolvedStoreDir);
-    const currentIsGlobal = !isPathInsideOrEqual(storeRealpath, workspaceRealpath);
+    if (!parseRecordedVirtualStoreDir(modulesManifest)) return;
+    const currentIsGlobal = isGlobalVirtualStoreLayout(finalRootDir);
     if (currentIsGlobal === enableGlobalVirtualStore) return;
 
     // the switch only endangers a bit whose own code lives inside the node_modules being
     // rewritten. `__dirname` sits in the running installation's copy of this component; injected
     // workspace packages are real directories, so a workspace-provided bit resolves under the
     // workspace realpath while bvm/global installations resolve elsewhere.
+    const workspaceRealpath = await fs.realpath(finalRootDir).catch(() => finalRootDir);
     const runningFrom = await fs.realpath(__dirname).catch(() => __dirname);
     const selfHosted = isPathInsideOrEqual(runningFrom, path.join(workspaceRealpath, 'node_modules'));
     if (!selfHosted) return;
@@ -320,10 +316,7 @@ export class DependencyInstaller {
     // guard here rather than in `install()`: workspace installs enter through this method
     // directly (InstallMain._installModules), so `install()` is not a choke point.
     if (!this.installingContext?.inCapsule) {
-      await this.assertSafeVirtualStoreTransition(
-        finalRootDir,
-        this.dependencyResolver.enableGlobalVirtualStore()
-      );
+      await this.assertSafeVirtualStoreTransition(finalRootDir, this.dependencyResolver.enableGlobalVirtualStore());
     }
     if (options.linkedDependencies) {
       manifests = JSON.parse(JSON.stringify(manifests));
