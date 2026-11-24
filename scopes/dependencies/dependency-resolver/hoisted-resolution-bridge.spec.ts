@@ -98,6 +98,40 @@ describe('isGlobalVirtualStoreLayout()', () => {
     writeManifest({ virtualStoreDir: '../../.pnpm-store/v11/links' });
     expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
   });
+  it('should support a custom globalVirtualStoreDir outside storeDir while still rejecting a copied node_modules/.pnpm', () => {
+    const customGvs = path.join(tmp, 'custom-gvs');
+    fs.ensureDirSync(customGvs);
+    writeManifest({ storeDir: store, virtualStoreDir: customGvs });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+
+    writeManifest({ virtualStoreDir: customGvs });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(true);
+
+    const copiedLocalStore = path.join(tmp, 'copied-workspace', 'node_modules', '.pnpm');
+    fs.ensureDirSync(copiedLocalStore);
+    writeManifest({ storeDir: store, virtualStoreDir: copiedLocalStore });
+    expect(isGlobalVirtualStoreLayout(root)).to.eq(false);
+  });
+  it('should detect global virtual store through a symlinked workspaceRoot with a relative virtualStoreDir', () => {
+    const realRoot = path.join(tmp, 'nested', 'real-workspace');
+    const linkedRoot = path.join(tmp, 'workspace-link');
+    fs.ensureDirSync(realRoot);
+    fs.symlinkSync(realRoot, linkedRoot, 'junction');
+    try {
+      const writeLinkedManifest = (manifest: Record<string, string>) =>
+        fs.outputFileSync(path.join(realRoot, 'node_modules', '.modules.yaml'), JSON.stringify(manifest));
+
+      const linksFromLinkedRoot = path.relative(path.join(linkedRoot, 'node_modules'), path.join(store, 'links'));
+      writeLinkedManifest({ storeDir: store, virtualStoreDir: linksFromLinkedRoot });
+      expect(isGlobalVirtualStoreLayout(linkedRoot)).to.eq(true);
+
+      const linksFromRealRoot = path.relative(path.join(realRoot, 'node_modules'), path.join(store, 'links'));
+      writeLinkedManifest({ storeDir: store, virtualStoreDir: linksFromRealRoot });
+      expect(isGlobalVirtualStoreLayout(linkedRoot)).to.eq(true);
+    } finally {
+      fs.unlinkSync(linkedRoot);
+    }
+  });
 });
 
 describe('hoistedResolutionDirs()', () => {

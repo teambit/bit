@@ -104,11 +104,11 @@ let lastRegisteredEntries: string | undefined;
 let lastImportFlag: string | undefined;
 
 /**
- * A top-level string field pnpm recorded in a `node_modules/.modules.yaml` (e.g. `virtualStoreDir`,
- * `storeDir`), or undefined when the manifest records none.
+ * Top-level `virtualStoreDir` and `storeDir` fields pnpm recorded in a
+ * `node_modules/.modules.yaml`, or undefined for any field not present.
  *
  * Current pnpm writes this manifest as JSON (YAML 1.2 being a superset of it), so the structured
- * read is a plain `JSON.parse` - no dependency, and correct for every value the writer can emit.
+ * read is a single `JSON.parse` - no dependency, and correct for every value the writer can emit.
  * Older versions wrote block YAML, which the line match handles. A full YAML parser is
  * deliberately avoided: this runs in `bootstrap`, before any command does its work, and parsing
  * the whole manifest costs ~40ms on this repo's own 415KB one against ~0.2ms for the line match
@@ -116,26 +116,40 @@ let lastImportFlag: string | undefined;
  * Taking a package dependency here would also make the earliest, least recoverable step of CLI
  * startup depend on module resolution - the very thing this module exists to repair.
  */
-function parseRecordedManifestField(
-  modulesManifest: string,
-  field: 'virtualStoreDir' | 'storeDir'
-): string | undefined {
+function matchTopLevelYamlString(modulesManifest: string, field: 'virtualStoreDir' | 'storeDir'): string | undefined {
+  // anchored at column 0 of the key, so indented keys never match and `storeDir` never matches `virtualStoreDir`
+  return modulesManifest.match(new RegExp(`^"?${field}"?:\\s*"?([^"\\n]+?)"?,?\\s*$`, 'm'))?.[1];
+}
+
+function parseRecordedManifestDirs(modulesManifest: string): {
+  virtualStoreDir?: string;
+  storeDir?: string;
+} {
   try {
-    const value = (JSON.parse(modulesManifest) as Record<string, unknown>)[field];
-    return typeof value === 'string' ? value : undefined;
+    const parsed = JSON.parse(modulesManifest) as unknown;
+    if (parsed && typeof parsed === 'object') {
+      const record = parsed as Record<string, unknown>;
+      return {
+        virtualStoreDir: typeof record.virtualStoreDir === 'string' ? record.virtualStoreDir : undefined,
+        storeDir: typeof record.storeDir === 'string' ? record.storeDir : undefined,
+      };
+    }
+    return {};
   } catch {
     // not JSON - a block-YAML manifest from an older pnpm
   }
-  // anchored at the key's start, so `storeDir` never matches the `virtualStoreDir` line
-  return modulesManifest.match(new RegExp(`^\\s*"?${field}"?:\\s*"?([^"\\n]+?)"?,?\\s*$`, 'm'))?.[1];
+  return {
+    virtualStoreDir: matchTopLevelYamlString(modulesManifest, 'virtualStoreDir'),
+    storeDir: matchTopLevelYamlString(modulesManifest, 'storeDir'),
+  };
 }
 
 export function parseRecordedVirtualStoreDir(modulesManifest: string): string | undefined {
-  return parseRecordedManifestField(modulesManifest, 'virtualStoreDir');
+  return parseRecordedManifestDirs(modulesManifest).virtualStoreDir;
 }
 
 export function parseRecordedStoreDir(modulesManifest: string): string | undefined {
-  return parseRecordedManifestField(modulesManifest, 'storeDir');
+  return parseRecordedManifestDirs(modulesManifest).storeDir;
 }
 
 /**
@@ -163,14 +177,18 @@ export function isSamePath(one: string, other: string): boolean {
 
 /**
  * Whether the workspace's last install used pnpm's global virtual store, judged by what the engine
- * recorded in `node_modules/.modules.yaml`: the global virtual store lives inside the store itself
- * (`<storeDir>/links`), so `virtualStoreDir` sits under `storeDir`. A project-local virtual store
- * (`.pnpm`) never does. No manifest or no recorded values reads as project-local - a workspace that
- * never installed under the global store has nothing to bridge.
+ * recorded in `node_modules/.modules.yaml`:
+ * - Primary check: the default global virtual store lives inside the store itself
+ *   (`<storeDir>/links`), so `virtualStoreDir` sits under `storeDir` without touching disk for
+ *   the target dir.
+ * - Fallback check: when `virtualStoreDir` sits outside `storeDir` (or `storeDir` is absent, e.g.
+ *   a custom `globalVirtualStoreDir`), treat it as global only when the resolved `virtualStoreDir`
+ *   exists on disk, sits outside the workspace root, and does not end in `node_modules/.pnpm`.
  *
- * Judged by containment rather than by where the virtual store sits relative to the workspace: pnpm
- * records `virtualStoreDir` as an absolute path on Windows, so an installation moved after its install
- * (bvm installs into `versions/_tmp_*` and renames it) records a project-local store outside its root.
+ * This keeps moved/copied Windows installations (bvm installs into `versions/_tmp_<id>` and renames
+ * it, leaving an absolute `.../_tmp_<id>/node_modules/.pnpm` path) reading as project-local while
+ * still supporting custom `globalVirtualStoreDir` locations. No manifest or no recorded
+ * `virtualStoreDir` also reads as project-local.
  */
 export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   let modulesManifest: string;
@@ -179,21 +197,44 @@ export function isGlobalVirtualStoreLayout(workspaceRoot: string): boolean {
   } catch {
     return false;
   }
-  const virtualStoreDir = parseRecordedVirtualStoreDir(modulesManifest);
-  const storeDir = parseRecordedStoreDir(modulesManifest);
-  if (!virtualStoreDir || !storeDir) return false;
+  const { virtualStoreDir, storeDir } = parseRecordedManifestDirs(modulesManifest);
+  if (!virtualStoreDir) return false;
   // a relative `virtualStoreDir` was computed from the modules dir as pnpm was given it, which may be
-  // a symlinked spelling (e.g. macOS `/tmp` vs `/private/tmp`), so both spellings are tried, against
-  // both spellings of the store dir
+  // a symlinked spelling (e.g. macOS `/tmp` vs `/private/tmp`), so both spellings are tried
+  const workspaceRealpath = realpathOrUndefined(workspaceRoot);
   const virtualStoreCandidates = uniq(
-    [workspaceRoot, realpathOrUndefined(workspaceRoot)].map(
-      (root) => root && path.resolve(root, 'node_modules', virtualStoreDir)
-    )
+    [workspaceRoot, workspaceRealpath].map((root) => root && path.resolve(root, 'node_modules', virtualStoreDir))
   );
-  const storeCandidates = uniq([storeDir, realpathOrUndefined(storeDir)]);
-  return virtualStoreCandidates.some((virtualStore) =>
-    storeCandidates.some((store) => isPathInsideOrEqual(virtualStore, store))
-  );
+  if (storeDir) {
+    const storeCandidates = uniq([storeDir, realpathOrUndefined(storeDir)]);
+    if (
+      virtualStoreCandidates.some((virtualStore) =>
+        storeCandidates.some((store) => isPathInsideOrEqual(virtualStore, store))
+      )
+    ) {
+      return true;
+    }
+  }
+  const workspaceTarget = workspaceRealpath ?? workspaceRoot;
+  return virtualStoreCandidates.some((candidate) => {
+    const realVirtualStore = realpathOrUndefined(candidate);
+    if (!realVirtualStore) return false;
+    return (
+      !isPathInsideOrEqual(realVirtualStore, workspaceTarget) &&
+      !isLocalVirtualStorePath(candidate) &&
+      !isLocalVirtualStorePath(realVirtualStore)
+    );
+  });
+}
+
+function isLocalVirtualStorePath(fsPath: string): boolean {
+  const normalized = path.resolve(fsPath);
+  const base = path.basename(normalized);
+  const parent = path.basename(path.dirname(normalized));
+  if (process.platform === 'win32') {
+    return base.toLowerCase() === '.pnpm' && parent.toLowerCase() === 'node_modules';
+  }
+  return base === '.pnpm' && parent === 'node_modules';
 }
 
 function realpathOrUndefined(fsPath: string): string | undefined {
